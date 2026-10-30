@@ -1,6 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   hero-terminator.js — day/night sky gradient
-   v2.2 — robust gradient state, safe resize logic
+   hero-terminator.js — real day/night sky gradient
    ═══════════════════════════════════════════════════════════ */
 (function (global) {
   'use strict';
@@ -20,7 +19,7 @@
 
     phase: 0,
     sunAz: 180,
-    sunElev: 0,
+    sunElev: 18,
     moonAz: 180,
     moonElev: 0,
     moonAlpha: 0,
@@ -38,13 +37,11 @@
 
   try {
     const mq = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null;
-    if (mq) {
-      state.reducedMotion = mq.matches;
-      if (mq.addEventListener) {
-        mq.addEventListener('change', () => { state.reducedMotion = mq.matches; });
-      } else if (mq.addListener) {
-        mq.addListener(() => { state.reducedMotion = mq.matches; });
-      }
+    state.reducedMotion = !!(mq && mq.matches);
+    if (mq && mq.addEventListener) {
+      mq.addEventListener('change', () => { state.reducedMotion = mq.matches; });
+    } else if (mq && mq.addListener) {
+      mq.addListener(() => { state.reducedMotion = mq.matches; });
     }
   } catch (_) {}
 
@@ -112,35 +109,37 @@
   }
 
   function skyPalette(sunElev, cloudCover) {
+    const safeElev = Number.isFinite(sunElev) ? sunElev : 18;
     const cloud = Math.max(0, Math.min(1, (cloudCover || 0) / 100));
 
     let top, mid, bottom;
-    if (sunElev >= 6) {
-      top = [45, 110, 210];
-      mid = [80, 150, 230];
-      bottom = [180, 210, 245];
-    } else if (sunElev > -6) {
-      const t = (sunElev + 6) / 12;
-      top = lerpRGB([20, 25, 70], [45, 110, 210], t);
-      mid = lerpRGB([150, 80, 90], [80, 150, 230], t);
-      bottom = lerpRGB([255, 170, 100], [180, 210, 245], t);
-    } else if (sunElev > -12) {
-      const t = (sunElev + 12) / 6;
-      top = lerpRGB([4, 8, 22], [20, 25, 70], t);
-      mid = lerpRGB([8, 14, 32], [150, 80, 90], t);
-      bottom = lerpRGB([18, 22, 48], [255, 170, 100], t);
+
+    if (safeElev >= 6) {
+      top = [35, 88, 190];
+      mid = [82, 152, 230];
+      bottom = [190, 222, 250];
+    } else if (safeElev > -6) {
+      const t = (safeElev + 6) / 12;
+      top = lerpRGB([12, 18, 46], [35, 88, 190], t);
+      mid = lerpRGB([120, 96, 140], [82, 152, 230], t);
+      bottom = lerpRGB([255, 175, 120], [190, 222, 250], t);
+    } else if (safeElev > -12) {
+      const t = (safeElev + 12) / 6;
+      top = lerpRGB([4, 8, 22], [12, 18, 46], t);
+      mid = lerpRGB([8, 12, 28], [120, 96, 140], t);
+      bottom = lerpRGB([20, 28, 55], [255, 175, 120], t);
     } else {
       top = [3, 6, 18];
-      mid = [10, 15, 30];
-      bottom = [15, 20, 40];
+      mid = [8, 12, 27];
+      bottom = [14, 19, 38];
     }
 
-    if (cloud > 0.15 && sunElev > -6) {
-      const grey = [140, 150, 165];
-      const k = Math.min(1, (cloud - 0.15) / 0.85) * 0.85;
-      top = lerpRGB(top, grey, k);
-      mid = lerpRGB(mid, grey, k * 0.85);
-      bottom = lerpRGB(bottom, [190, 200, 210], k * 0.7);
+    if (cloud > 0.18 && safeElev > -6) {
+      const grey = [150, 156, 170];
+      const k = Math.min(1, (cloud - 0.18) / 0.82) * 0.9;
+      top = lerpRGB(top, grey, k * 0.55);
+      mid = lerpRGB(mid, grey, k * 0.8);
+      bottom = lerpRGB(bottom, [200, 210, 220], k * 0.6);
     }
 
     return { top, mid, bottom };
@@ -159,12 +158,11 @@
 
     ctx.clearRect(0, 0, w, h);
 
-    const sunElev = Number.isFinite(state.sunElev) ? state.sunElev : 0;
+    const sunElev = Number.isFinite(state.sunElev) ? state.sunElev : 18;
     const sunAz = Number.isFinite(state.sunAz) ? state.sunAz : 180;
-    const cloud = Number.isFinite(state.cloudCover) ? state.cloudCover : 0;
+    const cloud = Number.isFinite(state.cloudCover) ? state.cloudCover : 25;
 
     const pal = skyPalette(sunElev, cloud);
-
     const grad = ctx.createLinearGradient(0, 0, 0, h);
     grad.addColorStop(0, `rgb(${pal.top[0]},${pal.top[1]},${pal.top[2]})`);
     grad.addColorStop(0.6, `rgb(${pal.mid[0]},${pal.mid[1]},${pal.mid[2]})`);
@@ -172,14 +170,14 @@
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
 
-    if (Math.abs(sunElev) < 15 && cloud < 95) {
+    if (Math.abs(sunElev) < 18 && cloud < 95) {
       const glowX = ((sunAz % 360) + 360) % 360 / 360 * w;
-      const intensity = 1 - Math.min(1, Math.abs(sunElev) / 15);
-      const warmth = Math.max(0, 1 - cloud / 100);
-      const glow = ctx.createRadialGradient(glowX, h, 0, glowX, h, w * 0.7);
-      glow.addColorStop(0, `rgba(255, 175, 90, ${0.4 * intensity * warmth})`);
-      glow.addColorStop(0.5, `rgba(255, 140, 80, ${0.15 * intensity * warmth})`);
-      glow.addColorStop(1, 'rgba(255, 140, 80, 0)');
+      const intensity = 1 - Math.min(1, Math.abs(sunElev) / 18);
+      const warmth = Math.max(0.15, 1 - cloud / 100);
+      const glow = ctx.createRadialGradient(glowX, h, 0, glowX, h, w * 0.75);
+      glow.addColorStop(0, `rgba(255, 200, 120, ${0.42 * intensity * warmth})`);
+      glow.addColorStop(0.45, `rgba(255, 150, 80, ${0.18 * intensity * warmth})`);
+      glow.addColorStop(1, 'rgba(255, 150, 80, 0)');
       ctx.fillStyle = glow;
       ctx.fillRect(0, 0, w, h);
     }
@@ -214,7 +212,7 @@
   }
 
   const api = {
-    version: '2.2',
+    version: '2.3',
 
     init(opts) {
       if (state.destroyed) return api;
@@ -246,13 +244,14 @@
       if (state.destroyed || !sky) return api;
       state.sky = sky;
 
-      state.sunElev = Number(sky.sun && sky.sun.elevation) || 0;
-      state.sunAz = Number(sky.sun && sky.sun.azimuth) || 180;
-      state.moonElev = Number(sky.moon && sky.moon.elevation) || 0;
-      state.moonAz = Number(sky.moon && sky.moon.azimuth) || 180;
-      state.moonAlpha = (sky.moon && sky.moon.visible)
-        ? Number(sky.moon.illumination) || 0.5
-        : 0;
+      const sun = sky.sun || {};
+      const moon = sky.moon || {};
+
+      state.sunElev = Number.isFinite(Number(sun.elevation)) ? Number(sun.elevation) : 18;
+      state.sunAz = Number.isFinite(Number(sun.azimuth)) ? Number(sun.azimuth) : 180;
+      state.moonElev = Number.isFinite(Number(moon.elevation)) ? Number(moon.elevation) : 0;
+      state.moonAz = Number.isFinite(Number(moon.azimuth)) ? Number(moon.azimuth) : 180;
+      state.moonAlpha = moon.visible ? (Number(moon.illumination) || 0.5) : 0;
 
       try {
         const W = global.VioraHero && global.VioraHero.debug && global.VioraHero.debug.Weather;
@@ -277,9 +276,12 @@
       const S = global.Solar;
       if (!S || typeof S.getSkyState !== 'function') return api;
       try {
-        const now = (typeof global.__vioraNow === 'function') ? global.__vioraNow() : new Date();
+        const now = typeof global.__vioraNow === 'function' ? global.__vioraNow() : new Date();
         const sky = S.getSkyState(state.location.lat, state.location.lon, now);
-        api.setSkyState(sky);
+        api.setSkyState(sky || {
+          sun: { elevation: 18, azimuth: 180 },
+          moon: { visible: false, illumination: 0 }
+        });
       } catch (_) {}
       return api;
     },
