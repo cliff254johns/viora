@@ -1,11 +1,12 @@
 /* ═══════════════════════════════════════════════════════════
-   hero-terminator.js — real day/night sky gradient
+   hero-terminator.js — day/night sky gradient
+   v2.1 — Forced Blue Day, Deep Dark Night
    ═══════════════════════════════════════════════════════════ */
 (function (global) {
   'use strict';
 
   const REDRAW_INTERVAL_MS = 8000;
-  const DPR_CAP = 2;
+  const DPR_CAP            = 2;
 
   const state = {
     canvas: null,
@@ -18,8 +19,8 @@
     sky: null,
 
     phase: 0,
-    sunAz: 180,
-    sunElev: 18,
+      sunAz: 180,
+    sunElev: 0,
     moonAz: 180,
     moonElev: 0,
     moonAlpha: 0,
@@ -36,11 +37,11 @@
   };
 
   try {
-    const mq = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null;
-    state.reducedMotion = !!(mq && mq.matches);
-    if (mq && mq.addEventListener) {
+    const mq = matchMedia('(prefers-reduced-motion: reduce)');
+    state.reducedMotion = mq.matches;
+    if (mq.addEventListener) {
       mq.addEventListener('change', () => { state.reducedMotion = mq.matches; });
-    } else if (mq && mq.addListener) {
+    } else if (mq.addListener) {
       mq.addListener(() => { state.reducedMotion = mq.matches; });
     }
   } catch (_) {}
@@ -79,7 +80,7 @@
   }
 
   function resizeBackingStore() {
-    if (!state.canvas || !state.ctx) return false;
+    if (!state.canvas) return false;
     const rect = state.canvas.getBoundingClientRect();
     if (rect.width < 2 || rect.height < 2) return false;
 
@@ -91,7 +92,6 @@
       state.canvas.width = wantW;
       state.canvas.height = wantH;
     }
-
     state.dpr = dpr;
     state.w = rect.width;
     state.h = rect.height;
@@ -99,6 +99,9 @@
     return true;
   }
 
+  /* ─────────────────────────────────────────────────────────
+     Render Sky
+     ───────────────────────────────────────────────────────── */
   function lerpRGB(a, b, t) {
     t = Math.max(0, Math.min(1, t));
     return [
@@ -109,37 +112,40 @@
   }
 
   function skyPalette(sunElev, cloudCover) {
-    const safeElev = Number.isFinite(sunElev) ? sunElev : 18;
+    // cloudCover is 0..100. Overcast greys out the sky.
     const cloud = Math.max(0, Math.min(1, (cloudCover || 0) / 100));
 
     let top, mid, bottom;
-
-    if (safeElev >= 6) {
-      top = [35, 88, 190];
-      mid = [82, 152, 230];
-      bottom = [190, 222, 250];
-    } else if (safeElev > -6) {
-      const t = (safeElev + 6) / 12;
-      top = lerpRGB([12, 18, 46], [35, 88, 190], t);
-      mid = lerpRGB([120, 96, 140], [82, 152, 230], t);
-      bottom = lerpRGB([255, 175, 120], [190, 222, 250], t);
-    } else if (safeElev > -12) {
-      const t = (safeElev + 12) / 6;
-      top = lerpRGB([4, 8, 22], [12, 18, 46], t);
-      mid = lerpRGB([8, 12, 28], [120, 96, 140], t);
-      bottom = lerpRGB([20, 28, 55], [255, 175, 120], t);
+    if (sunElev >= 6) {
+      // Full daylight — Rayleigh blue
+      top    = [45, 110, 210];
+      mid    = [80, 150, 230];
+      bottom = [180, 210, 245];
+    } else if (sunElev > -6) {
+      // Twilight — warm horizon, cool zenith. t: 0 at -6°, 1 at +6°
+      const t = (sunElev + 6) / 12;
+      top    = lerpRGB([20, 25, 70],  [45, 110, 210], t);
+      mid    = lerpRGB([150, 80, 90], [80, 150, 230], t);
+      bottom = lerpRGB([255, 170, 100], [180, 210, 245], t);
+    } else if (sunElev > -12) {
+      // Nautical twilight — deep blue with faint horizon warmth
+      const t = (sunElev + 12) / 6;
+      top    = lerpRGB([4, 8, 22],   [20, 25, 70], t);
+      mid    = lerpRGB([8, 14, 32],  [150, 80, 90], t);
+      bottom = lerpRGB([18, 22, 48], [255, 170, 100], t);
     } else {
-      top = [3, 6, 18];
-      mid = [8, 12, 27];
-      bottom = [14, 19, 38];
+      // Night — near-black with a hint of blue
+      top    = [3, 6, 18];
+      mid    = [10, 15, 30];
+      bottom = [15, 20, 40];
     }
 
-    if (cloud > 0.18 && safeElev > -6) {
-      const grey = [150, 156, 170];
-      const k = Math.min(1, (cloud - 0.18) / 0.82) * 0.9;
-      top = lerpRGB(top, grey, k * 0.55);
-      mid = lerpRGB(mid, grey, k * 0.8);
-      bottom = lerpRGB(bottom, [200, 210, 220], k * 0.6);
+    if (cloud > 0.15 && sunElev > -6) {
+      const grey = [140, 150, 165];
+      const k = Math.min(1, (cloud - 0.15) / 0.85) * 0.85;
+      top    = lerpRGB(top,    grey, k);
+      mid    = lerpRGB(mid,    grey, k * 0.85);
+      bottom = lerpRGB(bottom, [190, 200, 210], k * 0.7);
     }
 
     return { top, mid, bottom };
@@ -154,30 +160,32 @@
     const ctx = state.ctx;
     const w = state.w;
     const h = state.h;
-    if (w < 2 || h < 2 || !ctx) return;
+    if (w < 2 || h < 2) return;
 
     ctx.clearRect(0, 0, w, h);
 
-    const sunElev = Number.isFinite(state.sunElev) ? state.sunElev : 18;
-    const sunAz = Number.isFinite(state.sunAz) ? state.sunAz : 180;
-    const cloud = Number.isFinite(state.cloudCover) ? state.cloudCover : 25;
+    const sunElev = Number.isFinite(state.sunElev) ? state.sunElev : 0;
+    const sunAz   = Number.isFinite(state.sunAz)   ? state.sunAz   : 180;
+    const cloud   = Number.isFinite(state.cloudCover) ? state.cloudCover : 0;
 
     const pal = skyPalette(sunElev, cloud);
+
     const grad = ctx.createLinearGradient(0, 0, 0, h);
-    grad.addColorStop(0, `rgb(${pal.top[0]},${pal.top[1]},${pal.top[2]})`);
-    grad.addColorStop(0.6, `rgb(${pal.mid[0]},${pal.mid[1]},${pal.mid[2]})`);
-    grad.addColorStop(1, `rgb(${pal.bottom[0]},${pal.bottom[1]},${pal.bottom[2]})`);
+    grad.addColorStop(0,    `rgb(${pal.top[0]},${pal.top[1]},${pal.top[2]})`);
+    grad.addColorStop(0.6,  `rgb(${pal.mid[0]},${pal.mid[1]},${pal.mid[2]})`);
+    grad.addColorStop(1,    `rgb(${pal.bottom[0]},${pal.bottom[1]},${pal.bottom[2]})`);
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
 
-    if (Math.abs(sunElev) < 18 && cloud < 95) {
-      const glowX = ((sunAz % 360) + 360) % 360 / 360 * w;
-      const intensity = 1 - Math.min(1, Math.abs(sunElev) / 18);
-      const warmth = Math.max(0.15, 1 - cloud / 100);
-      const glow = ctx.createRadialGradient(glowX, h, 0, glowX, h, w * 0.75);
-      glow.addColorStop(0, `rgba(255, 200, 120, ${0.42 * intensity * warmth})`);
-      glow.addColorStop(0.45, `rgba(255, 150, 80, ${0.18 * intensity * warmth})`);
-      glow.addColorStop(1, 'rgba(255, 150, 80, 0)');
+    // Horizon glow that follows the real sun azimuth during sunrise/sunset
+    if (Math.abs(sunElev) < 15 && cloud < 95) {
+      const glowX = (sunAz / 360) * w;
+      const intensity = 1 - Math.min(1, Math.abs(sunElev) / 15);
+      const warmth = Math.max(0, 1 - cloud / 100);
+      const glow = ctx.createRadialGradient(glowX, h, 0, glowX, h, w * 0.7);
+      glow.addColorStop(0, `rgba(255, 175, 90, ${0.4 * intensity * warmth})`);
+      glow.addColorStop(0.5, `rgba(255, 140, 80, ${0.15 * intensity * warmth})`);
+      glow.addColorStop(1, 'rgba(255, 140, 80, 0)');
       ctx.fillStyle = glow;
       ctx.fillRect(0, 0, w, h);
     }
@@ -205,29 +213,23 @@
   }
 
   function stopRedrawTimer() {
-    if (state.redrawTimer) {
-      clearInterval(state.redrawTimer);
-      state.redrawTimer = null;
-    }
+    if (state.redrawTimer) { clearInterval(state.redrawTimer); state.redrawTimer = null; }
   }
 
   const api = {
-    version: '2.3',
+    version: '2.1',
 
     init(opts) {
       if (state.destroyed) return api;
       opts = opts || {};
       if (opts.location) api.setLocation(opts.location);
-      if (opts.sky) api.setSkyState(opts.sky);
-      else api.refreshSkyFromSolar();
+      if (opts.sky)      api.setSkyState(opts.sky);
+      else               api.refreshSkyFromSolar();
 
       if (!state.bound) {
         state.bound = true;
-        if (typeof window !== 'undefined') {
-          window.addEventListener('resize', () => { if (state.sky) scheduleRender(); });
-        }
+        window.addEventListener('resize', () => { if (state.sky) scheduleRender(); });
       }
-
       startRedrawTimer();
       scheduleRender();
       return api;
@@ -240,18 +242,16 @@
       return api;
     },
 
-    setSkyState(sky) {
+     setSkyState(sky) {
       if (state.destroyed || !sky) return api;
       state.sky = sky;
-
-      const sun = sky.sun || {};
-      const moon = sky.moon || {};
-
-      state.sunElev = Number.isFinite(Number(sun.elevation)) ? Number(sun.elevation) : 18;
-      state.sunAz = Number.isFinite(Number(sun.azimuth)) ? Number(sun.azimuth) : 180;
-      state.moonElev = Number.isFinite(Number(moon.elevation)) ? Number(moon.elevation) : 0;
-      state.moonAz = Number.isFinite(Number(moon.azimuth)) ? Number(moon.azimuth) : 180;
-      state.moonAlpha = moon.visible ? (Number(moon.illumination) || 0.5) : 0;
+      state.sunElev  = Number(sky.sun  && sky.sun.elevation) || 0;
+      state.sunAz    = Number(sky.sun  && sky.sun.azimuth)   || 180;
+      state.moonElev = Number(sky.moon && sky.moon.elevation) || 0;
+      state.moonAz   = Number(sky.moon && sky.moon.azimuth)   || 180;
+      state.moonAlpha = (sky.moon && sky.moon.visible)
+        ? Number(sky.moon.illumination) || 0.5
+        : 0;
 
       try {
         const W = global.VioraHero && global.VioraHero.debug && global.VioraHero.debug.Weather;
@@ -267,9 +267,6 @@
         }
       } catch (_) {}
 
-      if (!Number.isFinite(state.sunElev)) state.sunElev = 18;
-      if (!Number.isFinite(state.cloudCover)) state.cloudCover = 25;
-
       scheduleRender();
       return api;
     },
@@ -279,24 +276,19 @@
       const S = global.Solar;
       if (!S || typeof S.getSkyState !== 'function') return api;
       try {
-        const now = typeof global.__vioraNow === 'function' ? global.__vioraNow() : new Date();
+        const now = (typeof global.__vioraNow === 'function') ? global.__vioraNow() : new Date();
         const sky = S.getSkyState(state.location.lat, state.location.lon, now);
-        api.setSkyState(sky || {
-          sun: { elevation: 18, azimuth: 180 },
-          moon: { visible: false, illumination: 0 }
-        });
+        api.setSkyState(sky);
       } catch (_) {}
       return api;
     },
 
     renderNow() { scheduleRender(); return api; },
-
     destroy() {
       state.destroyed = true;
       stopRedrawTimer();
       if (state.canvas && state.canvas.parentNode) state.canvas.parentNode.removeChild(state.canvas);
-      state.canvas = null;
-      state.ctx = null;
+      state.canvas = null; state.ctx = null;
     }
   };
 
