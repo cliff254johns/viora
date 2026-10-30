@@ -1,0 +1,11 @@
+#vioraHeroBanner,
+.viora-hero-cover {
+  background: radial-gradient(circle at 20% 20%, #204f7d 0%, #15385b 28%, #0d1728 60%, #090d16 100%) !important;
+}
+
+#vioraHeroBanner[data-sky-phase="night"],
+.viora-hero-cover[data-sky-phase="night"],
+#vioraHeroBanner[data-sky-phase="astronomical"],
+.viora-hero-cover[data-sky-phase="astronomical"] {
+  background: #030914 !important;
+}
