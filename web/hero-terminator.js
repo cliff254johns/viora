@@ -267,6 +267,9 @@
         }
       } catch (_) {}
 
+      if (!Number.isFinite(state.sunElev)) state.sunElev = 18;
+      if (!Number.isFinite(state.cloudCover)) state.cloudCover = 25;
+
       scheduleRender();
       return api;
     },
