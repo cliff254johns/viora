@@ -1,0 +1,453 @@
+:root{
+  --v-blue:#08cfff; --v-cyan:#56efff; --v-navy:#09233c; --v-dark:#06111d;
+  --v-green:#22d36b; --v-white:#fff; --panel:rgba(7,24,40,.96);
+  --scale:1;
+  --hero-h:130px;
+  --avatar-img-size: 24px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+body{background:linear-gradient(135deg,#eefcff,#fff 45%,#eef7ff);color:#10253a;overflow-x:hidden}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+
+/* ═══ MINI avatar ════════════════════════════════════════════════ */
+#viora-assistant{
+  position:fixed;left:18px;bottom:100px;
+  width:clamp(92px,11vw,145px);height:clamp(118px,15vw,170px);
+  z-index:2147483000;pointer-events:none;user-select:none;
+  transition:opacity .35s ease,transform .35s ease;
+}
+#viora-assistant *{pointer-events:auto}
+#viora-assistant.hidden{opacity:0;pointer-events:none!important;transform:scale(.4) translateY(40px)}
+.va-avatar{
+  position:absolute;inset:0;filter:drop-shadow(0 12px 12px rgba(0,30,55,.25));
+  transition:transform .3s ease,filter .3s ease;
+  border:0;background:none;padding:0;width:100%;height:100%;
+}
+.va-avatar:hover{transform:translateY(-5px) rotate(-1deg);filter:drop-shadow(0 17px 16px rgba(0,145,210,.28))}
+.float-shadow{
+  position:absolute;bottom:0;left:17%;width:66%;height:11px;border-radius:50%;
+  background:rgba(4,28,48,.17);filter:blur(5px);transform:scaleX(.9);
+  animation:shadow 2.4s ease-in-out infinite
+}
+@keyframes shadow{50%{transform:scaleX(.68);opacity:.6}}
+.bot{animation:float 3.2s ease-in-out infinite;transform-origin:50% 80%}
+@keyframes float{50%{transform:translateY(-5px)}}
+.eye{animation:blink 5.2s infinite;transform-origin:center}
+@keyframes blink{0%,45%,48%,100%{transform:scaleY(1)}46.5%{transform:scaleY(.12)}}
+.mouth{animation:smile 4s ease-in-out infinite;transform-origin:110px 92px}
+@keyframes smile{50%{transform:scaleX(1.08)}}
+.antenna{animation:antenna 2s ease-in-out infinite;transform-origin:110px 20px}
+@keyframes antenna{50%{transform:translateY(-3px)}}
+.hand-left{transform-origin:70px 99px;animation:wave 3.8s ease-in-out infinite}
+@keyframes wave{0%,65%,100%{transform:rotate(0)}72%{transform:rotate(-13deg)}78%{transform:rotate(8deg)}84%{transform:rotate(-8deg)}}
+.hand-right{animation:thumb 3.5s ease-in-out infinite;transform-origin:160px 105px}
+@keyframes thumb{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+#avatarSvg .glow{filter:url(#glow-mini)}
+
+/* Logo image inside avatar chest */
+.avatar-logo-img{
+  position:absolute;
+  left:50%; top:50%;
+  transform:translate(-50%,-50%);
+  width: var(--avatar-img-size);
+  height: var(--avatar-img-size);
+  object-fit:contain;
+  object-position:center;
+  border-radius:50%;
+  filter:
+    drop-shadow(0 0 6px rgba(86,239,255,.95))
+    drop-shadow(0 0 14px rgba(8,207,255,.85))
+    drop-shadow(0 0 26px rgba(8,207,255,.55));
+  animation: avatarLogoGlow 2.4s ease-in-out infinite;
+  pointer-events:none;
+  z-index:2;
+}
+@keyframes avatarLogoGlow{
+  0%,100%{
+    filter:
+      drop-shadow(0 0 5px rgba(86,239,255,.85))
+      drop-shadow(0 0 12px rgba(8,207,255,.7))
+      drop-shadow(0 0 20px rgba(8,207,255,.45));
+  }
+  50%{
+    filter:
+      drop-shadow(0 0 9px rgba(86,239,255,1))
+      drop-shadow(0 0 20px rgba(8,207,255,.95))
+      drop-shadow(0 0 34px rgba(8,207,255,.7));
+  }
+}
+
+/* ═══ Bubble ════════════════════════════════════════════════════ */
+.va-bubble{
+  position:absolute;left:104%;bottom:62%;min-width:180px;max-width:270px;
+  background:rgba(255,255,255,.98);border:1px solid rgba(8,207,255,.3);
+  color:#09233c;border-radius:18px 18px 18px 4px;padding:10px 13px;
+  box-shadow:0 12px 35px rgba(0,30,55,.17);font-size:13px;line-height:1.35;
+  opacity:0;transform:translate(-8px,8px) scale(.96);pointer-events:none!important;
+  transition:.25s ease;backdrop-filter:blur(12px)
+}
+.va-bubble.show{opacity:1;transform:none}
+.va-bubble strong{display:block;color:#067ca9;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+
+/* ═══ BIG panel — standard chatbot size (380 × 600) ═════════════ */
+.va-panel{
+  position:fixed;left:18px;bottom:100px;
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  height: min(600px, calc(100vh - 140px));
+  z-index:2147482999;
+  display:flex;flex-direction:column;
+  opacity:0;transform:translateY(22px) scale(.96);
+  pointer-events:none;
+  transition:opacity .35s cubic-bezier(.2,.8,.2,1),
+             transform .35s cubic-bezier(.2,.8,.2,1);
+}
+.va-panel.open{opacity:1;transform:none;pointer-events:auto}
+
+/* HERO — transparent strip */
+.va-hero{
+  position:relative;
+  height:var(--hero-h);
+  flex:0 0 var(--hero-h);
+  background:transparent;
+  border:0;
+  box-shadow:none;
+  overflow:visible;
+  pointer-events:none;
+  display:flex;align-items:flex-end;justify-content:center;
+}
+.va-hero-inner{
+  position:relative;
+  width:100%;height:100%;
+  pointer-events:none;
+  display:flex;align-items:flex-end;justify-content:center;
+}
+.va-big{
+  position:absolute;
+  bottom:-6px;left:50%;
+  width:230px;height:200px;
+  transform:translateX(-50%) translateY(30px) scale(.3);
+  transform-origin:50% 100%;
+  opacity:0;
+  transition:transform .55s cubic-bezier(.2,.9,.25,1.15),
+             opacity .4s ease;
+  pointer-events:auto;
+  filter:drop-shadow(0 14px 18px rgba(0,30,55,.22));
+  cursor:pointer;
+}
+.va-panel.open .va-big{
+  transform:translateX(-50%) translateY(0) scale(1);
+  opacity:1;
+}
+.va-big svg{width:100%;height:100%;display:block}
+
+.va-stop{
+  position:absolute;top:8px;right:8px;
+  width:38px;height:38px;border-radius:50%;
+  border:1px solid rgba(255,80,80,.55);
+  background:rgba(255,255,255,.92);
+  color:#c02626;font-weight:800;font-size:14px;
+  display:none;align-items:center;justify-content:center;
+  box-shadow:0 6px 18px rgba(0,0,0,.18);
+  pointer-events:auto;cursor:pointer;transition:transform .2s ease;
+}
+.va-stop.show{display:flex}
+.va-stop:hover{transform:scale(1.08)}
+
+.va-status{
+  position:absolute;top:8px;left:8px;
+  padding:5px 11px;border-radius:99px;
+  background:rgba(255,255,255,.92);
+  border:1px solid rgba(8,207,255,.35);
+  color:#075a7c;font-size:11px;font-weight:700;
+  box-shadow:0 6px 18px rgba(0,0,0,.1);
+  opacity:0;transform:translateY(-4px);
+  transition:.25s ease;pointer-events:none;
+}
+.va-status.show{opacity:1;transform:none}
+
+/* DARK BODY */
+.va-body{
+  flex:1 1 auto;min-height:0;
+  background:var(--panel);color:#effaff;
+  border:1px solid rgba(86,239,255,.22);
+  border-radius:28px;
+  box-shadow:0 30px 100px rgba(0,0,0,.42);
+  backdrop-filter:blur(18px);
+  display:flex;flex-direction:column;overflow:hidden;
+  position:relative;
+}
+.va-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.09)}
+.va-head .dot{width:11px;height:11px;border-radius:50%;background:#22d36b;box-shadow:0 0 15px #22d36b}
+.va-head h2{font-size:15px;margin:0;flex:1}
+.va-head small{display:block;color:#91afbd;font-size:10px}
+.va-iconbtn{width:34px;height:34px;border-radius:11px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:white;display:grid;place-items:center;font-size:14px}
+.va-iconbtn:hover{background:rgba(86,239,255,.14);border-color:rgba(86,239,255,.4)}
+
+.va-chat{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:11px;scrollbar-width:thin;scrollbar-color:rgba(86,239,255,.4) transparent}
+.va-chat::-webkit-scrollbar{width:6px}
+.va-chat::-webkit-scrollbar-thumb{background:rgba(86,239,255,.3);border-radius:3px}
+.msg{max-width:88%;padding:11px 13px;border-radius:16px;font-size:13px;line-height:1.5;word-wrap:break-word;position:relative}
+.msg.bot{align-self:flex-start;background:rgba(255,255,255,.08);border-top-left-radius:5px}
+.msg.user{align-self:flex-end;background:#08aee0;color:#fff;border-top-right-radius:5px}
+.msg.tool{align-self:flex-start;background:rgba(34,211,107,.12);border:1px dashed rgba(34,211,107,.4);color:#b7f5cf;font-size:12px;font-style:italic}
+.msg a{color:#56efff;text-decoration:underline}
+.msg-actions{display:flex;gap:6px;margin-top:8px;opacity:0;transition:opacity .2s ease}
+.msg:hover .msg-actions, .msg:focus-within .msg-actions{opacity:1}
+.msg-actions button{
+  font-size:10.5px;padding:3px 8px;border-radius:8px;
+  border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);
+  color:#c7eaf2;cursor:pointer;
+}
+.msg-actions button:hover{background:rgba(86,239,255,.14);border-color:rgba(86,239,255,.4);color:#fff}
+.msg.user .msg-actions button{border-color:rgba(255,255,255,.3);color:#eaf7ff}
+
+.typing{display:inline-flex;gap:4px;align-items:center;height:14px}
+.typing span{width:6px;height:6px;border-radius:50%;background:#56efff;opacity:.35;animation:typingDot 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.18s}
+.typing span:nth-child(3){animation-delay:.36s}
+@keyframes typingDot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+
+.va-captions{
+  display:none;padding:8px 16px;
+  background:rgba(0,0,0,.4);
+  border-top:1px solid rgba(86,239,255,.18);
+  font-size:12.5px;line-height:1.4;color:#d9f6ff;min-height:34px;
+}
+.va-captions.on{display:block}
+.va-captions b{color:#56efff;font-weight:700;margin-right:6px;text-transform:uppercase;font-size:10px;letter-spacing:.08em}
+.va-captions .cap-current{color:#fff;background:rgba(86,239,255,.14);border-radius:4px;padding:0 3px}
+.va-captions .cap-done{color:#9fc6d3}
+
+.va-sign{display:none;position:relative;margin:0 16px 12px;border:1px solid rgba(86,239,255,.2);border-radius:18px;background:linear-gradient(135deg,rgba(9,35,60,.95),rgba(6,50,70,.95));min-height:140px;align-items:center;justify-content:center;overflow:hidden}
+.va-sign.on{display:flex}
+.sign-stage{font-size:64px;animation:signMove 1.2s ease-in-out infinite}
+@keyframes signMove{0%,100%{transform:translateY(6px) rotate(-3deg)}50%{transform:translateY(-6px) rotate(3deg)}}
+.sign-caption{position:absolute;bottom:8px;left:10px;right:10px;text-align:center;font-size:11px;color:#bdeff8}
+
+/* Input row */
+.va-inputrow{padding:10px;border-top:1px solid rgba(255,255,255,.08);display:flex;gap:7px;align-items:center}
+.va-inputrow textarea{flex:1;resize:none;min-height:43px;max-height:100px;border-radius:14px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.07);color:white;padding:11px;outline:none;line-height:1.35}
+.va-inputrow textarea:focus{border-color:#56efff;box-shadow:0 0 0 3px rgba(86,239,255,.1)}
+.va-inputrow textarea::placeholder{color:#7d95a5}
+.va-inputwrap{flex:1;position:relative;display:flex;flex-direction:column;gap:4px}
+.va-inputhint{font-size:10px;color:#7d95a5;text-align:right;height:0;overflow:hidden;transition:height .2s ease}
+.va-inputhint.on{height:14px}
+
+/* Mic, Read, Send */
+.va-mic, .va-read, .va-send{
+  min-width:44px;height:44px;border:0;border-radius:14px;
+  display:grid;place-items:center;padding:0 10px;font-size:14px;
+  font-weight:800;transition:all .2s ease;
+  position:relative;
+}
+.va-send{background:#08aee0;color:#fff;box-shadow:0 4px 14px rgba(8,174,224,.35);}
+.va-send:hover:not(:disabled){background:#0bbcf0;transform:translateY(-1px)}
+.va-send:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+
+.va-mic{background:rgba(255,255,255,.08);color:#8aa5b8;border:1px solid rgba(255,255,255,.12);}
+.va-mic:hover{background:rgba(255,255,255,.14);color:#dfefff}
+.va-mic.armed{background:rgba(34,211,107,.16);color:#5feb9a;border-color:rgba(34,211,107,.55);box-shadow:0 0 0 1px rgba(34,211,107,.35) inset, 0 0 14px rgba(34,211,107,.35);}
+.va-mic.recording{background:#e04242;color:#fff;border-color:#ff6d6d;animation:micPulse 1.1s ease-in-out infinite;}
+@keyframes micPulse{0%,100%{box-shadow:0 0 0 0 rgba(224,66,66,.6)}50%{box-shadow:0 0 0 10px rgba(224,66,66,0)}}
+.va-mic.recording::after{content:'';position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:#fff;animation:liveDot 1s ease-in-out infinite;}
+@keyframes liveDot{0%,100%{opacity:1}50%{opacity:.35}}
+.va-mic:disabled{opacity:.45;cursor:not-allowed}
+.va-mic-time{
+  position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);
+  font-size:10px;color:#ff8a8a;font-weight:700;
+  opacity:0;transition:opacity .2s ease;
+  pointer-events:none;white-space:nowrap;
+}
+.va-mic.recording .va-mic-time{opacity:1}
+
+.va-read{background:rgba(255,255,255,.08);color:#8aa5b8;border:1px solid rgba(255,255,255,.12);}
+.va-read:hover{background:rgba(255,255,255,.14);color:#dfefff}
+.va-read.on{background:rgba(34,211,107,.18);color:#5feb9a;border-color:rgba(34,211,107,.55);box-shadow:0 0 0 1px rgba(34,211,107,.35) inset, 0 0 14px rgba(34,211,107,.35);}
+
+.va-footer{padding:6px 13px 12px;display:flex;gap:6px;flex-wrap:wrap}
+.va-chip{font-size:10.5px;border-radius:99px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.05);color:#c7eaf2;padding:6px 10px;transition:.2s}
+.va-chip:hover{background:rgba(86,239,255,.14);border-color:rgba(86,239,255,.4);color:#fff}
+
+.va-settings{position:absolute;left:0;right:0;bottom:0;top:0;background:rgba(4,17,29,.98);padding:17px;display:none;overflow:auto;border-radius:28px;z-index:5}
+.va-settings.on{display:block}
+.va-settings h3{margin:0 0 6px;font-size:15px}
+.va-settings p.note{color:#91afbd;font-size:12px;margin:0 0 12px}
+.setting{padding:12px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.setting label{display:flex;justify-content:space-between;gap:10px;font-size:13px;align-items:center}
+.setting small{display:block;color:#91afbd;margin-top:5px;font-size:10.5px;line-height:1.35}
+.switch{appearance:none;width:43px;height:24px;border-radius:99px;background:#294253;position:relative;outline:none;flex-shrink:0}
+.switch:checked{background:#08aee0}
+.switch:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;border-radius:50%;background:white;transition:.2s}
+.switch:checked:before{transform:translateX(19px)}
+.sel-input{width:100%;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.13);color:#fff;font-size:12.5px;margin-top:6px}
+.sel-input option{background:#06111d;color:#fff}
+.range-row{display:flex;align-items:center;gap:10px;margin-top:6px}
+.range-row input[type=range]{flex:1}
+.range-row span{font-size:11px;color:#91afbd;min-width:34px;text-align:right}
+.va-back{margin-top:14px;width:100%;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font-weight:700}
+
+.va-shortcuts{
+  position:absolute;top:8px;right:52px;
+  background:rgba(0,0,0,.85);color:#d9f6ff;
+  border:1px solid rgba(86,239,255,.3);border-radius:12px;
+  padding:10px 12px;font-size:11.5px;line-height:1.6;
+  max-width:230px;z-index:6;display:none;
+}
+.va-shortcuts.on{display:block}
+.va-shortcuts b{color:#56efff}
+kbd{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:4px;padding:1px 5px;font-family:monospace;font-size:10.5px}
+
+body.va-high-contrast{filter:contrast(1.18)}
+body.va-high-contrast .va-body{background:#000;border-color:#fff}
+body.va-high-contrast .va-captions{background:#000;color:#fff}
+body.va-reduced-motion *{animation:none!important;transition:none!important}
+body.va-large-text .va-body{font-size:1.14em}
+body.va-large-text .msg{font-size:14.5px}
+
+@media(max-width:520px){
+  #viora-assistant{left:10px;bottom:88px}
+  .va-panel{
+    left:8px;bottom:88px;
+    width:calc(100vw - 16px);
+    height:min(560px, calc(100vh - 100px));
+  }
+  .va-body{border-radius:22px}
+  .va-bubble{left:80%;bottom:72%;max-width:210px}
+  :root{--hero-h:110px; --avatar-img-size:20px;}
+  .va-big{width:130px;height:165px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.va-big.speaking .mouth{animation:none}
+.va-big.explaining .hand-right{animation:thumb 1.4s ease-in-out infinite}
+.va-big.explaining .hand-left{animation:wave 1.8s ease-in-out infinite}
+.va-big.idle .mouth{animation:smile 4s ease-in-out infinite}
+.va-big.thinking .antenna{animation:antenna 1s ease-in-out infinite}
+.va-big.thinking .eye{animation:think 1.2s ease-in-out infinite}
+@keyframes think{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.7)}}
+
+@keyframes vioraBounce{
+  0%   {transform:translate(-50%,0) scale(1)}
+  25%  {transform:translate(-50%,-10px) scale(1.05)}
+  50%  {transform:translate(-50%,0) scale(.96)}
+  75%  {transform:translate(-50%,-4px) scale(1.02)}
+  100% {transform:translate(-50%,0) scale(1)}
+}
+.va-big.bouncing{animation: vioraBounce .6s cubic-bezier(.3,.7,.4,1.3);}
+
+@keyframes vioraMiniBounce{
+  0%   {transform:translateY(0) scale(1)}
+  25%  {transform:translateY(-8px) scale(1.05)}
+  50%  {transform:translateY(0) scale(.96)}
+  75%  {transform:translateY(-3px) scale(1.02)}
+  100% {transform:translateY(0) scale(1)}
+}
+.va-avatar.bouncing{animation: vioraMiniBounce .6s cubic-bezier(.3,.7,.4,1.3);}
+
+/* ═══ FIX: ensure input row + footer chips are always visible ═══ */
+
+/* The body must be a proper flex column that respects the panel height */
+.va-body {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+  height: 100% !important;
+}
+
+/* Chat area shrinks to make room for input + footer — never pushes them out */
+.va-chat {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+}
+
+/* Input row and footer chips NEVER shrink */
+.va-inputrow {
+  flex: 0 0 auto !important;
+  flex-shrink: 0 !important;
+}
+.va-footer {
+  flex: 0 0 auto !important;
+  flex-shrink: 0 !important;
+  padding-bottom: 14px !important;   /* breathing room above the rounded edge */
+}
+
+/* Input row: prevent the textarea hint from pushing buttons off */
+.va-inputwrap {
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+.va-inputrow textarea {
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+/* Mic / Read / Send must always be visible and same size */
+.va-mic, .va-read, .va-send {
+  flex: 0 0 auto !important;
+  min-width: 44px !important;
+  width: 44px !important;
+  height: 44px !important;
+}
+
+/* The panel itself must respect viewport height */
+.va-panel {
+  max-height: calc(100vh - 130px) !important;
+  height: min(600px, calc(100vh - 130px)) !important;
+}
+
+/* On mobile, tighter */
+@media (max-width: 520px) {
+  .va-panel {
+    height: min(600px, calc(100vh - 100px)) !important;
+    max-height: calc(100vh - 100px) !important;
+  }
+  .va-mic, .va-read, .va-send {
+    min-width: 40px !important;
+    width: 40px !important;
+    height: 40px !important;
+  }
+  .va-footer {
+    padding: 4px 8px 10px !important;
+    gap: 4px !important;
+  }
+}
+@media (max-width: 520px){
+  #shortcutsBtn,
+  #settingsBtn,
+  #newSessionBtn{
+    display: none !important;
+  }
+  /* #closeBtn stays visible */
+}
+.msg.va-suggestions {
+  background: transparent;
+  box-shadow: none;
+  padding: 4px 0 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.msg.va-suggestions .va-chip {
+  font-size: 12px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.va-mic.recording {
+  box-shadow: 0 0 0 calc(4px + var(--mic-level, 0) * 0.15px)
+              rgba(224, 66, 66, calc(0.15 + var(--mic-level, 0) / 200));
+}
+.msg.bot.streaming::after {
+  content: '▋';
+  display: inline-block;
+  margin-left: 3px;
+  color: #4ef1ff;
+  animation: va-cursor-blink 1s infinite;
+}
+@keyframes va-cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}

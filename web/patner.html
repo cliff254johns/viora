@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0" />
+<meta name="theme-color" content="#060913" />
+<title>Viora Partner Performance</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<!-- PWA: manifest with correct start_url (root-relative, works from /v6.html) -->
+<link rel="manifest" href="/manifest.json">
+      <!-- Favicons + PWA icons — all point to viora.png -->
+    <link rel="icon" type="image/png" href="https://viora.co.ke/viora.png">
+    <link rel="shortcut icon" type="image/png" href="https://viora.co.ke/viora.png">
+    <link rel="apple-touch-icon" href="https://viora.co.ke/viora.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://viora.co.ke/viora.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="https://viora.co.ke/viora.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="https://viora.co.ke/viora.png">
+    <link rel="mask-icon" href="https://viora.co.ke/viora.png" color="#00d2ff">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="msapplication-TileImage" content="https://viora.co.ke/viora.png">
+    <meta name="msapplication-TileColor" content="#070a13">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="VIORA">
+    <meta name="application-name" content="VIORA">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { darkMode: 'class', theme: { extend: {
+    fontFamily: { display: ['"Space Grotesk"','ui-sans-serif'], body: ['Inter','ui-sans-serif'] },
+    keyframes: {
+      floaty: { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-6px)' } },
+      fadeUp: { '0%': { opacity: 0, transform: 'translateY(14px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
+      slideUp: { '0%': { opacity: 0, transform: 'translateY(24px) scale(.96)' }, '100%': { opacity: 1, transform: 'translateY(0) scale(1)' } },
+      pulsePill: { '0%,100%': { opacity: 1 }, '50%': { opacity: .55 } },
+      sheetUp: { '0%': { transform: 'translateY(100%)' }, '100%': { transform: 'translateY(0)' } }
+    },
+    animation: {
+      floaty: 'floaty 4s ease-in-out infinite',
+      fadeUp: 'fadeUp .45s cubic-bezier(.22,1,.36,1) both',
+      slideUp: 'slideUp .3s cubic-bezier(.22,1,.36,1) both',
+      sheetUp: 'sheetUp .3s cubic-bezier(.22,1,.36,1) both'
+    }
+  }}};
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+ 
+ <link rel="stylesheet" href="/mainPartner/patner.css" />
+
+</head>
+
+<body class="text-slate-100 dark:text-slate-100">
+<!-- ═══════════════════════════════════════════════════════════
+     VIORA PRELOADER
+     The animated V logo lockup. Covers the page until ready.
+     ═══════════════════════════════════════════════════════════ -->
+<style>
+  /* Only applies while the preloader exists on the page */
+  #vioraPreloader {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #05060a;
+    background-image: radial-gradient(ellipse at 50% 30%, #10131c 0%, #05060a 70%);
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+    opacity: 1;
+    visibility: visible;
+    overflow: hidden;
+  }
+  #vioraPreloader.viora-preloader-hide {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  #vioraPreloader .viora-lockup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(28px, 5vw, 48px);
+    width: min(92vw, 640px);
+    position: relative;
+  }
+
+  /* Ambient glow — scoped to the preloader */
+  #vioraPreloader .viora-lockup::before {
+    content: '';
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    width: 70vw;
+    height: 70vw;
+    max-width: 720px;
+    max-height: 720px;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(60, 90, 160, 0.16) 0%, transparent 62%);
+    pointer-events: none;
+    z-index: -1;
+    filter: blur(46px);
+    animation: ambient-pulse 6s ease-in-out infinite;
+  }
+  @keyframes ambient-pulse {
+    0%, 100% { opacity: 0.55; }
+    50%      { opacity: 1; }
+  }
+
+  /* ─── The silver V monogram ─── */
+  #vioraPreloader .v-mark {
+    width: min(44vw, 260px);
+    height: auto;
+    display: block;
+    filter:
+      drop-shadow(0 22px 36px rgba(0, 0, 0, 0.85))
+      drop-shadow(0 8px 14px rgba(0, 0, 0, 0.55));
+    animation: mark-in 1s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  @keyframes mark-in {
+    from { opacity: 0; transform: scale(0.88) translateY(-10px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  #vioraPreloader .v-mark .v-shape {
+    fill: url(#silverBrush);
+    stroke: url(#silverEdge);
+    stroke-width: 1.2;
+    stroke-linejoin: round;
+  }
+  #vioraPreloader .v-mark .specular {
+    fill: url(#specularShine);
+    opacity: 0.55;
+    mix-blend-mode: screen;
+    pointer-events: none;
+  }
+
+  /* ─── The VIORA wordmark ─── */
+  #vioraPreloader .viora-wordmark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(4px, 1.4vw, 10px);
+    font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+    font-weight: 800;
+    font-size: clamp(2.6rem, 9.5vw, 5.4rem);
+    line-height: 1;
+    user-select: none;
+  }
+
+  #vioraPreloader .viora-wordmark .letter {
+    display: inline-block;
+    background: linear-gradient(180deg, #506a9a 0%, #2c3f68 22%, #152549 55%, #0a152e 82%, #040a18 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 1.4px #c8ccd2;
+    filter:
+      drop-shadow(0 2px 0 #7a8088)
+      drop-shadow(0 4px 0 #565c64)
+      drop-shadow(0 6px 0 #343a42)
+      drop-shadow(0 10px 14px rgba(0, 0, 0, 0.9))
+      drop-shadow(0 0 26px rgba(120, 140, 180, 0.14));
+    opacity: 0;
+    transform: translateY(16px);
+    animation: letter-in 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  #vioraPreloader .viora-wordmark .letter.silver {
+    background: linear-gradient(180deg,
+      #ffffff 0%, #eaecef 16%, #a8aeb6 38%, #7d848c 56%,
+      #b8bdc4 72%, #e0e3e8 88%, #8b9097 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 1.4px #ffffff;
+    filter:
+      drop-shadow(0 2px 0 #8a8f96)
+      drop-shadow(0 4px 0 #6a7078)
+      drop-shadow(0 6px 0 #454a51)
+      drop-shadow(0 10px 14px rgba(0, 0, 0, 0.85))
+      drop-shadow(0 0 30px rgba(200, 220, 255, 0.18));
+  }
+
+  #vioraPreloader .viora-wordmark .letter:nth-child(1) { animation-delay: 0.35s; }
+  #vioraPreloader .viora-wordmark .letter:nth-child(2) { animation-delay: 0.45s; }
+  #vioraPreloader .viora-wordmark .letter:nth-child(3) { animation-delay: 0.55s; }
+  #vioraPreloader .viora-wordmark .letter:nth-child(4) { animation-delay: 0.65s; }
+  #vioraPreloader .viora-wordmark .letter:nth-child(5) { animation-delay: 0.75s; }
+
+  @keyframes letter-in {
+    to { opacity: 1; transform: none; }
+  }
+
+  /* ─── The tagline ─── */
+  #vioraPreloader .tagline {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-weight: 500;
+    font-size: clamp(0.9rem, 2.5vw, 1.4rem);
+    letter-spacing: clamp(1px, 0.35vw, 3.2px);
+    color: #c8ccd2;
+    text-align: center;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.06);
+    opacity: 0;
+    transform: translateY(10px);
+    animation: tagline-in 0.8s 1.1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+  @keyframes tagline-in {
+    to { opacity: 1; transform: none; }
+  }
+
+  /* ─── Mobile ─── */
+  @media (max-width: 480px) {
+    #vioraPreloader .viora-lockup { gap: 34px; }
+    #vioraPreloader .v-mark { width: min(52vw, 180px); }
+  }
+
+  /* ─── Accessibility ─── */
+  @media (prefers-reduced-motion: reduce) {
+    #vioraPreloader .v-mark,
+    #vioraPreloader .viora-wordmark .letter,
+    #vioraPreloader .tagline,
+    #vioraPreloader .viora-lockup::before {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  }
+</style>
+
+<div id="vioraPreloader" role="status" aria-live="polite" aria-label="Loading VIORA">
+  <div class="viora-lockup">
+
+    <svg class="v-mark" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-label="V">
+      <defs>
+        <linearGradient id="silverBrush" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#ffffff"/>
+          <stop offset="16%"  stop-color="#eaecef"/>
+          <stop offset="38%"  stop-color="#a8aeb6"/>
+          <stop offset="56%"  stop-color="#7d848c"/>
+          <stop offset="72%"  stop-color="#b8bdc4"/>
+          <stop offset="88%"  stop-color="#e0e3e8"/>
+          <stop offset="100%" stop-color="#8b9097"/>
+        </linearGradient>
+        <linearGradient id="silverEdge" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#ffffff"/>
+          <stop offset="50%"  stop-color="#5a6068"/>
+          <stop offset="100%" stop-color="#2e3338"/>
+        </linearGradient>
+        <linearGradient id="specularShine" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.95"/>
+          <stop offset="45%"  stop-color="#ffffff" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+
+      <path class="v-shape" d="
+        M 30 40
+        L 120 40
+        L 150 200
+        L 180 40
+        L 270 40
+        L 165 265
+        L 135 265
+        Z" />
+
+      <path class="specular" d="M 30 40 L 120 40 L 138 120 L 123 120 Z" />
+      <path class="specular" d="M 180 40 L 270 40 L 255 120 L 240 120 Z" />
+    </svg>
+
+    <div class="viora-wordmark" aria-label="VIORA">
+      <span class="letter">V</span>
+      <span class="letter">I</span>
+      <span class="letter silver">O</span>
+      <span class="letter">R</span>
+      <span class="letter">A</span>
+    </div>
+
+    <div class="tagline">Explore. Discover. Belong.</div>
+
+  </div>
+</div>
+
+
+<script>
+(function () {
+  'use strict';
+
+  var preloader = document.getElementById('vioraPreloader');
+  if (!preloader) return;
+
+  // ─── Timing configuration ───
+  // Full animation: V (1.10s) + VIORA (1.50s) + tagline (2.75s) = 2.75s
+  // Add a small pause after it settles so the user can absorb it.
+  var MIN_VISIBLE_MS = 3000;   // 3.0 seconds — guaranteed full animation + pause
+  var FADE_OUT_MS    = 700;    // matches the CSS fade duration
+  var SAFETY_MAX_MS  = 8000;   // never stay longer than this, whatever happens
+
+  var startTime = Date.now();
+  var hidden = false;
+  var pendingHide = false;
+
+  function doHide() {
+    if (hidden) return;
+    hidden = true;
+    preloader.classList.add('viora-preloader-hide');
+    setTimeout(function () {
+      if (preloader && preloader.parentNode) preloader.parentNode.removeChild(preloader);
+    }, FADE_OUT_MS);
+  }
+
+  // Public API — called by app code, load event, or safety timer.
+  // Defers the real hide until the minimum visible time has elapsed.
+  function hide() {
+    if (hidden || pendingHide) return;
+    var elapsed = Date.now() - startTime;
+    var remaining = MIN_VISIBLE_MS - elapsed;
+    if (remaining <= 0) {
+      doHide();
+    } else {
+      pendingHide = true;
+      setTimeout(doHide, remaining);
+    }
+  }
+
+  // Hide when the page finishes loading
+  if (document.readyState === 'complete') {
+    hide();
+  } else {
+    window.addEventListener('load', hide);
+  }
+
+  // Safety: force-hide if something goes wrong
+  setTimeout(function () {
+    if (!hidden) doHide();
+  }, SAFETY_MAX_MS);
+
+  // Expose to app code
+  window.vioraHidePreloader = hide;
+})();
+</script>
+<!-- ═══ END VIORA PRELOADER ═══ -->
+
+<div id="authScreen" class="fixed inset-0 z-[80] flex items-center justify-center p-4">
+  <div class="w-full max-w-[440px] rounded-[26px] p-8 sm:p-10 glass shadow-2xl animate-fadeUp">
+    <div class="flex items-center gap-3.5 mb-7">
+      <div class="w-14 h-14 rounded-2xl grid place-items-center text-2xl font-bold text-white shadow-lg shadow-sky-500/40" style="background:linear-gradient(135deg,#38bdf8,#a855f7)">⧉</div>
+      <div><h1 class="font-display text-xl font-bold text-white">Viora <span class="text-sky-400">Performance</span></h1>
+        <p class="text-[11px] uppercase tracking-[1.4px] text-slate-500 mt-0.5">v7.3</p></div>
+    </div>
+    <div class="flex gap-1.5 p-1 rounded-2xl bg-slate-900/60 border border-white/5 mb-6">
+      <button id="tabSignIn" class="flex-1 py-2.5 rounded-xl text-[13px] font-semibold transition-all bg-gradient-to-r from-sky-500 to-violet-600 text-white">Sign In</button>
+      <button id="tabSignUp" class="flex-1 py-2.5 rounded-xl text-[13px] font-semibold text-slate-400 transition-all hover:text-white">Create Account</button>
+    </div>
+    <div class="space-y-4">
+      <div id="nameField" class="hidden">
+        <label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Display Name</label>
+        <input id="authName" class="field" placeholder="e.g. Alex" autocomplete="name" /></div>
+      <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Email</label>
+        <input id="authEmail" type="email" class="field" placeholder="you@example.com" autocomplete="email" /></div>
+      <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Password</label>
+        <input id="authPassword" type="password" class="field" placeholder="••••••••" autocomplete="current-password" /></div>
+      <button id="authBtn" class="w-full py-3.5 rounded-xl font-display font-bold text-[15px] text-white shadow-lg shadow-sky-500/35 transition-all hover:-translate-y-0.5" style="background:linear-gradient(135deg,#38bdf8,#7c3aed)">
+        <i class="fa-solid fa-arrow-right-to-bracket mr-2"></i><span id="authBtnText">Sign In</span></button>
+    </div>
+    <div class="mt-7 pt-5 border-t border-white/10 text-[11.5px] leading-relaxed text-slate-500">
+      <strong class="text-slate-400">Viora Track.</strong> One shared workspace for tasks, goals, finances, learning and play.
+    </div>
+  </div>
+</div>
+
+<div id="desktopShell" class="hidden">
+  <div class="flex min-h-screen">
+    <div id="backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 hidden lg:hidden"></div>
+
+    <aside id="sidebar" class="fixed md:sticky top-0 left-0 z-50 h-screen w-[260px] md:w-[72px] lg:w-[260px] shrink-0 -translate-x-full md:translate-x-0 transition-all duration-300 bg-[#050914]/95 md:bg-[#050914]/90 backdrop-blur-xl border-r border-white/5 flex flex-col overflow-hidden">
+      <div class="px-4 pt-6 pb-5 border-b border-white/5">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-xl grid place-items-center text-lg font-bold text-white shadow-lg shadow-sky-500/30 shrink-0" style="background:linear-gradient(135deg,#38bdf8,#a855f7)">⧉</div>
+          <div class="md:hidden lg:block">
+            <div class="font-display text-[16px] font-bold text-white leading-none">Viora <span class="text-sky-400">Performance</span></div>
+            <div class="text-[10px] uppercase tracking-[1.3px] text-sky-400/80 mt-1">v7.3</div>
+          </div>
+        </div>
+      </div>
+      <nav class="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
+        <p class="px-3 pt-2 pb-1.5 text-[9.5px] font-bold uppercase tracking-[1.6px] text-slate-600 md:hidden lg:block">Overview</p>
+        <a data-tab="dashboard" class="nav-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-400 cursor-pointer md:justify-center lg:justify-start" title="Dashboard"><span class="nav-dot hidden lg:block"></span><i class="fa-solid fa-chart-pie w-4 text-center text-sky-400 shrink-0"></i><span class="md:hidden lg:inline">Dashboard</span></a>
+        <a data-tab="shared" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-400 cursor-pointer md:justify-center lg:justify-start" title="Shared"><span class="nav-dot hidden lg:block"></span><i class="fa-solid fa-users-viewfinder w-4 text-center text-violet-400 shrink-0"></i><span class="md:hidden lg:inline">Shared</span></a>
+        <a data-tab="assistant" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-400 cursor-pointer md:justify-center lg:justify-start" title="AI Chat"><span class="nav-dot hidden lg:block"></span><i class="fa-solid fa-robot w-4 text-center text-cyan-400 shrink-0"></i><span class="md:hidden lg:inline">AI Chat</span></a>
+        <a data-tab="automations" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-400 cursor-pointer md:justify-center lg:justify-start" title="Automations"><span class="nav-dot hidden lg:block"></span><i class="fa-solid fa-bolt w-4 text-center text-yellow-400 shrink-0"></i><span class="md:hidden lg:inline">Automations</span></a>
+        <p class="px-3 pt-4 pb-1.5 text-[9.5px] font-bold uppercase tracking-[1.6px] text-slate-600 md:hidden lg:block">My Space</p>
+        <a data-tab="activities" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-400 cursor-pointer md:justify-center lg:justify-start" title="Activities"><span class="nav-dot hidden lg:block"></span><i class="fa-solid fa-wand-magic-sparkles w-4 text-center text-fuchsia-400 shrink-0"></i><span class="md:hidden lg:inline">Activities</span></a>
+        <a data-tab="hourly" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-400 cursor-pointer md:justify-center lg:justify-start" title="Hourly"><span class="nav-dot hidden lg:block"></span><i class="fa-solid fa-clock-rotate-left w-4 text-center text-emerald-400 shrink-0"></i><span class="md:hidden lg:inline">Hourly</span></a>
+        <a data-tab="tasks" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-400 cursor-pointer md:justify-center lg:justify-start" title="Tasks"><span class="nav-dot hidden lg:block"></span><i class="fa-solid fa-list-check w-4 text-center text-emerald-400 shrink-0"></i><span class="md:hidden lg:inline">Tasks</span><span id="navTaskCount" class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30 md:hidden lg:inline">0</span></a>
+        <a data-tab="today" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-400 cursor-pointer md:justify-center lg:justify-start" title="To-Dos"><span class="nav-dot hidden lg:block"></span><i class="fa-solid fa-circle-check w-4 text-center text-amber-400 shrink-0"></i><span class="md:hidden lg:inline">To-Dos</span><span id="navTodoCount" class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 md:hidden lg:inline">0</span></a>
+        <a data-tab="schedule" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-400 cursor-pointer md:justify-center lg:justify-start" title="Schedule"><span class="nav-dot hidden lg:block"></span><i class="fa-regular fa-calendar-days w-4 text-center text-rose-400 shrink-0"></i><span class="md:hidden lg:inline">Schedule</span></a>
+        <a data-tab="vault" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-400 cursor-pointer md:justify-center lg:justify-start" title="Vault"><span class="nav-dot hidden lg:block"></span><i class="fa-solid fa-folder-open w-4 text-center text-cyan-400 shrink-0"></i><span class="md:hidden lg:inline">Vault</span><span id="navDocCount" class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 md:hidden lg:inline">0</span></a>
+        <p class="px-3 pt-4 pb-1.5 text-[9.5px] font-bold uppercase tracking-[1.6px] text-slate-600 md:hidden lg:block">Together</p>
+        <a data-tab="financials" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-400 cursor-pointer md:justify-center lg:justify-start" title="Financials"><span class="nav-dot hidden lg:block"></span><i class="fa-solid fa-coins w-4 text-center text-yellow-400 shrink-0"></i><span class="md:hidden lg:inline">Financials</span></a>
+        <a data-tab="goals" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-400 cursor-pointer md:justify-center lg:justify-start" title="Goals"><span class="nav-dot hidden lg:block"></span><i class="fa-solid fa-bullseye w-4 text-center text-orange-400 shrink-0"></i><span class="md:hidden lg:inline">Goals</span></a>
+        <a data-tab="skills" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-400 cursor-pointer md:justify-center lg:justify-start" title="Skills"><span class="nav-dot hidden lg:block"></span><i class="fa-solid fa-code-branch w-4 text-center text-indigo-400 shrink-0"></i><span class="md:hidden lg:inline">Skills</span></a>
+        <a data-tab="handoffs" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-400 cursor-pointer md:justify-center lg:justify-start" title="Handoffs"><span class="nav-dot hidden lg:block"></span><i class="fa-solid fa-arrows-rotate w-4 text-center text-teal-400 shrink-0"></i><span class="md:hidden lg:inline">Handoffs</span><span id="navHandoffCount" class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-500/15 text-teal-300 border border-teal-500/30 md:hidden lg:inline">0</span></a>
+        <a data-tab="games" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-400 cursor-pointer md:justify-center lg:justify-start" title="Play"><span class="nav-dot hidden lg:block"></span><i class="fa-solid fa-dice w-4 text-center text-pink-400 shrink-0"></i><span class="md:hidden lg:inline">Play Together</span></a>
+        <p class="px-3 pt-4 pb-1.5 text-[9.5px] font-bold uppercase tracking-[1.6px] text-slate-600 md:hidden lg:block">Account</p>
+        <a data-tab="history" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-400 cursor-pointer md:justify-center lg:justify-start" title="History"><span class="nav-dot hidden lg:block"></span><i class="fa-solid fa-clock-rotate-left w-4 text-center text-amber-400 shrink-0"></i><span class="md:hidden lg:inline">History</span><span id="navHistoryCount" class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 md:hidden lg:inline">0</span></a>
+        <a data-tab="profile" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-400 cursor-pointer md:justify-center lg:justify-start" title="Profile"><span class="nav-dot hidden lg:block"></span><i class="fa-solid fa-id-badge w-4 text-center text-fuchsia-400 shrink-0"></i><span class="md:hidden lg:inline">Profile</span></a>
+        <a data-tab="settings" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-400 cursor-pointer md:justify-center lg:justify-start" title="Settings"><span class="nav-dot hidden lg:block"></span><i class="fa-solid fa-sliders w-4 text-center text-slate-400 shrink-0"></i><span class="md:hidden lg:inline">Settings</span></a>
+      </nav>
+      <div class="px-3 pb-4 pt-3 border-t border-white/5 space-y-2">
+        <div id="partnerStrip" class="px-3 py-2.5 rounded-xl bg-white/[.03] border border-white/5 md:hidden lg:block"><div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span><span class="text-[10.5px] text-slate-500">No partner</span></div></div>
+        <button id="themeBtn" class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-[12px] font-medium text-slate-400 border border-white/5 bg-white/[.03] hover:bg-white/[.07]"><i class="fa-solid fa-moon"></i><span class="md:hidden lg:inline">Theme</span></button>
+        <button id="signOutBtn" class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-[12px] font-medium text-rose-300 border border-rose-500/20 bg-rose-500/[.08] hover:bg-rose-500/[.16]"><i class="fa-solid fa-right-from-bracket"></i><span class="md:hidden lg:inline">Sign Out</span></button>
+      </div>
+    </aside>
+
+    <main class="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 pb-24 pt-4">
+      <div id="syncBanner" class="online"><span class="pulse-dot"></span><span id="syncBannerText">Online — live sync active</span><button id="syncBannerBtn" style="display:none;">Retry</button></div>
+
+      <header class="flex items-center gap-3 flex-wrap mb-6">
+        <button id="menuBtn" class="md:hidden w-10 h-10 rounded-xl grid place-items-center glass text-slate-300"><i class="fa-solid fa-bars"></i></button>
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-full glass text-[11px] font-semibold text-sky-300"><span id="syncDot" class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span id="syncLabel">Live Sync</span></div>
+        <div class="ml-auto flex items-center gap-3">
+          <div style="position:relative;">
+            <button id="notifBell" class="w-10 h-10 rounded-full glass grid place-items-center text-slate-300 hover:text-sky-400 relative"><i class="fa-regular fa-bell"></i><span id="notifCount" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-rose-500 text-white text-[10px] font-bold grid place-items-center px-1">0</span></button>
+            <div id="notifDropdown" class="notif-dropdown">
+              <div class="notif-head">Notifications <button id="notifRefresh">Refresh</button></div>
+              <div class="notif-body" id="notifBody"></div>
+            </div>
+          </div>
+          <div id="clockChip" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full glass text-[11.5px] text-slate-300"><i class="fa-regular fa-clock text-sky-400"></i><span id="clockText">--:--</span></div>
+          <button data-tab="profile" class="nav-jump flex items-center gap-2.5 pl-1.5 pr-3.5 py-1.5 rounded-full glass hover:border-sky-400/40"><span class="avatar-ring"><span id="topAvatar" class="w-8 h-8 rounded-full grid place-items-center text-[13px] font-bold text-white overflow-hidden" style="background:linear-gradient(135deg,#38bdf8,#a855f7)">?</span></span><span class="text-left leading-tight hidden sm:block"><span id="topName" class="block text-[12.5px] font-semibold text-slate-200">Loading…</span><span class="block text-[10px] text-slate-500">Signed in</span></span></button>
+        </div>
+      </header>
+
+      <section id="panel-dashboard" class="tab-panel active">
+        <div class="flex items-end justify-between flex-wrap gap-3 mb-5">
+          <div><h2 class="font-display text-[26px] sm:text-[30px] font-bold text-white">Welcome back</h2>
+            <p class="text-[13px] text-slate-400 mt-1">Everything at a glance — tasks, money, learning, play.</p></div>
+          <div class="flex gap-2 flex-wrap">
+            <button id="weeklyReviewBtn" class="px-4 py-2 rounded-full font-semibold text-[12px] text-white" style="background:linear-gradient(135deg,#a855f7,#7c3aed)"><i class="fa-solid fa-book-open mr-1.5"></i> Week Review</button>
+            <button id="refreshBtn" class="px-4 py-2 rounded-full glass text-[12px] font-semibold text-slate-300 hover:text-white"><i class="fa-solid fa-rotate mr-1.5"></i> Refresh</button>
+          </div>
+        </div>
+        <div id="weeklyReviewCard" class="hidden rounded-2xl ai-glow p-5 mb-6"></div>
+        <div id="aiInsightCard" class="rounded-2xl ai-glow p-5 mb-6 hidden">
+          <div class="flex items-start gap-3">
+            <div class="w-9 h-9 rounded-xl grid place-items-center bg-gradient-to-br from-cyan-400 to-violet-500 text-white shrink-0"><i class="fa-solid fa-sparkles text-[14px]"></i></div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1"><span class="text-[10px] font-bold uppercase tracking-wider text-cyan-300">AI Coach Insight</span><span class="badge b-ai">Live</span></div>
+              <p id="aiInsightText" class="text-[13px] text-slate-300 leading-relaxed"></p></div>
+            <button id="aiInsightRefresh" class="w-8 h-8 rounded-lg glass grid place-items-center text-slate-400 hover:text-cyan-400"><i class="fa-solid fa-rotate text-[11px]"></i></button>
+          </div>
+        </div>
+        <div id="alertBannerContainer" class="mb-5"></div>
+        <div id="upcomingGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 mb-6"></div>
+        <div id="kpiGrid" class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5 mb-6"></div>
+
+        <div class="grid lg:grid-cols-2 gap-5 mb-6">
+          <div class="rounded-2xl p-5 glass card-3d">
+            <div class="flex items-center gap-2 mb-4"><i class="fa-solid fa-bolt text-sky-400"></i><h3 class="font-display text-[14px] font-bold text-slate-200 uppercase tracking-wider">Live Performance</h3></div>
+            <div id="metricBars" class="space-y-4"></div>
+          </div>
+          <div class="rounded-2xl p-5 glass card-3d">
+            <div class="flex items-center gap-2 mb-4"><i class="fa-solid fa-fire text-amber-400"></i><h3 class="font-display text-[14px] font-bold text-slate-200 uppercase tracking-wider">Today</h3></div>
+            <div id="todayGlance" class="space-y-3"></div>
+          </div>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-5 mb-5">
+          <div class="rounded-2xl p-5 glass card-3d">
+            <h3 class="font-display text-[13.5px] font-bold text-slate-300 uppercase tracking-wider mb-1"><i class="fa-solid fa-chart-pie text-sky-400 mr-1.5"></i> Task Status</h3>
+            <div class="h-[240px]"><canvas id="chartDonut"></canvas></div></div>
+          <div class="rounded-2xl p-5 glass card-3d">
+            <h3 class="font-display text-[13.5px] font-bold text-slate-300 uppercase tracking-wider mb-1"><i class="fa-solid fa-chart-column text-emerald-400 mr-1.5"></i> 7-Day Race</h3>
+            <div class="h-[240px]"><canvas id="chartBars"></canvas></div></div>
+          <div class="rounded-2xl p-5 glass card-3d lg:col-span-2">
+            <h3 class="font-display text-[13.5px] font-bold text-slate-300 uppercase tracking-wider mb-1"><i class="fa-solid fa-radar text-violet-400 mr-1.5"></i> Complete Life Radar — every area of your system</h3>
+            <p class="text-[11.5px] text-slate-500 mb-3">Tasks · To-dos · Goals · Skills · Finance · Schedule · Hourly · Activities</p>
+            <div class="h-[340px]"><canvas id="chartRadar"></canvas></div></div>
+          <div class="rounded-2xl p-5 glass card-3d">
+            <h3 class="font-display text-[13.5px] font-bold text-slate-300 uppercase tracking-wider mb-1"><i class="fa-solid fa-arrow-trend-up text-amber-400 mr-1.5"></i> 14-Day Momentum</h3>
+            <div class="h-[260px]"><canvas id="chartLine"></canvas></div></div>
+          <div class="rounded-2xl p-5 glass card-3d">
+            <h3 class="font-display text-[13.5px] font-bold text-slate-300 uppercase tracking-wider mb-1"><i class="fa-solid fa-bullseye text-orange-400 mr-1.5"></i> Goals Overview</h3>
+            <div class="h-[260px]"><canvas id="chartGoals"></canvas></div></div>
+          <div class="rounded-2xl p-5 glass card-3d">
+            <h3 class="font-display text-[13.5px] font-bold text-slate-300 uppercase tracking-wider mb-1"><i class="fa-solid fa-code-branch text-indigo-400 mr-1.5"></i> Skills Progress</h3>
+            <div class="h-[260px]"><canvas id="chartSkills"></canvas></div></div>
+          <div class="rounded-2xl p-5 glass card-3d">
+            <h3 class="font-display text-[13.5px] font-bold text-slate-300 uppercase tracking-wider mb-1"><i class="fa-solid fa-coins text-yellow-400 mr-1.5"></i> Financial Overview</h3>
+            <div class="h-[260px]"><canvas id="chartFinance"></canvas></div></div>
+        </div>
+
+        <div class="rounded-2xl glass card-3d overflow-hidden">
+          <div class="px-5 py-4 border-b border-white/5 flex items-center gap-2"><i class="fa-solid fa-wave-square text-sky-400"></i><h3 class="font-display text-[13.5px] font-bold text-slate-200 uppercase tracking-wider">Recent Activity</h3></div>
+          <div id="activityFeed" class="p-4 space-y-2.5 max-h-[380px] overflow-y-auto"></div></div>
+      </section>
+
+      <section id="panel-shared" class="tab-panel">
+        <h2 class="font-display text-[26px] sm:text-[30px] font-bold text-white mb-1">Shared Board</h2>
+        <p class="text-[13px] text-slate-400 mb-5">Side-by-side progress, real-time.</p>
+        <div id="sharedGrid" class="grid md:grid-cols-2 gap-5"></div>
+      </section>
+
+      <section id="panel-assistant" class="tab-panel">
+        <div class="mb-5"><h2 class="font-display text-[26px] sm:text-[30px] font-bold text-white">AI Assistant <span class="badge b-ai ml-2">GPT-OSS 120B</span></h2></div>
+        <div class="rounded-2xl glass card-3d overflow-hidden flex flex-col" style="height: calc(100vh - 260px); min-height: 480px;">
+          <div id="chatScroll" class="flex-1 overflow-y-auto p-5 space-y-4"></div>
+          <div class="border-t border-white/5 p-3">
+            <div id="chatQuick" class="flex flex-wrap gap-1.5 mb-2.5"></div>
+            <form id="chatForm" class="flex gap-2">
+              <input id="chatInput" class="field flex-1" placeholder="Ask Viora AI…" autocomplete="off" />
+              <button type="submit" class="px-5 rounded-xl font-semibold text-white shrink-0" style="background:linear-gradient(135deg,#38bdf8,#7c3aed)"><i class="fa-solid fa-paper-plane"></i></button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section id="panel-automations" class="tab-panel">
+        <div class="mb-5"><h2 class="font-display text-[26px] sm:text-[30px] font-bold text-white">AI Automations</h2></div>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          <div class="rounded-2xl glass card-3d p-5"><div class="w-11 h-11 rounded-xl grid place-items-center text-[18px] mb-3" style="background:linear-gradient(135deg,#38bdf8,#0284c7)">📅</div>
+            <h3 class="font-display font-bold text-[15px] text-white">Auto-Schedule</h3><p class="text-[12px] text-slate-400 mt-1 mb-3">AI fills your calendar.</p>
+            <button id="autoScheduleBtn" class="w-full py-2.5 rounded-lg font-semibold text-[12.5px] text-white" style="background:linear-gradient(135deg,#38bdf8,#0284c7)"><i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Generate</button></div>
+          <div class="rounded-2xl glass card-3d p-5"><div class="w-11 h-11 rounded-xl grid place-items-center text-[18px] mb-3" style="background:linear-gradient(135deg,#34d399,#059669)">🧩</div>
+            <h3 class="font-display font-bold text-[15px] text-white">Break Down Task</h3><p class="text-[12px] text-slate-400 mt-1 mb-3">Small steps from big tasks.</p>
+            <button id="breakdownBtn" class="w-full py-2.5 rounded-lg font-semibold text-[12.5px] text-white" style="background:linear-gradient(135deg,#34d399,#059669)"><i class="fa-solid fa-list-check mr-1.5"></i> Choose</button></div>
+          <div class="rounded-2xl glass card-3d p-5"><div class="w-11 h-11 rounded-xl grid place-items-center text-[18px] mb-3" style="background:linear-gradient(135deg,#fbbf24,#d97706)">☀️</div>
+            <h3 class="font-display font-bold text-[15px] text-white">Mood Booster</h3><p class="text-[12px] text-slate-400 mt-1 mb-3">Quick pick-me-ups.</p>
+            <button id="moodBoostBtn" class="w-full py-2.5 rounded-lg font-semibold text-[12.5px] text-white" style="background:linear-gradient(135deg,#fbbf24,#d97706)"><i class="fa-solid fa-face-smile mr-1.5"></i> Boost</button></div>
+          <div class="rounded-2xl glass card-3d p-5"><div class="w-11 h-11 rounded-xl grid place-items-center text-[18px] mb-3" style="background:linear-gradient(135deg,#a855f7,#7c3aed)">📓</div>
+            <h3 class="font-display font-bold text-[15px] text-white">Journal Prompt</h3><p class="text-[12px] text-slate-400 mt-1 mb-3">Daily reflection.</p>
+            <button id="journalBtn" class="w-full py-2.5 rounded-lg font-semibold text-[12.5px] text-white" style="background:linear-gradient(135deg,#a855f7,#7c3aed)"><i class="fa-solid fa-feather mr-1.5"></i> Prompt</button></div>
+          <div class="rounded-2xl glass card-3d p-5"><div class="w-11 h-11 rounded-xl grid place-items-center text-[18px] mb-3" style="background:linear-gradient(135deg,#fb7185,#e11d48)">📖</div>
+            <h3 class="font-display font-bold text-[15px] text-white">Week in Review</h3><p class="text-[12px] text-slate-400 mt-1 mb-3">Wins & challenges.</p>
+            <button id="weekReviewBtn2" class="w-full py-2.5 rounded-lg font-semibold text-[12.5px] text-white" style="background:linear-gradient(135deg,#fb7185,#e11d48)"><i class="fa-solid fa-chart-simple mr-1.5"></i> Generate</button></div>
+          <div class="rounded-2xl glass card-3d p-5"><div class="w-11 h-11 rounded-xl grid place-items-center text-[18px] mb-3" style="background:linear-gradient(135deg,#22d3ee,#0e7490)">🌿</div>
+            <h3 class="font-display font-bold text-[15px] text-white">Weekly Goals</h3><p class="text-[12px] text-slate-400 mt-1 mb-3">AI suggests goals.</p>
+            <button id="weeklyGoalsBtn" class="w-full py-2.5 rounded-lg font-semibold text-[12.5px] text-white" style="background:linear-gradient(135deg,#22d3ee,#0e7490)"><i class="fa-solid fa-bullseye mr-1.5"></i> Suggest</button></div>
+          <div class="rounded-2xl glass card-3d p-5"><div class="w-11 h-11 rounded-xl grid place-items-center text-[18px] mb-3" style="background:linear-gradient(135deg,#d946ef,#7c3aed)">🧠</div>
+            <h3 class="font-display font-bold text-[15px] text-white">Priority Advisor</h3><p class="text-[12px] text-slate-400 mt-1 mb-3">Re-ranks all pending items.</p>
+            <button id="priorityAdvisorBtn" class="w-full py-2.5 rounded-lg font-semibold text-[12.5px] text-white" style="background:linear-gradient(135deg,#d946ef,#7c3aed)"><i class="fa-solid fa-brain mr-1.5"></i> Analyze</button></div>
+        </div>
+        <div id="automationResult" class="hidden rounded-2xl ai-glow p-6 mb-5"></div>
+      </section>
+
+      <section id="panel-activities" class="tab-panel">
+        <div class="flex items-end justify-between flex-wrap gap-3 mb-5">
+          <div><h2 class="font-display text-[26px] sm:text-[30px] font-bold text-white">AI Daily Activities</h2>
+            <p class="text-[13px] text-slate-400 mt-1">Personalized hourly plan.</p></div>
+          <button id="genActivitiesBtn" class="px-5 py-2.5 rounded-full font-semibold text-[12.5px] text-white" style="background:linear-gradient(135deg,#d946ef,#7c3aed)"><i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Generate Plan</button>
+        </div>
+        <div class="rounded-2xl glass card-3d p-5 mb-5">
+          <div class="grid md:grid-cols-3 gap-3">
+            <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Hobbies</label><input id="actHobbies" class="field" placeholder="reading, hiking" /></div>
+            <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Mood</label>
+              <select id="actMood" class="field"><option value="energized">⚡ Energized</option><option value="neutral" selected>😐 Neutral</option><option value="tired">😴 Tired</option><option value="stressed">😰 Stressed</option><option value="happy">😄 Happy</option><option value="focused">🎯 Focused</option></select></div>
+            <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Hours</label><input id="actHours" class="field" value="6-22" /></div>
+          </div>
+          <div id="actAiStatus" class="mt-3 text-[12px] text-slate-500"></div>
+        </div>
+        <div id="dailyTheme" class="hidden rounded-2xl ai-glow p-4 mb-5"><div class="text-[10px] font-bold uppercase tracking-wider text-cyan-300 mb-1">Today's Theme</div><div id="dailyThemeText" class="font-display text-2xl font-bold text-white"></div></div>
+        <div id="activitiesList" class="space-y-3"></div>
+      </section>
+
+      <section id="panel-hourly" class="tab-panel">
+        <div class="mb-5"><h2 class="font-display text-[26px] sm:text-[30px] font-bold text-white">Hourly Tracker</h2></div>
+        <div class="subtabs mb-5" data-subgroup="hr"><div class="subtab active" data-subtab="hr-me">My Week</div><div class="subtab" data-subtab="hr-partner">Partner</div></div>
+        <div class="rounded-2xl glass card-3d p-5 mb-5">
+          <div class="flex items-center justify-between gap-3 mb-4 flex-wrap"><h3 class="font-display text-[14px] font-bold text-slate-200">Weekly Heatmap</h3></div>
+          <div id="hourlyGridWrap" class="overflow-x-auto"></div>
+        </div>
+        <div class="rounded-2xl glass card-3d p-5"><h3 class="font-display text-[14px] font-bold text-slate-200 mb-3">Today's Log</h3><div id="todayHourlyList" class="space-y-2"></div></div>
+      </section>
+
+      <section id="panel-tasks" class="tab-panel">
+        <div class="flex items-end justify-between flex-wrap gap-3 mb-5">
+          <div><h2 class="font-display text-[26px] sm:text-[30px] font-bold text-white">Tasks</h2>
+            <p class="text-[13px] text-slate-400 mt-1">Time · priority · countdown · photos.</p></div>
+          <div class="flex gap-2 flex-wrap">
+            <button id="prioritizeTasksBtn" class="px-4 py-2.5 rounded-full font-semibold text-[12px] text-white" style="background:linear-gradient(135deg,#d946ef,#7c3aed)"><i class="fa-solid fa-brain mr-1.5"></i> AI Prioritize</button>
+            <button id="addTaskBtn" class="px-5 py-2.5 rounded-full font-semibold text-[12.5px] text-white" style="background:linear-gradient(135deg,#38bdf8,#7c3aed)"><i class="fa-solid fa-plus mr-1.5"></i> New Task</button>
+          </div>
+        </div>
+        <div class="rounded-2xl glass p-4 mb-5 flex flex-wrap gap-3 items-center">
+          <div class="flex-1 min-w-[200px] flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-slate-950/50 border border-white/10"><i class="fa-solid fa-magnifying-glass text-sky-400 text-[13px]"></i>
+            <input id="taskSearch" class="bg-transparent border-none outline-none w-full text-[13.5px] text-slate-200 placeholder:text-slate-500" placeholder="Search tasks…" /></div>
+          <select id="taskFilter" class="field !w-auto !py-2.5 !rounded-full !text-[12.5px]">
+            <option value="all">All</option><option value="open">Open</option><option value="done">Done</option><option value="overdue">Overdue</option><option value="today">Due Today</option><option value="assigned">Assigned</option><option value="high">🔴 High</option><option value="medium">🟡 Medium</option><option value="low">🟢 Low</option>
+          </select>
+        </div>
+        <div id="taskList" class="grid md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+      </section>
+
+      <section id="panel-today" class="tab-panel">
+        <div class="flex items-end justify-between flex-wrap gap-3 mb-5">
+          <div><h2 class="font-display text-[26px] sm:text-[30px] font-bold text-white">Daily To-Dos</h2>
+            <p class="text-[13px] text-slate-400 mt-1" id="todayDateLabel">—</p></div>
+          <div class="flex gap-2">
+            <button id="prevDayBtn" class="w-10 h-10 rounded-full glass grid place-items-center text-slate-300"><i class="fa-solid fa-chevron-left"></i></button>
+            <button id="todayJumpBtn" class="px-4 h-10 rounded-full glass text-[12.5px] font-semibold text-slate-300">Today</button>
+            <button id="nextDayBtn" class="w-10 h-10 rounded-full glass grid place-items-center text-slate-300"><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+        <div id="journalCard" class="rounded-2xl ai-glow p-5 mb-5 hidden">
+          <div class="flex items-start gap-3">
+            <div class="w-9 h-9 rounded-xl grid place-items-center bg-gradient-to-br from-fuchsia-400 to-purple-600 text-white shrink-0"><i class="fa-solid fa-feather text-[14px]"></i></div>
+            <div class="flex-1"><div class="flex items-center gap-2 mb-1"><span class="text-[10px] font-bold uppercase tracking-wider text-fuchsia-300">Journal Prompt</span></div>
+              <p id="journalPromptText" class="text-[13.5px] text-slate-200 leading-relaxed"></p>
+              <p id="journalHintText" class="text-[11.5px] text-slate-500 mt-2"></p></div>
+          </div>
+        </div>
+        <div class="grid lg:grid-cols-[1.4fr_1fr] gap-5">
+          <div class="rounded-2xl glass card-3d overflow-hidden">
+            <div class="p-5 border-b border-white/5">
+              <form id="todoForm" class="space-y-2.5">
+                <input id="todoInput" class="field" placeholder="Add a to-do…" autocomplete="off" />
+                <div class="flex gap-2 flex-wrap">
+                  <input type="time" id="todoDueTime" class="field flex-1 min-w-[110px]" />
+                  <select id="todoPriority" class="field flex-1 min-w-[110px]">
+                    <option value="high">🔴 High</option><option value="medium" selected>🟡 Medium</option><option value="low">🟢 Low</option></select>
+                  <label class="flex items-center gap-2 px-3 rounded-xl bg-slate-950/50 border border-white/10 text-[11.5px] text-slate-400 cursor-pointer whitespace-nowrap"><input type="checkbox" id="todoRecurring" class="w-3.5 h-3.5 rounded" /> Repeat</label>
+                  <button type="submit" class="px-5 rounded-xl font-semibold text-[13px] text-white shrink-0" style="background:linear-gradient(135deg,#34d399,#059669)"><i class="fa-solid fa-plus"></i></button>
+                </div>
+              </form>
+            </div>
+            <div id="todoList" class="p-4 space-y-2 max-h-[520px] overflow-y-auto"></div>
+          </div>
+          <div class="space-y-5">
+            <div class="rounded-2xl glass card-3d p-5"><h3 class="font-display text-[13px] font-bold text-slate-300 uppercase tracking-wider mb-4">Completion</h3>
+              <div class="relative grid place-items-center"><div id="todoRing" class="text-[34px] font-display font-bold text-white">0%</div></div>
+              <div class="progress-shell mt-4"><div id="todoProgress" class="progress-fill fill-emerald" style="width:0%"></div></div>
+              <p id="todoSummary" class="text-[12px] text-slate-400 mt-3 text-center">0 of 0</p></div>
+            <div class="rounded-2xl glass card-3d p-5"><h3 class="font-display text-[13px] font-bold text-slate-300 uppercase tracking-wider mb-3">7-Day Streak</h3>
+              <div id="habitStrip" class="flex gap-1.5 justify-between"></div>
+              <p id="streakText" class="text-[12px] text-slate-400 mt-3 text-center">—</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="panel-schedule" class="tab-panel">
+        <div class="flex items-end justify-between flex-wrap gap-3 mb-5">
+          <div><h2 class="font-display text-[26px] sm:text-[30px] font-bold text-white">Schedule</h2></div>
+          <div class="flex gap-2 flex-wrap">
+            <button id="aiScheduleBtn" class="px-4 py-2 rounded-full font-semibold text-[12px] text-white" style="background:linear-gradient(135deg,#a855f7,#7c3aed)"><i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> AI Schedule</button>
+            <button id="addEventBtn" class="px-5 py-2.5 rounded-full font-semibold text-[12.5px] text-white" style="background:linear-gradient(135deg,#fb7185,#e11d48)"><i class="fa-solid fa-plus mr-1.5"></i> New Event</button>
+          </div>
+        </div>
+        <div id="scheduleList" class="space-y-3"></div>
+      </section>
+
+      <section id="panel-vault" class="tab-panel">
+        <div class="mb-5"><h2 class="font-display text-[26px] sm:text-[30px] font-bold text-white">Vault</h2>
+          <p class="text-[13px] text-slate-400 mt-1">Every upload syncs here automatically. Click any to preview.</p></div>
+        <div id="dropZone" class="rounded-2xl border-2 border-dashed border-white/15 bg-white/[.02] hover:border-sky-400/60 p-10 text-center cursor-pointer mb-6">
+          <i class="fa-solid fa-cloud-arrow-up text-[36px] text-sky-400"></i>
+          <p class="font-display font-bold text-slate-200 mt-3">Drop files or click</p>
+          <input type="file" id="fileInput" class="hidden" multiple /></div>
+        <div id="vaultGrid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+      </section>
+
+      <section id="panel-financials" class="tab-panel">
+        <div class="mb-5"><h2 class="font-display text-[26px] sm:text-[30px] font-bold text-white">Financials</h2></div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mb-6" id="finStats"></div>
+        <div class="subtabs mb-5" data-subgroup="fin">
+          <div class="subtab active" data-subtab="fin-expenses">Expenses</div>
+          <div class="subtab" data-subtab="fin-savings">Savings</div>
+          <div class="subtab" data-subtab="fin-subscriptions">Subs</div></div>
+        <div id="subpanel-fin-expenses" class="subpanel active">
+          <div class="flex justify-end mb-4"><button id="addExpenseBtn" class="px-5 py-2.5 rounded-full font-semibold text-[12.5px] text-white" style="background:linear-gradient(135deg,#fbbf24,#d97706)"><i class="fa-solid fa-plus mr-1.5"></i> Add Expense</button></div>
+          <div id="expensesList" class="space-y-3"></div></div>
+        <div id="subpanel-fin-savings" class="subpanel">
+          <div class="flex justify-end mb-4"><button id="addSavingsBtn" class="px-5 py-2.5 rounded-full font-semibold text-[12.5px] text-white" style="background:linear-gradient(135deg,#34d399,#059669)"><i class="fa-solid fa-plus mr-1.5"></i> Add Savings</button></div>
+          <div id="savingsList" class="grid md:grid-cols-2 gap-4"></div></div>
+        <div id="subpanel-fin-subscriptions" class="subpanel">
+          <div class="flex justify-end mb-4"><button id="addSubscriptionBtn" class="px-5 py-2.5 rounded-full font-semibold text-[12.5px] text-white" style="background:linear-gradient(135deg,#a855f7,#7c3aed)"><i class="fa-solid fa-plus mr-1.5"></i> Add Sub</button></div>
+          <div id="subscriptionsList" class="space-y-3"></div></div>
+      </section>
+
+      <section id="panel-goals" class="tab-panel">
+        <div class="flex items-end justify-between flex-wrap gap-3 mb-5">
+          <div><h2 class="font-display text-[26px] sm:text-[30px] font-bold text-white">Goals & OKRs</h2></div>
+          <div class="flex gap-2 flex-wrap">
+            <button id="prioritizeGoalsBtn" class="px-4 py-2.5 rounded-full font-semibold text-[12px] text-white" style="background:linear-gradient(135deg,#d946ef,#7c3aed)"><i class="fa-solid fa-brain mr-1.5"></i> AI Prioritize</button>
+            <button id="addGoalBtn" class="px-5 py-2.5 rounded-full font-semibold text-[12.5px] text-white" style="background:linear-gradient(135deg,#fb923c,#ea580c)"><i class="fa-solid fa-plus mr-1.5"></i> New Goal</button>
+          </div>
+        </div>
+        <div id="goalsGrid" class="grid md:grid-cols-2 gap-4"></div>
+      </section>
+
+      <section id="panel-skills" class="tab-panel">
+        <div class="flex items-end justify-between flex-wrap gap-3 mb-5">
+          <div><h2 class="font-display text-[26px] sm:text-[30px] font-bold text-white">Skill Tree</h2></div>
+          <button id="addSkillBtn" class="px-5 py-2.5 rounded-full font-semibold text-[12.5px] text-white" style="background:linear-gradient(135deg,#818cf8,#4f46e5)"><i class="fa-solid fa-plus mr-1.5"></i> New Skill</button>
+        </div>
+        <div id="skillsGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      </section>
+
+      <section id="panel-handoffs" class="tab-panel">
+        <div class="mb-5"><h2 class="font-display text-[26px] sm:text-[30px] font-bold text-white">Handoffs</h2></div>
+        <div class="subtabs mb-5" data-subgroup="hand">
+          <div class="subtab active" data-subtab="hand-inbox">Inbox (<span id="handInCount">0</span>)</div>
+          <div class="subtab" data-subtab="hand-outbox">Sent (<span id="handOutCount">0</span>)</div></div>
+        <div id="subpanel-hand-inbox" class="subpanel active space-y-3"></div>
+        <div id="subpanel-hand-outbox" class="subpanel space-y-3"></div>
+      </section>
+
+      <section id="panel-games" class="tab-panel">
+        <div class="mb-5"><h2 class="font-display text-[26px] sm:text-[30px] font-bold text-white">Play Together</h2></div>
+        <div class="subtabs mb-5" data-subgroup="game">
+          <div class="subtab active" data-subtab="game-lobby">Lobby</div><div class="subtab" data-subtab="game-ttt">Tic-Tac-Toe</div>
+          <div class="subtab" data-subtab="game-c4">Connect 4</div><div class="subtab" data-subtab="game-memory">Memory</div>
+          <div class="subtab" data-subtab="game-rps">RPS</div><div class="subtab" data-subtab="game-dice">Dice</div>
+          <div class="subtab" data-subtab="game-word">Word</div><div class="subtab" data-subtab="game-20q">20 Questions</div>
+          <div class="subtab" data-subtab="game-trivia">Trivia</div><div class="subtab" data-subtab="game-td">Truth/Dare</div>
+          <div class="subtab" data-subtab="game-prompts">WYR</div>
+        </div>
+        <div id="subpanel-game-lobby" class="subpanel active">
+          <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="rounded-2xl glass card-3d p-5 cursor-pointer" data-goto-game="ttt"><div class="w-12 h-12 rounded-xl grid place-items-center text-2xl mb-3" style="background:linear-gradient(135deg,#38bdf8,#0284c7)">⨯</div><h3 class="font-display font-bold text-[15px] text-white">Tic-Tac-Toe</h3></div>
+            <div class="rounded-2xl glass card-3d p-5 cursor-pointer" data-goto-game="c4"><div class="w-12 h-12 rounded-xl grid place-items-center text-2xl mb-3" style="background:linear-gradient(135deg,#ef4444,#b91c1c)">🔴</div><h3 class="font-display font-bold text-[15px] text-white">Connect Four</h3></div>
+            <div class="rounded-2xl glass card-3d p-5 cursor-pointer" data-goto-game="memory"><div class="w-12 h-12 rounded-xl grid place-items-center text-2xl mb-3" style="background:linear-gradient(135deg,#a855f7,#7c3aed)">🧠</div><h3 class="font-display font-bold text-[15px] text-white">Memory</h3></div>
+            <div class="rounded-2xl glass card-3d p-5 cursor-pointer" data-goto-game="rps"><div class="w-12 h-12 rounded-xl grid place-items-center text-2xl mb-3" style="background:linear-gradient(135deg,#a855f7,#7c3aed)">✂️</div><h3 class="font-display font-bold text-[15px] text-white">RPS</h3></div>
+            <div class="rounded-2xl glass card-3d p-5 cursor-pointer" data-goto-game="dice"><div class="w-12 h-12 rounded-xl grid place-items-center text-2xl mb-3" style="background:linear-gradient(135deg,#fbbf24,#d97706)">🎲</div><h3 class="font-display font-bold text-[15px] text-white">Dice Duel</h3></div>
+            <div class="rounded-2xl glass card-3d p-5 cursor-pointer" data-goto-game="word"><div class="w-12 h-12 rounded-xl grid place-items-center text-2xl mb-3" style="background:linear-gradient(135deg,#22d3ee,#0e7490)">🔤</div><h3 class="font-display font-bold text-[15px] text-white">Word Duel</h3></div>
+            <div class="rounded-2xl glass card-3d p-5 cursor-pointer" data-goto-game="20q"><div class="w-12 h-12 rounded-xl grid place-items-center text-2xl mb-3" style="background:linear-gradient(135deg,#fb7185,#e11d48)">❓</div><h3 class="font-display font-bold text-[15px] text-white">20 Questions</h3></div>
+            <div class="rounded-2xl glass card-3d p-5 cursor-pointer" data-goto-game="trivia"><div class="w-12 h-12 rounded-xl grid place-items-center text-2xl mb-3" style="background:linear-gradient(135deg,#34d399,#059669)">📚</div><h3 class="font-display font-bold text-[15px] text-white">AI Trivia</h3></div>
+            <div class="rounded-2xl glass card-3d p-5 cursor-pointer" data-goto-game="td"><div class="w-12 h-12 rounded-xl grid place-items-center text-2xl mb-3" style="background:linear-gradient(135deg,#f472b6,#be185d)">🎭</div><h3 class="font-display font-bold text-[15px] text-white">Truth or Dare</h3></div>
+            <div class="rounded-2xl glass card-3d p-5 cursor-pointer" data-goto-game="prompts"><div class="w-12 h-12 rounded-xl grid place-items-center text-2xl mb-3" style="background:linear-gradient(135deg,#fb7185,#e11d48)">💬</div><h3 class="font-display font-bold text-[15px] text-white">Would You Rather</h3></div>
+          </div>
+          <div class="mt-6 rounded-2xl glass card-3d p-5"><h3 class="font-display text-[14px] font-bold text-slate-200 mb-3">Game Stats</h3><div id="gameStats" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div></div>
+        </div>
+        <div id="subpanel-game-ttt" class="subpanel"><div class="rounded-2xl glass card-3d p-6">
+          <div class="flex items-center justify-between flex-wrap gap-3 mb-4"><div><h3 class="font-display font-bold text-[18px] text-white">Tic-Tac-Toe</h3><p id="tttStatus" class="text-[12.5px] text-slate-400 mt-0.5">Start a new match.</p></div>
+            <button id="tttNewBtn" class="px-4 py-2 rounded-full glass text-[12px] font-semibold text-slate-300"><i class="fa-solid fa-rotate-right mr-1.5"></i> New</button></div>
+          <div class="grid grid-cols-3 gap-3 max-w-[360px] mx-auto my-4" id="tttBoard"></div>
+          <div class="flex justify-center gap-6 mt-4 text-[12px]"><div class="text-center"><div class="text-slate-500">You</div><div id="tttMeSymbol" class="font-display text-xl font-bold text-sky-400">—</div></div>
+            <div class="text-center"><div class="text-slate-500">Score</div><div id="tttScore" class="font-display text-xl font-bold text-white">0 – 0</div></div>
+            <div class="text-center"><div class="text-slate-500">Partner</div><div id="tttPartnerSymbol" class="font-display text-xl font-bold text-violet-400">—</div></div></div>
+        </div></div>
+        <div id="subpanel-game-c4" class="subpanel"><div class="rounded-2xl glass card-3d p-6">
+          <div class="flex items-center justify-between flex-wrap gap-3 mb-4"><div><h3 class="font-display font-bold text-[18px] text-white">Connect Four</h3><p id="c4Status" class="text-[12.5px] text-slate-400 mt-0.5">Start a new match.</p></div>
+            <button id="c4NewBtn" class="px-4 py-2 rounded-full glass text-[12px] font-semibold text-slate-300"><i class="fa-solid fa-rotate-right mr-1.5"></i> New</button></div>
+          <div class="c4-board max-w-[500px] mx-auto" id="c4Board"></div>
+          <div class="flex justify-center gap-8 mt-4 text-[12px]"><div class="text-center"><div class="text-slate-500">You</div><div id="c4MeColor" class="font-display text-xl font-bold text-sky-400">—</div></div>
+            <div class="text-center"><div class="text-slate-500">Score</div><div id="c4Score" class="font-display text-xl font-bold text-white">0 – 0</div></div>
+            <div class="text-center"><div class="text-slate-500">Partner</div><div id="c4PartnerColor" class="font-display text-xl font-bold text-violet-400">—</div></div></div>
+        </div></div>
+        <div id="subpanel-game-memory" class="subpanel"><div class="rounded-2xl glass card-3d p-6">
+          <div class="flex items-center justify-between flex-wrap gap-3 mb-4"><div><h3 class="font-display font-bold text-[18px] text-white">Memory Match</h3><p id="memStatus" class="text-[12.5px] text-slate-400 mt-0.5">Start a new game.</p></div>
+            <button id="memNewBtn" class="px-4 py-2 rounded-full glass text-[12px] font-semibold text-slate-300"><i class="fa-solid fa-rotate-right mr-1.5"></i> New</button></div>
+          <div class="grid grid-cols-4 gap-3 max-w-[420px] mx-auto" id="memBoard"></div>
+          <div class="flex justify-center gap-8 mt-4 text-[12px]"><div class="text-center"><div class="text-slate-500">You</div><div id="memMeScore" class="font-display text-xl font-bold text-sky-400">0</div></div>
+            <div class="text-center"><div class="text-slate-500">Pairs</div><div id="memPairs" class="font-display text-xl font-bold text-white">0 / 8</div></div>
+            <div class="text-center"><div class="text-slate-500">Partner</div><div id="memPartnerScore" class="font-display text-xl font-bold text-violet-400">0</div></div></div>
+        </div></div>
+        <div id="subpanel-game-rps" class="subpanel"><div class="rounded-2xl glass card-3d p-6">
+          <div class="flex items-center justify-between flex-wrap gap-3 mb-5"><div><h3 class="font-display font-bold text-[18px] text-white">Rock-Paper-Scissors</h3><p id="rpsStatus" class="text-[12.5px] text-slate-400 mt-0.5">Pick your throw.</p></div>
+            <button id="rpsNewBtn" class="px-4 py-2 rounded-full glass text-[12px] font-semibold text-slate-300"><i class="fa-solid fa-rotate-right mr-1.5"></i> New</button></div>
+          <div class="grid grid-cols-3 gap-3 max-w-[420px] mx-auto mb-5">
+            <button class="rps-btn" data-throw="rock">🪨<small>Rock</small></button>
+            <button class="rps-btn" data-throw="paper">📄<small>Paper</small></button>
+            <button class="rps-btn" data-throw="scissors">✂️<small>Scissors</small></button></div>
+          <div class="text-center mb-4"><div class="font-display text-3xl" id="rpsReveal">?</div></div>
+          <div class="flex justify-center gap-8 text-center text-[12px]"><div><div class="text-slate-500">You</div><div id="rpsMeScore" class="font-display text-xl font-bold text-sky-400">0</div></div>
+            <div><div class="text-slate-500">Rounds</div><div id="rpsRound" class="font-display text-xl font-bold text-white">1</div></div>
+            <div><div class="text-slate-500">Partner</div><div id="rpsPartnerScore" class="font-display text-xl font-bold text-violet-400">0</div></div></div>
+        </div></div>
+        <div id="subpanel-game-dice" class="subpanel"><div class="rounded-2xl glass card-3d p-6">
+          <div class="flex items-center justify-between flex-wrap gap-3 mb-5"><div><h3 class="font-display font-bold text-[18px] text-white">Dice Duel</h3><p id="diceStatus" class="text-[12.5px] text-slate-400 mt-0.5">Roll to begin.</p></div>
+            <button id="diceRollBtn" class="px-5 py-2.5 rounded-full font-semibold text-[12.5px] text-white" style="background:linear-gradient(135deg,#fbbf24,#d97706)"><i class="fa-solid fa-dice mr-1.5"></i> Roll</button></div>
+          <div class="flex justify-center items-center gap-10 flex-wrap">
+            <div class="text-center"><div class="text-[12px] text-slate-500 mb-2">You</div>
+              <div class="flex gap-2"><div class="die" id="dieMe1">?</div><div class="die" id="dieMe2">?</div></div>
+              <div id="diceMeTotal" class="font-display text-2xl font-bold text-sky-400 mt-2">—</div></div>
+            <div class="text-center"><div class="text-[12px] text-slate-500 mb-2">Partner</div>
+              <div class="flex gap-2"><div class="die" id="dieThem1">?</div><div class="die" id="dieThem2">?</div></div>
+              <div id="diceThemTotal" class="font-display text-2xl font-bold text-violet-400 mt-2">—</div></div></div>
+          <div class="text-center mt-6"><div id="diceVerdict" class="text-[15px] font-semibold text-slate-300">—</div>
+            <div class="flex justify-center gap-8 mt-3 text-[12px]"><div><div class="text-slate-500">You</div><div id="diceMeScore" class="font-display text-lg font-bold text-sky-400">0</div></div>
+              <div><div class="text-slate-500">Rounds</div><div id="diceRound" class="font-display text-lg font-bold text-white">1</div></div>
+              <div><div class="text-slate-500">Partner</div><div id="diceThemScore" class="font-display text-lg font-bold text-violet-400">0</div></div></div></div>
+        </div></div>
+        <div id="subpanel-game-word" class="subpanel"><div class="rounded-2xl glass card-3d p-6">
+          <div class="flex items-center justify-between flex-wrap gap-3 mb-4"><div><h3 class="font-display font-bold text-[18px] text-white">Word Duel</h3><p id="wdStatus" class="text-[12.5px] text-slate-400 mt-0.5">Guess the 5-letter word.</p></div>
+            <button id="wdNewBtn" class="px-4 py-2 rounded-full glass text-[12px] font-semibold text-slate-300"><i class="fa-solid fa-rotate-right mr-1.5"></i> New</button></div>
+          <div id="wdBoard" class="max-w-[280px] mx-auto mb-5"></div>
+          <form id="wdForm" class="flex gap-2 max-w-[280px] mx-auto">
+            <input id="wdInput" maxlength="5" class="field flex-1 text-center text-[20px] font-display uppercase tracking-widest" placeholder="WORD" autocomplete="off" />
+            <button type="submit" class="px-4 rounded-xl font-semibold text-white" style="background:linear-gradient(135deg,#22d3ee,#0e7490)">Guess</button></form>
+          <div class="text-center mt-5"><div id="wdVerdict" class="text-[15px] font-semibold text-slate-300">—</div></div>
+        </div></div>
+        <div id="subpanel-game-20q" class="subpanel"><div class="rounded-2xl glass card-3d p-6">
+          <div class="flex items-center justify-between flex-wrap gap-3 mb-4"><div><h3 class="font-display font-bold text-[18px] text-white">20 Questions</h3><p id="q20Status" class="text-[12.5px] text-slate-400 mt-0.5">AI thinks of something. You guess.</p></div>
+            <button id="q20NewBtn" class="px-4 py-2 rounded-full glass text-[12px] font-semibold text-slate-300"><i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> New</button></div>
+          <div id="q20Hint" class="hidden rounded-xl bg-slate-950/40 border border-white/5 p-3 mb-3 text-[12.5px] text-slate-400"></div>
+          <div id="q20Log" class="space-y-2 max-h-[280px] overflow-y-auto mb-4 p-3 rounded-xl bg-slate-950/40 border border-white/5 min-h-[120px]"></div>
+          <form id="q20Form" class="flex gap-2"><input id="q20Input" class="field flex-1" placeholder="Ask a yes/no question…" autocomplete="off" />
+            <button type="submit" class="px-4 rounded-xl font-semibold text-white shrink-0" style="background:linear-gradient(135deg,#fb7185,#e11d48)">Ask</button></form>
+          <div class="text-center mt-3 text-[12px] text-slate-500">Questions used: <span id="q20Count" class="text-white font-bold">0</span> / 20</div>
+        </div></div>
+        <div id="subpanel-game-trivia" class="subpanel"><div class="rounded-2xl glass card-3d p-6">
+          <div class="flex items-center justify-between flex-wrap gap-3 mb-4"><div><h3 class="font-display font-bold text-[18px] text-white">AI Trivia</h3><p id="triviaStatus" class="text-[12.5px] text-slate-400 mt-0.5">Pick a topic.</p></div>
+            <button id="triviaNewBtn" class="px-4 py-2 rounded-full glass text-[12px] font-semibold text-slate-300"><i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Generate</button></div>
+          <div class="grid md:grid-cols-3 gap-3 mb-5"><input id="triviaTopic" class="field" placeholder="Topic" />
+            <select id="triviaDiff" class="field"><option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option></select>
+            <div class="flex items-center justify-center rounded-xl glass text-[12.5px] text-slate-400 px-3">Score: <span id="triviaScore" class="ml-1.5 font-bold text-white">0 / 0</span></div></div>
+          <div id="triviaCard" class="rounded-xl bg-slate-950/40 border border-white/5 p-5 min-h-[180px]"></div>
+        </div></div>
+        <div id="subpanel-game-td" class="subpanel"><div class="rounded-2xl glass card-3d p-6">
+          <div class="flex items-center justify-between flex-wrap gap-3 mb-4"><div><h3 class="font-display font-bold text-[18px] text-white">Truth or Dare</h3><p id="tdStatus" class="text-[12.5px] text-slate-400 mt-0.5">AI-generated for couples.</p></div>
+            <button id="tdNewBtn" class="px-4 py-2 rounded-full glass text-[12px] font-semibold text-slate-300"><i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Generate</button></div>
+          <div class="flex gap-2 justify-center mb-5">
+            <button class="td-tab px-6 py-2.5 rounded-full font-semibold text-[12.5px] text-white" data-kind="truth" style="background:linear-gradient(135deg,#38bdf8,#0284c7)">Truth</button>
+            <button class="td-tab px-6 py-2.5 rounded-full glass font-semibold text-[12.5px] text-slate-300" data-kind="dare">Dare</button></div>
+          <div id="tdCard" class="rounded-xl bg-slate-950/40 border border-white/5 p-5 min-h-[160px] grid place-items-center text-center"><p class="text-slate-500 text-[13px]">Pick truth or dare.</p></div>
+          <div class="text-center mt-3"><button id="tdNextBtn" class="px-4 py-2 rounded-full glass text-[12px] font-semibold text-slate-300 hidden">Next →</button></div>
+        </div></div>
+        <div id="subpanel-game-prompts" class="subpanel"><div class="rounded-2xl glass card-3d p-6">
+          <div class="flex items-center justify-between flex-wrap gap-3 mb-4"><div><h3 class="font-display font-bold text-[18px] text-white">Would You Rather</h3><p id="promptsStatus" class="text-[12.5px] text-slate-400 mt-0.5">AI prompts.</p></div>
+            <button id="promptsNewBtn" class="px-4 py-2 rounded-full glass text-[12px] font-semibold text-slate-300"><i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Generate</button></div>
+          <div id="promptsCard" class="rounded-xl bg-slate-950/40 border border-white/5 p-5 min-h-[180px]"></div>
+        </div></div>
+      </section>
+
+      <section id="panel-history" class="tab-panel">
+        <div class="flex items-end justify-between flex-wrap gap-3 mb-5">
+          <div><h2 class="font-display text-[26px] sm:text-[30px] font-bold text-white">History</h2>
+            <p class="text-[13px] text-slate-400 mt-1">Every action you've logged.</p></div>
+          <div class="flex gap-2 flex-wrap">
+            <button id="histExportBtn" class="px-4 py-2 rounded-full glass text-[12px] font-semibold text-slate-300 hover:text-white"><i class="fa-solid fa-file-export mr-1.5"></i> Export CSV</button>
+            <button id="histClearBtn" class="px-4 py-2 rounded-full glass text-[12px] font-semibold text-rose-300 hover:text-rose-200"><i class="fa-solid fa-trash mr-1.5"></i> Clear</button></div>
+        </div>
+        <div class="rounded-2xl glass p-4 mb-5 space-y-3">
+          <div class="flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-slate-950/50 border border-white/10">
+            <i class="fa-solid fa-magnifying-glass text-amber-400 text-[13px]"></i>
+            <input id="histSearch" class="bg-transparent border-none outline-none w-full text-[13.5px] text-slate-200 placeholder:text-slate-500" placeholder="Search history…" /></div>
+          <div><div class="text-[10.5px] font-bold uppercase tracking-wider text-slate-500 mb-2">Entity</div><div class="chip-row" id="histEntityChips"></div></div>
+          <div><div class="text-[10.5px] font-bold uppercase tracking-wider text-slate-500 mb-2">Action</div><div class="chip-row" id="histActionChips"></div></div>
+        </div>
+        <div id="histList" class="space-y-1"></div>
+      </section>
+
+      <section id="panel-profile" class="tab-panel">
+        <div class="mb-5"><h2 class="font-display text-[26px] sm:text-[30px] font-bold text-white">Profile</h2></div>
+        <div class="grid lg:grid-cols-[380px_1fr] gap-5">
+          <div class="rounded-2xl glass card-3d p-6 text-center">
+            <div class="avatar-ring mx-auto"><div id="profileAvatar" class="w-32 h-32 rounded-full grid place-items-center text-4xl font-bold text-white overflow-hidden" style="background:linear-gradient(135deg,#38bdf8,#a855f7)">?</div></div>
+            <button id="avatarUploadBtn" class="mt-4 px-4 py-2 rounded-full glass text-[12px] font-semibold text-slate-300"><i class="fa-solid fa-camera mr-1.5"></i> Change Photo</button>
+            <input type="file" id="avatarInput" accept="image/*" class="hidden" />
+            <h3 id="profileName" class="font-display text-xl font-bold text-white mt-5">—</h3>
+            <p id="profileEmail" class="text-[12.5px] text-slate-500 mt-1">—</p>
+            <div class="mt-6 pt-5 border-t border-white/5 grid grid-cols-3 gap-2 text-center">
+              <div><div id="pStatTasks" class="font-display text-lg font-bold text-sky-400">0</div><div class="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">Tasks</div></div>
+              <div><div id="pStatDone" class="font-display text-lg font-bold text-emerald-400">0</div><div class="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">Done</div></div>
+              <div><div id="pStatDocs" class="font-display text-lg font-bold text-cyan-400">0</div><div class="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">Files</div></div>
+            </div>
+          </div>
+          <div class="rounded-2xl glass card-3d p-6">
+            <h3 class="font-display text-[14px] font-bold text-slate-200 uppercase tracking-wider mb-5">Account Details</h3>
+            <div class="space-y-4">
+              <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Name</label><input id="profNameInput" class="field" /></div>
+              <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Tagline</label><input id="profTaglineInput" class="field" /></div>
+              <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Hobbies</label><input id="profHobbiesInput" class="field" placeholder="reading, hiking" /></div>
+              <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Accent</label><div id="colorPicker" class="flex gap-2.5 flex-wrap"></div></div>
+              <button id="saveProfileBtn" class="px-6 py-3 rounded-xl font-semibold text-[13.5px] text-white" style="background:linear-gradient(135deg,#38bdf8,#7c3aed)"><i class="fa-solid fa-floppy-disk mr-1.5"></i> Save</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="panel-settings" class="tab-panel">
+        <div class="mb-5"><h2 class="font-display text-[26px] sm:text-[30px] font-bold text-white">Settings</h2></div>
+        <div class="grid lg:grid-cols-2 gap-5">
+          <div class="rounded-2xl glass card-3d p-6"><h3 class="font-display text-[14px] font-bold text-slate-200 uppercase tracking-wider mb-5">Partner</h3>
+            <select id="partnerSelect" class="field"><option value="">— None —</option></select>
+            <p class="text-[11.5px] text-slate-500 mt-3">Active partner for comparisons, games, and chat.</p></div>
+          <div class="rounded-2xl glass card-3d p-6"><h3 class="font-display text-[14px] font-bold text-slate-200 uppercase tracking-wider mb-5">AI Worker</h3>
+            <input id="workerUrlInput" class="field" placeholder="https://..." />
+            <button id="saveWorkerBtn" class="mt-3 px-4 py-2 rounded-lg text-[12px] font-semibold text-white" style="background:linear-gradient(135deg,#38bdf8,#7c3aed)"><i class="fa-solid fa-floppy-disk mr-1.5"></i> Save URL</button>
+            <button id="aiTestBtn" class="mt-2 w-full py-2.5 rounded-xl glass text-[12.5px] font-semibold text-cyan-300 hover:text-white"><i class="fa-solid fa-heart-pulse mr-1.5"></i> Test AI Worker</button>
+            <div id="aiTestResult" class="mt-2 text-[11.5px] text-slate-500"></div>
+          </div>
+          <div class="rounded-2xl glass card-3d p-6"><h3 class="font-display text-[14px] font-bold text-slate-200 uppercase tracking-wider mb-5">Notifications</h3>
+            <div class="space-y-3">
+              <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" id="notifEnabled" class="w-4 h-4 rounded" /><span class="text-[13px] text-slate-300">Enable notifications</span></label>
+              <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" id="chatSoundEnabled" class="w-4 h-4 rounded" checked /><span class="text-[13px] text-slate-300">Chat sound</span></label>
+              <button id="requestPermBtn" class="w-full py-2.5 rounded-xl glass text-[12.5px] font-semibold text-slate-300"><i class="fa-solid fa-bell mr-1.5"></i> Request Permission</button>
+              <button id="testNotifBtn" class="w-full py-2.5 rounded-xl glass text-[12.5px] font-semibold text-slate-300"><i class="fa-solid fa-paper-plane mr-1.5"></i> Send Test</button></div></div>
+          <div class="rounded-2xl glass card-3d p-6"><h3 class="font-display text-[14px] font-bold text-slate-200 uppercase tracking-wider mb-5">Sync</h3>
+            <div class="space-y-3 text-[12.5px]">
+              <div class="flex justify-between p-3 rounded-xl bg-white/[.03]"><span class="text-slate-500">Database</span><span id="connState" class="text-emerald-400 font-semibold">Connected</span></div>
+              <div class="flex justify-between p-3 rounded-xl bg-white/[.03]"><span class="text-slate-500">Last sync</span><span id="lastSyncText" class="text-slate-300 font-semibold">—</span></div>
+              <div class="flex justify-between p-3 rounded-xl bg-white/[.03]"><span class="text-slate-500">Partner</span><span id="partnerState" class="text-slate-500 font-semibold">—</span></div>
+              <div class="flex justify-between p-3 rounded-xl bg-white/[.03]"><span class="text-slate-500">Offline queue</span><span id="queueState" class="text-slate-300 font-semibold">0</span></div>
+            </div></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <button id="chatFab" class="fixed bottom-5 right-5 z-[60] w-14 h-14 rounded-full grid place-items-center text-white shadow-2xl" style="background:linear-gradient(135deg,#38bdf8,#a855f7)">
+    <i class="fa-solid fa-comments text-[20px]"></i>
+    <span id="chatFabBadge" class="hidden absolute -top-1 -right-1 min-w-[20px] h-[20px] rounded-full bg-rose-500 text-white text-[10px] font-bold grid place-items-center px-1 border-2 border-[#0b1220]">0</span>
+  </button>
+  <div id="chatPanel" class="hidden fixed bottom-24 right-5 z-[59] w-[360px] max-w-[calc(100vw-40px)] h-[520px] rounded-2xl glass shadow-2xl overflow-hidden flex-col flex" style="animation:slideUp .3s cubic-bezier(.22,1,.36,1) both;">
+    <div class="flex items-center gap-3 px-4 py-3 border-b border-white/5 bg-gradient-to-r from-sky-500/10 to-violet-500/10">
+      <div id="chatPartnerAvatar" class="w-8 h-8 rounded-full grid place-items-center text-[11px] font-bold text-white" style="background:linear-gradient(135deg,#a855f7,#7c3aed)">?</div>
+      <div class="flex-1 min-w-0"><div id="chatPartnerName" class="text-[13px] font-semibold text-white truncate">Partner</div>
+        <div id="chatPartnerStatus" class="text-[10.5px] text-slate-500 flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span> Offline</div></div>
+      <button id="chatCloseBtn" class="w-8 h-8 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white grid place-items-center"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="chatFabMessages" class="flex-1 overflow-y-auto p-3 space-y-2.5"></div>
+    <div id="chatTyping" class="hidden px-4 pb-1 text-[11px] text-slate-500 italic">typing…</div>
+    <form id="chatFabForm" class="border-t border-white/5 p-2 flex gap-2">
+      <input id="chatFabInput" class="field flex-1 !py-2.5 !text-[13px]" placeholder="Message your partner…" autocomplete="off" />
+      <button type="submit" class="w-10 h-10 rounded-xl grid place-items-center text-white shrink-0" style="background:linear-gradient(135deg,#38bdf8,#7c3aed)"><i class="fa-solid fa-paper-plane"></i></button>
+    </form>
+  </div>
+</div>
+
+<div class="mobile-app-container" id="mobileAppShell">
+  <div class="mobile-header">
+    <div class="app-brand">
+      <div class="brand-mark"><i class="fa-solid fa-bolt"></i></div>
+      <span>Viora <span class="brand-track">Track</span></span>
+    </div>
+    <div class="header-actions">
+      <button class="header-btn" id="mThemeBtn" aria-label="Theme"><i class="fa-solid fa-moon"></i></button>
+      <button class="header-btn" id="mNotifBtn" aria-label="Notifications"><i class="fa-regular fa-bell"></i><span class="dot" id="mNotifDot" style="display:none;">0</span></button>
+      <div class="avatar-mini-m" id="mAvatarBtn">?</div>
+    </div>
+  </div>
+
+  <div class="mobile-screens" id="mobileScreens">
+    <div class="mobile-screen active" data-screen="dashboard">
+      <div class="m-screen-head">
+        <div><span class="sub">Overview</span><h1 id="mGreeting">Welcome back</h1></div>
+      </div>
+      <div id="mSyncBanner" style="display:none;" class="mb-3">
+        <div style="display:flex;gap:8px;align-items:center;padding:8px 12px;border-radius:12px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);color:#fbbf24;font-size:.72rem;font-weight:600">
+          <span style="width:6px;height:6px;border-radius:50%;background:currentColor;"></span>
+          <span id="mSyncText">Offline — changes queued</span>
+        </div>
+      </div>
+      <div id="mAlertContainer"></div>
+      <div class="m-kpi-grid" id="mKpiGrid"></div>
+      <div class="m-card"><h3><i class="fa-solid fa-bolt"></i> Performance</h3><div id="mMetricBars" style="display:flex;flex-direction:column;gap:8px;"></div></div>
+      <div class="m-card"><h3><i class="fa-solid fa-chart-pie"></i> Task Status</h3><div class="m-chart-wrap"><canvas id="mChartDonut"></canvas></div></div>
+      <div class="m-card"><h3><i class="fa-solid fa-radar"></i> Life Radar</h3><div class="m-chart-wrap" style="height:280px;"><canvas id="mChartRadar"></canvas></div></div>
+      <div class="m-card"><h3><i class="fa-solid fa-bullseye"></i> Goals Overview</h3><div class="m-chart-wrap" style="height:240px;"><canvas id="mChartGoals"></canvas></div></div>
+      <div class="m-card"><h3><i class="fa-solid fa-code-branch"></i> Skills Progress</h3><div class="m-chart-wrap" style="height:240px;"><canvas id="mChartSkills"></canvas></div></div>
+      <div class="m-card"><h3><i class="fa-solid fa-coins"></i> Financial Overview</h3><div class="m-chart-wrap" style="height:240px;"><canvas id="mChartFinance"></canvas></div></div>
+      <div class="m-card"><h3><i class="fa-solid fa-arrow-trend-up"></i> 14-Day Momentum</h3><div class="m-chart-wrap" style="height:220px;"><canvas id="mChartLine"></canvas></div></div>
+      <div class="m-card"><h3><i class="fa-solid fa-calendar-day"></i> Upcoming</h3><div id="mUpcomingList" style="display:flex;flex-direction:column;gap:8px;"></div></div>
+    </div>
+
+    <div class="mobile-screen" data-screen="tasks">
+      <div class="m-screen-head">
+        <div><span class="sub">My Space</span><h1>Tasks</h1></div>
+        <div class="actions">
+          <button class="m-btn ai" id="mPrioritizeTasks"><i class="fa-solid fa-brain"></i> AI</button>
+          <button class="m-btn primary" id="mAddTaskBtn"><i class="fa-solid fa-plus"></i> New</button>
+        </div>
+      </div>
+      <div class="m-pills" data-mfilter="tasks">
+        <div class="m-pill active" data-filter="all">All</div><div class="m-pill" data-filter="open">Open</div>
+        <div class="m-pill" data-filter="today">Today</div><div class="m-pill" data-filter="overdue">Overdue</div>
+        <div class="m-pill" data-filter="done">Done</div><div class="m-pill" data-filter="high">🔴 High</div>
+        <div class="m-pill" data-filter="medium">🟡 Medium</div><div class="m-pill" data-filter="low">🟢 Low</div>
+      </div>
+      <div id="mTaskList"></div>
+    </div>
+
+    <div class="mobile-screen" data-screen="today">
+      <div class="m-screen-head">
+        <div><span class="sub" id="mTodayDate">Today</span><h1>Daily To-Dos</h1></div>
+        <div class="actions">
+          <button class="m-btn" id="mPrevDay"><i class="fa-solid fa-chevron-left"></i></button>
+          <button class="m-btn" id="mTodayJump">Today</button>
+          <button class="m-btn" id="mNextDay"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </div>
+      <div class="m-form" style="display:flex;flex-direction:column;gap:8px;">
+        <input id="mTodoInput" placeholder="What needs to be done?" autocomplete="off" />
+        <div style="display:flex;gap:6px;">
+          <input type="time" id="mTodoDueTime" style="flex:1;min-width:0;" />
+          <select id="mTodoPriority" style="flex:1;min-width:0;">
+            <option value="high">🔴 High</option>
+            <option value="medium" selected>🟡 Medium</option>
+            <option value="low">🟢 Low</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:.72rem;color:#94a3b8;flex:1;">
+            <input type="checkbox" id="mTodoRecurring" style="width:auto;" /> Repeat daily
+          </label>
+          <button class="m-btn primary" id="mAddTodoBtn" style="padding:8px 18px;"><i class="fa-solid fa-plus"></i> Add</button>
+        </div>
+      </div>
+      <div class="m-card" style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:.72rem;color:#94a3b8;font-weight:600;">Completion</span>
+          <span id="mTodoPct" style="font-family:'Space Grotesk';font-weight:800;font-size:1.1rem;color:#34d399;">0%</span>
+        </div>
+        <div class="progress-shell"><div id="mTodoProgress" class="progress-fill fill-emerald" style="width:0%"></div></div>
+        <p id="mTodoSummary" style="font-size:.7rem;color:#64748b;margin-top:6px;text-align:center;">0 of 0 completed</p>
+      </div>
+      <div id="mTodoList"></div>
+    </div>
+
+    <div class="mobile-screen" data-screen="goals">
+      <div class="m-screen-head">
+        <div><span class="sub">Together</span><h1>Goals & OKRs</h1></div>
+        <div class="actions">
+          <button class="m-btn ai" id="mPrioritizeGoals"><i class="fa-solid fa-brain"></i> AI</button>
+          <button class="m-btn primary" id="mAddGoalBtn"><i class="fa-solid fa-plus"></i> New</button>
+        </div>
+      </div>
+      <div id="mGoalsGrid" style="display:flex;flex-direction:column;gap:10px;"></div>
+    </div>
+
+    <div class="mobile-screen" data-screen="games">
+      <div class="m-screen-head">
+        <div><span class="sub">Together</span><h1>Play</h1></div>
+      </div>
+      <div id="mGameArea"></div>
+    </div>
+
+    <div class="mobile-screen" data-screen="vault">
+      <div class="m-screen-head">
+        <div><span class="sub">Library</span><h1>Vault</h1></div>
+      </div>
+      <div class="m-form" style="display:flex;flex-direction:column;gap:8px;">
+        <input type="file" id="mVaultFileInput" multiple style="padding:10px;background:rgba(2,6,23,.55);border:1px dashed rgba(148,163,184,.3);color:#94a3b8;border-radius:10px;" />
+        <p style="font-size:.68rem;color:#64748b;text-align:center;">Files up to 400 KB stored inline. Larger files stored as metadata only.</p>
+      </div>
+      <div id="mVaultList"></div>
+    </div>
+  </div>
+
+  <nav class="mobile-bottom-nav" id="mobileBottomNav">
+    <button type="button" class="nav-item active" data-screen="dashboard"><i class="fa-solid fa-house"></i><span>Home</span></button>
+    <button type="button" class="nav-item" data-screen="tasks"><i class="fa-solid fa-list-check"></i><span>Tasks</span></button>
+    <button type="button" class="nav-item" data-screen="today"><i class="fa-solid fa-circle-check"></i><span>To-Dos</span></button>
+    <button type="button" class="nav-item" data-screen="goals"><i class="fa-solid fa-bullseye"></i><span>Goals</span></button>
+    <button type="button" class="nav-item" data-screen="games"><i class="fa-solid fa-dice"></i><span>Play</span></button>
+    <button type="button" class="nav-item" id="mMoreBtn"><i class="fa-solid fa-ellipsis"></i><span>More</span></button>
+  </nav>
+
+  <button class="m-fab" id="mFab"><i class="fa-solid fa-plus"></i></button>
+
+  <div class="m-sheet-backdrop" id="mSheetBackdrop"></div>
+  <div class="m-sheet" id="mSheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head"><h3>Everything else</h3><button class="sheet-close" id="mSheetClose"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="sheet-body" id="mSheetBody">
+      <div class="sheet-tile" data-mgoto="assistant"><div class="tile-icon"><i class="fa-solid fa-robot"></i></div><span>AI Chat</span></div>
+      <div class="sheet-tile" data-mgoto="automations"><div class="tile-icon"><i class="fa-solid fa-bolt"></i></div><span>Automate</span></div>
+      <div class="sheet-tile" data-mgoto="activities"><div class="tile-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div><span>Activities</span></div>
+      <div class="sheet-tile" data-mgoto="hourly"><div class="tile-icon"><i class="fa-solid fa-clock-rotate-left"></i></div><span>Hourly</span></div>
+      <div class="sheet-tile" data-mgoto="schedule"><div class="tile-icon"><i class="fa-solid fa-calendar"></i></div><span>Schedule</span></div>
+      <div class="sheet-tile" data-mgoto="vault"><div class="tile-icon"><i class="fa-solid fa-folder-open"></i></div><span>Vault</span></div>
+      <div class="sheet-tile" data-mgoto="financials"><div class="tile-icon"><i class="fa-solid fa-coins"></i></div><span>Money</span></div>
+      <div class="sheet-tile" data-mgoto="skills"><div class="tile-icon"><i class="fa-solid fa-code-branch"></i></div><span>Skills</span></div>
+      <div class="sheet-tile" data-mgoto="handoffs"><div class="tile-icon"><i class="fa-solid fa-arrows-rotate"></i></div><span>Handoffs</span></div>
+      <div class="sheet-tile" data-mgoto="shared"><div class="tile-icon"><i class="fa-solid fa-users-viewfinder"></i></div><span>Shared</span></div>
+      <div class="sheet-tile" data-mgoto="history"><div class="tile-icon"><i class="fa-solid fa-clock-rotate-left"></i></div><span>History</span></div>
+      <div class="sheet-tile" data-mgoto="profile"><div class="tile-icon"><i class="fa-solid fa-id-badge"></i></div><span>Profile</span></div>
+      <div class="sheet-tile" data-mgoto="settings"><div class="tile-icon"><i class="fa-solid fa-sliders"></i></div><span>Settings</span></div>
+      <div class="sheet-tile" data-mchat><div class="tile-icon"><i class="fa-solid fa-comments"></i></div><span>Chat</span></div>
+    </div>
+  </div>
+</div>
+
+<div id="mobileChatModal">
+  <div class="chat-modal-shell">
+    <div class="chat-modal-header">
+      <div id="mChatPartnerAvatar" style="width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:700;color:#fff;background:linear-gradient(135deg,#a855f7,#7c3aed);overflow:hidden;">?</div>
+      <div style="flex:1;min-width:0;">
+        <div id="mChatPartnerName" style="font-size:15px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Partner</div>
+        <div id="mChatPartnerStatus" style="font-size:11px;color:#94a3b8;display:flex;align-items:center;gap:6px;">
+          <span style="width:6px;height:6px;border-radius:50%;background:#64748b;"></span> Offline
+        </div>
+      </div>
+      <button class="close-btn" id="mChatCloseBtn"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="chat-messages" id="mChatMessages"></div>
+    <div id="mChatTyping" style="display:none;padding:4px 16px;font-size:11px;color:#64748b;font-style:italic;">typing…</div>
+    <form class="chat-input-area" id="mChatForm">
+      <input id="mChatInput" placeholder="Message your partner…" autocomplete="off" />
+      <button type="submit"><i class="fa-solid fa-paper-plane"></i></button>
+    </form>
+  </div>
+</div>
+
+<div id="taskModal" class="modal-overlay fixed inset-0 z-[70] hidden items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+  <div class="modal-shell w-full max-w-[560px] max-h-[92vh] overflow-y-auto p-6 animate-fadeUp">
+    <h3 class="font-display text-lg font-bold text-white mb-5"><i class="fa-solid fa-list-check text-sky-400 mr-2"></i><span id="taskModalTitle">New Task</span></h3>
+    <form id="taskForm" class="space-y-4">
+      <input type="hidden" id="taskEditId" />
+      <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Title *</label><input id="taskTitle" class="field" required /></div>
+      <button type="button" id="breakdownBtn2" class="w-full py-2 rounded-lg glass text-[11.5px] font-semibold text-cyan-300 hover:text-white border border-cyan-500/30"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> AI Break Down</button>
+      <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Notes</label><textarea id="taskNotes" rows="2" class="field"></textarea></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Category</label>
+          <select id="taskCategory" class="field"><option>Personal</option><option>Work</option><option>Study</option><option>Health</option><option>Finance</option><option>Home</option><option>Other</option></select></div>
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Priority</label>
+          <select id="taskPriority" class="field"><option value="high">🔴 High</option><option value="medium" selected>🟡 Medium</option><option value="low">🟢 Low</option></select></div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Due Date</label><input type="date" id="taskDue" class="field" /></div>
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Due Time</label><input type="time" id="taskDueTime" class="field" /></div>
+      </div>
+      <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Goal</label><select id="taskGoal" class="field"><option value="">— None —</option></select></div>
+      <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Assign</label><select id="taskAssign" class="field"><option value="">— Myself —</option></select></div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" data-close="taskModal" class="px-5 py-2.5 rounded-xl glass text-[13px] font-semibold text-slate-300">Cancel</button>
+        <button type="submit" class="px-6 py-2.5 rounded-xl font-semibold text-[13px] text-white" style="background:linear-gradient(135deg,#34d399,#059669)">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="eventModal" class="modal-overlay fixed inset-0 z-[70] hidden items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+  <div class="modal-shell w-full max-w-[560px] p-6 animate-fadeUp">
+    <h3 class="font-display text-lg font-bold text-white mb-5"><i class="fa-regular fa-calendar-plus text-rose-400 mr-2"></i>New Event</h3>
+    <form id="eventForm" class="space-y-4">
+      <input type="hidden" id="eventEditId" />
+      <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Title *</label><input id="eventTitle" class="field" required /></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Starts *</label><input type="datetime-local" id="eventStart" class="field" required /></div>
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Ends</label><input type="datetime-local" id="eventEnd" class="field" /></div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Type</label>
+          <select id="eventType" class="field"><option>Meeting</option><option>Focus Block</option><option>Personal</option><option>Reminder</option><option>Deadline</option><option>Other</option></select></div>
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Location</label><input id="eventLocation" class="field" /></div>
+      </div>
+      <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Notes</label><textarea id="eventNotes" rows="2" class="field"></textarea></div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" data-close="eventModal" class="px-5 py-2.5 rounded-xl glass text-[13px] font-semibold text-slate-300">Cancel</button>
+        <button type="submit" class="px-6 py-2.5 rounded-xl font-semibold text-[13px] text-white" style="background:linear-gradient(135deg,#fb7185,#e11d48)">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="expenseModal" class="modal-overlay fixed inset-0 z-[70] hidden items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+  <div class="modal-shell w-full max-w-[560px] p-6 animate-fadeUp">
+    <h3 class="font-display text-lg font-bold text-white mb-5"><i class="fa-solid fa-receipt text-yellow-400 mr-2"></i>Add Expense</h3>
+    <form id="expenseForm" class="space-y-4">
+      <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Title *</label><input id="expTitle" class="field" required /></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Amount *</label><input id="expAmount" type="number" step="0.01" class="field" required /></div>
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Category</label>
+          <select id="expCategory" class="field"><option>Food</option><option>Rent</option><option>Utilities</option><option>Transport</option><option>Entertainment</option><option>Health</option><option>Education</option><option>Other</option></select></div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Paid By</label><select id="expPaidBy" class="field"></select></div>
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Split</label>
+          <select id="expSplit" class="field"><option value="50/50">50/50</option><option value="custom">Custom</option></select></div>
+      </div>
+      <div id="splitCustomRow" class="hidden grid grid-cols-2 gap-3">
+        <div><input id="expSplitA" type="number" step="0.01" class="field" placeholder="My share" /></div>
+        <div><input id="expSplitB" type="number" step="0.01" class="field" placeholder="Partner share" /></div>
+      </div>
+      <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Date</label><input type="date" id="expDate" class="field" /></div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" data-close="expenseModal" class="px-5 py-2.5 rounded-xl glass text-[13px] font-semibold text-slate-300">Cancel</button>
+        <button type="submit" class="px-6 py-2.5 rounded-xl font-semibold text-[13px] text-white" style="background:linear-gradient(135deg,#fbbf24,#d97706)">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="savingsModal" class="modal-overlay fixed inset-0 z-[70] hidden items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+  <div class="modal-shell w-full max-w-[560px] p-6 animate-fadeUp">
+    <h3 class="font-display text-lg font-bold text-white mb-5"><i class="fa-solid fa-piggy-bank text-emerald-400 mr-2"></i>Savings Goal</h3>
+    <form id="savingsForm" class="space-y-4">
+      <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Title *</label><input id="savTitle" class="field" required /></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Target</label><input id="savTarget" type="number" step="0.01" class="field" required /></div>
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Current</label><input id="savCurrent" type="number" step="0.01" class="field" value="0" /></div>
+      </div>
+      <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Deadline</label><input type="date" id="savDeadline" class="field" /></div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" data-close="savingsModal" class="px-5 py-2.5 rounded-xl glass text-[13px] font-semibold text-slate-300">Cancel</button>
+        <button type="submit" class="px-6 py-2.5 rounded-xl font-semibold text-[13px] text-white" style="background:linear-gradient(135deg,#34d399,#059669)">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="subModal" class="modal-overlay fixed inset-0 z-[70] hidden items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+  <div class="modal-shell w-full max-w-[560px] p-6 animate-fadeUp">
+    <h3 class="font-display text-lg font-bold text-white mb-5"><i class="fa-solid fa-repeat text-violet-400 mr-2"></i>Subscription</h3>
+    <form id="subForm" class="space-y-4">
+      <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Name *</label><input id="subName" class="field" required /></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Amount</label><input id="subAmount" type="number" step="0.01" class="field" required /></div>
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Cycle</label>
+          <select id="subCycle" class="field"><option value="monthly">Monthly</option><option value="yearly">Yearly</option><option value="weekly">Weekly</option></select></div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Next</label><input type="date" id="subNextDate" class="field" /></div>
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Paid By</label><select id="subPaidBy" class="field"></select></div>
+      </div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" data-close="subModal" class="px-5 py-2.5 rounded-xl glass text-[13px] font-semibold text-slate-300">Cancel</button>
+        <button type="submit" class="px-6 py-2.5 rounded-xl font-semibold text-[13px] text-white" style="background:linear-gradient(135deg,#a855f7,#7c3aed)">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="goalModal" class="modal-overlay fixed inset-0 z-[70] hidden items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+  <div class="modal-shell w-full max-w-[600px] max-h-[92vh] overflow-y-auto p-6 animate-fadeUp">
+    <h3 class="font-display text-lg font-bold text-white mb-5"><i class="fa-solid fa-bullseye text-orange-400 mr-2"></i>New Goal</h3>
+    <form id="goalForm" class="space-y-4">
+      <input type="hidden" id="goalEditId" />
+      <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Title *</label><input id="goalTitle" class="field" required /></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Type</label>
+          <select id="goalType" class="field"><option value="short_term">Short-term</option><option value="long_term">Long-term</option></select></div>
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Priority</label>
+          <select id="goalPriority" class="field"><option value="high">🔴 High</option><option value="medium" selected>🟡 Medium</option><option value="low">🟢 Low</option></select></div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Target Date</label><input type="date" id="goalTarget" class="field" /></div>
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Target Time</label><input type="time" id="goalTargetTime" class="field" /></div>
+      </div>
+      <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Description</label><textarea id="goalDesc" rows="2" class="field"></textarea></div>
+      <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Milestones</label>
+        <div id="milestoneEditor" class="space-y-2"></div>
+        <button type="button" id="addMilestoneBtn" class="mt-2 px-3 py-1.5 rounded-lg glass text-[11.5px] font-semibold text-slate-300">+ Add Milestone</button></div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" data-close="goalModal" class="px-5 py-2.5 rounded-xl glass text-[13px] font-semibold text-slate-300">Cancel</button>
+        <button type="submit" class="px-6 py-2.5 rounded-xl font-semibold text-[13px] text-white" style="background:linear-gradient(135deg,#fb923c,#ea580c)">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="skillModal" class="modal-overlay fixed inset-0 z-[70] hidden items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+  <div class="modal-shell w-full max-w-[560px] p-6 animate-fadeUp">
+    <h3 class="font-display text-lg font-bold text-white mb-5"><i class="fa-solid fa-code-branch text-indigo-400 mr-2"></i>New Skill</h3>
+    <form id="skillForm" class="space-y-4">
+      <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Name *</label><input id="skillName" class="field" required /></div>
+      <div class="grid grid-cols-3 gap-3">
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Hours</label><input id="skillHours" type="number" step="0.5" class="field" value="0" /></div>
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Level</label><input id="skillLevel" type="number" class="field" value="1" /></div>
+        <div><label class="block text-[10.5px] font-bold uppercase tracking-[1px] text-slate-400 mb-2">Target</label><input id="skillTarget" type="number" class="field" value="100" /></div>
+      </div>
+      <div><select id="skillCategory" class="field"><option>Coding</option><option>Design</option><option>Fitness</option><option>Language</option><option>Music</option><option>Business</option><option>Other</option></select></div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" data-close="skillModal" class="px-5 py-2.5 rounded-xl glass text-[13px] font-semibold text-slate-300">Cancel</button>
+        <button type="submit" class="px-6 py-2.5 rounded-xl font-semibold text-[13px] text-white" style="background:linear-gradient(135deg,#818cf8,#4f46e5)">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="hourlyModal" class="modal-overlay fixed inset-0 z-[70] hidden items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+  <div class="modal-shell w-full max-w-[460px] p-6 animate-fadeUp">
+    <h3 class="font-display text-lg font-bold text-white mb-5"><i class="fa-solid fa-clock-rotate-left text-emerald-400 mr-2"></i>Log Hour <span id="hourlyHourLabel" class="text-slate-500 font-normal"></span></h3>
+    <form id="hourlyForm" class="space-y-4">
+      <input type="hidden" id="hourlyKey" />
+      <div><input id="hourlyText" class="field" required placeholder="What did you do?" /></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><select id="hourlyIntensity" class="field"><option value="1">Light</option><option value="2" selected>Medium</option><option value="3">Deep focus</option></select></div>
+        <div><select id="hourlyCategory" class="field"><option>Work</option><option>Learning</option><option>Health</option><option>Social</option><option>Chore</option><option>Rest</option><option>Fun</option><option>Other</option></select></div>
+      </div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" data-close="hourlyModal" class="px-5 py-2.5 rounded-xl glass text-[13px] font-semibold text-slate-300">Cancel</button>
+        <button type="submit" class="px-6 py-2.5 rounded-xl font-semibold text-[13px] text-white" style="background:linear-gradient(135deg,#34d399,#059669)">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="breakdownModal" class="modal-overlay fixed inset-0 z-[70] hidden items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+  <div class="modal-shell w-full max-w-[520px] p-6 animate-fadeUp">
+    <h3 class="font-display text-lg font-bold text-white mb-5"><i class="fa-solid fa-list-check text-cyan-400 mr-2"></i>AI Task Breakdown</h3>
+    <div id="breakdownBody"></div>
+    <div class="flex justify-end gap-3 pt-4"><button type="button" data-close="breakdownModal" class="px-5 py-2.5 rounded-xl glass text-[13px] font-semibold text-slate-300">Close</button></div>
+  </div>
+</div>
+
+<div id="previewModal" class="modal-overlay fixed inset-0 z-[70] hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+  <div class="modal-shell w-full max-w-[900px] max-h-[92vh] overflow-hidden flex flex-col animate-fadeUp">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-white/10">
+      <h3 id="previewTitle" class="font-display text-[15px] font-bold text-white truncate pr-4">File</h3>
+      <div class="flex gap-2">
+        <button id="previewDownloadBtn" class="w-9 h-9 rounded-lg glass grid place-items-center text-slate-300 hover:text-sky-400"><i class="fa-solid fa-download"></i></button>
+        <button data-close="previewModal" class="w-9 h-9 rounded-lg glass grid place-items-center text-slate-300 hover:text-rose-400"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+    <div id="previewBody" class="flex-1 overflow-auto p-5 grid place-items-center bg-slate-950/40 min-h-[240px]"></div>
+  </div>
+</div>
+
+<div id="toasts" class="fixed bottom-5 left-5 z-[90] flex flex-col gap-2.5 w-[330px] max-w-[calc(100vw-40px)]"></div>
+<div id="loading" class="fixed inset-0 z-[95] grid place-items-center bg-[#060913]">
+  <div class="text-center">
+    <div class="w-14 h-14 mx-auto rounded-full border-[3px] border-sky-500/20 border-t-sky-400 animate-spin"></div>
+    <p class="font-display text-lg font-bold mt-5 bg-gradient-to-r from-sky-400 to-violet-500 bg-clip-text text-transparent">Viora Track</p>
+    <p id="loadingMsg" class="text-[12px] text-slate-500 mt-1.5">Connecting…</p>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "firebase/app": "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js",
+    "firebase/database": "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js",
+    "firebase/auth": "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js"
+  }
+}
+</script>
+<script type="module" src="/mainPartner/patner.js"></script>
+<!-- ═══ VIORA NOTIFICATION SOUND ═══ -->
+<audio id="vioraNotifSound" preload="auto" playsinline>
+  <source src="/sounds/viora-notification.mp3" type="audio/mpeg" />
+  <source src="/viora-notification.mp3" type="audio/mpeg" />
+  <source src="/notification.mp3" type="audio/mpeg" />
+</audio>
+
+<!-- ═══ VIORA NOTIFICATION BRIDGE ═══ -->
+<script>
+  window.vioraNotify = window.vioraNotify || async function (opts) {
+    opts = opts || {};
+    try {
+      const id = 'notif-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      const db = (typeof firebase !== 'undefined' && firebase.database) ? firebase.database() : null;
+      if (!db) return;
+      await db.ref('viora_data/orgs/viora/notifications/' + id).set({
+        id,
+        title: opts.title || 'VIORA',
+        body: opts.body || '',
+        icon: opts.icon || 'fa-bell',
+        level: opts.level || 'info',
+        url: opts.url || '/dash.html',
+        source: opts.source || 'unknown',
+        ts: new Date().toISOString(),
+        read: false
+      });
+      return id;
+    } catch (e) {
+      console.warn('[vioraNotify] failed:', e.message);
+    }
+  };
+</script>
+</body>
+</html>

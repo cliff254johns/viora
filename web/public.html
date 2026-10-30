@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0a0a0f" />
+<title>VIORA — Business Operating Systems</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="public.css" />
+
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/png" href="https://viora.co.ke/viora.png">
+<link rel="shortcut icon" type="image/png" href="https://viora.co.ke/viora.png">
+<link rel="apple-touch-icon" href="https://viora.co.ke/viora.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://viora.co.ke/viora.png">
+<link rel="apple-touch-icon" sizes="152x152" href="https://viora.co.ke/viora.png">
+<link rel="apple-touch-icon" sizes="120x120" href="https://viora.co.ke/viora.png">
+<meta name="msapplication-TileImage" content="https://viora.co.ke/viora.png">
+<meta name="msapplication-TileColor" content="#070a13">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VIORA">
+<meta name="application-name" content="VIORA">
+</head>
+<body>
+
+<!-- ═══ PRELOADER ═══ -->
+<style>
+  #vioraPreloader{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#05060a;background-image:radial-gradient(ellipse at 50% 30%,#10131c 0%,#05060a 70%);transition:opacity .6s ease,visibility .6s ease;opacity:1;visibility:visible;overflow:hidden}
+  #vioraPreloader.viora-preloader-hide{opacity:0;visibility:hidden;pointer-events:none}
+  #vioraPreloader .viora-lockup{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(28px,5vw,48px);width:min(92vw,640px);position:relative}
+  #vioraPreloader .viora-lockup::before{content:'';position:absolute;top:30%;left:50%;width:70vw;height:70vw;max-width:720px;max-height:720px;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(60,90,160,.16) 0%,transparent 62%);pointer-events:none;z-index:-1;filter:blur(46px);animation:ambient-pulse 6s ease-in-out infinite}
+  @keyframes ambient-pulse{0%,100%{opacity:.55}50%{opacity:1}}
+  #vioraPreloader .v-mark{width:min(44vw,260px);height:auto;display:block;filter:drop-shadow(0 22px 36px rgba(0,0,0,.85)) drop-shadow(0 8px 14px rgba(0,0,0,.55));animation:mark-in 1s cubic-bezier(.34,1.56,.64,1) both}
+  @keyframes mark-in{from{opacity:0;transform:scale(.88) translateY(-10px)}to{opacity:1;transform:none}}
+  #vioraPreloader .v-mark .v-shape{fill:url(#silverBrush);stroke:url(#silverEdge);stroke-width:1.2;stroke-linejoin:round}
+  #vioraPreloader .v-mark .specular{fill:url(#specularShine);opacity:.55;mix-blend-mode:screen;pointer-events:none}
+  #vioraPreloader .viora-wordmark{display:flex;align-items:center;justify-content:center;gap:clamp(4px,1.4vw,10px);font-family:'Space Grotesk','Inter',system-ui,sans-serif;font-weight:800;font-size:clamp(2.6rem,9.5vw,5.4rem);line-height:1;user-select:none}
+  #vioraPreloader .viora-wordmark .letter{display:inline-block;background:linear-gradient(180deg,#506a9a 0%,#2c3f68 22%,#152549 55%,#0a152e 82%,#040a18 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;-webkit-text-stroke:1.4px #c8ccd2;filter:drop-shadow(0 2px 0 #7a8088) drop-shadow(0 4px 0 #565c64) drop-shadow(0 6px 0 #343a42) drop-shadow(0 10px 14px rgba(0,0,0,.9)) drop-shadow(0 0 26px rgba(120,140,180,.14));opacity:0;transform:translateY(16px);animation:letter-in .7s cubic-bezier(.34,1.56,.64,1) both}
+  #vioraPreloader .viora-wordmark .letter.silver{background:linear-gradient(180deg,#fff 0%,#eaecef 16%,#a8aeb6 38%,#7d848c 56%,#b8bdc4 72%,#e0e3e8 88%,#8b9097 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;-webkit-text-stroke:1.4px #fff;filter:drop-shadow(0 2px 0 #8a8f96) drop-shadow(0 4px 0 #6a7078) drop-shadow(0 6px 0 #454a51) drop-shadow(0 10px 14px rgba(0,0,0,.85)) drop-shadow(0 0 30px rgba(200,220,255,.18))}
+  #vioraPreloader .viora-wordmark .letter:nth-child(1){animation-delay:.35s}
+  #vioraPreloader .viora-wordmark .letter:nth-child(2){animation-delay:.45s}
+  #vioraPreloader .viora-wordmark .letter:nth-child(3){animation-delay:.55s}
+  #vioraPreloader .viora-wordmark .letter:nth-child(4){animation-delay:.65s}
+  #vioraPreloader .viora-wordmark .letter:nth-child(5){animation-delay:.75s}
+  @keyframes letter-in{to{opacity:1;transform:none}}
+  #vioraPreloader .tagline{font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:clamp(.9rem,2.5vw,1.4rem);letter-spacing:clamp(1px,.35vw,3.2px);color:#c8ccd2;text-align:center;text-shadow:0 1px 0 rgba(255,255,255,.06);opacity:0;transform:translateY(10px);animation:tagline-in .8s 1.1s cubic-bezier(.34,1.56,.64,1) forwards}
+  @keyframes tagline-in{to{opacity:1;transform:none}}
+  @media (max-width:480px){#vioraPreloader .viora-lockup{gap:34px}#vioraPreloader .v-mark{width:min(52vw,180px)}}
+  @media (prefers-reduced-motion:reduce){#vioraPreloader .v-mark,#vioraPreloader .viora-wordmark .letter,#vioraPreloader .tagline,#vioraPreloader .viora-lockup::before{animation:none!important;opacity:1!important;transform:none!important}}
+</style>
+
+<div id="vioraPreloader" role="status" aria-live="polite" aria-label="Loading VIORA">
+  <div class="viora-lockup">
+    <svg class="v-mark" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-label="V">
+      <defs>
+        <linearGradient id="silverBrush" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff"/><stop offset="16%" stop-color="#eaecef"/><stop offset="38%" stop-color="#a8aeb6"/><stop offset="56%" stop-color="#7d848c"/><stop offset="72%" stop-color="#b8bdc4"/><stop offset="88%" stop-color="#e0e3e8"/><stop offset="100%" stop-color="#8b9097"/></linearGradient>
+        <linearGradient id="silverEdge" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff"/><stop offset="50%" stop-color="#5a6068"/><stop offset="100%" stop-color="#2e3338"/></linearGradient>
+        <linearGradient id="specularShine" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff" stop-opacity=".95"/><stop offset="45%" stop-color="#fff" stop-opacity="0"/></linearGradient>
+      </defs>
+      <path class="v-shape" d="M 30 40 L 120 40 L 150 200 L 180 40 L 270 40 L 165 265 L 135 265 Z"/>
+      <path class="specular" d="M 30 40 L 120 40 L 138 120 L 123 120 Z"/>
+      <path class="specular" d="M 180 40 L 270 40 L 255 120 L 240 120 Z"/>
+    </svg>
+    <div class="viora-wordmark" aria-label="VIORA">
+      <span class="letter">V</span><span class="letter">I</span><span class="letter silver">O</span><span class="letter">R</span><span class="letter">A</span>
+    </div>
+    <div class="tagline">Explore. Discover. Belong.</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var preloader = document.getElementById('vioraPreloader');
+  if (!preloader) return;
+  var MIN_VISIBLE_MS = 3000, FADE_OUT_MS = 700, SAFETY_MAX_MS = 8000;
+  var startTime = Date.now(), hidden = false, pendingHide = false;
+  function doHide(){ if(hidden) return; hidden = true; preloader.classList.add('viora-preloader-hide'); setTimeout(function(){ if(preloader && preloader.parentNode) preloader.parentNode.removeChild(preloader); }, FADE_OUT_MS); }
+  function hide(){ if(hidden||pendingHide) return; var rem = MIN_VISIBLE_MS - (Date.now()-startTime); if(rem<=0){doHide();} else {pendingHide=true; setTimeout(doHide,rem);} }
+  if(document.readyState==='complete'){hide();} else {window.addEventListener('load',hide);}
+  setTimeout(function(){ if(!hidden) doHide(); }, SAFETY_MAX_MS);
+  window.vioraHidePreloader = hide;
+})();
+</script>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ================= DESKTOP NAV ================= -->
+<nav id="mainNav" class="desktop-only">
+<div class="nav-container">
+<a href="#" class="brand-logo" id="brandLogo">
+  <img id="brandLogoImg" alt="" style="display:none;height:32px;width:auto;object-fit:contain;">
+  <span class="logo-icon" id="brandLogoIcon"><i class="fa-solid fa-code"></i></span>
+  <span class="cliff-text" id="brandText">Cliff IT</span>
+  <span class="highlight">.</span>
+</a>
+<ul class="nav-links" id="navLinks">
+<li><a href="#about" id="navAbout">About</a></li>
+<li><a href="#industries" id="navIndustries">Industries</a></li>
+<li><a href="#services" id="navServices">Services</a></li>
+<li><a href="#skills" id="navSkills">Skills</a></li>
+<li><a href="#projects" id="navProjects">Projects</a></li>
+<li><a href="#faq" id="navFaq">FAQ</a></li>
+<li><a href="#contact" id="navContact">Contact</a></li>
+</ul>
+<div class="nav-actions">
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"><i class="fa-solid fa-moon"></i></button>
+<a href="https://viora.co.ke" id="portalLink" class="btn-portal" target="_blank" rel="noopener"><i class="fa-solid fa-globe"></i> <span id="portalLabel">Visit VIORA</span></a>
+<button class="mobile-toggle" id="mobileToggle" aria-label="Toggle navigation"><i class="fa-solid fa-bars"></i></button>
+</div>
+</div>
+</nav>
+
+<!-- ================= DESKTOP CONTENT ================= -->
+<div class="desktop-only">
+
+<section class="hero" id="about">
+<canvas id="particleCanvas"></canvas>
+<div class="hero-container">
+<div class="hero-text">
+<span class="badge" id="companyBadge">VIORA · EcoSystems</span>
+<h1><span id="heroName">Cliff Johns</span><br /><span class="gradient-text" id="heroTitle">Business Operating Systems That Run Themselves</span></h1>
+<div class="typed-wrapper"><span id="typedText"></span><span class="typed-cursor">|</span></div>
+<p id="heroBio"></p>
+<div class="hero-buttons">
+<a href="#contact" class="btn-primary" id="heroBtn1"><i class="fa-solid fa-paper-plane"></i> <span id="heroBtn1Label">Book a Demo</span></a>
+<a href="#" class="btn-apk" id="apkBtn" target="_blank" rel="noopener"><i class="fa-solid fa-download"></i> <span id="apkBtnLabel">Download App</span></a>
+</div>
+<div class="hero-stats">
+<div class="stat-item"><span class="stat-number"><span class="accent" id="statProjects">22</span>+</span><span class="stat-label" id="statProjectsLabel">Products Built</span></div>
+<div class="stat-item"><span class="stat-number"><span class="accent" id="statIndustries">10</span>+</span><span class="stat-label" id="statIndustriesLabel">Industries Served</span></div>
+<div class="stat-item"><span class="stat-number"><span class="accent" id="statExperience">4</span>+</span><span class="stat-label" id="statExperienceLabel">Years Experience</span></div>
+</div>
+</div>
+<div class="hero-portrait-wrapper">
+  <div class="glow-ring"></div>
+  <img id="heroImage" class="hero-portrait" src="viora/viora.png" alt="Logo" />
+</div>
+</div>
+</section>
+
+<section class="section section-dark" id="ecosystem">
+<div class="container">
+<div class="section-header reveal">
+<span class="subtitle" id="ecosystemSubtitle">The Viora Ecosystem</span>
+<h2 id="ecosystemHeading">One System. <span class="highlight">Every Department.</span></h2>
+<div class="divider"></div>
+<p id="ecosystemDesc">Most businesses run on 5–7 disconnected tools. None of them talk. The owner becomes the human API — copying data, chasing payments, firefighting stockouts. Viora replaces all of it with one AI-powered nervous system.</p>
+</div>
+<div class="ecosystem-flow reveal" id="ecosystemFlow"></div>
+<div class="cta-section reveal" style="margin-top:2rem;">
+<h2 id="ecosystemCtaHeading">No human touches the data <span class="highlight">between steps.</span></h2>
+<p id="ecosystemCtaBody">That's what an ecosystem is — every part of your business sharing the same brain. That's what a standalone POS, CRM, or accounting tool cannot do.</p>
+</div>
+</div>
+</section>
+
+<section class="section section-surface" id="industries">
+<div class="container">
+<div class="section-header reveal">
+<span class="subtitle" id="industriesSubtitle">Industry Solutions</span>
+<h2 id="industriesHeading">Industries We <span class="highlight">Transform</span></h2>
+<div class="divider"></div>
+<p id="industriesDesc">Click any industry to see the specific pain points we solve and the features your team gets.</p>
+</div>
+<div class="industries-grid stagger-children" id="industriesGrid"></div>
+</div>
+</section>
+
+<section class="section section-dark" id="why">
+<div class="container">
+<div class="section-header reveal">
+<span class="subtitle" id="whySubtitle">The Difference</span>
+<h2 id="whyHeading">Ecosystem vs. <span class="highlight">Standalone Stack</span></h2>
+<div class="divider"></div>
+<p id="whyDesc">Here's what you tell a client who says <em>"Why not just buy QuickBooks + HubSpot + a POS?"</em></p>
+</div>
+<div class="compare-wrap reveal">
+<table class="compare-table">
+<thead><tr><th id="compareColCap">Capability</th><th class="standalone-col" id="compareColStandalone">Standalone Stack (5–7 vendors)</th><th class="ecosystem-col" id="compareColEcosystem">Viora Ecosystem (1 vendor)</th></tr></thead>
+<tbody id="compareBody"></tbody>
+</table>
+</div>
+</div>
+</section>
+
+<section class="section section-surface" id="services">
+<div class="container">
+<div class="section-header reveal">
+<span class="subtitle" id="servicesSubtitle">What We Do</span>
+<h2 id="servicesHeading">Our <span class="highlight">Services</span></h2>
+<div class="divider"></div>
+<p id="servicesDesc">Six services. One orchestrated ecosystem. Each one feeds the others with data.</p>
+</div>
+<div class="services-grid stagger-children" id="servicesGrid"></div>
+</div>
+</section>
+
+<section class="section section-dark" id="skills">
+<div class="container">
+<div class="section-header reveal">
+<span class="subtitle" id="skillsSubtitle">Tech Stack</span>
+<h2 id="skillsHeading">Our <span class="highlight">Skills</span></h2>
+<div class="divider"></div>
+<p id="skillsDesc">Technologies we master across web, mobile, AI, and enterprise.</p>
+</div>
+<div class="skills-grid stagger-children" id="skillsGrid"></div>
+</div>
+</section>
+
+<section class="section section-surface" id="projects">
+<div class="container">
+<div class="section-header reveal">
+<span class="subtitle" id="projectsSubtitle">Portfolio</span>
+<h2 id="projectsHeading">Featured <span class="highlight">Products</span></h2>
+<div class="divider"></div>
+<p id="projectsDesc">22+ ventures from the VIORA Collective ecosystem — proof of what one unified system can ship.</p>
+</div>
+<div class="projects-grid stagger-children" id="projectsGrid"></div>
+</div>
+</section>
+
+<section class="section section-dark" id="testimonials">
+<div class="container">
+<div class="section-header reveal">
+<span class="subtitle" id="testimonialsSubtitle">Testimonials</span>
+<h2 id="testimonialsHeading">Client <span class="highlight">Feedback</span></h2>
+<div class="divider"></div>
+</div>
+<div class="testimonials-grid stagger-children" id="testimonialsGrid"></div>
+</div>
+</section>
+
+<section class="section section-surface" id="blog">
+<div class="container">
+<div class="section-header reveal">
+<span class="subtitle" id="blogSubtitle">Insights</span>
+<h2 id="blogHeading">From the <span class="highlight">Blog</span></h2>
+<div class="divider"></div>
+<p id="blogDesc">Thoughts on software, AI, fintech, and building digital products in Africa.</p>
+</div>
+<div class="section-blog-grid" id="blogGrid"></div>
+</div>
+</section>
+
+<section class="section section-dark" id="faq">
+<div class="container">
+<div class="section-header reveal">
+<span class="subtitle" id="faqSubtitle">Questions</span>
+<h2 id="faqHeading">Frequently <span class="highlight">Asked</span></h2>
+<div class="divider"></div>
+<p id="faqDesc">Common questions about working with VIORA.</p>
+</div>
+<div class="faq-grid" id="faqGrid"></div>
+</div>
+</section>
+
+<section class="section section-surface" id="tech">
+<div class="container">
+<div class="section-header reveal">
+<span class="subtitle" id="techSubtitle">Stack</span>
+<h2 id="techHeading">Technologies We <span class="highlight">Use</span></h2>
+<div class="divider"></div>
+</div>
+<div class="tech-marquee"><div class="tech-track" id="techTrack"></div></div>
+</div>
+</section>
+
+<section class="section section-dark" id="stats">
+<div class="container">
+<div class="section-header reveal">
+<span class="subtitle" id="statsSubtitle">By The Numbers</span>
+<h2 id="statsHeading">Our <span class="highlight">Impact</span></h2>
+<div class="divider"></div>
+</div>
+<div class="stats-banner-grid" id="statsBannerGrid"></div>
+</div>
+</section>
+
+<section class="section section-surface" id="contact">
+<div class="container">
+<div class="section-header reveal">
+<span class="subtitle" id="contactSubtitle">Get in Touch</span>
+<h2 id="contactHeading">Let's <span class="highlight">Connect</span></h2>
+<div class="divider"></div>
+<p id="contactDesc">Book a 15-minute walkthrough. See the ecosystem in action with your own data.</p>
+</div>
+<div class="contact-grid reveal">
+<div class="contact-info">
+<h4 style="font-family:'Space Grotesk',sans-serif;color:var(--text-color);margin-bottom:1.5rem;"><i class="fa-solid fa-address-card" style="color:var(--accent);margin-right:.6rem;"></i> <span id="contactInfoHeading">Contact Details</span></h4>
+<div class="info-item"><div class="info-icon"><i class="fa-solid fa-user"></i></div><div><strong id="contactFounderLabel">Founder</strong><br /><span id="contactName">Clifford Munene</span></div></div>
+<div class="info-item"><div class="info-icon"><i class="fa-brands fa-whatsapp"></i></div><div><strong>WhatsApp</strong><br /><a id="contactPhoneLink" href="#" target="_blank" style="color:var(--accent);text-decoration:none;"><span class="phoneText" id="contactPhone">0713 428 774</span></a></div></div>
+<div class="info-item"><div class="info-icon"><i class="fa-solid fa-envelope"></i></div><div><strong>Email</strong><br /><span id="contactEmail">cliff254johns@gmail.com</span></div></div>
+<div class="info-item"><div class="info-icon"><i class="fa-solid fa-location-dot"></i></div><div><strong id="contactLocationLabel">Location</strong><br /><span id="contactLocation">Meru, Kenya</span></div></div>
+</div>
+<div class="contact-form">
+<h4 style="font-family:'Space Grotesk',sans-serif;color:var(--text-color);margin-bottom:1.2rem;"><i class="fa-solid fa-paper-plane" style="color:var(--accent);margin-right:.6rem;"></i> <span id="contactFormHeading">Send a Message</span></h4>
+<form id="contactForm">
+<div class="form-group"><label id="contactFormNameLabel">Your Name *</label><input type="text" id="formName" required placeholder="John Doe" /></div>
+<div class="form-group"><label id="contactFormEmailLabel">Your Email *</label><input type="email" id="formEmail" required placeholder="john@example.com" /></div>
+<div class="form-group"><label id="contactFormSubjectLabel">Subject</label><input type="text" id="formSubject" placeholder="Project Inquiry" /></div>
+<div class="form-group"><label id="contactFormMessageLabel">Message *</label><textarea id="formMessage" rows="4" required placeholder="Tell us about your business..."></textarea></div>
+<button type="submit" class="btn-submit" id="contactFormSubmit"><i class="fa-brands fa-whatsapp"></i> <span id="contactFormSubmitLabel">Send via WhatsApp</span></button>
+</form>
+</div>
+</div>
+</div>
+</section>
+
+<footer><p>&copy; <span id="currentYear"></span> <span class="footer-brand"><span id="footerName">VIORA</span> <span class="accent">·</span> <span id="footerOwner">Clifford Munene</span></span> — All Rights Reserved.</p></footer>
+</div>
+
+<!-- ================= MOBILE APP ================= -->
+<div class="mobile-app-container" id="mobileAppContainer">
+<div class="mobile-app-header">
+<div class="app-title" id="mobileAppTitle"><span class="logo-icon" id="mobileLogoIcon"><i class="fa-solid fa-code"></i></span><span id="mobileBrandText">CLIFF<span class="highlight">.</span></span></div>
+<div class="header-actions">
+<button class="theme-toggle" id="mobileThemeToggle" aria-label="Toggle theme"><i class="fa-solid fa-moon"></i></button>
+<a href="https://www.elma.co.ke/v.html" class="btn-portal-sm" id="mobilePortalLink" target="_blank" rel="noopener"><i class="fa-solid fa-globe"></i> <span id="mobilePortalLabel">VIORA</span></a>
+</div>
+</div>
+
+<div class="mobile-screen active" id="screen-home" data-screen="home">
+<div class="hero-mobile">
+<span class="badge" id="mobileCompanyBadge">VIORA · Business OS</span>
+<h1><span id="mobileHeroName">Clifford Munene</span><br /><span class="gradient-text" id="mobileHeroTitle">Business Operating Systems That Run Themselves</span></h1>
+<div class="typed-wrapper"><span id="mobileTypedText"></span><span class="typed-cursor">|</span></div>
+<p id="mobileHeroBio"></p>
+<div class="hero-buttons">
+<a href="#contact" class="btn-primary" data-screen-target="contact" id="mobileHeroBtn1"><i class="fa-solid fa-paper-plane"></i> <span id="mobileHeroBtn1Label">Book Demo</span></a>
+<a href="#" class="btn-apk" id="mobileApkBtn" target="_blank" rel="noopener"><i class="fa-solid fa-download"></i> <span id="mobileApkBtnLabel">App</span></a>
+</div>
+<div class="hero-portrait-wrapper">
+  <div class="glow-ring"></div>
+  <img id="mobileHeroImage" class="hero-portrait" src="viora/viora.png" alt="Logo" />
+</div>
+<div class="hero-stats">
+<div class="stat-item"><span class="stat-number"><span class="accent" id="mobileStatProjects">22</span>+</span><span class="stat-label" id="mobileStatProjectsLabel">Products</span></div>
+<div class="stat-item"><span class="stat-number"><span class="accent" id="mobileStatIndustries">10</span>+</span><span class="stat-label" id="mobileStatIndustriesLabel">Industries</span></div>
+<div class="stat-item"><span class="stat-number"><span class="accent" id="mobileStatExperience">4</span>+</span><span class="stat-label" id="mobileStatExperienceLabel">Years</span></div>
+</div>
+</div>
+</div>
+
+<div class="mobile-screen" id="screen-ecosystem" data-screen="ecosystem">
+<div class="mobile-section-header"><span class="subtitle" id="mobileEcosystemSubtitle">The Ecosystem</span><h2 id="mobileEcosystemHeading">One System. <span class="highlight">Every Dept.</span></h2><div class="divider"></div><p id="mobileEcosystemDesc">Every step feeds the next. No human touches the data.</p></div>
+<div id="mobileEcosystemFlow" style="display:flex;flex-direction:column;gap:10px;padding:4px 0 16px;"></div>
+</div>
+
+<div class="mobile-screen" id="screen-industries" data-screen="industries">
+<div class="mobile-section-header"><span class="subtitle" id="mobileIndustriesSubtitle">Industry Solutions</span><h2 id="mobileIndustriesHeading">Industries We <span class="highlight">Serve</span></h2><div class="divider"></div><p id="mobileIndustriesDesc">Tap any industry to see the specific features.</p></div>
+<div class="mobile-industries-list" id="mobileIndustriesList"></div>
+</div>
+
+<div class="mobile-screen" id="screen-services" data-screen="services">
+<div class="mobile-section-header"><span class="subtitle" id="mobileServicesSubtitle">What We Do</span><h2 id="mobileServicesHeading">Our <span class="highlight">Services</span></h2><div class="divider"></div><p id="mobileServicesDesc">Tap a service to learn more.</p></div>
+<div class="mobile-services-list" id="mobileServicesList"></div>
+</div>
+
+<div class="mobile-screen" id="screen-skills" data-screen="skills">
+<div class="mobile-section-header"><span class="subtitle" id="mobileSkillsSubtitle">Tech Stack</span><h2 id="mobileSkillsHeading">Our <span class="highlight">Skills</span></h2><div class="divider"></div><p id="mobileSkillsDesc">Technologies we master.</p></div>
+<div class="mobile-skills-grid" id="mobileSkillsGrid"></div>
+</div>
+
+<div class="mobile-screen" id="screen-projects" data-screen="projects">
+<div class="mobile-section-header"><span class="subtitle" id="mobileProjectsSubtitle">Portfolio</span><h2 id="mobileProjectsHeading">Featured <span class="highlight">Products</span></h2><div class="divider"></div><p id="mobileProjectsDesc">Selected work from the VIORA ecosystem.</p></div>
+<div class="mobile-projects-list" id="mobileProjectsList"></div>
+</div>
+
+<div class="mobile-screen" id="screen-testimonials" data-screen="testimonials">
+<div class="mobile-section-header"><span class="subtitle" id="mobileTestimonialsSubtitle">Testimonials</span><h2 id="mobileTestimonialsHeading">Client <span class="highlight">Feedback</span></h2><div class="divider"></div><p id="mobileTestimonialsDesc">What our clients say about us.</p></div>
+<div class="mobile-testimonials-list" id="mobileTestimonialsList"></div>
+</div>
+
+<div class="mobile-screen" id="screen-blog" data-screen="blog">
+<div class="mobile-section-header"><span class="subtitle" id="mobileBlogSubtitle">Insights</span><h2 id="mobileBlogHeading">From the <span class="highlight">Blog</span></h2><div class="divider"></div><p id="mobileBlogDesc">Thoughts on software, AI, and building in Africa.</p></div>
+<div id="mobileBlogList" style="display:flex;flex-direction:column;gap:14px;padding:4px 0 16px;"></div>
+</div>
+
+<div class="mobile-screen" id="screen-faq" data-screen="faq">
+<div class="mobile-section-header"><span class="subtitle" id="mobileFaqSubtitle">Questions</span><h2 id="mobileFaqHeading">Frequently <span class="highlight">Asked</span></h2><div class="divider"></div><p id="mobileFaqDesc">Common questions about working with us.</p></div>
+<div id="mobileFaqList" style="display:flex;flex-direction:column;gap:10px;padding:4px 0 16px;"></div>
+</div>
+
+<div class="mobile-screen" id="screen-contact" data-screen="contact">
+<div class="mobile-section-header"><span class="subtitle" id="mobileContactSubtitle">Get in Touch</span><h2 id="mobileContactHeading">Let's <span class="highlight">Connect</span></h2><div class="divider"></div></div>
+<div class="mobile-contact-info">
+<div class="info-item-sm"><div class="info-icon-sm"><i class="fa-solid fa-user"></i></div><div class="info-text-sm"><strong id="mobileContactFounderLabel">Founder</strong><span id="mobileContactName">Clifford Munene</span></div></div>
+<div class="info-item-sm"><div class="info-icon-sm"><i class="fa-brands fa-whatsapp"></i></div><div class="info-text-sm"><strong>WhatsApp</strong><a id="mobilePhoneLink" href="#" target="_blank" style="color:var(--accent);text-decoration:none;"><span class="phoneText" id="mobilePhone">0713 428 774</span></a></div></div>
+<div class="info-item-sm"><div class="info-icon-sm"><i class="fa-solid fa-envelope"></i></div><div class="info-text-sm"><strong>Email</strong><span id="mobileContactEmail">cliff254johns@gmail.com</span></div></div>
+</div>
+<div class="mobile-contact-form">
+<h4 style="font-family:'Space Grotesk',sans-serif;color:var(--text-color);margin-bottom:10px;font-size:.9rem;"><i class="fa-solid fa-paper-plane" style="color:var(--accent);margin-right:6px;"></i> <span id="mobileContactFormHeading">Send a Message</span></h4>
+<form id="mobileContactForm">
+<div class="form-group-sm"><label id="mobileFormNameLabel">Your Name *</label><input type="text" id="mobileFormName" required placeholder="John Doe" /></div>
+<div class="form-group-sm"><label id="mobileFormEmailLabel">Your Email *</label><input type="email" id="mobileFormEmail" required placeholder="john@example.com" /></div>
+<div class="form-group-sm"><label id="mobileFormSubjectLabel">Subject</label><input type="text" id="mobileFormSubject" placeholder="Project Inquiry" /></div>
+<div class="form-group-sm"><label id="mobileFormMessageLabel">Message *</label><textarea id="mobileFormMessage" rows="3" required placeholder="Tell us about your project..."></textarea></div>
+<button type="submit" class="btn-submit-sm" id="mobileFormSubmit"><i class="fa-brands fa-whatsapp"></i> <span id="mobileFormSubmitLabel">Send via WhatsApp</span></button>
+</form>
+</div>
+<div class="mobile-footer">&copy; <span id="mobileCurrentYear"></span> <span id="mobileFooterName">VIORA</span> · <span id="mobileFooterOwner">Clifford Munene</span></div>
+</div>
+
+<nav class="mobile-bottom-nav" id="mobileBottomNav">
+<button type="button" class="nav-item active" data-screen="home" id="mobileNavHome"><i class="fa-solid fa-house"></i><span class="nav-label" id="mobileNavHomeLabel">Home</span></button>
+<button type="button" class="nav-item" data-screen="ecosystem" id="mobileNavEco"><i class="fa-solid fa-diagram-project"></i><span class="nav-label" id="mobileNavEcoLabel">Eco</span></button>
+<button type="button" class="nav-item" data-screen="industries" id="mobileNavInd"><i class="fa-solid fa-industry"></i><span class="nav-label" id="mobileNavIndLabel">Ind.</span></button>
+<button type="button" class="nav-item" data-screen="services" id="mobileNavServ"><i class="fa-solid fa-briefcase"></i><span class="nav-label" id="mobileNavServLabel">Serv.</span></button>
+<button type="button" class="nav-item" data-screen="projects" id="mobileNavWork"><i class="fa-solid fa-folder-open"></i><span class="nav-label" id="mobileNavWorkLabel">Work</span></button>
+<button type="button" class="nav-item" data-screen="faq" id="mobileNavFaq"><i class="fa-solid fa-circle-question"></i><span class="nav-label" id="mobileNavFaqLabel">FAQ</span></button>
+<button type="button" class="nav-item" data-screen="contact" id="mobileNavContact"><i class="fa-solid fa-envelope"></i><span class="nav-label" id="mobileNavContactLabel">Contact</span></button>
+</nav>
+</div>
+
+<a href="#" class="whatsapp-float" id="whatsappFloat" target="_blank" rel="noopener" title="Chat on WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+<button class="scroll-top" id="scrollTopBtn" aria-label="Scroll to top"><i class="fa-solid fa-arrow-up"></i></button>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script type="module" src="public.js"></script>
+</body>
+</html>

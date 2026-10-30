@@ -1,0 +1,15 @@
+/* ═══════════════════════════════════════════════════════════════
+   VIORA CLIENT PORTAL — client.css v4.0
+   All styles are INLINED in client.html to guarantee zero FOUC
+   and zero stylesheet load failures.
+
+   This file is kept as a placeholder in case you later want to
+   split styles out. Currently, the HTML embeds all styles in a
+   single <style> block, so this file can be left empty or deleted.
+
+   Why? Because your previous CSS was 2,000+ lines and any single
+   parse error in it could break the whole portal. The new build
+   inlines everything for guaranteed reliability.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Intentionally empty — all styles are in client.html <style> block */

@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#08080e" />
+  <title>Viora Marketplace — Premium Software Licenses</title>
+  <meta name="description" content="Instant access to premium software tools in Kenyan Shillings. Delivered instantly via email." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/png" href="https://viora.co.ke/viora.png">
+  <link rel="apple-touch-icon" href="https://viora.co.ke/viora.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="VIORA">
+  <meta property="og:title" content="Viora Marketplace — Premium Software Licenses">
+  <meta property="og:description" content="Instant access to premium software tools in Kenyan Shillings.">
+  <meta property="og:image" content="https://viora.co.ke/viora.png">
+  <meta property="og:type" content="website">
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <link rel="stylesheet" href="/mainMarket/market.css" />
+  <!-- TikTok Pixel Code Start -->
+<script>
+!function (w, d, t) {
+  w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(
+var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{};ttq._o[e]=n||{};n=document.createElement("script")
+;n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
+
+
+  ttq.load('DBG4A4BC77U1OI24RFLG');
+  ttq.page();
+}(window, document, 'ttq');
+</script>
+<!-- TikTok Pixel Code End -->
+</head>
+<body>
+
+  <!-- ═══ ANIMATED BACKGROUND ═══ -->
+  <div class="bg-layer" aria-hidden="true">
+    <div class="bg-gradient"></div>
+    <div class="bg-blob b1"></div>
+    <div class="bg-blob b2"></div>
+    <div class="bg-blob b3"></div>
+    <div class="bg-grid"></div>
+  </div>
+
+  <!-- ═══ TOASTS ═══ -->
+  <div class="toast-container" id="toastContainer" role="region" aria-label="Notifications"></div>
+
+  <!-- ═══ ANNOUNCEMENT BAR ═══ -->
+  <div class="announce-bar" id="announceBar" aria-hidden="true" style="display:none;">
+    <div class="announce-track" id="announceTrack"></div>
+  </div>
+
+  <!-- ═══ NAV ═══ -->
+  <nav class="main-nav" id="mainNav">
+    <div class="nav-container">
+      <a href="#" class="brand-logo" onclick="App.scrollToTop(event)" title="Viora Marketplace">
+        <img src="https://viora.co.ke/viora.png" alt="Viora" height="40" />
+        <span class="brand-text">
+          <span class="brand-name">VIORA</span>
+          <span class="brand-sub">Marketplace</span>
+        </span>
+      </a>
+
+      <ul class="nav-links" id="navLinks" role="menu">
+        <li><a onclick="App.scrollToSection('carousel-section')" role="menuitem">Featured</a></li>
+        <li><a onclick="App.scrollToSection('products')" role="menuitem">Products</a></li>
+        <li><a onclick="App.scrollToSection('case-studies')" role="menuitem">Case Studies</a></li>
+        <li><a onclick="App.scrollToSection('how')" role="menuitem">How It Works</a></li>
+        <li><a onclick="App.scrollToSection('faq')" role="menuitem">FAQ</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <button class="nav-icon-btn wishlist-btn" id="wishlistToggle" aria-label="Open wishlist" title="Wishlist">
+          <i class="fa-solid fa-heart"></i>
+          <span class="badge" id="wishlistBadge" style="display:none;">0</span>
+        </button>
+        <button class="nav-icon-btn cart-btn-nav" id="cartToggle" aria-label="Open cart" title="Cart">
+          <i class="fa-solid fa-bag-shopping"></i>
+          <span class="badge" id="cartBadge" style="display:none;">0</span>
+        </button>
+        <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══ CART DRAWER ═══ -->
+  <aside class="cart-drawer" id="cartDrawer" aria-label="Shopping cart">
+    <div class="cart-header">
+      <h3><i class="fa-solid fa-bag-shopping"></i> Your Cart</h3>
+      <button class="cart-close" onclick="App.toggleCart()" aria-label="Close cart">&times;</button>
+    </div>
+    <div class="cart-body" id="cartBody">
+      <div class="cart-empty">
+        <i class="fa-solid fa-bag-shopping"></i>
+        <p>Your cart is empty.</p>
+        <button class="btn-ghost" onclick="App.toggleCart(); App.scrollToSection('products')">
+          Browse Products
+        </button>
+      </div>
+    </div>
+    <div class="cart-footer">
+      <div class="cart-total">
+        <span class="ct-label">Total</span>
+        <span class="ct-value" id="cartTotal">KSh 0</span>
+      </div>
+      <button class="cart-checkout-btn" id="cartCheckoutBtn" disabled onclick="App.openCheckout()">
+        <i class="fa-solid fa-lock"></i> Checkout Securely
+      </button>
+      <div class="cart-trust">
+        <span><i class="fa-solid fa-shield-halved"></i> Secure checkout</span>
+        <span><i class="fa-solid fa-bolt"></i> Instant delivery</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══ HERO ═══ -->
+  <section class="hero" id="home">
+    <div class="hero-container">
+      <div class="hero-text">
+        <div class="hero-badge-row">
+          <span class="badge" id="heroBadge"><i class="fa-solid fa-bolt"></i> Powered by Viora Intercollective</span>
+          <span class="live-pill" id="heroLive"><span class="dot"></span> Live</span>
+        </div>
+
+        <h1>
+          <span class="gradient-text" id="heroTitle1">Software Licenses</span>
+          <span class="line2" id="heroTitle2">That Power Your Business</span>
+        </h1>
+
+        <p class="hero-sub" id="heroSub">
+          Instant access to premium software tools — all prices in <strong>Kenyan Shillings</strong>, delivered instantly.
+        </p>
+
+        <div class="hero-buttons">
+          <button class="btn-primary" id="heroBtn1" onclick="App.scrollToSection('products')">
+            <i class="fa-solid fa-bag-shopping"></i> Browse Products
+          </button>
+          <button class="btn-secondary" id="heroBtn2" onclick="App.scrollToSection('how')">
+            <i class="fa-solid fa-circle-question"></i> How It Works
+          </button>
+        </div>
+
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="hs-val"><span class="accent" id="statProducts">0</span><span>+</span></div>
+            <div class="hs-lbl" id="statProductsLabel">Software Solutions</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="glow-ring"></div>
+        <div class="orbit-ring"></div>
+        <div class="orbit-ring ring2"></div>
+
+        <div class="float-chip chip1" id="floatChip1">
+          <i class="fa-solid fa-circle-check" id="floatChip1Icon"></i>
+          <span id="floatChip1Text">Instant delivery</span>
+        </div>
+        <div class="float-chip chip2" id="floatChip2">
+          <i class="fa-solid fa-star" id="floatChip2Icon"></i>
+          <span id="floatChip2Text">4.9/5 rating</span>
+        </div>
+        <div class="float-chip chip3" id="floatChip3">
+          <i class="fa-solid fa-shield-halved" id="floatChip3Icon"></i>
+          <span id="floatChip3Text">Secure M-Pesa</span>
+        </div>
+
+        <div class="hero-featured" id="featuredCard" style="display:none;">
+          <div class="crown-wrap"><i class="fa-solid fa-crown"></i></div>
+          <div class="featured-label" id="featuredLabel">Most Popular</div>
+          <h3 id="featuredName">Featured</h3>
+          <div class="big-price" id="featuredPrice">KSh 0</div>
+          <div class="price-note" id="featuredNote">One-time payment</div>
+          <ul id="featuredFeatures"></ul>
+          <button class="btn-primary" id="featuredBtn">
+            <i class="fa-solid fa-cart-plus"></i> Buy Now
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ TRUST STRIP ═══ -->
+  <section class="trust-strip" id="trustStrip" style="display:none;">
+    <div class="trust-grid" id="trustGrid"></div>
+  </section>
+
+  <!-- ═══ CAROUSEL (FEATURED) — comes BEFORE the catalogue ═══ -->
+  <section class="section" id="carousel-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="subtitle" id="carouselSubtitle">Browse the Collection</span>
+        <h2 id="carouselHeading">Featured <span class="highlight">Products</span></h2>
+        <div class="divider"></div>
+        <p id="carouselDesc">Swipe or scroll through our catalog. Click any product to see details or add it to your cart.</p>
+      </div>
+
+      <div class="carousel-wrapper" id="carouselWrapper">
+        <button class="carousel-nav carousel-prev" id="carouselPrev" aria-label="Previous products">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <button class="carousel-nav carousel-next" id="carouselNext" aria-label="Next products">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+        <div class="carousel-track" id="carouselTrack">
+          <div class="carousel-empty">
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            <p>Loading products…</p>
+          </div>
+        </div>
+      </div>
+      <div class="carousel-dots" id="carouselDots"></div>
+      <div class="carousel-auto-hint">
+        <i class="fa-solid fa-circle-info"></i>
+        Hover to pause · Auto-advances every 4 seconds
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ PRODUCTS CATALOGUE ═══ -->
+  <section class="section section-dark" id="products">
+    <div class="container">
+      <div class="section-header">
+        <span class="subtitle" id="productsSubtitle">Our Catalog</span>
+        <h2 id="productsHeading">Product <span class="highlight">Collection</span></h2>
+        <div class="divider"></div>
+        <p id="productsDesc">Browse by category or search. Add items to cart, then checkout securely with M-Pesa.</p>
+        <div class="section-pills">
+          <span class="fx-note"><i class="fa-solid fa-coins"></i> All prices in Kenyan Shillings (KSh)</span>
+          <span class="live-pill"><span class="dot"></span> Live from Viora system</span>
+        </div>
+      </div>
+
+      <div class="shop-toolbar">
+        <div class="search-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="searchInput" placeholder="Search products, categories, tags…" oninput="App.onSearch(this.value)" aria-label="Search products" autocomplete="off" />
+          <button class="search-clear" onclick="App.onSearch(''); document.getElementById('searchInput').value = '';" aria-label="Clear search">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+          <div class="search-suggestions" id="searchSuggestions" style="display:none;"></div>
+        </div>
+        <select class="toolbar-select" id="sortSelect" onchange="App.onSort(this.value)" aria-label="Sort products">
+         <option value="popular">Recommended for you</option>
+          <option value="price-asc">Price: Low → High</option>
+          <option value="price-desc">Price: High → Low</option>
+          <option value="name-asc">Name: A → Z</option>
+          <option value="name-desc">Name: Z → A</option>
+        </select>
+        <select class="toolbar-select" id="priceFilter" onchange="App.onPriceFilter(this.value)" aria-label="Filter by price">
+          <option value="all">All Prices</option>
+          <option value="under-2k">Under KSh 2,000</option>
+          <option value="2k-5k">KSh 2,000 – 5,000</option>
+          <option value="5k-10k">KSh 5,000 – 10,000</option>
+          <option value="over-10k">Over KSh 10,000</option>
+        </select>
+      </div>
+
+            <div class="category-bar-wrap">
+  <div class="cat-search-wrap">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <input id="catSearchInput" placeholder="Find a category…" autocomplete="off" />
+  </div>
+        <button class="cat-scroll-btn prev" id="catPrev" aria-label="Scroll categories left">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <div class="category-bar" id="categoryBar" role="tablist" aria-label="Product categories"></div>
+        <button class="cat-scroll-btn next" id="catNext" aria-label="Scroll categories right">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+
+      <div class="product-grid product-grid-large" id="productGrid">
+        <div class="empty-catalog">
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          <h3>Loading catalog…</h3>
+          <p>Syncing from Viora system.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ CASE STUDIES ═══ -->
+  <section class="section" id="case-studies" style="display:none;">
+    <div class="container">
+      <div class="section-header">
+        <span class="subtitle" id="caseSubtitle">Built for Real Businesses</span>
+        <h2 id="caseHeading">Case <span class="highlight">Studies</span></h2>
+        <div class="divider"></div>
+        <p id="caseDesc">See how Viora has solved real problems for businesses across industries.</p>
+      </div>
+      <div class="case-grid" id="caseGrid"></div>
+    </div>
+  </section>
+
+  <!-- ═══ HOW IT WORKS ═══ -->
+  <section class="section section-dark" id="how">
+    <div class="container">
+      <div class="section-header">
+        <span class="subtitle" id="howSubtitle">Simple Process</span>
+        <h2 id="howHeading">How It <span class="highlight">Works</span></h2>
+        <div class="divider"></div>
+      </div>
+      <div class="steps-grid" id="stepsGrid"></div>
+    </div>
+  </section>
+
+  <!-- ═══ TESTIMONIALS ═══ -->
+  <section class="section" id="testimonials" style="display:none;">
+    <div class="container">
+      <div class="section-header">
+        <span class="subtitle">Customer Stories</span>
+        <h2>What Clients <span class="highlight">Say</span></h2>
+        <div class="divider"></div>
+      </div>
+      <div class="testi-grid" id="testiGrid"></div>
+    </div>
+  </section>
+
+  <!-- ═══ FAQ ═══ -->
+  <section class="section section-dark" id="faq" style="display:none;">
+    <div class="container">
+      <div class="section-header">
+        <span class="subtitle" id="faqSubtitle">Questions</span>
+        <h2 id="faqHeading">Frequently <span class="highlight">Asked</span></h2>
+        <div class="divider"></div>
+      </div>
+      <div class="faq-list" id="faqList"></div>
+    </div>
+  </section>
+
+  <!-- ═══ NEWSLETTER ═══ -->
+  <section class="section">
+    <div class="container">
+      <div class="newsletter">
+        <h3 id="newsletterHeading">Stay in the loop</h3>
+        <p id="newsletterDesc">Get notified about new products and exclusive KSh discounts.</p>
+        <form class="newsletter-form" onsubmit="App.subscribeNewsletter(event)">
+          <input type="email" id="newsletterEmail" placeholder="you@example.com" required aria-label="Email address" />
+          <button type="submit"><i class="fa-solid fa-paper-plane"></i> Subscribe</button>
+        </form>
+        <div class="newsletter-note">We respect your inbox. Unsubscribe anytime.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-col">
+        <div class="footer-brand">
+          <img src="https://viora.co.ke/viora.png" alt="Viora" height="32" />
+          <span id="footerBrand">VIORA Marketplace</span>
+        </div>
+        <p id="footerText">Buy premium software licenses instantly in Kenyan Shillings.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Shop</h4>
+        <a onclick="App.scrollToSection('carousel-section')">Featured</a>
+        <a onclick="App.scrollToSection('products')">All Products</a>
+        <a onclick="App.scrollToSection('case-studies')">Case Studies</a>
+        <a onclick="App.scrollToSection('how')">How It Works</a>
+        <a onclick="App.openTrack()">Track Order / Quote</a>
+        <a onclick="App.openWishlist()">My Wishlist</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="https://www.elma.co.ke/v.html" target="_blank" rel="noopener">Viora Ecosystem</a>
+        <a href="https://www.elma.co.ke/v2.html" target="_blank" rel="noopener">Public Portfolio</a>
+        <a href="https://www.elma.co.ke/v3.html" target="_blank" rel="noopener">Partner Portal</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <a href="#" id="footerWhatsApp"><i class="fa-brands fa-whatsapp"></i> <span id="footerPhone">Contact us</span></a>
+        <a href="#" id="footerEmail"><i class="fa-solid fa-envelope"></i> <span id="footerEmailText">Email us</span></a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      &copy; <span id="currentYear"></span> <span class="accent">VIORA</span> · All Rights Reserved · Prices in KSh (KES)
+    </div>
+  </footer>
+
+  <!-- ═══ WHATSAPP FLOAT ═══ -->
+  <a href="#" class="whatsapp-float" id="whatsappFloat" target="_blank" rel="noopener" title="Chat on WhatsApp" style="display:none;" aria-label="Chat on WhatsApp">
+    <i class="fa-brands fa-whatsapp"></i>
+  </a>
+
+  <!-- ═══ MOBILE BOTTOM NAV ═══ -->
+  <nav class="mobile-bottom-nav" id="mobileBottomNav" role="navigation">
+    <button class="mn-item active" data-target="home" onclick="App.mobileNav('home')">
+      <i class="fa-solid fa-house"></i><span>Home</span>
+    </button>
+    <button class="mn-item" data-target="products" onclick="App.mobileNav('products')">
+      <i class="fa-solid fa-box-open"></i><span>Products</span>
+    </button>
+    <button class="mn-item" data-target="cart" onclick="App.toggleCart()">
+      <i class="fa-solid fa-bag-shopping"></i><span>Cart</span>
+    </button>
+    <button class="mn-item" data-target="how" onclick="App.mobileNav('how')">
+      <i class="fa-solid fa-circle-question"></i><span>Help</span>
+    </button>
+  </nav>
+
+  <!-- ═══ PRODUCT DETAIL MODAL ═══ -->
+  <div class="modal-overlay" id="productDetailModal" role="dialog" aria-modal="true" aria-labelledby="pdmTitle">
+    <div class="modal-card modal-product-detail">
+      <button class="close-modal" onclick="App.closeModal('productDetailModal')" aria-label="Close">&times;</button>
+      <div id="productDetailBody"></div>
+    </div>
+  </div>
+
+  <!-- ═══ GET QUOTE MODAL ═══ -->
+  <div class="modal-overlay" id="quoteModal" role="dialog" aria-modal="true" aria-labelledby="quoteModalTitle">
+    <div class="modal-card">
+      <button class="close-modal" onclick="App.closeModal('quoteModal')" aria-label="Close">&times;</button>
+      <h3><span class="modal-icon"><i class="fa-solid fa-comments-dollar"></i></span><span id="quoteModalTitle">Request a Quote</span></h3>
+      <p class="quote-modal-sub" id="quoteModalSub">Tell us about your business and we'll get back to you within 2 hours during business hours.</p>
+      <form id="quoteForm">
+        <input type="hidden" id="quoteProductId" />
+        <input type="hidden" id="quoteProductName" />
+        <div class="modal-field">
+          <label>Product / Service</label>
+          <input type="text" id="quoteProductDisplay" readonly class="readonly-input" />
+        </div>
+        <div class="modal-field"><label>Your Name *</label><input type="text" id="quoteName" required placeholder="e.g. Alex Mwangi" /></div>
+        <div class="modal-field"><label>Email *</label><input type="email" id="quoteEmail" required placeholder="you@example.com" /></div>
+        <div class="modal-field"><label>Phone (WhatsApp / M-Pesa) *</label><input type="tel" id="quotePhone" required placeholder="254712345678" /></div>
+        <div class="modal-field"><label>Company / Business Name</label><input type="text" id="quoteCompany" placeholder="e.g. Tuma Restaurant" /></div>
+        <div class="modal-field">
+          <label>Industry *</label>
+          <select id="quoteIndustry" required>
+            <option value="">Select your industry…</option>
+            <option value="restaurant">Restaurant / Food</option>
+            <option value="retail">Retail / Shop</option>
+            <option value="salon">Salon / Spa / Beauty</option>
+            <option value="healthcare">Healthcare / Clinic</option>
+            <option value="education">Education / School</option>
+            <option value="realestate">Real Estate</option>
+            <option value="logistics">Logistics / Transport</option>
+            <option value="professional">Professional Services</option>
+            <option value="ecommerce">E-commerce / Online</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label>Company Size</label>
+          <select id="quoteCompanySize">
+            <option value="1-5">1–5 people</option>
+            <option value="6-20">6–20 people</option>
+            <option value="21-50">21–50 people</option>
+            <option value="51-200">51–200 people</option>
+            <option value="200+">200+ people</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label>Budget Range (KSh) *</label>
+          <select id="quoteBudget" required>
+            <option value="">Select budget…</option>
+            <option value="under-20k">Under KSh 20,000</option>
+            <option value="20k-50k">KSh 20,000 – 50,000</option>
+            <option value="50k-150k">KSh 50,000 – 150,000</option>
+            <option value="150k-500k">KSh 150,000 – 500,000</option>
+            <option value="over-500k">Over KSh 500,000</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label>Timeline</label>
+          <select id="quoteTimeline">
+            <option value="asap">As soon as possible</option>
+            <option value="1month">Within 1 month</option>
+            <option value="3months">Within 3 months</option>
+            <option value="flexible">Flexible</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label>What do you need? *</label>
+          <textarea id="quoteNeeds" rows="3" required placeholder="Describe your requirements, current setup, and any specific features you need…"></textarea>
+        </div>
+        <button type="submit" class="btn-primary btn-full" id="quoteSubmitBtn">
+          <i class="fa-solid fa-paper-plane"></i> Send Quote Request
+        </button>
+        <button type="button" class="btn-outline btn-full" onclick="App.closeModal('quoteModal')">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══ PURCHASE MODAL ═══ -->
+  <div class="modal-overlay" id="purchaseModal" role="dialog" aria-modal="true" aria-labelledby="purchaseModalTitle">
+    <div class="modal-card">
+      <button class="close-modal" onclick="App.closeModal('purchaseModal')" aria-label="Close">&times;</button>
+      <h3><span class="modal-icon"><i class="fa-solid fa-bag-shopping"></i></span><span id="purchaseModalTitle">Complete Your Purchase</span></h3>
+      <form id="purchaseForm">
+        <input type="hidden" id="purchaseProductId" />
+        <input type="hidden" id="purchaseProductName" />
+        <input type="hidden" id="purchaseMode" value="single" />
+        <div class="modal-field">
+          <label>Product</label>
+          <input type="text" id="purchaseProductDisplay" readonly class="readonly-input" />
+        </div>
+        <div class="modal-field" id="planField" style="display:none;">
+          <label>Plan</label>
+          <select id="purchasePlan"></select>
+        </div>
+        <div class="modal-field"><label>Your Name *</label><input type="text" id="purchaseName" required placeholder="e.g. Alex Mwangi" /></div>
+        <div class="modal-field"><label>Email *</label><input type="email" id="purchaseEmail" required placeholder="you@example.com" /></div>
+        <div class="modal-field"><label>Phone (M-Pesa) *</label><input type="tel" id="purchasePhone" required placeholder="254712345678" /></div>
+        <div class="modal-field">
+          <label>Payment Method</label>
+          <select id="purchaseMethod">
+            <option value="mpesa">M-Pesa</option>
+            <option value="card">Credit / Debit Card</option>
+            <option value="bank">Bank Transfer</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label>Promo Code (optional)</label>
+          <input type="text" id="purchasePromo" placeholder="e.g. VIORA10" oninput="App.applyPromo(this.value)" />
+        </div>
+        <div id="orderSummaryBox" class="order-summary-box" style="display:none;">
+          <div class="summary-label">Order Summary</div>
+          <div id="orderSummaryItems"></div>
+          <div id="orderSummaryTotal" class="summary-total"></div>
+        </div>
+        <button type="submit" class="btn-primary btn-full" id="purchaseSubmitBtn">
+          <i class="fa-solid fa-lock"></i> Complete Purchase
+        </button>
+        <button type="button" class="btn-outline btn-full" onclick="App.closeModal('purchaseModal')">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══ THANK-YOU MODAL ═══ -->
+  <div class="modal-overlay" id="thankYouModal" role="dialog" aria-modal="true">
+    <div class="modal-card modal-centered" style="max-width:520px;">
+      <button class="close-modal" onclick="App.closeModal('thankYouModal'); App.resetPurchaseForm();" aria-label="Close">&times;</button>
+      <div class="thanks-icon">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      <h3 class="thanks-title">Thank You for Your Purchase!</h3>
+      <p class="thanks-sub">Your order has been received and our team has been notified.</p>
+      <div class="thanks-info-box">
+        <i class="fa-solid fa-headset"></i>
+        <div>
+          <strong>Viora Support will be in contact soon.</strong><br>
+          We'll reach out on <strong id="thanksPhone">your phone</strong> or <strong id="thanksEmail">your email</strong> with payment instructions and your license key. Typically within a few minutes during business hours.
+        </div>
+      </div>
+      <div class="thanks-order-box">
+        <div class="thanks-order-label">Order Reference</div>
+        <div class="thanks-order-id" id="thanksOrderId">ORD-XXXXX</div>
+        <div class="thanks-order-summary" id="thanksSummary">— item(s) · KSh 0</div>
+      </div>
+      <button class="btn-primary btn-full" onclick="App.closeModal('thankYouModal'); App.resetPurchaseForm();">
+        <i class="fa-solid fa-check"></i> Got It, Thanks
+      </button>
+      <a href="#" id="thanksWhatsApp" class="thanks-wa-link" target="_blank" rel="noopener">
+        <i class="fa-brands fa-whatsapp"></i> Chat with support now
+      </a>
+    </div>
+  </div>
+
+  <!-- ═══ QUOTE THANK-YOU MODAL ═══ -->
+  <div class="modal-overlay" id="quoteThankYouModal" role="dialog" aria-modal="true">
+    <div class="modal-card modal-centered" style="max-width:520px;">
+      <button class="close-modal" onclick="App.closeModal('quoteThankYouModal'); App.resetQuoteForm();" aria-label="Close">&times;</button>
+      <div class="thanks-icon"><i class="fa-solid fa-circle-check"></i></div>
+      <h3 class="thanks-title">Quote Request Sent!</h3>
+      <p class="thanks-sub">We've received your requirements. A Viora specialist will contact you within 2 hours during business hours.</p>
+      <div class="thanks-info-box">
+        <i class="fa-solid fa-headset"></i>
+        <div>
+          <strong>What happens next:</strong><br>
+          1. We review your requirements<br>
+          2. We send you a custom quote<br>
+          3. You approve and we start building
+        </div>
+      </div>
+      <div class="thanks-order-box">
+        <div class="thanks-order-label">Quote Reference</div>
+        <div class="thanks-order-id" id="quoteThanksId">QTE-XXXXX</div>
+      </div>
+      <a href="#" id="quoteThanksWhatsApp" class="btn-primary btn-full" style="text-decoration:none;display:flex;justify-content:center;gap:.5rem;" target="_blank" rel="noopener">
+        <i class="fa-brands fa-whatsapp"></i> Chat with us now
+      </a>
+      <button class="btn-outline btn-full" style="margin-top:.6rem;" onclick="App.closeModal('quoteThankYouModal'); App.resetQuoteForm();">Done</button>
+    </div>
+  </div>
+
+  <!-- ═══ SUCCESS MODAL ═══ -->
+  <div class="modal-overlay" id="successModal" role="dialog" aria-modal="true">
+    <div class="modal-card modal-centered" style="max-width:460px;">
+      <button class="close-modal" onclick="App.closeModal('successModal'); App.resetPurchaseForm();" aria-label="Close">&times;</button>
+      <div class="thanks-icon"><i class="fa-solid fa-circle-check"></i></div>
+      <h3 class="thanks-title">Purchase Successful!</h3>
+      <p class="thanks-sub">Your license(s) have been delivered to your email. The Viora system has been updated in real time.</p>
+      <div class="license-box">
+        <div class="license-label">Your License Key(s)</div>
+        <div class="license-value" id="licenseKeyDisplay">VIORA-XXXX-XXXX</div>
+      </div>
+      <div class="order-detail-box">
+        <div class="order-detail-label">Order Details</div>
+        <div class="order-detail-grid" id="orderDetailGrid"></div>
+      </div>
+      <button class="btn-primary btn-full" onclick="App.closeModal('successModal'); App.resetPurchaseForm();">
+        <i class="fa-solid fa-check"></i> Done
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══ HISTORY MODAL ═══ -->
+  <div class="modal-overlay" id="historyModal" role="dialog" aria-modal="true">
+    <div class="modal-card" style="max-width:640px;">
+      <button class="close-modal" onclick="App.closeModal('historyModal')" aria-label="Close">&times;</button>
+      <h3><span class="modal-icon"><i class="fa-solid fa-clock-rotate-left"></i></span>Your Purchase History</h3>
+      <div id="historyList" class="modal-list"></div>
+    </div>
+  </div>
+
+  <!-- ═══ TRACK MODAL ═══ -->
+  <div class="modal-overlay" id="trackModal" role="dialog" aria-modal="true">
+    <div class="modal-card" style="max-width:640px;">
+      <button class="close-modal" onclick="App.closeModal('trackModal')" aria-label="Close">&times;</button>
+      <h3><span class="modal-icon"><i class="fa-solid fa-location-dot"></i></span>Track Order / Quote</h3>
+      <form onsubmit="App.lookupTrack(event)" style="margin-bottom:1.4rem;">
+        <div class="modal-field">
+          <label>Enter Order ID or Quote ID or Email</label>
+          <input type="text" id="trackQuery" placeholder="ORD-XXXXX or QTE-XXXXX or your email" required />
+        </div>
+        <button type="submit" class="btn-primary btn-full"><i class="fa-solid fa-magnifying-glass"></i> Track</button>
+      </form>
+      <div id="trackResults" class="modal-list"></div>
+    </div>
+  </div>
+
+  <!-- ═══ WISHLIST MODAL ═══ -->
+  <div class="modal-overlay" id="wishlistModal" role="dialog" aria-modal="true">
+    <div class="modal-card" style="max-width:640px;">
+      <button class="close-modal" onclick="App.closeModal('wishlistModal')" aria-label="Close">&times;</button>
+      <h3><span class="modal-icon" style="background:linear-gradient(135deg,var(--pink),var(--purple));"><i class="fa-solid fa-heart"></i></span>Your Wishlist</h3>
+      <div id="wishlistList" class="modal-list"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/mainMarket/market.js"></script>
+
+  <!-- ═══ NOTIFICATION SOUND ═══ -->
+  <audio id="vioraNotifSound" preload="auto" playsinline>
+    <source src="/sounds/viora-notification.mp3" type="audio/mpeg" />
+    <source src="/viora-notification.mp3" type="audio/mpeg" />
+    <source src="/notification.mp3" type="audio/mpeg" />
+  </audio>
+
+  <!-- ═══ NOTIFICATION BRIDGE ═══ -->
+  <script>
+    window.vioraNotify = window.vioraNotify || async function(opts) {
+      opts = opts || {};
+      try {
+        const id = 'notif-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        const db = (typeof firebase !== 'undefined' && firebase.database) ? firebase.database() : null;
+        if (!db) return;
+        await db.ref('viora_data/orgs/viora/notifications/' + id).set({
+          id,
+          title: opts.title || 'VIORA',
+          body: opts.body || '',
+          icon: opts.icon || 'fa-bell',
+          level: opts.level || 'info',
+          url: opts.url || '/dash.html',
+          source: opts.source || 'unknown',
+          ts: new Date().toISOString(),
+          read: false
+        });
+        return id;
+      } catch (e) {
+        console.warn('[vioraNotify] failed:', e.message);
+      }
+    };
+  </script>
+</body>
+</html>

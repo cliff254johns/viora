@@ -1,0 +1,1122 @@
+/* ═══════════════════════════════════════════════════════════════
+   VIORA HERO — v2.0
+   Realistic sky · visible clouds · realistic globe · solid text
+   ─────────────────────────────────────────────────────────────
+   Layers (back → front):
+     • .viora-hero              multi-stop sky + horizon glow + noise
+     • .viora-hero-canvas       rain / stars / lightning
+     • .viora-hero-grid         fine grid overlay
+     • .viora-hero-clouds       SVG clouds (2 layers, visible tint)
+     • .viora-hero-sunpath      sun arc + orb
+     • .viora-hero-content      3-column content grid
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────────
+   1. BASE BANNER + SKY VARIABLES
+   ───────────────────────────────────────────────────────────── */
+.viora-hero {
+  position: relative;
+  overflow: hidden;
+  margin: 0 0 24px 0;
+  padding: 28px 32px 26px;
+  min-height: 440px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  isolation: isolate;
+
+  /* Default palette (dusk) — overridden per hour */
+  --hero-sky-top:    #0b1a3d;
+  --hero-sky-mid:    #1e3a72;
+  --hero-sky-low:    #6d4a9c;
+  --hero-sky-bottom: #d97a5a;
+  --hero-horizon:    rgba(255, 180, 130, 0.45);
+
+  --hero-cloud-tint: 255, 255, 255;
+  --hero-cloud-alpha: 0.32;
+  --hero-cloud-drift: 180s;
+
+  --hero-cloud-tint-2: 180, 195, 220;
+  --hero-cloud-alpha-2: 0.22;
+
+  --hero-noise-opacity: 0.055;
+
+  --hero-font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --hero-font-body:    'Inter', system-ui, sans-serif;
+}
+
+/* ── HOURLY PALETTES — richer, multi-stop, with coloured horizon ── */
+.viora-hero--dawn {
+  --hero-sky-top:    #1a2456;
+  --hero-sky-mid:    #5b6cc4;
+  --hero-sky-low:    #d68aa8;
+  --hero-sky-bottom: #ffc2a8;
+  --hero-horizon:    rgba(255, 210, 180, 0.62);
+  --hero-cloud-tint: 255, 230, 220;
+  --hero-cloud-alpha: 0.42;
+  --hero-cloud-tint-2: 200, 180, 210;
+  --hero-cloud-alpha-2: 0.30;
+}
+.viora-hero--morning {
+  --hero-sky-top:    #0a3160;
+  --hero-sky-mid:    #1f6db5;
+  --hero-sky-low:    #52a8e0;
+  --hero-sky-bottom: #a8d8f0;
+  --hero-horizon:    rgba(200, 235, 255, 0.55);
+  --hero-cloud-tint: 255, 255, 255;
+  --hero-cloud-alpha: 0.55;
+  --hero-cloud-tint-2: 190, 210, 235;
+  --hero-cloud-alpha-2: 0.38;
+}
+.viora-hero--noon {
+  --hero-sky-top:    #0b5aa5;
+  --hero-sky-mid:    #2e8adb;
+  --hero-sky-low:    #6cbcec;
+  --hero-sky-bottom: #d8efff;
+  --hero-horizon:    rgba(255, 250, 220, 0.68);
+  --hero-cloud-tint: 255, 255, 255;
+  --hero-cloud-alpha: 0.60;
+  --hero-cloud-tint-2: 210, 225, 240;
+  --hero-cloud-alpha-2: 0.42;
+}
+.viora-hero--afternoon {
+  --hero-sky-top:    #1c3d8f;
+  --hero-sky-mid:    #4a7ec4;
+  --hero-sky-low:    #f0a15c;
+  --hero-sky-bottom: #ffd28a;
+  --hero-horizon:    rgba(255, 210, 150, 0.68);
+  --hero-cloud-tint: 255, 240, 220;
+  --hero-cloud-alpha: 0.55;
+  --hero-cloud-tint-2: 220, 190, 160;
+  --hero-cloud-alpha-2: 0.36;
+}
+.viora-hero--dusk {
+  --hero-sky-top:    #2a1455;
+  --hero-sky-mid:    #6b2a8a;
+  --hero-sky-low:    #d8556a;
+  --hero-sky-bottom: #ffab8a;
+  --hero-horizon:    rgba(255, 160, 140, 0.62);
+  --hero-cloud-tint: 255, 200, 200;
+  --hero-cloud-alpha: 0.50;
+  --hero-cloud-tint-2: 200, 150, 190;
+  --hero-cloud-alpha-2: 0.36;
+}
+.viora-hero--evening {
+  --hero-sky-top:    #161b48;
+  --hero-sky-mid:    #3c2a80;
+  --hero-sky-low:    #7e3cb0;
+  --hero-sky-bottom: #c46ad0;
+  --hero-horizon:    rgba(210, 150, 255, 0.48);
+  --hero-cloud-tint: 220, 200, 240;
+  --hero-cloud-alpha: 0.42;
+  --hero-cloud-tint-2: 160, 140, 200;
+  --hero-cloud-alpha-2: 0.32;
+}
+.viora-hero--night {
+  --hero-sky-top:    #01040e;
+  --hero-sky-mid:    #061024;
+  --hero-sky-low:    #0d2050;
+  --hero-sky-bottom: #1a3a72;
+  --hero-horizon:    rgba(80, 120, 200, 0.35);
+  --hero-cloud-tint: 140, 160, 200;
+  --hero-cloud-alpha: 0.30;
+  --hero-cloud-tint-2: 80, 100, 140;
+  --hero-cloud-alpha-2: 0.26;
+}
+
+/* ── THE SKY — layered gradient + horizon glow + noise ── */
+.viora-hero {
+  background:
+    radial-gradient(
+      ellipse 140% 60% at 50% 100%,
+      var(--hero-horizon) 0%,
+      transparent 65%
+    ),
+    linear-gradient(
+      180deg,
+      var(--hero-sky-top)     0%,
+      var(--hero-sky-mid)    38%,
+      var(--hero-sky-low)    72%,
+      var(--hero-sky-bottom) 100%
+    );
+}
+
+/* ── NOISE overlay — kills banding, adds photographic texture ── */
+.viora-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  opacity: var(--hero-noise-opacity);
+  mix-blend-mode: overlay;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 220px 220px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   2. CANVAS (particles)
+   ───────────────────────────────────────────────────────────── */
+.viora-hero-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   3. GRID OVERLAY
+   ───────────────────────────────────────────────────────────── */
+.viora-hero-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse at 50% 40%, black 20%, transparent 85%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 40%, black 20%, transparent 85%);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   4. SVG CLOUDS — TWO LAYERS, VISIBLE TINT
+   ───────────────────────────────────────────────────────────── */
+.viora-hero-clouds {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* Layer 2 (back) — larger, darker, slower */
+.viora-hero-clouds-back .cloud-back {
+  fill: rgba(var(--hero-cloud-tint-2), var(--hero-cloud-alpha-2));
+  filter: blur(34px);
+  animation: hero-cloud-drift-back var(--hero-cloud-drift) linear infinite;
+  transition: fill 900ms ease;
+}
+.viora-hero-clouds-back .cloud-back:nth-child(2) { animation-duration: calc(var(--hero-cloud-drift) * 1.20); }
+.viora-hero-clouds-back .cloud-back:nth-child(3) { animation-duration: calc(var(--hero-cloud-drift) * 0.90); }
+.viora-hero-clouds-back .cloud-back:nth-child(4) { animation-duration: calc(var(--hero-cloud-drift) * 1.10); }
+
+@keyframes hero-cloud-drift-back {
+  0%   { transform: translateX(0); }
+  50%  { transform: translateX(28px); }
+  100% { transform: translateX(0); }
+}
+
+/* Layer 1 (front) — brighter, smaller, sharper */
+.viora-hero-clouds-front .cloud {
+  fill: rgba(var(--hero-cloud-tint), var(--hero-cloud-alpha));
+  filter: blur(22px) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.18));
+  animation: hero-cloud-drift var(--hero-cloud-drift) linear infinite;
+  transition: fill 900ms ease, opacity 900ms ease;
+}
+.viora-hero-clouds-front .cloud-2 { animation-duration: calc(var(--hero-cloud-drift) * 0.85); }
+.viora-hero-clouds-front .cloud-3 { animation-duration: calc(var(--hero-cloud-drift) * 1.15); }
+.viora-hero-clouds-front .cloud-4 { animation-duration: calc(var(--hero-cloud-drift) * 0.75); }
+.viora-hero-clouds-front .cloud-5 { animation-duration: calc(var(--hero-cloud-drift) * 1.30); }
+.viora-hero-clouds-front .cloud-6 { animation-duration: calc(var(--hero-cloud-drift) * 0.95); }
+
+.viora-hero-clouds-front .cloud.cloud-hidden { opacity: 0; }
+
+@keyframes hero-cloud-drift {
+  0%   { transform: translateX(0); }
+  50%  { transform: translateX(40px); }
+  100% { transform: translateX(0); }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   5. SUN PATH + ORB
+   ───────────────────────────────────────────────────────────── */
+.viora-hero-sunpath {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 220px;
+  z-index: 4;
+  pointer-events: none;
+  color: rgba(255, 255, 255, 0.22);
+}
+.viora-hero-arc {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.viora-hero-orb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 56px;
+  height: 56px;
+  margin-left: -28px;
+  margin-top: -28px;
+  transform: translate(0, 0);
+  transition: transform 900ms linear;
+  will-change: transform;
+}
+.viora-hero-orb-halo,
+.viora-hero-orb-core,
+.viora-hero-orb-moon {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  transition: opacity 400ms ease;
+}
+.viora-hero-orb-halo {
+  background: radial-gradient(circle, rgba(255, 220, 120, 0.55) 0%, rgba(255, 180, 60, 0.25) 42%, transparent 72%);
+  animation: hero-orb-halo 4.5s ease-in-out infinite;
+}
+.viora-hero-orb-core {
+  inset: 12px;
+  background: radial-gradient(circle at 32% 28%, #fff8dc 0%, #ffd86a 40%, #ff9e2e 100%);
+  box-shadow:
+    0 0 28px rgba(255, 200, 80, 0.65),
+    0 0 60px rgba(255, 160, 50, 0.35);
+}
+.viora-hero-orb-moon {
+  inset: 14px;
+  background: radial-gradient(circle at 35% 30%, #f3f4f8 0%, #c8cad4 55%, #8e919d 100%);
+  box-shadow:
+    0 0 18px rgba(220, 230, 255, 0.55),
+    inset -6px -4px 10px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+}
+.viora-hero-orb[data-mode="moon"] .viora-hero-orb-halo {
+  background: radial-gradient(circle, rgba(180, 200, 255, 0.35) 0%, transparent 70%);
+}
+.viora-hero-orb[data-mode="moon"] .viora-hero-orb-core { opacity: 0; }
+.viora-hero-orb[data-mode="moon"] .viora-hero-orb-moon { opacity: 1; }
+
+@keyframes hero-orb-halo {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.12); opacity: 0.85; }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   6. CONTENT GRID
+   ───────────────────────────────────────────────────────────── */
+.viora-hero-content {
+  position: relative;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: 1.4fr 1.1fr 0.9fr;
+  gap: 28px;
+  align-items: stretch;
+  min-height: 400px;
+}
+.viora-hero-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.viora-hero-col-greeting { justify-content: space-between; }
+.viora-hero-col-weather  { justify-content: flex-start; gap: 18px; }
+.viora-hero-col-globe    { align-items: center; justify-content: space-between; }
+
+/* ── Eyebrow ── */
+.viora-hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.88);
+  margin-bottom: 14px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+}
+.viora-hero-eyebrow-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #22e6a0;
+  box-shadow: 0 0 10px #22e6a0;
+  animation: hero-dot-pulse 2.4s ease-in-out infinite;
+}
+@keyframes hero-dot-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   TITLE — SOLID WHITE FILL + PURE BLACK STROKE
+   ───────────────────────────────────────────────────────────── */
+.viora-hero-title {
+  font-family: var(--hero-font-display);
+  font-weight: 600;
+  font-size: clamp(1.85rem, 3.4vw, 2.6rem);
+  line-height: 1.06;
+  letter-spacing: -0.015em;
+
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  -webkit-text-stroke: 1.5px #000000;
+  paint-order: stroke fill;
+  text-shadow: none;
+
+  margin: 0 0 12px 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+.viora-hero-title *,
+.viora-hero-title span {
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  -webkit-text-stroke: 1.5px #000000;
+  paint-order: stroke fill;
+  text-shadow: none;
+}
+.viora-hero-accent {
+  font-family: var(--hero-font-display);
+  font-weight: 800;
+  font-style: italic;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  -webkit-text-stroke: 1.5px #000000;
+  paint-order: stroke fill;
+  text-shadow: none;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   META LINE — bigger time + date
+   ───────────────────────────────────────────────────────────── */
+.viora-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--hero-font-body);
+  font-size: clamp(1rem, 1.25vw, 1.15rem);
+  font-weight: 600;
+  letter-spacing: 0.005em;
+
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  -webkit-text-stroke: 1.2px #000000;
+  paint-order: stroke fill;
+  text-shadow: none;
+
+  margin-bottom: 18px;
+  line-height: 1.4;
+}
+.viora-hero-meta i {
+  color: #ffffff;
+  margin-right: 8px;
+  font-size: 1.05em;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.85));
+}
+.viora-hero-meta-sep { opacity: 0.6; }
+.viora-hero-meta > span { display: inline-flex; align-items: center; }
+
+#vioraHeroDate {
+  font-family: var(--hero-font-body);
+  font-weight: 700;
+  font-size: clamp(1.05rem, 1.35vw, 1.25rem);
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  -webkit-text-stroke: 1.4px #000000;
+  paint-order: stroke fill;
+  text-shadow: none;
+}
+
+#heroClock {
+  font-family: var(--hero-font-display);
+  font-weight: 800;
+  font-size: clamp(1.35rem, 1.9vw, 1.75rem);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  -webkit-text-stroke: 1.6px #000000;
+  paint-order: stroke fill;
+  text-shadow: none;
+}
+
+.viora-hero-divider {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.15), transparent);
+  margin-top: 16px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   7. FORECAST CURVE + STRIP — ENLARGED
+   ───────────────────────────────────────────────────────────── */
+.viora-hero-forecast {
+  margin-top: auto;
+  padding: 20px 20px 18px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 16px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.viora-hero-forecast-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.viora-hero-forecast-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+}
+.viora-hero-forecast-title i {
+  color: #6ec6ff;
+  font-size: 1rem;
+}
+.viora-hero-forecast-peak {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #22d3ee;
+}
+.viora-hero-forecast-canvas {
+  display: block;
+  width: 100%;
+  height: 96px;
+}
+.viora-hero-forecast-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 14px;
+}
+.fx-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 12px 4px 10px;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  text-align: center;
+  min-width: 0;
+  transition: background 200ms ease;
+}
+.fx-day.is-peak {
+  background: rgba(34, 211, 238, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.35);
+}
+.fx-day-label {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.70);
+  font-size: 0.75rem;
+}
+.fx-day-icon {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 1.15rem;
+  line-height: 1;
+}
+.fx-day-temp {
+  font-weight: 700;
+  color: #ffffff;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   8. WEATHER COLUMN
+   ───────────────────────────────────────────────────────────── */
+.viora-hero-weather-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.viora-hero-weather-icon {
+  width: 64px; height: 64px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.65rem;
+  color: #ffd86a;
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+.viora-hero-weather-headline { min-width: 0; }
+.viora-hero-weather-row {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+.viora-hero-weather-temp {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+.viora-hero-weather-degree {
+  font-size: 1rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.72);
+  margin-left: 2px;
+}
+.viora-hero-weather-cond {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.88);
+  margin-top: 4px;
+  text-transform: capitalize;
+}
+.viora-hero-weather-loc {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.65);
+  margin-top: 6px;
+}
+.viora-hero-weather-loc i { font-size: 0.6875rem; }
+
+.viora-hero-weather-hl {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.82);
+  font-variant-numeric: tabular-nums;
+}
+.viora-hero-weather-hl strong {
+  color: rgba(255, 255, 255, 0.58);
+  font-weight: 700;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  margin-right: 2px;
+}
+.viora-hero-weather-hl-sep { color: rgba(255, 255, 255, 0.35); }
+
+/* ── Dense metric grid ── */
+.viora-hero-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: auto;
+}
+.viora-hero-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px 12px 10px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 14px;
+  min-width: 0;
+  transition: background 200ms ease;
+}
+.viora-hero-metric:hover { background: rgba(255, 255, 255, 0.12); }
+.viora-hero-metric i {
+  font-size: 0.8125rem;
+  color: #6ec6ff;
+}
+.viora-hero-metric-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.58);
+}
+.viora-hero-metric-value {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+  word-break: break-word;
+  line-height: 1.2;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   9. GLOBE + STAT STRIP
+   ───────────────────────────────────────────────────────────── */
+.viora-hero-globe-wrap {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: grab;
+  margin: 0 auto;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.viora-hero-globe-wrap:active { cursor: grabbing; }
+.viora-hero-globe-canvas {
+  width: 180px;
+  height: 180px;
+  display: block;
+  border-radius: 50%;
+  pointer-events: auto;
+}
+.viora-hero-globe-aura {
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.18) 0%, transparent 70%);
+  pointer-events: none;
+  animation: hero-globe-aura 4s ease-in-out infinite;
+}
+@keyframes hero-globe-aura {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50%      { transform: scale(1.06); opacity: 1; }
+}
+.viora-hero-globe-hint {
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.6875rem;
+  color: rgba(255, 255, 255, 0.55);
+  opacity: 0;
+  transition: opacity 240ms ease;
+  white-space: nowrap;
+  pointer-events: none;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.viora-hero-globe-wrap:hover .viora-hero-globe-hint { opacity: 1; }
+
+/* ── Stat strip ── */
+.viora-hero-stats {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  width: 100%;
+  margin-top: 16px;
+}
+.viora-hero-stat {
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 14px;
+  min-width: 0;
+  transition: background 200ms ease;
+}
+.viora-hero-stat:hover { background: rgba(255, 255, 255, 0.12); }
+.viora-hero-stat-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.58);
+}
+.viora-hero-stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-top: 2px;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+  word-break: break-word;
+  line-height: 1.2;
+}
+.viora-hero-stat-sub {
+  font-size: 0.6875rem;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 2px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   10. LOCATION PICKER MODAL — v2.3
+   Bulletproof centering. Uses an explicit overlay + sheet
+   layout so it doesn't depend on position:fixed behaving
+   correctly inside transformed ancestors. The overlay is
+   inserted into the hero itself (see hero-banner.js) so it
+   is anchored to the banner, not the page bottom.
+   ───────────────────────────────────────────────────────────── */
+.viora-hero-location-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(2, 8, 15, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 24px;
+  overflow: auto;
+}
+.viora-hero-location-overlay.active { display: flex; }
+
+.viora-hero-location-sheet {
+  background: #0b1220;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 16px;
+  padding: 22px;
+  max-width: 460px;
+  width: 100%;
+  max-height: 100%;
+  overflow: auto;
+  color: #e2e8f0;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  animation: hero-sheet-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes hero-sheet-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+.viora-hero-location-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.viora-hero-location-head strong {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+.viora-hero-location-close {
+  background: transparent;
+  border: 0;
+  color: #94a3b8;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  border-radius: 8px;
+  transition: color 150ms ease, background 150ms ease;
+}
+.viora-hero-location-close:hover {
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.viora-hero-location-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#vioraHeroLocationModal .btn {
+  justify-content: space-between;
+  text-align: left;
+  width: 100%;
+  gap: 12px;
+}
+#vioraHeroLocationModal .btn small { opacity: 0.6; font-size: 0.68rem; }
+
+/* Legacy selector — kept so any old references still work
+   if the modal was cached, but the new overlay class above
+   is what the JS actually renders now. */
+#vioraHeroLocationModal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(2, 8, 15, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 2147483000;
+}
+#vioraHeroLocationModal.active { display: flex; }
+
+/* ─────────────────────────────────────────────────────────────
+   11. RESPONSIVE
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 1200px) {
+  .viora-hero-content {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "greeting weather"
+      "globe    globe";
+    gap: 24px;
+  }
+  .viora-hero-col-greeting { grid-area: greeting; }
+  .viora-hero-col-weather  { grid-area: weather; }
+  .viora-hero-col-globe    {
+    grid-area: globe;
+    flex-direction: row;
+    align-items: center;
+    gap: 24px;
+  }
+  .viora-hero-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .viora-hero {
+    padding: 24px 20px 22px;
+    min-height: 0;
+    border-radius: 20px;
+  }
+  .viora-hero-content {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "greeting"
+      "weather"
+      "globe";
+    gap: 20px;
+    min-height: 0;
+  }
+  .viora-hero-col-globe {
+    flex-direction: column;
+    gap: 14px;
+  }
+  .viora-hero-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+  }
+  .viora-hero-globe-wrap { width: 140px; height: 140px; }
+  .viora-hero-globe-canvas { width: 140px; height: 140px; }
+  .viora-hero-sunpath { height: 180px; }
+  .viora-hero-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+  .viora-hero { padding: 20px 16px 18px; }
+  .viora-hero-title { font-size: 1.6rem; }
+  .viora-hero-weather-icon { width: 54px; height: 54px; font-size: 1.4rem; }
+  .viora-hero-weather-temp { font-size: 2rem; }
+  .viora-hero-globe-wrap,
+  .viora-hero-globe-canvas { width: 120px; height: 120px; }
+  .viora-hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .viora-hero-stat:last-child { grid-column: 1 / -1; }
+  .viora-hero-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .viora-hero-sunpath { height: 150px; }
+
+  /* Enlarged forecast on mobile */
+  .fx-day { font-size: 0.8125rem; padding: 10px 3px 8px; }
+  .fx-day-label { font-size: 0.6875rem; }
+  .fx-day-icon { font-size: 1.05rem; }
+  .fx-day-temp { font-size: 0.9375rem; }
+  .viora-hero-forecast-canvas { height: 84px; }
+
+  #heroClock { font-size: 1.2rem; }
+  #vioraHeroDate { font-size: 0.95rem; }
+}
+
+@media (max-width: 420px) {
+  .viora-hero-title { font-size: 1.35rem; }
+  .viora-hero-meta { font-size: 0.78rem; gap: 8px; }
+  .viora-hero-globe-wrap,
+  .viora-hero-globe-canvas { width: 100px; height: 100px; }
+  .viora-hero-stat-value { font-size: 1.1rem; }
+  .viora-hero-weather-icon { width: 46px; height: 46px; font-size: 1.2rem; }
+  .viora-hero-metrics { grid-template-columns: 1fr 1fr; }
+  .viora-hero-metric { padding: 10px 10px 8px; }
+  .viora-hero-metric-value { font-size: 0.8125rem; }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   12. REDUCED MOTION
+   ───────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .viora-hero-clouds .cloud,
+  .viora-hero-clouds-back .cloud-back,
+  .viora-hero-orb-halo,
+  .viora-hero-globe-aura,
+  .viora-hero-eyebrow-dot {
+    animation: none !important;
+  }
+  .viora-hero-orb { transition: none; }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   13. PRINT
+   ───────────────────────────────────────────────────────────── */
+@media print {
+  .viora-hero {
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border: 1px solid #ccc;
+  }
+  .viora-hero-canvas,
+  .viora-hero-grid,
+  .viora-hero-clouds,
+  .viora-hero-sunpath { display: none !important; }
+  .viora-hero-title,
+  .viora-hero-weather-temp,
+  .viora-hero-stat-value,
+  .viora-hero-metric-value {
+    color: #000 !important;
+    text-shadow: none !important;
+    -webkit-text-fill-color: #000 !important;
+    -webkit-text-stroke: 0 !important;
+  }
+}
+/* v8.2 — Moon phase shaping.
+
+   The base orb is a full circle. When `--moon-illum` is < 1
+   we overlay a shadow circle offset horizontally to create a
+   crescent or gibbous shape. The overlay is drawn with
+   ::after and clipped to the orb's circle. */
+#vioraHeroOrb.is-moon {
+  position: relative;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+#vioraHeroOrb.is-moon::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  /* The shadow slides across the disc. At illum = 1 it is
+     fully off-disc (no shadow). At illum = 0.5 it covers
+     half. At illum = 0 it covers everything. */
+  background: rgba(8, 14, 28, 0.92);
+  transform: translateX(
+    calc(var(--moon-side, 1) * (1 - var(--moon-illum, 1)) * 100%)
+  );
+  transition: transform 1.2s ease;
+  pointer-events: none;
+}
+/* v1.0 — Orb tint + glow follow the real sun/moon color. */
+#vioraHeroOrb {
+  background: var(--orb-tint, rgba(255, 250, 235, 1));
+  box-shadow:
+    0 0 12px 2px var(--orb-glow, rgba(255, 250, 235, 0.55)),
+    0 0 40px 8px var(--orb-glow, rgba(255, 250, 235, 0.25));
+  border-radius: 50%;
+  transition: background-color 0.6s ease, box-shadow 0.6s ease;
+}
+
+/* If your existing CSS hard-codes a sun/moon background, the
+   `background: var(--orb-tint, ...)` above will override it
+   because inline style beats stylesheet rules. No change
+   needed to the base .is-sun / .is-moon classes. */
+   /* v1.0 — Background layer stack. Ensures the star canvas,
+   terminator canvas, clouds, and orb always render in the
+   right order even if individual files set conflicting
+   z-index values. */
+#vioraHeroBanner > .viora-hero-sky-canvas       { z-index: 0; }
+#vioraHeroBanner > .viora-hero-terminator-canvas{ z-index: 1; }
+#vioraHeroBanner > .viora-hero-clouds-back      { z-index: 2; }
+#vioraHeroBanner > .viora-hero-clouds-front     { z-index: 3; }
+#vioraHeroBanner > #vioraHeroOrb                { z-index: 4; }
+#vioraHeroBanner > .viora-hero-content          { z-index: 5; }
+/* ─────────────────────────────────────────────────────────
+   v1.0 — Weather tooltip internals.
+   The container's outer styles are set inline by
+   hero-tooltip.js (position, background, border, etc.).
+   These rules style the content the module injects.
+   ───────────────────────────────────────────────────────── */
+#vioraHeroTooltip .viora-tt-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+#vioraHeroTooltip .viora-tt-loc {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+#vioraHeroTooltip .viora-tt-cond {
+  font-size: 11.5px;
+  color: #94a3b8;
+}
+
+#vioraHeroTooltip .viora-tt-temps {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+#vioraHeroTooltip .viora-tt-temp {
+  font-size: 22px;
+  font-weight: 600;
+  color: #67e8f9;
+  line-height: 1;
+}
+#vioraHeroTooltip .viora-tt-feels {
+  font-size: 11.5px;
+  color: #94a3b8;
+}
+
+#vioraHeroTooltip .viora-tt-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+}
+#vioraHeroTooltip .viora-tt-row {
+  display: contents;
+}
+#vioraHeroTooltip .viora-tt-label {
+  font-size: 11.5px;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+#vioraHeroTooltip .viora-tt-value {
+  font-size: 11.5px;
+  color: #e2e8f0;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+#vioraHeroTooltip .viora-tt-delta {
+  color: #67e8f9;
+  font-size: 10.5px;
+  margin-left: 2px;
+}
+
+#vioraHeroTooltip .viora-tt-sep {
+  height: 1px;
+  background: rgba(148, 163, 184, 0.18);
+  margin: 8px 0 6px;
+}
+
+#vioraHeroTooltip .viora-tt-moon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#vioraHeroTooltip .viora-tt-moon-svg {
+  flex: 0 0 auto;
+  filter: drop-shadow(0 0 4px rgba(200, 220, 255, 0.35));
+}
+#vioraHeroTooltip .viora-tt-moon-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: #f1f5f9;
+}
+#vioraHeroTooltip .viora-tt-moon-illum {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* Reduced motion: kill the fade. */
+@media (prefers-reduced-motion: reduce) {
+  #vioraHeroTooltip {
+    transition: none !important;
+  }
+}
+.viora-hero-sunpath { display: none !important; }
