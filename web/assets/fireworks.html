@@ -1,0 +1,1485 @@
+[file name]: s1.html
+[file content begin]
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fireworks & Pyrotechnic Displays - MadFun Fireworks</title>
+    <meta name="description" content="Professional fireworks and pyrotechnic displays for events, weddings, corporate functions and celebrations across Kenya. Spectacular outdoor firework shows with certified pyrotechnicians.">
+    <meta name="keywords" content="fireworks Kenya, pyrotechnic displays Kenya, wedding fireworks, event fireworks, corporate fireworks, festival fireworks, New Year fireworks">
+    <meta name="author" content="MadFun Fireworks">
+    
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="logo.png">
+    
+    <style>
+        /* Base Styles - Matching Main Theme */
+        :root {
+            --primary: #ff3366;
+            --secondary: #ff9900;
+            --accent: #ffcc00;
+            --dark: #0a0a1a;
+            --darker: #050510;
+            --light: #ffffff;
+            --gray: #f0f0f0;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 80px;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--dark);
+            color: var(--light);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            line-height: 1.2;
+            text-shadow: 0 2px 20px rgba(255, 51, 102, 0.5);
+        }
+
+        h2 {
+            font-size: clamp(1.8rem, 3vw, 2.8rem);
+            margin-bottom: 2rem;
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 100px;
+            height: 4px;
+            background: var(--gradient);
+            border-radius: 2px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        section {
+            padding: 80px 0;
+            position: relative;
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            background: rgba(10, 10, 26, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: var(--transition);
+        }
+
+        header.scrolled {
+            padding: 10px 0;
+            background: rgba(10, 10, 26, 0.98);
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo span {
+            color: var(--primary);
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* Navigation */
+        .nav-main {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--gradient);
+            transition: var(--transition);
+            transform: translateX(-50%);
+        }
+
+        .nav-links a:hover::after {
+            width: 70%;
+        }
+
+        .mobile-menu {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        /* Service Banner */
+        .service-banner {
+            background: linear-gradient(rgba(10, 10, 26, 0.85), rgba(10, 10, 26, 0.92)), url('https://images.unsplash.com/photo-1467810563316-b5476525c0f9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            padding: 180px 0 100px;
+            text-align: center;
+            margin-top: 80px;
+        }
+
+        .service-banner h1 {
+            margin-bottom: 1.5rem;
+        }
+
+        .service-banner p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+
+        /* Service Description */
+        .service-description {
+            background: var(--darker);
+        }
+
+        .description-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .service-image {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .service-image img {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .service-image:hover img {
+            transform: scale(1.05);
+        }
+
+        .description-content h2 {
+            margin-bottom: 1.5rem;
+        }
+
+        .description-content p {
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .features-list {
+            list-style: none;
+            margin: 2rem 0;
+        }
+
+        .features-list li {
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+            position: relative;
+        }
+
+        .features-list li:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* Products Section */
+        .products-section {
+            background: var(--dark);
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-header h2 {
+            text-align: center;
+        }
+
+        .section-header h2::after {
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .section-header p {
+            max-width: 600px;
+            margin: 1rem auto 0;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .product-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .product-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow);
+            border-color: var(--primary);
+        }
+
+        .product-image {
+            height: 200px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .product-card:hover .product-image img {
+            transform: scale(1.1);
+        }
+
+        .product-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--primary);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .product-info {
+            padding: 1.5rem;
+        }
+
+        .product-info h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--secondary);
+            margin: 1rem 0;
+        }
+
+        .old-price {
+            text-decoration: line-through;
+            color: #999;
+            font-size: 1rem;
+            margin-left: 10px;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 1rem 2rem;
+            background: var(--gradient);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(255, 51, 102, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .buy-btn {
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        /* Portfolio Section */
+        .portfolio-section {
+            background: var(--darker);
+        }
+
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .portfolio-item {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            height: 250px;
+        }
+
+        .portfolio-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .portfolio-item:hover img {
+            transform: scale(1.05);
+        }
+
+        .portfolio-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+            padding: 1.5rem;
+            transform: translateY(100%);
+            transition: var(--transition);
+        }
+
+        .portfolio-item:hover .portfolio-overlay {
+            transform: translateY(0);
+        }
+
+        /* Safety Section */
+        .safety-section {
+            background: var(--dark);
+        }
+
+        .safety-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .safety-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .safety-card:hover {
+            transform: translateY(-5px);
+            border: 1px solid var(--primary);
+        }
+
+        .safety-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        /* Applications Section */
+        .applications-section {
+            background: var(--darker);
+        }
+
+        .applications-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .application-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .application-icon {
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+
+        /* Event Types Section */
+        .event-types-section {
+            background: var(--dark);
+        }
+
+        .event-types-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .event-type-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .event-type-card:hover {
+            transform: translateY(-5px);
+            border: 1px solid var(--primary);
+        }
+
+        .event-type-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, rgba(10, 10, 26, 0.9), rgba(20, 20, 40, 0.9)), url('https://images.unsplash.com/photo-1467810563316-b5476525c0f9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=60');
+            background-size: cover;
+            background-position: center;
+            text-align: center;
+            padding: 100px 0;
+        }
+
+        .cta-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .cta-content h2 {
+            color: white;
+            margin-bottom: 1.5rem;
+        }
+
+        .cta-content p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--darker);
+            padding: 4rem 0 2rem;
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-logo {
+            font-size: 2rem;
+            font-weight: 900;
+            color: white;
+            text-decoration: none;
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+
+        .footer-links h3,
+        .footer-contact h3 {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+        }
+
+        .footer-links ul {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-links a {
+            color: #ccc;
+            text-decoration: none;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .social-links a {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .social-links a:hover {
+            background: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        /* WhatsApp Button */
+        .whatsapp-float {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: #25d366;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            text-decoration: none;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);
+            transition: var(--transition);
+        }
+
+        .whatsapp-float:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(37, 211, 102, 0.6);
+        }
+
+        /* Back to Top */
+        .back-to-top {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: var(--gradient);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            text-decoration: none;
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+            cursor: pointer;
+            border: none;
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .back-to-top:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 51, 102, 0.5);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .description-container {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .service-image img {
+                height: 300px;
+            }
+            
+            .nav-main {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 300px;
+                height: 100vh;
+                background: var(--dark);
+                flex-direction: column;
+                padding: 100px 2rem 2rem;
+                transition: var(--transition);
+                z-index: 1001;
+                box-shadow: -5px 0 20px rgba(0, 0, 0, 0.3);
+            }
+            
+            .nav-main.active {
+                right: 0;
+            }
+            
+            .nav-links {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .mobile-menu {
+                display: block;
+                z-index: 1002;
+            }
+            
+            .service-banner {
+                padding: 150px 0 80px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            section {
+                padding: 60px 0;
+            }
+            
+            .service-banner {
+                padding: 130px 0 60px;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            h2 {
+                font-size: 1.8rem;
+            }
+            
+            .portfolio-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .safety-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .event-types-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .service-banner {
+                padding: 120px 0 50px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+
+        /* Animation Classes */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Fireworks Animation */
+        .fireworks-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Fireworks Overlay Animation -->
+    <div class="fireworks-overlay" id="fireworks-overlay"></div>
+
+    <!-- WhatsApp Button -->
+    <a href="https://wa.me/254735659184" class="whatsapp-float" target="_blank" aria-label="Chat on WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="back-to-top" aria-label="Back to top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- Header -->
+    <header id="header">
+        <div class="container header-container">
+            <a href="index1.html" class="logo">
+                <img src="logo.png" height="50px" alt="MadFun Fireworks Logo">
+            </a>
+            <button class="mobile-menu" id="mobile-menu" aria-label="Toggle menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <nav class="nav-main" id="nav-main">
+                <ul class="nav-links">
+                    <li><a href="index1.html#home">Home</a></li>
+                    <li><a href="services.html">All Services</a></li>
+                    <li><a href="#products">Packages</a></li>
+                    <li><a href="#applications">Applications</a></li>
+                    <li><a href="#safety">Safety</a></li>
+                    <li><a href="#event-types">Event Types</a></li>
+                    <li><a href="#portfolio">Portfolio</a></li>
+                    <li><a href="#footer">Contacts</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Service Banner -->
+    <section class="service-banner">
+        <div class="container">
+            <h1>Fireworks & Pyrotechnic Displays</h1>
+            <p>Breathtaking outdoor fireworks displays for weddings, corporate events, festivals and celebrations across Kenya. Professional pyrotechnic shows that create unforgettable memories.</p>
+        </div>
+    </section>
+
+    <!-- Service Description -->
+    <section class="service-description">
+        <div class="container description-container">
+            <div class="service-image fade-in">
+                <img src="https://images.unsplash.com/photo-1467810563316-b5476525c0f9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Spectacular Fireworks Display">
+            </div>
+            <div class="description-content fade-in">
+                <h2>Professional Pyrotechnic Shows</h2>
+                <p>Experience the magic of professional fireworks displays designed and executed by certified pyrotechnicians. Our shows combine artistic vision with technical expertise to create stunning visual spectacles.</p>
+                
+                <h3>Key Features:</h3>
+                <ul class="features-list">
+                    <li>Certified pyrotechnicians with international training</li>
+                    <li>Custom-designed displays for any event size</li>
+                    <li>Wide variety of firework types and effects</li>
+                    <li>Synchronized music and fireworks shows</li>
+                    <li>Comprehensive safety planning and execution</li>
+                    <li>All necessary permits and insurance coverage</li>
+                    <li>Setup, operation, and cleanup included</li>
+                </ul>
+                
+                <a href="#contact" class="btn">
+                    <i class="fas fa-fire"></i> Plan Your Fireworks Show
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Applications Section -->
+    <section id="applications" class="applications-section">
+        <div class="container">
+            <div class="section-header fade-in">
+                <h2>Perfect For Every Occasion</h2>
+                <p>Professional fireworks displays that elevate any celebration to extraordinary heights.</p>
+            </div>
+            
+            <div class="applications-list">
+                <div class="application-item fade-in">
+                    <div class="application-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <div>
+                        <h4>Weddings</h4>
+                        <p>Grand finale celebrations for wedding receptions</p>
+                    </div>
+                </div>
+                
+                <div class="application-item fade-in">
+                    <div class="application-icon">
+                        <i class="fas fa-briefcase"></i>
+                    </div>
+                    <div>
+                        <h4>Corporate Events</h4>
+                        <p>Product launches, anniversaries, milestone celebrations</p>
+                    </div>
+                </div>
+                
+                <div class="application-item fade-in">
+                    <div class="application-icon">
+                        <i class="fas fa-music"></i>
+                    </div>
+                    <div>
+                        <h4>Festivals & Concerts</h4>
+                        <p>Grand finales for music festivals and outdoor concerts</p>
+                    </div>
+                </div>
+                
+                <div class="application-item fade-in">
+                    <div class="application-icon">
+                        <i class="fas fa-calendar-star"></i>
+                    </div>
+                    <div>
+                        <h4>New Year Celebrations</h4>
+                        <p>Midnight fireworks displays for New Year's Eve</p>
+                    </div>
+                </div>
+                
+                <div class="application-item fade-in">
+                    <div class="application-icon">
+                        <i class="fas fa-flag"></i>
+                    </div>
+                    <div>
+                        <h4>National Holidays</h4>
+                        <p>Independence Day, Jamhuri Day celebrations</p>
+                    </div>
+                </div>
+                
+                <div class="application-item fade-in">
+                    <div class="application-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <div>
+                        <h4>School & University Events</h4>
+                        <p>Graduation ceremonies and special anniversaries</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section id="products" class="products-section">
+        <div class="container">
+            <div class="section-header fade-in">
+                <h2>Fireworks Display Packages</h2>
+                <p>Tailored packages for events of all sizes, from intimate gatherings to large-scale festivals.</p>
+            </div>
+            
+            <div class="product-grid">
+                <!-- Package 1 -->
+                <div class="product-card fade-in">
+                    <div class="product-image">
+                        <img src="https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Intimate Celebration Package" loading="lazy">
+                        <span class="product-badge">Popular</span>
+                    </div>
+                    <div class="product-info">
+                        <h3>Intimate Celebration</h3>
+                        <p>Perfect for small weddings and private parties. 5-minute display with basic effects.</p>
+                        <div class="price">KSH 45,000 <span class="old-price">KSH 55,000</span></div>
+                        <button class="btn buy-btn" data-product="Intimate Celebration Fireworks Package">
+                            <i class="fa-brands fa-whatsapp"></i> Book Now
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Package 2 -->
+                <div class="product-card fade-in">
+                    <div class="product-image">
+                        <img src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Standard Wedding Package" loading="lazy">
+                        <span class="product-badge">Best Seller</span>
+                    </div>
+                    <div class="product-info">
+                        <h3>Standard Wedding</h3>
+                        <p>8-minute display with varied effects, perfect for medium-sized wedding receptions.</p>
+                        <div class="price">KSH 75,000</div>
+                        <button class="btn buy-btn" data-product="Standard Wedding Fireworks Package">
+                            <i class="fa-brands fa-whatsapp"></i> Book Now
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Package 3 -->
+                <div class="product-card fade-in">
+                    <div class="product-image">
+                        <img src="https://images.unsplash.com/photo-1467810563316-b5476525c0f9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Corporate Event Package" loading="lazy">
+                    </div>
+                    <div class="product-info">
+                        <h3>Corporate Event</h3>
+                        <p>10-minute professional display with aerial shells and ground effects for corporate functions.</p>
+                        <div class="price">KSH 120,000</div>
+                        <button class="btn buy-btn" data-product="Corporate Event Fireworks Package">
+                            <i class="fa-brands fa-whatsapp"></i> Book Now
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Package 4 -->
+                <div class="product-card fade-in">
+                    <div class="product-image">
+                        <img src="https://images.unsplash.com/photo-1492684223066-dd23140edf6d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Grand Festival Package" loading="lazy">
+                    </div>
+                    <div class="product-info">
+                        <h3>Grand Festival</h3>
+                        <p>15-minute spectacular with music synchronization for large festivals and public events.</p>
+                        <div class="price">KSH 200,000+</div>
+                        <button class="btn buy-btn" data-product="Grand Festival Fireworks Package">
+                            <i class="fa-brands fa-whatsapp"></i> Book Now
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Package 5 -->
+                <div class="product-card fade-in">
+                    <div class="product-image">
+                        <img src="https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60" alt="New Year's Eve Special" loading="lazy">
+                    </div>
+                    <div class="product-info">
+                        <h3>New Year's Eve Special</h3>
+                        <p>Midnight display with countdown, perfect for hotels, resorts, and private NYE parties.</p>
+                        <div class="price">KSH 150,000</div>
+                        <button class="btn buy-btn" data-product="New Year's Eve Fireworks Special">
+                            <i class="fa-brands fa-whatsapp"></i> Book Now
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Package 6 -->
+                <div class="product-card fade-in">
+                    <div class="product-image">
+                        <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Custom Design Package" loading="lazy">
+                        <span class="product-badge">Custom</span>
+                    </div>
+                    <div class="product-info">
+                        <h3>Custom Design</h3>
+                        <p>Fully customized display designed specifically for your event's theme and requirements.</p>
+                        <div class="price">Contact for Quote</div>
+                        <button class="btn buy-btn" data-product="Custom Fireworks Design Package">
+                            <i class="fa-brands fa-whatsapp"></i> Get Quote
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 3rem;">
+                <a href="index1.html#products" class="btn btn-secondary">
+                    <i class="fas fa-fire"></i> View All Packages
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Event Types Section -->
+    <section id="event-types" class="event-types-section">
+        <div class="container">
+            <div class="section-header fade-in">
+                <h2>Types of Firework Effects</h2>
+                <p>Choose from a wide variety of stunning firework effects for your display.</p>
+            </div>
+            
+            <div class="event-types-grid">
+                <div class="event-type-card fade-in">
+                    <div class="event-type-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <h3>Aerial Shells</h3>
+                    <p>Classic bursting shells that create beautiful patterns in the sky. Available in various sizes and colors.</p>
+                </div>
+                
+                <div class="event-type-card fade-in">
+                    <div class="event-type-icon">
+                        <i class="fas fa-water"></i>
+                    </div>
+                    <h3>Fountains</h3>
+                    <p>Ground-based effects that spray colored sparks and crackles. Perfect for low-level displays.</p>
+                </div>
+                
+                <div class="event-type-card fade-in">
+                    <div class="event-type-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h3>Roman Candles</h3>
+                    <p>Tube-based fireworks that shoot multiple projectiles and effects into the air.</p>
+                </div>
+                
+                <div class="event-type-card fade-in">
+                    <div class="event-type-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3>Cakes & Barrages</h3>
+                    <p>Multiple-shot devices that produce rapid sequences of effects for dramatic impact.</p>
+                </div>
+                
+                <div class="event-type-card fade-in">
+                    <div class="event-type-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h3>Specialty Shapes</h3>
+                    <p>Custom shapes like hearts, stars, and smiley faces for themed events.</p>
+                </div>
+                
+                <div class="event-type-card fade-in">
+                    <div class="event-type-icon">
+                        <i class="fas fa-music"></i>
+                    </div>
+                    <h3>Musical Synchronization</h3>
+                    <p>Fireworks choreographed to music for a fully immersive audio-visual experience.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Safety Section -->
+    <section id="safety" class="safety-section">
+        <div class="container">
+            <div class="section-header fade-in">
+                <h2>Safety & Professional Standards</h2>
+                <p>Your safety is our top priority. We adhere to the highest professional standards.</p>
+            </div>
+            
+            <div class="safety-grid">
+                <div class="safety-card fade-in">
+                    <div class="safety-icon">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <h3>Certified Pyrotechnicians</h3>
+                    <p>All our operators are certified professionals with extensive training and experience.</p>
+                </div>
+                
+                <div class="safety-card fade-in">
+                    <div class="safety-icon">
+                        <i class="fas fa-file-certificate"></i>
+                    </div>
+                    <h3>Full Insurance Coverage</h3>
+                    <p>Comprehensive liability insurance for all events and displays we conduct.</p>
+                </div>
+                
+                <div class="safety-card fade-in">
+                    <div class="safety-icon">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <h3>Permit Assistance</h3>
+                    <p>We handle all necessary permits and approvals from local authorities.</p>
+                </div>
+                
+                <div class="safety-card fade-in">
+                    <div class="safety-icon">
+                        <i class="fas fa-people-arrows"></i>
+                    </div>
+                    <h3>Crowd Management</h3>
+                    <p>Professional crowd control and safety perimeter setup for all displays.</p>
+                </div>
+                
+                <div class="safety-card fade-in">
+                    <div class="safety-icon">
+                        <i class="fas fa-fire-extinguisher"></i>
+                    </div>
+                    <h3>Fire Safety</h3>
+                    <p>Fire safety equipment and protocols in place for all events.</p>
+                </div>
+                
+                <div class="safety-card fade-in">
+                    <div class="safety-icon">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <h3>Secure Transport</h3>
+                    <p>Secure, licensed transportation for all pyrotechnic materials.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Portfolio Section -->
+    <section id="portfolio" class="portfolio-section">
+        <div class="container">
+            <div class="section-header fade-in">
+                <h2>Recent Fireworks Projects</h2>
+                <p>Spectacular fireworks displays we've created for events across Kenya.</p>
+            </div>
+            
+            <div class="portfolio-grid">
+                <div class="portfolio-item fade-in">
+                    <img src="https://images.unsplash.com/photo-1467810563316-b5476525c0f9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Nairobi Wedding Fireworks" loading="lazy">
+                    <div class="portfolio-overlay">
+                        <h3>Nairobi Luxury Wedding</h3>
+                        <p>Grand finale fireworks display at a high-end wedding reception</p>
+                    </div>
+                </div>
+                
+                <div class="portfolio-item fade-in">
+                    <img src="https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Corporate Gala Fireworks" loading="lazy">
+                    <div class="portfolio-overlay">
+                        <h3>Corporate Anniversary Gala</h3>
+                        <p>10-minute synchronized display for a multinational company's anniversary</p>
+                    </div>
+                </div>
+                
+                <div class="portfolio-item fade-in">
+                    <img src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="New Year's Eve Display" loading="lazy">
+                    <div class="portfolio-overlay">
+                        <h3>Coastal Resort NYE</h3>
+                        <p>Midnight fireworks at a beachfront resort for New Year's celebration</p>
+                    </div>
+                </div>
+                
+                <div class="portfolio-item fade-in">
+                    <img src="https://images.unsplash.com/photo-1492684223066-dd23140edf6d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Music Festival Finale" loading="lazy">
+                    <div class="portfolio-overlay">
+                        <h3>Music Festival Finale</h3>
+                        <p>15-minute musical fireworks to close a major music festival</p>
+                    </div>
+                </div>
+                
+                <div class="portfolio-item fade-in">
+                    <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="University Graduation" loading="lazy">
+                    <div class="portfolio-overlay">
+                        <h3>University Graduation</h3>
+                        <p>Celebratory fireworks for a major university's graduation ceremony</p>
+                    </div>
+                </div>
+                
+                <div class="portfolio-item fade-in">
+                    <img src="https://images.unsplash.com/photo-1530103862676-de8c9debad1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Product Launch Event" loading="lazy">
+                    <div class="portfolio-overlay">
+                        <h3>Product Launch Event</h3>
+                        <p>Themed fireworks display for a major automotive product launch</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-content fade-in">
+                <h2>Ready for an Unforgettable Fireworks Experience?</h2>
+                <p>Contact our pyrotechnic experts to design a custom fireworks display that will leave your guests in awe. From intimate celebrations to grand festivals, we create magic in the sky.</p>
+                <a href="https://wa.me/254735659184?text=Hi%2C%20I'm%20interested%20in%20a%20professional%20fireworks%20display%20for%20my%20event.%20Can%20you%20provide%20more%20information%3F" class="btn" target="_blank">
+                    <i class="fab fa-whatsapp"></i> Discuss Your Fireworks Display
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <section id="footer">
+        <footer>
+            <div class="container">
+                <div class="footer-content">
+                    <div>
+                        <a href="index1.html" class="footer-logo">
+                            <img src="logo.png" height="50px" alt="MadFun Fireworks"> <h3>MadFun Fireworks</h3>
+                        </a>
+                        <p style="margin: 1rem 0; max-width: 300px;">Your trusted partner for spectacular fireworks and pyrotechnic displays in Kenya. Safe, professional, and unforgettable sky shows.</p>
+                        <div class="social-links">
+                            <a href="https://www.facebook.com/madfunfireworks" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                            <a href="https://www.instagram.com/invites/contact/?utm_source=ig_contact_invite&utm_medium=copy_link&utm_content=zu5hnOa" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                            <a href="https://www.tiktok.com/@madfunfireworks?_r=1&_t=ZM-923DRBPCD84" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
+                            <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                        </div>
+                    </div>
+                    
+                    <div class="footer-links">
+                        <h3>Quick Links</h3>
+                        <ul>
+                            <li><a href="index1.html#home"><i class="fas fa-home"></i> Home</a></li>
+                            <li><a href="index1.html#services"><i class="fas fa-concierge-bell"></i> Services</a></li>
+                            <li><a href="index1.html#products"><i class="fas fa-fire"></i> Products</a></li>
+                            <li><a href="index1.html#portfolio"><i class="fas fa-images"></i> Portfolio</a></li>
+                            <li><a href="index1.html#contact"><i class="fas fa-phone"></i> Contact</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-contact">
+                        <h3>Contact Info</h3>
+                        <p><i class="fas fa-phone"></i> +254 735 659 184</p>
+                        <p><i class="fab fa-whatsapp"></i> +254 735 659 184</p>
+                        <p><i class="fas fa-envelope"></i> info@madfunfireworks.com</p>
+                        <p><i class="fas fa-clock"></i> Mon-Sun: 8AM - 8PM</p>
+                        <p><i class="fas fa-map-marker-alt"></i> Nationwide Service</p>
+                    </div>
+                </div>
+                
+                <div class="copyright">
+                    <p>© 2025 MadFun Fireworks. All rights reserved.</p>
+                    <p style="margin-top: 10px; font-size: 0.8rem;">Professional Fireworks & Pyrotechnic Displays Across Kenya</p>
+                </div>
+            </div>
+        </footer>
+    </section>
+
+    <script>
+        // Mobile Menu Toggle
+        const mobileMenu = document.getElementById('mobile-menu');
+        const navMain = document.getElementById('nav-main');
+        
+        mobileMenu.addEventListener('click', () => {
+            navMain.classList.toggle('active');
+            mobileMenu.innerHTML = navMain.classList.contains('active') 
+                ? '<i class="fas fa-times"></i>' 
+                : '<i class="fas fa-bars"></i>';
+        });
+        
+        // Close mobile menu when clicking on a link
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                navMain.classList.remove('active');
+                mobileMenu.innerHTML = '<i class="fas fa-bars"></i>';
+            });
+        });
+        
+        // Header scroll effect
+        window.addEventListener('scroll', function() {
+            const header = document.getElementById('header');
+            if (window.scrollY > 100) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+            
+            // Back to top button
+            const backToTop = document.getElementById('back-to-top');
+            if (window.scrollY > 500) {
+                backToTop.classList.add('visible');
+            } else {
+                backToTop.classList.remove('visible');
+            }
+        });
+        
+        // Back to Top Button
+        document.getElementById('back-to-top').addEventListener('click', function(e) {
+            e.preventDefault();
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+        
+        // Buy Now buttons functionality
+        document.querySelectorAll('.buy-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const productName = this.getAttribute('data-product');
+                const message = `Hi, I'm interested in ${productName} for a fireworks display. Can you provide more details and pricing?`;
+                const whatsappURL = `https://wa.me/254735659184?text=${encodeURIComponent(message)}`;
+                window.open(whatsappURL, '_blank');
+            });
+        });
+        
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    const headerHeight = document.getElementById('header').offsetHeight;
+                    const targetPosition = targetElement.offsetTop - headerHeight - 20;
+                    
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+        
+        // Fade-in animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+        
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+        
+        // Initialize animations
+        document.querySelectorAll('.fade-in').forEach(el => {
+            el.classList.add('visible');
+        });
+
+        // Simple fireworks animation effect
+        function createFireworkParticle() {
+            const overlay = document.getElementById('fireworks-overlay');
+            if (!overlay) return;
+            
+            const particle = document.createElement('div');
+            particle.style.position = 'absolute';
+            particle.style.width = '4px';
+            particle.style.height = '4px';
+            particle.style.background = `hsl(${Math.random() * 360}, 100%, 60%)`;
+            particle.style.borderRadius = '50%';
+            particle.style.left = `${Math.random() * 100}%`;
+            particle.style.top = `${Math.random() * 100}%`;
+            particle.style.boxShadow = '0 0 8px currentColor';
+            particle.style.opacity = '0';
+            particle.style.transition = 'all 0.5s ease';
+            
+            overlay.appendChild(particle);
+            
+            // Animate particle
+            setTimeout(() => {
+                particle.style.opacity = '0.7';
+                particle.style.transform = `translate(${Math.random() * 40 - 20}px, ${Math.random() * 40 - 20}px) scale(1.5)`;
+            }, 10);
+            
+            // Remove particle
+            setTimeout(() => {
+                particle.style.opacity = '0';
+                setTimeout(() => {
+                    if (particle.parentNode === overlay) {
+                        overlay.removeChild(particle);
+                    }
+                }, 500);
+            }, 800 + Math.random() * 700);
+        }
+        
+        // Create occasional firework particles
+        setInterval(createFireworkParticle, 300);
+        
+        // Create initial burst of particles
+        for (let i = 0; i < 20; i++) {
+            setTimeout(createFireworkParticle, i * 50);
+        }
+    </script>
+</body>
+</html>
+[file content end]

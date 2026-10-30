@@ -1,0 +1,2210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <title>ATM Entertainment | Kenya Nightlife · Live DJ Streams · Events & Reservations</title>
+    <meta name="description" content="Discover Kenya's best nightlife: clubs, lounges, live DJ streams, events, and table reservations. Real-time weather, maps, taxi options & WhatsApp booking. Find your vibe tonight.">
+    <meta name="keywords" content="Kenya nightlife, clubs in Kenya, live DJ streams Kenya, Nairobi events, Mombasa nightlife, Kisumu clubs, entertainment Kenya, table reservation Kenya, nightclub map, live streaming clubs, ATM Entertainment, Kenyan events tonight, best lounges Kenya, Uber to club, WhatsApp reservation Kenya">
+    <meta name="author" content="ATM Entertainment">
+    <meta name="geo.region" content="KE">
+    <meta name="geo.placename" content="Kenya">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://www.atmentertainment.co.ke/">
+    <meta property="og:title" content="ATM Entertainment – Kenya Nightlife & Live Streams">
+    <meta property="og:description" content="Find clubs, live DJs, events, and reservations across Kenya. Map, weather, taxi, and WhatsApp booking all in one place.">
+    <meta property="og:image" content="https://www.atmentertainment.co.ke/og-image.jpg">
+    <meta property="og:url" content="https://www.atmentertainment.co.ke">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ATM Entertainment – Kenya Nightlife & Live Streams">
+    <meta name="twitter:description" content="Real-time club streams, events, and reservations. Your nightlife companion in Kenya.">
+    <meta name="twitter:image" content="https://www.atmentertainment.co.ke/twitter-image.jpg">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "ATM Entertainment",
+      "url": "https://www.atmentertainment.co.ke",
+      "description": "Kenyan nightlife discovery platform with live DJ streams, events, venue maps, weather, taxi booking, and WhatsApp table reservations.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://www.atmentertainment.co.ke?search={search_term_string}",
+        "query-input": "required name=search_term_string"
+      },
+      "sameAs": [
+        "https://www.facebook.com/atmentertainment",
+        "https://www.instagram.com/atmentertainment",
+        "https://www.tiktok.com/@atmentertainment"
+      ]
+    }
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --surface: #111118;
+            --surface-light: #1a1a25;
+            --neon: #e040fb;
+            --neon2: #00e5ff;
+            --neon3: #ff6d00;
+            --gold: #ffb300;
+            --text: #f0f0f5;
+            --text-secondary: #b0b0c0;
+            --text-muted: #707088;
+            --danger: #ff4444;
+            --success: #00e676;
+            --border: #222230;
+            --border-light: #2a2a3a;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6);
+            --transition: 0.25s ease;
+            --font: 'Outfit', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            width: 100%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .header-inner {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 0 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 62px;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .logo img {
+            height: 42px;
+            width: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 0 6px rgba(224, 64, 251, 0.3));
+        }
+
+        .logo:hover {
+            opacity: 0.85;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 0.4rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: var(--font);
+            font-weight: 600;
+            font-size: 0.65rem;
+            padding: 6px 14px;
+            border-radius: 32px;
+            transition: all 0.2s ease;
+            min-width: 50px;
+        }
+
+        .nav-btn i {
+            font-size: 1.1rem;
+            margin-bottom: 1px;
+        }
+
+        .nav-btn span {
+            line-height: 1;
+        }
+
+        .nav-btn:hover {
+            color: var(--neon2);
+            background: rgba(0, 229, 255, 0.08);
+        }
+
+        .nav-btn.active {
+            background: rgba(224, 64, 251, 0.2);
+            color: var(--neon);
+            border: 1px solid rgba(224, 64, 251, 0.4);
+            box-shadow: 0 0 10px rgba(224, 64, 251, 0.15);
+        }
+
+        .partner-link {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--gold);
+            cursor: pointer;
+            border: 1px solid var(--gold);
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(255, 179, 0, 0.1);
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .partner-link:hover { background: var(--gold); color: #000; }
+
+        .admin-lock {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-light);
+            border-radius: 40px;
+            width: 38px;
+            height: 38px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+            backdrop-filter: blur(4px);
+            flex-shrink: 0;
+        }
+
+        .admin-lock:hover {
+            border-color: var(--neon);
+            color: var(--neon);
+            background: rgba(224, 64, 251, 0.08);
+        }
+
+        .admin-lock.logged-in {
+            border-color: var(--success);
+            color: var(--success);
+            background: rgba(0, 230, 118, 0.08);
+        }
+
+        .main-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        /* HERO SECTION WITH VIDEO BACKGROUND */
+        .hero {
+            position: relative;
+            background: transparent;
+            overflow: hidden;
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+            text-align: center;
+            padding: 2.8rem 1.5rem 2.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            isolation: isolate;
+        }
+
+        .hero-video-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+            border-radius: inherit;
+        }
+
+        .hero-video-background video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            pointer-events: none;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.65);
+            pointer-events: none;
+            backdrop-filter: brightness(0.9);
+        }
+
+        .hero h1, .hero p {
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
+            margin: 0.25rem 0;
+        }
+
+        .hero h1 {
+            font-size: 2.8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--neon), var(--neon2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .hero p {
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        /* Marquee Styles */
+        .marquee-section {
+            margin: 1rem 0 0.8rem;
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(8px);
+            border-radius: 48px;
+            padding: 0.4rem 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: nowrap;
+            border: 1px solid rgba(224, 64, 251, 0.3);
+        }
+
+        .marquee-label {
+            font-weight: 700;
+            font-size: 0.85rem;
+            background: var(--neon);
+            color: #fff;
+            padding: 6px 16px;
+            border-radius: 40px;
+            white-space: nowrap;
+            letter-spacing: 0.5px;
+            box-shadow: 0 0 8px rgba(224, 64, 251, 0.5);
+        }
+
+        .marquee-wrapper {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            border-radius: 32px;
+            height: 48px;
+        }
+
+        .marquee-content {
+            display: inline-flex;
+            align-items: center;
+            white-space: nowrap;
+            animation: scrollMarquee 28s linear infinite;
+            will-change: transform;
+        }
+
+        .marquee-content:hover {
+            animation-play-state: paused;
+        }
+
+        .marquee-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(20, 20, 30, 0.8);
+            backdrop-filter: blur(4px);
+            border-radius: 40px;
+            padding: 6px 18px 6px 14px;
+            margin-right: 16px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text);
+            border-left: 3px solid var(--neon2);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .marquee-item:hover {
+            background: rgba(224, 64, 251, 0.2);
+            transform: translateY(-2px);
+            border-left-color: var(--neon);
+        }
+
+        .marquee-item i {
+            font-size: 0.9rem;
+            color: var(--neon2);
+        }
+
+        .marquee-item .event-name {
+            font-weight: 700;
+            margin-right: 4px;
+        }
+
+        .marquee-item .event-venue {
+            color: var(--gold);
+            font-weight: 600;
+            margin: 0 4px;
+        }
+
+        .marquee-item .event-date {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            background: rgba(0,0,0,0.4);
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        @keyframes scrollMarquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Rest of original styles */
+        .tab-content {
+            display: none;
+            animation: fade 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fade {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 8px;
+            max-width: 700px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 18px;
+            border-radius: 25px;
+            border: 1.5px solid var(--border-light);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: var(--neon);
+        }
+
+        .filter-select {
+            padding: 12px 14px;
+            border-radius: 25px;
+            border: 1.5px solid var(--border-light);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 0.85rem;
+            cursor: pointer;
+            outline: none;
+            min-width: 130px;
+        }
+
+        .filter-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            margin-top: 8px;
+            margin-bottom: 12px;
+        }
+
+        .filter-tag {
+            padding: 5px 12px;
+            border-radius: 15px;
+            background: var(--surface-light);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .filter-tag:hover,
+        .filter-tag.active {
+            border-color: var(--neon);
+            color: var(--neon);
+            background: rgba(224, 64, 251, 0.08);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 1.5rem 0 1rem;
+            flex-wrap: wrap;
+            gap: 8px;
+            scroll-margin-top: 70px;
+        }
+
+        .section-title h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .count-badge {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            background: var(--surface);
+            padding: 5px 12px;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+        }
+
+        .venue-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            justify-items: center;
+        }
+
+        .venue-card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: var(--transition);
+            cursor: pointer;
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .venue-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.5), 0 0 20px rgba(224, 64, 251, 0.15);
+            border-color: var(--border-light);
+        }
+
+        .venue-card.premium {
+            border-color: var(--gold);
+            box-shadow: 0 0 25px rgba(255, 179, 0, 0.15);
+        }
+        .venue-card.premium:hover {
+            box-shadow: 0 0 35px rgba(255, 179, 0, 0.3);
+        }
+
+        .venue-card.platinum {
+            border-color: var(--neon);
+            box-shadow: 0 0 30px rgba(224, 64, 251, 0.2);
+        }
+        .venue-card.platinum:hover {
+            box-shadow: 0 0 40px rgba(224, 64, 251, 0.4);
+            border-color: var(--neon2);
+        }
+
+        .venue-image {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            transition: background-color 0.3s ease;
+        }
+
+        .venue-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: transform 0.4s ease;
+        }
+
+        .venue-card:hover .venue-image img {
+            transform: scale(1.03);
+        }
+
+        .venue-image-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #aaa;
+            background: var(--surface);
+        }
+
+        .live-badge-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(220, 20, 60, 0.95);
+            backdrop-filter: blur(4px);
+            color: white;
+            font-weight: 700;
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            border-radius: 30px;
+            z-index: 15;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 12px rgba(255, 0, 64, 0.6);
+            animation: liveGlow 1.2s infinite alternate;
+            cursor: pointer;
+        }
+
+        .live-badge-overlay:hover {
+            transform: scale(1.02);
+            background: #ff1a4f;
+        }
+
+        @keyframes liveGlow {
+            0% {
+                box-shadow: 0 0 4px #ff3366;
+                background: #dc143c;
+            }
+            100% {
+                box-shadow: 0 0 14px #ff3366, 0 0 4px #ff6699;
+                background: #ff1a4f;
+            }
+        }
+
+        .tier-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            color: #1a1a1a;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 0.75rem;
+            z-index: 10;
+        }
+        .tier-badge.premium { background: var(--gold); }
+        .tier-badge.platinum {
+            background: linear-gradient(135deg, var(--neon), var(--neon2));
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+        .tier-badge.basic { background: rgba(255,255,255,0.1); color: var(--text-secondary); }
+
+        .vibe-indicator {
+            font-size: 0.7rem;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 8px;
+        }
+        .vibe-quiet { background: rgba(255, 255, 255, 0.1); color: var(--text-secondary); }
+        .vibe-filling { background: rgba(0, 229, 255, 0.15); color: var(--neon2); }
+        .vibe-packed { background: rgba(255, 68, 68, 0.2); color: #ff6b6b; border: 1px solid #ff6b6b; animation: pulseRed 2s infinite; }
+        @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(255,107,107,0.4); } 70% { box-shadow: 0 0 0 6px rgba(255,107,107,0); } 100% { box-shadow: 0 0 0 0 rgba(255,107,107,0); } }
+
+        .venue-details {
+            padding: 1.2rem;
+        }
+
+        .venue-name {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .venue-meta {
+            display: flex;
+            gap: 12px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            flex-wrap: wrap;
+            margin-top: 6px;
+        }
+
+        .venue-stars {
+            color: var(--gold);
+            font-size: 0.9rem;
+            margin-top: 6px;
+            letter-spacing: 1px;
+        }
+
+        .venue-weather {
+            font-size: 0.8rem;
+            background: rgba(0, 0, 0, 0.5);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 24px;
+            margin: 8px 0;
+            width: fit-content;
+            backdrop-filter: blur(2px);
+        }
+
+        .venue-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 8px 0;
+        }
+
+        .venue-tag {
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: var(--surface-light);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .venue-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .venue-events-section {
+            margin: 10px 0 5px;
+            border-top: 1px solid var(--border);
+            padding-top: 8px;
+        }
+
+        .venue-event-item {
+            background: rgba(0, 229, 255, 0.08);
+            border-radius: 12px;
+            padding: 6px 8px;
+            margin-bottom: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            border-left: 2px solid var(--neon2);
+            transition: background 0.2s;
+        }
+
+        .venue-event-item:hover {
+            background: rgba(0, 229, 255, 0.2);
+        }
+
+        .venue-event-name {
+            font-weight: 700;
+            color: var(--neon2);
+        }
+
+        .venue-event-date {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .venue-event-countdown {
+            font-family: monospace;
+            font-size: 0.7rem;
+            color: var(--gold);
+            margin-top: 2px;
+        }
+
+        .btn,
+        .interested-btn,
+        .modal-close,
+        .admin-lock,
+        .share-btn,
+        .social-icon,
+        .filter-tag,
+        .admin-tab,
+        .nav-btn,
+        .tab-btn {
+            border-radius: 40px !important;
+            transition: all 0.2s ease;
+        }
+
+        .btn {
+            padding: 9px 18px;
+            border-radius: 40px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.8rem;
+            font-family: var(--font);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--surface-light);
+            border: 1px solid var(--border-light);
+            color: var(--text);
+        }
+
+        .btn-neon {
+            background: var(--neon);
+            color: #fff;
+            border: none;
+            box-shadow: 0 2px 8px rgba(224, 64, 251, 0.3);
+        }
+
+        .btn-neon:hover {
+            background: #d030e8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(224, 64, 251, 0.5);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--border-light);
+            color: var(--text);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--neon);
+            color: var(--neon);
+            background: rgba(224, 64, 251, 0.08);
+        }
+
+        .btn-wa {
+            background: #25D366;
+            color: #fff;
+            border: none;
+        }
+
+        .btn-wa:hover {
+            background: #1fb855;
+            transform: translateY(-1px);
+        }
+
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 0.72rem;
+        }
+
+        .interested-btn {
+            padding: 6px 16px;
+            background: transparent;
+            border: 1.5px solid var(--border-light);
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .interested-btn:hover {
+            border-color: var(--neon2);
+            color: var(--neon2);
+            background: rgba(0, 229, 255, 0.1);
+        }
+
+        .social-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            margin: 0 2px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .social-icon.fb { background: #1877f2; }
+        .social-icon.ig { background: #E4405F; }
+        .social-icon.tt { background: #010101; }
+        .social-icon.tw { background: #1DA1F2; }
+        .social-icon.website { background: #4caf50; }
+
+        .social-icon:hover {
+            transform: translateY(-3px);
+            filter: brightness(1.05);
+        }
+
+        .share-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 1px solid var(--border-light);
+            color: #ccc;
+            font-size: 1rem;
+        }
+
+        .share-btn:hover {
+            background: var(--neon);
+            color: white;
+            border-color: var(--neon);
+            transform: scale(1.05);
+        }
+
+        .event-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            justify-items: center;
+        }
+
+        .event-card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: 0.3s;
+            cursor: pointer;
+            position: relative;
+            width: 100%;
+        }
+
+        .event-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            border-color: var(--neon2);
+        }
+
+        .event-card.promoted {
+            border: 2px solid #ff3366;
+            box-shadow: 0 0 25px rgba(255, 51, 102, 0.7);
+            animation: redGlowPulse 1.5s infinite alternate;
+            background: linear-gradient(145deg, #1a1018 0%, var(--surface) 60%);
+        }
+
+        @keyframes redGlowPulse {
+            0% {
+                box-shadow: 0 0 15px rgba(255, 51, 102, 0.6);
+                border-color: #ff3366;
+            }
+            100% {
+                box-shadow: 0 0 35px rgba(255, 51, 102, 1), 0 0 8px #ff6699;
+                border-color: #ff6699;
+            }
+        }
+
+        .event-poster {
+            width: 100%;
+            aspect-ratio: 4/5;
+            background: var(--surface-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            cursor: zoom-in;
+            position: relative;
+        }
+
+        .event-poster img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .event-card:hover .event-poster img {
+            transform: scale(1.02);
+        }
+
+        .promoted-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: linear-gradient(135deg, #ff3366, #ff1a4f);
+            color: white;
+            font-weight: 800;
+            font-size: 0.7rem;
+            padding: 5px 12px;
+            border-radius: 30px;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 0 12px rgba(255, 51, 102, 0.8);
+            animation: badgePulse 1.5s infinite;
+        }
+
+        @keyframes badgePulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .event-details {
+            padding: 1.2rem;
+            background: var(--surface);
+        }
+
+        .event-name {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 0.3rem;
+        }
+
+        .event-date {
+            color: var(--neon2);
+            font-size: 0.85rem;
+            margin: 6px 0 4px;
+        }
+
+        .countdown {
+            background: rgba(0, 0, 0, 0.4);
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin: 8px 0;
+            font-family: monospace;
+            color: var(--gold);
+        }
+
+        .interested-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .modal {
+            background: var(--surface);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-light);
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .club-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            padding: 0.5rem 0;
+        }
+
+        .detail-section {
+            background: var(--surface-light);
+            border-radius: 20px;
+            padding: 1.2rem;
+            border: 1px solid var(--border);
+            transition: var(--transition);
+        }
+
+        .detail-section:hover {
+            border-color: var(--border-light);
+        }
+
+        .detail-section.full-width {
+            grid-column: span 2;
+        }
+
+        .detail-section h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+            color: var(--neon);
+            border-left: 3px solid var(--neon);
+            padding-left: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+            gap: 4px;
+            align-items: baseline;
+        }
+
+        .info-label {
+            font-weight: 600;
+            min-width: 100px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .info-value {
+            color: var(--text);
+            font-size: 0.95rem;
+            flex: 1;
+            word-break: break-word;
+        }
+
+        .star-rating {
+            display: flex;
+            gap: 6px;
+            margin: 8px 0;
+            cursor: pointer;
+        }
+
+        .star {
+            font-size: 1.6rem;
+            color: #555;
+            transition: 0.1s;
+        }
+
+        .star:hover,
+        .star.active {
+            color: var(--gold);
+            text-shadow: 0 0 8px gold;
+        }
+
+        #detail-map {
+            height: 250px;
+            border-radius: 20px;
+            margin-top: 0.5rem;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            background: #1a1a2a;
+        }
+
+        .modal-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 1.2rem;
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+        .social-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin: 12px 0 0;
+        }
+
+        .venue-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            transition: background-color 0.3s ease;
+            border-radius: 16px;
+            padding: 8px;
+            background: var(--surface-light);
+        }
+
+        .venue-modal-header img {
+            width: 160px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 16px;
+            border: 2px solid var(--border-light);
+        }
+
+        .venue-modal-header .venue-title {
+            flex: 1;
+        }
+
+        .venue-modal-header .venue-title h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 0.2rem;
+        }
+
+        .venue-modal-header .venue-meta {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .premium-modal-badge {
+            background: var(--gold);
+            color: #1a1a1a;
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-left: 8px;
+        }
+
+        .amenity-list, .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 4px;
+        }
+
+        .mini-tag {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-secondary);
+            padding: 4px 12px;
+            border-radius: 14px;
+            font-size: 0.75rem;
+            border: 1px solid var(--border-light);
+        }
+
+        @media (max-width: 768px) {
+            .club-detail-grid { grid-template-columns: 1fr; }
+            .detail-section.full-width { grid-column: span 1; }
+            .venue-modal-header img { width: 100%; height: auto; max-height: 160px; }
+            .hero h1 { font-size: 2rem; }
+            .hero p { font-size: 0.95rem; }
+            .marquee-label { font-size: 0.7rem; padding: 4px 12px; }
+            .marquee-item { padding: 4px 12px; font-size: 0.75rem; }
+            .marquee-wrapper { height: 42px; }
+        }
+
+        .taxi-options {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 12px 0;
+        }
+        .taxi-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border-light);
+            border-radius: 40px;
+            padding: 8px 16px;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .taxi-btn:hover {
+            background: var(--neon);
+            border-color: var(--neon);
+            color: white;
+            transform: translateY(-2px);
+        }
+        .btn-live-modal {
+            background: linear-gradient(135deg, #e60026, #ff1a4f);
+            color: #fff;
+            border: none;
+            font-weight: 700;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            box-shadow: 0 0 12px rgba(255, 30, 80, 0.7);
+        }
+        .btn-live-modal:hover {
+            transform: scale(1.02);
+            background: linear-gradient(135deg, #ff1a4f, #e60026);
+        }
+        #map {
+            height: 420px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            margin-top: 1rem;
+            z-index: 1;
+            background: #1a1a2a;
+        }
+        .admin-panel {
+            display: none;
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-top: 1rem;
+            border: 1px solid var(--border);
+        }
+        .admin-panel.visible { display: block; }
+        .admin-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+        .admin-tab {
+            background: transparent;
+            border: 1px solid var(--border-light);
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+        .admin-tab.active {
+            background: var(--neon);
+            color: #fff;
+            border-color: var(--neon);
+        }
+        .admin-content { display: none; }
+        .admin-content.active { display: block; }
+        .stats-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .stat-card {
+            background: var(--surface-light);
+            padding: 0.8rem;
+            border-radius: var(--radius-sm);
+            flex: 1;
+            text-align: center;
+            border: 1px solid var(--border);
+            min-width: 90px;
+        }
+        .stat-value {
+            font-size: 1.7rem;
+            font-weight: 800;
+            color: var(--neon);
+        }
+        .admin-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-top: 1rem;
+        }
+        .admin-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            background: var(--surface-light);
+            padding: 0.7rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+        .admin-info { flex: 1; }
+        .admin-thumb {
+            width: 55px;
+            height: 45px;
+            object-fit: cover;
+            border-radius: 12px;
+            background: var(--surface);
+        }
+        .form-card {
+            background: var(--surface-light);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea,
+        .file-wrap input,
+        .file-wrap {
+            border-radius: 28px;
+            border: 1.5px solid var(--border-light);
+            background: var(--surface);
+            color: var(--text);
+            padding: 12px 16px;
+            font-family: var(--font);
+            font-size: 0.85rem;
+            outline: none;
+            width: 100%;
+        }
+        .form-group textarea { border-radius: 24px; resize: vertical; }
+        .file-wrap {
+            background: var(--surface);
+            cursor: pointer;
+            text-align: center;
+            border: 2px dashed var(--border-light);
+        }
+        .img-preview {
+            max-width: 100px;
+            max-height: 80px;
+            margin-top: 8px;
+            border-radius: 12px;
+            display: none;
+        }
+        .toggle-row {
+            margin: 6px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.92);
+            backdrop-filter: blur(12px);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 1.8rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface-light);
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+        .modal-close {
+            background: transparent;
+            border: 1.5px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 40px;
+        }
+        .modal-close:hover {
+            background: var(--danger);
+            color: white;
+        }
+        .modal-body { padding: 1.5rem 1.8rem; }
+        .modal-body img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            margin: 0 auto 0.5rem;
+            display: block;
+            object-fit: contain;
+        }
+        .video-modal {
+            max-width: 90vw;
+            width: 1000px;
+            background: #000;
+        }
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+        }
+        .video-container iframe,
+        .video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .reserve-form-group {
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+        .reserve-form-group label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--neon2);
+        }
+        .reserve-form-group input,
+        .reserve-form-group textarea {
+            background: var(--surface);
+            border: 1px solid var(--border-light);
+            border-radius: 28px;
+            padding: 12px 14px;
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 0.9rem;
+            outline: none;
+            width: 100%;
+        }
+        .modal-actions-row {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+        .footer {
+            text-align: center;
+            padding: 1.2rem;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            border-top: 1px solid var(--border);
+            background: var(--surface);
+            margin-top: 2rem;
+        }
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .toast {
+            background: var(--surface);
+            border-left: 3px solid var(--neon);
+            padding: 10px 16px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            font-size: 0.85rem;
+        }
+        #backToTop {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--neon);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            z-index: 50;
+            display: none;
+        }
+        .animated-marker {
+            animation: markerPop 0.5s ease-out;
+        }
+        @keyframes markerPop {
+            0% { transform: scale(0.3); opacity: 0; }
+            60% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Pricing grid for partner modal */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .pricing-card {
+            background: var(--surface-light);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+        }
+        .pricing-card h3 { margin-bottom: 0.5rem; font-size: 1.4rem; }
+        .pricing-card ul { list-style: none; text-align: left; margin: 1rem 0; font-size: 0.9rem; color: var(--text-secondary); }
+        .pricing-card ul li { margin-bottom: 8px; }
+        .pricing-card ul li i { color: var(--success); margin-right: 6px; }
+        .pricing-card.premium { border-color: var(--gold); }
+        .pricing-card.platinum { border-color: var(--neon); background: linear-gradient(180deg, rgba(224,64,251,0.1) 0%, var(--surface-light) 100%); }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-inner">
+            <div class="logo" onclick="showPublicView()">
+                <img src="atm.png" alt="ATM Entertainment">
+            </div>
+            <nav class="header-nav">
+                <button class="nav-btn active" data-tab="venues-tab" onclick="switchTab('venues-tab')">
+                    <i class="fas fa-building"></i>
+                    <span>Venues</span>
+                </button>
+                <button class="nav-btn" data-tab="events-tab" onclick="switchTab('events-tab')">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Events</span>
+                </button>
+                <button class="nav-btn" data-tab="map-tab" onclick="switchTab('map-tab')">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Map</span>
+                </button>
+                <!-- Partner Link (NEW) -->
+                <button class="partner-link" onclick="openPartnerModal()">For Venue Owners</button>
+                <button class="admin-lock" id="btn-admin-toggle" onclick="toggleAdminAccess()" title="Admin panel"></button>
+            </nav>
+        </div>
+    </header>
+    <div class="main-container">
+        <div id="public-view">
+            <div class="hero">
+                <div class="hero-video-background">
+                    <video autoplay muted loop playsinline>
+                        <source src="atm.mp4" type="video/mp4">
+                    </video>
+                    <div class="hero-overlay"></div>
+                </div>
+                <h1>Twende Sherehe. Lets Go Party.</h1>
+                <p>Discover clubs, lounges, hotels & nightlife experiences across Kenya</p>
+            </div>
+            
+            <!-- Venues Tab -->
+            <div id="venues-tab" class="tab-content active">
+                <div class="search-bar">
+                    <input type="text" class="search-input" id="search-input" placeholder="🔍 Search venues, locations, amenities..." oninput="renderVenues()">
+                    <select class="filter-select" id="filter-sort" onchange="renderVenues()">
+                        <option value="premium">Premium First</option>
+                        <option value="rating">Highest Rated</option>
+                        <option value="name">A–Z Name</option>
+                    </select>
+                </div>
+                <div class="filter-tags" id="filter-tags"></div>
+                
+                <!-- MARQUEE SECTION: Upcoming Events Ticker -->
+                <div class="marquee-section">
+                    <div class="marquee-label"><i class="fas fa-calendar-alt"></i> Events</div>
+                    <div class="marquee-wrapper" id="marquee-wrapper">
+                        <div class="marquee-content" id="marquee-content">
+                            <!-- dynamic event items will appear here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section-title">
+                    <h2>🏢 Premier Venues</h2>
+                    <span class="count-badge" id="venue-count">0 venues</span>
+                </div>
+                <div class="venue-grid" id="venue-grid"></div>
+            </div>
+            
+            <!-- Events Tab -->
+            <div id="events-tab" class="tab-content">
+                <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin-bottom:1rem;">
+                    <select class="filter-select" id="event-club-filter" onchange="renderEvents()">
+                        <option value="all">All Venues</option>
+                    </select>
+                    <select class="filter-select" id="event-sort" onchange="renderEvents()">
+                        <option value="promoted">Promoted First</option>
+                        <option value="soonest">Soonest Date</option>
+                    </select>
+                </div>
+                <div class="section-title">
+                    <h2>📅 Upcoming Events</h2>
+                    <span class="count-badge" id="event-count">0 events</span>
+                </div>
+                <div class="event-grid" id="event-grid"></div>
+            </div>
+            
+            <!-- Map Tab -->
+            <div id="map-tab" class="tab-content">
+                <div class="map-section">
+                    <h2>🗺️ Interactive Map</h2>
+                    <div id="map"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Admin Panel (enhanced with tier, vibe, menu) -->
+        <div class="admin-panel" id="admin-panel">
+            <div style="display:flex; justify-content:space-between; flex-wrap:wrap;">
+                <h2>🛠️ Admin Dashboard</h2>
+                <button class="btn btn-outline btn-sm" onclick="logoutAdmin()">🚪 Logout</button>
+            </div>
+            <div class="stats-row">
+                <div class="stat-card"><div class="stat-value" id="stat-clubs">0</div><div class="stat-label">Venues</div></div>
+                <div class="stat-card"><div class="stat-value" id="stat-events">0</div><div class="stat-label">Events</div></div>
+                <div class="stat-card"><div class="stat-value" id="stat-live">0</div><div class="stat-label">LIVE NOW</div></div>
+            </div>
+            <div class="admin-tabs">
+                <button class="admin-tab active" onclick="switchAdminTab('clubs')">🏢 Venues</button>
+                <button class="admin-tab" onclick="switchAdminTab('events')">📅 Events</button>
+                <button class="admin-tab" onclick="switchAdminTab('tags')">🏷️ Tags</button>
+            </div>
+            <div class="admin-content active" id="admin-content-clubs">
+                <div class="form-card"><h3 id="club-form-title">➕ Add Venue</h3>
+                    <form id="club-form" onsubmit="handleClubSubmit(event)">
+                        <input type="hidden" id="edit-club-id">
+                        <div class="form-grid">
+                            <div class="form-group"><label>Venue Name *</label><input type="text" id="club-name" required></div>
+                            <div class="form-group"><label>Location</label><input type="text" id="club-location"></div>
+                            <div class="form-group"><label>Latitude</label><input type="number" step="any" id="club-lat"></div>
+                            <div class="form-group"><label>Longitude</label><input type="number" step="any" id="club-lng"></div>
+                            <div class="form-group"><label>Phone</label><input type="text" id="club-phone"></div>
+                            <div class="form-group"><label>Live Stream URL</label><input type="text" id="club-stream"></div>
+                            <!-- NEW: Digital Menu URL -->
+                            <div class="form-group"><label>Digital Menu URL</label><input type="url" id="club-menu" placeholder="https://..."></div>
+                            <!-- NEW: Venue Tier -->
+                            <div class="form-group">
+                                <label>Venue Tier</label>
+                                <select id="club-tier">
+                                    <option value="basic">Basic Listing</option>
+                                    <option value="premium">Premium Partner</option>
+                                    <option value="platinum">Platinum Sponsor</option>
+                                </select>
+                            </div>
+                            <!-- NEW: Vibe / Crowd Status -->
+                            <div class="form-group">
+                                <label>Current Vibe</label>
+                                <select id="club-vibe">
+                                    <option value="quiet">🧊 Chill / Quiet</option>
+                                    <option value="filling">🚶 Filling Up</option>
+                                    <option value="packed">🔥 Packed</option>
+                                </select>
+                            </div>
+                            <div class="form-group full"><label>Description</label><textarea id="club-desc" rows="2"></textarea></div>
+                            <div class="form-group full"><label>Amenities (comma)</label><input type="text" id="club-amenities"></div>
+                            <div class="form-group full"><label>Tags (comma)</label><input type="text" id="club-tags-input"></div>
+                            <div class="form-group"><label>Facebook</label><input type="text" id="club-facebook"></div>
+                            <div class="form-group"><label>Instagram</label><input type="text" id="club-instagram"></div>
+                            <div class="form-group"><label>TikTok</label><input type="text" id="club-tiktok"></div>
+                            <div class="form-group"><label>Twitter/X</label><input type="text" id="club-twitter"></div>
+                            <div class="form-group"><label>Website</label><input type="url" id="club-website" placeholder="https://..."></div>
+                            <div class="form-group full"><label>Venue Image</label><div class="file-wrap"><input type="file" id="club-image-input" accept="image/*" onchange="handleClubImage(event)"><div>📷 Upload image (max 800px)</div><img class="img-preview" id="club-img-preview"></div></div>
+                            <div class="form-group full">
+                                <div class="toggle-row"><input type="checkbox" id="club-premium"><label>Premium Venue (legacy)</label></div>
+                                <div class="toggle-row"><input type="checkbox" id="club-live"><label>LIVE NOW</label></div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-neon" id="club-submit-btn">✅ Add Venue</button>
+                        <button type="button" class="btn btn-outline" id="club-cancel-btn" style="display:none;" onclick="cancelClubEdit()">Cancel</button>
+                    </form>
+                </div>
+                <div class="section-title"><h3>📋 Manage Venues</h3><span class="count-badge" id="admin-club-count">0</span></div>
+                <div class="admin-list" id="admin-club-list"></div>
+            </div>
+            <div class="admin-content" id="admin-content-events">
+                <div class="form-card"><h3>➕ Add Event</h3><form id="event-form" onsubmit="handleEventSubmit(event)"><input type="hidden" id="edit-event-id"><div class="form-grid"><div class="form-group"><label>Event Name *</label><input type="text" id="event-name" required></div><div class="form-group"><label>Venue *</label><select id="event-club" required></select></div><div class="form-group"><label>Date & Time *</label><input type="datetime-local" id="event-date" required></div><div class="form-group"><label>Promoted</label><select id="event-promoted"><option value="false">No</option><option value="true">Yes</option></select></div><div class="form-group full"><label>Event Poster</label><div class="file-wrap"><input type="file" id="event-image-input" accept="image/*" onchange="handleEventImage(event)"><div>📷 Upload poster</div><img class="img-preview" id="event-img-preview"></div></div></div><button type="submit" class="btn btn-neon" id="event-submit-btn">✅ Add Event</button><button type="button" class="btn btn-outline" id="event-cancel-btn" style="display:none;" onclick="cancelEventEdit()">Cancel</button></form></div>
+                <div class="section-title"><h3>📋 Manage Events</h3><span class="count-badge" id="admin-event-count">0</span></div>
+                <div class="admin-list" id="admin-event-list"></div>
+            </div>
+            <div class="admin-content" id="admin-content-tags">
+                <div class="section-title"><h3>🏷️ Manage Filter Tags</h3></div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:1rem;" id="admin-tags-list"></div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <input type="text" id="new-tag-input" placeholder="New tag" class="search-input" style="max-width:200px;">
+                    <button class="btn btn-neon btn-sm" onclick="addFilterTag()">➕ Add Tag</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modals -->
+    <div class="modal-overlay" id="club-modal" style="display:none;" onclick="closeModal('club-modal')"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><h3 id="club-modal-title">Venue Details</h3><button class="modal-close" onclick="closeModal('club-modal')">&times;</button></div><div class="modal-body" id="club-modal-body"></div></div></div>
+    <div class="modal-overlay" id="stream-modal" style="display:none;" onclick="closeStreamModal()"><div class="modal video-modal" onclick="event.stopPropagation()"><div class="modal-header"><h3><i class="fas fa-video"></i> Live DJ Stream</h3><button class="modal-close" onclick="closeStreamModal()">&times;</button></div><div class="modal-body" style="padding:0;"><div id="stream-container" class="video-container"></div><div id="stream-fallback" style="display:none;" class="fallback-message"></div></div></div></div>
+    <div class="modal-overlay" id="taxi-modal" style="display:none;" onclick="closeModal('taxi-modal')"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><h3><i class="fas fa-taxi"></i> Choose a Taxi Service</h3><button class="modal-close" onclick="closeModal('taxi-modal')">&times;</button></div><div class="modal-body" id="taxi-modal-body"></div></div></div>
+    <div class="modal-overlay" id="reserve-modal" style="display:none;" onclick="closeReserveModal()"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><h3>📋 Table Reservation</h3><button class="modal-close" onclick="closeReserveModal()">&times;</button></div><div class="modal-body"><div id="reserve-club-name" style="font-weight:700; margin-bottom:1rem; color:var(--neon2);"></div><div class="reserve-form-group"><label>Your Name *</label><input type="text" id="reserve-name" placeholder="Full name" required></div><div class="reserve-form-group"><label>Phone Number *</label><input type="tel" id="reserve-phone" placeholder="07XX XXX XXX" required></div><div class="reserve-form-group"><label>Number of Seats</label><input type="number" id="reserve-seats" min="1" value="2"></div><div class="reserve-form-group"><label>Preferred Date & Time (optional)</label><input type="datetime-local" id="reserve-datetime"></div><div class="reserve-form-group"><label>Special Requests</label><textarea id="reserve-note" rows="2" placeholder="Any extra info..."></textarea></div><div class="modal-actions-row"><button class="btn btn-outline" onclick="closeReserveModal()">Cancel</button><button class="btn btn-neon" id="send-reserve-btn">📩 Send Request</button></div></div></div></div>
+    <div class="modal-overlay" id="welcome-modal" style="display:none;" onclick="closeWelcomeModal()"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header" style="border-bottom-color: var(--neon);"><h3><i class="fas fa-glass-cheers" style="color: var(--neon2);"></i> Welcome to ATM Entertainment</h3><button class="modal-close" onclick="closeWelcomeModal()">&times;</button></div><div class="modal-body" style="text-align: center;"><div class="welcome-highlight">🎧🔥</div><h2 style="background: linear-gradient(135deg, var(--neon), var(--neon2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem; font-weight: 800;">Kenya Nightlife Awaits!</h2><p style="margin-bottom: 1rem; font-size: 1.05rem;">Discover the heartbeat of Kenya — top clubs, lounges, live DJ streams, exclusive events, and unforgettable night experiences. Reserve your table, explore hotspots, and vibe with the city.</p><div style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; margin: 1.5rem 0 1rem;"><button class="btn btn-neon" onclick="closeWelcomeModal()" style="padding: 12px 32px; font-size: 1rem;">✨ Start Exploring ✨</button></div><p style="font-size: 0.75rem; color: var(--text-muted);"><i class="fas fa-map-marked-alt"></i> Live updates · Real-time weather · WhatsApp reservations · Taxi services</p></div></div></div>
+
+    <!-- NEW: Partner Modal -->
+    <div class="modal-overlay" id="partner-modal" style="display:none;" onclick="closeModal('partner-modal')">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header"><h3>🤝 Partner With ATM Entertainment</h3><button class="modal-close" onclick="closeModal('partner-modal')">&times;</button></div>
+            <div class="modal-body">
+                <p style="text-align:center; margin-bottom:1rem;">Turn browsers into confirmed WhatsApp reservations. Claim your venue today.</p>
+                <div class="pricing-grid">
+                    <div class="pricing-card">
+                        <h3>Basic Listing</h3>
+                        <p style="color:var(--text-muted)">Get on the map.</p>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Standard Venue Card</li>
+                            <li><i class="fas fa-check"></i> Map Pin & Directions</li>
+                            <li><i class="fas fa-check"></i> Basic WhatsApp Booking</li>
+                        </ul>
+                        <button class="btn btn-outline" style="width:100%" onclick="contactSales('Basic')">Claim Venue</button>
+                    </div>
+                    <div class="pricing-card premium">
+                        <h3 style="color:var(--gold)">Premium Partner</h3>
+                        <p style="color:var(--text-muted)">Drive consistent weekend traffic.</p>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Gold Premium Badge</li>
+                            <li><i class="fas fa-check"></i> Live DJ Stream Embeds</li>
+                            <li><i class="fas fa-check"></i> Digital Menu Links</li>
+                            <li><i class="fas fa-check"></i> Priority Search Placement</li>
+                        </ul>
+                        <button class="btn" style="width:100%; background:var(--gold); color:#000;" onclick="contactSales('Premium')">Upgrade to Premium</button>
+                    </div>
+                    <div class="pricing-card platinum">
+                        <h3 style="color:var(--neon)">Platinum Sponsor</h3>
+                        <p style="color:var(--text-muted)">Total market dominance.</p>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Platinum Glowing Badge</li>
+                            <li><i class="fas fa-check"></i> Top-of-Page Placement</li>
+                            <li><i class="fas fa-check"></i> Real-time "Vibe" Updates</li>
+                            <li><i class="fas fa-check"></i> Dedicated Account Manager</li>
+                        </ul>
+                        <button class="btn btn-neon" style="width:100%" onclick="contactSales('Platinum')">Become Platinum</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+    <button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+    <footer class="footer">© 2026 ATM Entertainment | Kenya Nightlife · Live Streams | 📍 Kenya</footer>
+    
+    <script>
+        // ========== Firebase & Global Variables ==========
+        const firebaseConfig = { apiKey: "AIzaSyCgzmQhJxsQfBeLGvL-RkrpFH71-ExUMQQ", authDomain: "carsale-f0548.firebaseapp.com", projectId: "carsale-f0548", storageBucket: "carsale-f0548.firebasestorage.app", messagingSenderId: "1063628678096", appId: "1:1063628678096:web:4cf9b2dde466b80ee84fd5" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        let clubs = [], events = [], ratings = {}, filterTags = ['all'];
+        let clubImageBase64 = null, eventImageBase64 = null, editingClubId = null, editingEventId = null, activeFilterTag = 'all', isAdmin = false;
+        const ADMIN_PW = atob('RW5lcmd5');
+        let mapInstance = null, mapMarkers = [], countdownInterval = null, currentRoutingControl = null;
+        let currentDetailMap = null;
+        const weatherCache = new Map();
+        let currentReserveClub = null;
+        let venueCountdownInterval = null;
+        const KENYA_BOUNDS = L.latLngBounds(L.latLng(-4.8, 33.8), L.latLng(5.2, 42.2));
+        
+        // ---- Helper functions (unchanged except added tier/vibe handling) ----
+        function venueIsLive(v) { return v.live === true && v.streamUrl && v.streamUrl.trim() !== ''; }
+        function getUpcomingEventsForVenue(venueId) {
+            const now = Date.now();
+            return events.filter(e => e.clubId === venueId && new Date(e.date).getTime() > now).sort((a,b) => new Date(a.date)-new Date(b.date));
+        }
+        function venueHasUpcoming(v) { return getUpcomingEventsForVenue(v.id).length > 0; }
+        function getNearestEventDate(venueId) {
+            const upcoming = getUpcomingEventsForVenue(venueId);
+            return upcoming.length ? new Date(upcoming[0].date).getTime() : Infinity;
+        }
+        function getUpdatedAtMillis(club) {
+            const ts = club.updatedAt || club.createdAt;
+            if (ts && typeof ts.toMillis === 'function') return ts.toMillis();
+            if (ts && ts.seconds) return ts.seconds * 1000;
+            return 0;
+        }
+        function shuffleArray(arr) { const copy = [...arr]; for (let i=copy.length-1;i>0;i--) { const j=Math.floor(Math.random()*(i+1)); [copy[i],copy[j]]=[copy[j],copy[i]]; } return copy; }
+        function getAvgRating(id) { const r=ratings[id]; return r&&r.count>0?r.total/r.count:0; }
+        function formatEventDate(d) { return new Date(d).toLocaleDateString('en-KE',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
+        function getEventCountdown(d) { const diff=new Date(d).getTime()-Date.now(); if(diff<=0) return "Happening now!"; const days=Math.floor(diff/86400000), hrs=Math.floor((diff%86400000)/3600000), mins=Math.floor((diff%3600000)/60000); return days>0?`${days}d ${hrs}h`:hrs>0?`${hrs}h ${mins}m`:`${mins}m`; }
+        function getDaysLeft(d){ const diff = Math.ceil((new Date(d).getTime()-Date.now())/(1000*3600*24)); if(diff<0) return "🎉 Happened"; if(diff===0) return "🔥 Today!"; return `⏳ ${diff} day${diff!==1?'s':''} left`; }
+        function getEmbedUrl(url) { if (!url) return null; let yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/); if (yt) return `https://www.youtube.com/embed/${yt[1]}?autoplay=1&controls=1&rel=0`; let vm = url.match(/(?:vimeo\.com\/)(\d+)/); if (vm) return `https://player.vimeo.com/video/${vm[1]}?autoplay=1`; return url; }
+        function showToast(msg) { const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.getElementById('toast-container').appendChild(t); setTimeout(()=>t.remove(),3000); }
+        
+        // ---- Color extraction (unchanged) ----
+        function extractDominantColor(imgElement, callback) { if (!imgElement || !imgElement.complete || !imgElement.naturalWidth) { imgElement.addEventListener('load', () => extractDominantColor(imgElement, callback), { once: true }); return; } const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const sampleSize = 50; canvas.width = sampleSize; canvas.height = sampleSize * (imgElement.naturalHeight / imgElement.naturalWidth); ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height); const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data; const colorCounts = {}; let maxCount = 0, dominantColor = '#1a1a2a'; for (let i = 0; i < imageData.length; i += 4) { const r = imageData[i], g = imageData[i+1], b = imageData[i+2], a = imageData[i+3]; if (a < 128) continue; const qr = Math.round(r/32)*32, qg = Math.round(g/32)*32, qb = Math.round(b/32)*32; const key = `${qr},${qg},${qb}`; colorCounts[key] = (colorCounts[key] || 0) + 1; if (colorCounts[key] > maxCount) { maxCount = colorCounts[key]; dominantColor = `rgb(${qr},${qg},${qb})`; } } callback(dominantColor); }
+        function applyDominantBackground(imageElement, containerElement) { if (!imageElement || !containerElement) return; extractDominantColor(imageElement, (color) => { containerElement.style.backgroundColor = color; const rgb = color.match(/\d+/g); if (rgb && rgb.length >= 3) { const luminance = 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]; containerElement.style.color = luminance > 140 ? '#111' : '#fff'; } }); }
+        function attachColorExtraction() { document.querySelectorAll('.venue-image').forEach(container => { const img = container.querySelector('img'); if (img && img.complete) { applyDominantBackground(img, container); } else if (img) { img.addEventListener('load', () => applyDominantBackground(img, container), { once: true }); } }); const modalImg = document.querySelector('#club-modal-body .venue-modal-header img'); if (modalImg) { const header = modalImg.closest('.venue-modal-header'); if (header) { if (modalImg.complete) { applyDominantBackground(modalImg, header); } else { modalImg.addEventListener('load', () => applyDominantBackground(modalImg, header), { once: true }); } } } }
+        
+        // ---- Social and weather ----
+        function generateSocialHTML(c) { let h='<div class="social-row">'; if(c.facebook) h+=`<a href="${c.facebook}" target="_blank" class="social-icon fb"><i class="fab fa-facebook-f"></i></a>`; if(c.instagram) h+=`<a href="${c.instagram}" target="_blank" class="social-icon ig"><i class="fab fa-instagram"></i></a>`; if(c.tiktok) h+=`<a href="${c.tiktok}" target="_blank" class="social-icon tt"><i class="fab fa-tiktok"></i></a>`; if(c.twitter) h+=`<a href="${c.twitter}" target="_blank" class="social-icon tw"><i class="fab fa-twitter"></i></a>`; if(c.website) h+=`<a href="${c.website}" target="_blank" class="social-icon website"><i class="fas fa-globe"></i></a>`; h+=`<div class="share-btn" onclick="event.stopPropagation();shareVenue('${c.id}','${c.name.replace(/'/g,"\\'")}')"><i class="fas fa-share-alt"></i></div></div>`; return h; }
+        
+        async function fetchWeather(lat,lng) { if(!lat||!lng) return null; const key=`${lat},${lng}`; if(weatherCache.has(key)&&Date.now()-weatherCache.get(key).ts<600000) return weatherCache.get(key).data; try { const res=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true`); const data=await res.json(); if(data.current_weather) { const w=data.current_weather; const temp=Math.round(w.temperature); let icon='☀️'; if(w.weathercode>=51&&w.weathercode<=67) icon='🌧️'; else if(w.weathercode>=71&&w.weathercode<=77) icon='❄️'; else if(w.weathercode>=80) icon='⛈️'; else if(w.weathercode>=3) icon='☁️'; const result={text:`${icon} ${temp}°C`,full:`${icon} ${temp}°C · 💨${w.windspeed||0}km/h`}; weatherCache.set(key,{data:result,ts:Date.now()}); return result; } }catch(e){} return null; }
+        async function attachWeatherToCards() { const divs=document.querySelectorAll('.venue-weather[data-lat][data-lng]'); for(const div of divs){ const lat=parseFloat(div.dataset.lat),lng=parseFloat(div.dataset.lng); if(isNaN(lat)||isNaN(lng)) continue; const w=await fetchWeather(lat,lng); if(w) div.innerHTML=`<i class="fas fa-cloud-sun"></i> ${w.text}`; else div.innerHTML='🌡️ --'; } }
+        
+        // ---- NEW: Tier-based priority ----
+        function getVenueTierValue(v) {
+            if(v.tier === 'platinum') return 4;
+            if(v.tier === 'premium') return 3;
+            if(v.premium === true) return 2;
+            return 1;
+        }
+        function sortVenuesByPriority(venueList) {
+            return venueList.sort((a,b) => {
+                const tierDiff = getVenueTierValue(b) - getVenueTierValue(a);
+                if(tierDiff !== 0) return tierDiff;
+                const aLive = venueIsLive(a) ? 1 : 0;
+                const bLive = venueIsLive(b) ? 1 : 0;
+                if(bLive !== aLive) return bLive - aLive;
+                return 0;
+            });
+        }
+        // ---- Override original getVenuePriority? We'll keep original but use new sorting in renderVenues if needed.
+        // We'll modify renderVenues to use tier sorting when sort === 'premium'.
+        
+        // ---- Marquee update ----
+        function updateMarquee() {
+            const container = document.getElementById('marquee-content');
+            if (!container) return;
+            const now = Date.now();
+            const upcomingEvents = events.filter(ev => new Date(ev.date).getTime() > now)
+                .sort((a,b) => new Date(a.date) - new Date(b.date));
+            if (upcomingEvents.length === 0) {
+                container.innerHTML = '<div class="marquee-item" style="cursor:default;"><i class="fas fa-calendar-check"></i> No upcoming events — check back soon!</div>';
+                container.style.animation = 'none';
+                return;
+            }
+            let itemsHtml = '';
+            upcomingEvents.forEach(ev => {
+                const club = clubs.find(c => c.id === ev.clubId);
+                const venueName = club ? club.name : 'Venue';
+                const dateStr = new Date(ev.date).toLocaleDateString('en-KE', {month:'short', day:'numeric'});
+                const escapedName = ev.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                const escapedPoster = ev.image ? ev.image.replace(/'/g, "\\'") : '';
+                itemsHtml += `<div class="marquee-item" onclick="openPosterLightbox('${escapedPoster}', '${escapedName}')">
+                    <i class="fas fa-music"></i>
+                    <span class="event-name">${ev.name}</span>
+                    <span class="event-venue">@ ${venueName}</span>
+                    <span class="event-date">📅 ${dateStr}</span>
+                </div>`;
+            });
+            const duplicated = itemsHtml + itemsHtml;
+            container.innerHTML = duplicated;
+            container.style.animation = 'scrollMarquee 28s linear infinite';
+            const wrapper = document.getElementById('marquee-wrapper');
+            if (wrapper && container.scrollWidth <= wrapper.clientWidth) {
+                container.style.animation = 'none';
+            }
+        }
+        
+        // ---- Render Venues (enhanced with tier and vibe) ----
+        window.renderVenues = function() {
+            const search = (document.getElementById('search-input')?.value||'').toLowerCase();
+            const sort = document.getElementById('filter-sort')?.value||'premium';
+            let filtered = clubs.filter(c => {
+                if(activeFilterTag!=='all' && !(c.tags||[]).includes(activeFilterTag) && !(c.amenities||[]).includes(activeFilterTag)) return false;
+                if(search && !`${c.name} ${c.location} ${(c.amenities||[]).join(' ')} ${(c.tags||[]).join(' ')}`.toLowerCase().includes(search)) return false;
+                return true;
+            });
+            // Use tier-based sorting when 'premium' selected
+            if(sort === 'premium') {
+                filtered = sortVenuesByPriority(filtered);
+            } else if(sort === 'rating') {
+                filtered.sort((a,b)=>getAvgRating(b.id)-getAvgRating(a.id));
+            } else {
+                filtered.sort((a,b)=>a.name.localeCompare(b.name));
+            }
+            document.getElementById('venue-count').textContent = filtered.length+' venues';
+            document.getElementById('venue-grid').innerHTML = filtered.map(v => {
+                const avg = getAvgRating(v.id);
+                const weatherHtml = (v.lat&&v.lng) ? `<div class="venue-weather" data-lat="${v.lat}" data-lng="${v.lng}"><i class="fas fa-spinner fa-spin"></i> weather</div>` : `<div class="venue-weather">📍 No coordinates</div>`;
+                const liveOverlay = (v.live && v.streamUrl) ? `<div class="live-badge-overlay" onclick="event.stopPropagation();watchStream('${v.id}')"><i class="fas fa-circle" style="font-size:0.55rem;"></i> Live DJ Stream</div>` : '';
+                const taxiBtn = (v.lat&&v.lng) ? `<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();showTaxiOptions(${v.lat},${v.lng},'${v.name.replace(/'/g,"\\'")}')"><i class="fas fa-taxi"></i> Get There</button>` : `<button class="btn btn-outline btn-sm disabled" disabled><i class="fas fa-taxi"></i> No location</button>`;
+                const upcoming = getUpcomingEventsForVenue(v.id);
+                let eventsHtml = '';
+                if(upcoming.length) {
+                    eventsHtml = `<div class="venue-events-section"><div style="font-size:0.7rem;color:var(--neon2);margin-bottom:4px;"><i class="fas fa-calendar-alt"></i> Upcoming events</div>`;
+                    upcoming.forEach(ev => { const cd = getEventCountdown(ev.date); eventsHtml += `<div class="venue-event-item" onclick="event.stopPropagation();openPosterLightbox('${ev.image||''}','${ev.name.replace(/'/g,"\\'")}')"><div class="venue-event-name">🎉 ${ev.name}</div><div class="venue-event-date">📅 ${formatEventDate(ev.date)}</div><div class="venue-event-countdown" data-event-date="${ev.date}">⏳ ${cd}</div></div>`; });
+                    eventsHtml += `</div>`;
+                }
+                // --- Tier badge ---
+                let tierBadge = '';
+                if(v.tier === 'platinum') tierBadge = '<div class="tier-badge platinum">💎 PLATINUM</div>';
+                else if(v.tier === 'premium') tierBadge = '<div class="tier-badge premium">⭐ PREMIUM</div>';
+                else if(v.premium === true && !v.tier) tierBadge = '<div class="tier-badge premium">⭐ PREMIUM</div>'; // legacy
+                // --- Vibe indicator ---
+                let vibeHtml = '';
+                if(v.vibe === 'packed') vibeHtml = '<span class="vibe-indicator vibe-packed">🔥 Packed</span>';
+                else if(v.vibe === 'filling') vibeHtml = '<span class="vibe-indicator vibe-filling">🚶 Filling Up</span>';
+                else if(v.vibe === 'quiet') vibeHtml = '<span class="vibe-indicator vibe-quiet">🧊 Chill</span>';
+                // Card class for tier
+                let tierClass = '';
+                if(v.tier === 'platinum') tierClass = 'platinum';
+                else if(v.tier === 'premium' || (v.premium && !v.tier)) tierClass = 'premium';
+                return `<div class="venue-card ${tierClass}" onclick="openClubDetail('${v.id}')">
+                    <div class="venue-image" onclick="event.stopPropagation();openClubDetail('${v.id}')">${v.image?`<img src="${v.image}" onerror="this.parentElement.innerHTML='<div class=venue-image-placeholder>🎧</div>'">`:'<div class="venue-image-placeholder">🎧</div>'}${tierBadge}${liveOverlay}</div>
+                    <div class="venue-details">
+                        <div class="venue-name">${v.name} ${vibeHtml}</div>
+                        <div class="venue-meta"><span>📍 ${v.location||'Kenya'}</span><span>📞 ${v.phone||'N/A'}</span></div>
+                        <div class="venue-stars">${'⭐'.repeat(Math.round(avg))} ${avg>0?`(${avg.toFixed(1)})`:''}</div>
+                        ${weatherHtml}${generateSocialHTML(v)}
+                        <div class="venue-tags">${(v.tags||[]).map(t=>`<span class="venue-tag">${t}</span>`).join('')}</div>
+                        ${eventsHtml}
+                        <div class="venue-actions">
+                            <button class="btn btn-wa btn-sm" onclick="event.stopPropagation();reserveTable('${v.id}')">📱 Reserve</button>
+                            ${taxiBtn}
+                            <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openClubDetail('${v.id}')">ℹ️ More Info</button>
+                            ${v.lat&&v.lng?`<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();getDirections(${v.lat},${v.lng})">📍 Directions</button>`:''}
+                        </div>
+                    </div>
+                </div>`;
+            }).join('') || '<p style="color:var(--text-muted);text-align:center;">No venues found.</p>';
+            attachWeatherToCards();
+            startVenueEventCountdownUpdater();
+            attachColorExtraction();
+        };
+        
+        function startVenueEventCountdownUpdater() { if(venueCountdownInterval) clearInterval(venueCountdownInterval); venueCountdownInterval = setInterval(() => { document.querySelectorAll('.venue-event-countdown').forEach(el => { const date = el.getAttribute('data-event-date'); if(date) el.textContent = `⏳ ${getEventCountdown(date)}`; }); }, 1000); }
+        
+        // ---- Render Events (unchanged) ----
+        function renderEvents() { const clubFilter = document.getElementById('event-club-filter')?.value||'all'; const sort = document.getElementById('event-sort')?.value||'promoted'; let filtered = events.filter(e=>clubFilter==='all'||e.clubId===clubFilter); if(clubFilter==='all'&&sort==='promoted') { const promoted = filtered.filter(e=>e.promoted===true); const notPromoted = filtered.filter(e=>e.promoted!==true); filtered = [...shuffleArray(promoted), ...shuffleArray(notPromoted)]; } else { filtered.sort((a,b)=>sort==='promoted'?(b.promoted?1:0)-(a.promoted?1:0):new Date(a.date)-new Date(b.date)); } document.getElementById('event-count').textContent = filtered.length+' events'; document.getElementById('event-grid').innerHTML = filtered.map(e=>{ const club = clubs.find(c=>c.id===e.clubId); const days = getDaysLeft(e.date); return `<div class="event-card ${e.promoted?'promoted':''}"><div class="event-poster" onclick="openPosterLightbox('${e.image||''}','${e.name.replace(/'/g,"\\'")}')">${e.image?`<img src="${e.image}" alt="poster">`:'<div style="height:100%;display:flex;align-items:center;justify-content:center;">🎉</div>'}</div><div class="event-details"><div class="event-name">${e.name}${e.promoted?' 🔥':''}<div class="share-btn" onclick="event.stopPropagation();shareEvent('${e.id}','${e.name.replace(/'/g,"\\'")}','${e.image||''}','${e.clubId}','${e.date}')"><i class="fas fa-share-alt"></i></div></div><div class="event-date">📅 ${new Date(e.date).toLocaleDateString('en-KE',{weekday:'short',day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div><div class="countdown" data-event-time="${new Date(e.date).getTime()}">${days}</div><div>📍 ${club?club.name:'Unknown'}</div><div class="interested-row"><span>${e.interested||0} interested</span><button class="interested-btn" onclick="event.stopPropagation();markInterested('${e.id}')">👍 I'm Interested</button></div></div></div>`; }).join('')||'<p style="color:var(--text-muted);text-align:center;">No events found.</p>'; startCountdownUpdater(); }
+        function updateAllCountdowns() { document.querySelectorAll('.countdown[data-event-time]').forEach(el => { const target=parseInt(el.dataset.eventTime); if(isNaN(target)) return; const diff=target-Date.now(); if(diff<=0){ el.textContent='🎉 Happening now!'; return; } const d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000); el.textContent=`⏳ ${d}d ${h}h ${m}m ${s}s`; }); }
+        function startCountdownUpdater() { if(countdownInterval) clearInterval(countdownInterval); countdownInterval=setInterval(updateAllCountdowns,1000); updateAllCountdowns(); }
+        window.markInterested = (id) => { const e = events.find(x=>x.id===id); if(!e) return; db.collection('atm_events').doc(id).update({interested:(e.interested||0)+1}); showToast('👍 Interested!'); };
+        
+        // ---- Map functions (unchanged) ----
+        function updateMap() { if(!mapInstance) { mapInstance = L.map('map', { minZoom:5, maxBounds:KENYA_BOUNDS, maxBoundsViscosity:1.0 }).setView([0.5,38],6); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap contributors' }).addTo(mapInstance); mapInstance.setMaxBounds(KENYA_BOUNDS); mapInstance.on('drag', function() { mapInstance.panInsideBounds(KENYA_BOUNDS, {animate:true}); }); mapInstance.on('zoomend', function() { if(!KENYA_BOUNDS.contains(mapInstance.getCenter())) mapInstance.setView([0.5,38], mapInstance.getZoom()); }); } mapMarkers.forEach(m=>mapInstance.removeLayer(m)); mapMarkers = []; clubs.forEach(c => { if(c.lat && c.lng && KENYA_BOUNDS.contains([c.lat,c.lng])) { const marker = L.marker([c.lat,c.lng], { riseOnHover:true }).addTo(mapInstance).bindPopup(`<b>${c.name}</b><br>${c.location||'Kenya'}<br><a href="#" onclick="getDirections(${c.lat},${c.lng});return false;">Get Directions</a>`); const iconEl = marker._icon; if(iconEl){ iconEl.classList.add('animated-marker'); setTimeout(()=>{ iconEl.classList.remove('animated-marker'); },600); } mapMarkers.push(marker); } }); if(mapMarkers.length>0) { const group = L.featureGroup(mapMarkers); const bounds = group.getBounds(); if(bounds.isValid() && KENYA_BOUNDS.intersects(bounds)) { const clampedBounds = L.latLngBounds( L.latLng(Math.max(bounds.getSouth(), KENYA_BOUNDS.getSouth()), Math.max(bounds.getWest(), KENYA_BOUNDS.getWest())), L.latLng(Math.min(bounds.getNorth(), KENYA_BOUNDS.getNorth()), Math.min(bounds.getEast(), KENYA_BOUNDS.getEast())) ); mapInstance.fitBounds(clampedBounds.pad(0.2)); } else mapInstance.setView([0.5,38],6); } else mapInstance.setView([0.5,38],6); mapInstance.setMaxBounds(KENYA_BOUNDS); if(currentRoutingControl){ mapInstance.removeControl(currentRoutingControl); currentRoutingControl=null; } }
+        window.getDirections = (lat,lng) => { showRouteOnMainMap(lat,lng); switchTab('map-tab'); };
+        function showRouteOnMainMap(lat,lng) { if(!mapInstance) return; if(currentRoutingControl) mapInstance.removeControl(currentRoutingControl); if(L.Routing && KENYA_BOUNDS.contains([lat,lng])) { currentRoutingControl = L.Routing.control({ waypoints:[L.latLng(0.0478,37.6498), L.latLng(lat,lng)], routeWhileDragging:true, addWaypoints:false, lineOptions:{styles:[{color:'#e040fb',weight:4}]} }).addTo(mapInstance); showToast('📍 Route added'); } else if(!L.Routing) alert('Routing not available'); else showToast('📍 Destination outside Kenya'); }
+        
+        window.switchTab = function(tabId) { document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active')); document.getElementById(tabId).classList.add('active'); const activeBtn = document.querySelector(`.nav-btn[data-tab="${tabId}"]`); if(activeBtn) activeBtn.classList.add('active'); if(tabId==='map-tab' && mapInstance) { setTimeout(()=>{ mapInstance.invalidateSize(); mapInstance.setMaxBounds(KENYA_BOUNDS); if(!KENYA_BOUNDS.contains(mapInstance.getCenter())) mapInstance.setView([0.5,38],6); },150); } };
+        
+        // ---- Open Club Detail (enhanced with tier, vibe, menu, claim) ----
+        window.openClubDetail = async (id) => {
+            const c = clubs.find(x=>x.id===id); if(!c) return;
+            const avg = getAvgRating(id), cur = ratings[id]||{total:0,count:0};
+            let weatherHtml = '<div>🌡️ Loading...</div>';
+            if(c.lat&&c.lng) {
+                const w = await fetchWeather(c.lat,c.lng);
+                if(w) weatherHtml = `<div class="venue-weather" style="margin:8px 0"><i class="fas fa-cloud-sun"></i> ${w.full}</div>`;
+                else weatherHtml = '<div>🌡️ Unavailable</div>';
+            }
+            const socialHtml = generateSocialHTML(c);
+            // Tier display
+            let tierDisplay = '';
+            if(c.tier === 'platinum') tierDisplay = '💎 Platinum';
+            else if(c.tier === 'premium') tierDisplay = '⭐ Premium';
+            else if(c.premium === true && !c.tier) tierDisplay = '⭐ Premium';
+            else tierDisplay = 'Basic';
+            // Vibe display
+            let vibeDisplay = '';
+            if(c.vibe === 'packed') vibeDisplay = '🔥 Packed';
+            else if(c.vibe === 'filling') vibeDisplay = '🚶 Filling Up';
+            else vibeDisplay = '🧊 Chill';
+            // Menu button
+            const menuBtn = c.menuUrl ? `<button class="btn btn-outline" onclick="window.open('${c.menuUrl}', '_blank')"><i class="fas fa-book-open"></i> View Menu</button>` : '';
+            // Claim/Upgrade button for basic venues
+            const isBasic = !c.tier || c.tier === 'basic';
+            const claimBtn = isBasic ? `<button class="btn btn-outline" style="border-color:var(--gold); color:var(--gold);" onclick="contactSales('Premium')"><i class="fas fa-check-circle"></i> Claim Venue / Upgrade</button>` : '';
+            
+            const modalHtml = `
+            <div class="venue-modal-header" id="modal-header-image">
+                ${c.image ? `<img src="${c.image}" alt="${c.name}" id="modal-venue-img">` : '<div style="width:160px;height:100px;background:#222;display:flex;align-items:center;justify-content:center;border-radius:16px;">🎧</div>'}
+                <div class="venue-title">
+                    <h2>${c.name} <span style="font-size:0.9rem; color:var(--gold);">${tierDisplay}</span></h2>
+                    <div class="venue-meta">📍 ${c.location||'Kenya'} &nbsp;·&nbsp; 📞 ${c.phone||'N/A'}</div>
+                    <div class="vibe-indicator" style="margin-top:8px;">${vibeDisplay}</div>
+                    ${c.description ? `<p style="margin-top:0.5rem;color:var(--text-secondary);font-size:0.9rem;">${c.description}</p>` : ''}
+                </div>
+            </div>
+            <div class="club-detail-grid">
+                <div class="detail-section"><h4><i class="fas fa-info-circle"></i> Venue Info</h4><div class="info-row"><div class="info-label">📍 Location</div><div class="info-value">${c.location||'Kenya'}</div></div><div class="info-row"><div class="info-label">📞 Contact</div><div class="info-value">${c.phone||'N/A'}</div></div><div class="info-row"><div class="info-label">📖 About</div><div class="info-value">${c.description||'Experience the best nightlife in Kenya.'}</div></div></div>
+                <div class="detail-section"><h4><i class="fas fa-star"></i> Ratings & Weather</h4><div class="info-row"><div class="info-label">⭐ Rating</div><div class="info-value">${avg.toFixed(1)} (${cur.count} votes)</div></div><div class="star-rating" id="modal-star-rating">${[1,2,3,4,5].map(s=>`<i class="fas fa-star star" data-value="${s}"></i>`).join('')}</div><div class="info-row"><div class="info-label">🌤️ Weather</div><div class="info-value">${weatherHtml}</div></div></div>
+                <div class="detail-section"><h4><i class="fas fa-tag"></i> Amenities & Tags</h4><div class="info-row"><div class="info-label">🎯 Amenities</div><div class="info-value"><div class="amenity-list">${(c.amenities||[]).map(a=>`<span class="mini-tag">${a}</span>`).join('')||'—'}</div></div></div><div class="info-row"><div class="info-label">🏷️ Tags</div><div class="info-value"><div class="tag-list">${(c.tags||[]).map(t=>`<span class="mini-tag">${t}</span>`).join('')||'—'}</div></div></div></div>
+                <div class="detail-section"><h4><i class="fas fa-link"></i> Connect & Share</h4>${socialHtml}<div class="modal-actions">${(c.live&&c.streamUrl) ? `<button class="btn btn-live-modal" onclick="watchStream('${c.id}')"><i class="fas fa-video"></i> Live DJ Stream</button>` : ''}<button class="btn btn-wa" onclick="reserveTable('${c.id}')"><i class="fab fa-whatsapp"></i> Reserve Table</button>${menuBtn}${(c.lat&&c.lng) ? `<button class="btn btn-outline" onclick="showTaxiOptions(${c.lat},${c.lng},'${c.name.replace(/'/g,"\\'")}')"><i class="fas fa-taxi"></i> Get There</button>` : ''}${claimBtn}<div class="share-btn" onclick="shareVenue('${c.id}','${c.name.replace(/'/g,"\\'")}')"><i class="fas fa-share-alt"></i> Share</div></div></div>
+                <div class="detail-section full-width"><h4><i class="fas fa-map-marked-alt"></i> Location Map</h4><div id="detail-map"></div></div>
+            </div>`;
+            document.getElementById('club-modal-title').textContent = c.name;
+            document.getElementById('club-modal-body').innerHTML = modalHtml;
+            document.getElementById('club-modal').style.display = 'flex';
+            setTimeout(()=>{
+                document.querySelectorAll('#modal-star-rating .star').forEach(star=>star.addEventListener('click',(e)=>{rateClubInteractive(c.id,parseInt(star.dataset.value));}));
+                if(c.lat&&c.lng){
+                    if(currentDetailMap) currentDetailMap.remove();
+                    const dm = L.map('detail-map',{maxBounds:KENYA_BOUNDS,minZoom:5}).setView([c.lat,c.lng],16);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(dm);
+                    L.marker([c.lat,c.lng]).addTo(dm).bindPopup(`<b>${c.name}</b>`).openPopup();
+                    dm.setMaxBounds(KENYA_BOUNDS);
+                    currentDetailMap = dm;
+                }
+                attachColorExtraction();
+            },150);
+        };
+        function rateClubInteractive(id,val) { const cur=ratings[id]||{total:0,count:0}; db.collection('atm_ratings').doc(id).set({total:cur.total+val,count:cur.count+1}).then(()=>{ showToast(`⭐ Rated ${val} stars!`); renderVenues(); }); }
+        
+        // ---- Share, Stream, Taxi, Reserve (unchanged) ----
+        window.shareVenue = async (id,name) => { const venue = clubs.find(v=>v.id===id); if(!venue) return; const shareText = `🎧 ${venue.name} on ATM Entertainment`; if(navigator.share) try{await navigator.share({title:venue.name,text:shareText});showToast("Shared!");}catch(e){} else { navigator.clipboard.writeText(shareText); showToast("Copied!"); } };
+        window.shareEvent = async (id,name,poster,clubId,date) => { const club = clubs.find(c=>c.id===clubId); const text = `🚀 ${name} at ${club?.name||'a venue'}`; if(navigator.share) try{await navigator.share({title:name,text});showToast("Shared!");}catch(e){} else { navigator.clipboard.writeText(text); showToast("Copied!"); } };
+        window.closeStreamModal = () => { document.getElementById('stream-modal').style.display='none'; document.getElementById('stream-container').innerHTML=''; };
+        window.watchStream = (clubId) => { const club = clubs.find(c=>c.id===clubId); if(!club||!club.streamUrl){ showToast("Stream URL not available."); return; } let embed = getEmbedUrl(club.streamUrl); const container = document.getElementById('stream-container'); const fallback = document.getElementById('stream-fallback'); container.innerHTML=''; fallback.style.display='none'; if(!embed){ fallback.innerHTML=`<p>Cannot embed. <a href="${club.streamUrl}" target="_blank">Open in new tab</a></p>`; fallback.style.display='block'; document.getElementById('stream-modal').style.display='flex'; return; } const iframe = document.createElement('iframe'); iframe.src=embed; iframe.allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"; iframe.allowFullscreen=true; container.appendChild(iframe); document.getElementById('stream-modal').style.display='flex'; };
+        window.showTaxiOptions = (lat,lng,venueName) => { if(!lat||!lng){ showToast("📍 Venue coordinates missing"); return; } const uberLink = `uber://?action=setPickup&pickup=my_location&dropoff[latitude]=${lat}&dropoff[longitude]=${lng}`; const uberWeb = `https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[latitude]=${lat}&dropoff[longitude]=${lng}`; const boltLink = `bolt://?destination_latitude=${lat}&destination_longitude=${lng}`; const boltWeb = `https://bolt.eu/en/ride/?destination_latitude=${lat}&destination_longitude=${lng}`; document.getElementById('taxi-modal-body').innerHTML = `<p style="margin-bottom:1rem;text-align:center"><strong>${venueName}</strong><br>Get a ride</p><div class="taxi-options"><a href="${uberLink}" onclick="window.open('${uberWeb}','_blank');return false;" class="taxi-btn"><i class="fab fa-uber"></i> Uber</a><a href="${boltLink}" onclick="window.open('${boltWeb}','_blank');return false;" class="taxi-btn"><i class="fas fa-bolt"></i> Bolt</a><a href="https://bebwa.co.ke" target="_blank" class="taxi-btn"><i class="fas fa-car"></i> Bebwa</a><button class="taxi-btn" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving','_blank');"><i class="fas fa-map-marked-alt"></i> Maps</button></div>`; document.getElementById('taxi-modal').style.display='flex'; };
+        window.showReservationModal = (clubId) => { const club = clubs.find(c=>c.id===clubId); if(!club||!club.phone){ showToast("Venue phone missing"); return; } currentReserveClub = club; document.getElementById('reserve-club-name').innerHTML = `<i class="fas fa-glass-cheers"></i> ${club.name}`; document.getElementById('reserve-name').value = ''; document.getElementById('reserve-phone').value = ''; document.getElementById('reserve-seats').value = '2'; document.getElementById('reserve-datetime').value = ''; document.getElementById('reserve-note').value = ''; document.getElementById('reserve-modal').style.display = 'flex'; };
+        window.closeReserveModal = () => { document.getElementById('reserve-modal').style.display='none'; currentReserveClub=null; };
+        window.reserveTable = (id) => { showReservationModal(id); };
+        window.sendReservation = () => { if(!currentReserveClub) return; const name = document.getElementById('reserve-name').value.trim(); const phone = document.getElementById('reserve-phone').value.trim(); const seats = document.getElementById('reserve-seats').value||'2'; const datetime = document.getElementById('reserve-datetime').value; const note = document.getElementById('reserve-note').value.trim(); if(!name||!phone){ showToast("Please fill name and phone"); return; } let cleanPhone = currentReserveClub.phone.replace(/\D/g,''); if(cleanPhone.startsWith('0')) cleanPhone = '254'+cleanPhone.slice(1); if(!cleanPhone.startsWith('254')) cleanPhone = '254'+cleanPhone; let msg = `🏢 RESERVATION REQUEST 🎉\n📍 Venue: ${currentReserveClub.name}\n👤 Name: ${name}\n📞 Your Phone: ${phone}\n🪑 Seats: ${seats}\n`; if(datetime) msg += `📅 Date/Time: ${new Date(datetime).toLocaleString()}\n`; if(note) msg += `📝 Notes: ${note}\n`; window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`,'_blank'); closeReserveModal(); showToast("Redirecting to WhatsApp..."); };
+        function openPosterLightbox(imgUrl, eventName) { if(!imgUrl){ showToast('No poster available'); return; } const overlay = document.createElement('div'); overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:300;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:1rem;'; overlay.onclick = () => overlay.remove(); const img = document.createElement('img'); img.src=imgUrl; img.style.cssText = 'max-width:95vw;max-height:80vh;object-fit:contain;border-radius:16px;box-shadow:0 0 40px rgba(224,64,251,0.3);'; img.onclick = (e) => e.stopPropagation(); const btnRow = document.createElement('div'); btnRow.style.cssText = 'margin-top:1rem;display:flex;gap:12px;flex-wrap:wrap;justify-content:center;'; const closeBtn = document.createElement('button'); closeBtn.textContent = '✕ Close'; closeBtn.style.cssText = 'padding:10px 20px;border-radius:40px;border:1px solid #fff;background:transparent;color:#fff;cursor:pointer;font-family:Outfit,sans-serif;font-weight:600;'; closeBtn.onclick = () => overlay.remove(); const downloadBtn = document.createElement('button'); downloadBtn.textContent = '⬇️ Download'; downloadBtn.style.cssText = 'padding:10px 20px;border-radius:40px;border:none;background:#e040fb;color:#fff;cursor:pointer;font-family:Outfit,sans-serif;font-weight:600;'; downloadBtn.onclick = () => { const a=document.createElement('a'); a.href=imgUrl; a.download=`${(eventName||'poster').replace(/\s/g,'_')}.jpg`; a.click(); showToast('Downloading...'); }; btnRow.appendChild(downloadBtn); btnRow.appendChild(closeBtn); overlay.appendChild(img); overlay.appendChild(btnRow); document.body.appendChild(overlay); }
+        window.closeModal = (id) => document.getElementById(id).style.display='none';
+        window.closeWelcomeModal = () => document.getElementById('welcome-modal').style.display='none';
+        
+        // ---- Partner modal functions ----
+        window.openPartnerModal = () => { document.getElementById('partner-modal').style.display='flex'; };
+        window.contactSales = (tier) => { window.open(`https://wa.me/254700000000?text=Hello, I am interested in claiming my venue with the ${tier} package.`, '_blank'); };
+        
+        // ---- Admin functions (enhanced with tier, vibe, menu) ----
+        function checkAdmin() { if(sessionStorage.getItem('atm_admin')==='true') isAdmin=true; }
+        function tryAdminLogin(){ const p=prompt('Enter admin password:'); if(p===ADMIN_PW){ isAdmin=true; sessionStorage.setItem('atm_admin','true'); updateUI(); showToast('✅ Admin Welcome!'); } else if(p!==null) alert('❌ Incorrect.'); }
+        window.toggleAdminAccess = () => isAdmin ? logoutAdmin() : tryAdminLogin();
+        window.logoutAdmin = () => { isAdmin=false; sessionStorage.removeItem('atm_admin'); updateUI(); showPublicView(); showToast('👋 Logged out'); };
+        function updateUI() { const btn = document.getElementById('btn-admin-toggle'); if(isAdmin){ btn.classList.add('logged-in'); btn.innerHTML='<i class="fas fa-lock-open"></i>'; } else { btn.classList.remove('logged-in'); btn.innerHTML='<i class="fas fa-lock"></i>'; } document.getElementById('public-view').style.display = isAdmin ? 'none' : 'block'; document.getElementById('admin-panel').classList.toggle('visible', isAdmin); if(isAdmin) renderAdmin(); else { renderVenues(); renderEvents(); updateMap(); populateEventClubFilter(); startCountdownUpdater(); } updateStats(); }
+        function showPublicView() { if(isAdmin) { isAdmin=false; sessionStorage.removeItem('atm_admin'); updateUI(); } }
+        function updateStats() { if(document.getElementById('stat-clubs')) document.getElementById('stat-clubs').textContent=clubs.length; document.getElementById('stat-events')&&(document.getElementById('stat-events').textContent=events.length); document.getElementById('stat-live')&&(document.getElementById('stat-live').textContent=clubs.filter(c=>c.live).length); document.getElementById('venue-count')&&(document.getElementById('venue-count').textContent=clubs.length+' venues'); document.getElementById('event-count')&&(document.getElementById('event-count').textContent=events.length+' events'); document.getElementById('admin-club-count')&&(document.getElementById('admin-club-count').textContent=clubs.length); document.getElementById('admin-event-count')&&(document.getElementById('admin-event-count').textContent=events.length); }
+        function populateEventClubFilter() { const sel = document.getElementById('event-club-filter'); if(sel) sel.innerHTML = '<option value="all">All Venues</option>'+clubs.map(c=>`<option value="${c.id}">${c.name}</option>`).join(''); const evSel = document.getElementById('event-club'); if(evSel) evSel.innerHTML = clubs.map(c=>`<option value="${c.id}">${c.name}</option>`).join(''); }
+        function renderFilterTags() { document.getElementById('filter-tags').innerHTML = filterTags.map(t=>`<span class="filter-tag${activeFilterTag===t?' active':''}" onclick="setFilterTag('${t}', this)">${t==='all'?'All':t}</span>`).join(''); }
+        window.setFilterTag = (tag, el) => { activeFilterTag=tag; document.querySelectorAll('.filter-tag').forEach(t=>t.classList.remove('active')); if(el) el.classList.add('active'); renderVenues(); };
+        function addFilterTag() { const name = document.getElementById('new-tag-input').value.trim(); if(!name) return; db.collection('atm_filterTags').add({name}).then(()=>{ document.getElementById('new-tag-input').value=''; showToast('✅ Tag added'); }); }
+        function removeFilterTag(name) { db.collection('atm_filterTags').where('name','==',name).get().then(s=>s.forEach(d=>d.ref.delete())); }
+        function switchAdminTab(tab) { document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active')); document.querySelectorAll('.admin-content').forEach(c=>c.classList.remove('active')); if(tab==='clubs') document.querySelector('.admin-tab:nth-child(1)').classList.add('active'); else if(tab==='events') document.querySelector('.admin-tab:nth-child(2)').classList.add('active'); else document.querySelector('.admin-tab:nth-child(3)').classList.add('active'); document.getElementById(`admin-content-${tab}`).classList.add('active'); }
+        function renderAdmin() { renderAdminClubs(); renderAdminEvents(); renderAdminTags(); populateEventClubFilter(); }
+        function renderAdminClubs() {
+            document.getElementById('admin-club-list').innerHTML = clubs.map(c=>`
+                <div class="admin-item">
+                    <img class="admin-thumb" src="${c.image||''}" onerror="this.style.display='none'">
+                    <div class="admin-info"><strong>${c.name}</strong> 
+                        <span>${c.location||'N/A'} | Tier: ${c.tier||(c.premium?'premium':'basic')} | 
+                        <span class="vibe-indicator ${c.vibe==='packed'?'vibe-packed':c.vibe==='filling'?'vibe-filling':'vibe-quiet'}" style="margin-left:8px;">${c.vibe||'quiet'}</span>
+                        ${c.live?' 🔴LIVE':''}</span>
+                    </div>
+                    <div class="admin-actions"><button class="btn btn-outline btn-sm" onclick="editClub('${c.id}')">✏️</button><button class="btn btn-sm" style="background:var(--danger);color:#fff;" onclick="deleteClub('${c.id}')">🗑️</button></div>
+                </div>
+            `).join('')||'<p>No venues.</p>';
+        }
+        function renderAdminEvents() {
+            document.getElementById('admin-event-list').innerHTML = events.map(e=>{ const club = clubs.find(c=>c.id===e.clubId); return `<div class="admin-item"><img class="admin-thumb" src="${e.image||''}" onerror="this.style.display='none'"><div class="admin-info"><strong>${e.name}</strong><span>${club?club.name:'?'} | ${new Date(e.date).toLocaleDateString()} | ${e.promoted?'🔥Promoted':''}</span></div><div class="admin-actions"><button class="btn btn-outline btn-sm" onclick="editEvent('${e.id}')">✏️</button><button class="btn btn-sm" style="background:var(--danger);color:#fff;" onclick="deleteEvent('${e.id}')">🗑️</button></div></div>`; }).join('')||'<p>No events.</p>';
+        }
+        function renderAdminTags() { document.getElementById('admin-tags-list').innerHTML = filterTags.filter(t=>t!=='all').map(t=>`<span style="background:var(--surface-light);padding:5px 10px;border-radius:12px;display:flex;align-items:center;gap:6px;">${t}<button style="background:none;border:none;color:var(--danger);cursor:pointer;" onclick="removeFilterTag('${t}')">×</button></span>`).join(''); }
+        function handleClubImage(e) { const file=e.target.files[0]; if(!file) return; compressImage(file,(base64)=>{ clubImageBase64=base64; document.getElementById('club-img-preview').src=base64; document.getElementById('club-img-preview').style.display='block'; }); }
+        function handleEventImage(e) { const file=e.target.files[0]; if(!file) return; compressImage(file,(base64)=>{ eventImageBase64=base64; document.getElementById('event-img-preview').src=base64; document.getElementById('event-img-preview').style.display='block'; }); }
+        function compressImage(file,cb){ const reader=new FileReader(); reader.onload=(ev)=>{ const img=new Image(); img.onload=()=>{ let w=img.width,h=img.height; if(w>800){ h=Math.round(h*(800/w)); w=800; } const canvas=document.createElement('canvas'); canvas.width=w; canvas.height=h; canvas.getContext('2d').drawImage(img,0,0,w,h); cb(canvas.toDataURL('image/jpeg',0.85)); }; img.src=ev.target.result; }; reader.readAsDataURL(file); }
+        async function handleClubSubmit(e) {
+            e.preventDefault(); if(!isAdmin) return;
+            let imageData = editingClubId ? clubs.find(c=>c.id===editingClubId)?.image||'' : '';
+            if(clubImageBase64) imageData = clubImageBase64;
+            const data = {
+                name: document.getElementById('club-name').value.trim(),
+                location: document.getElementById('club-location').value.trim(),
+                lat: parseFloat(document.getElementById('club-lat').value)||null,
+                lng: parseFloat(document.getElementById('club-lng').value)||null,
+                phone: document.getElementById('club-phone').value.trim(),
+                streamUrl: document.getElementById('club-stream').value.trim(),
+                description: document.getElementById('club-desc').value.trim(),
+                amenities: document.getElementById('club-amenities').value.split(',').map(s=>s.trim()).filter(Boolean),
+                tags: document.getElementById('club-tags-input').value.split(',').map(s=>s.trim()).filter(Boolean),
+                tier: document.getElementById('club-tier').value,
+                vibe: document.getElementById('club-vibe').value,
+                menuUrl: document.getElementById('club-menu').value.trim(),
+                premium: document.getElementById('club-premium').checked,
+                live: document.getElementById('club-live').checked,
+                facebook: document.getElementById('club-facebook').value.trim(),
+                instagram: document.getElementById('club-instagram').value.trim(),
+                tiktok: document.getElementById('club-tiktok').value.trim(),
+                twitter: document.getElementById('club-twitter').value.trim(),
+                website: document.getElementById('club-website').value.trim(),
+                image: imageData,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            if(!editingClubId) data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            try {
+                if(editingClubId) await db.collection('atm_clubs').doc(editingClubId).update(data);
+                else await db.collection('atm_clubs').add(data);
+                resetClubForm();
+                showToast('✅ Venue saved!');
+            } catch(err) { showToast('❌ '+err.message); }
+        }
+        window.editClub = (id) => {
+            const c = clubs.find(x=>x.id===id); if(!c) return;
+            editingClubId = id;
+            document.getElementById('edit-club-id').value=id;
+            document.getElementById('club-name').value=c.name||'';
+            document.getElementById('club-location').value=c.location||'';
+            document.getElementById('club-lat').value=c.lat||'';
+            document.getElementById('club-lng').value=c.lng||'';
+            document.getElementById('club-phone').value=c.phone||'';
+            document.getElementById('club-stream').value=c.streamUrl||'';
+            document.getElementById('club-menu').value=c.menuUrl||'';
+            document.getElementById('club-tier').value=c.tier||(c.premium?'premium':'basic');
+            document.getElementById('club-vibe').value=c.vibe||'quiet';
+            document.getElementById('club-desc').value=c.description||'';
+            document.getElementById('club-amenities').value=(c.amenities||[]).join(', ');
+            document.getElementById('club-tags-input').value=(c.tags||[]).join(', ');
+            document.getElementById('club-premium').checked=!!c.premium;
+            document.getElementById('club-live').checked=!!c.live;
+            document.getElementById('club-facebook').value=c.facebook||'';
+            document.getElementById('club-instagram').value=c.instagram||'';
+            document.getElementById('club-tiktok').value=c.tiktok||'';
+            document.getElementById('club-twitter').value=c.twitter||'';
+            document.getElementById('club-website').value=c.website||'';
+            if(c.image){ document.getElementById('club-img-preview').src=c.image; document.getElementById('club-img-preview').style.display='block'; }
+            document.getElementById('club-submit-btn').textContent='💾 Update Venue';
+            document.getElementById('club-form-title').textContent='✏️ Edit Venue';
+            document.getElementById('club-cancel-btn').style.display='inline-block';
+            clubImageBase64=null;
+            window.scrollTo(0,0);
+        };
+        window.deleteClub = async (id) => { if(confirm('Delete this venue?')){ await db.collection('atm_clubs').doc(id).delete(); showToast('🗑️ Deleted'); } };
+        function resetClubForm(){
+            document.getElementById('club-form').reset();
+            editingClubId=null; clubImageBase64=null;
+            document.getElementById('club-img-preview').style.display='none';
+            document.getElementById('club-submit-btn').textContent='✅ Add Venue';
+            document.getElementById('club-form-title').textContent='➕ Add Venue';
+            document.getElementById('club-cancel-btn').style.display='none';
+        }
+        window.cancelClubEdit = () => { resetClubForm(); showToast('Cancelled'); };
+        async function handleEventSubmit(e) {
+            e.preventDefault(); if(!isAdmin) return;
+            let imageData = editingEventId ? events.find(x=>x.id===editingEventId)?.image||'' : '';
+            if(eventImageBase64) imageData = eventImageBase64;
+            const data = {
+                name: document.getElementById('event-name').value.trim(),
+                clubId: document.getElementById('event-club').value,
+                date: document.getElementById('event-date').value,
+                promoted: document.getElementById('event-promoted').value==='true',
+                image: imageData,
+                interested: editingEventId ? (events.find(x=>x.id===editingEventId)?.interested||0) : 0
+            };
+            try {
+                if(editingEventId) await db.collection('atm_events').doc(editingEventId).update(data);
+                else await db.collection('atm_events').add(data);
+                resetEventForm();
+                showToast('✅ Event saved!');
+            } catch(err) { showToast('❌ '+err.message); }
+        }
+        window.editEvent = (id) => {
+            const e = events.find(x=>x.id===id); if(!e) return;
+            editingEventId = id;
+            document.getElementById('edit-event-id').value=id;
+            document.getElementById('event-name').value=e.name||'';
+            document.getElementById('event-club').value=e.clubId||'';
+            document.getElementById('event-date').value=e.date||'';
+            document.getElementById('event-promoted').value=e.promoted?'true':'false';
+            if(e.image){ document.getElementById('event-img-preview').src=e.image; document.getElementById('event-img-preview').style.display='block'; }
+            document.getElementById('event-submit-btn').textContent='💾 Update Event';
+            document.getElementById('event-cancel-btn').style.display='inline-block';
+            eventImageBase64=null;
+            window.scrollTo(0,0);
+        };
+        window.deleteEvent = async (id) => { if(confirm('Delete this event?')){ await db.collection('atm_events').doc(id).delete(); showToast('🗑️ Deleted'); } };
+        function resetEventForm(){
+            document.getElementById('event-form').reset();
+            editingEventId=null; eventImageBase64=null;
+            document.getElementById('event-img-preview').style.display='none';
+            document.getElementById('event-submit-btn').textContent='✅ Add Event';
+            document.getElementById('event-cancel-btn').style.display='none';
+        }
+        window.cancelEventEdit = () => { resetEventForm(); showToast('Cancelled'); };
+        
+        // ---- Firestore listeners ----
+        db.collection('atm_clubs').orderBy('createdAt','desc').onSnapshot(snap => { clubs = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderVenues(); updateMap(); populateEventClubFilter(); if(isAdmin) renderAdminClubs(); updateStats(); updateMarquee(); });
+        db.collection('atm_events').orderBy('date','asc').onSnapshot(snap => { events = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderEvents(); populateEventClubFilter(); if(isAdmin) renderAdminEvents(); updateStats(); updateMarquee(); });
+        db.collection('atm_ratings').onSnapshot(snap => { ratings = {}; snap.forEach(d => { const r = d.data(); ratings[d.id] = { total: r.total||0, count: r.count||0 }; }); renderVenues(); });
+        db.collection('atm_filterTags').onSnapshot(snap => { filterTags = ['all']; snap.forEach(d => filterTags.push(d.data().name)); renderFilterTags(); renderVenues(); });
+        
+        document.getElementById('send-reserve-btn')?.addEventListener('click', sendReservation);
+        window.addEventListener('load', () => { setTimeout(() => { const wm = document.getElementById('welcome-modal'); if(wm) wm.style.display='flex'; }, 400); handleUrlParams(); switchTab('venues-tab'); updateMarquee(); });
+        window.onscroll = () => { document.getElementById('backToTop').style.display = window.scrollY > 400 ? 'block' : 'none'; };
+        checkAdmin(); updateUI(); updateMap(); populateEventClubFilter(); startCountdownUpdater(); startVenueEventCountdownUpdater();
+        window.addEventListener('resize', () => { updateMarquee(); });
+        function handleUrlParams() { const url = new URLSearchParams(window.location.search); const vid = url.get('venueId'); const eid = url.get('eventId'); if(vid) setTimeout(() => { if(clubs.some(c=>c.id===vid)) openClubDetail(vid); }, 1500); else if(eid) setTimeout(() => { const ev = events.find(e=>e.id===eid); if(ev&&ev.image) openPosterLightbox(ev.image,ev.name); else showToast("Event not found"); }, 1500); }
+    </script>
+</body>
+</html>

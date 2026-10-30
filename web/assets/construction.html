@@ -1,0 +1,3110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SiteCredit">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%233b82f6'/%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3ESC%3C/text%3E%3C/svg%3E">
+<title>SiteCredit — Hardware Trade Operations</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+:root {
+  --sidebar-bg:#0f172a; --sidebar-text:#e2e8f0; --sidebar-hover:#1e293b; --sidebar-active:#334155;
+  --bg:#f1f5f9; --card-bg:#fff; --text:#0f172a; --text-secondary:#475569; --text-muted:#94a3b8;
+  --border:#e2e8f0; --primary:#3b82f6; --primary-dark:#2563eb; --success:#10b981;
+  --warning:#f59e0b; --danger:#ef4444; --info:#06b6d4;
+  --radius:12px; --radius-sm:8px;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,.08),0 4px 6px -2px rgba(0,0,0,.04);
+  --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --sidebar-width:260px; --header-height:64px; --transition:.2s ease;
+  --chart-1:#3b82f6; --chart-2:#10b981; --chart-3:#f59e0b; --chart-4:#ef4444; --chart-5:#8b5cf6; --chart-6:#06b6d4;
+}
+[data-theme="dark"] {
+  --bg:#0f172a; --card-bg:#1e293b; --text:#f1f5f9; --text-secondary:#cbd5e1; --text-muted:#64748b;
+  --border:#334155; --sidebar-bg:#020617; --sidebar-text:#cbd5e1; --sidebar-hover:#1e293b; --sidebar-active:#334155;
+}
+body {
+  font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.5;
+  -webkit-font-smoothing: antialiased; transition: background .2s,color .2s; overflow-x: hidden;
+}
+.app-container { display: flex; min-height: 100vh; position: relative; }
+/* SIDEBAR */
+.sidebar {
+  width: var(--sidebar-width); background: var(--sidebar-bg); color: var(--sidebar-text);
+  display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0;
+  z-index: 100; transition: transform .2s; overflow-y: auto; overflow-x: hidden;
+  scrollbar-width: thin;
+}
+.sidebar::-webkit-scrollbar { width: 6px; }
+.sidebar::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+.sidebar.collapsed { width: 72px; }
+.sidebar.collapsed .sidebar-label,.sidebar.collapsed .sidebar-brand-text,.sidebar.collapsed .sidebar-footer-text,.sidebar.collapsed .sidebar-section { display: none; }
+.sidebar.collapsed .sidebar-item { justify-content: center; padding: 12px; }
+.sidebar.collapsed .sidebar-item .sidebar-icon { margin-right: 0; }
+.sidebar-brand {
+  display: flex; align-items: center; padding: 16px 20px; height: var(--header-height);
+  border-bottom: 1px solid rgba(255,255,255,.06); flex-shrink: 0;
+}
+.sidebar-brand-icon {
+  width: 36px; height: 36px; background: var(--primary); border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  font-weight: 700; font-size: 18px; margin-right: 12px; flex-shrink: 0; overflow: hidden;
+}
+.sidebar-brand-icon img { width: 100%; height: 100%; object-fit: cover; }
+.sidebar-brand-text { font-weight: 700; font-size: 18px; letter-spacing: -.02em; white-space: nowrap; }
+.sidebar-brand-text span { color: #60a5fa; }
+.sidebar-nav { flex: 1; padding: 12px 8px; }
+.sidebar-section {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--text-muted); padding: 16px 16px 6px; font-weight: 600;
+  white-space: nowrap; overflow: hidden;
+}
+.sidebar-item {
+  display: flex; align-items: center; padding: 10px 16px; border-radius: var(--radius-sm);
+  cursor: pointer; color: var(--sidebar-text); transition: background .15s;
+  font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden;
+  margin-bottom: 2px; user-select: none;
+}
+.sidebar-item:hover { background: var(--sidebar-hover); }
+.sidebar-item.active { background: var(--sidebar-active); color: #fff; }
+.sidebar-icon {
+  width: 20px; height: 20px; margin-right: 12px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: .8;
+}
+.sidebar-icon svg { width: 100%; height: 100%; }
+.sidebar-footer {
+  padding: 16px; border-top: 1px solid rgba(255,255,255,.06);
+  font-size: 12px; color: var(--text-muted); flex-shrink: 0;
+}
+/* MAIN */
+.main-wrapper {
+  flex: 1; margin-left: var(--sidebar-width); transition: margin-left .2s;
+  display: flex; flex-direction: column; min-height: 100vh;
+}
+.sidebar.collapsed ~ .main-wrapper { margin-left: 72px; }
+.app-header {
+  height: var(--header-height); background: var(--card-bg);
+  border-bottom: 1px solid var(--border); display: flex; align-items: center;
+  padding: 0 20px; gap: 12px; position: sticky; top: 0; z-index: 50;
+  padding-top: env(safe-area-inset-top);
+}
+.header-menu-btn {
+  display: none; background: none; border: none; color: var(--text);
+  cursor: pointer; padding: 8px; border-radius: var(--radius-sm);
+}
+.header-menu-btn:hover { background: var(--bg); }
+.header-search { flex: 1; max-width: 480px; position: relative; }
+.header-search input {
+  width: 100%; padding: 8px 12px 8px 36px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); background: var(--bg); color: var(--text);
+  font-size: 14px; outline: none;
+}
+.header-search .search-icon {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; color: var(--text-muted); pointer-events: none;
+}
+.header-search .search-kbd {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  font-size: 11px; color: var(--text-muted); border: 1px solid var(--border);
+  border-radius: 4px; padding: 1px 5px; pointer-events: none;
+}
+.header-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.header-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: var(--radius-sm);
+  background: none; border: 1px solid transparent; color: var(--text-secondary);
+  cursor: pointer; position: relative;
+}
+.header-btn:hover { background: var(--bg); color: var(--text); }
+.header-btn svg { width: 18px; height: 18px; }
+.header-avatar {
+  width: 32px; height: 32px; border-radius: 50%; background: var(--primary);
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 600; cursor: pointer; border: 2px solid transparent;
+}
+.header-avatar:hover { border-color: var(--primary); }
+.offline-badge {
+  display: none; align-items: center; gap: 4px; font-size: 11px;
+  padding: 4px 8px; border-radius: 20px; background: var(--warning);
+  color: #000; font-weight: 600;
+}
+.offline-badge.visible { display: flex; }
+.content-area { flex: 1; padding: 24px; max-width: 1400px; width: 100%; margin: 0 auto; }
+.page-view { display: none; animation: fadeIn .25s; }
+.page-view.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+/* COMPONENTS */
+.card {
+  background: var(--card-bg); border-radius: var(--radius);
+  border: 1px solid var(--border); box-shadow: var(--shadow);
+  padding: 20px;
+}
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px; flex-wrap: wrap; gap: 8px;
+}
+.card-title { font-size: 16px; font-weight: 600; }
+.grid { display: grid; gap: 16px; }
+.grid-2 { grid-template-columns: repeat(2,1fr); }
+.grid-3 { grid-template-columns: repeat(3,1fr); }
+.grid-4 { grid-template-columns: repeat(4,1fr); }
+.kpi-card {
+  background: var(--card-bg); border-radius: var(--radius); border: 1px solid var(--border);
+  padding: 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 4px;
+}
+.kpi-label { font-size: 12px; color: var(--text-secondary); font-weight: 500; text-transform: uppercase; letter-spacing: .04em; }
+.kpi-value { font-size: 24px; font-weight: 700; letter-spacing: -.02em; }
+.kpi-sub { font-size: 12px; color: var(--text-muted); }
+.kpi-danger .kpi-value { color: var(--danger); }
+.kpi-warning .kpi-value { color: var(--warning); }
+.kpi-success .kpi-value { color: var(--success); }
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 8px 16px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500;
+  cursor: pointer; border: 1px solid transparent; transition: all .15s;
+  white-space: nowrap; user-select: none; font-family: var(--font);
+}
+.btn:active { transform: scale(.97); }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-secondary { background: var(--bg); color: var(--text); border-color: var(--border); }
+.btn-secondary:hover { background: var(--border); }
+.btn-success { background: var(--success); color: #fff; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-warning { background: var(--warning); color: #000; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-ghost { background: transparent; color: var(--text-secondary); border: none; }
+.btn-ghost:hover { background: var(--bg); color: var(--text); }
+.btn-block { width: 100%; }
+/* Badges */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px;
+  border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .03em;
+}
+.badge-success { background: #d1fae5; color: #065f46; }
+.badge-warning { background: #fef3c7; color: #92400e; }
+.badge-danger { background: #fee2e2; color: #991b1b; }
+.badge-info { background: #cffafe; color: #155e75; }
+.badge-neutral { background: var(--bg); color: var(--text-secondary); }
+[data-theme="dark"] .badge-success { background: #064e3b; color: #6ee7b7; }
+[data-theme="dark"] .badge-warning { background: #78350f; color: #fcd34d; }
+[data-theme="dark"] .badge-danger { background: #7f1d1d; color: #fca5a5; }
+[data-theme="dark"] .badge-info { background: #164e63; color: #67e8f9; }
+/* Tables */
+.table-wrapper { overflow-x: auto; border-radius: var(--radius-sm); -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+thead th {
+  text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted);
+  border-bottom: 1px solid var(--border); white-space: nowrap; background: var(--card-bg);
+}
+tbody td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--bg); }
+/* Forms */
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 4px; color: var(--text-secondary); }
+.form-label .required { color: var(--danger); }
+.form-input, .form-select, .form-textarea {
+  width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--bg); color: var(--text); font-size: 14px; font-family: var(--font);
+  outline: none; transition: border-color .15s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--primary); }
+.form-input.error, .form-select.error { border-color: var(--danger); }
+.form-error { font-size: 12px; color: var(--danger); margin-top: 4px; display: none; }
+.form-error.visible { display: block; }
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-row { display: flex; gap: 12px; }
+.form-row > * { flex: 1; }
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200;
+  display: none; align-items: center; justify-content: center; padding: 16px;
+  backdrop-filter: blur(2px);
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow-lg);
+  width: 100%; max-width: 560px; max-height: 90vh; display: flex; flex-direction: column;
+  animation: modalIn .2s;
+}
+.modal.modal-lg { max-width: 800px; }
+.modal.modal-xl { max-width: 1000px; }
+@keyframes modalIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.modal-title { font-size: 16px; font-weight: 600; }
+.modal-close {
+  background: none; border: none; color: var(--text-muted); cursor: pointer;
+  font-size: 22px; line-height: 1; width: 32px; height: 32px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-close:hover { background: var(--bg); color: var(--text); }
+.modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+.modal-footer {
+  padding: 16px 20px; border-top: 1px solid var(--border);
+  display: flex; justify-content: flex-end; gap: 8px; flex-shrink: 0; flex-wrap: wrap;
+}
+/* Toast */
+.toast-container {
+  position: fixed; bottom: 24px; right: 24px; z-index: 300;
+  display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.toast {
+  background: var(--card-bg); color: var(--text); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 16px; box-shadow: var(--shadow-lg);
+  display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500;
+  animation: toastIn .25s; pointer-events: auto; max-width: 360px;
+}
+.toast-success { border-left: 4px solid var(--success); }
+.toast-error { border-left: 4px solid var(--danger); }
+.toast-warning { border-left: 4px solid var(--warning); }
+.toast-info { border-left: 4px solid var(--info); }
+@keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: none; } }
+/* Empty */
+.empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+.empty-state svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: .5; }
+.empty-state p { font-size: 14px; }
+/* Command palette */
+.command-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 250;
+  display: none; align-items: flex-start; justify-content: center;
+  padding-top: 15vh; backdrop-filter: blur(2px);
+}
+.command-overlay.open { display: flex; }
+.command-palette {
+  background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow-lg);
+  width: 100%; max-width: 560px; max-height: 60vh; display: flex; flex-direction: column;
+  overflow: hidden; animation: modalIn .15s;
+}
+.command-input {
+  width: 100%; padding: 16px 20px; border: none; background: transparent;
+  color: var(--text); font-size: 16px; outline: none; font-family: var(--font);
+  border-bottom: 1px solid var(--border);
+}
+.command-results { overflow-y: auto; flex: 1; padding: 8px; }
+.command-item {
+  padding: 10px 12px; border-radius: var(--radius-sm); cursor: pointer;
+  display: flex; align-items: center; gap: 10px; font-size: 14px;
+}
+.command-item:hover, .command-item.selected { background: var(--bg); }
+.command-item .cmd-type {
+  font-size: 10px; text-transform: uppercase; color: var(--text-muted);
+  font-weight: 600; margin-left: auto;
+}
+/* Tour */
+.tour-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 400; display: none; }
+.tour-overlay.open { display: block; }
+.tour-tooltip {
+  position: fixed; z-index: 401; background: var(--card-bg); border-radius: var(--radius);
+  box-shadow: var(--shadow-lg); padding: 20px; max-width: 340px; border: 1px solid var(--border);
+}
+.tour-tooltip h3 { font-size: 16px; margin-bottom: 8px; }
+.tour-tooltip p { font-size: 14px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.6; }
+.tour-tooltip .tour-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.tour-tooltip .tour-step { font-size: 12px; color: var(--text-muted); }
+.tour-highlight {
+  position: fixed; z-index: 399; border: 3px solid var(--primary); border-radius: var(--radius);
+  box-shadow: 0 0 0 9999px rgba(0,0,0,.6); pointer-events: none; transition: all .3s;
+}
+/* Bottom nav */
+.bottom-nav {
+  display: none; position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--card-bg); border-top: 1px solid var(--border); z-index: 90;
+  padding: 4px 0 env(safe-area-inset-bottom,4px);
+}
+.bottom-nav-inner { display: flex; align-items: center; justify-content: space-around; }
+.bottom-nav-item {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 8px 4px; flex: 1; cursor: pointer; color: var(--text-muted);
+  font-size: 10px; font-weight: 500; border: none; background: none;
+  transition: color .15s;
+}
+.bottom-nav-item.active { color: var(--primary); }
+.bottom-nav-item svg { width: 22px; height: 22px; }
+/* Mobile more menu */
+.mobile-more-menu {
+  position: fixed; inset: 0; background: var(--bg); z-index: 95;
+  display: none; flex-direction: column; padding: 16px; overflow-y: auto;
+  padding-top: calc(16px + env(safe-area-inset-top));
+}
+.mobile-more-menu.open { display: flex; }
+.mobile-more-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 16px; padding: 8px 0;
+}
+.mobile-more-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+.mobile-more-tile {
+  display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 8px;
+  background: var(--card-bg); border-radius: var(--radius); border: 1px solid var(--border);
+  cursor: pointer; text-align: center; font-size: 12px; font-weight: 500;
+}
+.mobile-more-tile:hover { background: var(--bg); }
+.mobile-more-tile svg { width: 24px; height: 24px; color: var(--primary); }
+/* Chart styles */
+.chart-svg { width: 100%; height: auto; display: block; }
+.chart-tooltip {
+  position: fixed; background: var(--text); color: var(--card-bg);
+  padding: 6px 10px; border-radius: 6px; font-size: 12px; pointer-events: none;
+  z-index: 300; opacity: 0; transition: opacity .15s; white-space: nowrap;
+}
+.chart-tooltip.visible { opacity: 1; }
+.donut-center-text { font-family: var(--font); }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; font-size: 12px; color: var(--text-secondary); }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+.legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+/* Image styling */
+.product-thumb {
+  width: 48px; height: 48px; border-radius: 8px; object-fit: cover; background: var(--border);
+  display: block; flex-shrink: 0;
+}
+.product-cell { display: flex; align-items: center; gap: 10px; min-width: 200px; }
+.customer-avatar {
+  width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 600; color: #fff; font-size: 14px; flex-shrink: 0;
+}
+.card-hero {
+  width: 100%; height: 140px; object-fit: cover; border-radius: var(--radius-sm);
+  display: block; margin-bottom: 12px; background: var(--border);
+}
+.tile-icon-lg {
+  width: 48px; height: 48px; border-radius: 12px; background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--primary); flex-shrink: 0;
+}
+.tile-icon-lg svg { width: 24px; height: 24px; }
+/* Responsive */
+@media (max-width: 1024px) {
+  .grid-4 { grid-template-columns: repeat(2,1fr); }
+  .grid-3 { grid-template-columns: repeat(2,1fr); }
+}
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); width: var(--sidebar-width); }
+  .sidebar.mobile-open { transform: translateX(0); }
+  .main-wrapper { margin-left: 0 !important; }
+  .header-menu-btn { display: flex; }
+  .content-area { padding: 16px; padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+  .grid-2,.grid-3,.grid-4 { grid-template-columns: 1fr; }
+  .bottom-nav { display: block; }
+  .header-search { display: none; }
+  .kpi-value { font-size: 20px; }
+  .modal { max-width: 100%; margin: 0; border-radius: var(--radius); max-height: calc(100vh - 32px); }
+  .form-row { flex-direction: column; gap: 0; }
+  .page-view { padding-bottom: 20px; }
+  .header-actions .header-btn:not(.header-btn-essential) { display: none; }
+  .app-header { padding: 0 12px; padding-top: env(safe-area-inset-top); }
+  .mobile-more-grid { grid-template-columns: repeat(3,1fr); }
+}
+@media (max-width: 480px) {
+  .mobile-more-grid { grid-template-columns: repeat(2,1fr); }
+  .kpi-card,.card { padding: 14px; }
+  .btn { font-size: 13px; padding: 7px 12px; }
+}
+/* Print */
+@media print {
+  .sidebar,.app-header,.bottom-nav,.no-print,.toast-container,.modal-overlay,
+  .command-overlay,.tour-overlay,.tour-highlight,.tour-tooltip,.chart-tooltip { display: none !important; }
+  .main-wrapper { margin-left: 0 !important; }
+  .content-area { padding: 0; }
+  .card { border: none; box-shadow: none; page-break-inside: avoid; }
+  body { background: #fff !important; color: #000 !important; }
+  table { font-size: 12px; }
+  .print-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+  .print-logo { max-height: 60px; max-width: 160px; }
+  .print-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+  .print-table th,.print-table td { padding: 8px; border-bottom: 1px solid #ccc; text-align: left; font-size: 13px; }
+  .print-table th { background: #f5f5f5; font-weight: 600; }
+  .print-total { text-align: right; font-size: 18px; font-weight: 700; margin-top: 12px; }
+  .signature-area { display: flex; justify-content: space-between; margin-top: 40px; gap: 40px; }
+  .signature-line { flex: 1; border-top: 1px solid #999; padding-top: 8px; font-size: 12px; color: #666; }
+  .kpi-card,.card { color: #000 !important; background: #fff !important; }
+}
+/* Utility */
+.hidden { display: none !important; }
+.text-muted { color: var(--text-muted); }
+.text-secondary { color: var(--text-secondary); }
+.text-success { color: var(--success); }
+.text-danger { color: var(--danger); }
+.text-warning { color: var(--warning); }
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+.font-bold { font-weight: 700; }
+.font-semibold { font-weight: 600; }
+.text-sm { font-size: 13px; }
+.text-xs { font-size: 11px; }
+.mt-1 { margin-top: 4px; } .mt-2 { margin-top: 8px; } .mt-3 { margin-top: 12px; } .mt-4 { margin-top: 16px; }
+.mb-1 { margin-bottom: 4px; } .mb-2 { margin-bottom: 8px; } .mb-3 { margin-bottom: 12px; } .mb-4 { margin-bottom: 16px; }
+.flex { display: flex; } .flex-col { flex-direction: column; } .items-center { align-items: center; }
+.justify-between { justify-content: space-between; } .justify-center { justify-content: center; }
+.gap-1 { gap: 4px; } .gap-2 { gap: 8px; } .gap-3 { gap: 12px; }
+.flex-wrap { flex-wrap: wrap; } .w-full { width: 100%; }
+.cursor-pointer { cursor: pointer; }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spinner {
+  width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--primary);
+  border-radius: 50%; animation: spin .6s linear infinite; display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.progress-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.progress-bar-fill { height: 100%; border-radius: 4px; transition: width .4s; }
+.chip {
+  display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px;
+  border-radius: 20px; font-size: 12px; background: var(--bg); color: var(--text-secondary);
+  border: 1px solid var(--border); cursor: pointer;
+}
+.chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+</style>
+</head>
+<body>
+<div class="app-container">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon" id="sidebarBrandIcon">SC</div>
+      <div class="sidebar-brand-text">Site<span>Credit</span></div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-footer-text" id="sidebarFooterText">v2.0 · Local</div>
+    </div>
+  </aside>
+  <div class="main-wrapper">
+    <header class="app-header">
+      <button class="header-menu-btn" id="headerMenuBtn" aria-label="Toggle menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+      <div class="header-search" id="headerSearch">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="globalSearchInput" placeholder="Search customers, projects, invoices..." autocomplete="off">
+        <span class="search-kbd">/</span>
+      </div>
+      <div class="header-actions">
+        <span class="offline-badge" id="offlineBadge">● Offline</span>
+        <button class="header-btn" id="themeToggleBtn" title="Toggle theme" aria-label="Toggle theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364-.707-.707M6.343 6.343l-.707-.707m12.728 0-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z"/></svg>
+        </button>
+        <button class="header-btn" id="installAppBtn" title="Install App" aria-label="Install App" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M6 21h12"/></svg>
+        </button>
+        <button class="header-btn" id="notificationsBtn" title="Notifications" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6.002 6.002 0 0 0-4-5.659V5a2 2 0 1 0-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9"/></svg>
+        </button>
+        <div class="header-avatar" id="headerAvatar" title="Profile">A</div>
+      </div>
+    </header>
+    <main class="content-area" id="contentArea"></main>
+  </div>
+</div>
+<nav class="bottom-nav" id="bottomNav">
+  <div class="bottom-nav-inner">
+    <button class="bottom-nav-item active" data-page="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </button>
+    <button class="bottom-nav-item" data-page="deliveries">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      Deliveries
+    </button>
+    <button class="bottom-nav-item" data-page="orders">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Orders
+    </button>
+    <button class="bottom-nav-item" data-page="customers">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Customers
+    </button>
+    <button class="bottom-nav-item" data-page="more" id="bottomMoreBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+      More
+    </button>
+  </div>
+</nav>
+<div class="mobile-more-menu" id="mobileMoreMenu">
+  <div class="mobile-more-header">
+    <h2 style="font-size:18px;">All Modules</h2>
+    <button class="btn btn-ghost" id="closeMoreMenu">✕</button>
+  </div>
+  <div class="mobile-more-grid" id="mobileMoreGrid"></div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+<div class="chart-tooltip" id="chartTooltip"></div>
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalTitle">Modal</h2>
+      <button class="modal-close" id="modalCloseBtn" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+<div class="command-overlay" id="commandOverlay">
+  <div class="command-palette">
+    <input type="text" class="command-input" id="commandInput" placeholder="Search or type a command..." autocomplete="off">
+    <div class="command-results" id="commandResults"></div>
+  </div>
+</div>
+<div class="tour-overlay" id="tourOverlay"></div>
+<div class="tour-highlight" id="tourHighlight" style="display:none;"></div>
+<div class="tour-tooltip" id="tourTooltip" style="display:none;">
+  <h3 id="tourTitle">Welcome</h3>
+  <p id="tourText">Tour text</p>
+  <div class="tour-actions">
+    <span class="tour-step" id="tourStep">1 of 10</span>
+    <div style="display:flex; gap:8px;">
+      <button class="btn btn-ghost btn-sm" id="tourSkipBtn">Skip</button>
+      <button class="btn btn-primary btn-sm" id="tourNextBtn">Next</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+'use strict';
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+const $ = (sel, ctx) => (ctx || document).querySelector(sel);
+const $$ = (sel, ctx) => Array.from((ctx || document).querySelectorAll(sel));
+const uid = (prefix = 'id') => prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const todayISO = () => new Date().toISOString().slice(0, 10);
+const nowISO = () => new Date().toISOString();
+const fmt = (n) => Number(n || 0).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtQty = (n) => Number(n || 0).toLocaleString('en-KE', { maximumFractionDigits: 2 });
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+const fmtDateTime = (d) => d ? new Date(d).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+const daysBetween = (a, b) => Math.floor((new Date(b) - new Date(a)) / 86400000);
+const escapeHtml = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+const debounce = (fn, ms = 300) => { let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); }; };
+const shortMoney = (n) => {
+  n = Number(n) || 0;
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(0) + 'K';
+  return Math.round(n).toString();
+};
+
+/* Product image library — real photos from Unsplash */
+const PRODUCT_IMAGES = {
+  'Cement': 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=200&q=70&auto=format&fit=crop',
+  'Steel': 'https://images.unsplash.com/photo-1565008576549-57569a49371d?w=200&q=70&auto=format&fit=crop',
+  'Ballast': 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=200&q=70&auto=format&fit=crop',
+  'Sand': 'https://images.unsplash.com/photo-1591024051790-d3e3d0f6c88b?w=200&q=70&auto=format&fit=crop',
+  'Stone': 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=200&q=70&auto=format&fit=crop',
+  'Roofing': 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=200&q=70&auto=format&fit=crop',
+  'Nails': 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=200&q=70&auto=format&fit=crop',
+  'Wire': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=200&q=70&auto=format&fit=crop',
+  'PVC': 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=200&q=70&auto=format&fit=crop',
+  'Water Tank': 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=200&q=70&auto=format&fit=crop',
+  'Paint': 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=200&q=70&auto=format&fit=crop',
+  'Cable': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=200&q=70&auto=format&fit=crop',
+  'Door': 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=200&q=70&auto=format&fit=crop',
+  'Window': 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=200&q=70&auto=format&fit=crop',
+  'Gypsum': 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=200&q=70&auto=format&fit=crop',
+  'Ceiling': 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=200&q=70&auto=format&fit=crop',
+  'default': 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=200&q=70&auto=format&fit=crop'
+};
+function getProductImage(name) {
+  if (!name) return PRODUCT_IMAGES.default;
+  for (const key of Object.keys(PRODUCT_IMAGES)) {
+    if (key !== 'default' && name.toLowerCase().includes(key.toLowerCase())) return PRODUCT_IMAGES[key];
+  }
+  return PRODUCT_IMAGES.default;
+}
+function getCustomerColor(name) {
+  const colors = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#06b6d4','#ef4444','#6366f1'];
+  let hash = 0;
+  for (let i = 0; i < (name||'').length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return colors[Math.abs(hash) % colors.length];
+}
+function getInitials(name) {
+  return (name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+const Toast = {
+  show(msg, type = 'info', duration = 3200) {
+    const container = $('#toastContainer');
+    const el = document.createElement('div');
+    el.className = `toast toast-${type}`;
+    el.innerHTML = `<span>${type === 'success' ? '✓' : type === 'error' ? '✕' : type === 'warning' ? '⚠' : 'ℹ'}</span><span>${escapeHtml(msg)}</span>`;
+    container.appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(20px)'; setTimeout(() => el.remove(), 250); }, duration);
+  },
+  success: (m) => Toast.show(m, 'success'),
+  error: (m) => Toast.show(m, 'error', 4500),
+  warning: (m) => Toast.show(m, 'warning', 4000),
+  info: (m) => Toast.show(m, 'info'),
+};
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+const Modal = {
+  open(title, bodyHtml, footerHtml, size = '') {
+    $('#modalTitle').textContent = title;
+    $('#modalBody').innerHTML = bodyHtml;
+    $('#modalFooter').innerHTML = footerHtml || '';
+    const modal = $('#modal');
+    modal.className = 'modal' + (size === 'lg' ? ' modal-lg' : size === 'xl' ? ' modal-xl' : '');
+    $('#modalOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  },
+  close() {
+    $('#modalOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  },
+  confirm(title, message, onConfirm, confirmText = 'Confirm', danger = false) {
+    Modal.open(title,
+      `<p style="font-size:14px; color:var(--text-secondary); line-height:1.7;">${escapeHtml(message)}</p>`,
+      `<button class="btn btn-secondary" onclick="SiteCredit.Modal.close()">Cancel</button>
+       <button class="btn ${danger ? 'btn-danger' : 'btn-primary'}" id="modalConfirmBtn">${escapeHtml(confirmText)}</button>`
+    );
+    $('#modalConfirmBtn').onclick = () => { Modal.close(); onConfirm(); };
+  }
+};
+
+/* ============================================================
+   STORAGE
+   ============================================================ */
+const StorageService = {
+  prefix: 'sitecredit_',
+  get(key, fallback = null) {
+    try {
+      const raw = localStorage.getItem(this.prefix + key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (e) { return fallback; }
+  },
+  set(key, value) {
+    try {
+      localStorage.setItem(this.prefix + key, JSON.stringify(value));
+      return true;
+    } catch (e) {
+      if (e.name === 'QuotaExceededError') Toast.error('Storage full! Export a backup and clear old data.');
+      return false;
+    }
+  },
+  remove(key) { localStorage.removeItem(this.prefix + key); },
+  usage() {
+    let total = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(this.prefix)) total += (localStorage.getItem(k) || '').length;
+    }
+    return total;
+  },
+  clearAll() {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(this.prefix)) keys.push(k);
+    }
+    keys.forEach(k => localStorage.removeItem(k));
+  }
+};
+
+/* ============================================================
+   CHART ENGINE (SVG)
+   ============================================================ */
+const Charts = {
+  line(data, opts = {}) {
+    const { width = 500, height = 200, padding = 30, color = 'var(--chart-1)', fill = true, grid = true, labels = [] } = opts;
+    if (!data.length) return `<div class="empty-state"><p>No data</p></div>`;
+    const max = Math.max(...data, 1);
+    const min = Math.min(...data, 0);
+    const range = max - min || 1;
+    const innerW = width - padding * 2;
+    const innerH = height - padding * 2;
+    const stepX = data.length > 1 ? innerW / (data.length - 1) : innerW;
+    const points = data.map((v, i) => {
+      const x = padding + i * stepX;
+      const y = padding + innerH - ((v - min) / range) * innerH;
+      return [x, y];
+    });
+    let svg = `<svg viewBox="0 0 ${width} ${height}" class="chart-svg" preserveAspectRatio="none" style="height:${height}px">`;
+    if (grid) {
+      for (let i = 0; i <= 4; i++) {
+        const y = padding + (innerH / 4) * i;
+        const val = max - (range / 4) * i;
+        svg += `<line x1="${padding}" y1="${y}" x2="${width-padding}" y2="${y}" stroke="var(--border)" stroke-dasharray="3 4"/>`;
+        svg += `<text x="${padding-6}" y="${y+3}" text-anchor="end" font-size="9" fill="var(--text-muted)">${shortMoney(val)}</text>`;
+      }
+    }
+    if (fill) {
+      const path = points.map((p, i) => (i === 0 ? `M${p[0]},${p[1]}` : `L${p[0]},${p[1]}`)).join(' ');
+      svg += `<path d="${path} L${points[points.length-1][0]},${height-padding} L${points[0][0]},${height-padding} Z" fill="${color}" opacity="0.15"/>`;
+    }
+    const polyline = points.map(p => p.join(',')).join(' ');
+    svg += `<polyline points="${polyline}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+    points.forEach((p, i) => {
+      svg += `<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="${color}"><title>${labels[i] || ''}: ${shortMoney(data[i])}</title></circle>`;
+    });
+    labels.forEach((lbl, i) => {
+      if (i % Math.ceil(labels.length / 6) === 0 || i === labels.length - 1) {
+        const x = padding + i * stepX;
+        svg += `<text x="${x}" y="${height - 8}" text-anchor="middle" font-size="9" fill="var(--text-muted)">${escapeHtml(lbl)}</text>`;
+      }
+    });
+    svg += '</svg>';
+    return svg;
+  },
+  bar(data, opts = {}) {
+    const { width = 500, height = 200, padding = 30, labels = [], color = 'var(--chart-1)', horizontal = false } = opts;
+    if (!data.length) return `<div class="empty-state"><p>No data</p></div>`;
+    const max = Math.max(...data, 1);
+    if (horizontal) {
+      const innerW = width - padding * 2 - 80;
+      const rowH = (height - padding * 2) / data.length;
+      let svg = `<svg viewBox="0 0 ${width} ${height}" class="chart-svg" preserveAspectRatio="none" style="height:${height}px">`;
+      data.forEach((v, i) => {
+        const bw = (v / max) * innerW;
+        const y = padding + i * rowH + rowH / 2 - 10;
+        svg += `<text x="${padding-6}" y="${y+14}" text-anchor="end" font-size="10" fill="var(--text-secondary)">${escapeHtml((labels[i]||'').slice(0,12))}</text>`;
+        svg += `<rect x="${padding}" y="${y}" width="${innerW}" height="20" fill="var(--border)" rx="3"/>`;
+        svg += `<rect x="${padding}" y="${y}" width="${bw}" height="20" fill="${color}" rx="3"><title>${labels[i]}: ${shortMoney(v)}</title></rect>`;
+        svg += `<text x="${padding+bw+6}" y="${y+14}" font-size="10" fill="var(--text)">${shortMoney(v)}</text>`;
+      });
+      svg += '</svg>';
+      return svg;
+    }
+    const innerW = width - padding * 2;
+    const innerH = height - padding * 2;
+    const stepX = innerW / data.length;
+    const barW = Math.min(stepX * 0.6, 40);
+    let svg = `<svg viewBox="0 0 ${width} ${height}" class="chart-svg" preserveAspectRatio="none" style="height:${height}px">`;
+    for (let i = 0; i <= 4; i++) {
+      const y = padding + (innerH / 4) * i;
+      const val = max - (max / 4) * i;
+      svg += `<line x1="${padding}" y1="${y}" x2="${width-padding}" y2="${y}" stroke="var(--border)" stroke-dasharray="3 4"/>`;
+      svg += `<text x="${padding-6}" y="${y+3}" text-anchor="end" font-size="9" fill="var(--text-muted)">${shortMoney(val)}</text>`;
+    }
+    data.forEach((v, i) => {
+      const bh = (v / max) * innerH;
+      const x = padding + i * stepX + (stepX - barW) / 2;
+      const y = padding + innerH - bh;
+      svg += `<rect x="${x}" y="${y}" width="${barW}" height="${bh}" fill="${color}" rx="3"><title>${labels[i]||''}: ${shortMoney(v)}</title></rect>`;
+      if (labels[i]) {
+        svg += `<text x="${x + barW/2}" y="${height - 8}" text-anchor="middle" font-size="9" fill="var(--text-muted)">${escapeHtml((labels[i]||'').slice(0,8))}</text>`;
+      }
+    });
+    svg += '</svg>';
+    return svg;
+  },
+  donut(data, opts = {}) {
+    const { width = 200, height = 200, colors = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6'], labels = [] } = opts;
+    if (!data.length) return `<div class="empty-state"><p>No data</p></div>`;
+    const total = data.reduce((s, v) => s + v, 0) || 1;
+    const cx = width / 2, cy = height / 2;
+    const outerR = Math.min(width, height) * 0.4;
+    const innerR = outerR * 0.6;
+    let startAngle = -Math.PI / 2;
+    let svg = `<svg viewBox="0 0 ${width} ${height}" class="chart-svg" style="height:${height}px">`;
+    data.forEach((v, i) => {
+      if (v === 0) return;
+      const angle = (v / total) * Math.PI * 2;
+      const endAngle = startAngle + angle;
+      const x1 = cx + outerR * Math.cos(startAngle);
+      const y1 = cy + outerR * Math.sin(startAngle);
+      const x2 = cx + outerR * Math.cos(endAngle);
+      const y2 = cy + outerR * Math.sin(endAngle);
+      const ix1 = cx + innerR * Math.cos(endAngle);
+      const iy1 = cy + innerR * Math.sin(endAngle);
+      const ix2 = cx + innerR * Math.cos(startAngle);
+      const iy2 = cy + innerR * Math.sin(startAngle);
+      const large = angle > Math.PI ? 1 : 0;
+      svg += `<path d="M${x1},${y1} A${outerR},${outerR} 0 ${large} 1 ${x2},${y2} L${ix1},${iy1} A${innerR},${innerR} 0 ${large} 0 ${ix2},${iy2} Z" fill="${colors[i % colors.length]}"><title>${labels[i]||''}: ${shortMoney(v)}</title></path>`;
+      startAngle = endAngle;
+    });
+    svg += `<text x="${cx}" y="${cy - 4}" text-anchor="middle" class="donut-center-text" font-size="11" fill="var(--text-muted)">TOTAL</text>`;
+    svg += `<text x="${cx}" y="${cy + 16}" text-anchor="middle" class="donut-center-text" font-size="16" font-weight="700" fill="var(--text)">${shortMoney(total)}</text>`;
+    svg += '</svg>';
+    return svg;
+  },
+  legend(labels, colors) {
+    return `<div class="legend">${labels.map((l, i) => `<span><i style="background:${colors[i % colors.length]}"></i>${escapeHtml(l)}</span>`).join('')}</div>`;
+  }
+};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const COLLECTIONS = [
+  'users','roles','settings','customers','contractors','fundis','projects','products','stock',
+  'suppliers','quotations','orders','invoices','creditNotes','deliveries','deliveryExceptions',
+  'disputes','returns','payments','receipts','transportCosts','expenses','creditLimits',
+  'creditApplications','riskScores','dunningRules','approvalWorkflows','routes','vehicles',
+  'drivers','purchaseOrders','supplierCreditAccounts','invoiceFinancingRequests','escrowMilestones',
+  'marketplaceListings','procurementRequests','notifications','auditLogs','shops','promisesToPay'
+];
+
+const State = {
+  data: {},
+  currentUser: null,
+  currentPage: 'dashboard',
+  sidebarCollapsed: false,
+  theme: 'light',
+  online: navigator.onLine,
+  offlineQueue: [],
+  tourActive: false,
+  tourStep: 0,
+  commandSelectedIndex: 0,
+  commandResults: [],
+
+  init() {
+    this.theme = StorageService.get('theme', 'light');
+    document.documentElement.setAttribute('data-theme', this.theme);
+    COLLECTIONS.forEach(c => { this.data[c] = StorageService.get(c, null); });
+    if (!this.data.settings || !this.data.users || this.data.users.length === 0) {
+      this.seedDemoData();
+    }
+    this.currentUser = StorageService.get('session', null);
+    this.offlineQueue = StorageService.get('offlineQueue', []);
+    this.sidebarCollapsed = StorageService.get('sidebarCollapsed', false);
+    window.addEventListener('online', () => { this.online = true; this.updateOfflineBadge(); });
+    window.addEventListener('offline', () => { this.online = false; this.updateOfflineBadge(); });
+    this.updateOfflineBadge();
+    window.addEventListener('beforeunload', () => this.persistAll());
+  },
+
+  updateOfflineBadge() {
+    const badge = $('#offlineBadge');
+    if (badge) badge.classList.toggle('visible', !this.online);
+  },
+
+  persist(collection) {
+    if (collection) StorageService.set(collection, this.data[collection] || []);
+    else this.persistAll();
+  },
+
+  persistAll() {
+    COLLECTIONS.forEach(c => StorageService.set(c, this.data[c] || []));
+    StorageService.set('theme', this.theme);
+    StorageService.set('sidebarCollapsed', this.sidebarCollapsed);
+    StorageService.set('offlineQueue', this.offlineQueue);
+  },
+
+  getCollection(name) { return this.data[name] || []; },
+
+  add(collection, item) {
+    if (!this.data[collection]) this.data[collection] = [];
+    item.id = item.id || uid(collection.slice(0, 3));
+    item.createdAt = item.createdAt || nowISO();
+    this.data[collection].push(item);
+    this.persist(collection);
+    return item;
+  },
+
+  update(collection, id, patch) {
+    const list = this.data[collection] || [];
+    const idx = list.findIndex(x => x.id === id);
+    if (idx >= 0) {
+      list[idx] = { ...list[idx], ...patch, updatedAt: nowISO() };
+      this.persist(collection);
+      return list[idx];
+    }
+    return null;
+  },
+
+  find(collection, id) { return (this.data[collection] || []).find(x => x.id === id) || null; },
+
+  remove(collection, id) {
+    const list = this.data[collection] || [];
+    const idx = list.findIndex(x => x.id === id);
+    if (idx >= 0) { list.splice(idx, 1); this.persist(collection); return true; }
+    return false;
+  },
+
+  audit(action, details = {}) {
+    this.add('auditLogs', {
+      action, userId: this.currentUser ? this.currentUser.id : 'system',
+      userName: this.currentUser ? this.currentUser.name : 'System',
+      details, timestamp: nowISO()
+    });
+  },
+
+  seedDemoData() {
+    const settings = {
+      id: 'settings_1',
+      businessName: 'SiteCredit Hardware & Building Supplies',
+      address: 'Plot 45, Industrial Area, Nairobi, Kenya',
+      phone: '+254 700 123 456',
+      email: 'info@sitecredit.co.ke',
+      pin: 'P051234567X',
+      currency: 'KES',
+      taxRate: 16,
+      invoicePrefix: 'INV',
+      paymentTerms: 'Net 30',
+      defaultCreditTerms: 30,
+      logo: '',
+      mpesaNumber: '0700 123 456',
+      bankDetails: 'Equity Bank · A/C 0123456789 · Branch: Industrial Area',
+      dunningTemplates: {
+        beforeDue: 'Dear {customer}, this is a friendly reminder that invoice {invoice} of {amount} is due on {dueDate}. Kindly arrange payment. — {business}',
+        onDue: 'Dear {customer}, invoice {invoice} of {amount} is due today. Please make payment to avoid interruption of supply. — {business}',
+        after7: 'Dear {customer}, invoice {invoice} of {amount} is now 7 days overdue. Please settle urgently. — {business}',
+        after14: 'Dear {customer}, invoice {invoice} of {amount} is 14 days overdue. A late payment may affect your credit terms. — {business}',
+        after30: 'Dear {customer}, invoice {invoice} of {amount} is 30 days overdue. Immediate payment is required to maintain your account. — {business}',
+        after60: 'Dear {customer}, invoice {invoice} of {amount} is 60 days overdue. This is a final reminder before suspension of credit supply. — {business}',
+        after90: 'FINAL DEMAND: Invoice {invoice} of {amount} is 90+ days overdue. Legal action may follow unless payment is received within 7 days. — {business}'
+      }
+    };
+
+    const users = [
+      { id: 'user_1', name: 'Alice Wanjiku', username: 'admin', password: 'admin123', pin: '1234', role: 'owner', active: true, createdAt: nowISO() },
+      { id: 'user_2', name: 'Brian Otieno', username: 'manager', password: 'manager123', pin: '2345', role: 'manager', active: true, createdAt: nowISO() },
+      { id: 'user_3', name: 'Cynthia Mwangi', username: 'sales', password: 'sales123', pin: '3456', role: 'sales', active: true, createdAt: nowISO() },
+      { id: 'user_4', name: 'David Kiprop', username: 'driver', password: 'driver123', pin: '4567', role: 'driver', active: true, createdAt: nowISO() },
+      { id: 'user_5', name: 'Esther Njeri', username: 'accountant', password: 'account123', pin: '5678', role: 'accountant', active: true, createdAt: nowISO() },
+    ];
+
+    const roles = [
+      { id: 'role_owner', name: 'Owner/Admin', permissions: ['*'] },
+      { id: 'role_manager', name: 'Manager', permissions: ['dashboard','customers','projects','orders','deliveries','disputes','collections','reports','credit','invoices'] },
+      { id: 'role_sales', name: 'Sales/Attendant', permissions: ['dashboard','customers','orders','quotations','invoices'] },
+      { id: 'role_driver', name: 'Driver/Field Agent', permissions: ['dashboard','deliveries','routes'] },
+      { id: 'role_accountant', name: 'Accountant/Collector', permissions: ['dashboard','collections','invoices','reports','payments'] },
+    ];
+
+    const shops = [
+      { id: 'shop_1', name: 'Nairobi Industrial Area', code: 'NIA', address: 'Plot 45, Industrial Area', phone: '+254 700 111 111' },
+      { id: 'shop_2', name: 'Nakuru CBD', code: 'NKR', address: 'Kenyatta Avenue, Nakuru', phone: '+254 700 222 222' },
+      { id: 'shop_3', name: 'Mombasa Changamwe', code: 'MSA', address: 'Changamwe Road, Mombasa', phone: '+254 700 333 333' },
+    ];
+
+    const customerNames = [
+      ['John Kamau', 'individual'], ['Fundi Peter Mwangi', 'fundi'], ['Kariobangi Contractors Ltd', 'contractor'],
+      ['Greenfield Developers', 'developer'], ['Wanjiku Hardware & Supplies', 'company'], ['Nairobi Technical College', 'institution'],
+      ['Mary Achieng', 'individual'], ['Fundi Joseph Ochieng', 'fundi'], ['Westlands Builders Ltd', 'contractor'],
+      ['Mega Homes Developers', 'developer'], ['Kibera Youth Hardware', 'company'], ['Kenya Water Institute', 'institution']
+    ];
+    const customers = customerNames.map(([name, type], i) => ({
+      id: 'cust_' + (i + 1), name, type,
+      phone: '+254 7' + String(10000000 + i * 111111).slice(0, 8),
+      email: name.toLowerCase().replace(/[^a-z]/g, '.').slice(0, 20) + '@example.com',
+      address: ['Nairobi', 'Kiambu', 'Nakuru', 'Mombasa', 'Thika'][i % 5] + ', Kenya',
+      taxId: 'P05' + String(1000000 + i * 12345),
+      idNumber: String(20000000 + i * 33333),
+      creditLimit: [500000, 1200000, 2000000, 3500000, 800000, 1500000][i % 6],
+      paymentTerms: [30, 30, 45, 60, 30, 45][i % 6],
+      creditStatus: i === 4 ? 'watchlist' : i === 9 ? 'suspended' : 'active',
+      riskScore: 45 + (i * 5) % 50,
+      outstanding: 0,
+      stopSupply: i === 9,
+      createdAt: nowISO()
+    }));
+
+    const projects = [
+      { id: 'proj_1', name: 'Westlands 5-Bedroom Villa', customerId: 'cust_3', location: 'Westlands, Nairobi', lat: -1.265, lng: 36.802, manager: 'Eng. Michael Ouma', startDate: '2024-11-01', endDate: '2025-06-30', budget: 4500000, creditLimit: 2000000, status: 'active', image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=70&auto=format&fit=crop' },
+      { id: 'proj_2', name: 'Kiambu Road Apartments Phase 2', customerId: 'cust_4', location: 'Kiambu Road, Nairobi', lat: -1.213, lng: 36.835, manager: 'Arch. Susan Wairimu', startDate: '2025-01-15', endDate: '2025-12-31', budget: 12000000, creditLimit: 3500000, status: 'active', image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&q=70&auto=format&fit=crop' },
+      { id: 'proj_3', name: 'Nakuru Perimeter Wall', customerId: 'cust_2', location: 'Section 58, Nakuru', lat: -0.303, lng: 36.080, manager: 'Fundi Peter Mwangi', startDate: '2025-02-01', endDate: '2025-05-30', budget: 680000, creditLimit: 1200000, status: 'active', image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&q=70&auto=format&fit=crop' },
+      { id: 'proj_4', name: 'Mombasa Beach House', customerId: 'cust_5', location: 'Nyali, Mombasa', lat: -4.043, lng: 39.668, manager: 'Mr. Rashid Ali', startDate: '2024-09-01', endDate: '2025-08-31', budget: 3200000, creditLimit: 800000, status: 'active', image: 'https://images.unsplash.com/photo-1613977257363-707ba9348227?w=600&q=70&auto=format&fit=crop' },
+      { id: 'proj_5', name: 'Thika Road School Block', customerId: 'cust_6', location: 'Ruiru, Kiambu', lat: -1.146, lng: 36.960, manager: 'Dr. Joseph Mwangi', startDate: '2025-01-01', endDate: '2025-10-31', budget: 9500000, creditLimit: 1500000, status: 'active', image: 'https://images.unsplash.com/photo-1562774053-701939374585?w=600&q=70&auto=format&fit=crop' },
+      { id: 'proj_6', name: 'Kileleshwa Renovation', customerId: 'cust_1', location: 'Kileleshwa, Nairobi', lat: -1.285, lng: 36.790, manager: 'John Kamau', startDate: '2025-03-01', endDate: '2025-07-31', budget: 350000, creditLimit: 500000, status: 'active', image: 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=600&q=70&auto=format&fit=crop' },
+      { id: 'proj_7', name: 'Karen Office Complex', customerId: 'cust_10', location: 'Karen, Nairobi', lat: -1.320, lng: 36.708, manager: 'Eng. Peter Njoroge', startDate: '2024-06-01', endDate: '2025-09-30', budget: 18000000, creditLimit: 2500000, status: 'paused', image: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=600&q=70&auto=format&fit=crop' },
+      { id: 'proj_8', name: 'Limuru Farmhouse', customerId: 'cust_7', location: 'Limuru, Kiambu', lat: -1.111, lng: 36.642, manager: 'Mary Achieng', startDate: '2025-02-15', endDate: '2025-11-30', budget: 2800000, creditLimit: 600000, status: 'active', image: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=600&q=70&auto=format&fit=crop' },
+    ];
+
+    const productDefs = [
+      ['Cement 50kg (Bamburi)', 'Bags', 750], ['Cement 50kg (Simba)', 'Bags', 720], ['Steel Bar Y8 12m', 'Pcs', 650],
+      ['Steel Bar Y10 12m', 'Pcs', 980], ['Steel Bar Y12 12m', 'Pcs', 1350], ['Steel Bar Y16 12m', 'Pcs', 2200],
+      ['Ballast 1 Tonne', 'Tonnes', 1800], ['Sand 1 Tonne', 'Tonnes', 1500], ['Machine Cut Stones 6x9', 'Pcs', 35],
+      ['Machine Cut Stones 9x9', 'Pcs', 55], ['Roofing Sheet 3m G28', 'Pcs', 1250], ['Roofing Sheet 2m G28', 'Pcs', 850],
+      ['Nails 4 inch 1kg', 'Kg', 180], ['Nails 2 inch 1kg', 'Kg', 170], ['Binding Wire 1kg', 'Kg', 150],
+      ['PVC Pipe 4inch 6m', 'Pcs', 680], ['PVC Pipe 2inch 6m', 'Pcs', 380], ['Water Tank 5000L', 'Pcs', 18500],
+      ['Water Tank 1000L', 'Pcs', 6500], ['Paint Interior 20L', 'Buckets', 4200], ['Paint Exterior 20L', 'Buckets', 4800],
+      ['Wire Cable 2.5mm 100m', 'Rolls', 6800], ['Wire Cable 1.5mm 100m', 'Rolls', 4200], ['MCB 32A', 'Pcs', 850],
+      ['Socket 13A', 'Pcs', 320], ['Switch 1-Gang', 'Pcs', 280], ['Door Frame 3x7', 'Pcs', 3200],
+      ['Window Frame 4x4', 'Pcs', 4800], ['Gypsum Board 8x4', 'Pcs', 950], ['Ceiling Board 8x4', 'Pcs', 870]
+    ];
+    const products = productDefs.map(([name, unit, price], i) => ({
+      id: 'prod_' + (i + 1), name, unit, unitPrice: price,
+      costPrice: Math.round(price * 0.72),
+      category: i < 10 ? 'Structural' : i < 18 ? 'Plumbing' : i < 24 ? 'Electrical' : 'Finishing',
+      stockQty: Math.round(50 + Math.random() * 500), reorderLevel: 20,
+      leadTimeDays: [3, 5, 7, 10][i % 4], supplierId: 'sup_' + ((i % 4) + 1),
+      image: getProductImage(name)
+    }));
+
+    const suppliers = [
+      { id: 'sup_1', name: 'Bamburi Cement Ltd', contact: 'James Mwangi', phone: '+254 711 000 111', creditLimit: 3000000, outstanding: 0, leadTime: 3, rating: 4.8 },
+      { id: 'sup_2', name: 'Devki Steel Mills', contact: 'Sarah Akinyi', phone: '+254 722 000 222', creditLimit: 5000000, outstanding: 0, leadTime: 5, rating: 4.5 },
+      { id: 'sup_3', name: 'Kenya Builders & Contractors', contact: 'Peter Njoroge', phone: '+254 733 000 333', creditLimit: 2000000, outstanding: 0, leadTime: 7, rating: 4.2 },
+      { id: 'sup_4', name: 'Plumbing World Kenya', contact: 'Grace Wambui', phone: '+254 744 000 444', creditLimit: 1500000, outstanding: 0, leadTime: 4, rating: 4.6 },
+    ];
+
+    const vehicles = [
+      { id: 'veh_1', plate: 'KDA 123A', model: 'Isuzu NQR', capacity: '5 Tonnes', costPerKm: 45, driverId: 'user_4', status: 'active' },
+      { id: 'veh_2', plate: 'KDB 456B', model: 'Mitsubishi Fuso', capacity: '7 Tonnes', costPerKm: 55, driverId: null, status: 'active' },
+      { id: 'veh_3', plate: 'KDC 789C', model: 'Toyota Hilux', capacity: '1 Tonne', costPerKm: 25, driverId: null, status: 'maintenance' },
+    ];
+
+    const drivers = users.filter(u => u.role === 'driver').map(u => ({ id: 'drv_' + u.id, userId: u.id, name: u.name, phone: '+254 700 000 000', license: 'DL-' + u.id, rating: 4.5 }));
+
+    const orders = [], invoices = [], deliveries = [], payments = [];
+    for (let i = 0; i < 12; i++) {
+      const cust = customers[i % customers.length];
+      const proj = projects[i % projects.length];
+      const prod = products[(i * 3) % products.length];
+      const qty = 10 + i * 5;
+      const subtotal = qty * prod.unitPrice;
+      const tax = subtotal * 0.16;
+      const total = subtotal + tax;
+      const orderId = 'ord_' + (i + 1);
+      const dateOffset = (i - 12) * 86400000;
+      orders.push({
+        id: orderId, orderNumber: 'ORD-' + String(1001 + i), customerId: cust.id, projectId: proj.id,
+        date: new Date(Date.now() + dateOffset).toISOString().slice(0, 10),
+        items: [{ productId: prod.id, name: prod.name, qty, unit: prod.unit, unitPrice: prod.unitPrice, subtotal }],
+        subtotal, tax, total, status: i < 8 ? 'delivered' : 'confirmed',
+        paymentType: i % 3 === 0 ? 'cash' : 'credit',
+        createdBy: 'user_3', createdAt: nowISO()
+      });
+      if (i < 8) {
+        const invId = 'inv_' + (i + 1);
+        invoices.push({
+          id: invId, invoiceNumber: settings.invoicePrefix + '-' + String(2001 + i),
+          orderId, customerId: cust.id, projectId: proj.id,
+          date: new Date(Date.now() + dateOffset).toISOString().slice(0, 10),
+          dueDate: new Date(Date.now() + dateOffset + 30 * 86400000).toISOString().slice(0, 10),
+          items: [{ productId: prod.id, name: prod.name, qty, unit: prod.unit, unitPrice: prod.unitPrice, subtotal }],
+          subtotal, tax, total, amountPaid: i === 0 ? total : (i === 1 ? total * 0.5 : 0),
+          status: i === 0 || i === 1 ? 'paid' : 'sent',
+          transportCost: i * 500, createdAt: nowISO()
+        });
+      }
+      if (i < 6) {
+        deliveries.push({
+          id: 'del_' + (i + 1), deliveryNumber: 'DEL-' + String(3001 + i),
+          orderId, customerId: cust.id, projectId: proj.id,
+          date: new Date(Date.now() + dateOffset + 86400000).toISOString().slice(0, 10),
+          driverId: 'user_4', vehicleId: 'veh_1',
+          status: i < 3 ? 'verified' : 'in_transit',
+          items: [{ productId: prod.id, name: prod.name, expectedQty: qty, deliveredQty: i < 3 ? qty : qty - 2, unit: prod.unit }],
+          recipientName: i < 3 ? 'Site Foreman' : '', signature: i < 3 ? 'signed' : '',
+          gps: i < 3 ? { lat: proj.lat, lng: proj.lng } : null, createdAt: nowISO()
+        });
+      }
+    }
+    payments.push(
+      { id: 'pay_1', receiptNumber: 'RCP-1001', invoiceId: 'inv_1', customerId: 'cust_1', amount: 44620, method: 'M-Pesa', date: todayISO(), recordedBy: 'user_5', createdAt: nowISO() },
+      { id: 'pay_2', receiptNumber: 'RCP-1002', invoiceId: 'inv_2', customerId: 'cust_2', amount: 25000, method: 'Bank Transfer', date: todayISO(), recordedBy: 'user_5', createdAt: nowISO() }
+    );
+
+    const disputes = [
+      { id: 'disp_1', disputeNumber: 'DSP-1001', type: 'shortage', deliveryId: 'del_1', customerId: 'cust_3', projectId: 'proj_1', status: 'open', priority: 'high', amount: 15000, description: 'Short delivery of 5 bags of cement', assignedTo: 'user_2', createdAt: nowISO() },
+      { id: 'disp_2', disputeNumber: 'DSP-1002', type: 'damage', deliveryId: 'del_2', customerId: 'cust_1', projectId: 'proj_6', status: 'under_review', priority: 'medium', amount: 8500, description: 'Roofing sheets dented on arrival', assignedTo: 'user_2', createdAt: nowISO() },
+      { id: 'disp_3', disputeNumber: 'DSP-1003', type: 'pricing_error', invoiceId: 'inv_3', customerId: 'cust_4', projectId: 'proj_2', status: 'awaiting_customer', priority: 'low', amount: 4200, description: 'Unit price mismatch on steel bars', assignedTo: 'user_3', createdAt: nowISO() },
+    ];
+
+    const financingRequests = [
+      { id: 'fin_1', invoiceId: 'inv_3', customerId: 'cust_4', amount: 150000, fee: 7500, status: 'requested', requestedBy: 'user_5', createdAt: nowISO() },
+      { id: 'fin_2', invoiceId: 'inv_4', customerId: 'cust_5', amount: 80000, fee: 4000, status: 'approved', requestedBy: 'user_5', createdAt: nowISO() },
+    ];
+
+    const supplierCreditAccounts = [
+      { id: 'sca_1', supplierId: 'sup_1', creditLimit: 3000000, outstanding: 450000, lastPurchase: '2025-03-01', nextRepayment: '2025-04-01' },
+      { id: 'sca_2', supplierId: 'sup_2', creditLimit: 5000000, outstanding: 1200000, lastPurchase: '2025-03-10', nextRepayment: '2025-04-10' },
+    ];
+
+    const stock = products.map(p => ({ id: 'stk_' + p.id, productId: p.id, shopId: 'shop_1', qty: p.stockQty, lastUpdated: nowISO() }));
+
+    const promisesToPay = [
+      { id: 'ptp_1', customerId: 'cust_3', invoiceId: 'inv_3', amount: 50000, promiseDate: new Date(Date.now() + 5 * 86400000).toISOString().slice(0, 10), status: 'active', createdAt: nowISO() },
+      { id: 'ptp_2', customerId: 'cust_4', invoiceId: 'inv_4', amount: 120000, promiseDate: new Date(Date.now() + 10 * 86400000).toISOString().slice(0, 10), status: 'active', createdAt: nowISO() }
+    ];
+
+    this.data.settings = settings;
+    this.data.users = users;
+    this.data.roles = roles;
+    this.data.shops = shops;
+    this.data.customers = customers;
+    this.data.contractors = customers.filter(c => c.type === 'contractor' || c.type === 'developer');
+    this.data.fundis = customers.filter(c => c.type === 'fundi');
+    this.data.projects = projects;
+    this.data.products = products;
+    this.data.suppliers = suppliers;
+    this.data.vehicles = vehicles;
+    this.data.drivers = drivers;
+    this.data.orders = orders;
+    this.data.invoices = invoices;
+    this.data.deliveries = deliveries;
+    this.data.payments = payments;
+    this.data.disputes = disputes;
+    this.data.invoiceFinancingRequests = financingRequests;
+    this.data.supplierCreditAccounts = supplierCreditAccounts;
+    this.data.stock = stock;
+    this.data.promisesToPay = promisesToPay;
+    this.data.quotations = [];
+    this.data.creditNotes = [];
+    this.data.returns = [];
+    this.data.transportCosts = [];
+    this.data.expenses = [];
+    this.data.creditLimits = [];
+    this.data.creditApplications = [];
+    this.data.riskScores = [];
+    this.data.dunningRules = [];
+    this.data.approvalWorkflows = [];
+    this.data.routes = [];
+    this.data.purchaseOrders = [];
+    this.data.escrowMilestones = [];
+    this.data.marketplaceListings = [];
+    this.data.procurementRequests = [];
+    this.data.notifications = [];
+    this.data.auditLogs = [];
+    this.data.deliveryExceptions = [];
+    this.data.receipts = [];
+
+    this.persistAll();
+  }
+};
+
+/* ============================================================
+   AUTH
+   ============================================================ */
+const Auth = {
+  login(username, password) {
+    const user = State.getCollection('users').find(u => u.username === username && u.password === password && u.active !== false);
+    if (!user) return { success: false, error: 'Invalid username or password.' };
+    State.currentUser = user;
+    StorageService.set('session', { userId: user.id, loginAt: nowISO() });
+    State.audit('login', { username });
+    return { success: true, user };
+  },
+  logout() {
+    if (State.currentUser) State.audit('logout', {});
+    State.currentUser = null;
+    StorageService.remove('session');
+    App.renderLogin();
+  },
+  restoreSession() {
+    const session = StorageService.get('session', null);
+    if (session) {
+      const user = State.find('users', session.userId);
+      if (user && user.active !== false) { State.currentUser = user; return true; }
+    }
+    return false;
+  },
+  hasPermission(perm) {
+    if (!State.currentUser) return false;
+    const role = State.getCollection('roles').find(r => r.name.toLowerCase().includes(State.currentUser.role.toLowerCase()) || r.id === 'role_' + State.currentUser.role);
+    if (!role) return State.currentUser.role === 'owner';
+    return role.permissions.includes('*') || role.permissions.includes(perm);
+  },
+};
+
+/* ============================================================
+   FORMAT
+   ============================================================ */
+const Format = {
+  money(n) {
+    const settings = State.getCollection('settings');
+    const cur = settings && settings.currency ? settings.currency : 'KES';
+    return cur + ' ' + fmt(n);
+  },
+  date: fmtDate,
+  datetime: fmtDateTime,
+  number: fmtQty,
+  statusBadge(status) {
+    const map = {
+      active:'badge-success', completed:'badge-success', paid:'badge-success', verified:'badge-success', resolved:'badge-success', approved:'badge-success', funded:'badge-success', in_stock:'badge-success',
+      watchlist:'badge-warning', paused:'badge-warning', pending:'badge-warning', under_review:'badge-warning', awaiting_customer:'badge-warning', low_stock:'badge-warning',
+      in_transit:'badge-info', sent:'badge-info', confirmed:'badge-info', requested:'badge-info', new:'badge-info', high_confidence:'badge-info', medium_confidence:'badge-info', low_confidence:'badge-warning',
+      suspended:'badge-danger', blocked:'badge-danger', disputed:'badge-danger', loss_making:'badge-danger', overdue:'badge-danger', rejected:'badge-danger', out_of_stock:'badge-danger',
+      open:'badge-warning', closed:'badge-neutral', profitable:'badge-success', marginal:'badge-warning'
+    };
+    return `<span class="badge ${map[status] || 'badge-neutral'}">${escapeHtml(status.replace(/_/g, ' '))}</span>`;
+  }
+};
+
+/* ============================================================
+   RISK ENGINE
+   ============================================================ */
+const RiskEngine = {
+  calculate(customerId) {
+    const customer = State.find('customers', customerId);
+    if (!customer) return null;
+    const invoices = State.getCollection('invoices').filter(i => i.customerId === customerId);
+    const disputes = State.getCollection('disputes').filter(d => d.customerId === customerId);
+    const payments = State.getCollection('payments').filter(p => p.customerId === customerId);
+
+    let score = 50;
+    const totalInvoiced = invoices.reduce((s, i) => s + i.total, 0);
+    const totalPaid = invoices.reduce((s, i) => s + (i.amountPaid || 0), 0);
+    const payRatio = totalInvoiced > 0 ? totalPaid / totalInvoiced : 1;
+    score += (payRatio - 0.5) * 60;
+    const overdueCount = invoices.filter(i => i.status !== 'paid' && new Date(i.dueDate) < new Date()).length;
+    score -= Math.min(overdueCount * 8, 30);
+    const outstanding = invoices.reduce((s, i) => s + (i.total - (i.amountPaid || 0)), 0);
+    const util = customer.creditLimit > 0 ? outstanding / customer.creditLimit : 0;
+    score -= util * 30;
+    score -= Math.min(disputes.length * 5, 20);
+    const months = customer.createdAt ? Math.floor(daysBetween(customer.createdAt, nowISO()) / 30) : 0;
+    score += Math.min(months * 2, 15);
+    const returnsCount = State.getCollection('returns').filter(r => r.customerId === customerId).length;
+    score -= Math.min(returnsCount * 4, 12);
+    score = clamp(Math.round(score), 0, 100);
+    let grade = 'E';
+    if (score >= 85) grade = 'A';
+    else if (score >= 70) grade = 'B';
+    else if (score >= 55) grade = 'C';
+    else if (score >= 40) grade = 'D';
+    const reasons = [];
+    if (payRatio < 0.7) reasons.push('Low payment ratio');
+    if (overdueCount > 0) reasons.push(`${overdueCount} overdue invoice(s)`);
+    if (util > 0.8) reasons.push('High credit utilization');
+    if (disputes.length > 0) reasons.push(`${disputes.length} dispute(s)`);
+    if (months < 3) reasons.push('New relationship');
+    let action = 'Maintain';
+    if (score >= 85) action = 'Increase limit';
+    else if (score >= 55) action = 'Review';
+    else if (score >= 40) action = 'Reduce limit';
+    else action = 'Stop supply';
+    return { score, grade, reasons, action, recommendedLimit: Math.round(score / 100 * (customer.creditLimit || 500000)) };
+  }
+};
+
+/* ============================================================
+   FORECAST ENGINE
+   ============================================================ */
+const ForecastEngine = {
+  forecast(productId, days = 30) {
+    const orders = State.getCollection('orders');
+    const productOrders = orders.flatMap(o => o.items || []).filter(i => i.productId === productId);
+    const recent = productOrders.filter(i => (Date.now() - new Date(i.createdAt || i.date).getTime()) < 90 * 86400000);
+    const totalQty = recent.reduce((s, i) => s + i.qty, 0);
+    const avgDaily = totalQty / 90;
+    const forecast = avgDaily * days;
+    const confidence = recent.length > 5 ? 'high_confidence' : recent.length > 2 ? 'medium_confidence' : 'low_confidence';
+    const product = State.find('products', productId);
+    const stock = product ? product.stockQty : 0;
+    const reorder = Math.max(0, Math.ceil(forecast + (product ? product.reorderLevel : 20) - stock));
+    return { productId, days, forecast: Math.round(forecast), confidence, recommendedReorder: reorder, avgDaily: avgDaily.toFixed(2) };
+  }
+};
+
+/* ============================================================
+   ROUTE OPTIMIZER
+   ============================================================ */
+const RouteOptimizer = {
+  optimize(stops, startLat = -1.2921, startLng = 36.8219) {
+    if (stops.length <= 1) return stops;
+    const remaining = [...stops];
+    const route = [];
+    let current = { lat: startLat, lng: startLng };
+    while (remaining.length) {
+      let nearestIdx = 0, nearestDist = Infinity;
+      remaining.forEach((s, i) => {
+        const d = Math.hypot((s.lat || 0) - current.lat, (s.lng || 0) - current.lng);
+        if (d < nearestDist) { nearestDist = d; nearestIdx = i; }
+      });
+      const next = remaining.splice(nearestIdx, 1)[0];
+      route.push({ ...next, distFromPrev: nearestDist.toFixed(2) });
+      current = next;
+    }
+    return route;
+  }
+};
+
+/* ============================================================
+   DUNNING ENGINE (WhatsApp / SMS)
+   ============================================================ */
+const Dunning = {
+  buildMessage(invoiceId, stage) {
+    const inv = State.find('invoices', invoiceId);
+    if (!inv) return '';
+    const cust = State.find('customers', inv.customerId);
+    const settings = State.getCollection('settings');
+    const template = settings.dunningTemplates[stage] || settings.dunningTemplates.after7;
+    const outstanding = inv.total - (inv.amountPaid || 0);
+    return template
+      .replace(/{customer}/g, cust ? cust.name : 'Customer')
+      .replace(/{invoice}/g, inv.invoiceNumber)
+      .replace(/{amount}/g, Format.money(outstanding))
+      .replace(/{dueDate}/g, Format.date(inv.dueDate))
+      .replace(/{business}/g, settings.businessName);
+  },
+  sendWhatsApp(invoiceId, stage = 'after7') {
+    const inv = State.find('invoices', invoiceId);
+    if (!inv) return;
+    const cust = State.find('customers', inv.customerId);
+    const msg = this.buildMessage(invoiceId, stage);
+    const phone = (cust && cust.phone || '').replace(/\s+/g, '').replace(/^0/, '254').replace(/^\+/, '');
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+  },
+  sendSMS(invoiceId, stage = 'after7') {
+    const inv = State.find('invoices', invoiceId);
+    if (!inv) return;
+    const cust = State.find('customers', inv.customerId);
+    const msg = this.buildMessage(invoiceId, stage);
+    const phone = (cust && cust.phone || '').replace(/\s+/g, '');
+    window.open(`sms:${phone}?body=${encodeURIComponent(msg)}`, '_blank');
+  }
+};
+
+/* ============================================================
+   APP CONTROLLER
+   ============================================================ */
+const App = {
+  init() {
+    State.init();
+    this.bindGlobalEvents();
+    this.setupPWA();
+    if (Auth.restoreSession()) {
+      this.renderApp();
+    } else {
+      this.renderLogin();
+    }
+  },
+
+  bindGlobalEvents() {
+    $('#headerMenuBtn').addEventListener('click', () => {
+      if (window.innerWidth <= 768) $('#sidebar').classList.toggle('mobile-open');
+      else {
+        State.sidebarCollapsed = !State.sidebarCollapsed;
+        $('#sidebar').classList.toggle('collapsed', State.sidebarCollapsed);
+        StorageService.set('sidebarCollapsed', State.sidebarCollapsed);
+      }
+    });
+
+    $('#themeToggleBtn').addEventListener('click', () => {
+      State.theme = State.theme === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', State.theme);
+      StorageService.set('theme', State.theme);
+    });
+
+    $('#modalCloseBtn').addEventListener('click', () => Modal.close());
+    $('#modalOverlay').addEventListener('click', (e) => { if (e.target === $('#modalOverlay')) Modal.close(); });
+
+    $('#globalSearchInput').addEventListener('focus', () => this.openCommandPalette());
+    $('#globalSearchInput').addEventListener('input', (e) => this.renderCommandResults(e.target.value));
+    $('#commandInput').addEventListener('input', (e) => this.renderCommandResults(e.target.value));
+    $('#commandOverlay').addEventListener('click', (e) => { if (e.target === $('#commandOverlay')) this.closeCommandPalette(); });
+    $('#commandInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') this.closeCommandPalette();
+      if (e.key === 'ArrowDown') { e.preventDefault(); State.commandSelectedIndex = Math.min(State.commandSelectedIndex + 1, State.commandResults.length - 1); this.updateCommandSelection(); }
+      if (e.key === 'ArrowUp') { e.preventDefault(); State.commandSelectedIndex = Math.max(State.commandSelectedIndex - 1, 0); this.updateCommandSelection(); }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const item = State.commandResults[State.commandSelectedIndex];
+        if (item) { item.action(); this.closeCommandPalette(); }
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.target.matches('input, textarea, select')) return;
+      if (e.key === '/') { e.preventDefault(); this.openCommandPalette(); }
+      if (e.key === 'Escape') { Modal.close(); this.closeCommandPalette(); }
+      if (e.key.toLowerCase() === 'n' && Auth.hasPermission('orders')) { e.preventDefault(); this.navigate('orders'); setTimeout(() => App.showNewOrderModal(), 100); }
+      if (e.key.toLowerCase() === 'd' && Auth.hasPermission('deliveries')) { e.preventDefault(); this.navigate('deliveries'); }
+      if (e.key.toLowerCase() === 'p' && Auth.hasPermission('payments')) { e.preventDefault(); this.navigate('collections'); setTimeout(() => App.showRecordPaymentModal(), 100); }
+    });
+
+    $$('.bottom-nav-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const page = btn.dataset.page;
+        if (page === 'more') { $('#mobileMoreMenu').classList.add('open'); return; }
+        this.navigate(page);
+      });
+    });
+    $('#closeMoreMenu').addEventListener('click', () => $('#mobileMoreMenu').classList.remove('open'));
+
+    $('#headerAvatar').addEventListener('click', () => {
+      if (State.currentUser) {
+        Modal.open('Profile', `
+          <div class="flex items-center gap-3 mb-3">
+            <div class="customer-avatar" style="background:${getCustomerColor(State.currentUser.name)};width:56px;height:56px;font-size:20px;">${getInitials(State.currentUser.name)}</div>
+            <div>
+              <p><strong>${escapeHtml(State.currentUser.name)}</strong></p>
+              <p class="text-sm text-secondary">Role: ${escapeHtml(State.currentUser.role)}</p>
+              <p class="text-sm text-secondary">Username: ${escapeHtml(State.currentUser.username)}</p>
+            </div>
+          </div>
+        `, `<button class="btn btn-danger" onclick="SiteCredit.Auth.logout()">Log Out</button>`);
+      }
+    });
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      window.deferredPrompt = e;
+      $('#installAppBtn').style.display = 'flex';
+    });
+    $('#installAppBtn').addEventListener('click', async () => {
+      if (window.deferredPrompt) {
+        window.deferredPrompt.prompt();
+        const result = await window.deferredPrompt.userChoice;
+        if (result.outcome === 'accepted') Toast.success('App installed!');
+        window.deferredPrompt = null;
+        $('#installAppBtn').style.display = 'none';
+      } else {
+        Toast.info('Use your browser menu → "Add to Home Screen"');
+      }
+    });
+  },
+
+  setupPWA() {
+    if ('serviceWorker' in navigator) {
+      const swCode = `
+        self.addEventListener('install', e => { self.skipWaiting(); });
+        self.addEventListener('activate', e => { e.waitUntil(clients.claim()); });
+        self.addEventListener('fetch', e => { e.respondWith(fetch(e.request).catch(() => caches.match(e.request))); });
+      `;
+      try {
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        const url = URL.createObjectURL(blob);
+        navigator.serviceWorker.register(url).catch(() => console.info('SW registration failed (likely file:// protocol). App still works offline via localStorage.'));
+      } catch (e) { console.info('SW unavailable:', e.message); }
+    }
+    const manifest = {
+      name: 'SiteCredit — Hardware Trade Operations',
+      short_name: 'SiteCredit',
+      start_url: '.',
+      display: 'standalone',
+      background_color: '#0f172a',
+      theme_color: '#0f172a',
+      icons: [{
+        src: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#3b82f6"/><text x="50" y="65" font-size="50" text-anchor="middle" fill="white" font-family="sans-serif" font-weight="bold">SC</text></svg>'),
+        sizes: '192x192', type: 'image/svg+xml'
+      }]
+    };
+    try {
+      const mBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+      const mLink = document.createElement('link');
+      mLink.rel = 'manifest';
+      mLink.href = URL.createObjectURL(mBlob);
+      document.head.appendChild(mLink);
+    } catch (e) { console.info('Manifest unsupported:', e.message); }
+  },
+
+  /* ---------- AUTH VIEW ---------- */
+  renderLogin() {
+    $('#contentArea').innerHTML = `
+      <div style="min-height:80vh; display:flex; align-items:center; justify-content:center; padding:16px;">
+        <div class="card" style="max-width:400px; width:100%;">
+          <div class="text-center mb-4">
+            <div style="width:64px; height:64px; border-radius:16px; background:var(--primary); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; color:white; font-weight:700; font-size:28px;">SC</div>
+            <h1 style="font-size:22px; font-weight:700;">SiteCredit</h1>
+            <p class="text-sm text-secondary mt-1">Hardware Trade Operations System</p>
+          </div>
+          <form id="loginForm">
+            <div class="form-group">
+              <label class="form-label">Username</label>
+              <input type="text" class="form-input" id="loginUsername" required value="admin" autocomplete="username">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <input type="password" class="form-input" id="loginPassword" required value="admin123" autocomplete="current-password">
+            </div>
+            <div class="form-error mb-3" id="loginError"></div>
+            <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+          </form>
+          <p class="text-xs text-muted text-center mt-4">Demo: admin / admin123 · manager / manager123 · sales / sales123</p>
+        </div>
+      </div>
+    `;
+    $('#loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = $('#loginUsername').value.trim();
+      const password = $('#loginPassword').value;
+      const result = Auth.login(username, password);
+      if (result.success) {
+        Toast.success('Welcome back, ' + result.user.name);
+        this.renderApp();
+      } else {
+        $('#loginError').textContent = result.error;
+        $('#loginError').classList.add('visible');
+      }
+    });
+  },
+
+  /* ---------- MAIN APP ---------- */
+  renderApp() {
+    this.renderSidebar();
+    this.renderMobileMore();
+    this.navigate(State.currentPage || 'dashboard');
+    if (!StorageService.get('tourCompleted', false)) {
+      setTimeout(() => Tour.start(), 800);
+    }
+  },
+
+  renderSidebar() {
+    const nav = $('#sidebarNav');
+    const items = [
+      { section: 'Overview', links: [
+        { page: 'dashboard', label: 'Dashboard', icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' },
+        { page: 'notifications', label: 'Notifications', icon: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6.002 6.002 0 0 0-4-5.659V5a2 2 0 1 0-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9' },
+      ]},
+      { section: 'Sales & Operations', links: [
+        { page: 'customers', label: 'Customers', icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7a4 4 0 1 1 0 8 4 4 0 0 1 0-8z' },
+        { page: 'projects', label: 'Projects', icon: 'M3 3h18v18H3zM3 9h18M9 21V9' },
+        { page: 'orders', label: 'Orders & Invoices', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' },
+        { page: 'deliveries', label: 'Deliveries', icon: 'M1 3h15v13H1zM16 8h4l3 3v5h-7z' },
+        { page: 'disputes', label: 'Disputes & Returns', icon: 'M12 9v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z' },
+      ]},
+      { section: 'Credit & Collections', links: [
+        { page: 'collections', label: 'Collections', icon: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' },
+        { page: 'credit', label: 'Credit Control', icon: 'M9 12l2 2 4-4M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' },
+        { page: 'risk', label: 'Risk Scoring', icon: 'M12 20V10M18 20V4M6 20v-4' },
+        { page: 'promises', label: 'Promises to Pay', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z' },
+      ]},
+      { section: 'Inventory & Supply', links: [
+        { page: 'inventory', label: 'Inventory', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
+        { page: 'forecasting', label: 'Forecasting', icon: 'M22 12h-4l-3 9L9 3l-3 9H2' },
+        { page: 'procurement', label: 'Procurement', icon: 'M16 11V7a4 4 0 0 0-8 0v4M5 9h14l1 12H4z' },
+      ]},
+      { section: 'Finance', links: [
+        { page: 'finance', label: 'Finance', icon: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' },
+        { page: 'routes', label: 'Routes & Logistics', icon: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z' },
+      ]},
+      { section: 'Analytics', links: [
+        { page: 'reports', label: 'Reports', icon: 'M3 3v18h18M18 17V9M13 17V5M8 17v-3' },
+        { page: 'approvals', label: 'Approvals', icon: 'M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11' },
+      ]},
+      { section: 'System', links: [
+        { page: 'settings', label: 'Settings', icon: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z' },
+        { page: 'audit', label: 'Audit Log', icon: 'M12 8v4l3 3M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z' },
+      ]}
+    ];
+
+    let html = '';
+    items.forEach(group => {
+      html += `<div class="sidebar-section">${escapeHtml(group.section)}</div>`;
+      group.links.forEach(link => {
+        if (!Auth.hasPermission(link.page) && !Auth.hasPermission('*')) return;
+        html += `
+          <div class="sidebar-item" data-page="${link.page}">
+            <span class="sidebar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="${link.icon}"/></svg></span>
+            <span class="sidebar-label">${escapeHtml(link.label)}</span>
+          </div>
+        `;
+      });
+    });
+    nav.innerHTML = html;
+    $$('.sidebar-item').forEach(item => {
+      item.addEventListener('click', () => {
+        this.navigate(item.dataset.page);
+        if (window.innerWidth <= 768) $('#sidebar').classList.remove('mobile-open');
+      });
+    });
+    if (State.sidebarCollapsed) $('#sidebar').classList.add('collapsed');
+    const settings = State.getCollection('settings');
+    if (settings && settings.logo) $('#sidebarBrandIcon').innerHTML = `<img src="${settings.logo}" alt="Logo">`;
+    $('#sidebarFooterText').textContent = `${State.currentUser ? State.currentUser.name : ''} · ${State.currentUser ? State.currentUser.role : ''}`;
+  },
+
+  renderMobileMore() {
+    const grid = $('#mobileMoreGrid');
+    const pages = [
+      { page: 'projects', label: 'Projects', icon: 'M3 3h18v18H3z' },
+      { page: 'disputes', label: 'Disputes', icon: 'M12 9v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z' },
+      { page: 'collections', label: 'Collections', icon: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' },
+      { page: 'credit', label: 'Credit', icon: 'M9 12l2 2 4-4' },
+      { page: 'risk', label: 'Risk', icon: 'M12 20V10M18 20V4M6 20v-4' },
+      { page: 'promises', label: 'Promises', icon: 'M8 7V3m8 4V3M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z' },
+      { page: 'inventory', label: 'Inventory', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4' },
+      { page: 'forecasting', label: 'Forecast', icon: 'M22 12h-4l-3 9L9 3l-3 9H2' },
+      { page: 'procurement', label: 'Procure', icon: 'M16 11V7a4 4 0 0 0-8 0v4' },
+      { page: 'finance', label: 'Finance', icon: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' },
+      { page: 'routes', label: 'Routes', icon: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z' },
+      { page: 'reports', label: 'Reports', icon: 'M3 3v18h18M18 17V9' },
+      { page: 'approvals', label: 'Approvals', icon: 'M9 11l3 3L22 4' },
+      { page: 'settings', label: 'Settings', icon: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z' },
+      { page: 'audit', label: 'Audit', icon: 'M12 8v4l3 3' },
+    ];
+    grid.innerHTML = pages.map(p => `
+      <div class="mobile-more-tile" data-page="${p.page}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="${p.icon}"/></svg>
+        <span>${p.label}</span>
+      </div>
+    `).join('');
+    $$('.mobile-more-tile').forEach(tile => {
+      tile.addEventListener('click', () => {
+        this.navigate(tile.dataset.page);
+        $('#mobileMoreMenu').classList.remove('open');
+      });
+    });
+  },
+
+  navigate(page) {
+    State.currentPage = page;
+    $$('.sidebar-item').forEach(i => i.classList.toggle('active', i.dataset.page === page));
+    $$('.bottom-nav-item').forEach(i => i.classList.toggle('active', i.dataset.page === page));
+    const renderers = {
+      dashboard: () => this.renderDashboard(),
+      customers: () => this.renderCustomers(),
+      projects: () => this.renderProjects(),
+      orders: () => this.renderOrders(),
+      deliveries: () => this.renderDeliveries(),
+      disputes: () => this.renderDisputes(),
+      collections: () => this.renderCollections(),
+      credit: () => this.renderCreditControl(),
+      risk: () => this.renderRiskScoring(),
+      promises: () => this.renderPromises(),
+      inventory: () => this.renderInventory(),
+      forecasting: () => this.renderForecasting(),
+      procurement: () => this.renderProcurement(),
+      finance: () => this.renderFinance(),
+      routes: () => this.renderRoutes(),
+      reports: () => this.renderReports(),
+      approvals: () => this.renderApprovals(),
+      settings: () => this.renderSettings(),
+      audit: () => this.renderAudit(),
+      notifications: () => this.renderNotifications(),
+    };
+    const fn = renderers[page];
+    if (fn) fn();
+    else this.renderDashboard();
+  },
+
+  pageHeader(title, subtitle, actionsHtml = '') {
+    return `
+      <div class="flex items-center justify-between flex-wrap gap-2 mb-4">
+        <div>
+          <h1 style="font-size:22px; font-weight:700; letter-spacing:-0.02em;">${escapeHtml(title)}</h1>
+          ${subtitle ? `<p class="text-sm text-secondary mt-1">${escapeHtml(subtitle)}</p>` : ''}
+        </div>
+        <div class="flex gap-2 flex-wrap">${actionsHtml}</div>
+      </div>
+    `;
+  },
+
+  emptyState(msg) {
+    return `<div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 13V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7m16 0v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-5m16 0h-2.586a1 1 0 0 0-.707.293l-2.414 2.414a1 1 0 0 1-.707.293h-3.172a1 1 0 0 1-.707-.293l-2.414-2.414A1 1 0 0 0 6.586 13H4"/></svg>
+      <p>${escapeHtml(msg)}</p>
+    </div>`;
+  },
+
+  avatar(name, size = 40) {
+    return `<div class="customer-avatar" style="background:${getCustomerColor(name)};width:${size}px;height:${size}px;font-size:${size/3}px;">${getInitials(name)}</div>`;
+  },
+
+  /* ---------- DASHBOARD ---------- */
+  renderDashboard() {
+    const invoices = State.getCollection('invoices');
+    const payments = State.getCollection('payments');
+    const deliveries = State.getCollection('deliveries');
+    const disputes = State.getCollection('disputes');
+    const customers = State.getCollection('customers');
+    const projects = State.getCollection('projects');
+    const products = State.getCollection('products');
+    const orders = State.getCollection('orders');
+    const today = todayISO();
+    const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+
+    const totalReceivables = invoices.reduce((s, i) => s + (i.total - (i.amountPaid || 0)), 0);
+    const overdue = invoices.filter(i => i.status !== 'paid' && new Date(i.dueDate) < new Date());
+    const overdueAmount = overdue.reduce((s, i) => s + (i.total - (i.amountPaid || 0)), 0);
+    const todaySales = orders.filter(o => o.date === today).reduce((s, o) => s + o.total, 0);
+    const todayDeliveries = deliveries.filter(d => d.date === today).length;
+    const pendingDeliveries = deliveries.filter(d => d.status !== 'verified').length;
+    const disputedValue = disputes.filter(d => d.status !== 'resolved' && d.status !== 'credited').reduce((s, d) => s + (d.amount || 0), 0);
+    const cashCollectedWeek = payments.filter(p => p.date >= weekAgo).reduce((s, p) => s + p.amount, 0);
+    const lowStock = products.filter(p => p.stockQty <= p.reorderLevel);
+
+    // Revenue trend (last 14 days)
+    const revenueByDay = {};
+    orders.forEach(o => { revenueByDay[o.date] = (revenueByDay[o.date] || 0) + o.total; });
+    const revenueLabels = [], revenueData = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+      revenueLabels.push(new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }));
+      revenueData.push(revenueByDay[d] || 0);
+    }
+
+    // Aging buckets
+    const buckets = { Current: 0, '1-30': 0, '31-60': 0, '61-90': 0, '90+': 0 };
+    invoices.filter(i => i.status !== 'paid').forEach(i => {
+      const days = daysBetween(i.dueDate, today);
+      const key = days <= 0 ? 'Current' : days <= 30 ? '1-30' : days <= 60 ? '31-60' : days <= 90 ? '61-90' : '90+';
+      buckets[key] += (i.total - (i.amountPaid || 0));
+    });
+
+    // Category split
+    const categoryTotals = {};
+    products.forEach(p => { categoryTotals[p.category] = (categoryTotals[p.category] || 0) + (p.unitPrice * p.stockQty); });
+    const categoryLabels = Object.keys(categoryTotals);
+    const categoryData = Object.values(categoryTotals);
+
+    // Project margin chart
+    const projectLabels = projects.slice(0, 6).map(p => p.name.slice(0, 15));
+    const projectMargins = projects.slice(0, 6).map(p => {
+      const pInv = invoices.filter(i => i.projectId === p.id);
+      const inv = pInv.reduce((s, i) => s + i.total, 0);
+      return p.budget > 0 ? Math.max(0, ((p.budget - inv) / p.budget) * 100) : 0;
+    });
+
+    // Delivery status donut
+    const deliveryStatus = { verified: 0, in_transit: 0, exception: 0, pending: 0 };
+    deliveries.forEach(d => { deliveryStatus[d.status] = (deliveryStatus[d.status] || 0) + 1; });
+
+    const topCustomers = customers.map(c => {
+      const inv = invoices.filter(i => i.customerId === c.id);
+      const out = inv.reduce((s, i) => s + (i.total - (i.amountPaid || 0)), 0);
+      return { ...c, outstanding: out };
+    }).sort((a, b) => b.outstanding - a.outstanding).slice(0, 5);
+
+    const kpi = (label, value, sub = '', cls = '') => `
+      <div class="kpi-card ${cls}">
+        <div class="kpi-label">${label}</div>
+        <div class="kpi-value">${value}</div>
+        ${sub ? `<div class="kpi-sub">${sub}</div>` : ''}
+      </div>
+    `;
+
+    $('#contentArea').innerHTML = `
+      <div class="page-view active">
+        ${this.pageHeader('Dashboard', 'Know who owes you, what they received, and whether the job is still profitable.',
+          `<button class="btn btn-primary btn-sm" onclick="SiteCredit.App.showNewOrderModal()">+ New Order</button>
+           <button class="btn btn-secondary btn-sm" onclick="SiteCredit.App.showRecordPaymentModal()">Record Payment</button>`)}
+        <div class="grid grid-4 mb-4">
+          ${kpi('Total Receivables', Format.money(totalReceivables), `${invoices.filter(i=>i.status!=='paid').length} open invoices`)}
+          ${kpi('Overdue', Format.money(overdueAmount), `${overdue.length} overdue invoice(s)`, 'kpi-danger')}
+          ${kpi("Today's Sales", Format.money(todaySales), '', 'kpi-success')}
+          ${kpi('Cash Collected (Week)', Format.money(cashCollectedWeek), '', 'kpi-success')}
+        </div>
+        <div class="grid grid-4 mb-4">
+          ${kpi("Today's Deliveries", todayDeliveries, '')}
+          ${kpi('Pending Deliveries', pendingDeliveries, '')}
+          ${kpi('Disputed Value', Format.money(disputedValue), `${disputes.filter(d=>d.status!=='resolved').length} open`, 'kpi-warning')}
+          ${kpi('Low Stock Alerts', lowStock.length, 'items below reorder', lowStock.length ? 'kpi-warning' : '')}
+        </div>
+        <div class="grid grid-2 mb-4">
+          <div class="card">
+            <div class="card-header"><h3 class="card-title">Revenue — Last 14 Days</h3></div>
+            ${Charts.line(revenueData, { width: 600, height: 220, color: 'var(--chart-1)', labels: revenueLabels })}
+          </div>
+          <div class="card">
+            <div class="card-header"><h3 class="card-title">Aging Breakdown</h3></div>
+            ${Charts.bar(Object.values(buckets), { width: 600, height: 220, color: 'var(--chart-3)', labels: Object.keys(buckets) })}
+          </div>
+        </div>
+        <div class="grid grid-3 mb-4">
+          <div class="card">
+            <div class="card-header"><h3 class="card-title">Stock by Category</h3></div>
+            ${Charts.donut(categoryData, { width: 220, height: 220, labels: categoryLabels })}
+            ${Charts.legend(categoryLabels, ['#3b82f6','#10b981','#f59e0b','#ef4444'])}
+          </div>
+          <div class="card">
+            <div class="card-header"><h3 class="card-title">Delivery Status</h3></div>
+            ${Charts.donut(Object.values(deliveryStatus), { width: 220, height: 220, labels: Object.keys(deliveryStatus), colors: ['#10b981','#3b82f6','#ef4444','#f59e0b'] })}
+            ${Charts.legend(Object.keys(deliveryStatus), ['#10b981','#3b82f6','#ef4444','#f59e0b'])}
+          </div>
+          <div class="card">
+            <div class="card-header"><h3 class="card-title">Top Project Margins</h3></div>
+            ${Charts.bar(projectMargins, { width: 300, height: 220, horizontal: true, color: 'var(--chart-2)', labels: projectLabels })}
+          </div>
+        </div>
+        <div class="grid grid-2 mb-4">
+          <div class="card">
+            <div class="card-header"><h3 class="card-title">Top Customers by Outstanding</h3></div>
+            ${topCustomers.length ? `<div class="table-wrapper"><table>
+              <thead><tr><th>Customer</th><th>Type</th><th class="text-right">Outstanding</th><th>Status</th></tr></thead>
+              <tbody>${topCustomers.map(c => `
+                <tr>
+                  <td><div class="product-cell">${this.avatar(c.name, 32)}<span class="font-semibold">${escapeHtml(c.name)}</span></div></td>
+                  <td class="text-sm text-secondary">${escapeHtml(c.type)}</td>
+                  <td class="text-right font-semibold">${Format.money(c.outstanding)}</td>
+                  <td>${Format.statusBadge(c.creditStatus)}</td>
+                </tr>
+              `).join('')}</tbody>
+            </table></div>` : this.emptyState('No outstanding balances')}
+          </div>
+          <div class="card">
+            <div class="card-header"><h3 class="card-title">Recent Orders</h3></div>
+            <div class="table-wrapper"><table>
+              <thead><tr><th>Order #</th><th>Date</th><th class="text-right">Total</th><th>Status</th></tr></thead>
+              <tbody>${orders.slice(-5).reverse().map(o => `<tr><td>${escapeHtml(o.orderNumber)}</td><td>${Format.date(o.date)}</td><td class="text-right">${Format.money(o.total)}</td><td>${Format.statusBadge(o.status)}</td></tr>`).join('') || '<tr><td colspan="4" class="text-center text-muted">No orders yet</td></tr>'}</tbody>
+            </table></div>
+          </div>
+        </div>
+        <div class="card mb-4">
+          <div class="card-header"><h3 class="card-title">Quick Actions</h3></div>
+          <div class="grid grid-3 gap-2">
+            <button class="btn btn-secondary" onclick="SiteCredit.App.showNewCustomerModal()">+ New Customer</button>
+            <button class="btn btn-secondary" onclick="SiteCredit.App.showNewProjectModal()">+ New Project</button>
+            <button class="btn btn-secondary" onclick="SiteCredit.App.showNewOrderModal()">+ New Order</button>
+            <button class="btn btn-secondary" onclick="SiteCredit.App.showRecordPaymentModal()">Record Payment</button>
+            <button class="btn btn-secondary" onclick="SiteCredit.App.navigate('reports')">Generate Report</button>
+            <button class="btn btn-secondary" onclick="SiteCredit.App.navigate('disputes')">View Disputes</button>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  /* ---------- CUSTOMERS ---------- */
+  renderCustomers() {
+    const customers = State.getCollection('customers');
+    const invoices = State.getCollection('invoices');
+    const search = (window._custSearch || '').toLowerCase();
+    const filtered = customers.filter(c => !search || c.name.toLowerCase().includes(search) || (c.phone || '').includes(search));
+    const getOutstanding = (id) => invoices.filter(i => i.customerId === id).reduce((s, i) => s + (i.total - (i.amountPaid || 0)), 0);
+
+    $('#contentArea').innerHTML = `
+      <div class="page-view active">
+        ${this.pageHeader('Customers & Contractors', `${filtered.length} customer(s)`, `
+          <input type="text" class="form-input" style="width:200px;" placeholder="Search customers..." id="custSearchInput" value="${escapeHtml(window._custSearch || '')}">
+          <button class="btn btn-primary btn-sm" onclick="SiteCredit.App.showNewCustomerModal()">+ New Customer</button>
+        `)}
+        <div class="card">
+          ${filtered.length ? `<div class="table-wrapper"><table>
+            <thead><tr><th>Customer</th><th>Type</th><th>Phone</th><th class="text-right">Outstanding</th><th>Credit Limit</th><th>Utilization</th><th>Status</th><th></th></tr></thead>
+            <tbody>${filtered.map(c => {
+              const out = getOutstanding(c.id);
+              const util = c.creditLimit > 0 ? clamp(out / c.creditLimit * 100, 0, 100) : 0;
+              return `
+              <tr>
+                <td><div class="product-cell">${this.avatar(c.name, 36)}<span class="font-semibold">${escapeHtml(c.name)}</span></div></td>
+                <td class="text-sm text-secondary">${escapeHtml(c.type)}</td>
+                <td class="text-sm">${escapeHtml(c.phone || '—')}</td>
+                <td class="text-right font-semibold">${Format.money(out)}</td>
+                <td>${Format.money(c.creditLimit)}</td>
+                <td style="min-width:100px;">
+                  <div class="progress-bar"><div class="progress-bar-fill" style="width:${util}%; background:${util>80?'var(--danger)':util>50?'var(--warning)':'var(--success)'};"></div></div>
+                  <span class="text-xs text-muted">${util.toFixed(0)}%</span>
+                </td>
+                <td>${Format.statusBadge(c.creditStatus)}</td>
+                <td><button class="btn btn-ghost btn-sm" onclick="SiteCredit.App.showCustomerDetail('${c.id}')">View</button></td>
+              </tr>
+            `}).join('')}</tbody>
+          </table></div>` : this.emptyState('No customers found')}
+        </div>
+      </div>
+    `;
+    const input = $('#custSearchInput');
+    if (input) input.addEventListener('input', debounce((e) => { window._custSearch = e.target.value; this.renderCustomers(); }, 300));
+  },
+
+  showCustomerDetail(id) {
+    const c = State.find('customers', id);
+    if (!c) return;
+    const invoices = State.getCollection('invoices').filter(i => i.customerId === id);
+    const projects = State.getCollection('projects').filter(p => p.customerId === id);
+    const disputes = State.getCollection('disputes').filter(d => d.customerId === id);
+    const risk = RiskEngine.calculate(id);
+    const outstanding = invoices.reduce((s, i) => s + (i.total - (i.amountPaid || 0)), 0);
+    const util = c.creditLimit > 0 ? clamp(outstanding / c.creditLimit * 100, 0, 100) : 0;
+
+    Modal.open(`Customer: ${escapeHtml(c.name)}`, `
+      <div class="flex items-center gap-3 mb-3">
+        ${this.avatar(c.name, 56)}
+        <div>
+          <div class="font-semibold">${escapeHtml(c.name)}</div>
+          <div class="text-sm text-secondary">${escapeHtml(c.type)} · ${escapeHtml(c.phone || '')}</div>
+        </div>
+      </div>
+      <div class="grid grid-2 gap-3 mb-3">
+        <div><span class="text-xs text-muted">Email</span><div class="font-semibold">${escapeHtml(c.email || '—')}</div></div>
+        <div><span class="text-xs text-muted">Tax ID / PIN</span><div class="font-semibold">${escapeHtml(c.taxId || '—')}</div></div>
+        <div><span class="text-xs text-muted">Credit Limit</span><div class="font-semibold">${Format.money(c.creditLimit)}</div></div>
+        <div><span class="text-xs text-muted">Payment Terms</span><div class="font-semibold">${c.paymentTerms} days</div></div>
+      </div>
+      <div class="mb-3">
+        <div class="flex justify-between text-sm mb-1"><span>Credit Utilization</span><span class="font-semibold">${util.toFixed(0)}%</span></div>
+        <div class="progress-bar"><div class="progress-bar-fill" style="width:${util}%; background:${util>80?'var(--danger)':util>50?'var(--warning)':'var(--success)'};"></div></div>
+      </div>
+      <div class="grid grid-3 gap-2 mb-3">
+        <div class="kpi-card"><div class="kpi-label">Outstanding</div><div class="kpi-value" style="font-size:18px;">${Format.money(outstanding)}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Risk Score</div><div class="kpi-value" style="font-size:18px;">${risk ? risk.score + '/100 (' + risk.grade + ')' : '—'}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Projects</div><div class="kpi-value" style="font-size:18px;">${projects.length}</div></div>
+      </div>
+      <h4 class="font-semibold mb-2">Invoices</h4>
+      ${invoices.length ? `<div class="table-wrapper"><table>
+        <thead><tr><th>Invoice</th><th>Due</th><th class="text-right">Total</th><th>Status</th><th></th></tr></thead>
+        <tbody>${invoices.map(i => `<tr><td>${escapeHtml(i.invoiceNumber)}</td><td>${Format.date(i.dueDate)}</td><td class="text-right">${Format.money(i.total)}</td><td>${Format.statusBadge(i.status)}</td><td><button class="btn btn-ghost btn-sm" onclick="SiteCredit.App.showReminder('${i.id}')">Remind</button></td></tr>`).join('')}</tbody>
+      </table></div>` : '<p class="text-sm text-muted">No invoices</p>'}
+      ${disputes.length ? `<h4 class="font-semibold mt-3 mb-2">Disputes</h4><p class="text-sm">${disputes.length} dispute(s) — ${Format.money(disputes.reduce((s,d)=>s+d.amount,0))} total</p>` : ''}
+    `, `
+      <button class="btn btn-secondary" onclick="SiteCredit.App.showStatement('${id}')">Print Statement</button>
+      <button class="btn btn-primary" onclick="SiteCredit.Modal.close()">Close</button>
+    `, 'lg');
+  },
+
+  showStatement(customerId) {
+    const c = State.find('customers', customerId);
+    const invoices = State.getCollection('invoices').filter(i => i.customerId === customerId);
+    const settings = State.getCollection('settings');
+    const outstanding = invoices.reduce((s, i) => s + (i.total - (i.amountPaid || 0)), 0);
+    const html = `
+      <div class="print-header">
+        <div>
+          ${settings.logo ? `<img src="${settings.logo}" class="print-logo">` : `<div style="font-size:20px;font-weight:700;">${escapeHtml(settings.businessName)}</div>`}
+          <div class="text-sm text-secondary mt-1">${escapeHtml(settings.address)}<br>${escapeHtml(settings.phone)} · ${escapeHtml(settings.email)}</div>
+        </div>
+        <div class="text-right">
+          <h2 style="font-size:18px;">STATEMENT OF ACCOUNT</h2>
+          <div class="text-sm text-secondary">Date: ${Format.date(todayISO())}</div>
+          <div class="text-sm text-secondary">Customer: ${escapeHtml(c.name)}</div>
+        </div>
+      </div>
+      <table class="print-table">
+        <thead><tr><th>Invoice #</th><th>Date</th><th>Due Date</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead>
+        <tbody>${invoices.map(i => `
+          <tr><td>${escapeHtml(i.invoiceNumber)}</td><td>${Format.date(i.date)}</td><td>${Format.date(i.dueDate)}</td><td>${Format.money(i.total)}</td><td>${Format.money(i.amountPaid||0)}</td><td>${Format.money(i.total-(i.amountPaid||0))}</td><td>${escapeHtml(i.status)}</td></tr>
+        `).join('')}</tbody>
+      </table>
+      <div class="print-total">Outstanding Balance: ${Format.money(outstanding)}</div>
+      <div class="mt-4 text-sm text-secondary">Payment instructions: ${escapeHtml(settings.mpesaNumber)} · ${escapeHtml(settings.bankDetails)}</div>
+      <div class="signature-area"><div class="signature-line">Authorized Signature</div><div class="signature-line">Customer Signature</div></div>
+    `;
+    Modal.open('Customer Statement', html, `<button class="btn btn-primary" onclick="window.print()">Print / Save PDF</button><button class="btn btn-secondary" onclick="SiteCredit.Modal.close()">Close</button>`, 'lg');
+  },
+
+  showReminder(invoiceId) {
+    const inv = State.find('invoices', invoiceId);
+    const cust = State.find('customers', inv.customerId);
+    const stages = [
+      { key: 'beforeDue', label: 'Before due' },
+      { key: 'onDue', label: 'On due' },
+      { key: 'after7', label: '7 days overdue' },
+      { key: 'after14', label: '14 days overdue' },
+      { key: 'after30', label: '30 days overdue' },
+      { key: 'after60', label: '60 days overdue' },
+      { key: 'after90', label: '90+ days overdue' },
+    ];
+    Modal.open('Send Payment Reminder', `
+      <p class="text-sm text-secondary mb-3">Invoice ${escapeHtml(inv.invoiceNumber)} · ${escapeHtml(cust.name)} · Outstanding: ${Format.money(inv.total - (inv.amountPaid || 0))}</p>
+      <div class="form-group">
+        <label class="form-label">Reminder Stage</label>
+        <select class="form-select" id="reminderStage">${stages.map(s => `<option value="${s.key}">${s.label}</option>`).join('')}</select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Message Preview</label>
+        <textarea class="form-textarea" id="reminderText" style="min-height:120px;"></textarea>
+      </div>
+    `, `
+      <button class="btn btn-secondary" onclick="SiteCredit.Modal.close()">Cancel</button>
+      <button class="btn btn-success" id="sendWhatsAppBtn">📱 WhatsApp</button>
+      <button class="btn btn-secondary" id="sendSMSBtn">💬 SMS</button>
+    `);
+    const updatePreview = () => {
+      const stage = $('#reminderStage').value;
+      $('#reminderText').value = Dunning.buildMessage(invoiceId, stage);
+    };
+    updatePreview();
+    $('#reminderStage').onchange = updatePreview;
+    $('#sendWhatsAppBtn').onclick = () => { Dunning.sendWhatsApp(invoiceId, $('#reminderStage').value); Modal.close(); State.audit('reminder_sent', { invoiceId, channel: 'whatsapp' }); Toast.success('WhatsApp opened'); };
+    $('#sendSMSBtn').onclick = () => { Dunning.sendSMS(invoiceId, $('#reminderStage').value); Modal.close(); State.audit('reminder_sent', { invoiceId, channel: 'sms' }); Toast.success('SMS opened'); };
+  },
+
+  showNewCustomerModal() {
+    Modal.open('New Customer', `
+      <form id="newCustomerForm">
+        <div class="form-group"><label class="form-label">Name <span class="required">*</span></label><input class="form-input" id="ncName" required></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Type</label><select class="form-select" id="ncType"><option>individual</option><option>fundi</option><option>contractor</option><option>developer</option><option>company</option><option>institution</option></select></div>
+          <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="ncPhone"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Credit Limit</label><input class="form-input" type="number" id="ncLimit" value="500000"></div>
+          <div class="form-group"><label class="form-label">Payment Terms (days)</label><input class="form-input" type="number" id="ncTerms" value="30"></div>
+        </div>
+      </form>
+    `, `<button class="btn btn-secondary" onclick="SiteCredit.Modal.close()">Cancel</button>
+        <button class="btn btn-primary" id="saveCustomerBtn">Save Customer</button>`);
+    $('#saveCustomerBtn').onclick = () => {
+      const name = $('#ncName').value.trim();
+      if (!name) { Toast.error('Customer name is required'); return; }
+      State.add('customers', { name, type: $('#ncType').value, phone: $('#ncPhone').value, creditLimit: Number($('#ncLimit').value) || 0, paymentTerms: Number($('#ncTerms').value) || 30, creditStatus: 'active', outstanding: 0, createdAt: nowISO() });
+      State.audit('customer_created', { name });
+      Modal.close();
+      Toast.success('Customer created');
+      this.renderCustomers();
+    };
+  },
+
+  showNewProjectModal() {
+    const customers = State.getCollection('customers');
+    Modal.open('New Project', `
+      <div class="form-group"><label class="form-label">Project Name <span class="required">*</span></label><input class="form-input" id="npName" required></div>
+      <div class="form-group"><label class="form-label">Customer</label><select class="form-select" id="npCustomer">${customers.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}</select></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Location</label><input class="form-input" id="npLocation"></div>
+        <div class="form-group"><label class="form-label">Budget</label><input class="form-input" type="number" id="npBudget" value="1000000"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Start Date</label><input class="form-input" type="date" id="npStart" value="${todayISO()}"></div>
+        <div class="form-group"><label class="form-label">End Date</label><input class="form-input" type="date" id="npEnd"></div>
+      </div>
+    `, `<button class="btn btn-secondary" onclick="SiteCredit.Modal.close()">Cancel</button>
+        <button class="btn btn-primary" id="saveProjectBtn">Save Project</button>`);
+    $('#saveProjectBtn').onclick = () => {
+      const name = $('#npName').value.trim();
+      if (!name) { Toast.error('Project name is required'); return; }
+      State.add('projects', {
+        name, customerId: $('#npCustomer').value, location: $('#npLocation').value,
+        budget: Number($('#npBudget').value) || 0, startDate: $('#npStart').value, endDate: $('#npEnd').value,
+        status: 'active', createdAt: nowISO(),
+        image: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600&q=70&auto=format&fit=crop'
+      });
+      State.audit('project_created', { name });
+      Modal.close();
+      Toast.success('Project created');
+      this.renderProjects();
+    };
+  },
+
+  showNewOrderModal() {
+    const customers = State.getCollection('customers');
+    const projects = State.getCollection('projects');
+    const products = State.getCollection('products');
+    Modal.open('New Order', `
+      <div class="form-group"><label class="form-label">Customer</label><select class="form-select" id="noCustomer">${customers.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-label">Project</label><select class="form-select" id="noProject"><option value="">— None —</option>${projects.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-label">Product</label><select class="form-select" id="noProduct">${products.map(p => `<option value="${p.id}">${escapeHtml(p.name)} — ${Format.money(p.unitPrice)}</option>`).join('')}</select></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Quantity</label><input class="form-input" type="number" id="noQty" value="1" min="1"></div>
+        <div class="form-group"><label class="form-label">Payment Type</label><select class="form-select" id="noPayType"><option value="credit">Credit</option><option value="cash">Cash</option></select></div>
+      </div>
+    `, `<button class="btn btn-secondary" onclick="SiteCredit.Modal.close()">Cancel</button>
+        <button class="btn btn-primary" id="saveOrderBtn">Create Order</button>`);
+    $('#saveOrderBtn').onclick = () => {
+      const customerId = $('#noCustomer').value;
+      const productId = $('#noProduct').value;
+      const qty = Number($('#noQty').value) || 1;
+      const product = State.find('products', productId);
+      const customer = State.find('customers', customerId);
+      const payType = $('#noPayType').value;
+      if (payType === 'credit') {
+        const invoices = State.getCollection('invoices').filter(i => i.customerId === customerId);
+        const outstanding = invoices.reduce((s, i) => s + (i.total - (i.amountPaid || 0)), 0);
+        const newTotal = qty * product.unitPrice * 1.16;
+        if (outstanding + newTotal > customer.creditLimit || customer.stopSupply) {
+          Toast.error(`Credit limit exceeded or supply stopped for ${customer.name}.`);
+          return;
+        }
+      }
+      const subtotal = qty * product.unitPrice;
+      const tax = subtotal * 0.16;
+      State.add('orders', {
+        orderNumber: 'ORD-' + String(1001 + State.getCollection('orders').length),
+        customerId, projectId: $('#noProject').value || null,
+        date: todayISO(), items: [{ productId, name: product.name, qty, unit: product.unit, unitPrice: product.unitPrice, subtotal }],
+        subtotal, tax, total: subtotal + tax, status: 'confirmed', paymentType: payType,
+        createdBy: State.currentUser.id, createdAt: nowISO()
+      });
+      State.audit('order_created', { customerId, productId, qty });
+      Modal.close();
+      Toast.success('Order created');
+      this.navigate('orders');
+    };
+  },
+
+  showRecordPaymentModal() {
+    const invoices = State.getCollection('invoices').filter(i => i.status !== 'paid');
+    if (!invoices.length) { Toast.info('No outstanding invoices'); return; }
+    Modal.open('Record Payment', `
+      <div class="form-group"><label class="form-label">Invoice</label><select class="form-select" id="rpInvoice">${invoices.map(i => `<option value="${i.id}">${escapeHtml(i.invoiceNumber)} — ${Format.money(i.total - (i.amountPaid||0))} due</option>`).join('')}</select></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Amount</label><input class="form-input" type="number" id="rpAmount" required></div>
+        <div class="form-group"><label class="form-label">Method</label><select class="form-select" id="rpMethod"><option>M-Pesa</option><option>Bank Transfer</option><option>Cash</option><option>Cheque</option></select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" id="rpDate" value="${todayISO()}"></div>
+    `, `<button class="btn btn-secondary" onclick="SiteCredit.Modal.close()">Cancel</button>
+        <button class="btn btn-primary" id="savePaymentBtn">Record Payment</button>`);
+    const sel = $('#rpInvoice');
+    const updateAmount = () => {
+      const inv = State.find('invoices', sel.value);
+      if (inv) $('#rpAmount').value = (inv.total - (inv.amountPaid || 0)).toFixed(2);
+    };
+    sel.addEventListener('change', updateAmount);
+    updateAmount();
+    $('#savePaymentBtn').onclick = () => {
+      const invId = sel.value;
+      const amount = Number($('#rpAmount').value);
+      if (!amount || amount <= 0) { Toast.error('Enter a valid amount'); return; }
+      const inv = State.find('invoices', invId);
+      const newPaid = (inv.amountPaid || 0) + amount;
+      State.update('invoices', invId, { amountPaid: newPaid, status: newPaid >= inv.total ? 'paid' : 'partial' });
+      State.add('payments', {
+        receiptNumber: 'RCP-' + String(1001 + State.getCollection('payments').length),
+        invoiceId: invId, customerId: inv.customerId, amount, method: $('#rpMethod').value,
+        date: $('#rpDate').value, recordedBy: State.currentUser.id, createdAt: nowISO()
+      });
+      State.audit('payment_recorded', { invoiceId: invId, amount });
+      Modal.close();
+      Toast.success('Payment recorded');
+      this.navigate(State.currentPage);
+    };
+  },
+
+  /* ---------- PROJECTS ---------- */
+  renderProjects() {
+    const projects = State.getCollection('projects');
+    const invoices = State.getCollection('invoices');
+    const customers = State.getCollection('customers');
+    $('#contentArea').innerHTML = `
+      <div class="page-view active">
+        ${this.pageHeader('Project Ledger', `${projects.length} project(s)`, `<button class="btn btn-primary btn-sm" onclick="SiteCredit.App.showNewProjectModal()">+ New Project</button>`)}
+        <div class="grid grid-3">
+          ${projects.map(p => {
+            const inv = invoices.filter(i => i.projectId === p.id);
+            const invoiced = inv.reduce((s, i) => s + i.total, 0);
+            const paid = inv.reduce((s, i) => s + (i.amountPaid || 0), 0);
+            const margin = p.budget > 0 ? ((p.budget - invoiced) / p.budget * 100) : 0;
+            const marginStatus = margin > 20 ? 'profitable' : margin > 0 ? 'marginal' : 'loss_making';
+            const cust = customers.find(c => c.id === p.customerId);
+            return `<div class="card cursor-pointer" onclick="SiteCredit.App.showProjectDetail('${p.id}')">
+              <img src="${p.image}" class="card-hero" alt="${escapeHtml(p.name)}" onerror="this.style.display='none'">
+              <h4 class="font-semibold mb-1">${escapeHtml(p.name)}</h4>
+              <p class="text-sm text-secondary mb-2">${escapeHtml(cust ? cust.name : '')}</p>
+              <div class="flex gap-1 mb-2">${Format.statusBadge(p.status)} ${Format.statusBadge(marginStatus)}</div>
+              <div class="text-sm"><span class="text-muted">Budget:</span> ${Format.money(p.budget)}</div>
+              <div class="text-sm"><span class="text-muted">Invoiced:</span> ${Format.money(invoiced)}</div>
+              <div class="text-sm font-semibold"><span class="text-muted">Outstanding:</span> ${Format.money(invoiced - paid)}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  },
+
+  showProjectDetail(id) {
+    const p = State.find('projects', id);
+    if (!p) return;
+    const invoices = State.getCollection('invoices').filter(i => i.projectId === id);
+    const deliveries = State.getCollection('deliveries').filter(d => d.projectId === id);
+    const disputes = State.getCollection('disputes').filter(d => d.projectId === id);
+    const invoiced = invoices.reduce((s, i) => s + i.total, 0);
+    const paid = invoices.reduce((s, i) => s + (i.amountPaid || 0), 0);
+    const disputed = disputes.reduce((s, d) => s + d.amount, 0);
+    const margin = p.budget > 0 ? ((p.budget - invoiced) / p.budget * 100) : 0;
+    const marginStatus = margin > 20 ? 'profitable' : margin > 0 ? 'marginal' : 'loss_making';
+
+    Modal.open(`Project: ${escapeHtml(p.name)}`, `
+      <img src="${p.image}" style="width:100%;height:180px;object-fit:cover;border-radius:8px;margin-bottom:12px;" onerror="this.style.display='none'">
+      <div class="grid grid-3 gap-2 mb-3">
+        <div class="kpi-card"><div class="kpi-label">Budget</div><div class="kpi-value" style="font-size:16px;">${Format.money(p.budget)}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Invoiced</div><div class="kpi-value" style="font-size:16px;">${Format.money(invoiced)}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Paid</div><div class="kpi-value" style="font-size:16px;">${Format.money(paid)}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Outstanding</div><div class="kpi-value" style="font-size:16px;">${Format.money(invoiced - paid)}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Disputed</div><div class="kpi-value" style="font-size:16px;">${Format.money(disputed)}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Margin</div><div class="kpi-value" style="font-size:16px;">${margin.toFixed(1)}%</div></div>
+      </div>
+      <div class="mb-2">${Format.statusBadge(p.status)} ${Format.statusBadge(marginStatus)}</div>
+      <h4 class="font-semibold mb-2">Invoices (${invoices.length})</h4>
+      ${invoices.length ? `<div class="table-wrapper"><table><thead><tr><th>Invoice</th><th>Total</th><th>Paid</th><th>Status</th></tr></thead><tbody>${invoices.map(i => `<tr><td>${escapeHtml(i.invoiceNumber)}</td><td>${Format.money(i.total)}</td><td>${Format.money(i.amountPaid||0)}</td><td>${Format.statusBadge(i.status)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="text-sm text-muted">No invoices</p>'}
+      <h4 class="font-semibold mt-3 mb-2">Deliveries (${deliveries.length})</h4>
+      ${deliveries.length ? `<div class="table-wrapper"><table><thead><tr><th>Delivery</th><th>Date</th><th>Status</th></tr></thead><tbody>${deliveries.map(d => `<tr><td>${escapeHtml(d.deliveryNumber)}</td><td>${Format.date(d.date)}</td><td>${Format.statusBadge(d.status)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="text-sm text-muted">No deliveries</p>'}
+    `, `<button class="btn btn-secondary" onclick="SiteCredit.Modal.close()">Close</button>`, 'lg');
+  },
+
+  /* ---------- ORDERS ---------- */
+  renderOrders() {
+    const orders = State.getCollection('orders');
+    const invoices = State.getCollection('invoices');
+    const customers = State.getCollection('customers');
+    const getName = (id) => { const c = customers.find(x => x.id === id); return c ? c.name : '—'; };
+    $('#contentArea').innerHTML = `
+      <div class="page-view active">
+        ${this.pageHeader('Orders & Invoices', `${orders.length} orders · ${invoices.length} invoices`, `
+          <button class="btn btn-primary btn-sm" onclick="SiteCredit.App.showNewOrderModal()">+ New Order</button>
+          <button class="btn btn-secondary btn-sm" onclick="SiteCredit.App.showNewInvoiceModal()">+ Create Invoice</button>
+        `)}
+        <div class="card mb-3">
+          <div class="card-header"><h3 class="card-title">Sales Orders</h3></div>
+          ${orders.length ? `<div class="table-wrapper"><table>
+            <thead><tr><th>Order #</th><th>Customer</th><th>Date</th><th>Items</th><th class="text-right">Total</th><th>Type</th><th>Status</th></tr></thead>
+            <tbody>${orders.slice().reverse().map(o => `<tr>
+              <td class="font-semibold">${escapeHtml(o.orderNumber)}</td>
+              <td>${escapeHtml(getName(o.customerId))}</td>
+              <td>${Format.date(o.date)}</td>
+              <td>${(o.items||[]).length}</td>
+              <td class="text-right font-semibold">${Format.money(o.total)}</td>
+              <td>${Format.statusBadge(o.paymentType)}</td>
+              <td>${Format.statusBadge(o.status)}</td>
+            </tr>`).join('')}</tbody>
+          </table></div>` : this.emptyState('No orders yet')}
+        </div>
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">Invoices</h3></div>
+          ${invoices.length ? `<div class="table-wrapper"><table>
+            <thead><tr><th>Invoice #</th><th>Customer</th><th>Due Date</th><th class="text-right">Total</th><th class="text-right">Paid</th><th>Status</th><th></th></tr></thead>
+            <tbody>${invoices.slice().reverse().map(i => `<tr>
+              <td class="font-semibold">${escapeHtml(i.invoiceNumber)}</td>
+              <td>${escapeHtml(getName(i.customerId))}</td>
+              <td>${Format.date(i.dueDate)}</td>
+              <td class="text-right">${Format.money(i.total)}</td>
+              <td class="text-right">${Format.money(i.amountPaid||0)}</td>
+              <td>${Format.statusBadge(i.status)}</td>
+              <td><button class="btn btn-ghost btn-sm" onclick="SiteCredit.App.showInvoiceDetail('${i.id}')">View</button></td>
+            </tr>`).join('')}</tbody>
+          </table></div>` : this.emptyState('No invoices yet')}
+        </div>
+      </div>
+    `;
+  },
+
+  showNewInvoiceModal() {
+    const orders = State.getCollection('orders').filter(o => o.status !== 'invoiced');
+    if (!orders.length) { Toast.info('No uninvoiced orders'); return; }
+    Modal.open('Create Invoice from Order', `
+      <div class="form-group"><label class="form-label">Select Order</label><select class="form-select" id="invOrder">${orders.map(o => `<option value="${o.id}">${escapeHtml(o.orderNumber)} — ${Format.money(o.total)}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-label">Due Date</label><input class="form-input" type="date" id="invDueDate" value="${new Date(Date.now() + 30*86400000).toISOString().slice(0,10)}"></div>
+    `, `<button class="btn btn-secondary" onclick="SiteCredit.Modal.close()">Cancel</button>
+        <button class="btn btn-primary" id="createInvoiceBtn">Create Invoice</button>`);
+    $('#createInvoiceBtn').onclick = () => {
+      const orderId = $('#invOrder').value;
+      const order = State.find('orders', orderId);
+      const settings = State.getCollection('settings');
+      State.add('invoices', {
+        invoiceNumber: settings.invoicePrefix + '-' + String(2001 + State.getCollection('invoices').length),
+        orderId, customerId: order.customerId, projectId: order.projectId,
+        date: todayISO(), dueDate: $('#invDueDate').value,
+        items: order.items, subtotal: order.subtotal, tax: order.tax, total: order.total,
+        amountPaid: 0, status: 'sent', transportCost: 0, createdAt: nowISO()
+      });
+      State.update('orders', orderId, { status: 'invoiced' });
+      State.audit('invoice_created', { orderId });
+      Modal.close();
+      Toast.success('Invoice created');
+      this.renderOrders();
+    };
+  },
+
+  showInvoiceDetail(id) {
+    const inv = State.find('invoices', id);
+    if (!inv) return;
+    const c = State.find('customers', inv.customerId);
+    const settings = State.getCollection('settings');
+    const html = `
+      <div class="print-header">
+        <div>
+          ${settings.logo ? `<img src="${settings.logo}" class="print-logo">` : `<div style="font-size:20px;font-weight:700;">${escapeHtml(settings.businessName)}</div>`}
+          <div class="text-sm text-secondary mt-1">${escapeHtml(settings.address)}<br>${escapeHtml(settings.phone)} · ${escapeHtml(settings.email)}<br>PIN: ${escapeHtml(settings.pin)}</div>
+        </div>
+        <div class="text-right">
+          <h2 style="font-size:20px;">INVOICE</h2>
+          <div class="text-sm">${escapeHtml(inv.invoiceNumber)}</div>
+          <div class="text-sm text-secondary">Date: ${Format.date(inv.date)}</div>
+          <div class="text-sm text-secondary">Due: ${Format.date(inv.dueDate)}</div>
+        </div>
+      </div>
+      <div class="mb-3"><strong>Bill To:</strong> ${escapeHtml(c ? c.name : '—')}<br><span class="text-sm text-secondary">${escapeHtml(c ? c.address : '')}<br>${escapeHtml(c ? c.phone : '')}</span></div>
+      <table class="print-table">
+        <thead><tr><th>Item</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th></tr></thead>
+        <tbody>${(inv.items||[]).map(i => `<tr><td>${escapeHtml(i.name)}</td><td>${fmtQty(i.qty)} ${escapeHtml(i.unit)}</td><td>${Format.money(i.unitPrice)}</td><td>${Format.money(i.subtotal)}</td></tr>`).join('')}</tbody>
+      </table>
+      <div class="text-right text-sm">Subtotal: ${Format.money(inv.subtotal)}<br>Tax (16%): ${Format.money(inv.tax)}<br><strong style="font-size:18px;">Total: ${Format.money(inv.total)}</strong></div>
+      <div class="mt-3 text-sm text-secondary">Payment: ${escapeHtml(settings.mpesaNumber)} · ${escapeHtml(settings.bankDetails)}</div>
+      <div class="signature-area"><div class="signature-line">Authorized Signature</div><div class="signature-line">Customer Signature</div></div>
+    `;
+    Modal.open('Invoice', html, `<button class="btn btn-primary" onclick="window.print()">Print / Save PDF</button><button class="btn btn-secondary" onclick="SiteCredit.Modal.close()">Close</button>`, 'lg');
+  },
+
+  /* ---------- DELIVERIES ---------- */
+  renderDeliveries() {
+    const deliveries = State.getCollection('deliveries');
+    const customers = State.getCollection('customers');
+    const projects = State.getCollection('projects');
+    const getName = (id) => { const c = customers.find(x => x.id === id); return c ? c.name : '—'; };
+    const getProject = (id) => { const p = projects.find(x => x.id === id); return p ? p.name : '—'; };
+    $('#contentArea').innerHTML = `
+      <div class="page-view active">
+        ${this.pageHeader('Delivery Verification', `${deliveries.length} delivery record(s)`, `<button class="btn btn-primary btn-sm" onclick="SiteCredit.App.showNewDeliveryModal()">+ New Delivery</button>`)}
+        <div class="card">
+          ${deliveries.length ? `<div class="table-wrapper"><table>
+            <thead><tr><th>Delivery #</th><th>Customer</th><th>Project</th><th>Date</th><th>Driver</th><th>Status</th><th></th></tr></thead>
+            <tbody>${deliveries.slice().reverse().map(d => `<tr>
+              <td class="font-semibold">${escapeHtml(d.deliveryNumber)}</td>
+              <td>${escapeHtml(getName(d.customerId))}</td>
+              <td class="text-sm">${escapeHtml(getProject(d.projectId))}</td>
+              <td>${Format.date(d.date)}</td>
+              <td class="text-sm">${d.driverId ? 'Assigned' : '—'}</td>
+              <td>${Format.statusBadge(d.status)}</td>
+              <td><button class="btn btn-ghost btn-sm" onclick="SiteCredit.App.showDeliveryDetail('${d.id}')">View</button></td>
+            </tr>`).join('')}</tbody>
+          </table></div>` : this.emptyState('No deliveries yet')}
+        </div>
+      </div>
+    `;
+  },
+
+  showNewDeliveryModal() {
+    const orders = State.getCollection('orders');
+    if (!orders.length) { Toast.info('Create an order first.'); return; }
+    Modal.open('New Delivery', `
+      <div class="form-group"><label class="form-label">Order</label><select class="form-select" id="ndOrder">${orders.map(o => `<option value="${o.id}">${escapeHtml(o.orderNumber)}</option>`).join('')}</select></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" id="ndDate" value="${todayISO()}"></div>
+        <div class="form-group"><label class="form-label">Vehicle</label><select class="form-select" id="ndVehicle">${State.getCollection('vehicles').map(v => `<option value="${v.id}">${escapeHtml(v.plate)}</option>`).join('')}</select></div>
+      </div>
+    `, `<button class="btn btn-secondary" onclick="SiteCredit.Modal.close()">Cancel</button>
+        <button class="btn btn-primary" id="saveDeliveryBtn">Create Delivery</button>`);
+    $('#saveDeliveryBtn').onclick = () => {
+      const order = State.find('orders', $('#ndOrder').value);
+      if (!order) return;
+      State.add('deliveries', {
+        deliveryNumber: 'DEL-' + String(3001 + State.getCollection('deliveries').length),
+        orderId: order.id, customerId: order.customerId, projectId: order.projectId,
+        date: $('#ndDate').value, driverId: 'user_4', vehicleId: $('#ndVehicle').value,
+        status: 'in_transit', items: order.items.map(i => ({ ...i, expectedQty: i.qty, deliveredQty: 0 })),
+        recipientName: '', signature: '', gps: null, createdAt: nowISO()
+      });
+      State.audit('delivery_created', { orderId: order.id });
+      Modal.close();
+      Toast.success('Delivery created');
+      this.renderDeliveries();
+    };
+  },
+
+  showDeliveryDetail(id) {
+    const d = State.find('deliveries', id);
+    if (!d) return;
+    const c = State.find('customers', d.customerId);
+    const p = State.find('projects', d.projectId);
+    Modal.open(`Delivery ${escapeHtml(d.deliveryNumber)}`, `
+      <div class="grid grid-2 gap-3 mb-3">
+        <div><span class="text-xs text-muted">Customer</span><div class="font-semibold">${escapeHtml(c ? c.name : '—')}</div></div>
+        <div><span class="text-xs text-muted">Project</span><div class="font-semibold">${escapeHtml(p ? p.name : '—')}</div></div>
+        <div><span class="text-xs text-muted">Date</span><div class="font-semibold">${Format.date(d.date)}</div></div>
+        <div><span class="text-xs text-muted">Status</span><div>${Format.statusBadge(d.status)}</div></div>
+      </div>
+      <h4 class="font-semibold mb-2">Items</h4>
+      <div class="table-wrapper"><table><thead><tr><th>Item</th><th>Expected</th><th>Delivered</th><th>Unit</th></tr></thead><tbody>${(d.items||[]).map(i => `<tr><td>${escapeHtml(i.name)}</td><td>${fmtQty(i.expectedQty)}</td><td>${fmtQty(i.deliveredQty)}</td><td>${escapeHtml(i.unit)}</td></tr>`).join('')}</tbody></table></div>
+      ${d.recipientName ? `<p class="mt-3 text-sm"><strong>Received by:</strong> ${escapeHtml(d.recipientName)}</p>` : ''}
+      ${d.signature ? `<p class="text-sm text-success">✓ Signature captured</p>` : '<p class="text-sm text-warning">⚠ Signature pending</p>'}
+    `, `<button class="btn btn-secondary" onclick="SiteCredit.Modal.close()">Close</button>`);
+  },
+
+  /* ---------- DISPUTES ---------- */
+  renderDisputes() {
+    const disputes = State.getCollection('disputes');
+    const customers = State.getCollection('customers');
+    const getName = (id) => { const c = customers.find(x => x.id === id); return c ? c.name : '—'; };
+    $('#contentArea').innerHTML = `
+      <div class="page-view active">
+        ${this.pageHeader('Disputes & Returns', `${disputes.length} case(s)`, `<button class="btn btn-primary btn-sm" onclick="SiteCredit.App.showNewDisputeModal()">+ New Dispute</button>`)}
+        <div class="card">
+          ${disputes.length ? `<div class="table-wrapper"><table>
+            <thead><tr><th>Case #</th><th>Type</th><th>Customer</th><th class="text-right">Amount</th><th>Priority</th><th>Status</th><th>Assigned</th><th></th></tr></thead>
+            <tbody>${disputes.map(d => `<tr>
+              <td class="font-semibold">${escapeHtml(d.disputeNumber)}</td>
+              <td>${escapeHtml(d.type.replace(/_/g,' '))}</td>
+              <td>${escapeHtml(getName(d.customerId))}</td>
+              <td class="text-right font-semibold">${Format.money(d.amount)}</td>
+              <td>${Format.statusBadge(d.priority)}</td>
+              <td>${Format.statusBadge(d.status)}</td>
+              <td class="text-sm">${escapeHtml(d.assignedTo || '—')}</td>
+              <td>${d.status !== 'resolved' ? `<button class="btn btn-ghost btn-sm" onclick="SiteCredit.App.resolveDispute('${d.id}')">Resolve</button>` : ''}</td>
+            </tr>`).join('')}</tbody>
+          </table></div>` : this.emptyState('No disputes')}
+        </div>
+      </div>
+    `;
+  },
+
+  resolveDispute(id) {
+    const d = State.find('disputes', id);
+    if (!d) return;
+    Modal.confirm('Resolve Dispute', `Mark dispute ${d.disputeNumber} as resolved? Amount: ${Format.money(d.amount)}`, () => {
+      State.update('disputes', id, { status: 'resolved', resolvedAt: nowISO() });
+      State.audit('dispute_resolved', { disputeId: id });
+      Toast.success('Dispute resolved');
+      this.renderDisputes();
+    });
+  },
+
+  showNewDisputeModal() {
+    const customers = State.getCollection('customers');
+    Modal.open('New Dispute', `
+      <div class="form-group"><label class="form-label">Customer</label><select class="form-select" id="ndCust">${customers.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}</select></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Type</label><select class="form-select" id="ndType"><option>shortage</option><option>damage</option><option>wrong_item</option><option>pricing_error</option><option>non_delivery</option><option>quality_issue</option><option>return_request</option></select></div>
+        <div class="form-group"><label class="form-label">Amount</label><input class="form-input" type="number" id="ndAmount" value="0"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="ndDesc"></textarea></div>
+    `, `<button class="btn btn-secondary" onclick="SiteCredit.Modal.close()">Cancel</button>
+        <button class="btn btn-primary" id="saveDisputeBtn">Create Dispute</button>`);
+    $('#saveDisputeBtn').onclick = () => {
+      State.add('disputes', {
+        disputeNumber: 'DSP-' + String(1001 + State.getCollection('disputes').length),
+        type: $('#ndType').value, customerId: $('#ndCust').value,
+        amount: Number($('#ndAmount').value) || 0, description: $('#ndDesc').value,
+        status: 'open', priority: 'medium', assignedTo: State.currentUser.id, createdAt: nowISO()
+      });
+      State.audit('dispute_created', {});
+      Modal.close();
+      Toast.success('Dispute created');
+      this.renderDisputes();
+    };
+  },
+
+  /* ---------- COLLECTIONS ---------- */
+  renderCollections() {
+    const invoices = State.getCollection('invoices').filter(i => i.status !== 'paid');
+    const customers = State.getCollection('customers');
+    const getName = (id) => { const c = customers.find(x => x.id === id); return c ? c.name : '—'; };
+    const today = new Date();
+    const aging = (inv) => {
+      const days = daysBetween(inv.dueDate, today);
+      if (days <= 0) return 'Current';
+      if (days <= 30) return '1-30';
+      if (days <= 60) return '31-60';
+      if (days <= 90) return '61-90';
+      return '90+';
+    };
+    const buckets = { Current: 0, '1-30': 0, '31-60': 0, '61-90': 0, '90+': 0 };
+    invoices.forEach(i => { buckets[aging(i)] += (i.total - (i.amountPaid || 0)); });
+
+    $('#contentArea').innerHTML = `
+      <div class="page-view active">
+        ${this.pageHeader('Collections Dashboard', `${invoices.length} outstanding invoice(s)`, `<button class="btn btn-primary btn-sm" onclick="SiteCredit.App.showRecordPaymentModal()">Record Payment</button>`)}
+        <div class="grid grid-4 mb-4">
+          ${Object.entries(buckets).map(([k, v]) => `
+            <div class="kpi-card ${k === '90+' && v > 0 ? 'kpi-danger' : k === '61-90' && v > 0 ? 'kpi-warning' : ''}">
+              <div class="kpi-label">${k} days</div>
+              <div class="kpi-value" style="font-size:18px;">${Format.money(v)}</div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="card mb-4">
+          <div class="card-header"><h3 class="card-title">Aging Bar Chart</h3></div>
+          ${Charts.bar(Object.values(buckets), { width: 700, height: 220, color: 'var(--chart-4)', labels: Object.keys(buckets) })}
+        </div>
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">Outstanding Invoices</h3></div>
+          ${invoices.length ? `<div class="table-wrapper"><table>
+            <thead><tr><th>Invoice</th><th>Customer</th><th>Due Date</th><th>Days Overdue</th><th class="text-right">Balance</th><th>Bucket</th><th></th></tr></thead>
+            <tbody>${invoices.sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate)).map(i => {
+              const days = daysBetween(i.dueDate, today);
+              return `<tr>
+                <td class="font-semibold">${escapeHtml(i.invoiceNumber)}</td>
+                <td>${escapeHtml(getName(i.customerId))}</td>
+                <td>${Format.date(i.dueDate)}</td>
+                <td class="${days > 0 ? 'text-danger font-semibold' : 'text-muted'}">${days > 0 ? days + ' days' : '—'}</td>
+                <td class="text-right font-semibold">${Format.money(i.total - (i.amountPaid||0))}</td>
+                <td>${aging(i)}</td>
+                <td><button class="btn btn-ghost btn-sm" onclick="SiteCredit.App.showReminder('${i.id}')">Remind</button></td>
+              </tr>`;
+            }).join('')}</tbody>
+          </table></div>` : this.emptyState('No outstanding invoices')}
+        </div>
+      </div>
+    `;
+  },
+
+  /* ---------- CREDIT CONTROL ---------- */
+  renderCreditControl() {
+    const customers = State.getCollection('customers');
+    const invoices = State.getCollection('invoices');
+    const getOutstanding = (id) => invoices.filter(i => i.customerId === id).reduce((s, i) => s + (i.total - (i.amountPaid || 0)), 0);
+    $('#contentArea').innerHTML = `
+      <div class="page-view active">
+        ${this.pageHeader('Credit Control', 'Monitor credit exposure and stop-supply rules')}
+        <div class="card">
+          <div class="table-wrapper"><table>
+            <thead><tr><th>Customer</th><th class="text-right">Outstanding</th><th class="text-right">Limit</th><th>Utilization</th><th>Status</th><th>Stop Supply</th></tr></thead>
+            <tbody>${customers.map(c => {
+              const out = getOutstanding(c.id);
+              const util = c.creditLimit > 0 ? clamp(out / c.creditLimit * 100, 0, 100) : 0;
+              return `<tr>
+                <td><div class="product-cell">${this.avatar(c.name, 32)}<span class="font-semibold">${escapeHtml(c.name)}</span></div></td>
+                <td class="text-right">${Format.money(out)}</td>
+                <td class="text-right">${Format.money(c.creditLimit)}</td>
+                <td style="min-width:100px;"><div class="progress-bar"><div class="progress-bar-fill" style="width:${util}%; background:${util>80?'var(--danger)':util>50?'var(--warning)':'var(--success)'};"></div></div><span class="text-xs text-muted">${util.toFixed(0)}%</span></td>
+                <td>${Format.statusBadge(c.creditStatus)}</td>
+                <td>${c.stopSupply ? '<span class="badge badge-danger">Stopped</span>' : '<span class="badge badge-success">Active</span>'}</td>
+              </tr>`;
+            }).join('')}</tbody>
+          </table></div>
+        </div>
+      </div>
+    `;
+  },
+
+  /* ---------- RISK SCORING ---------- */
+  renderRiskScoring() {
+    const customers = State.getCollection('customers');
+    const scores = customers.map(c => RiskEngine.calculate(c.id));
+    $('#contentArea').innerHTML = `
+      <div class="page-view active">
+        ${this.pageHeader('Contractor Risk Scoring', 'Transparent, weighted risk assessment')}
+        <div class="card mb-4">
+          <div class="card-header"><h3 class="card-title">Risk Distribution</h3></div>
+          ${Charts.bar(scores.map(s => s.score), { width: 700, height: 200, color: 'var(--chart-5)', labels: customers.map(c => c.name.slice(0, 10)) })}
+        </div>
+        <div class="card">
+          <div class="table-wrapper"><table>
+            <thead><tr><th>Customer</th><th>Risk Score</th><th>Grade</th><th>Reasons</th><th>Recommended Action</th></tr></thead>
+            <tbody>${customers.map((c, i) => {
+              const r = scores[i];
+              return `<tr>
+                <td class="font-semibold">${escapeHtml(c.name)}</td>
+                <td><strong style="color:${r.score >= 70 ? 'var(--success)' : r.score >= 40 ? 'var(--warning)' : 'var(--danger)'}">${r.score}/100</strong></td>
+                <td><span class="badge ${r.grade === 'A' ? 'badge-success' : r.grade === 'B' ? 'badge-info' : r.grade === 'C' ? 'badge-warning' : 'badge-danger'}">${r.grade}</span></td>
+                <td class="text-sm text-secondary">${r.reasons.join(', ') || 'No issues'}</td>
+                <td>${escapeHtml(r.action)}</td>
+              </tr>`;
+            }).join('')}</tbody>
+          </table></div>
+        </div>
+      </div>
+    `;
+  },
+
+  /* ---------- PROMISES TO PAY ---------- */
+  renderPromises() {
+    const promises = State.getCollection('promisesToPay');
+    const customers = State.getCollection('customers');
+    const getName = (id) => { const c = customers.find(x => x.id === id); return c ? c.name : '—'; };
+    $('#contentArea').innerHTML = `
+      <div class="page-view active">
+        ${this.pageHeader('Promises to Pay', `${promises.length} active commitment(s)`)}
+        <div class="card">
+          ${promises.length ? `<div class="table-wrapper"><table>
+            <thead><tr><th>Customer</th><th>Invoice</th><th class="text-right">Amount</th><th>Promise Date</th><th>Status</th></tr></thead>
+            <tbody>${promises.map(p => `<tr>
+              <td class="font-semibold">${escapeHtml(getName(p.customerId))}</td>
+              <td>${escapeHtml((State.find('invoices', p.invoiceId)||{}).invoiceNumber || '—')}</td>
+              <td class="text-right font-semibold">${Format.money(p.amount)}</td>
+              <td>${Format.date(p.promiseDate)}</td>
+              <td>${Format.statusBadge(p.status)}</td>
+            </tr>`).join('')}</tbody>
+          </table></div>` : this.emptyState('No promises to pay recorded')}
+        </div>
+      </div>
+    `;
+  },
+
+  /* ---------- INVENTORY ---------- */
+  renderInventory() {
+    const products = State.getCollection('products');
+    $('#contentArea').innerHTML = `
+      <div class="page-view active">
+        ${this.pageHeader('Inventory', `${products.length} products`)}
+        <div class="card mb-4">
+          <div class="card-header"><h3 class="card-title">Stock Levels</h3></div>
+          ${Charts.bar(products.slice(0, 10).map(p => p.stockQty), { width: 700, height: 200, color: 'var(--chart-2)', labels: products.slice(0, 10).map(p => p.name.slice(0, 10)) })}
+        </div>
+        <div class="card">
+          <div class="table-wrapper"><table>
+            <thead><tr><th>Product</th><th>Category</th><th>Unit</th><th class="text-right">Stock</th><th>Reorder Level</th><th>Status</th></tr></thead>
+            <tbody>${products.map(p => {
+              const status = p.stockQty <= 0 ? 'out_of_stock' : p.stockQty <= p.reorderLevel ? 'low_stock' : 'in_stock';
+              return `<tr>
+                <td><div class="product-cell"><img src="${p.image}" class="product-thumb" alt="${escapeHtml(p.name)}" onerror="this.style.display='none'"><span class="font-semibold">${escapeHtml(p.name)}</span></div></td>
+                <td class="text-sm">${escapeHtml(p.category)}</td>
+                <td>${escapeHtml(p.unit)}</td>
+                <td class="text-right font-semibold">${fmtQty(p.stockQty)}</td>
+                <td>${p.reorderLevel}</td>
+                <td>${Format.statusBadge(status)}</td>
+              </tr>`;
+            }).join('')}</tbody>
+          </table></div>
+        </div>
+      </div>
+    `;
+  },
+
+  /* ---------- FORECASTING ---------- */
+  renderForecasting() {
+    const products = State.getCollection('products');
+    $('#contentArea').innerHTML = `
+      <div class="page-view active">
+        ${this.pageHeader('Demand Forecasting', 'Based on 90 days of historical sales')}
+        <div class="card">
+          <div class="table-wrapper"><table>
+            <thead><tr><th>Product</th><th>Current Stock</th><th>7-Day</th><th>30-Day</th><th>90-Day</th><th>Confidence</th><th>Reorder</th></tr></thead>
+            <tbody>${products.map(p => {
+              const f7 = ForecastEngine.forecast(p.id, 7);
+              const f30 = ForecastEngine.forecast(p.id, 30);
+              const f90 = ForecastEngine.forecast(p.id, 90);
+              return `<tr>
+                <td><div class="product-cell"><img src="${p.image}" class="product-thumb" onerror="this.style.display='none'"><span class="font-semibold">${escapeHtml(p.name)}</span></div></td>
+                <td>${fmtQty(p.stockQty)}</td>
+                <td>${f7.forecast}</td>
+                <td>${f30.forecast}</td>
+                <td>${f90.forecast}</td>
+                <td>${Format.statusBadge(f30.confidence)}</td>
+                <td class="font-semibold">${f30.recommendedReorder}</td>
+              </tr>`;
+            }).join('')}</tbody>
+          </table></div>
+        </div>
+      </div>
+    `;
+  },
+
+  /* ---------- PROCUREMENT ---------- */
+  renderProcurement() {
+    const suppliers = State.getCollection('suppliers');
+    const pos = State.getCollection('purchaseOrders');
+    $('#contentArea').innerHTML = `
+      <div class="page-view active">
+        ${this.pageHeader('Procurement & Suppliers', `${suppliers.length} supplier(s)`)}
+        <div class="card mb-3">
+          <div class="card-header"><h3 class="card-title">Suppliers</h3></div>
+          <div class="table-wrapper"><table>
+            <thead><tr><th>Supplier</th><th>Contact</th><th>Lead Time</th><th>Rating</th><th class="text-right">Credit Limit</th><th class="text-right">Outstanding</th></tr></thead>
+            <tbody>${suppliers.map(s => `<tr>
+              <td class="font-semibold">${escapeHtml(s.name)}</td>
+              <td>${escapeHtml(s.contact)}</td>
+              <td>${s.leadTime} days</td>
+              <td>${s.rating}/5</td>
+              <td class="text-right">${Format.money(s.creditLimit)}</td>
+              <td class="text-right">${Format.money(s.outstanding)}</td>
+            </tr>`).join('')}</tbody>
+          </table></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">Purchase Orders</h3></div>
+          ${pos.length ? '<p>POs will appear here.</p>' : this.emptyState('No purchase orders yet')}
+        </div>
+      </div>
+    `;
+  },
+
+  /* ---------- FINANCE ---------- */
+  renderFinance() {
+    const financing = State.getCollection('invoiceFinancingRequests');
+    const suppliers = State.getCollection('supplierCreditAccounts');
+    $('#contentArea').innerHTML = `
+      <div class="page-view active">
+        ${this.pageHeader('Finance Module', 'Invoice financing, supplier credit and escrow')}
+        <div class="card mb-3">
+          <div class="card-header"><h3 class="card-title">Invoice Financing Requests</h3></div>
+          ${financing.length ? `<div class="table-wrapper"><table>
+            <thead><tr><th>Invoice</th><th class="text-right">Amount</th><th class="text-right">Fee</th><th>Status</th></tr></thead>
+            <tbody>${financing.map(f => {
+              const inv = State.find('invoices', f.invoiceId);
+              return `<tr><td class="font-semibold">${inv ? escapeHtml(inv.invoiceNumber) : f.invoiceId}</td><td class="text-right">${Format.money(f.amount)}</td><td class="text-right">${Format.money(f.fee)}</td><td>${Format.statusBadge(f.status)}</td></tr>`;
+            }).join('')}</tbody>
+          </table></div>` : this.emptyState('No financing requests')}
+        </div>
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">Supplier Credit Accounts</h3></div>
+          ${suppliers.length ? `<div class="table-wrapper"><table>
+            <thead><tr><th>Supplier</th><th class="text-right">Credit Limit</th><th class="text-right">Outstanding</th><th>Next Repayment</th></tr></thead>
+            <tbody>${suppliers.map(s => {
+              const sup = State.find('suppliers', s.supplierId);
+              return `<tr><td class="font-semibold">${sup ? escapeHtml(sup.name) : s.supplierId}</td><td class="text-right">${Format.money(s.creditLimit)}</td><td class="text-right">${Format.money(s.outstanding)}</td><td>${Format.date(s.nextRepayment)}</td></tr>`;
+            }).join('')}</tbody>
+          </table></div>` : this.emptyState('No supplier credit accounts')}
+        </div>
+      </div>
+    `;
+  },
+
+  /* ---------- ROUTES ---------- */
+  renderRoutes() {
+    const vehicles = State.getCollection('vehicles');
+    const deliveries = State.getCollection('deliveries').filter(d => d.status !== 'verified');
+    const projects = State.getCollection('projects');
+    $('#contentArea').innerHTML = `
+      <div class="page-view active">
+        ${this.pageHeader('Routes & Logistics', `${vehicles.length} vehicle(s) · ${deliveries.length} pending`)}
+        <div class="card mb-3">
+          <div class="card-header"><h3 class="card-title">Vehicles</h3></div>
+          <div class="table-wrapper"><table>
+            <thead><tr><th>Plate</th><th>Model</th><th>Capacity</th><th>Cost/km</th><th>Status</th></tr></thead>
+            <tbody>${vehicles.map(v => `<tr><td class="font-semibold">${escapeHtml(v.plate)}</td><td>${escapeHtml(v.model)}</td><td>${escapeHtml(v.capacity)}</td><td>${Format.money(v.costPerKm)}</td><td>${Format.statusBadge(v.status)}</td></tr>`).join('')}</tbody>
+          </table></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">Pending Deliveries</h3></div>
+          ${deliveries.length ? `<div class="table-wrapper"><table>
+            <thead><tr><th>Delivery #</th><th>Project</th><th>Date</th><th>Status</th></tr></thead>
+            <tbody>${deliveries.map(d => {
+              const p = projects.find(x => x.id === d.projectId);
+              return `<tr><td>${escapeHtml(d.deliveryNumber)}</td><td>${p ? escapeHtml(p.name) : '—'}</td><td>${Format.date(d.date)}</td><td>${Format.statusBadge(d.status)}</td></tr>`;
+            }).join('')}</tbody>
+          </table></div>` : this.emptyState('No pending deliveries')}
+        </div>
+      </div>
+    `;
+  },
+
+  /* ---------- REPORTS ---------- */
+  renderReports() {
+    const reports = [
+      { name: 'Daily Sales', desc: 'Sales summary by day' },
+      { name: 'Customer Statements', desc: 'Per-customer statements' },
+      { name: 'Project Profitability', desc: 'Margin by project' },
+      { name: 'Credit Exposure', desc: 'Outstanding by customer' },
+      { name: 'Aging Report', desc: 'Receivables aging buckets' },
+      { name: 'Collections Performance', desc: 'Collections by period' },
+      { name: 'Delivery Performance', desc: 'On-time and failed deliveries' },
+      { name: 'Dispute Report', desc: 'Open and resolved disputes' },
+      { name: 'Inventory Valuation', desc: 'Stock value at cost' },
+      { name: 'Demand Forecast', desc: 'Forecast by product' },
+      { name: 'Route Cost Report', desc: 'Cost per delivery and project' },
+      { name: 'Supplier Performance', desc: 'Lead time and fill rate' },
+      { name: 'Tax Report', desc: 'VAT summary' },
+      { name: 'Audit Log', desc: 'All sensitive actions' },
+    ];
+    $('#contentArea').innerHTML = `
+      <div class="page-view active">
+        ${this.pageHeader('Reports & Exports', 'Printable and CSV-ready reports')}
+        <div class="grid grid-3">
+          ${reports.map(r => `
+            <div class="card cursor-pointer" onclick="SiteCredit.App.generateReport('${r.name}')">
+              <div class="flex items-center gap-2 mb-2">
+                <div class="tile-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M18 17V9"/></svg></div>
+                <h4 class="font-semibold">${escapeHtml(r.name)}</h4>
+              </div>
+              <p class="text-sm text-secondary">${escapeHtml(r.desc)}</p>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  },
+
+  generateReport(name) {
+    const settings = State.getCollection('settings');
+    let html = '';
+    switch (name) {
+      case 'Daily Sales': {
+        const orders = State.getCollection('orders');
+        const byDate = {};
+        orders.forEach(o => { byDate[o.date] = (byDate[o.date] || 0) + o.total; });
+        html = `<h2>${escapeHtml(settings.businessName)} — Daily Sales</h2><table class="print-table"><thead><tr><th>Date</th><th class="text-right">Sales</th></tr></thead><tbody>${Object.entries(byDate).sort().map(([d, v]) => `<tr><td>${Format.date(d)}</td><td class="text-right">${Format.money(v)}</td></tr>`).join('')}</tbody></table>`;
+        break;
+      }
+      case 'Aging Report': {
+        const invoices = State.getCollection('invoices').filter(i => i.status !== 'paid');
+        const buckets = { Current: 0, '1-30': 0, '31-60': 0, '61-90': 0, '90+': 0 };
+        invoices.forEach(i => {
+          const days = daysBetween(i.dueDate, todayISO());
+          const key = days <= 0 ? 'Current' : days <= 30 ? '1-30' : days <= 60 ? '31-60' : days <= 90 ? '61-90' : '90+';
+          buckets[key] += (i.total - (i.amountPaid || 0));
+        });
+        html = `<h2>${escapeHtml(settings.businessName)} — Aging Report</h2><table class="print-table"><thead><tr><th>Bucket</th><th class="text-right">Amount</th></tr></thead><tbody>${Object.entries(buckets).map(([k, v]) => `<tr><td>${k}</td><td class="text-right">${Format.money(v)}</td></tr>`).join('')}</tbody></table>`;
+        break;
+      }
+      case 'Credit Exposure': {
+        const customers = State.getCollection('customers');
+        const invoices = State.getCollection('invoices');
+        html = `<h2>${escapeHtml(settings.businessName)} — Credit Exposure</h2><table class="print-table"><thead><tr><th>Customer</th><th class="text-right">Outstanding</th><th class="text-right">Limit</th></tr></thead><tbody>${customers.map(c => {
+          const out = invoices.filter(i => i.customerId === c.id).reduce((s, i) => s + (i.total - (i.amountPaid || 0)), 0);
+          return `<tr><td>${escapeHtml(c.name)}</td><td class="text-right">${Format.money(out)}</td><td class="text-right">${Format.money(c.creditLimit)}</td></tr>`;
+        }).join('')}</tbody></table>`;
+        break;
+      }
+      default: {
+        html = `<h2>${escapeHtml(settings.businessName)} — ${escapeHtml(name)}</h2><p>Report generated on ${Format.date(todayISO())}.</p><p class="text-sm text-secondary">This report is available in the full system. Export to CSV or print for records.</p>`;
+      }
+    }
+    Modal.open(name, html, `<button class="btn btn-primary" onclick="window.print()">Print / Save PDF</button><button class="btn btn-secondary" onclick="SiteCredit.Modal.close()">Close</button>`, 'lg');
+  },
+
+  /* ---------- APPROVALS ---------- */
+  renderApprovals() {
+    $('#contentArea').innerHTML = `
+      <div class="page-view active">
+        ${this.pageHeader('Automated Approvals', 'Pending decisions and audit trail')}
+        <div class="card">
+          ${this.emptyState('No pending approvals')}
+        </div>
+      </div>
+    `;
+  },
+
+  /* ---------- SETTINGS ---------- */
+  renderSettings() {
+    const s = State.getCollection('settings');
+    const usage = StorageService.usage();
+    const usageKB = (usage / 1024).toFixed(1);
+    const usagePct = clamp(usage / (5 * 1024 * 1024) * 100, 0, 100);
+    $('#contentArea').innerHTML = `
+      <div class="page-view active">
+        ${this.pageHeader('Settings', 'Business profile, data management and security')}
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-header"><h3 class="card-title">Business Profile</h3></div>
+            <div class="form-group"><label class="form-label">Business Name</label><input class="form-input" id="setBizName" value="${escapeHtml(s.businessName)}"></div>
+            <div class="form-group"><label class="form-label">Address</label><input class="form-input" id="setAddress" value="${escapeHtml(s.address)}"></div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="setPhone" value="${escapeHtml(s.phone)}"></div>
+              <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="setEmail" value="${escapeHtml(s.email)}"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Tax PIN</label><input class="form-input" id="setPin" value="${escapeHtml(s.pin)}"></div>
+              <div class="form-group"><label class="form-label">Currency</label><input class="form-input" id="setCurrency" value="${escapeHtml(s.currency)}"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Tax Rate (%)</label><input class="form-input" type="number" id="setTaxRate" value="${s.taxRate}"></div>
+              <div class="form-group"><label class="form-label">Invoice Prefix</label><input class="form-input" id="setInvPrefix" value="${escapeHtml(s.invoicePrefix)}"></div>
+            </div>
+            <button class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3 class="card-title">Data & Storage</h3></div>
+            <div class="mb-3">
+              <div class="flex justify-between text-sm mb-1"><span>Storage Usage</span><span>${usageKB} KB / 5 MB</span></div>
+              <div class="progress-bar"><div class="progress-bar-fill" style="width:${usagePct}%; background:${usagePct>80?'var(--danger)':'var(--primary)'};"></div></div>
+            </div>
+            <div class="flex gap-2 flex-wrap mb-3">
+              <button class="btn btn-secondary btn-sm" id="exportJsonBtn">Export JSON Backup</button>
+              <button class="btn btn-secondary btn-sm" id="importJsonBtn">Import JSON</button>
+              <button class="btn btn-danger btn-sm" id="resetDemoBtn">Reset Demo Data</button>
+            </div>
+            <input type="file" id="importFileInput" accept=".json" style="display:none;">
+            <div class="form-group">
+              <label class="form-label">Shop Logo</label>
+              <input type="file" id="logoUpload" accept="image/*" class="form-input">
+            </div>
+            <p class="text-xs text-muted">All data is stored locally in this browser. Device-specific. Export backups regularly.</p>
+          </div>
+        </div>
+      </div>
+    `;
+    $('#saveSettingsBtn').onclick = () => {
+      State.data.settings = {
+        ...s,
+        businessName: $('#setBizName').value, address: $('#setAddress').value,
+        phone: $('#setPhone').value, email: $('#setEmail').value,
+        pin: $('#setPin').value, currency: $('#setCurrency').value,
+        taxRate: Number($('#setTaxRate').value) || 16, invoicePrefix: $('#setInvPrefix').value
+      };
+      State.persist('settings');
+      State.audit('settings_updated', {});
+      Toast.success('Settings saved');
+      this.renderSidebar();
+    };
+    $('#exportJsonBtn').onclick = () => {
+      const data = {};
+      COLLECTIONS.forEach(c => data[c] = State.data[c]);
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'sitecredit-backup-' + todayISO() + '.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+      Toast.success('Backup exported');
+    };
+    $('#importJsonBtn').onclick = () => $('#importFileInput').click();
+    $('#importFileInput').onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          COLLECTIONS.forEach(c => { if (data[c]) State.data[c] = data[c]; });
+          State.persistAll();
+          Toast.success('Data imported successfully');
+          this.navigate('dashboard');
+        } catch (err) { Toast.error('Invalid backup file'); }
+      };
+      reader.readAsText(file);
+    };
+    $('#resetDemoBtn').onclick = () => {
+      Modal.confirm('Reset Demo Data', 'This will clear all current data and restore the demo dataset. Are you sure?', () => {
+        StorageService.clearAll();
+        State.init();
+        State.currentUser = State.getCollection('users').find(u => u.username === 'admin');
+        StorageService.set('session', { userId: State.currentUser.id, loginAt: nowISO() });
+        Toast.success('Demo data restored');
+        this.renderApp();
+      }, 'Reset Data', true);
+    };
+    $('#logoUpload').onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        State.data.settings.logo = ev.target.result;
+        State.persist('settings');
+        this.renderSidebar();
+        Toast.success('Logo updated');
+      };
+      reader.readAsDataURL(file);
+    };
+  },
+
+  /* ---------- AUDIT ---------- */
+  renderAudit() {
+    const logs = State.getCollection('auditLogs').slice().reverse();
+    $('#contentArea').innerHTML = `
+      <div class="page-view active">
+        ${this.pageHeader('Audit Log', `${logs.length} entries`)}
+        <div class="card">
+          ${logs.length ? `<div class="table-wrapper"><table>
+            <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Details</th></tr></thead>
+            <tbody>${logs.map(l => `<tr>
+              <td class="text-sm">${Format.datetime(l.timestamp)}</td>
+              <td>${escapeHtml(l.userName)}</td>
+              <td>${Format.statusBadge(l.action)}</td>
+              <td class="text-sm text-secondary">${escapeHtml(JSON.stringify(l.details || {}).slice(0, 120))}</td>
+            </tr>`).join('')}</tbody>
+          </table></div>` : this.emptyState('No audit entries')}
+        </div>
+      </div>
+    `;
+  },
+
+  renderNotifications() {
+    const notifications = State.getCollection('notifications');
+    $('#contentArea').innerHTML = `
+      <div class="page-view active">
+        ${this.pageHeader('Notifications', `${notifications.length} notification(s)`)}
+        <div class="card">
+          ${notifications.length ? notifications.map(n => `<div class="card mb-2"><strong>${escapeHtml(n.title)}</strong><p class="text-sm text-secondary">${escapeHtml(n.message)}</p></div>`).join('') : this.emptyState('No notifications')}
+        </div>
+      </div>
+    `;
+  },
+
+  /* ---------- COMMAND PALETTE ---------- */
+  openCommandPalette() {
+    $('#commandOverlay').classList.add('open');
+    $('#commandInput').value = '';
+    $('#commandInput').focus();
+    this.renderCommandResults('');
+  },
+
+  closeCommandPalette() {
+    $('#commandOverlay').classList.remove('open');
+    State.commandSelectedIndex = 0;
+  },
+
+  renderCommandResults(query) {
+    query = (query || '').toLowerCase();
+    const results = [];
+    const customers = State.getCollection('customers');
+    const projects = State.getCollection('projects');
+    const invoices = State.getCollection('invoices');
+    const deliveries = State.getCollection('deliveries');
+    const products = State.getCollection('products');
+    if (!query) {
+      results.push(
+        { label: 'Go to Dashboard', type: 'page', action: () => this.navigate('dashboard') },
+        { label: 'New Order', type: 'action', action: () => { this.navigate('orders'); setTimeout(() => this.showNewOrderModal(), 100); } },
+        { label: 'Record Payment', type: 'action', action: () => { this.navigate('collections'); setTimeout(() => this.showRecordPaymentModal(), 100); } },
+        { label: 'New Customer', type: 'action', action: () => this.showNewCustomerModal() },
+        { label: 'New Delivery', type: 'action', action: () => { this.navigate('deliveries'); } },
+        { label: 'View Reports', type: 'page', action: () => this.navigate('reports') },
+      );
+    }
+    customers.forEach(c => { if (c.name.toLowerCase().includes(query)) results.push({ label: c.name, type: 'customer', action: () => { this.navigate('customers'); setTimeout(() => this.showCustomerDetail(c.id), 150); } }); });
+    projects.forEach(p => { if (p.name.toLowerCase().includes(query)) results.push({ label: p.name, type: 'project', action: () => { this.navigate('projects'); setTimeout(() => this.showProjectDetail(p.id), 150); } }); });
+    invoices.forEach(i => { if (i.invoiceNumber.toLowerCase().includes(query)) results.push({ label: i.invoiceNumber, type: 'invoice', action: () => { this.navigate('orders'); setTimeout(() => this.showInvoiceDetail(i.id), 150); } }); });
+    deliveries.forEach(d => { if (d.deliveryNumber.toLowerCase().includes(query)) results.push({ label: d.deliveryNumber, type: 'delivery', action: () => { this.navigate('deliveries'); setTimeout(() => this.showDeliveryDetail(d.id), 150); } }); });
+    products.forEach(p => { if (p.name.toLowerCase().includes(query)) results.push({ label: p.name, type: 'product', action: () => { this.navigate('inventory'); } }); });
+    State.commandResults = results.slice(0, 12);
+    State.commandSelectedIndex = 0;
+    this.updateCommandSelection();
+  },
+
+  updateCommandSelection() {
+    const container = $('#commandResults');
+    if (!State.commandResults.length) {
+      container.innerHTML = '<div class="empty-state" style="padding:24px;"><p>No results found</p></div>';
+      return;
+    }
+    container.innerHTML = State.commandResults.map((r, i) => `
+      <div class="command-item ${i === State.commandSelectedIndex ? 'selected' : ''}" data-index="${i}">
+        <span>${escapeHtml(r.label)}</span>
+        <span class="cmd-type">${escapeHtml(r.type)}</span>
+      </div>
+    `).join('');
+    $$('.command-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const idx = Number(item.dataset.index);
+        State.commandResults[idx].action();
+        this.closeCommandPalette();
+      });
+    });
+  },
+};
+
+/* ============================================================
+   TOUR
+   ============================================================ */
+const Tour = {
+  steps: [
+    { selector: '#sidebar', title: 'Welcome to SiteCredit', text: 'Your complete hardware trade operations platform. Navigate all modules from the sidebar. On mobile, use the bottom navigation tiles.' },
+    { selector: '[data-page="dashboard"]', title: 'Dashboard', text: 'See receivables, overdue amounts, today\'s sales, deliveries, disputes and trends at a glance with live charts.' },
+    { selector: '[data-page="customers"]', title: 'Customers & Contractors', text: 'Manage customers, view credit utilization, risk scores, statements and send payment reminders via WhatsApp.' },
+    { selector: '[data-page="projects"]', title: 'Project Ledger', text: 'Track project profitability, deliveries, invoices and margin — know if the job is still profitable.' },
+    { selector: '[data-page="orders"]', title: 'Orders & Invoices', text: 'Create quotations, orders and professional invoices. Credit checks block orders that exceed limits.' },
+    { selector: '[data-page="deliveries"]', title: 'Delivery Verification', text: 'Capture proof-of-delivery with GPS, photos and signatures. Record exceptions and link disputes.' },
+    { selector: '[data-page="collections"]', title: 'Collections', text: 'Aging buckets, promises to pay and dunning templates. Generate WhatsApp/SMS reminders.' },
+    { selector: '[data-page="reports"]', title: 'Reports', text: 'Daily sales, aging, credit exposure, profitability and more. Export to CSV or print to PDF.' },
+    { selector: '[data-page="settings"]', title: 'Settings', text: 'Configure business profile, logo, backup/restore and storage usage. Install as PWA for offline use.' },
+  ],
+  current: 0,
+  start() {
+    State.tourActive = true;
+    this.current = 0;
+    $('#tourOverlay').classList.add('open');
+    this.showStep(0);
+  },
+  showStep(i) {
+    if (i >= this.steps.length) { this.finish(); return; }
+    this.current = i;
+    const step = this.steps[i];
+    const el = document.querySelector(step.selector);
+    const highlight = $('#tourHighlight');
+    const tooltip = $('#tourTooltip');
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      highlight.style.display = 'block';
+      highlight.style.top = (rect.top - 4) + 'px';
+      highlight.style.left = (rect.left - 4) + 'px';
+      highlight.style.width = (rect.width + 8) + 'px';
+      highlight.style.height = (rect.height + 8) + 'px';
+      tooltip.style.display = 'block';
+      let top = rect.bottom + 12;
+      let left = rect.left;
+      if (top + 200 > window.innerHeight) top = rect.top - 210;
+      if (left + 340 > window.innerWidth) left = window.innerWidth - 360;
+      if (left < 10) left = 10;
+      if (top < 10) top = 10;
+      tooltip.style.top = top + 'px';
+      tooltip.style.left = left + 'px';
+    } else {
+      highlight.style.display = 'none';
+      tooltip.style.top = '50%';
+      tooltip.style.left = '50%';
+      tooltip.style.transform = 'translate(-50%, -50%)';
+    }
+    $('#tourTitle').textContent = step.title;
+    $('#tourText').textContent = step.text;
+    $('#tourStep').textContent = `${i + 1} of ${this.steps.length}`;
+    $('#tourNextBtn').textContent = i === this.steps.length - 1 ? 'Finish' : 'Next';
+    $('#tourNextBtn').onclick = () => { this.showStep(this.current + 1); };
+    $('#tourSkipBtn').onclick = () => this.finish();
+  },
+  finish() {
+    State.tourActive = false;
+    $('#tourOverlay').classList.remove('open');
+    $('#tourHighlight').style.display = 'none';
+    $('#tourTooltip').style.display = 'none';
+    StorageService.set('tourCompleted', true);
+    Toast.success('Tour complete — you\'re ready to go!');
+  }
+};
+
+/* ============================================================
+   EXPORT
+   ============================================================ */
+window.SiteCredit = { App, Auth, Modal, Toast, State, StorageService, Format, RiskEngine, ForecastEngine, RouteOptimizer, Dunning, Charts, Tour };
+
+/* ============================================================
+   BOOTSTRAP
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  App.init();
+  State.updateOfflineBadge();
+});
+
+})();
+</script>
+</body>
+</html>

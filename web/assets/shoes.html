@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#090a0c">
+<meta name="description" content="A considered sneaker destination. Explore sculptural silhouettes, premium materials and everyday icons at SOLE ATELIER.">
+<title>SOLE ATELIER — Made to Move</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.162.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.162.0/examples/jsm/",
+    "gsap": "https://esm.sh/gsap@3.12.5",
+    "gsap/ScrollTrigger": "https://esm.sh/gsap@3.12.5/ScrollTrigger"
+  }
+}
+</script>
+<style>
+:root{--bg:#090a0c;--panel:#111316;--ink:#f7f5f0;--muted:#c4c2bd;--line:rgba(255,255,255,.14);--lime:#d8ff63;--orange:#ff744f;--nav-h:76px}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;background:var(--bg);scroll-padding-top:90px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"DM Sans",sans-serif;font-size:1.08rem;line-height:1.8;overflow-x:hidden}
+body,button,a{cursor:default}
+a,button{color:inherit}
+a{cursor:pointer;text-decoration:none}
+button{font:inherit}
+::selection{background:var(--lime);color:#10110d}
+#progress{position:fixed;z-index:1000;left:0;top:0;height:3px;width:0;background:var(--lime);box-shadow:0 0 18px #d8ff6380}
+#scene-wrap{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 50% 38%,#25272a 0%,#111214 42%,#08090b 100%)}
+#scene{width:100%;height:100%;display:block}
+.scene-vignette{position:absolute;inset:0;background:linear-gradient(90deg,rgba(6,7,8,.58),transparent 55%,rgba(6,7,8,.16)),linear-gradient(0deg,rgba(6,7,8,.65),transparent 30%,rgba(6,7,8,.12));pointer-events:none}
+#scene-fallback{position:absolute;inset:0;display:none;place-items:center;color:#fff;font-size:1rem;padding:2rem;text-align:center;background:radial-gradient(circle,#303236,#08090b)}
+header.topbar{height:var(--nav-h);position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,5vw,76px);border-bottom:1px solid transparent;transition:background .3s,border-color .3s,backdrop-filter .3s}
+header.topbar.scrolled{background:rgba(9,10,12,.82);backdrop-filter:blur(18px);border-color:var(--line)}
+.brand{display:flex;gap:10px;align-items:center;font:800 .92rem/1 "Manrope",sans-serif;letter-spacing:.17em}
+.brand-mark{width:27px;height:27px;border:1px solid var(--lime);border-radius:50%;display:grid;place-items:center;color:var(--lime);font-size:.72rem;letter-spacing:0}
+.desktop-nav{display:flex;align-items:center;gap:clamp(18px,3vw,44px);font-size:.88rem;color:#e8e6e1}
+.desktop-nav a{transition:color .2s}.desktop-nav a:hover{color:var(--lime)}
+.nav-cta,.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;border:1px solid var(--line);border-radius:100px;padding:12px 21px;font-size:.9rem;font-weight:700;line-height:1.3;transition:transform .25s,background .25s,border-color .25s;color:var(--ink);background:rgba(255,255,255,.04);cursor:pointer}
+.nav-cta,.btn-primary{background:var(--lime);border-color:var(--lime);color:#14160d}
+.btn:hover,.nav-cta:hover{transform:translateY(-3px);border-color:var(--lime)}
+.btn-primary:hover,.nav-cta:hover{background:#e4ff91}
+.btn-quiet{background:rgba(10,11,12,.45);backdrop-filter:blur(10px)}
+main{position:relative;z-index:1}
+section.story{min-height:100svh;position:relative;display:flex;align-items:center;padding:clamp(110px,13vh,155px) clamp(22px,8vw,124px);isolation:isolate}
+section.story .copy{width:min(520px,48vw);padding:clamp(22px,3vw,38px);border:1px solid rgba(255,255,255,.11);border-radius:24px;background:linear-gradient(135deg,rgba(14,15,17,.82),rgba(14,15,17,.53));backdrop-filter:blur(16px);box-shadow:0 24px 100px #0003}
+section.story.right{justify-content:flex-end}
+section.story.center{justify-content:center;text-align:center}
+section.story.center .copy{width:min(760px,90vw);background:rgba(9,10,12,.66)}
+.eyebrow{display:flex;align-items:center;gap:10px;color:var(--lime);font:700 .72rem/1.4 "Manrope",sans-serif;text-transform:uppercase;letter-spacing:.18em;margin:0 0 18px}
+.eyebrow:before{content:"";width:22px;height:1px;background:currentColor}
+h1,h2,h3,p{margin-top:0}
+h1,h2,h3{font-family:"Manrope",sans-serif;line-height:1.08;letter-spacing:-.055em;font-weight:800;text-shadow:0 1px 12px #0008}
+h1{font-size:clamp(3.2rem,7.5vw,7.7rem);max-width:850px;margin-bottom:24px}
+h2{font-size:clamp(2.2rem,4.3vw,4.3rem);margin-bottom:22px}
+h3{font-size:1.35rem;letter-spacing:-.03em}
+.gradient{background:linear-gradient(100deg,#fff 15%,#d8ff63 65%,#b8d1ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{font-size:clamp(1.08rem,1.4vw,1.23rem);line-height:1.8;color:rgba(255,255,255,.9);max-width:590px;text-shadow:0 1px 12px #0008}
+.hero{min-height:100svh;padding-top:calc(var(--nav-h) + 70px);align-items:center}
+.hero .copy{width:min(780px,67vw);background:linear-gradient(90deg,rgba(9,10,12,.9),rgba(9,10,12,.5) 76%,transparent);border:0;box-shadow:none;padding-left:0}
+.hero h1{max-width:800px}
+.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+.hero-note{margin-top:44px;display:flex;align-items:center;gap:15px;color:#e7e5df;font-size:.82rem}
+.note-line{height:1px;width:44px;background:var(--lime)}
+.scroll-cue{position:absolute;bottom:28px;left:clamp(22px,8vw,124px);display:flex;align-items:center;gap:12px;color:#d8d6d0;font-size:.76rem;letter-spacing:.13em;text-transform:uppercase}
+.scroll-cue span{display:block;width:28px;height:40px;border:1px solid #ffffff70;border-radius:20px;position:relative}
+.scroll-cue span:after{content:"";position:absolute;width:3px;height:7px;background:var(--lime);border-radius:4px;left:11px;top:8px;animation:scrollDot 1.5s infinite}
+@keyframes scrollDot{to{transform:translateY(13px);opacity:0}}
+.section-index{font:700 .7rem/1 "Manrope",sans-serif;color:var(--lime);letter-spacing:.17em;margin-bottom:20px}
+.quote{font:700 clamp(1.5rem,2.8vw,2.5rem)/1.35 "Manrope",sans-serif;letter-spacing:-.035em;margin:24px 0;color:#fff}
+.feature-list{list-style:none;padding:0;margin:26px 0 28px;display:grid;gap:11px}
+.feature-list li{display:flex;gap:12px;align-items:flex-start;color:rgba(255,255,255,.88);font-size:.98rem;line-height:1.65}
+.feature-list li:before{content:"↗";color:var(--lime);font-weight:700}
+.feature-list strong{color:#fff}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding-top:20px;border-top:1px solid var(--line);margin:22px 0}
+.stat strong{display:block;font:800 clamp(1.15rem,2vw,1.65rem)/1.2 "Manrope",sans-serif;letter-spacing:-.04em}
+.stat span{font-size:.72rem;line-height:1.4;color:#d0cec8;display:block;margin-top:7px}
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+.product-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:24px 0}
+.product-chip{border:1px solid var(--line);border-radius:14px;padding:13px;background:#ffffff08}
+.product-chip b{display:block;font-size:.9rem}.product-chip span{color:#d0cec8;font-size:.78rem}
+.climax h2{font-size:clamp(3rem,7vw,6.6rem)}
+footer{position:relative;z-index:2;padding:70px clamp(22px,8vw,124px) 110px;background:#090a0c;border-top:1px solid var(--line)}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px}
+footer p,footer a{color:#d3d1cb;font-size:.95rem}
+.footer-links{display:grid;gap:8px}
+.footer-bottom{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;border-top:1px solid var(--line);margin-top:42px;padding-top:22px;color:#c4c2bd;font-size:.8rem}
+#section-dots{position:fixed;right:24px;top:50%;transform:translateY(-50%);z-index:50;display:grid;gap:13px}
+#section-dots a{width:8px;height:8px;border:1px solid #fff9;border-radius:50%;background:#111;display:block;transition:transform .2s,background .2s,border .2s}
+#section-dots a[aria-current="true"]{background:var(--lime);border-color:var(--lime);transform:scale(1.45)}
+#active-badge{position:fixed;top:94px;left:clamp(20px,5vw,76px);z-index:50;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:#fff;background:#101114d9;border:1px solid var(--line);border-radius:100px;padding:8px 13px;backdrop-filter:blur(12px)}
+#hud{position:fixed;right:24px;bottom:22px;z-index:50;border:1px solid #ffffff20;background:#101114c9;backdrop-filter:blur(14px);border-radius:13px;padding:10px 13px;display:flex;gap:15px;font:600 .68rem/1.2 "Manrope",sans-serif;color:#d5d3cd}
+#hud span{color:var(--lime)}
+#back-top{position:fixed;right:24px;bottom:83px;z-index:60;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:#101114e8;color:white;display:grid;place-items:center;cursor:pointer}
+#whatsapp{position:fixed;left:22px;bottom:22px;z-index:60;display:flex;align-items:center;gap:9px;background:#101114e8;border:1px solid var(--line);border-radius:100px;padding:10px 15px;font-size:.82rem;backdrop-filter:blur(12px)}
+#whatsapp i{width:8px;height:8px;border-radius:50%;background:#70e5a1;box-shadow:0 0 12px #70e5a1}
+#cursor{position:fixed;top:0;left:0;width:28px;height:28px;border:1px solid #d8ff63a8;border-radius:50%;pointer-events:none;z-index:999;transform:translate(-50%,-50%);display:grid;place-items:center;opacity:0;transition:width .2s,height .2s,background .2s}
+#cursor.active{width:58px;height:58px;background:#d8ff631b}
+.mobile-nav{display:none}
+#toast{position:fixed;left:50%;bottom:30px;transform:translate(-50%,20px);opacity:0;z-index:200;background:#d8ff63;color:#111;padding:12px 18px;border-radius:100px;font-size:.9rem;font-weight:700;pointer-events:none;transition:.25s}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+.dialog-backdrop{position:fixed;inset:0;z-index:300;background:#000b;display:none;place-items:center;padding:20px}
+.dialog-backdrop.open{display:grid}
+.dialog{width:min(500px,100%);background:#141619;border:1px solid var(--line);border-radius:22px;padding:28px;box-shadow:0 30px 100px #0009}
+.dialog h2{font-size:2rem}.dialog p{color:#e2e0da}
+.dialog label{display:block;font-size:.85rem;margin:12px 0 5px}
+.dialog input,.dialog select{width:100%;border-radius:10px;border:1px solid #ffffff30;background:#090a0c;color:white;padding:13px;font:inherit}
+.dialog-close{float:right;background:transparent;border:1px solid var(--line);color:#fff;border-radius:50%;width:35px;height:35px;cursor:pointer}
+.reveal{opacity:1;transform:none}
+.js-ready .reveal{opacity:0;transform:translateY(24px);transition:opacity .75s cubic-bezier(.16,1,.3,1),transform .75s cubic-bezier(.16,1,.3,1)}
+.js-ready .reveal.in-view{opacity:1;transform:translateY(0)}
+@media(max-width:1024px){section.story{padding-left:5vw;padding-right:5vw}section.story .copy{width:min(510px,55vw)}.hero .copy{width:75vw}.footer-grid{grid-template-columns:1.5fr 1fr 1fr}}
+@media(max-width:768px){
+ :root{--nav-h:64px}
+ body{font-size:1rem;line-height:1.8}
+ header.topbar{display:none}
+ #scene-wrap{background:radial-gradient(ellipse at 50% 40%,#24262a,#090a0c 72%)}
+ .scene-vignette{background:linear-gradient(0deg,rgba(6,7,8,.76),rgba(6,7,8,.2) 55%,rgba(6,7,8,.25))}
+ section.story{min-height:100svh;padding:105px 18px 118px;align-items:flex-end}
+ section.story .copy,section.story.center .copy{width:100%;padding:23px;border-radius:20px;background:linear-gradient(145deg,rgba(11,12,14,.91),rgba(11,12,14,.78))}
+ .hero{align-items:center;padding-top:100px}
+ .hero .copy{width:100%;padding:0 5px;background:transparent}
+ h1{font-size:clamp(3.1rem,14vw,5.2rem)}
+ h2{font-size:clamp(2.2rem,9vw,3.4rem)}
+ .lede{font-size:1.06rem;line-height:1.75}
+ .scroll-cue{left:20px;bottom:91px}
+ #section-dots,#active-badge,#hud,#whatsapp,#cursor{display:none}
+ #back-top{right:16px;bottom:90px}
+ .mobile-nav{position:fixed;bottom:0;left:0;right:0;z-index:120;display:grid;grid-template-columns:repeat(4,1fr);padding:9px 10px calc(9px + env(safe-area-inset-bottom));background:rgba(12,13,15,.92);backdrop-filter:blur(20px);border-top:1px solid var(--line)}
+ .mobile-nav a{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;color:#d8d6d0;font-size:.68rem;line-height:1.4}
+ .mobile-nav a span{font-size:1.15rem}.mobile-nav a.active{color:var(--lime)}
+ .hero-actions .btn,.actions .btn{flex:1;min-width:140px}
+ .stats{gap:7px}.stat span{font-size:.7rem}
+ .product-strip{grid-template-columns:1fr}
+ .footer-grid{grid-template-columns:1fr;gap:25px}
+ footer{padding:55px 22px 115px}
+ .footer-bottom{margin-top:28px}
+}
+@media(max-width:480px){
+ .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .stat strong{font-size:1.15rem}
+ .stat span{font-size:.66rem}
+ .feature-list li{font-size:.95rem}
+ .hero-note{margin-top:30px}
+ .quote{font-size:1.55rem}
+ .dialog{padding:22px}
+}
+@media(prefers-reduced-motion:reduce){
+ html{scroll-behavior:auto}
+ *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+ .js-ready .reveal{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+<div id="progress" aria-hidden="true"></div>
+<div id="scene-wrap" aria-hidden="true"><canvas id="scene"></canvas><div class="scene-vignette"></div><div id="scene-fallback">Your browser could not start the 3D scene. The collection and ordering experience remain available below.</div></div>
+<header class="topbar" id="topbar">
+  <a class="brand" href="#home" aria-label="SOLE ATELIER home"><span class="brand-mark">S</span> SOLE ATELIER</a>
+  <nav class="desktop-nav" aria-label="Main navigation">
+    <a href="#craft">Craft</a><a href="#collection">Collection</a><a href="#fit">Fit guide</a><a href="#contact">Contact</a>
+  </nav>
+  <button class="nav-cta" data-order="Signature Runner" aria-label="Order the Signature Runner">Shop the edit ↗</button>
+</header>
+<div id="active-badge" aria-live="polite">01 / The first step</div>
+<nav id="section-dots" aria-label="Section progress">
+  <a href="#home" aria-label="Home" aria-current="true"></a><a href="#craft" aria-label="Craft"></a><a href="#materials" aria-label="Materials"></a><a href="#comfort" aria-label="Comfort"></a><a href="#collection" aria-label="Collection"></a><a href="#fit" aria-label="Fit guide"></a><a href="#care" aria-label="Care"></a><a href="#finale" aria-label="Finale"></a>
+</nav>
+<main id="top">
+<section class="story hero" id="home" data-state="hero" data-label="The first step">
+  <div class="copy reveal">
+    <p class="eyebrow">Independent sneaker house · Est. for movement</p>
+    <h1>Good shoes.<br><span class="gradient">Better moves.</span></h1>
+    <p class="lede">A sharper edit of everyday sneakers: considered silhouettes, tactile materials and comfort that keeps pace from first light to last train.</p>
+    <div class="hero-actions"><a class="btn btn-primary" href="#collection">Explore the collection <span>↘</span></a><a class="btn btn-quiet" href="#craft">Discover the details</a></div>
+    <div class="hero-note"><span class="note-line"></span><span>Designed for the long way round.</span></div>
+  </div>
+  <div class="scroll-cue"><span></span> Scroll to explore</div>
+</section>
+
+<section class="story right" id="craft" data-state="craft" data-label="Made with intention">
+  <div class="copy reveal"><div class="section-index">02 — THE DESIGN</div><p class="eyebrow">Shape with purpose</p><h2>Form follows your day.</h2>
+  <p class="lede">Every line has a job. Balanced proportions, a stable base and a clean profile make a sneaker that works with your wardrobe instead of competing with it.</p>
+  <p class="quote">“The best detail is the one you feel before you notice.”</p>
+  <ul class="feature-list"><li><span><strong>Considered profile.</strong> A versatile shape that moves from denim to tailored layers.</span></li><li><span><strong>Secure structure.</strong> A supportive heel and a platform built for everyday transitions.</span></li><li><span><strong>Quiet branding.</strong> Distinctive design without the noise.</span></li></ul>
+  <div class="stats"><div class="stat"><strong>01</strong><span>Signature silhouette</span></div><div class="stat"><strong>360°</strong><span>Designed in the round</span></div><div class="stat"><strong>All day</strong><span>Everyday versatility</span></div></div>
+  <div class="actions"><a class="btn btn-quiet" href="#collection">View sample →</a><button class="btn btn-primary" data-order="Signature Runner">Order now ↗</button></div></div>
+</section>
+
+<section class="story" id="materials" data-state="materials" data-label="Feel the difference">
+  <div class="copy reveal"><div class="section-index">03 — MATERIAL STUDY</div><p class="eyebrow">Texture is a feature</p><h2>Materials worth a closer look.</h2>
+  <p class="lede">A sneaker lives in the details: how the upper bends, how the lining feels and how the outsole meets the ground. We choose a balanced mix for a premium hand-feel and practical daily wear.</p>
+  <ul class="feature-list"><li><span><strong>Soft-touch upper.</strong> A layered finish with a refined, tactile surface.</span></li><li><span><strong>Breathable lining.</strong> Helps manage warmth through long days on the move.</span></li><li><span><strong>Grounded outsole.</strong> A grippy tread pattern designed for dependable everyday traction.</span></li></ul>
+  <div class="stats"><div class="stat"><strong>3-layer</strong><span>Visual material story</span></div><div class="stat"><strong>Grip</strong><span>Everyday traction</span></div><div class="stat"><strong>Easy</strong><span>Pairing and care</span></div></div>
+  <div class="actions"><a class="btn btn-quiet" href="#care">View material care →</a><button class="btn btn-primary" data-order="Material Study Runner">Order now ↗</button></div></div>
+</section>
+
+<section class="story right" id="comfort" data-state="comfort" data-label="Built for the miles">
+  <div class="copy reveal"><div class="section-index">04 — THE FEEL</div><p class="eyebrow">Comfort in motion</p><h2>Ready for the longer route.</h2>
+  <p class="lede">From the morning commute to an unplanned detour, the right sneaker should feel dependable. A cushioned footbed, a stable heel and a flexible forefoot help keep each step natural.</p>
+  <ul class="feature-list"><li><span><strong>Step-in cushioning.</strong> A comfortable underfoot feel for daily routines.</span></li><li><span><strong>Flexible forefoot.</strong> Lets the shoe move with your stride instead of against it.</span></li><li><span><strong>Stable heel hold.</strong> Helps the foot feel secure through turns and transitions.</span></li></ul>
+  <div class="stats"><div class="stat"><strong>Daily</strong><span>Wear intent</span></div><div class="stat"><strong>Flex</strong><span>Natural movement</span></div><div class="stat"><strong>Hold</strong><span>Secure heel feel</span></div></div>
+  <div class="actions"><a class="btn btn-quiet" href="#fit">Find your fit →</a><button class="btn btn-primary" data-order="Everyday Comfort Runner">Order now ↗</button></div></div>
+</section>
+
+<section class="story center" id="collection" data-state="collection" data-label="The collection">
+  <div class="copy reveal"><div class="section-index">05 — THE EDIT</div><p class="eyebrow">Three moods. One standard.</p><h2>Choose your everyday icon.</h2>
+  <p class="lede" style="margin-inline:auto">Build around your own uniform. Start with a clean essential, bring in a little colour, or choose a more technical shape for days that refuse to sit still.</p>
+  <div class="product-strip"><div class="product-chip"><b>01 / Signature Runner</b><span>Clean lines · versatile daily wear</span><p style="margin:8px 0 0;color:#fff;font-weight:700">KES 6,900</p><button class="btn btn-quiet" style="margin-top:12px;width:100%" data-order="Signature Runner">Select ↗</button></div><div class="product-chip"><b>02 / Studio Low</b><span>Minimal profile · easy pairing</span><p style="margin:8px 0 0;color:#fff;font-weight:700">KES 5,800</p><button class="btn btn-quiet" style="margin-top:12px;width:100%" data-order="Studio Low">Select ↗</button></div><div class="product-chip"><b>03 / Terrain Pace</b><span>Utility cues · confident grip</span><p style="margin:8px 0 0;color:#fff;font-weight:700">KES 7,500</p><button class="btn btn-quiet" style="margin-top:12px;width:100%" data-order="Terrain Pace">Select ↗</button></div></div>
+  <div class="stats"><div class="stat"><strong>3</strong><span>Core silhouettes</span></div><div class="stat"><strong>5–12</strong><span>Sample size range*</span></div><div class="stat"><strong>Daily</strong><span>Wear category</span></div></div>
+  <p style="font-size:.78rem;color:#d0cec8">*Sizes and stock shown here are sample catalogue data; confirm availability when ordering.</p>
+  <div class="actions" style="justify-content:center"><a class="btn btn-quiet" href="#fit">View sample →</a><button class="btn btn-primary" data-order="Signature Runner">Order now ↗</button></div></div>
+</section>
+
+<section class="story right" id="fit" data-state="fit" data-label="A better fit">
+  <div class="copy reveal"><div class="section-index">06 — YOUR FIT</div><p class="eyebrow">Get the right size</p><h2>Fit should feel effortless.</h2>
+  <p class="lede">Your best fit starts with a simple measurement. Measure both feet late in the day, use the longer foot, and compare the result with the size guide supplied by the retailer before placing an order.</p>
+  <ul class="feature-list"><li><span><strong>Measure standing.</strong> Keep your heel against a wall and measure to your longest toe.</span></li><li><span><strong>Check the width.</strong> Your toes should spread naturally without pressure at the sides.</span></li><li><span><strong>Allow movement.</strong> Leave a little space in front without letting the heel slip.</span></li></ul>
+  <div class="stats"><div class="stat"><strong>PM</strong><span>Best time to measure</span></div><div class="stat"><strong>Both</strong><span>Feet measured</span></div><div class="stat"><strong>Fit</strong><span>Comfort over label</span></div></div>
+  <div class="actions"><button class="btn btn-quiet" id="size-guide">Open size guide →</button><button class="btn btn-primary" data-order="Fit consultation">Ask about my size ↗</button></div></div>
+</section>
+
+<section class="story" id="care" data-state="care" data-label="Keep them in rotation">
+  <div class="copy reveal"><div class="section-index">07 — LONGER LIFE</div><p class="eyebrow">Care, not clutter</p><h2>Keep your favourites in rotation.</h2>
+  <p class="lede">A little maintenance goes a long way. Remove surface dust after wear, clean gently with a soft brush and mild solution, and let your sneakers air-dry away from direct heat.</p>
+  <ul class="feature-list"><li><span><strong>Brush before washing.</strong> Lift dry dirt first to avoid rubbing it deeper into the material.</span></li><li><span><strong>Spot-clean gently.</strong> Test cleaners on a discreet area and follow the material-specific care instructions.</span></li><li><span><strong>Dry naturally.</strong> Avoid radiators and harsh sunlight; use paper to help hold the shape.</span></li></ul>
+  <div class="stats"><div class="stat"><strong>Soft</strong><span>Brush and cloth</span></div><div class="stat"><strong>Air</strong><span>Natural drying</span></div><div class="stat"><strong>Repeat</strong><span>Small regular care</span></div></div>
+  <div class="actions"><a class="btn btn-quiet" href="#contact">Ask a care question →</a><button class="btn btn-primary" data-order="Care advice">Talk to the team ↗</button></div></div>
+</section>
+
+<section class="story center climax" id="finale" data-state="finale" data-label="Move your way">
+  <div class="copy reveal"><div class="section-index">08 — YOUR NEXT STEP</div><p class="eyebrow" style="justify-content:center">Find your pair</p><h2>Make room for<br><span class="gradient">another good day.</span></h2>
+  <p class="lede" style="margin-inline:auto">A good pair earns its place by being the one you reach for. Explore the edit, ask us about sizing, and choose the shape that fits your life.</p>
+  <div class="actions" style="justify-content:center;margin-top:28px"><button class="btn btn-primary" data-order="Signature Runner">Start an order ↗</button><a class="btn btn-quiet" href="#contact">Speak to the team</a></div></div>
+</section>
+</main>
+
+<footer id="contact">
+  <div class="footer-grid">
+    <div><a class="brand" href="#home"><span class="brand-mark">S</span> SOLE ATELIER</a><p style="max-width:380px;margin-top:20px">Sneakers for the everyday in-between: considered design, tactile details and a fit that feels like yours.</p><p><strong style="color:#fff">Retail note:</strong> This is a ready-to-customise demo storefront. Product prices, stock and contact details should be verified before launch.</p></div>
+    <div><h3>Explore</h3><div class="footer-links"><a href="#craft">Our approach</a><a href="#materials">Materials</a><a href="#collection">Collection</a><a href="#fit">Fit guide</a><a href="#care">Care notes</a></div></div>
+    <div><h3>Get in touch</h3><div class="footer-links"><a href="mailto:hello@soleatelier.example?subject=Sneaker%20enquiry">Email the team</a><a href="#collection">Browse the edit</a><button class="btn btn-quiet" style="justify-content:flex-start" data-order="General enquiry">Enquire about a pair ↗</button></div><p style="font-size:.8rem">Replace the demo email with your verified store contact before publishing.</p></div>
+  </div>
+  <div class="footer-bottom"><span>© <span id="year"></span> SOLE ATELIER. Made for movement.</span><span>Designed with care · Shop responsibly</span></div>
+</footer>
+
+<nav class="mobile-nav" aria-label="Mobile navigation">
+  <a href="#home" class="active"><span>⌂</span>Home</a><a href="#collection"><span>◈</span>Explore</a><a href="#craft"><span>◎</span>Tour</a><a href="#contact"><span>✉</span>Chat</a>
+</nav>
+<a id="whatsapp" href="#contact" aria-label="Contact the store"><i></i> Talk to us</a>
+<button id="back-top" aria-label="Back to top">↑</button>
+<div id="cursor" aria-hidden="true"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<div class="dialog-backdrop" id="order-dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+  <div class="dialog"><button class="dialog-close" id="dialog-close" aria-label="Close order form">×</button><p class="eyebrow">A good place to start</p><h2 id="dialog-title">Enquire about a pair.</h2><p>Tell us what you are looking for. This demo will prepare an email for your review; it does not process payment or reserve stock.</p>
+  <form id="order-form"><label for="product">Pair / enquiry</label><input id="product" name="product" required value="Signature Runner"><label for="size">EU size (optional)</label><select id="size" name="size"><option value="">Choose a size</option><option>EU 38</option><option>EU 39</option><option>EU 40</option><option>EU 41</option><option>EU 42</option><option>EU 43</option><option>EU 44</option><option>EU 45</option><option>Not sure yet</option></select><label for="customer-email">Your email (optional)</label><input id="customer-email" name="email" type="email" placeholder="you@example.com"><div class="actions" style="margin-top:22px"><button type="submit" class="btn btn-primary">Prepare enquiry ↗</button><button type="button" class="btn btn-quiet" id="cancel-order">Cancel</button></div></form></div>
+</div>
+<script type="module">
+import * as THREE from 'three';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+gsap.registerPlugin(ScrollTrigger);
+
+const $ = (s, root=document) => root.querySelector(s);
+const $$ = (s, root=document) => [...root.querySelectorAll(s)];
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const mobile = Math.min(window.innerWidth, 768) <= 768;
+$('#year').textContent = new Date().getFullYear();
+document.body.classList.add('js-ready');
+
+const dialog = $('#order-dialog');
+const productInput = $('#product');
+let lastFocus = null;
+function openOrder(product='Signature Runner'){
+  lastFocus = document.activeElement;
+  productInput.value = product;
+  dialog.classList.add('open');
+  setTimeout(()=>productInput.focus(), 20);
+}
+function closeOrder(){ dialog.classList.remove('open'); if(lastFocus) lastFocus.focus(); }
+$$('[data-order]').forEach(btn=>btn.addEventListener('click',()=>openOrder(btn.dataset.order)));
+$('#dialog-close').addEventListener('click',closeOrder);
+$('#cancel-order').addEventListener('click',closeOrder);
+dialog.addEventListener('click',e=>{if(e.target===dialog)closeOrder()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&dialog.classList.contains('open'))closeOrder()});
+$('#order-form').addEventListener('submit',e=>{
+  e.preventDefault();
+  const product = $('#product').value.trim();
+  const size = $('#size').value;
+  const email = $('#customer-email').value.trim();
+  const subject = encodeURIComponent('Sneaker enquiry — '+product);
+  const body = encodeURIComponent('Hello SOLE ATELIER,\n\nI would like to enquire about: '+product+'\nSize: '+(size||'Not specified')+'\nMy email: '+(email||'Not provided')+'\n\nPlease confirm availability, final price and delivery options.\n');
+  closeOrder();
+  window.location.href = 'mailto:hello@soleatelier.example?subject='+subject+'&body='+body;
+  toast('Your email app should open with the enquiry. Replace the demo email before launch.');
+});
+function toast(message){const el=$('#toast');el.textContent=message;el.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('show'),3600)}
+$('#size-guide').addEventListener('click',()=>toast('Measure both feet in centimetres and compare with the retailer’s verified size chart.'));
+$('#back-top').addEventListener('click',()=>window.scrollTo({top:0,behavior:reducedMotion?'auto':'smooth'}));
+const nav = $('#topbar');
+const sections = $$('section.story');
+const dots = $$('#section-dots a');
+const mobileLinks = $$('.mobile-nav a');
+const badge = $('#active-badge');
+function setActive(id){
+  const index = sections.findIndex(s=>s.id===id);
+  if(index<0)return;
+  dots.forEach((d,i)=>d.setAttribute('aria-current',i===index?'true':'false'));
+  mobileLinks.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+id || (id==='materials'&&a.getAttribute('href')==='#collection')));
+  badge.textContent=String(index+1).padStart(2,'0')+' / '+(sections[index].dataset.label||'Explore');
+}
+const revealObserver = new IntersectionObserver(entries=>{
+  entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('in-view');revealObserver.unobserve(entry.target)}});
+},{threshold:.12});
+$$('.reveal').forEach(el=>{if(reducedMotion)el.classList.add('in-view');else revealObserver.observe(el)});
+const sectionObserver = new IntersectionObserver(entries=>{
+  entries.forEach(entry=>{if(entry.isIntersecting){setActive(entry.target.id);nav.classList.toggle('scrolled',window.scrollY>40)}});
+},{rootMargin:'-35% 0px -45% 0px',threshold:0});
+sections.forEach(s=>sectionObserver.observe(s));
+window.addEventListener('scroll',()=>{
+  const max=document.documentElement.scrollHeight-window.innerHeight;
+  $('#progress').style.width=(max>0?window.scrollY/max*100:0)+'%';
+  nav.classList.toggle('scrolled',window.scrollY>40);
+},{passive:true});
+
+/* THREE.JS SCENE: procedural sneaker sculpture, shader-displaced upper, particle field,
+   flowing curve streams, raycast hover response, scroll-driven camera/material states. */
+let renderer, scene, camera, shoe, shoeGroup, sole, upper, accent, laceGroup, dust, particleData, streamGroup;
+let clock = new THREE.Clock();
+let pointer = new THREE.Vector2(0,0), pointerTarget = new THREE.Vector2(0,0);
+let hovered = false, scrollProgress = 0, targetScroll = 0, rafId;
+const canvas = $('#scene');
+const fallback = $('#scene-fallback');
+const palette = {
+  hero: new THREE.Color('#d8ff63'),
+  craft: new THREE.Color('#e9e5db'),
+  materials: new THREE.Color('#ff744f'),
+  comfort: new THREE.Color('#a7c7ff'),
+  collection: new THREE.Color('#d8ff63'),
+  fit: new THREE.Color('#f2d4a7'),
+  care: new THREE.Color('#9de3c1'),
+  finale: new THREE.Color('#d8ff63')
+};
+let targetAccent = palette.hero.clone();
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function makeUpperGeometry(){
+  // A smooth, parametric sneaker upper: x = toe-to-heel, y = height, z = width.
+  const rings=96, around=48, positions=[], uvs=[], indices=[];
+  for(let i=0;i<=rings;i++){
+    const t=i/rings;
+    const x=(t-.5)*3.55;
+    const toe=Math.exp(-Math.pow((t-.19)/.22,2));
+    const heel=Math.exp(-Math.pow((t-.82)/.2,2));
+    const width=(.28+.34*Math.sin(Math.PI*t)**.65)*(1-.28*heel)+.05*toe;
+    const top=.26+.48*Math.sin(Math.PI*t)**.65+.08*heel;
+    for(let j=0;j<=around;j++){
+      const a=j/around*Math.PI*2;
+      const side=Math.cos(a);
+      const y=top*(.5+.5*Math.sin(a)) + .02*Math.cos(a*2);
+      const z=width*Math.cos(a);
+      positions.push(x,y,z);
+      uvs.push(t,j/around);
+    }
+  }
+  for(let i=0;i<rings;i++)for(let j=0;j<around;j++){
+    const a=i*(around+1)+j,b=a+around+1;
+    indices.push(a,b,a+1,b,b+1,a+1);
+  }
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+  g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+  g.setIndex(indices);g.computeVertexNormals();return g;
+}
+function makeSoleGeometry(){
+  const shape=new THREE.Shape();
+  shape.moveTo(-1.95,.1);shape.quadraticCurveTo(-1.95,-.08,-1.72,-.1);
+  shape.lineTo(1.53,-.1);shape.quadraticCurveTo(1.98,-.08,1.98,.12);
+  shape.quadraticCurveTo(1.9,.25,1.58,.24);shape.lineTo(-1.55,.24);
+  shape.quadraticCurveTo(-1.94,.23,-1.95,.1);
+  const geo=new THREE.ExtrudeGeometry(shape,{depth:.65,bevelEnabled:true,bevelSegments:3,steps:1,bevelSize:.06,bevelThickness:.07,curveSegments:14});
+  geo.rotateX(-Math.PI/2);geo.translate(0,.05,.0);geo.computeVertexNormals();return geo;
+}
+function addLaces(parent){
+  const group=new THREE.Group();
+  const laceMat=new THREE.MeshStandardMaterial({color:0xe9e6dc,roughness:.5,metalness:.08});
+  for(let i=0;i<6;i++){
+    const x=-.45+i*.19;
+    const curve=new THREE.CatmullRomCurve3([new THREE.Vector3(x,.88,-.19),new THREE.Vector3(x+.1,.94,0),new THREE.Vector3(x,.88,.19)]);
+    const mesh=new THREE.Mesh(new THREE.TubeGeometry(curve,12,.018,6,false),laceMat);
+    group.add(mesh);
+  }
+  parent.add(group);return group;
+}
+function createShoe(){
+  shoeGroup=new THREE.Group();shoeGroup.position.set(.2,.05,0);shoeGroup.rotation.set(.12,-.38,-.04);scene.add(shoeGroup);
+  shoe=new THREE.Group();shoeGroup.add(shoe);
+  const soleMat=new THREE.MeshStandardMaterial({color:0xe8e4dc,roughness:.42,metalness:.08});
+  sole=new THREE.Mesh(makeSoleGeometry(),soleMat);sole.position.y=.05;sole.castShadow=true;sole.receiveShadow=true;shoe.add(sole);
+  // Fine outsole welt.
+  const welt=new THREE.Mesh(new THREE.TorusGeometry(1.15,.022,8,100),new THREE.MeshStandardMaterial({color:0xaaa69d,roughness:.55,metalness:.2}));
+  welt.scale.set(1.45,.22,.48);welt.position.set(0,.08,0);welt.rotation.x=Math.PI/2;shoe.add(welt);
+  const upperMat=new THREE.ShaderMaterial({
+    uniforms:{uTime:{value:0},uHover:{value:0},uAccent:{value:palette.hero.clone()},uBase:{value:new THREE.Color('#34383b')}},
+    vertexShader:`uniform float uTime; uniform float uHover; varying vec2 vUv; varying vec3 vNormal; varying vec3 vView; varying float vWave;
+      void main(){vUv=uv; vec3 p=position; float wave=sin(p.x*3.1+uTime*1.3)*cos(p.y*4.2-uTime*.8); p += normal*(wave*.018 + uHover*.035); vWave=wave; vec4 mv=modelViewMatrix*vec4(p,1.0); vNormal=normalize(normalMatrix*normal); vView=normalize(-mv.xyz); gl_Position=projectionMatrix*mv;}`,
+    fragmentShader:`uniform float uTime; uniform float uHover; uniform vec3 uAccent; uniform vec3 uBase; varying vec2 vUv; varying vec3 vNormal; varying vec3 vView; varying float vWave;
+      void main(){float fres=pow(1.0-max(dot(normalize(vNormal),normalize(vView)),0.0),2.5); float seam=smoothstep(.02,.0,abs(fract(vUv.x*28.0)-.5)-.46); float grain=sin(vUv.x*420.0+sin(vUv.y*170.0))*0.025; vec3 base=mix(uBase,uAccent,.09+uHover*.28); base += grain; base += seam*.035; base += fres*(.18+uHover*.28); float light=.92+.08*sin(uTime*1.4+vUv.x*9.0); gl_FragColor=vec4(base*light,1.0);}`,
+    roughness:.52,metalness:.16
+  });
+  upper=new THREE.Mesh(makeUpperGeometry(),upperMat);upper.position.y=.18;upper.castShadow=true;upper.receiveShadow=true;shoe.add(upper);
+  // A raised side panel gives the silhouette a layered, designed feel.
+  const panelGeo=new THREE.Shape();
+  panelGeo.moveTo(-1.35,.35);panelGeo.quadraticCurveTo(-.75,.7,-.1,.55);panelGeo.quadraticCurveTo(.5,.43,1.2,.5);panelGeo.lineTo(.95,.27);panelGeo.quadraticCurveTo(.1,.18,-.55,.34);panelGeo.quadraticCurveTo(-1.05,.4,-1.35,.35);
+  const panel=new THREE.Mesh(new THREE.ShapeGeometry(panelGeo,24),new THREE.MeshStandardMaterial({color:0x4b5051,roughness:.4,metalness:.12,side:THREE.DoubleSide}));
+  panel.position.set(0,.43,.355);panel.rotation.y=.04;shoe.add(panel);
+  accent=new THREE.Mesh(new THREE.BoxGeometry(.22,.035,.035),new THREE.MeshStandardMaterial({color:palette.hero,emissive:palette.hero,emissiveIntensity:.5,roughness:.25,metalness:.3}));
+  accent.position.set(.42,.82,.23);accent.rotation.z=-.18;shoe.add(accent);
+  laceGroup=addLaces(shoe);
+  // Heel loop and subtle stitched eyelets.
+  const loopCurve=new THREE.CatmullRomCurve3([new THREE.Vector3(1.15,.72,-.06),new THREE.Vector3(1.35,1.05,0),new THREE.Vector3(1.48,.75,.05)]);
+  shoe.add(new THREE.Mesh(new THREE.TubeGeometry(loopCurve,18,.025,7,false),new THREE.MeshStandardMaterial({color:0xbbb7ad,roughness:.55})));
+  const eyeMat=new THREE.MeshStandardMaterial({color:0xb4b1a9,metalness:.65,roughness:.3});
+  for(let i=0;i<5;i++){const eye=new THREE.Mesh(new THREE.TorusGeometry(.035,.009,6,12),eyeMat);eye.position.set(-.38+i*.17,.79,.25);eye.rotation.x=Math.PI/2;shoe.add(eye)}
+  shoe.userData.interactive=true;
+}
+function createParticles(){
+  const count=mobile?650:1700, geo=new THREE.BufferGeometry();
+  const positions=new Float32Array(count*3),colors=new Float32Array(count*3),sizes=new Float32Array(count);
+  const c1=new THREE.Color('#d8ff63'),c2=new THREE.Color('#a5b7d2');
+  for(let i=0;i<count;i++){
+    positions[i*3]=(Math.random()-.5)*15;
+    positions[i*3+1]=(Math.random()-.5)*9;
+    positions[i*3+2]=(Math.random()-.5)*9-2;
+    const c=c1.clone().lerp(c2,Math.random());colors.set([c.r,c.g,c.b],i*3);sizes[i]=Math.random();
+  }
+  geo.setAttribute('position',new THREE.BufferAttribute(positions,3));geo.setAttribute('color',new THREE.BufferAttribute(colors,3));geo.setAttribute('aSize',new THREE.BufferAttribute(sizes,1));
+  const mat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,uniforms:{uTime:{value:0},uPixelRatio:{value:Math.min(devicePixelRatio,2)}},
+  vertexShader:`attribute float aSize; attribute vec3 color; uniform float uTime; uniform float uPixelRatio; varying vec3 vColor; varying float vAlpha; void main(){vColor=color;vec3 p=position;p.y+=sin(uTime*.35+position.x*.6+position.z)*.12;vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=(1.2+aSize*3.0)*uPixelRatio*(8.0/-mv.z);vAlpha=.35+.5*abs(sin(uTime*.6+position.x));}`,
+  fragmentShader:`varying vec3 vColor;varying float vAlpha;void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;float a=smoothstep(.5,.02,d)*vAlpha;gl_FragColor=vec4(vColor,a);}`});
+  dust=new THREE.Points(geo,mat);scene.add(dust);particleData={geo,mat,count};
+}
+function createStreams(){
+  streamGroup=new THREE.Group();scene.add(streamGroup);
+  const curves=[
+    new THREE.CatmullRomCurve3([new THREE.Vector3(-5,-.7,-1),new THREE.Vector3(-2,1.6,-2),new THREE.Vector3(.2,1.2,-1),new THREE.Vector3(3,2.4,-3),new THREE.Vector3(6,1,-2)]),
+    new THREE.CatmullRomCurve3([new THREE.Vector3(-5,-1.5,-3),new THREE.Vector3(-2,-.2,-1),new THREE.Vector3(1,-1.5,-2),new THREE.Vector3(3,.1,-1),new THREE.Vector3(5,-.8,-3)])
+  ];
+  curves.forEach((curve,i)=>{
+    const tube=new THREE.Mesh(new THREE.TubeGeometry(curve,160,.012,6,false),new THREE.MeshBasicMaterial({color:i?0xff744f:0xd8ff63,transparent:true,opacity:.55,blending:THREE.AdditiveBlending}));
+    streamGroup.add(tube);
+    const packetCount=mobile?24:48, packetGeo=new THREE.SphereGeometry(.025,6,6), packetMat=new THREE.MeshBasicMaterial({color:i?0xffa58b:0xe9ffad});
+    const packets=new THREE.InstancedMesh(packetGeo,packetMat,packetCount);const dummy=new THREE.Object3D();
+    packets.userData={curve,packetCount,dummy,phase:i*.45};streamGroup.add(packets);
+  });
+}
+function initScene(){
+  try{
+    renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,powerPreference:'high-performance'});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+    renderer.setSize(window.innerWidth,window.innerHeight);
+    renderer.outputColorSpace=THREE.SRGBColorSpace;
+    renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.13;
+    renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+    scene=new THREE.Scene();scene.fog=new THREE.FogExp2(0x0a0b0d,.045);
+    camera=new THREE.PerspectiveCamera(35,window.innerWidth/window.innerHeight,.1,100);camera.position.set(0,1.35,8.7);
+    const ambient=new THREE.HemisphereLight(0xcfd9eb,0x171411,1.7);scene.add(ambient);
+    const key=new THREE.DirectionalLight(0xfff0d5,3.2);key.position.set(-3,6,5);key.castShadow=true;key.shadow.mapSize.set(mobile?512:1024,mobile?512:1024);key.shadow.camera.left=-5;key.shadow.camera.right=5;key.shadow.camera.top=5;key.shadow.camera.bottom=-5;scene.add(key);
+    const rim=new THREE.PointLight(0xd8ff9b,28,15,2);rim.position.set(3,2.5,-2);scene.add(rim);
+    const fill=new THREE.PointLight(0x92b8ff,12,12,2);fill.position.set(-4,0,3);scene.add(fill);
+    const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:0x111214,roughness:.82,metalness:.1}));floor.rotation.x=-Math.PI/2;floor.position.y=-1.15;floor.position.z=-2;floor.receiveShadow=true;scene.add(floor);
+    // A subtle reflective disc beneath the product.
+    const disc=new THREE.Mesh(new THREE.CircleGeometry(2.5,80),new THREE.MeshBasicMaterial({color:0x25282b,transparent:true,opacity:.45,side:THREE.DoubleSide}));disc.rotation.x=-Math.PI/2;disc.position.set(.15,-1.12,0);disc.scale.set(1.25,.52,1);scene.add(disc);
+    createShoe();createParticles();createStreams();
+    window.addEventListener('pointermove',e=>{
+      pointerTarget.x=(e.clientX/window.innerWidth)*2-1;
+      pointerTarget.y=-(e.clientY/window.innerHeight)*2+1;
+    },{passive:true});
+    window.addEventListener('resize',onResize);
+    canvas.addEventListener('pointermove',onCanvasMove);
+    canvas.addEventListener('pointerleave',()=>{hovered=false;$('#cursor').classList.remove('active')});
+    animate();
+  }catch(err){
+    console.error('3D scene initialization failed:',err);
+    fallback.style.display='grid';canvas.style.display='none';
+  }
+}
+const raycaster=new THREE.Raycaster();
+function onCanvasMove(e){
+  if(!shoe||mobile)return;
+  const rect=canvas.getBoundingClientRect();
+  const p=new THREE.Vector2((e.clientX-rect.left)/rect.width*2-1,-((e.clientY-rect.top)/rect.height*2-1));
+  raycaster.setFromCamera(p,camera);
+  const hits=raycaster.intersectObjects(shoe.children,true);
+  hovered=hits.length>0;
+  $('#cursor').classList.toggle('active',hovered);
+}
+function onResize(){
+  if(!renderer||!camera)return;
+  camera.aspect=window.innerWidth/window.innerHeight;camera.fov=mobile?43:35;camera.updateProjectionMatrix();
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));renderer.setSize(window.innerWidth,window.innerHeight);
+  if(particleData)particleData.mat.uniforms.uPixelRatio.value=Math.min(window.devicePixelRatio||1,2);
+}
+const stateConfigs={
+ hero:{cam:[0,1.35,8.7],shoe:[.25,.04,0],rot:[.12,-.38,-.04],scale:1,accent:'#d8ff63'},
+ craft:{cam:[-1.0,1.2,7.2],shoe:[.1,-.04,0],rot:[.02,-.75,.08],scale:1.04,accent:'#e9e5db'},
+ materials:{cam:[.5,1.9,6.8],shoe:[.15,-.02,.1],rot:[.22,.15,-.08],scale:1.12,accent:'#ff744f'},
+ comfort:{cam:[1.2,.8,7.6],shoe:[.1,-.08,0],rot:[-.12,-.95,.04],scale:1.03,accent:'#a7c7ff'},
+ collection:{cam:[0,1.5,9.3],shoe:[0,.03,0],rot:[.1,-.25,0],scale:.95,accent:'#d8ff63'},
+ fit:{cam:[-1.1,1.3,7.5],shoe:[.05,0,0],rot:[.08,-1.25,-.02],scale:1,accent:'#f2d4a7'},
+ care:{cam:[.3,1.8,8],shoe:[.15,-.02,0],rot:[.28,.6,-.06],scale:1.02,accent:'#9de3c1'},
+ finale:{cam:[0,1.3,7.4],shoe:[.1,.02,0],rot:[.12,Math.PI*1.8,0],scale:1.16,accent:'#d8ff63'}
+};
+function setSceneState(id,progress=0){
+  const cfg=stateConfigs[id]||stateConfigs.hero;
+  if(!shoeGroup||!camera)return;
+  if(reducedMotion){
+    camera.position.set(...cfg.cam);shoeGroup.position.set(...cfg.shoe);shoeGroup.rotation.set(...cfg.rot);shoeGroup.scale.setScalar(cfg.scale);targetAccent.set(cfg.accent);return;
+  }
+  gsap.to(camera.position,{x:cfg.cam[0],y:cfg.cam[1],z:cfg.cam[2],duration:.9,ease:'power2.out',overwrite:'auto'});
+  gsap.to(shoeGroup.position,{x:cfg.shoe[0],y:cfg.shoe[1],z:cfg.shoe[2],duration:.9,ease:'power2.out',overwrite:'auto'});
+  gsap.to(shoeGroup.rotation,{x:cfg.rot[0],y:cfg.rot[1],z:cfg.rot[2],duration:1,ease:'power2.out',overwrite:'auto'});
+  gsap.to(shoeGroup.scale,{x:cfg.scale,y:cfg.scale,z:cfg.scale,duration:.9,ease:'power2.out',overwrite:'auto'});
+  targetAccent.set(cfg.accent);
+}
+function setupScrollAnimation(){
+  sections.forEach((section,index)=>{
+    const id=section.dataset.state;
+    ScrollTrigger.create({trigger:section,start:'top 65%',end:'bottom 35%',onEnter:()=>setSceneState(id),onEnterBack:()=>setSceneState(id)});
+  });
+  const story=gsap.timeline({scrollTrigger:{trigger:'main',start:'top top',end:'bottom bottom',scrub:1},defaults:{ease:'none'}});
+  story.addLabel('hero',0);
+  sections.forEach((section,i)=>{
+    const t=i/(sections.length-1);
+    story.addLabel(section.id,t);
+    story.to({p:t},{p:(i+1)/(sections.length-1),duration:1},t);
+  });
+  ScrollTrigger.create({trigger:'main',start:'top top',end:'bottom bottom',scrub:1,onUpdate:self=>{
+    targetScroll=self.progress;
+    const index=Math.min(sections.length-1,Math.floor(self.progress*sections.length));
+    const sec=sections[index];if(sec&&sec.dataset.state)targetAccent.set(palette[sec.dataset.state]||palette.hero);
+  }});
+}
+function animate(){
+  rafId=requestAnimationFrame(animate);
+  const t=clock.getElapsedTime();
+  if(!renderer||!scene||!camera)return;
+  pointer.x+=(pointerTarget.x-pointer.x)*.035;pointer.y+=(pointerTarget.y-pointer.y)*.035;
+  scrollProgress+=(targetScroll-scrollProgress)*.04;
+  if(shoeGroup){
+    const idle=reducedMotion?0:Math.sin(t*.7)*.035;
+    shoeGroup.position.y+=idle*.02;
+    shoeGroup.rotation.y+=(pointer.x*.12 + (hovered?.12:0)-shoeGroup.rotation.y)*.018;
+    shoeGroup.rotation.x+=(pointer.y*-.055-shoeGroup.rotation.x)*.012;
+    shoeGroup.rotation.z+=Math.sin(t*.42)*.0007;
+    // Hover response is handled by the upper shader and rotation, avoiding cumulative scale drift.
+  }
+  if(upper&&upper.material.uniforms){
+    upper.material.uniforms.uTime.value=t;
+    upper.material.uniforms.uHover.value+=(Number(hovered)-upper.material.uniforms.uHover.value)*.06;
+    upper.material.uniforms.uAccent.value.lerp(targetAccent,.025);
+  }
+  if(accent&&accent.material){
+    accent.material.color.lerp(targetAccent,.05);accent.material.emissive.lerp(targetAccent,.05);
+    accent.material.emissiveIntensity=.4+.25*(.5+.5*Math.sin(t*1.8));
+  }
+  if(particleData){particleData.mat.uniforms.uTime.value=t;dust.rotation.y=t*.008;dust.rotation.x=Math.sin(t*.1)*.025}
+  if(streamGroup){
+    streamGroup.rotation.y=Math.sin(t*.12)*.05;
+    streamGroup.children.forEach(child=>{
+      if(child.isInstancedMesh&&child.userData.curve){
+        const {curve,packetCount,dummy,phase}=child.userData;
+        for(let i=0;i<packetCount;i++){
+          const u=(i/packetCount+t*.035+phase)%1;const p=curve.getPointAt(u);
+          dummy.position.copy(p);dummy.scale.setScalar(.6+.5*Math.sin(u*20+t));dummy.updateMatrix();child.setMatrixAt(i,dummy.matrix);
+        }child.instanceMatrix.needsUpdate=true;
+      }
+    });
+  }
+  camera.position.x+=(pointer.x*.42-camera.position.x)*.012;
+  camera.position.y+=(1.25+pointer.y*.18-camera.position.y)*.012;
+  camera.lookAt(.05,.05,0);
+  renderer.render(scene,camera);
+}
+initScene();
+if(!reducedMotion){setupScrollAnimation()}else{sections.forEach(s=>{if(s.getBoundingClientRect().top<window.innerHeight)setSceneState(s.dataset.state)})}
+const cursor=$('#cursor');
+window.addEventListener('pointermove',e=>{if(!mobile){cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px';cursor.style.opacity='1'}},{passive:true});
+$$('a,button').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{if(!mobile)cursor.classList.add('active')});
+  el.addEventListener('mouseleave',()=>{if(!mobile&&!hovered)cursor.classList.remove('active')});
+});
+window.addEventListener('beforeunload',()=>{cancelAnimationFrame(rafId);if(renderer)renderer.dispose();if(particleData){particleData.geo.dispose();particleData.mat.dispose()}});
+</script>
+</body>
+</html>

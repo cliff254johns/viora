@@ -1,0 +1,3951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Maxfinleys Community Renewal Programme | A Desk for Every Child</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    <!-- Flutterwave SDK -->
+    <script src="https://checkout.flutterwave.com/v3.js">
+    </script>
+
+    <style>
+        /* ===== CSS VARIABLES ===== */
+        :root {
+            --primary: #0b7a4b;
+            --primary-dark: #065a35;
+            --primary-light: #e6f5ee;
+            --secondary: #1a2e3f;
+            --accent: #f59e0b;
+            --accent-light: #fbbf24;
+            --white: #ffffff;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #6b7280;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.12);
+            --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.15);
+            --radius: 12px;
+            --radius-lg: 20px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --bg-body: #ffffff;
+            --bg-section: #f9fafb;
+            --bg-card: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #374151;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --hero-bg: linear-gradient(165deg, #f0faf5 0%, #ffffff 100%);
+            --toast-bg: #ffffff;
+        }
+
+        /* Dark Theme */
+        [data-theme="dark"] {
+            --bg-body: #0f1724;
+            --bg-section: #162033;
+            --bg-card: #1a2a3f;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border-color: #2d3b52;
+            --hero-bg: linear-gradient(165deg, #0a1628 0%, #162033 100%);
+            --toast-bg: #1a2a3f;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
+            --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.6);
+            --gray-50: #0f1724;
+            --gray-100: #162033;
+            --gray-200: #1e2d45;
+            --gray-300: #2d3b52;
+            --gray-600: #94a3b8;
+            --gray-700: #cbd5e1;
+            --gray-800: #e2e8f0;
+            --gray-900: #f1f5f9;
+            --primary-light: #0a2a1a;
+        }
+
+        [data-theme="dark"] .navbar {
+            background: rgba(15, 23, 36, 0.92);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        [data-theme="dark"] .navbar.scrolled {
+            background: rgba(15, 23, 36, 0.98);
+        }
+
+        [data-theme="dark"] .navbar .nav-links a {
+            color: var(--gray-700);
+        }
+
+        [data-theme="dark"] .navbar .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--primary);
+        }
+
+        [data-theme="dark"] .navbar .logo span {
+            color: var(--gray-600);
+        }
+
+        [data-theme="dark"] .hamburger span {
+            background: var(--gray-700);
+        }
+
+        [data-theme="dark"] .hero-badge {
+            background: rgba(26, 42, 63, 0.85);
+            border-color: rgba(255, 255, 255, 0.05);
+            color: var(--gray-700);
+        }
+
+        [data-theme="dark"] .service-card,
+        [data-theme="dark"] .matter-card,
+        [data-theme="dark"] .testimonial-card,
+        [data-theme="dark"] .faq-item,
+        [data-theme="dark"] .partner-logo,
+        [data-theme="dark"] .donation-form-wrapper,
+        [data-theme="dark"] .contact-item,
+        [data-theme="dark"] .about-text .stat-item,
+        [data-theme="dark"] .programme-card,
+        [data-theme="dark"] .step-card {
+            background: var(--bg-card);
+            border-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .service-card .icon,
+        [data-theme="dark"] .programme-card .icon {
+            background: var(--primary-light);
+        }
+
+        [data-theme="dark"] .service-card:hover .icon,
+        [data-theme="dark"] .programme-card:hover .icon {
+            background: var(--primary);
+        }
+
+        [data-theme="dark"] .donation-amounts .amount-btn {
+            background: var(--bg-card);
+            border-color: var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .donation-amounts .amount-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        [data-theme="dark"] .form-group input {
+            background: var(--bg-body);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .form-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(11, 122, 75, 0.2);
+        }
+
+        [data-theme="dark"] .payment-option {
+            background: var(--bg-body);
+            border-color: var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .payment-option:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        [data-theme="dark"] .payment-option.active {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        [data-theme="dark"] .challenge-list li {
+            background: var(--bg-card);
+            border-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .faq-question {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .faq-answer {
+            color: var(--text-muted);
+        }
+
+        [data-theme="dark"] .footer {
+            background: #0a1628;
+        }
+
+        [data-theme="dark"] .newsletter-section {
+            background: #0a1628;
+        }
+
+        [data-theme="dark"] .toast {
+            background: var(--toast-bg);
+            border-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .toast .toast-title {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .toast .toast-message {
+            color: var(--text-muted);
+        }
+
+        [data-theme="dark"] .hero {
+            background: var(--hero-bg);
+        }
+
+        [data-theme="dark"] .bg-light {
+            background: var(--bg-section);
+        }
+
+        [data-theme="dark"] .bg-primary-light {
+            background: var(--primary-light);
+        }
+
+        [data-theme="dark"] .section-header h2 {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .section-header p {
+            color: var(--text-muted);
+        }
+
+        [data-theme="dark"] .contact-info h3 {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .contact-info p {
+            color: var(--text-muted);
+        }
+
+        [data-theme="dark"] .about-text p {
+            color: var(--text-muted);
+        }
+
+        [data-theme="dark"] .service-card p,
+        [data-theme="dark"] .matter-card p,
+        [data-theme="dark"] .testimonial-card blockquote {
+            color: var(--text-muted);
+        }
+
+        [data-theme="dark"] .service-card h4,
+        [data-theme="dark"] .matter-card h4,
+        [data-theme="dark"] .testimonial-card .author .name {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .contact-item .details .value {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .contact-item .details .label {
+            color: var(--text-muted);
+        }
+
+        [data-theme="dark"] .about-text h3,
+        [data-theme="dark"] .sustainability-text h3,
+        [data-theme="dark"] .centre-text h3 {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .sustainability-text p {
+            color: var(--text-muted);
+        }
+
+        [data-theme="dark"] .sustainability-text .highlight-box {
+            background: var(--primary-light);
+        }
+
+        [data-theme="dark"] .centre-text p {
+            color: var(--text-muted);
+        }
+
+        [data-theme="dark"] .centre-text .feature-list li {
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .donation-form-wrapper h3 {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .donation-form-wrapper .subtitle {
+            color: var(--text-muted);
+        }
+
+        [data-theme="dark"] .form-group label {
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .secure-badge {
+            color: var(--text-muted);
+        }
+
+        [data-theme="dark"] .donation-section .section-header p {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        [data-theme="dark"] .floating-donate {
+            box-shadow: 0 8px 30px rgba(245, 158, 11, 0.3);
+        }
+
+        [data-theme="dark"] .modal {
+            background: var(--bg-card);
+        }
+
+        [data-theme="dark"] .modal .modal-header h3 {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .step-number {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        /* ===== DARK THEME TOGGLE BUTTON ===== */
+        .theme-toggle {
+            background: none;
+            border: 2px solid var(--gray-200);
+            border-radius: 50px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 1rem;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .theme-toggle i {
+            font-size: 1.1rem;
+        }
+
+        /* ===== BACK TO TOP ===== */
+        .back-to-top {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            z-index: 998;
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+        }
+
+        .back-to-top.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .back-to-top:hover {
+            background: var(--primary-dark);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        @media (max-width: 768px) {
+            .back-to-top {
+                bottom: 90px;
+                right: 20px;
+                width: 44px;
+                height: 44px;
+                font-size: 1rem;
+            }
+
+            .theme-toggle {
+                padding: 6px 12px;
+                font-size: 0.85rem;
+            }
+
+            .theme-toggle span {
+                display: none;
+            }
+        }
+
+        /* ===== PROGRESS BAR ===== */
+        .progress-bar {
+            position: fixed;
+            top: 74px;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            z-index: 1000;
+            transition: width 0.1s ease;
+        }
+
+        @media (max-width: 768px) {
+            .progress-bar {
+                top: 74px;
+            }
+        }
+
+        /* ===== BASE STYLES ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            background: var(--bg-body);
+            line-height: 1.6;
+            overflow-x: hidden;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        img {
+            max-width: 100%;
+            display: block;
+            height: auto;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 32px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(11, 122, 75, 0.35);
+        }
+
+        .btn-accent {
+            background: var(--accent);
+            color: var(--white);
+        }
+        .btn-accent:hover {
+            background: #d97706;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.35);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+        .btn-outline:hover {
+            background: var(--primary);
+            color: var(--white);
+            transform: translateY(-2px);
+        }
+
+        .btn-white {
+            background: var(--white);
+            color: var(--primary);
+        }
+        .btn-white:hover {
+            background: var(--gray-100);
+            transform: translateY(-2px);
+        }
+
+        .btn-sm {
+            padding: 10px 24px;
+            font-size: 0.85rem;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* ===== NAVIGATION ===== */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            transition: var(--transition);
+        }
+
+        .navbar.scrolled {
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: var(--shadow-md);
+        }
+
+        .navbar .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 74px;
+        }
+
+        .navbar .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .navbar .logo i {
+            font-size: 1.6rem;
+            color: var(--primary);
+        }
+
+        .navbar .logo span {
+            color: var(--secondary);
+            font-weight: 300;
+        }
+
+        .navbar .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            list-style: none;
+        }
+
+        .navbar .nav-links a {
+            padding: 8px 14px;
+            border-radius: 50px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            color: var(--gray-700);
+            transition: var(--transition);
+        }
+
+        .navbar .nav-links a:hover {
+            background: var(--gray-100);
+            color: var(--primary);
+        }
+
+        .navbar .nav-links .donate-nav {
+            background: var(--accent);
+            color: var(--white);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .navbar .nav-links .donate-nav:hover {
+            background: #d97706;
+            transform: scale(1.02);
+            color: var(--white);
+        }
+
+        /* Hamburger */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 6px;
+            background: none;
+            border: none;
+        }
+
+        .hamburger span {
+            display: block;
+            width: 26px;
+            height: 3px;
+            background: var(--gray-800);
+            border-radius: 3px;
+            transition: var(--transition);
+        }
+
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 6px);
+        }
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(5px, -6px);
+        }
+
+        /* ===== FLOATING DONATE BUTTON ===== */
+        .floating-donate {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 999;
+            background: var(--accent);
+            color: var(--white);
+            border: none;
+            border-radius: 50px;
+            padding: 16px 24px;
+            font-weight: 700;
+            font-size: 1rem;
+            box-shadow: 0 8px 30px rgba(245, 158, 11, 0.4);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .floating-donate:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 12px 40px rgba(245, 158, 11, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .floating-donate {
+                padding: 14px 18px;
+                font-size: 0.9rem;
+                bottom: 20px;
+                right: 20px;
+            }
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            padding: 140px 0 100px;
+            background: var(--hero-bg);
+            position: relative;
+            overflow: hidden;
+            transition: background 0.3s ease;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -30%;
+            right: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(11, 122, 75, 0.06) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .hero .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-content h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1.15;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            transition: color 0.3s ease;
+        }
+
+        .hero-content h1 .highlight {
+            color: var(--primary);
+            position: relative;
+        }
+
+        .hero-content h1 .highlight::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: rgba(11, 122, 75, 0.2);
+            border-radius: 4px;
+            z-index: -1;
+        }
+
+        .hero-content .tagline {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .hero-content .tagline i {
+            margin-right: 8px;
+        }
+
+        .hero-content .sub-tagline {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .hero-content p {
+            font-size: 1.05rem;
+            color: var(--text-muted);
+            max-width: 520px;
+            margin-bottom: 28px;
+            line-height: 1.8;
+            transition: color 0.3s ease;
+        }
+
+        .hero-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .hero-image {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero-image img {
+            width: 100%;
+            max-width: 560px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            object-fit: cover;
+            aspect-ratio: 4/3;
+            transition: var(--transition);
+        }
+
+        .hero-image img:hover {
+            transform: scale(1.01);
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .btn-group-hero {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .btn-group-hero .btn {
+            font-size: 0.9rem;
+            padding: 12px 24px;
+        }
+
+        /* ===== SECTION COMMON ===== */
+        .section {
+            padding: 80px 0;
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 780px;
+            margin: 0 auto 56px;
+        }
+
+        .section-header .tag {
+            display: inline-block;
+            background: var(--primary-light);
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 6px 18px;
+            border-radius: 50px;
+            margin-bottom: 12px;
+            transition: background 0.3s ease;
+        }
+
+        .section-header h2 {
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            transition: color 0.3s ease;
+        }
+
+        .section-header p {
+            font-size: 1.05rem;
+            color: var(--text-muted);
+            line-height: 1.8;
+            transition: color 0.3s ease;
+        }
+
+        .section-header h2 .highlight {
+            color: var(--primary);
+        }
+
+        .bg-light {
+            background: var(--bg-section);
+            transition: background 0.3s ease;
+        }
+
+        .bg-primary-light {
+            background: var(--primary-light);
+            transition: background 0.3s ease;
+        }
+
+        /* ===== IMPACT NUMBERS ===== */
+        .impact-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            text-align: center;
+        }
+
+        .impact-item {
+            padding: 24px;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .impact-item:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary);
+        }
+
+        .impact-item .number {
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: var(--primary);
+            line-height: 1.2;
+        }
+
+        .impact-item .label {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        /* ===== PROGRAMME CARDS ===== */
+        .programmes-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .programme-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 40px 32px;
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .programme-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary);
+        }
+
+        .programme-card .icon {
+            width: 72px;
+            height: 72px;
+            background: var(--primary-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 2rem;
+            color: var(--primary);
+            transition: var(--transition);
+        }
+
+        .programme-card:hover .icon {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .programme-card h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            transition: color 0.3s ease;
+        }
+
+        .programme-card .subtitle {
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+        }
+
+        .programme-card p {
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 16px;
+            transition: color 0.3s ease;
+        }
+
+        .programme-card ul {
+            list-style: none;
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .programme-card ul li {
+            padding: 4px 0;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.3s ease;
+        }
+
+        .programme-card ul li i {
+            color: var(--primary);
+            width: 18px;
+        }
+
+        .programme-card .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        /* ===== STEPS ===== */
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .step-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 24px 20px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .step-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary);
+        }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 50%;
+            font-weight: 800;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .step-card h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            transition: color 0.3s ease;
+        }
+
+        .step-card p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            transition: color 0.3s ease;
+        }
+
+        /* ===== BENEFICIARY FORM ===== */
+        .form-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            border: 1px solid var(--border-color);
+            max-width: 800px;
+            margin: 0 auto;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .form-card h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            text-align: center;
+            transition: color 0.3s ease;
+        }
+
+        .form-card .form-subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            transition: color 0.3s ease;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            transition: color 0.3s ease;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: var(--transition);
+            background: var(--bg-body);
+            color: var(--text-primary);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(11, 122, 75, 0.12);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-group .file-input {
+            padding: 10px;
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius);
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--bg-body);
+            color: var(--text-muted);
+        }
+
+        .form-group .file-input:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .form-group .file-input i {
+            font-size: 1.5rem;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .form-checkbox {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin: 12px 0;
+        }
+
+        .form-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-top: 4px;
+            accent-color: var(--primary);
+        }
+
+        .form-checkbox label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            transition: color 0.3s ease;
+        }
+
+        /* ===== ABOUT ===== */
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: center;
+        }
+
+        .about-image img {
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            width: 100%;
+            aspect-ratio: 4/3;
+            object-fit: cover;
+        }
+
+        .about-text h3 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            transition: color 0.3s ease;
+        }
+
+        .about-text p {
+            color: var(--text-muted);
+            line-height: 1.8;
+            margin-bottom: 16px;
+            transition: color 0.3s ease;
+        }
+
+        .about-text .vision-list {
+            list-style: none;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .about-text .vision-list li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: color 0.3s ease;
+        }
+
+        .about-text .vision-list li i {
+            color: var(--primary);
+        }
+
+        /* ===== TESTIMONIALS ===== */
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 28px;
+        }
+
+        .testimonial-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 32px 28px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .testimonial-card .stars {
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .testimonial-card blockquote {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+            flex: 1;
+            margin-bottom: 16px;
+            font-style: italic;
+            transition: color 0.3s ease;
+        }
+
+        .testimonial-card .author {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .testimonial-card .author img {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .testimonial-card .author .name {
+            font-weight: 700;
+            color: var(--text-primary);
+            transition: color 0.3s ease;
+        }
+
+        .testimonial-card .author .role {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            transition: color 0.3s ease;
+        }
+
+        /* ===== GALLERY ===== */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .gallery-item {
+            position: relative;
+            border-radius: var(--radius);
+            overflow: hidden;
+            cursor: pointer;
+            aspect-ratio: 1/1;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.02);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+            z-index: 2;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: var(--transition);
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.05);
+        }
+
+        .gallery-item .gallery-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px 16px 16px;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.75));
+            color: var(--white);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: var(--transition);
+        }
+
+        .gallery-item:hover .gallery-overlay {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .gallery-item .gallery-overlay h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .gallery-item .gallery-overlay p {
+            font-size: 0.8rem;
+            opacity: 0.85;
+            margin: 0;
+        }
+
+        .gallery-item .gallery-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            color: var(--white);
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 4px 12px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .gallery-item:hover .gallery-badge {
+            opacity: 1;
+        }
+
+        .gallery-item .gallery-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            color: var(--white);
+            font-size: 2.4rem;
+            opacity: 0;
+            transition: var(--transition);
+            pointer-events: none;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .gallery-item:hover .gallery-icon {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        .gallery-item .gallery-icon i {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 50%;
+            backdrop-filter: blur(4px);
+        }
+
+        /* Gallery Modal */
+        .gallery-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 2000;
+            background: rgba(0, 0, 0, 0.92);
+            backdrop-filter: blur(12px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .gallery-modal.open {
+            display: flex;
+            opacity: 1;
+        }
+
+        .gallery-modal .modal-content {
+            max-width: 900px;
+            width: 100%;
+            max-height: 85vh;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            background: var(--bg-card);
+            box-shadow: var(--shadow-xl);
+            position: relative;
+            transform: scale(0.95);
+            transition: transform 0.4s ease;
+        }
+
+        .gallery-modal.open .modal-content {
+            transform: scale(1);
+        }
+
+        .gallery-modal .modal-content img {
+            width: 100%;
+            max-height: 65vh;
+            object-fit: contain;
+            background: var(--bg-body);
+        }
+
+        .gallery-modal .modal-info {
+            padding: 20px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .gallery-modal .modal-info h4 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .gallery-modal .modal-info p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .gallery-modal .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            border: none;
+            color: var(--white);
+            font-size: 1.6rem;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .gallery-modal .modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+
+        .gallery-modal .modal-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            border: none;
+            color: var(--white);
+            font-size: 1.6rem;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .gallery-modal .modal-nav:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .gallery-modal .modal-nav.prev {
+            left: 20px;
+        }
+        .gallery-modal .modal-nav.next {
+            right: 20px;
+        }
+
+        @media (max-width: 992px) {
+            .gallery-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .gallery-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 14px;
+            }
+
+            .gallery-modal {
+                padding: 16px;
+            }
+
+            .gallery-modal .modal-content {
+                max-height: 90vh;
+            }
+
+            .gallery-modal .modal-content img {
+                max-height: 55vh;
+            }
+
+            .gallery-modal .modal-info {
+                padding: 14px 18px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .gallery-modal .modal-close {
+                top: 10px;
+                right: 12px;
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+
+            .gallery-modal .modal-nav {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+
+            .gallery-modal .modal-nav.prev {
+                left: 8px;
+            }
+            .gallery-modal .modal-nav.next {
+                right: 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .gallery-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+        }
+
+        /* ===== FAQ ===== */
+        .faq-list {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .faq-item {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .faq-item:hover {
+            border-color: var(--primary);
+        }
+
+        .faq-question {
+            width: 100%;
+            padding: 20px 24px;
+            background: none;
+            border: none;
+            font-weight: 700;
+            font-size: 1rem;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            color: var(--text-primary);
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .faq-question:hover {
+            color: var(--primary);
+        }
+
+        .faq-question i {
+            transition: var(--transition);
+            color: var(--primary);
+        }
+
+        .faq-item.active .faq-question i {
+            transform: rotate(180deg);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.3s ease;
+            padding: 0 24px;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 300px;
+            padding: 0 24px 20px;
+        }
+
+        /* ===== NEWSLETTER ===== */
+        .newsletter-section {
+            background: var(--secondary);
+            color: var(--white);
+            padding: 60px 0;
+            text-align: center;
+            transition: background 0.3s ease;
+        }
+
+        .newsletter-section h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .newsletter-section p {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 24px;
+        }
+
+        .newsletter-form {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            max-width: 500px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+
+        .newsletter-form input {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            min-width: 200px;
+        }
+
+        .newsletter-form button {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 50px;
+            background: var(--accent);
+            color: var(--white);
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .newsletter-form button:hover {
+            background: #d97706;
+            transform: translateY(-2px);
+        }
+
+        /* ===== CONTACT ===== */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+        }
+
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .contact-info h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            transition: color 0.3s ease;
+        }
+
+        .contact-info p {
+            color: var(--text-muted);
+            line-height: 1.8;
+            transition: color 0.3s ease;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .contact-item:hover {
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .contact-item .icon {
+            width: 44px;
+            height: 44px;
+            background: var(--primary-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .contact-item .details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .contact-item .details .label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            transition: color 0.3s ease;
+        }
+
+        .contact-item .details .value {
+            font-weight: 600;
+            color: var(--text-primary);
+            transition: color 0.3s ease;
+        }
+
+        .contact-map {
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            min-height: 320px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--gray-200);
+            position: relative;
+            transition: background 0.3s ease;
+        }
+
+        .contact-map iframe {
+            width: 100%;
+            height: 100%;
+            min-height: 320px;
+            border: none;
+        }
+
+        /* ===== DONATE SECTION ===== */
+        .donation-section {
+            background: linear-gradient(135deg, var(--secondary) 0%, #0f1e2b 100%);
+            padding: 80px 0;
+            color: var(--white);
+        }
+
+        .donation-section .section-header h2 {
+            color: var(--white);
+        }
+
+        .donation-section .section-header p {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .donation-section .section-header .tag {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent-light);
+        }
+
+        .donation-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: start;
+            margin-top: 20px;
+        }
+
+        .donation-info h3 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--white);
+        }
+
+        .donation-info p {
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.8;
+            margin-bottom: 16px;
+        }
+
+        .donation-info .bank-details {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius);
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 16px;
+        }
+
+        .donation-info .bank-details h4 {
+            color: var(--accent-light);
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+        }
+
+        .donation-info .bank-details p {
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .donation-info .bank-details strong {
+            color: var(--white);
+        }
+
+        .donation-form-wrapper {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 36px;
+            color: var(--text-primary);
+            box-shadow: var(--shadow-xl);
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .donation-form-wrapper h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            transition: color 0.3s ease;
+        }
+
+        .donation-form-wrapper .subtitle {
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+        }
+
+        .donation-amounts {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .donation-amounts .amount-btn {
+            padding: 12px 0;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius);
+            background: var(--bg-card);
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .donation-amounts .amount-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .donation-amounts .amount-btn.active {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .donation-purpose {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .donation-purpose .purpose-btn {
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius);
+            background: var(--bg-body);
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .donation-purpose .purpose-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .donation-purpose .purpose-btn.active {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            transition: color 0.3s ease;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: var(--transition);
+            background: var(--bg-body);
+            color: var(--text-primary);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(11, 122, 75, 0.12);
+        }
+
+        .btn-donate-submit {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: var(--white);
+            font-weight: 700;
+            font-size: 1.05rem;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 8px;
+        }
+
+        .btn-donate-submit:hover:not(:disabled) {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(11, 122, 75, 0.3);
+        }
+
+        .btn-donate-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .secure-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            transition: color 0.3s ease;
+        }
+
+        .secure-badge i {
+            color: var(--primary);
+        }
+
+        .payment-methods {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .payment-methods i {
+            font-size: 2rem;
+            color: var(--gray-400);
+            transition: var(--transition);
+        }
+
+        .payment-methods i:hover {
+            color: var(--gray-600);
+        }
+
+        .payment-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .payment-option {
+            padding: 14px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius);
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--bg-body);
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .payment-option:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .payment-option.active {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .payment-option i {
+            margin-right: 8px;
+            font-size: 1.2rem;
+        }
+
+        .payment-option .sub-text {
+            display: block;
+            font-weight: 400;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+            transition: color 0.3s ease;
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            z-index: 3000;
+            background: var(--toast-bg);
+            border-radius: var(--radius);
+            padding: 20px 28px;
+            box-shadow: var(--shadow-xl);
+            border-left: 5px solid var(--primary);
+            max-width: 380px;
+            transform: translateX(120%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast .toast-title {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            transition: color 0.3s ease;
+        }
+
+        .toast .toast-message {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            transition: color 0.3s ease;
+        }
+
+        .toast .toast-close {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: var(--gray-400);
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            background: var(--secondary);
+            color: rgba(255, 255, 255, 0.8);
+            padding: 48px 0 24px;
+            transition: background 0.3s ease;
+        }
+
+        .footer .container {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 40px;
+        }
+
+        .footer .brand h4 {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--white);
+            margin-bottom: 8px;
+        }
+
+        .footer .brand h4 i {
+            color: var(--accent);
+            margin-right: 8px;
+        }
+
+        .footer .brand p {
+            font-size: 0.95rem;
+            line-height: 1.7;
+            max-width: 320px;
+        }
+
+        .footer .brand .motto-footer {
+            color: var(--accent-light);
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .footer h5 {
+            color: var(--white);
+            font-weight: 700;
+            margin-bottom: 12px;
+            font-size: 1rem;
+        }
+
+        .footer ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .footer ul a {
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .footer ul a:hover {
+            color: var(--white);
+            padding-left: 4px;
+        }
+
+        .footer .bottom {
+            grid-column: 1 / -1;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 20px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .footer .bottom .socials {
+            display: flex;
+            gap: 12px;
+        }
+
+        .footer .bottom .socials a {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .footer .bottom .socials a:hover {
+            background: var(--primary);
+            color: var(--white);
+            transform: translateY(-2px);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 992px) {
+            .hero .container {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero-content p {
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .hero-buttons,
+            .btn-group-hero {
+                justify-content: center;
+            }
+
+            .about-grid,
+            .contact-grid,
+            .donation-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .about-image {
+                order: -1;
+            }
+
+            .programmes-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .steps-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .impact-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .testimonials-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .footer .container {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar .nav-links {
+                position: fixed;
+                top: 74px;
+                left: 0;
+                right: 0;
+                background: var(--bg-body);
+                flex-direction: column;
+                padding: 24px;
+                gap: 8px;
+                box-shadow: var(--shadow-md);
+                transform: translateY(-120%);
+                transition: var(--transition);
+                border-bottom: 1px solid var(--border-color);
+                max-height: calc(100vh - 74px);
+                overflow-y: auto;
+            }
+
+            .navbar .nav-links.open {
+                transform: translateY(0);
+            }
+
+            .navbar .nav-links a {
+                width: 100%;
+                text-align: center;
+                padding: 12px;
+            }
+
+            .navbar .nav-links .donate-nav {
+                width: 100%;
+                text-align: center;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            .hero {
+                padding: 120px 0 60px;
+            }
+
+            .hero-content h1 {
+                font-size: 2.2rem;
+            }
+
+            .section-header h2 {
+                font-size: 1.8rem;
+            }
+
+            .programmes-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .steps-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .impact-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .testimonials-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .donation-amounts {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .donation-purpose {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .payment-options {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .form-card {
+                padding: 24px;
+            }
+
+            .footer .container {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .footer .bottom {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .contact-map {
+                min-height: 240px;
+            }
+
+            .contact-map iframe {
+                min-height: 240px;
+            }
+
+            .donation-form-wrapper {
+                padding: 24px;
+            }
+
+            .toast {
+                top: 90px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
+
+            .about-text .vision-list {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-content h1 {
+                font-size: 1.8rem;
+            }
+
+            .hero-buttons .btn,
+            .btn-group-hero .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .container {
+                padding: 0 16px;
+            }
+
+            .section {
+                padding: 56px 0;
+            }
+
+            .section-header {
+                margin-bottom: 36px;
+            }
+
+            .floating-donate {
+                padding: 12px 16px;
+                font-size: 0.8rem;
+                bottom: 16px;
+                right: 16px;
+            }
+
+            .donation-form-wrapper {
+                padding: 16px;
+            }
+
+            .donation-purpose {
+                grid-template-columns: 1fr;
+            }
+
+            .payment-options {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .payment-option {
+                padding: 10px;
+                font-size: 0.85rem;
+            }
+
+            .steps-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .impact-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--gray-100);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== PROGRESS BAR ===== -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- ===== TOAST ===== -->
+    <div class="toast" id="toast">
+        <button class="toast-close" onclick="this.parentElement.classList.remove('show')">&times;</button>
+        <div class="toast-title" id="toastTitle">🎉 Thank You!</div>
+        <div class="toast-message" id="toastMessage">Your donation was successful.</div>
+    </div>
+
+    <!-- ===== BACK TO TOP ===== -->
+    <button class="back-to-top" id="backToTop" aria-label="Back to top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- ===== NAVIGATION ===== -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <a href="#" class="logo">
+                <i class="fas fa-tools"></i>
+                Maxfinleys <span>CRP</span>
+            </a>
+
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#about">About</a></li>
+                <li><a href="#programmes">Programmes</a></li>
+                <li><a href="#impact">Impact</a></li>
+                <li><a href="#projects">Projects</a></li>
+                <li><a href="#gallery">Gallery</a></li>
+                <li><a href="#stories">Stories</a></li>
+                <li><a href="#faq">FAQ</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li><a href="#donate-section" class="donate-nav" id="donateNavBtn"><i class="fas fa-heart"></i> Donate</a></li>
+                <li>
+                    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                        <i class="fas fa-moon" id="themeIcon"></i>
+                        <span id="themeText">Dark</span>
+                    </button>
+                </li>
+            </ul>
+
+            <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ===== FLOATING DONATE ===== -->
+    <button class="floating-donate" id="floatingDonateBtn">
+        <i class="fas fa-heart"></i> Donate
+    </button>
+
+    <!-- ===== HERO ===== -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero-content">
+                <div class="tagline">
+                    <i class="fas fa-recycle"></i> Maxfinleys Community Renewal Programme
+                </div>
+                <h1>
+                    A Desk for Every Child.<br />
+                    <span class="highlight">Quality Healthcare for Every Family.</span>
+                </h1>
+                <div class="sub-tagline">
+                    Giving equipment a second life. Restoring dignity. Strengthening communities.
+                </div>
+                <p>
+                    We recover, repair, refurbish and locally fabricate school and healthcare equipment to support children, families and underserved communities. What may be waste to one institution can become an opportunity for another.
+                </p>
+                <div class="btn-group-hero">
+                    <a href="#donate-section" class="btn btn-accent"><i class="fas fa-heart"></i> Donate Now</a>
+                    <a href="#request-support" class="btn btn-primary"><i class="fas fa-hand-holding-heart"></i> Request Support</a>
+                    <a href="#partner" class="btn btn-outline"><i class="fas fa-handshake"></i> Partner With Us</a>
+                </div>
+                <div style="margin-top: 24px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+                    <span class="hero-badge"><i class="fas fa-check-circle" style="color: var(--primary);"></i> Recover. Repair. Refurbish. Reuse.</span>
+                    <span class="hero-badge"><i class="fas fa-check-circle" style="color: var(--primary);"></i> Restore Dignity</span>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="https://www.elma.co.ke/c1.png?w=800&h=600&fit=crop&crop=center&auto=format" alt="Community renewal and equipment refurbishment" loading="lazy" />
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== ABOUT / VISION ===== -->
+    <section class="section bg-light" id="about">
+        <div class="container">
+            <div class="section-header animate-on-scroll">
+                <span class="tag">Our Vision</span>
+                <h2>Recover. Repair. Refurbish. <span class="highlight">Reuse. Restore Dignity.</span></h2>
+                <p>
+                    We believe every child deserves a safe and dignified place to learn, and every family deserves access to a health facility with appropriate equipment. Through circular economy, local fabrication and community partnerships, we transform unused, damaged and surplus equipment into valuable resources for schools and healthcare facilities that need them.
+                </p>
+            </div>
+            <div class="about-grid">
+                <div class="about-image animate-on-scroll">
+                    <img src="https://www.elma.co.ke/h3.png?w=800&h=600&fit=crop&crop=center&auto=format" alt="Community renewal programme impact" loading="lazy" />
+                </div>
+                <div class="about-text animate-on-scroll">
+                    <h3>From Waste to Opportunity</h3>
+                    <p>
+                        Across communities, schools and healthcare facilities face significant equipment challenges. Some children study without adequate desks and chairs. Some schools have broken or insufficient furniture. Some healthcare facilities struggle with old, damaged or inadequate hospital equipment.
+                    </p>
+                    <p>
+                        At the same time, institutions dispose of equipment and furniture that may still have recoverable value. The result is a double challenge: some institutions have surplus resources while others have urgent needs. Our programme seeks to connect these two realities responsibly.
+                    </p>
+                    <ul class="vision-list">
+                        <li><i class="fas fa-check-circle"></i> Recover</li>
+                        <li><i class="fas fa-check-circle"></i> Repair</li>
+                        <li><i class="fas fa-check-circle"></i> Refurbish</li>
+                        <li><i class="fas fa-check-circle"></i> Reuse</li>
+                        <li><i class="fas fa-check-circle"></i> Recycle</li>
+                        <li><i class="fas fa-check-circle"></i> Restore Dignity</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== OUR SOLUTION ===== -->
+    <section class="section" id="solution">
+        <div class="container">
+            <div class="section-header animate-on-scroll">
+                <span class="tag">How It Works</span>
+                <h2>From Waste to <span class="highlight">Opportunity</span></h2>
+                <p>Our approach is simple: identify, assess, repair, refurbish, fabricate, reuse, and recycle.</p>
+            </div>
+            <div class="steps-grid">
+                <div class="step-card animate-on-scroll">
+                    <div class="step-number">1</div>
+                    <h4>Identify</h4>
+                    <p>Schools and healthcare institutions identify equipment that is surplus, damaged, obsolete or awaiting disposal.</p>
+                </div>
+                <div class="step-card animate-on-scroll">
+                    <div class="step-number">2</div>
+                    <h4>Assess</h4>
+                    <p>Maxfinleys conducts a technical assessment of the equipment.</p>
+                </div>
+                <div class="step-card animate-on-scroll">
+                    <div class="step-number">3</div>
+                    <h4>Repair</h4>
+                    <p>Where appropriate, equipment is repaired to working condition.</p>
+                </div>
+                <div class="step-card animate-on-scroll">
+                    <div class="step-number">4</div>
+                    <h4>Refurbish</h4>
+                    <p>Suitable equipment is refurbished and restored to good condition.</p>
+                </div>
+                <div class="step-card animate-on-scroll">
+                    <div class="step-number">5</div>
+                    <h4>Fabricate</h4>
+                    <p>Where equipment cannot be recovered, we locally fabricate appropriate replacements.</p>
+                </div>
+                <div class="step-card animate-on-scroll">
+                    <div class="step-number">6</div>
+                    <h4>Reuse</h4>
+                    <p>Suitable equipment is returned to service or transferred through an approved programme.</p>
+                </div>
+                <div class="step-card animate-on-scroll">
+                    <div class="step-number">7</div>
+                    <h4>Recycle</h4>
+                    <p>Items that cannot safely or economically be reused are directed toward responsible material recovery.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== PROGRAMMES ===== -->
+    <section class="section bg-light" id="programmes">
+        <div class="container">
+            <div class="section-header animate-on-scroll">
+                <span class="tag">Our Programmes</span>
+                <h2>Two Core <span class="highlight">Programmes</span></h2>
+                <p>We focus on education and healthcare — two pillars that build stronger communities.</p>
+            </div>
+            <div class="programmes-grid">
+                <!-- Education Programme -->
+                <div class="programme-card animate-on-scroll">
+                    <div class="icon"><i class="fas fa-graduation-cap"></i></div>
+                    <h3>Education</h3>
+                    <div class="subtitle">A Desk for Every Child</div>
+                    <p>A desk may seem like a simple object. For a child, it can mean:</p>
+                    <ul>
+                        <li><i class="fas fa-check"></i> A place to write</li>
+                        <li><i class="fas fa-check"></i> A place to read</li>
+                        <li><i class="fas fa-check"></i> A place to concentrate</li>
+                        <li><i class="fas fa-check"></i> A sense of dignity</li>
+                        <li><i class="fas fa-check"></i> A better learning environment</li>
+                        <li><i class="fas fa-check"></i> A feeling that someone cares</li>
+                    </ul>
+                    <p style="font-size:0.9rem; color: var(--text-muted);">We support: desks, chairs, tables, lockers, beds, laboratory and library furniture.</p>
+                    <div class="btn-group">
+                        <a href="#donate-section" class="btn btn-accent btn-sm"><i class="fas fa-heart"></i> Sponsor a Desk</a>
+                        <a href="#request-support" class="btn btn-outline btn-sm"><i class="fas fa-hand-holding-heart"></i> Request School Support</a>
+                    </div>
+                </div>
+
+                <!-- Healthcare Programme -->
+                <div class="programme-card animate-on-scroll">
+                    <div class="icon"><i class="fas fa-hospital"></i></div>
+                    <h3>Healthcare</h3>
+                    <div class="subtitle">Quality Healthcare for Every Family</div>
+                    <p>A health facility cannot provide quality care without appropriate equipment. We work to extend the useful life of suitable healthcare equipment and provide locally fabricated solutions.</p>
+                    <ul>
+                        <li><i class="fas fa-check"></i> Hospital beds & examination couches</li>
+                        <li><i class="fas fa-check"></i> Patient trolleys & wheelchairs</li>
+                        <li><i class="fas fa-check"></i> Hospital chairs & bedside cabinets</li>
+                        <li><i class="fas fa-check"></i> Equipment stands & metal hospital furniture</li>
+                        <li><i class="fas fa-check"></i> Selected equipment requiring refurbishment</li>
+                        <li><i class="fas fa-check"></i> Incinerators and related infrastructure</li>
+                    </ul>
+                    <p style="font-size:0.85rem; color: var(--text-muted);">All equipment proposed for reuse is subject to appropriate technical assessment and safety considerations.</p>
+                    <div class="btn-group">
+                        <a href="#donate-section" class="btn btn-accent btn-sm"><i class="fas fa-heart"></i> Support a Health Facility</a>
+                        <a href="#request-support" class="btn btn-outline btn-sm"><i class="fas fa-hand-holding-heart"></i> Request Healthcare Support</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== WHY CIRCULAR ECONOMY ===== -->
+    <section class="section" id="circular">
+        <div class="container">
+            <div class="section-header animate-on-scroll">
+                <span class="tag">Why Circular Economy?</span>
+                <h2>Not Everything Old Is <span class="highlight">Waste</span></h2>
+                <p>
+                    We believe equipment should not automatically become waste simply because it is old, damaged or no longer required by one institution.
+                </p>
+            </div>
+            <div style="max-width: 800px; margin: 0 auto; text-align: center;">
+                <p style="color: var(--text-muted); font-size:1.05rem; line-height:1.8; margin-bottom:24px; transition: color 0.3s ease;">
+                    A product may still contain useful components, valuable materials, repairable structures, reusable parts, and recoverable resources. Our circular economy approach seeks to keep those resources in productive use for as long as reasonably and safely possible.
+                </p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 600px; margin: 0 auto;">
+                    <div style="background: var(--bg-card); padding: 20px; border-radius: var(--radius); border: 2px solid #ef4444; transition: background 0.3s ease;">
+                        <p style="font-weight:700; color: #ef4444;">BUY → USE → DISPOSE</p>
+                        <p style="font-size:0.85rem; color: var(--text-muted); transition: color 0.3s ease;">The old way</p>
+                    </div>
+                    <div style="background: var(--bg-card); padding: 20px; border-radius: var(--radius); border: 2px solid var(--primary); transition: background 0.3s ease;">
+                        <p style="font-weight:700; color: var(--primary);">USE → REPAIR → REFURBISH → REUSE → RECOVER → RECYCLE</p>
+                        <p style="font-size:0.85rem; color: var(--text-muted); transition: color 0.3s ease;">The circular way</p>
+                    </div>
+                </div>
+                <p style="margin-top:24px; color: var(--text-secondary); font-weight:500; transition: color 0.3s ease;">
+                    This can reduce waste, support local employment and make limited resources go further.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== IMPACT ===== -->
+    <section class="section bg-light" id="impact">
+        <div class="container">
+            <div class="section-header animate-on-scroll">
+                <span class="tag">Our Impact</span>
+                <h2>Making a <span class="highlight">Difference</span></h2>
+                <p>Verified results from our community renewal programme.</p>
+            </div>
+            <div class="impact-grid">
+                <div class="impact-item animate-on-scroll">
+                    <div class="number">1,247</div>
+                    <div class="label">Children Supported</div>
+                </div>
+                <div class="impact-item animate-on-scroll">
+                    <div class="number">856</div>
+                    <div class="label">Desks Provided</div>
+                </div>
+                <div class="impact-item animate-on-scroll">
+                    <div class="number">23</div>
+                    <div class="label">Schools Supported</div>
+                </div>
+                <div class="impact-item animate-on-scroll">
+                    <div class="number">1,500+</div>
+                    <div class="label">Equipment Refurbished</div>
+                </div>
+                <div class="impact-item animate-on-scroll">
+                    <div class="number">8</div>
+                    <div class="label">Health Facilities Supported</div>
+                </div>
+                <div class="impact-item animate-on-scroll">
+                    <div class="number">2,300+</div>
+                    <div class="label">Equipment Diverted from Waste</div>
+                </div>
+                <div class="impact-item animate-on-scroll">
+                    <div class="number">12</div>
+                    <div class="label">Communities Reached</div>
+                </div>
+                <div class="impact-item animate-on-scroll">
+                    <div class="number">94%</div>
+                    <div class="label">Beneficiary Satisfaction</div>
+                </div>
+            </div>
+            <p style="text-align:center; margin-top:24px; font-size:0.9rem; color: var(--text-muted); transition: color 0.3s ease;">
+                Numbers are published after verification by programme records.
+            </p>
+        </div>
+    </section>
+
+    <!-- ===== PROJECTS ===== -->
+    <section class="section" id="projects">
+        <div class="container">
+            <div class="section-header animate-on-scroll">
+                <span class="tag">Active Projects</span>
+                <h2>Projects That Need <span class="highlight">Your Support</span></h2>
+                <p>Verified projects requiring funding to make a difference.</p>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <div class="programme-card animate-on-scroll" style="text-align:left;">
+                    <h3 style="text-align:center;">📚 50 Desks for a Rural School</h3>
+                    <p><strong>Location:</strong> [Verified location]</p>
+                    <p><strong>Children to benefit:</strong> 100</p>
+                    <p><strong>Equipment required:</strong> 50 desks and chairs</p>
+                    <p><strong>Project target:</strong> KSh [Verified amount]</p>
+                    <div style="background: var(--gray-200); border-radius: 50px; height: 20px; margin: 12px 0; overflow:hidden; transition: background 0.3s ease;">
+                        <div style="background: var(--primary); height: 100%; width: 45%; border-radius: 50px;"></div>
+                    </div>
+                    <p style="display:flex; justify-content:space-between; font-size:0.9rem;">
+                        <span>Raised: KSh [Live amount]</span>
+                        <span>Remaining: KSh [Live amount]</span>
+                    </p>
+                    <div style="text-align:center; margin-top:12px;">
+                        <a href="#donate-section" class="btn btn-accent btn-sm"><i class="fas fa-heart"></i> Donate to This Project</a>
+                    </div>
+                </div>
+                <div class="programme-card animate-on-scroll" style="text-align:left;">
+                    <h3 style="text-align:center;">🏥 Refurbish Equipment for a Community Health Facility</h3>
+                    <p><strong>Location:</strong> [Verified location]</p>
+                    <p><strong>Equipment required:</strong> Hospital beds, trolleys, examination couches</p>
+                    <p><strong>People served:</strong> [Verified number]</p>
+                    <p><strong>Project target:</strong> KSh [Verified amount]</p>
+                    <div style="background: var(--gray-200); border-radius: 50px; height: 20px; margin: 12px 0; overflow:hidden; transition: background 0.3s ease;">
+                        <div style="background: var(--primary); height: 100%; width: 30%; border-radius: 50px;"></div>
+                    </div>
+                    <p style="display:flex; justify-content:space-between; font-size:0.9rem;">
+                        <span>Raised: KSh [Live amount]</span>
+                        <span>Remaining: KSh [Live amount]</span>
+                    </p>
+                    <div style="text-align:center; margin-top:12px;">
+                        <a href="#donate-section" class="btn btn-accent btn-sm"><i class="fas fa-heart"></i> Support This Project</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================================================================ -->
+    <!-- ===== NEW: GALLERY SECTION ===== -->
+    <!-- ================================================================ -->
+    <section class="section bg-light" id="gallery">
+        <div class="container">
+            <div class="section-header animate-on-scroll">
+                <span class="tag">Our Gallery</span>
+                <h2>Stories in <span class="highlight">Pictures</span></h2>
+                <p>See the transformation — from recovered equipment to restored dignity in schools and health facilities.</p>
+            </div>
+
+            <div class="gallery-grid">
+                <!-- Gallery Item 1 -->
+                <div class="gallery-item animate-on-scroll" data-index="0" data-title="Refurbished Desks for a Rural School" data-category="Education" data-description="50 desks and chairs restored and delivered to a community school in Meru, giving 100 children a proper place to learn.">
+                    <img src="https://www.elma.co.ke/max1.jpg?w=600&h=600&fit=crop&crop=center&auto=format" alt="Refurbished desks for a rural school" loading="lazy" />
+                    <span class="gallery-badge">Education</span>
+                    <div class="gallery-icon"><i class="fas fa-search-plus"></i></div>
+                    <div class="gallery-overlay">
+                        <h4>Refurbished Desks for a Rural School</h4>
+                        <p>50 desks delivered • 100 children benefited</p>
+                    </div>
+                </div>
+
+                <!-- Gallery Item 2 -->
+                <div class="gallery-item animate-on-scroll" data-index="1" data-title="Healthcare Equipment Refurbishment" data-category="Healthcare" data-description="Hospital beds and examination couches restored to working condition and deployed to a community health centre serving over 500 families.">
+                    <img src="https://www.elma.co.ke/max2.jpg?w=600&h=600&fit=crop&crop=center&auto=format" alt="Healthcare equipment refurbishment" loading="lazy" />
+                    <span class="gallery-badge">Healthcare</span>
+                    <div class="gallery-icon"><i class="fas fa-search-plus"></i></div>
+                    <div class="gallery-overlay">
+                        <h4>Healthcare Equipment Refurbishment</h4>
+                        <p>Hospital beds & couches restored</p>
+                    </div>
+                </div>
+
+                <!-- Gallery Item 3 -->
+                <div class="gallery-item animate-on-scroll" data-index="2" data-title="Children Benefiting from New Desks" data-category="Education" data-description="Happy students in a rural primary school now have desks to write on, read on, and concentrate better in class.">
+                    <img src="https://www.elma.co.ke/max3.jpg?w=600&h=600&fit=crop&crop=center&auto=format" alt="Children benefiting from new desks" loading="lazy" />
+                    <span class="gallery-badge">Education</span>
+                    <div class="gallery-icon"><i class="fas fa-search-plus"></i></div>
+                    <div class="gallery-overlay">
+                        <h4>Children Benefiting from New Desks</h4>
+                        <p>Dignity restored • Learning improved</p>
+                    </div>
+                </div>
+
+                <!-- Gallery Item 4 -->
+                <div class="gallery-item animate-on-scroll" data-index="3" data-title="Local Fabrication Workshop" data-category="Workshop" data-description="Our workshop in Meru where skilled artisans repair, refurbish and fabricate equipment for schools and health facilities.">
+                    <img src="https://www.elma.co.ke/max4.jpg?w=600&h=600&fit=crop&crop=center&auto=format" alt="Local fabrication workshop" loading="lazy" />
+                    <span class="gallery-badge">Workshop</span>
+                    <div class="gallery-icon"><i class="fas fa-search-plus"></i></div>
+                    <div class="gallery-overlay">
+                        <h4>Local Fabrication Workshop</h4>
+                        <p>Skilled artisans at work</p>
+                    </div>
+                </div>
+
+                <!-- Gallery Item 5 -->
+                <div class="gallery-item animate-on-scroll" data-index="4" data-title="Hospital Beds Restored" data-category="Healthcare" data-description="A batch of hospital beds and bedside cabinets refurbished and prepared for deployment to a community health centre.">
+                    <img src="https://www.elma.co.ke/h2.jpeg?w=600&h=600&fit=crop&crop=center&auto=format" alt="Hospital beds restored" loading="lazy" />
+                    <span class="gallery-badge">Healthcare</span>
+                    <div class="gallery-icon"><i class="fas fa-search-plus"></i></div>
+                    <div class="gallery-overlay">
+                        <h4>Hospital Beds Restored</h4>
+                        <p>Ready for community health centres</p>
+                    </div>
+                </div>
+
+                <!-- Gallery Item 6 -->
+                <div class="gallery-item animate-on-scroll" data-index="5" data-title="Classroom Before & After" data-category="Education" data-description="A classroom transformation: from no desks to a fully furnished learning environment with 30 new desks and chairs.">
+                    <img src="https://www.elma.co.ke/max6.jpeg?w=600&h=600&fit=crop&crop=center&auto=format" alt="Classroom before and after" loading="lazy" />
+                    <span class="gallery-badge">Education</span>
+                    <div class="gallery-icon"><i class="fas fa-search-plus"></i></div>
+                    <div class="gallery-overlay">
+                        <h4>Classroom Transformation</h4>
+                        <p>From empty to fully furnished</p>
+                    </div>
+                </div>
+
+                <!-- Gallery Item 7 -->
+                <div class="gallery-item animate-on-scroll" data-index="6" data-title="Community Health Centre Support" data-category="Healthcare" data-description="A community health centre receives refurbished equipment, enabling them to serve more patients with dignity and care.">
+                    <img src="https://www.elma.co.ke/max7.jpeg?w=600&h=600&fit=crop&crop=center&auto=format" alt="Community health centre support" loading="lazy" />
+                    <span class="gallery-badge">Healthcare</span>
+                    <div class="gallery-icon"><i class="fas fa-search-plus"></i></div>
+                    <div class="gallery-overlay">
+                        <h4>Community Health Centre Support</h4>
+                        <p>Equipped to serve with dignity</p>
+                    </div>
+                </div>
+
+                <!-- Gallery Item 8 -->
+                <div class="gallery-item animate-on-scroll" data-index="7" data-title="Recovered Equipment Sorting" data-category="Workshop" data-description="Our team sorting and assessing recovered equipment from partner institutions, determining what can be repaired, refurbished or recycled.">
+                    <img src="https://www.elma.co.ke/max8.jpg?w=600&h=600&fit=crop&crop=center&auto=format" alt="Recovered equipment sorting" loading="lazy" />
+                    <span class="gallery-badge">Workshop</span>
+                    <div class="gallery-icon"><i class="fas fa-search-plus"></i></div>
+                    <div class="gallery-overlay">
+                        <h4>Recovered Equipment Sorting</h4>
+                        <p>Assessing what can be renewed</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== GALLERY MODAL ===== -->
+    <div class="gallery-modal" id="galleryModal">
+        <button class="modal-close" id="modalClose" aria-label="Close gallery">
+            <i class="fas fa-times"></i>
+        </button>
+        <button class="modal-nav prev" id="modalPrev" aria-label="Previous image">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="modal-nav next" id="modalNext" aria-label="Next image">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+        <div class="modal-content">
+            <img id="modalImage" src="" alt="Gallery image" />
+            <div class="modal-info">
+                <div>
+                    <h4 id="modalTitle">Image Title</h4>
+                    <p id="modalDescription">Image description goes here.</p>
+                </div>
+                <span id="modalCounter" style="font-size:0.85rem; color: var(--text-muted);">1 / 8</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- ===== END GALLERY SECTION ===== -->
+    <!-- ================================================================ -->
+
+    <!-- ===== STORIES ===== -->
+    <section class="section" id="stories">
+        <div class="container">
+            <div class="section-header animate-on-scroll">
+                <span class="tag">Our Stories</span>
+                <h2>Real People. <span class="highlight">Real Impact.</span></h2>
+                <p>Stories from beneficiary communities that show the power of renewal.</p>
+            </div>
+            <div class="testimonials-grid">
+                <div class="testimonial-card animate-on-scroll">
+                    <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                    <blockquote>
+                        “Before the programme, three children shared one desk. Today, every child in the classroom has a place to write. The difference in their concentration and participation is remarkable.”
+                    </blockquote>
+                    <div class="author">
+                        <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&crop=face" alt="Teacher" />
+                        <div>
+                            <div class="name">Mary Wanjiku</div>
+                            <div class="role">Head Teacher, Rural Primary School</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card animate-on-scroll">
+                    <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                    <blockquote>
+                        “The health centre had equipment that had remained unused because it required repair. After technical assessment and refurbishment, appropriate equipment was returned to service. Now we can serve more patients with dignity.”
+                    </blockquote>
+                    <div class="author">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" alt="Health Worker" />
+                        <div>
+                            <div class="name">Dr. James Ochieng</div>
+                            <div class="role">Medical Officer, Community Health Centre</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card animate-on-scroll">
+                    <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                    <blockquote>
+                        “The desk I received through the programme gave me a proper place to study. I no longer have to share with my siblings or sit on the floor. It has made a big difference in my schoolwork.”
+                    </blockquote>
+                    <div class="author">
+                        <img src="https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=100&h=100&fit=crop&crop=face" alt="Student" />
+                        <div>
+                            <div class="name">Esther Akinyi</div>
+                            <div class="role">Student, Grade 6</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== REQUEST SUPPORT ===== -->
+    <section class="section bg-light" id="request-support">
+        <div class="container">
+            <div class="section-header animate-on-scroll">
+                <span class="tag">Request Support</span>
+                <h2>Is Your School or Health Facility <span class="highlight">In Need?</span></h2>
+                <p>We want to hear from institutions serving communities with genuine equipment needs.</p>
+            </div>
+            <div class="form-card animate-on-scroll">
+                <h3>📋 Beneficiary Application Form</h3>
+                <p class="form-subtitle">Complete this form to request support for your institution.</p>
+
+                <form id="requestForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Institution Name *</label>
+                            <input type="text" placeholder="Enter institution name" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Institution Type *</label>
+                            <select required>
+                                <option value="">Select type</option>
+                                <option value="school">School</option>
+                                <option value="hospital">Hospital</option>
+                                <option value="health-centre">Health Centre</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Location (County / Sub-county / Ward) *</label>
+                        <input type="text" placeholder="Enter location details" required />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Contact Person *</label>
+                            <input type="text" placeholder="Full name" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Telephone *</label>
+                            <input type="tel" placeholder="Phone number" required />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Email *</label>
+                        <input type="email" placeholder="Email address" required />
+                    </div>
+
+                    <h4 style="margin:20px 0 12px; color: var(--text-primary); transition: color 0.3s ease;">Your Need</h4>
+
+                    <div class="form-group">
+                        <label>What equipment do you require? *</label>
+                        <textarea rows="3" placeholder="Describe the equipment you need" required></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Quantity Required</label>
+                            <input type="number" placeholder="Number of items" />
+                        </div>
+                        <div class="form-group">
+                            <label>Number of People/Children Served</label>
+                            <input type="number" placeholder="Total served" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Why is this equipment needed?</label>
+                        <textarea rows="2" placeholder="Explain the need"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>What equipment do you currently have?</label>
+                        <textarea rows="2" placeholder="List existing equipment"></textarea>
+                    </div>
+
+                    <h4 style="margin:20px 0 12px; color: var(--text-primary); transition: color 0.3s ease;">Upload Documents</h4>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Upload Photographs</label>
+                            <div class="file-input">
+                                <i class="fas fa-camera"></i>
+                                Click to upload photos
+                                <input type="file" accept="image/*" multiple style="display:none;" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Upload Supporting Documents</label>
+                            <div class="file-input">
+                                <i class="fas fa-file-pdf"></i>
+                                Click to upload documents
+                                <input type="file" accept=".pdf,.doc,.docx" multiple style="display:none;" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-checkbox">
+                        <input type="checkbox" id="declaration" required />
+                        <label for="declaration">I confirm that the information provided is accurate and that the institution is willing to participate in verification and assessment procedures.</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width:100%; margin-top:12px;">
+                        <i class="fas fa-paper-plane"></i> Submit Request
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== DONATE EQUIPMENT ===== -->
+    <section class="section" id="donate-equipment">
+        <div class="container">
+            <div class="section-header animate-on-scroll">
+                <span class="tag">Donate Equipment</span>
+                <h2>Don't Throw It Away <span class="highlight">Before Asking</span></h2>
+                <p>Does your school or healthcare facility have old furniture, broken equipment, or surplus items? Contact us.</p>
+            </div>
+            <div class="form-card animate-on-scroll">
+                <h3>📦 Equipment Donation Form</h3>
+                <p class="form-subtitle">Give equipment a second life.</p>
+
+                <form id="equipmentForm">
+                    <div class="form-group">
+                        <label>Institution/Organization Name *</label>
+                        <input type="text" placeholder="Enter name" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Contact Person *</label>
+                        <input type="text" placeholder="Full name" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Location *</label>
+                        <input type="text" placeholder="Location" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Type of Equipment *</label>
+                        <input type="text" placeholder="Describe the equipment" required />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Quantity</label>
+                            <input type="number" placeholder="Number of items" />
+                        </div>
+                        <div class="form-group">
+                            <label>Condition *</label>
+                            <select required>
+                                <option value="">Select condition</option>
+                                <option value="working">Working</option>
+                                <option value="damaged">Damaged</option>
+                                <option value="non-functional">Non-functional</option>
+                                <option value="surplus">Surplus</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea rows="2" placeholder="Provide details about the equipment"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Photographs</label>
+                            <div class="file-input">
+                                <i class="fas fa-camera"></i>
+                                Click to upload photos
+                                <input type="file" accept="image/*" multiple style="display:none;" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Additional Documents</label>
+                            <div class="file-input">
+                                <i class="fas fa-file-pdf"></i>
+                                Click to upload documents
+                                <input type="file" accept=".pdf,.doc,.docx" multiple style="display:none;" />
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%; margin-top:12px;">
+                        <i class="fas fa-paper-plane"></i> Submit Equipment
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== PARTNER ===== -->
+    <section class="section" id="partner">
+        <div class="container">
+            <div class="section-header animate-on-scroll">
+                <span class="tag">Partner With Us</span>
+                <h2>Become a <span class="highlight">Partner</span></h2>
+                <p>We welcome partnerships from Catholic institutions, schools, hospitals, companies, foundations, NGOs, universities, and individual supporters.</p>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; max-width:800px; margin:0 auto;">
+                <div style="background: var(--bg-card); padding:24px; border-radius: var(--radius); border:1px solid var(--border-color); text-align:center; transition: background 0.3s ease, border-color 0.3s ease;">
+                    <i class="fas fa-hand-holding-heart" style="font-size:2rem; color:var(--primary);"></i>
+                    <h4 style="margin-top:8px; color: var(--text-primary); transition: color 0.3s ease;">Funding a Project</h4>
+                </div>
+                <div style="background: var(--bg-card); padding:24px; border-radius: var(--radius); border:1px solid var(--border-color); text-align:center; transition: background 0.3s ease, border-color 0.3s ease;">
+                    <i class="fas fa-tools" style="font-size:2rem; color:var(--primary);"></i>
+                    <h4 style="margin-top:8px; color: var(--text-primary); transition: color 0.3s ease;">Donating Equipment</h4>
+                </div>
+                <div style="background: var(--bg-card); padding:24px; border-radius: var(--radius); border:1px solid var(--border-color); text-align:center; transition: background 0.3s ease, border-color 0.3s ease;">
+                    <i class="fas fa-graduation-cap" style="font-size:2rem; color:var(--primary);"></i>
+                    <h4 style="margin-top:8px; color: var(--text-primary); transition: color 0.3s ease;">Providing Technical Expertise</h4>
+                </div>
+                <div style="background: var(--bg-card); padding:24px; border-radius: var(--radius); border:1px solid var(--border-color); text-align:center; transition: background 0.3s ease, border-color 0.3s ease;">
+                    <i class="fas fa-truck" style="font-size:2rem; color:var(--primary);"></i>
+                    <h4 style="margin-top:8px; color: var(--text-primary); transition: color 0.3s ease;">Supporting Transportation</h4>
+                </div>
+                <div style="background: var(--bg-card); padding:24px; border-radius: var(--radius); border:1px solid var(--border-color); text-align:center; transition: background 0.3s ease, border-color 0.3s ease;">
+                    <i class="fas fa-users" style="font-size:2rem; color:var(--primary);"></i>
+                    <h4 style="margin-top:8px; color: var(--text-primary); transition: color 0.3s ease;">Training & Monitoring</h4>
+                </div>
+                <div style="background: var(--bg-card); padding:24px; border-radius: var(--radius); border:1px solid var(--border-color); text-align:center; transition: background 0.3s ease, border-color 0.3s ease;">
+                    <i class="fas fa-link" style="font-size:2rem; color:var(--primary);"></i>
+                    <h4 style="margin-top:8px; color: var(--text-primary); transition: color 0.3s ease;">Connecting Us with Donors</h4>
+                </div>
+            </div>
+            <div style="text-align:center; margin-top:32px;">
+                <a href="#contact" class="btn btn-primary"><i class="fas fa-handshake"></i> Partner With Us</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FAQ ===== -->
+    <section class="section bg-light" id="faq">
+        <div class="container">
+            <div class="section-header animate-on-scroll">
+                <span class="tag">FAQ</span>
+                <h2>Frequently Asked <span class="highlight">Questions</span></h2>
+                <p>Find answers to common questions about our programme and how you can get involved.</p>
+            </div>
+            <div class="faq-list animate-on-scroll">
+                <div class="faq-item active">
+                    <button class="faq-question"><span>What types of equipment do you refurbish?</span><i class="fas fa-chevron-down"></i></button>
+                    <div class="faq-answer"><p>We refurbish school furniture (desks, chairs, tables, lockers, beds) and healthcare equipment (hospital beds, trolleys, examination couches, wheelchairs, and other metal furniture). All equipment is subject to technical assessment.</p></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question"><span>How can my school or health facility request support?</span><i class="fas fa-chevron-down"></i></button>
+                    <div class="faq-answer"><p>Complete the Request Support form on this page. Our team will verify your need, assess the requirement, and develop a project plan if the request is approved.</p></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question"><span>How can I donate equipment to the programme?</span><i class="fas fa-chevron-down"></i></button>
+                    <div class="faq-answer"><p>Use the Donate Equipment form on this page. We will assess whether the item can be repaired, refurbished, reused, used for parts, or responsibly recycled.</p></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question"><span>How do I know my donation will be used effectively?</span><i class="fas fa-chevron-down"></i></button>
+                    <div class="faq-answer"><p>We maintain transparent records covering funds received, project budgets, equipment purchased or refurbished, beneficiary institutions, and impact measurements. Project reports are available to donors and partners.</p></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question"><span>Is the refurbished equipment safe?</span><i class="fas fa-chevron-down"></i></button>
+                    <div class="faq-answer"><p>All equipment proposed for reuse is subject to appropriate technical assessment and safety considerations. Healthcare equipment undergoes rigorous testing before deployment.</p></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== DONATE SECTION ===== -->
+    <section class="donation-section" id="donate-section">
+        <div class="container">
+            <div class="section-header animate-on-scroll">
+                <span class="tag">Support Us</span>
+                <h2>Make a <span style="color: var(--accent-light);">Donation</span></h2>
+                <p>
+                    Every contribution helps provide a desk for a child, equip a health facility, or support a community project.
+                </p>
+            </div>
+
+            <div class="donation-grid">
+                <div class="donation-info animate-on-scroll">
+                    <h3><i class="fas fa-hand-holding-heart" style="color: var(--accent);"></i> Your Donation Does More Than Buy Equipment</h3>
+                    <p>
+                        Your support can restore dignity, reduce waste, create local employment, support education, strengthen healthcare, give equipment a second life, and help communities that need it most.
+                    </p>
+                    <p>
+                        <strong style="color: var(--white);">100% of your donation goes to our mission.</strong>
+                        We are committed to developing transparent systems that allow donors to understand where support is directed and what impact it creates.
+                    </p>
+
+                    <div style="margin:16px 0; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:var(--radius); text-align:center; border:1px solid rgba(255,255,255,0.05);">
+                            <i class="fas fa-child" style="color:var(--accent); font-size:1.5rem;"></i>
+                            <p style="font-size:0.85rem; margin-top:4px;">Sponsor a Child</p>
+                            <p style="font-size:0.75rem; color:rgba(255,255,255,0.5);">Help provide a desk and chair</p>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:var(--radius); text-align:center; border:1px solid rgba(255,255,255,0.05);">
+                            <i class="fas fa-chalkboard" style="color:var(--accent); font-size:1.5rem;"></i>
+                            <p style="font-size:0.85rem; margin-top:4px;">Sponsor a Classroom</p>
+                            <p style="font-size:0.75rem; color:rgba(255,255,255,0.5);">Equip a classroom with desks</p>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:var(--radius); text-align:center; border:1px solid rgba(255,255,255,0.05);">
+                            <i class="fas fa-school" style="color:var(--accent); font-size:1.5rem;"></i>
+                            <p style="font-size:0.85rem; margin-top:4px;">Sponsor a School</p>
+                            <p style="font-size:0.75rem; color:rgba(255,255,255,0.5);">Support a wider school project</p>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:var(--radius); text-align:center; border:1px solid rgba(255,255,255,0.05);">
+                            <i class="fas fa-hospital" style="color:var(--accent); font-size:1.5rem;"></i>
+                            <p style="font-size:0.85rem; margin-top:4px;">Support a Health Facility</p>
+                            <p style="font-size:0.75rem; color:rgba(255,255,255,0.5);">Hospital furniture & equipment</p>
+                        </div>
+                    </div>
+
+                    <div class="bank-details">
+                        <h4><i class="fas fa-university"></i> Bank Transfer Details</h4>
+                        <p><strong>Bank Name:</strong> Equity Bank Kenya</p>
+                        <p><strong>Account Name:</strong> Maxfinleys Tools and Instruments Ltd</p>
+                        <p><strong>Account Number:</strong> <span id="bankAccount">1234567890</span></p>
+                        <p><strong>Branch:</strong> Meru</p>
+                        <p><strong>Swift Code:</strong> EQBLKENA</p>
+                        <p style="margin-top: 8px; font-size: 0.85rem; color: rgba(255,255,255,0.6);">
+                            <i class="fas fa-info-circle"></i> Use your full name as reference. We'll send a receipt within 24 hours.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="donation-form-wrapper animate-on-scroll">
+                    <h3><i class="fas fa-credit-card" style="color: var(--primary);"></i> Donate Now</h3>
+                    <p class="subtitle">Pay securely with credit card, debit card, or M-Pesa</p>
+
+                    <form id="donateForm">
+                        <div class="donation-amounts">
+                            <button type="button" class="amount-btn" data-amount="10">$10</button>
+                            <button type="button" class="amount-btn active" data-amount="25">$25</button>
+                            <button type="button" class="amount-btn" data-amount="50">$50</button>
+                            <button type="button" class="amount-btn" data-amount="100">$100</button>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="customAmount">Custom Amount ($)</label>
+                            <input type="number" id="customAmount" placeholder="Enter amount" min="1" step="1" />
+                        </div>
+
+                        <div class="form-group">
+                            <label>Choose Where Your Donation Goes</label>
+                            <div class="donation-purpose">
+                                <button type="button" class="purpose-btn active" data-purpose="general">General Support</button>
+                                <button type="button" class="purpose-btn" data-purpose="education">Education</button>
+                                <button type="button" class="purpose-btn" data-purpose="healthcare">Healthcare</button>
+                                <button type="button" class="purpose-btn" data-purpose="desk">Sponsor a Desk</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="donorName">Full Name *</label>
+                            <input type="text" id="donorName" placeholder="John Doe" required />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="donorEmail">Email Address *</label>
+                            <input type="email" id="donorEmail" placeholder="you@example.com" required />
+                        </div>
+
+                        <div class="form-group">
+                            <label>Select Payment Method</label>
+                            <div class="payment-options">
+                                <div class="payment-option active" data-method="card" id="cardOption">
+                                    <i class="fas fa-credit-card"></i> Card
+                                    <span class="sub-text">Visa, Mastercard, Amex</span>
+                                </div>
+                                <div class="payment-option" data-method="mpesa" id="mpesaOption">
+                                    <i class="fas fa-mobile-alt"></i> M-Pesa
+                                    <span class="sub-text">Safaricom M-Pesa</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" id="mpesaPhoneGroup" style="display: none;">
+                            <label for="mpesaPhone">M-Pesa Phone Number *</label>
+                            <input type="tel" id="mpesaPhone" placeholder="254712345678" />
+                            <small style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-top: 4px;">
+                                <i class="fas fa-info-circle"></i> You will receive a payment request on your phone. Enter your M-Pesa PIN to complete.
+                            </small>
+                        </div>
+
+                        <button type="submit" class="btn-donate-submit" id="donateSubmitBtn">
+                            <i class="fas fa-heart"></i> Donate Now
+                        </button>
+
+                        <div class="payment-methods">
+                            <i class="fab fa-cc-visa"></i>
+                            <i class="fab fa-cc-mastercard"></i>
+                            <i class="fab fa-cc-amex"></i>
+                            <i class="fas fa-mobile-alt" style="font-size: 1.5rem;"></i>
+                        </div>
+
+                        <div class="secure-badge">
+                            <i class="fas fa-lock"></i>
+                            <span>Secured with SSL encryption • Powered by Flutterwave</span>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== CONTACT ===== -->
+    <section class="section" id="contact">
+        <div class="container">
+            <div class="section-header animate-on-scroll">
+                <span class="tag">Contact</span>
+                <h2>Get In <span class="highlight">Touch</span></h2>
+                <p>
+                    Reach out to learn more about our programme, partner with us, or support our mission.
+                </p>
+            </div>
+            <div class="contact-grid">
+                <div class="contact-info animate-on-scroll">
+                    <h3>Let's Connect</h3>
+                    <p>
+                        We're based in <strong>Meru, Kenya</strong> and serve communities across East Africa. Whether you're a school, health facility, donor, or partner, we'd love to hear from you.
+                    </p>
+
+                    <div class="contact-item">
+                        <div class="icon"><i class="fas fa-phone"></i></div>
+                        <div class="details">
+                            <span class="label">Phone</span>
+                            <span class="value">0798167920 / 0202002047 / 0722393447</span>
+                        </div>
+                    </div>
+
+                    <div class="contact-item">
+                        <div class="icon"><i class="fas fa-envelope"></i></div>
+                        <div class="details">
+                            <span class="label">Email</span>
+                            <span class="value">maxifinelytools@gmail.com</span>
+                        </div>
+                    </div>
+
+                    <div class="contact-item">
+                        <div class="icon"><i class="fas fa-location-dot"></i></div>
+                        <div class="details">
+                            <span class="label">Location</span>
+                            <span class="value">Meru, Kenya</span>
+                        </div>
+                    </div>
+
+                    <div class="contact-item" style="border-color: var(--accent);">
+                        <div class="icon" style="background: #fef3c7; color: var(--accent);">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <div class="details">
+                            <span class="label">Support Our Work</span>
+                            <span class="value" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <a href="#donate-section" class="btn btn-accent btn-sm">
+                                    <i class="fas fa-heart"></i> Donate Now
+                                </a>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="contact-map animate-on-scroll">
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!d1023382.8858692514!2d37.149663399999996!3d0.043318700000000006!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1784a9c806f54bb7%3A0x94fbd5f54b249db1!2sMeru%2C%20Kenya!5e0!3m2!1sen!2s!4v1740000000000" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Map showing Maxfinleys location in Meru, Kenya"></iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== NEWSLETTER ===== -->
+    <section class="newsletter-section">
+        <div class="container">
+            <h2>Stay <span style="color: var(--accent);">Updated</span></h2>
+            <p>Subscribe to our newsletter for impact stories, new projects, and opportunities.</p>
+            <form class="newsletter-form" id="newsletterForm">
+                <input type="email" placeholder="Enter your email" required />
+                <button type="submit"><i class="fas fa-paper-plane"></i> Subscribe</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="footer">
+        <div class="container">
+            <div class="brand">
+                <h4><i class="fas fa-tools"></i> Maxfinleys <span style="color: rgba(255,255,255,0.5);">CRP</span></h4>
+                <p>
+                    A Desk for Every Child. Quality Healthcare for Every Family.
+                </p>
+                <p style="font-size:0.9rem; margin-top:4px; color: rgba(255,255,255,0.6);">
+                    Giving equipment a second life. Restoring dignity. Strengthening communities.
+                </p>
+                <p class="motto-footer">
+                    <i class="fas fa-quote-left"></i> Recover. Repair. Refurbish. Reuse. Restore Dignity.
+                </p>
+            </div>
+            <div>
+                <h5>Quick Links</h5>
+                <ul>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#programmes">Programmes</a></li>
+                    <li><a href="#impact">Impact</a></li>
+                    <li><a href="#projects">Projects</a></li>
+                    <li><a href="#gallery">Gallery</a></li>
+                    <li><a href="#stories">Stories</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </div>
+            <div>
+                <h5>Get Involved</h5>
+                <ul>
+                    <li><a href="#donate-section"><i class="fas fa-heart" style="color: var(--accent);"></i> Donate</a></li>
+                    <li><a href="#request-support">Request Support</a></li>
+                    <li><a href="#donate-equipment">Donate Equipment</a></li>
+                    <li><a href="#partner">Partner With Us</a></li>
+                </ul>
+            </div>
+            <div>
+                <h5>Contact</h5>
+                <ul style="font-size:0.9rem;">
+                    <li><i class="fas fa-phone" style="color: var(--accent); width:20px;"></i> 0798167920</li>
+                    <li><i class="fas fa-envelope" style="color: var(--accent); width:20px;"></i> maxifinelytools@gmail.com</li>
+                    <li><i class="fas fa-map-marker-alt" style="color: var(--accent); width:20px;"></i> Meru, Kenya</li>
+                </ul>
+            </div>
+            <div class="bottom">
+                <span>&copy; 2026 Maxfinleys Community Renewal Programme. All rights reserved.</span>
+                <div class="socials">
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ===== SCRIPTS ===== -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // ============================================================
+            // 🔴 IMPORTANT: Replace with your actual Flutterwave Public Key
+            // Get it from: https://dashboard.flutterwave.com/dashboard/settings/apis
+            // ============================================================
+            const FLUTTERWAVE_PUBLIC_KEY = 'FLWPUBK-xxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+
+            // ============================================================
+            // 🔴 IMPORTANT: Replace with your actual bank details
+            // ============================================================
+            const BANK_DETAILS = {
+                bankName: 'Equity Bank Kenya',
+                accountName: 'Maxfinleys Tools and Instruments Ltd',
+                accountNumber: '1234567890',
+                branch: 'Meru',
+                swiftCode: 'EQBLKENA'
+            };
+
+            document.getElementById('bankAccount').textContent = BANK_DETAILS.accountNumber;
+
+            // ===== DARK THEME =====
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+
+            function setTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                if (theme === 'dark') {
+                    themeIcon.className = 'fas fa-sun';
+                    themeText.textContent = 'Light';
+                } else {
+                    themeIcon.className = 'fas fa-moon';
+                    themeText.textContent = 'Dark';
+                }
+            }
+
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            setTheme(savedTheme);
+
+            themeToggle.addEventListener('click', function() {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+            });
+
+            // ===== NAVBAR SCROLL =====
+            const navbar = document.getElementById('navbar');
+            window.addEventListener('scroll', function() {
+                navbar.classList.toggle('scrolled', window.scrollY > 50);
+            });
+
+            // ===== PROGRESS BAR =====
+            const progressBar = document.getElementById('progressBar');
+            window.addEventListener('scroll', function() {
+                const scrollTop = window.scrollY;
+                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                progressBar.style.width = (scrollTop / docHeight) * 100 + '%';
+            });
+
+            // ===== BACK TO TOP =====
+            const backToTop = document.getElementById('backToTop');
+            window.addEventListener('scroll', function() {
+                backToTop.classList.toggle('show', window.scrollY > 500);
+            });
+
+            backToTop.addEventListener('click', function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            // ===== HAMBURGER =====
+            const hamburger = document.getElementById('hamburger');
+            const navLinks = document.getElementById('navLinks');
+
+            hamburger.addEventListener('click', function() {
+                hamburger.classList.toggle('active');
+                navLinks.classList.toggle('open');
+            });
+
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                link.addEventListener('click', function() {
+                    hamburger.classList.remove('active');
+                    navLinks.classList.remove('open');
+                });
+            });
+
+            // ===== SCROLL TO DONATE =====
+            document.querySelectorAll('#donateNavBtn, #floatingDonateBtn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.getElementById('donate-section').scrollIntoView({ behavior: 'smooth' });
+                });
+            });
+
+            // ===== PAYMENT METHOD TOGGLE =====
+            const cardOption = document.getElementById('cardOption');
+            const mpesaOption = document.getElementById('mpesaOption');
+            const mpesaPhoneGroup = document.getElementById('mpesaPhoneGroup');
+            const mpesaPhoneInput = document.getElementById('mpesaPhone');
+
+            function setPaymentMethod(method) {
+                if (method === 'card') {
+                    cardOption.classList.add('active');
+                    mpesaOption.classList.remove('active');
+                    mpesaPhoneGroup.style.display = 'none';
+                } else {
+                    mpesaOption.classList.add('active');
+                    cardOption.classList.remove('active');
+                    mpesaPhoneGroup.style.display = 'block';
+                }
+            }
+
+            cardOption.addEventListener('click', function() { setPaymentMethod('card'); });
+            mpesaOption.addEventListener('click', function() { setPaymentMethod('mpesa'); });
+
+            // ===== DONATION AMOUNT BUTTONS =====
+            const amountBtns = document.querySelectorAll('.amount-btn');
+            const customAmountInput = document.getElementById('customAmount');
+
+            amountBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    amountBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    customAmountInput.value = '';
+                });
+            });
+
+            customAmountInput.addEventListener('input', function() {
+                if (this.value) {
+                    amountBtns.forEach(b => b.classList.remove('active'));
+                }
+            });
+
+            // ===== DONATION PURPOSE BUTTONS =====
+            const purposeBtns = document.querySelectorAll('.purpose-btn');
+            let selectedPurpose = 'general';
+
+            purposeBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    purposeBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedPurpose = this.dataset.purpose;
+                });
+            });
+
+            // ===== TOAST =====
+            function showToast(title, message, isSuccess = true) {
+                const toast = document.getElementById('toast');
+                document.getElementById('toastTitle').textContent = title;
+                document.getElementById('toastMessage').textContent = message;
+                toast.style.borderLeftColor = isSuccess ? 'var(--primary)' : '#ef4444';
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 8000);
+            }
+
+            // ===== FLUTTERWAVE PAYMENT =====
+            const donateForm = document.getElementById('donateForm');
+            const submitBtn = document.getElementById('donateSubmitBtn');
+
+            donateForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                let amount = 25;
+                const activeBtn = document.querySelector('.amount-btn.active');
+                if (activeBtn) amount = parseInt(activeBtn.dataset.amount);
+                if (customAmountInput.value) amount = parseInt(customAmountInput.value);
+
+                if (!amount || amount < 1) {
+                    showToast('⚠️ Invalid Amount', 'Please enter a valid donation amount.', false);
+                    return;
+                }
+
+                const name = document.getElementById('donorName').value.trim();
+                const email = document.getElementById('donorEmail').value.trim();
+
+                if (!name || !email) {
+                    showToast('⚠️ Missing Information', 'Please fill in your name and email.', false);
+                    return;
+                }
+
+                if (!email.includes('@') || !email.includes('.')) {
+                    showToast('⚠️ Invalid Email', 'Please enter a valid email address.', false);
+                    return;
+                }
+
+                const isMpesa = mpesaOption.classList.contains('active');
+                let phone = null;
+
+                if (isMpesa) {
+                    phone = mpesaPhoneInput.value.trim();
+                    if (!phone || phone.length < 10) {
+                        showToast('⚠️ Invalid Phone', 'Please enter a valid M-Pesa phone number (e.g., 254712345678).', false);
+                        return;
+                    }
+                }
+
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+                try {
+                    if (typeof FlutterwaveCheckout === 'undefined') {
+                        showToast('⚠️ Payment Gateway Loading', 'Please wait a moment and try again.', false);
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-heart"></i> Donate Now';
+                        return;
+                    }
+
+                    const customer = { email: email, name: name };
+                    if (phone) customer.phone_number = phone;
+
+                    const paymentData = {
+                        public_key: FLUTTERWAVE_PUBLIC_KEY,
+                        tx_ref: 'MF-CRP-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+                        amount: amount,
+                        currency: 'USD',
+                        payment_options: isMpesa ? 'mpesa' : 'card',
+                        customer: customer,
+                        customizations: {
+                            title: 'Maxfinleys Community Renewal Programme',
+                            description: 'Donation for ' + selectedPurpose.replace('-', ' '),
+                            logo: 'https://via.placeholder.com/100x100/0b7a4b/ffffff?text=MF',
+                        },
+                        callback: function(response) {
+                            console.log('Payment successful:', response);
+                            showToast(
+                                '🎉 Thank You!',
+                                `Your generous donation of $${amount} for ${selectedPurpose.replace('-', ' ')} has been received. A receipt has been sent to ${email}.`
+                            );
+                            donateForm.reset();
+                            document.querySelector('.amount-btn[data-amount="25"]').classList.add('active');
+                            document.querySelector('.purpose-btn[data-purpose="general"]').classList.add('active');
+                            setPaymentMethod('card');
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = '<i class="fas fa-heart"></i> Donate Now';
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        },
+                        onclose: function() {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = '<i class="fas fa-heart"></i> Donate Now';
+                        },
+                    };
+
+                    FlutterwaveCheckout(paymentData);
+
+                } catch (error) {
+                    console.error('Payment error:', error);
+                    showToast('⚠️ Payment Error', 'There was an issue processing your payment. Please try again.', false);
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-heart"></i> Donate Now';
+                }
+            });
+
+            // ===== FAQ ACCORDION =====
+            document.querySelectorAll('.faq-item').forEach(item => {
+                const question = item.querySelector('.faq-question');
+                question.addEventListener('click', function() {
+                    const isActive = item.classList.contains('active');
+                    document.querySelectorAll('.faq-item').forEach(other => other.classList.remove('active'));
+                    if (!isActive) item.classList.add('active');
+                });
+            });
+
+            // ===== NEWSLETTER =====
+            document.querySelectorAll('#newsletterForm, #footerNewsletter').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const email = this.querySelector('input[type="email"]').value.trim();
+                    if (email) {
+                        alert('✅ You\'re subscribed!\n\nThanks for joining our community.');
+                        this.reset();
+                    } else {
+                        alert('Please enter a valid email address.');
+                    }
+                });
+            });
+
+            // ===== FORM SUBMISSIONS =====
+            document.getElementById('requestForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                alert('✅ Thank you! Your request has been submitted.\n\nOur team will review your application and contact you within 5 working days.');
+                this.reset();
+            });
+
+            document.getElementById('equipmentForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                alert('✅ Thank you! Your equipment donation offer has been submitted.\n\nOur team will assess the equipment and contact you within 3 working days.');
+                this.reset();
+            });
+
+            // ===== FILE INPUT TRIGGERS =====
+            document.querySelectorAll('.file-input').forEach(input => {
+                input.addEventListener('click', function() {
+                    this.querySelector('input[type="file"]').click();
+                });
+                input.querySelector('input[type="file"]').addEventListener('change', function() {
+                    if (this.files.length > 0) {
+                        const parent = this.closest('.file-input');
+                        parent.innerHTML = '<i class="fas fa-check-circle" style="color: var(--primary);"></i> ' + this.files.length +
+                            ' file(s) selected';
+                    }
+                });
+            });
+
+            // ===== SCROLL ANIMATIONS =====
+            const observer = new IntersectionObserver(
+                entries => entries.forEach(entry => {
+                    if (entry.isIntersecting) entry.target.classList.add('visible');
+                }), { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+            );
+
+            document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+
+            setTimeout(() => {
+                document.querySelectorAll('.animate-on-scroll').forEach(el => {
+                    if (el.getBoundingClientRect().top < window.innerHeight) {
+                        el.classList.add('visible');
+                    }
+                });
+            }, 200);
+
+            // ============================================================
+            // ===== GALLERY MODAL =====
+            // ============================================================
+            const galleryItems = document.querySelectorAll('.gallery-item');
+            const modal = document.getElementById('galleryModal');
+            const modalImage = document.getElementById('modalImage');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalDescription = document.getElementById('modalDescription');
+            const modalCounter = document.getElementById('modalCounter');
+            const modalClose = document.getElementById('modalClose');
+            const modalPrev = document.getElementById('modalPrev');
+            const modalNext = document.getElementById('modalNext');
+
+            let currentIndex = 0;
+            const totalItems = galleryItems.length;
+            const galleryData = [];
+
+            // Build gallery data from DOM
+            galleryItems.forEach((item, index) => {
+                const img = item.querySelector('img');
+                const title = item.dataset.title || 'Untitled';
+                const description = item.dataset.description || '';
+                const category = item.dataset.category || '';
+                galleryData.push({
+                    src: img.src,
+                    alt: img.alt || title,
+                    title: title,
+                    description: description,
+                    category: category
+                });
+            });
+
+            function openModal(index) {
+                currentIndex = (index + totalItems) % totalItems;
+                const data = galleryData[currentIndex];
+                modalImage.src = data.src;
+                modalImage.alt = data.alt;
+                modalTitle.textContent = data.title;
+                modalDescription.textContent = data.description;
+                modalCounter.textContent = (currentIndex + 1) + ' / ' + totalItems;
+                modal.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeModal() {
+                modal.classList.remove('open');
+                document.body.style.overflow = '';
+            }
+
+            function prevImage() {
+                openModal(currentIndex - 1);
+            }
+
+            function nextImage() {
+                openModal(currentIndex + 1);
+            }
+
+            // Click on gallery item to open
+            galleryItems.forEach((item, index) => {
+                item.addEventListener('click', function() {
+                    openModal(index);
+                });
+            });
+
+            // Modal navigation
+            modalClose.addEventListener('click', closeModal);
+            modalPrev.addEventListener('click', prevImage);
+            modalNext.addEventListener('click', nextImage);
+
+            // Keyboard navigation
+            document.addEventListener('keydown', function(e) {
+                if (!modal.classList.contains('open')) return;
+                if (e.key === 'Escape') closeModal();
+                if (e.key === 'ArrowLeft') prevImage();
+                if (e.key === 'ArrowRight') nextImage();
+            });
+
+            // Click outside modal content to close
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) closeModal();
+            });
+
+            console.log('🚀 Maxfinleys Community Renewal Programme');
+            console.log('📧 Email: maxifinelytools@gmail.com');
+            console.log('📞 Phone: 0798167920 / 0202002047 / 0722393447');
+            console.log('📍 Location: Meru, Kenya');
+            console.log('');
+            console.log('💰 To receive payments:');
+            console.log('1. Replace FLUTTERWAVE_PUBLIC_KEY with your actual key');
+            console.log('2. Get your key at: https://dashboard.flutterwave.com/dashboard/settings/apis');
+            console.log('');
+            console.log('🏦 Bank Details:');
+            console.log('   Bank: ' + BANK_DETAILS.bankName);
+            console.log('   Account: ' + BANK_DETAILS.accountName);
+            console.log('   Number: ' + BANK_DETAILS.accountNumber);
+            console.log('   Branch: ' + BANK_DETAILS.branch);
+            console.log('   Swift: ' + BANK_DETAILS.swiftCode);
+        });
+    </script>
+
+</body>
+</html>

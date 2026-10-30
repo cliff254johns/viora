@@ -1,0 +1,607 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KIPIMO AI | Smart Ledger</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap');
+        
+        :root { --brand: #4f46e5; --bg-color: #ffffff; --text-main: #000000; --text-muted: #475569; --card-bg: #f8fafc; --card-border: #e2e8f0; }
+        .dark-mode { --bg-color: #0f172a; --text-main: #ffffff; --text-muted: #94a3b8; --card-bg: #1e293b; --card-border: #334155; }
+
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-color); color: var(--text-main); transition: background 0.3s; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .glass-card { background: var(--card-bg); border-radius: 32px; border: 2.5px solid var(--card-border); transition: all 0.2s; position: relative; }
+        .btn-primary { background: #4f46e5; color: white; border-radius: 24px; font-weight: 800; padding: 20px; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 1.1rem; }
+        
+        .wallet-balance { font-size: 64px; font-weight: 900; line-height: 1; letter-spacing: -0.05em; margin: 12px 0; }
+        .wallet-stat-value { font-size: 24px; font-weight: 900; }
+
+        .commodity-chip {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 14px 10px;
+            min-width: 85px;
+            height: 100px;
+            border-radius: 28px;
+            background: var(--card-bg);
+            border: 2.5px solid var(--card-border);
+            transition: all 0.2s;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .commodity-chip:disabled {
+            opacity: 0.3;
+            filter: grayscale(1);
+            pointer-events: none;
+        }
+
+        .item-counter {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #4f46e5;
+            color: white;
+            font-size: 12px;
+            font-weight: 900;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid var(--bg-color);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .category-icon { width: 64px; height: 64px; border-radius: 22px; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+        
+        .bar-container { display: flex; align-items: flex-end; gap: 10px; height: 120px; margin-top: 24px; position: relative; }
+        .bar { flex: 1; border-radius: 8px; transition: height 1s; min-height: 4px; }
+
+        .date-divider {
+            position: sticky;
+            top: 140px;
+            z-index: 20;
+            background: var(--bg-color);
+            padding: 12px 0;
+            margin: 10px 0;
+            font-weight: 900;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #4f46e5;
+            border-bottom: 2px solid var(--card-border);
+        }
+
+        .lockdown-btn:disabled {
+            background: #64748b !important;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide { animation: slideIn 0.3s ease forwards; }
+
+        @keyframes pulse-sync {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .syncing { animation: pulse-sync 1s infinite; pointer-events: none; }
+    </style>
+</head>
+<body class="min-h-screen pb-40">
+
+    <header class="pt-8 pb-4 sticky top-0 z-40 bg-[var(--bg-color)]/90 backdrop-blur-lg">
+        <div class="max-w-xl mx-auto px-6">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center gap-4">
+                    <h1 class="text-4xl font-extrabold tracking-tighter text-indigo-600">KIPIMO <span class="text-slate-400">AI</span></h1>
+                    <button onclick="toggleTheme()" class="w-12 h-12 rounded-2xl bg-[var(--card-bg)] border-2 border-[var(--card-border)] flex items-center justify-center">
+                        <i id="themeIcon" class="fa-solid fa-moon"></i>
+                    </button>
+                </div>
+                <div class="text-[11px] font-black bg-emerald-100 text-emerald-700 px-5 py-3 rounded-2xl uppercase tracking-widest flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-bolt"></i> Local Active
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-4 overflow-x-auto no-scrollbar px-6 pb-4">
+            <button onclick="quickExpense('Fare')" class="commodity-chip spending-trigger">
+                <span id="count-Fare" class="item-counter">0</span>
+                <i class="fa-solid fa-bus text-blue-500 text-2xl"></i><span class="text-[10px] font-black uppercase">Fare</span>
+            </button>
+            <button onclick="quickExpense('Food')" class="commodity-chip spending-trigger">
+                <span id="count-Food" class="item-counter">0</span>
+                <i class="fa-solid fa-utensils text-orange-500 text-2xl"></i><span class="text-[10px] font-black uppercase">Food</span>
+            </button>
+            <button onclick="quickExpense('Tokens')" class="commodity-chip spending-trigger">
+                <span id="count-Tokens" class="item-counter">0</span>
+                <i class="fa-solid fa-bolt text-yellow-500 text-2xl"></i><span class="text-[10px] font-black uppercase">Tokens</span>
+            </button>
+            <button onclick="quickExpense('Shop')" class="commodity-chip spending-trigger">
+                <span id="count-Shop" class="item-counter">0</span>
+                <i class="fa-solid fa-cart-shopping text-emerald-500 text-2xl"></i><span class="text-[10px] font-black uppercase">Shop</span>
+            </button>
+            <button onclick="quickExpense('Wifi')" class="commodity-chip spending-trigger">
+                <span id="count-Wifi" class="item-counter">0</span>
+                <i class="fa-solid fa-wifi text-indigo-500 text-2xl"></i><span class="text-[10px] font-black uppercase">Wifi</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-xl mx-auto px-6 mt-4">
+        
+        <div id="tab-daily" class="tab-content active space-y-8">
+            <div id="walletCard" class="glass-card p-8 border-l-[16px] border-l-indigo-600 shadow-2xl overflow-hidden">
+                <div class="flex justify-between items-start mb-2">
+                    <p class="text-[12px] font-black uppercase tracking-widest text-indigo-600">Daily Balance</p>
+                    <button onclick="openBudgetModal()" class="w-14 h-14 bg-indigo-600 text-white rounded-2xl flex items-center justify-center text-2xl shadow-lg hover:scale-105 active:scale-95 transition-transform">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+                
+                <h2 class="wallet-balance" id="spendableDisplay">KSh 0</h2>
+                
+                <div class="flex gap-8 mb-4">
+                    <div>
+                        <p class="text-[12px] font-black opacity-50 uppercase">Spent Today</p>
+                        <p class="wallet-stat-value text-rose-500" id="spentDisplay">KSh 0</p>
+                    </div>
+                    <div>
+                        <p class="text-[12px] font-black opacity-50 uppercase">Assets</p>
+                        <p class="wallet-stat-value text-indigo-500" id="wealthDisplay">KSh 0</p>
+                    </div>
+                </div>
+
+                <div class="bar-container">
+                    <div class="bar bg-slate-200 dark:bg-slate-700" style="height: 100%"></div>
+                    <div id="spentBar" class="bar bg-indigo-500" style="height: 0%"></div>
+                    <div id="remainingBar" class="bar bg-emerald-400" style="height: 100%"></div>
+                </div>
+                
+                <div class="flex justify-between items-center pt-6 mt-6 border-t-2 border-[var(--card-border)]">
+                    <div class="flex flex-col">
+                        <div id="aiSummary" class="text-[13px] font-black text-slate-500 transition-colors duration-300">Kipimo Core Active</div>
+                        <button id="mpesaSyncBtn" onclick="syncMpesaMessages()" class="text-[10px] font-black text-indigo-600 uppercase flex items-center gap-1 mt-1 hover:opacity-70 transition-opacity">
+                            <i class="fa-solid fa-rotate"></i> Sync M-PESA
+                        </button>
+                    </div>
+                    <div class="flex gap-2 text-[10px] font-black text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 px-3 py-1 rounded-full uppercase">
+                        <i class="fa-solid fa-calendar"></i> <span id="currentDateDisplay">...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Ledger History</h3>
+                    <span id="ledgerCount" class="text-[11px] font-black bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg">0 ITEMS</span>
+                </div>
+                <div id="ledger" class="space-y-4"></div>
+            </div>
+        </div>
+
+        <div id="tab-grow" class="tab-content space-y-6">
+            <div class="flex justify-between items-center">
+                <h3 class="text-3xl font-black uppercase italic">Assets</h3>
+                <button onclick="openAddGrowthModal()" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl text-sm font-black shadow-lg">+ ADD</button>
+            </div>
+            <div id="growthList" class="space-y-4"></div>
+        </div>
+
+        <div id="tab-bills" class="tab-content space-y-6">
+            <div class="flex justify-between items-center">
+                <h3 class="text-3xl font-black uppercase italic text-rose-500">Bills</h3>
+                <button onclick="openAddBillModal()" class="bg-rose-500 text-white px-6 py-3 rounded-2xl text-sm font-black shadow-lg">+ NEW</button>
+            </div>
+            <div id="billsList" class="space-y-4"></div>
+        </div>
+
+        <div id="tab-kipimo" class="tab-content space-y-6">
+            <div class="glass-card p-8 min-h-[500px] flex flex-col border-indigo-500 shadow-2xl">
+                <h3 class="text-2xl font-black uppercase mb-4">Financial AI</h3>
+                <div id="aiChatWindow" class="flex-1 space-y-4 overflow-y-auto no-scrollbar mb-6 flex flex-col p-2">
+                    <div class="bg-indigo-600 text-white p-4 rounded-3xl rounded-bl-none text-sm font-bold self-start max-w-[85%]">Sema! Ask me anything about your spending habits across different days.</div>
+                </div>
+                <div class="relative">
+                    <input type="text" id="aiInput" placeholder="How was my spending last week?" class="w-full p-6 bg-slate-100 dark:bg-slate-800 rounded-3xl font-black outline-none border-2 border-transparent focus:border-indigo-500 transition-all text-lg pr-20">
+                    <button onclick="askKipimo()" class="absolute right-3 top-1/2 -translate-y-1/2 w-14 h-14 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg">
+                        <i class="fa-solid fa-paper-plane text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <nav class="fixed bottom-0 left-0 right-0 p-6 z-50">
+        <div class="max-w-xl mx-auto bg-slate-950 text-white rounded-[40px] p-3 flex justify-between items-center shadow-2xl border border-white/5">
+            <button class="flex-1 py-4 flex flex-col items-center gap-2 text-indigo-400 nav-btn" onclick="switchTab('daily', this)">
+                <i class="fa-solid fa-wallet text-2xl"></i><span class="text-[9px] uppercase font-black">Wallet</span>
+            </button>
+            <button class="flex-1 py-4 flex flex-col items-center gap-2 text-slate-500 nav-btn" onclick="switchTab('grow', this)">
+                <i class="fa-solid fa-chart-line text-2xl"></i><span class="text-[9px] uppercase font-black">Growth</span>
+            </button>
+            <div class="px-3">
+                <button id="mainAddBtn" onclick="quickExpense('Other')" class="w-20 h-20 bg-rose-500 rounded-full flex items-center justify-center -mt-14 border-[6px] border-[var(--bg-color)] shadow-xl lockdown-btn transition-all">
+                    <i class="fa-solid fa-plus text-3xl"></i>
+                </button>
+            </div>
+            <button class="flex-1 py-4 flex flex-col items-center gap-2 text-slate-500 nav-btn" onclick="switchTab('bills', this)">
+                <i class="fa-solid fa-receipt text-2xl"></i><span class="text-[9px] uppercase font-black">Bills</span>
+            </button>
+            <button class="flex-1 py-4 flex flex-col items-center gap-2 text-slate-500 nav-btn" onclick="switchTab('kipimo', this)">
+                <i class="fa-solid fa-robot text-2xl"></i><span class="text-[9px] uppercase font-black">Kipimo</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Modal Base -->
+    <div id="modalOverlay" class="fixed inset-0 bg-black/90 backdrop-blur-xl z-[60] hidden flex items-end sm:items-center justify-center p-6" onclick="if(event.target==this) closeModal()">
+        <div id="modalContent" class="bg-[var(--bg-color)] w-full max-w-lg rounded-[48px] p-10 shadow-2xl" onclick="event.stopPropagation()"></div>
+    </div>
+
+    <script>
+        // State Management with LocalStorage
+        let state = {
+            cash: 0,
+            initialTotal: 0,
+            expenses: [],
+            growth: [],
+            bills: [],
+            darkMode: false,
+            lastLoggedDate: new Date().toLocaleDateString()
+        };
+
+        const ICONS = { "Fare": "fa-bus text-blue-500 bg-blue-50", "Food": "fa-utensils text-orange-500 bg-orange-50", "Tokens": "fa-bolt text-yellow-600 bg-yellow-50", "Shop": "fa-cart-shopping text-emerald-500 bg-emerald-50", "Wifi": "fa-wifi text-indigo-500 bg-indigo-50", "Other": "fa-tag text-slate-400 bg-slate-50", "Bill": "fa-receipt text-rose-500 bg-rose-50" };
+
+        const saveToLocal = () => localStorage.setItem('KIPIMO_LEDGER_DATA', JSON.stringify(state));
+        const loadFromLocal = () => {
+            const data = localStorage.getItem('KIPIMO_LEDGER_DATA');
+            if(data) state = JSON.parse(data);
+            
+            const today = new Date().toLocaleDateString();
+            if (state.lastLoggedDate !== today) {
+                state.lastLoggedDate = today;
+                state.initialTotal = state.cash; 
+                saveToLocal();
+            }
+        };
+
+        const toggleTheme = () => {
+            state.darkMode = !state.darkMode;
+            document.body.classList.toggle('dark-mode', state.darkMode);
+            document.getElementById('themeIcon').className = state.darkMode ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            saveToLocal();
+        };
+
+        const updateUI = () => {
+            document.body.classList.toggle('dark-mode', state.darkMode);
+            document.getElementById('themeIcon').className = state.darkMode ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            
+            document.getElementById('spendableDisplay').innerText = `KSh ${state.cash.toLocaleString()}`;
+            document.getElementById('currentDateDisplay').innerText = state.lastLoggedDate;
+
+            const today = new Date().toLocaleDateString();
+            const spentToday = state.expenses
+                .filter(e => new Date(e.date).toLocaleDateString() === today)
+                .reduce((s, i) => s + i.amount, 0);
+
+            document.getElementById('spentDisplay').innerText = `KSh ${spentToday.toLocaleString()}`;
+            
+            const totalWealth = (state.growth || []).reduce((s,i) => s + (i.value || 0), 0);
+            document.getElementById('wealthDisplay').innerText = `KSh ${totalWealth.toLocaleString()}`;
+
+            const usagePercent = state.initialTotal > 0 ? (spentToday / state.initialTotal) * 100 : 0;
+            document.getElementById('spentBar').style.height = `${Math.min(usagePercent, 100)}%`;
+            document.getElementById('remainingBar').style.height = `${Math.max(100 - usagePercent, 0)}%`;
+
+            // Threshold Triggers & Warnings
+            const aiSum = document.getElementById('aiSummary');
+            const walletCard = document.getElementById('walletCard');
+            
+            if (state.cash <= 0) {
+                aiSum.innerText = "CRITICAL: BALANCE ZERO";
+                aiSum.className = "text-[13px] font-black text-rose-600 animate-pulse";
+                walletCard.style.borderLeftColor = "#e11d48";
+                toggleLockdown(true);
+            } else if (usagePercent >= 80) {
+                aiSum.innerText = "WARNING: 80% BUDGET USED";
+                aiSum.className = "text-[13px] font-black text-rose-500";
+                walletCard.style.borderLeftColor = "#f43f5e";
+                toggleLockdown(false);
+            } else if (usagePercent >= 50) {
+                aiSum.innerText = "NOTE: 50% BUDGET USED";
+                aiSum.className = "text-[13px] font-black text-amber-500";
+                walletCard.style.borderLeftColor = "#f59e0b";
+                toggleLockdown(false);
+            } else {
+                aiSum.innerText = "Kipimo Core Active";
+                aiSum.className = "text-[13px] font-black text-slate-500";
+                walletCard.style.borderLeftColor = "#4f46e5";
+                toggleLockdown(false);
+            }
+
+            const todayExpenses = state.expenses.filter(e => new Date(e.date).toLocaleDateString() === today);
+            const counts = todayExpenses.reduce((acc, curr) => {
+                acc[curr.name] = (acc[curr.name] || 0) + 1;
+                return acc;
+            }, {});
+            Object.keys(ICONS).forEach(key => {
+                const el = document.getElementById(`count-${key}`);
+                if(el) el.innerText = counts[key] || 0;
+            });
+
+            renderLedger();
+            renderGrowth();
+            renderBills();
+        };
+
+        const toggleLockdown = (isLocked) => {
+            document.querySelectorAll('.spending-trigger').forEach(btn => btn.disabled = isLocked);
+            document.getElementById('mainAddBtn').disabled = isLocked;
+        };
+
+        const renderLedger = () => {
+            const l = document.getElementById('ledger');
+            const sorted = [...(state.expenses || [])].sort((a, b) => b.id - a.id);
+            document.getElementById('ledgerCount').innerText = `${sorted.length} TOTAL`;
+
+            if (sorted.length === 0) {
+                l.innerHTML = '<div class="text-center py-10 opacity-30 font-black uppercase text-xs tracking-widest">No history yet</div>';
+                return;
+            }
+
+            let currentDay = "";
+            let html = "";
+            
+            sorted.forEach(e => {
+                const day = new Date(e.date).toLocaleDateString('en-KE', { weekday: 'long', day: 'numeric', month: 'short' });
+                if (day !== currentDay) {
+                    currentDay = day;
+                    html += `<div class="date-divider">${day}</div>`;
+                }
+
+                html += `
+                    <div class="glass-card p-6 flex justify-between items-center animate-slide">
+                        <div class="flex items-center gap-6">
+                            <div class="category-icon ${ICONS[e.name] || ICONS.Other} shadow-sm">
+                                <i class="fa-solid ${ICONS[e.name]?.split(' ')[0] || 'fa-tag'}"></i>
+                            </div>
+                            <div>
+                                <p class="font-black uppercase text-sm">${e.detail || e.name}</p>
+                                <p class="text-[10px] font-bold text-slate-400">${new Date(e.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-black text-rose-500 text-lg">- ${e.amount.toLocaleString()}</p>
+                            <button onclick="deleteExpense(${e.id})" class="text-[9px] font-black uppercase text-slate-300 hover:text-rose-500">Remove</button>
+                        </div>
+                    </div>
+                `;
+            });
+            l.innerHTML = html;
+        };
+
+        // NEW: M-PESA Sync Logic
+        window.syncMpesaMessages = () => {
+            const btn = document.getElementById('mpesaSyncBtn');
+            btn.classList.add('syncing');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Syncing Messages...';
+
+            setTimeout(() => {
+                // Simulated M-PESA Messages
+                const simulatedMessages = [
+                    "QRC1234567 Confirmed. KSh 200.00 paid to BOLT RIDES on 25/4/26 at 10:15 AM.",
+                    "SJD7890123 Confirmed. KSh 450.00 paid to KUKU CHICKEN on 25/4/26 at 1:30 PM.",
+                    "TPW5556667 Confirmed. KSh 1,000.00 paid to KPLC TOKENS on 25/4/26 at 5:00 PM."
+                ];
+
+                let syncedCount = 0;
+                simulatedMessages.forEach(msg => {
+                    const amtMatch = msg.match(/KSh\s([\d,]+\.?\d*)/);
+                    const vendorMatch = msg.match(/paid to\s(.*?)\son/);
+                    
+                    if (amtMatch && vendorMatch) {
+                        const amount = parseFloat(amtMatch[1].replace(/,/g, ''));
+                        const vendor = vendorMatch[1].trim();
+                        
+                        // Map vendor to category
+                        let category = "Other";
+                        if (vendor.includes("BOLT") || vendor.includes("MATATU")) category = "Fare";
+                        if (vendor.includes("CHICKEN") || vendor.includes("JAVA")) category = "Food";
+                        if (vendor.includes("KPLC") || vendor.includes("TOKENS")) category = "Tokens";
+
+                        // Only add if we have balance
+                        if (state.cash >= amount) {
+                            state.expenses.push({
+                                id: Date.now() + Math.random(),
+                                name: category,
+                                detail: vendor,
+                                amount: amount,
+                                date: new Date().toISOString()
+                            });
+                            state.cash -= amount;
+                            syncedCount++;
+                        }
+                    }
+                });
+
+                btn.classList.remove('syncing');
+                btn.innerHTML = `<i class="fa-solid fa-check"></i> ${syncedCount} Items Synced`;
+                setTimeout(() => { btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Sync M-PESA'; }, 3000);
+                
+                saveToLocal();
+                updateUI();
+            }, 1500);
+        };
+
+        window.quickExpense = (cat) => {
+            if(state.cash <= 0) return;
+            renderModal(`
+                <h2 class="text-2xl font-black mb-8 uppercase text-slate-400">Log ${cat}</h2>
+                <input type="number" id="m_amt" placeholder="0" class="text-6xl font-black w-full mb-10 outline-none bg-transparent border-b-4 border-indigo-600 pb-2" autofocus>
+                <button onclick="saveQuick('${cat}')" class="btn-primary w-full shadow-lg">SPEND NOW</button>
+            `);
+        };
+
+        window.saveQuick = (cat) => {
+            const a = parseFloat(document.getElementById('m_amt').value) || 0;
+            if(a > 0 && a <= state.cash) {
+                state.expenses.push({ id: Date.now(), name: cat, amount: a, date: new Date().toISOString() });
+                state.cash -= a;
+                saveToLocal();
+                updateUI();
+                closeModal();
+            }
+        };
+
+        window.deleteExpense = (id) => {
+            const item = state.expenses.find(x => x.id === id);
+            if(item) {
+                if(new Date(item.date).toLocaleDateString() === new Date().toLocaleDateString()) {
+                    state.cash += item.amount;
+                }
+                state.expenses = state.expenses.filter(x => x.id !== id);
+                saveToLocal();
+                updateUI();
+            }
+        };
+
+        window.openBudgetModal = () => {
+            renderModal(`
+                <h2 class="text-2xl font-black mb-8 uppercase">Top Up Wallet</h2>
+                <input type="number" id="m_amt_add" placeholder="0" class="text-6xl font-black w-full mb-10 outline-none bg-transparent border-b-4 border-indigo-600 pb-2" autofocus>
+                <button onclick="updateWallet()" class="btn-primary w-full">CONFIRM</button>
+            `);
+        };
+
+        window.updateWallet = () => {
+            const val = parseFloat(document.getElementById('m_amt_add').value) || 0;
+            if(val > 0) {
+                state.cash += val; 
+                state.initialTotal += val; 
+                saveToLocal(); 
+                updateUI(); 
+                closeModal();
+            }
+        };
+
+        window.openAddGrowthModal = () => {
+            renderModal(`
+                <h2 class="text-2xl font-black mb-8 uppercase">New Asset</h2>
+                <input type="text" id="g_name" placeholder="E.g. Stocks, Crypto" class="w-full p-5 mb-4 bg-slate-100 dark:bg-slate-800 rounded-3xl font-black outline-none">
+                <input type="number" id="g_val" placeholder="Value (KSh)" class="w-full p-5 mb-8 bg-slate-100 dark:bg-slate-800 rounded-3xl font-black outline-none">
+                <button onclick="saveGrowthItem()" class="btn-primary w-full">ADD TO GROWTH</button>
+            `);
+        };
+
+        window.saveGrowthItem = () => {
+            const name = document.getElementById('g_name').value;
+            const value = parseFloat(document.getElementById('g_val').value) || 0;
+            if(name && value > 0) {
+                state.growth.push({ id: Date.now(), name, value });
+                saveToLocal(); updateUI(); closeModal();
+            }
+        };
+
+        window.renderGrowth = () => {
+            const list = document.getElementById('growthList');
+            if(!list) return;
+            const items = state.growth || [];
+            list.innerHTML = items.length ? items.map(i => `
+                <div class="glass-card p-6 flex justify-between items-center animate-slide">
+                    <div class="flex items-center gap-6">
+                         <div class="category-icon bg-indigo-50 text-indigo-500"><i class="fa-solid fa-gem"></i></div>
+                         <div><h4 class="font-black uppercase text-sm">${i.name}</h4><p class="text-lg font-black text-indigo-600">KSh ${i.value.toLocaleString()}</p></div>
+                    </div>
+                    <button onclick="deleteGrowth(${i.id})" class="text-slate-300 text-2xl"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('') : '<div class="text-center py-20 opacity-30 font-black uppercase text-xs">No assets recorded</div>';
+        };
+
+        window.deleteGrowth = (id) => {
+            state.growth = state.growth.filter(i => i.id !== id);
+            saveToLocal(); updateUI();
+        };
+
+        window.openAddBillModal = () => {
+            renderModal(`
+                <h2 class="text-2xl font-black mb-8 uppercase text-rose-500">New Bill</h2>
+                <input type="text" id="b_name" placeholder="Bill Name" class="w-full p-5 mb-4 bg-slate-100 dark:bg-slate-800 rounded-3xl font-black outline-none">
+                <input type="number" id="b_amt" placeholder="Amount (KSh)" class="w-full p-5 mb-8 bg-slate-100 dark:bg-slate-800 rounded-3xl font-black outline-none">
+                <button onclick="saveBillItem()" class="btn-primary w-full bg-rose-500">LOG BILL</button>
+            `);
+        };
+
+        window.saveBillItem = () => {
+            const name = document.getElementById('b_name').value;
+            const amount = parseFloat(document.getElementById('b_amt').value) || 0;
+            if(name && amount > 0) {
+                state.bills.push({ id: Date.now(), name, amount });
+                saveToLocal(); updateUI(); closeModal();
+            }
+        };
+
+        window.renderBills = () => {
+            const list = document.getElementById('billsList');
+            if(!list) return;
+            const items = state.bills || [];
+            list.innerHTML = items.length ? items.map(b => `
+                <div class="glass-card p-6 flex justify-between items-center animate-slide">
+                    <div class="flex items-center gap-6">
+                        <div class="category-icon bg-rose-50 text-rose-500"><i class="fa-solid fa-clock"></i></div>
+                        <div><h4 class="font-black uppercase text-sm">${b.name}</h4><p class="text-lg font-black text-rose-600">KSh ${b.amount.toLocaleString()}</p></div>
+                    </div>
+                    <button onclick="deleteBill(${b.id})" class="text-slate-300 text-2xl"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('') : '<div class="text-center py-20 opacity-30 font-black uppercase text-xs">No pending bills</div>';
+        };
+
+        window.deleteBill = (id) => {
+            state.bills = state.bills.filter(b => b.id !== id);
+            saveToLocal(); updateUI();
+        };
+
+        window.renderModal = (html) => { 
+            document.getElementById('modalContent').innerHTML = html; 
+            document.getElementById('modalOverlay').classList.remove('hidden'); 
+        };
+        window.closeModal = () => document.getElementById('modalOverlay').classList.add('hidden');
+        
+        window.switchTab = (id, el) => {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(`tab-${id}`).classList.add('active');
+            document.querySelectorAll('nav .nav-btn').forEach(b => {
+                b.classList.remove('text-indigo-400');
+                b.classList.add('text-slate-500');
+            });
+            el.classList.remove('text-slate-500');
+            el.classList.add('text-indigo-400');
+        };
+
+        loadFromLocal();
+        updateUI();
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b6fb8">
+<meta name="description" content="Responsive clinic and pharmacy management dashboard prototype with offline-ready local workflows.">
+<title>Hospital & Pharmacy Management</title>
+<style>
+:root{--blue:#0878bd;--blue2:#0b5d96;--green:#16a36a;--mint:#e8f8f1;--bg:#f3f7fb;--panel:#fff;--text:#183247;--muted:#6c8191;--line:#dfe8ef;--shadow:0 10px 30px rgba(23,61,89,.08);--danger:#d94b56;--amber:#d98b17;--radius:18px}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}body.dark{--bg:#0c1722;--panel:#142432;--text:#e7f0f6;--muted:#9bb0bf;--line:#2a4050;--mint:#153a31;--shadow:0 10px 30px rgba(0,0,0,.22)}
+button,input,select,textarea{font:inherit}button{cursor:pointer;border:0}a{color:inherit;text-decoration:none}.app{min-height:100vh}.topbar{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:12px 20px}.brand{display:flex;align-items:center;gap:10px;min-width:235px}.logo{width:43px;height:43px;border-radius:14px;background:linear-gradient(140deg,var(--blue),var(--green));display:grid;place-items:center;color:white;font-size:23px;box-shadow:0 7px 16px #0878bd33}.brand h1{font-size:17px;line-height:1.1;margin:0}.brand small{display:block;color:var(--muted);font-size:11px;margin-top:4px}.search{flex:1;max-width:480px;position:relative}.search input{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:12px;padding:11px 14px 11px 38px;outline:none}.search span{position:absolute;left:13px;top:9px;color:var(--muted)}.top-actions{margin-left:auto;display:flex;align-items:center;gap:8px}.iconbtn,.btn{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:11px;padding:10px 12px;display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:.2s}.iconbtn:hover,.btn:hover{transform:translateY(-1px);box-shadow:var(--shadow)}.btn.primary{background:var(--blue);border-color:var(--blue);color:white}.btn.green{background:var(--green);border-color:var(--green);color:white}.btn.danger{color:var(--danger)}.btn.small{padding:7px 9px;font-size:12px}.avatar{width:35px;height:35px;display:grid;place-items:center;border-radius:50%;background:var(--mint);color:var(--green);font-weight:800}.layout{display:grid;grid-template-columns:245px minmax(0,1fr);min-height:calc(100vh - 68px)}aside{background:var(--panel);border-right:1px solid var(--line);padding:18px 13px;display:flex;flex-direction:column;gap:7px}.nav-label{font-size:10px;letter-spacing:1.4px;color:var(--muted);font-weight:800;padding:15px 12px 6px}.nav{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;color:var(--muted);font-weight:650;font-size:13px;text-align:left;background:transparent;width:100%}.nav .ico{width:22px;font-size:17px;text-align:center}.nav:hover,.nav.active{background:var(--mint);color:var(--green)}.nav.active{box-shadow:inset 3px 0 var(--green)}.side-bottom{margin-top:auto;border-top:1px solid var(--line);padding-top:12px}.main{padding:24px;max-width:1600px;width:100%;margin:auto}.welcome{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:22px}.welcome h2{font-size:25px;margin:0 0 6px}.welcome p{color:var(--muted);margin:0;font-size:13px}.actions{display:flex;gap:8px;flex-wrap:wrap}.grid{display:grid;gap:16px}.stats{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:17px}.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);min-width:0}.stat{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.stat .label{font-size:12px;color:var(--muted);font-weight:650}.stat .value{font-size:27px;font-weight:800;margin:9px 0 5px;letter-spacing:-.8px}.trend{font-size:11px;color:var(--green)}.stat-icon{width:43px;height:43px;display:grid;place-items:center;border-radius:14px;background:var(--mint);font-size:21px}.content-grid{grid-template-columns:minmax(0,1.55fr) minmax(280px,1fr);margin-bottom:17px}.cardhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.cardhead h3{font-size:15px;margin:0}.cardhead p{font-size:11px;color:var(--muted);margin:5px 0 0}.chart-wrap{height:220px;position:relative}.chart-wrap canvas{width:100%;height:100%}.legend{display:flex;gap:15px;color:var(--muted);font-size:11px;margin-top:8px}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}.activity{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}.activity:last-child{border:0}.activity .bubble{width:34px;height:34px;border-radius:12px;background:var(--mint);display:grid;place-items:center;flex-shrink:0}.activity strong{font-size:12px;display:block}.activity p{font-size:11px;color:var(--muted);margin:4px 0 0}.pill{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border-radius:99px;font-size:10px;font-weight:800;background:var(--mint);color:var(--green);white-space:nowrap}.pill.warn{background:#fff4dc;color:#a66b0c}.pill.red{background:#ffe8e9;color:var(--danger)}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:12px;white-space:nowrap}th{text-align:left;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.7px;padding:12px;border-bottom:1px solid var(--line)}td{padding:13px 12px;border-bottom:1px solid var(--line)}tbody tr:last-child td{border-bottom:0}.prod{display:flex;align-items:center;gap:10px}.prod img{width:42px;height:42px;object-fit:cover;border-radius:10px;background:var(--bg)}.prod strong{display:block;font-size:12px}.prod small{display:block;color:var(--muted);font-size:10px;margin-top:4px}.section{display:none;animation:fade .25s ease}.section.active{display:block}@keyframes fade{from{opacity:.5;transform:translateY(4px)}to{opacity:1;transform:none}}.section-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 18px}.section-title h2{margin:0;font-size:23px}.section-title p{color:var(--muted);font-size:12px;margin:5px 0 0}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.field{display:flex;flex-direction:column;gap:6px}.field.full{grid-column:1/-1}.field label{font-size:11px;font-weight:750;color:var(--muted)}.field input,.field select,.field textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:var(--bg);color:var(--text);outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px #0878bd18}.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.75fr);gap:16px}.product-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.product-card{padding:0;overflow:hidden}.product-card img{width:100%;height:145px;object-fit:cover;background:var(--bg)}.product-info{padding:13px}.product-info h4{margin:0 0 5px;font-size:13px}.product-info p{font-size:11px;color:var(--muted);margin:0 0 12px}.product-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px}.product-bottom strong{font-size:14px}.empty{padding:35px;text-align:center;color:var(--muted)}.workflow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.workflow-step{border:1px solid var(--line);padding:12px;border-radius:12px;background:var(--panel);flex:1;min-width:120px}.workflow-step strong{display:block;font-size:12px}.workflow-step small{display:block;color:var(--muted);font-size:10px;margin-top:5px}.arrow{color:var(--green)}.security-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}.security-row:last-child{border:0}.security-row strong{font-size:12px}.security-row p{font-size:11px;color:var(--muted);margin:4px 0 0}.toggle{width:42px;height:24px;border-radius:99px;background:#9aabb6;position:relative;flex-shrink:0}.toggle:after{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:white;border-radius:50%;transition:.2s}.toggle.on{background:var(--green)}.toggle.on:after{left:21px}.toast{position:fixed;z-index:99;bottom:22px;left:50%;transform:translate(-50%,20px);background:#163a4d;color:white;padding:12px 18px;border-radius:12px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.25s;font-size:13px;max-width:90vw}.toast.show{opacity:1;transform:translate(-50%,0)}.modal{position:fixed;inset:0;background:#10233480;z-index:80;display:none;align-items:center;justify-content:center;padding:16px}.modal.show{display:flex}.modal-box{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:22px;width:min(560px,100%);max-height:90vh;overflow:auto;box-shadow:0 25px 80px #001b2c55}.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:17px}.modal-head h3{margin:0}.receipt{font-family:monospace;background:white;color:#111;padding:24px;max-width:400px;margin:auto;border:1px dashed #999}.receipt h2,.receipt p{text-align:center}.receipt table{font-family:monospace;color:#111}.receipt th,.receipt td{padding:6px;border-color:#ddd}.login-screen{position:fixed;inset:0;z-index:100;background:linear-gradient(135deg,#073e68,#0878bd 55%,#16a36a);display:none;align-items:center;justify-content:center;padding:18px}.login-screen.show{display:flex}.login-card{width:min(420px,100%);background:white;color:#183247;border-radius:24px;padding:28px;box-shadow:0 30px 90px #001c3666}.login-card h2{margin:15px 0 5px}.login-card>p{color:#6c8191;font-size:13px;margin-bottom:22px}.login-card .field{margin-bottom:13px}.login-note{font-size:10px;color:#6c8191;margin-top:15px;line-height:1.5}.mobile-nav{display:none}.muted{color:var(--muted)}.smalltext{font-size:11px}.stockbar{height:6px;border-radius:9px;background:var(--line);overflow:hidden;margin-top:8px}.stockbar span{display:block;height:100%;border-radius:9px;background:var(--green)}.scanner-box{border:1px dashed var(--line);border-radius:14px;padding:18px;text-align:center}.scanner-box video{width:100%;max-height:240px;object-fit:cover;border-radius:12px;display:none}.footer-note{color:var(--muted);font-size:10px;text-align:center;padding:18px 0}
+@media(max-width:1050px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.layout{grid-template-columns:205px minmax(0,1fr)}.main{padding:18px}.product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.brand{min-width:190px}}
+@media(max-width:760px){.topbar{padding:10px 12px;gap:9px}.brand{min-width:0}.brand h1{font-size:14px}.brand small{display:none}.logo{width:38px;height:38px}.search{display:none}.top-actions .hide-mobile{display:none}.layout{display:block}aside{display:none}.main{padding:16px 13px 92px}.welcome{align-items:flex-start;flex-direction:column}.welcome h2{font-size:22px}.stats{gap:10px}.card{padding:14px;border-radius:15px}.stat .value{font-size:23px}.stat-icon{width:36px;height:36px}.content-grid,.split{grid-template-columns:1fr}.product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.product-card img{height:115px}.product-info{padding:10px}.product-bottom{align-items:flex-start;flex-direction:column}.product-bottom .btn{width:100%}.mobile-nav{display:flex;position:fixed;z-index:30;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--line);padding:7px 4px calc(7px + env(safe-area-inset-bottom));justify-content:space-around;box-shadow:0 -6px 24px #0d33420c}.mobile-nav button{display:flex;flex-direction:column;align-items:center;gap:3px;background:transparent;color:var(--muted);font-size:9px;padding:5px 8px;border-radius:9px}.mobile-nav button span{font-size:18px}.mobile-nav button.active{color:var(--green);background:var(--mint)}.formgrid{grid-template-columns:1fr}.field.full{grid-column:auto}.section-title{align-items:flex-start;flex-direction:column}.section-title h2{font-size:21px}.workflow-step{min-width:calc(50% - 8px)}.arrow{display:none}.tablewrap table{min-width:650px}.chart-wrap{height:190px}.top-actions{gap:4px}.top-actions .iconbtn{padding:9px}.welcome .actions{width:100%}.welcome .actions .btn{flex:1}.footer-note{padding-bottom:10px}}
+@media print{body{background:white!important;color:#111!important}.topbar,aside,.mobile-nav,.welcome,.no-print,.section-title,.footer-note{display:none!important}.layout{display:block}.main{padding:0}.section{display:none!important}#receiptPrint{display:block!important}.modal{position:static;background:white;display:block;padding:0}.modal-box{box-shadow:none;border:0;max-height:none;width:100%;padding:0}.receipt{border:0}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="topbar">
+  <a class="brand" href="#" onclick="showSection('dashboard');return false">
+    <div class="logo">✚</div><div><h1>CarePoint <span style="color:var(--green)">+</span></h1><small>CLINIC & PHARMACY SUITE</small></div>
+  </a>
+  <div class="search"><span>⌕</span><input id="globalSearch" placeholder="Search patients, medicines, invoices…" oninput="globalSearch(this.value)"></div>
+  <div class="top-actions">
+    <button class="iconbtn" title="Toggle light/dark theme" onclick="toggleTheme()">◐</button>
+    <button class="iconbtn hide-mobile" title="Notifications" onclick="toast('You are all caught up.')">♧</button>
+    <button class="iconbtn" title="Help" onclick="openModal('helpModal')">ⓘ</button>
+    <div class="avatar" id="avatar">AD</div>
+    <button class="btn small hide-mobile" onclick="logout()">Log out ↗</button>
+  </div>
+</header>
+<div class="layout">
+<aside>
+  <div class="nav-label">WORKSPACE</div>
+  <button class="nav active" data-page="dashboard" onclick="showSection('dashboard')"><span class="ico">▦</span> Overview</button>
+  <button class="nav" data-page="patients" onclick="showSection('patients')"><span class="ico">♙</span> Patients</button>
+  <button class="nav" data-page="appointments" onclick="showSection('appointments')"><span class="ico">◷</span> Appointments & Queue</button>
+  <button class="nav" data-page="consultations" onclick="showSection('consultations')"><span class="ico">⚕</span> Consultations</button>
+ <button class="nav" data-page="laboratory" onclick="showSection('laboratory')"><span class="ico">⚗</span> Laboratory & Radiology</button>
+<button class="nav" data-page="admin" onclick="showSection('admin')"><span class="ico">🗂</span> Patient Administration</button>
+<div class="nav-label">CLINICAL</div>
+<button class="nav" data-page="outpatient" onclick="showSection('outpatient')"><span class="ico">🩺</span> Emergency & Outpatient</button>
+<button class="nav" data-page="inpatient" onclick="showSection('inpatient')"><span class="ico">🛏</span> Inpatient & Nursing</button>
+<button class="nav" data-page="theatre" onclick="showSection('theatre')"><span class="ico">🔬</span> Theatre & ICU</button>
+<button class="nav" data-page="maternity" onclick="showSection('maternity')"><span class="ico">🍼</span> Maternity</button>
+  <div class="nav-label">PHARMACY & FINANCE</div>
+  <button class="nav" data-page="pharmacy" onclick="showSection('pharmacy')"><span class="ico">▣</span> Pharmacy & POS</button>
+  <button class="nav" data-page="inventory" onclick="showSection('inventory')"><span class="ico">▤</span> Inventory & Suppliers</button>
+  <button class="nav" data-page="billing" onclick="showSection('billing')"><span class="ico">▧</span> Billing & Receipts</button>
+  <button class="nav" data-page="insurance" onclick="showSection('insurance')"><span class="ico">♡</span> Insurance Claims</button>
+  <div class="nav-label">MANAGEMENT</div>
+  <button class="nav" data-page="reports" onclick="showSection('reports')"><span class="ico">▥</span> Reports & Analytics</button>
+  <button class="nav" data-page="branches" onclick="showSection('branches')"><span class="ico">⌖</span> Branches</button>
+  <button class="nav" data-page="automation" onclick="showSection('automation')"><span class="ico">⟳</span> Automations</button>
+  <button class="nav" data-page="settings" onclick="showSection('settings')"><span class="ico">⚙</span> Users & Security</button>
+  <div class="side-bottom">
+    <button class="nav" onclick="openModal('workflowModal')"><span class="ico">⇄</span> How it works</button>
+    <button class="nav" onclick="logout()"><span class="ico">↪</span> Log out</button>
+  </div>
+</aside>
+<main class="main">
+<section id="dashboard" class="section active">
+  <div class="welcome"><div><h2>Good day, <span id="welcomeName">Administrator</span> 👋</h2><p>Here's what is happening across your clinic today.</p></div><div class="actions"><button class="btn" onclick="showSection('patients')">＋ Register patient</button><button class="btn primary" onclick="showSection('pharmacy')">＋ New sale</button></div></div>
+  <div class="grid stats">
+    <div class="card stat"><div><div class="label">Patients today</div><div class="value" id="statPatients">48</div><div class="trend">↗ 12% vs yesterday</div></div><div class="stat-icon">♙</div></div>
+    <div class="card stat"><div><div class="label">Revenue today</div><div class="value" id="statRevenue">KES 34,850</div><div class="trend">↗ Daily collection</div></div><div class="stat-icon">↗</div></div>
+    <div class="card stat"><div><div class="label">Pharmacy sales</div><div class="value" id="statSales">KES 18,420</div><div class="trend">↗ Dispensed items</div></div><div class="stat-icon">▣</div></div>
+    <div class="card stat"><div><div class="label">Low-stock alerts</div><div class="value" id="statLow">3</div><div class="trend" style="color:var(--amber)">Needs attention</div></div><div class="stat-icon">⚠</div></div>
+  </div>
+  <div class="grid content-grid">
+    <div class="card"><div class="cardhead"><div><h3>Revenue overview</h3><p>Illustrative weekly trend · KES</p></div><select id="chartRange" onchange="drawCharts()" style="padding:7px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--text)"><option>Last 7 days</option><option>Last 30 days</option></select></div><div class="chart-wrap"><canvas id="revenueChart" aria-label="Revenue chart"></canvas></div><div class="legend"><span><i class="dot" style="background:#0878bd"></i>Clinic</span><span><i class="dot" style="background:#16a36a"></i>Pharmacy</span></div></div>
+    <div class="card"><div class="cardhead"><div><h3>Operational snapshot</h3><p>Today's activity</p></div><span class="pill">Live demo</span></div><div class="activity"><div class="bubble">♙</div><div><strong>Patient check-ins</strong><p>48 registered visits today</p></div></div><div class="activity"><div class="bubble">▣</div><div><strong>Prescriptions dispensed</strong><p id="activityDispensed">26 completed orders</p></div></div><div class="activity"><div class="bubble">⚠</div><div><strong>Stock attention</strong><p id="activityStock">3 products at reorder level</p></div></div><div class="activity"><div class="bubble">✓</div><div><strong>Payment reconciliation</strong><p>Cash and M-Pesa ready to reconcile</p></div></div></div>
+  </div>
+  <div class="grid content-grid">
+    <div class="card"><div class="cardhead"><div><h3>Recent patients</h3><p>Latest registered records</p></div><button class="btn small" onclick="showSection('patients')">View all →</button></div><div class="tablewrap"><table><thead><tr><th>Patient</th><th>Patient ID</th><th>Visit</th><th>Status</th></tr></thead><tbody id="recentPatients"></tbody></table></div></div>
+    <div class="card"><div class="cardhead"><div><h3>Stock health</h3><p>Top items to monitor</p></div><button class="btn small" onclick="showSection('inventory')">Inventory →</button></div><div id="stockHealth"></div></div>
+  </div>
+  <div class="card"><div class="cardhead"><div><h3>System workflow</h3><p>Connected modules share relevant records with permission checks.</p></div><button class="btn small" onclick="openModal('workflowModal')">Explore workflow ↗</button></div><div class="workflow"><div class="workflow-step"><strong>01 · Register</strong><small>Patient & visit ID</small></div><span class="arrow">→</span><div class="workflow-step"><strong>02 · Consult</strong><small>Clinical notes & prescription</small></div><span class="arrow">→</span><div class="workflow-step"><strong>03 · Dispense</strong><small>Batch, quantity & stock</small></div><span class="arrow">→</span><div class="workflow-step"><strong>04 · Bill</strong><small>Charges & receipt</small></div><span class="arrow">→</span><div class="workflow-step"><strong>05 · Report</strong><small>Audit & analytics</small></div></div></div>
+</section>
+
+<section id="patients" class="section">
+  <div class="section-title"><div><h2>Patients</h2><p>Secure patient registration and demographic records.</p></div><button class="btn primary" onclick="openModal('patientModal')">＋ Register patient</button></div>
+  <div class="card"><div class="cardhead"><h3>Patient directory</h3><input id="patientFilter" placeholder="Filter patient list…" oninput="renderPatients()" style="max-width:230px;padding:9px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text)"></div><div class="tablewrap"><table><thead><tr><th>Patient</th><th>Patient ID</th><th>Phone</th><th>Age</th><th>Last visit</th><th>Action</th></tr></thead><tbody id="patientTable"></tbody></table></div></div>
+</section>
+
+<section id="appointments" class="section">
+  <div class="section-title"><div><h2>Appointments & Queue</h2><p>Coordinate check-ins, waiting patients and follow-ups.</p></div><button class="btn primary" onclick="openModal('appointmentModal')">＋ New appointment</button></div>
+  <div class="grid stats"><div class="card stat"><div><div class="label">Waiting</div><div class="value" id="queueWaiting">6</div><div class="trend">Awaiting consultation</div></div><div class="stat-icon">◷</div></div><div class="card stat"><div><div class="label">In consultation</div><div class="value">3</div><div class="trend">Assigned to clinicians</div></div><div class="stat-icon">⚕</div></div><div class="card stat"><div><div class="label">Completed</div><div class="value">39</div><div class="trend">Today's visits</div></div><div class="stat-icon">✓</div></div><div class="card stat"><div><div class="label">Follow-ups</div><div class="value">8</div><div class="trend">Due soon</div></div><div class="stat-icon">↻</div></div></div>
+  <div class="card"><div class="cardhead"><h3>Appointment queue</h3><span class="pill">Today</span></div><div class="tablewrap"><table><thead><tr><th>Time</th><th>Patient</th><th>Reason</th><th>Provider</th><th>Status</th><th>Action</th></tr></thead><tbody id="appointmentTable"></tbody></table></div></div>
+</section>
+
+<section id="consultations" class="section">
+  <div class="section-title"><div><h2>Consultations</h2><p>Document vital signs, clinical notes and treatment decisions.</p></div><button class="btn primary" onclick="openModal('consultModal')">＋ New consultation</button></div>
+  <div class="grid content-grid"><div class="card"><div class="cardhead"><h3>Consultation workspace</h3><span class="pill">Authorized clinicians</span></div><div class="formgrid"><div class="field"><label>Patient</label><select id="consultPatient"></select></div><div class="field"><label>Clinician</label><select id="consultClinician"><option>Dr. Amina Otieno</option><option>Clinical Officer</option><option>Dr. James Mwangi</option></select></div><div class="field"><label>Temperature (°C)</label><input id="vTemp" type="number" step=".1" placeholder="36.8"></div><div class="field"><label>Blood pressure</label><input id="vBP" placeholder="120/80"></div><div class="field"><label>Pulse (bpm)</label><input id="vPulse" type="number" placeholder="72"></div><div class="field"><label>Weight (kg)</label><input id="vWeight" type="number" step=".1" placeholder="65"></div><div class="field full"><label>Clinical notes</label><textarea id="clinicalNotes" rows="3" placeholder="Document history, examination and relevant findings…"></textarea></div><div class="field"><label>Assessment / diagnosis</label><input id="diagnosis" placeholder="Clinical assessment"></div><div class="field"><label>Plan / follow-up</label><input id="plan" placeholder="Treatment plan"></div><div class="field full"><label>Prescription notes (optional)</label><textarea id="prescriptionNotes" rows="2" placeholder="Medicine, dose, route, frequency, duration…"></textarea></div></div><button class="btn primary" style="margin-top:15px" onclick="saveConsultation()">Save clinical note</button></div><div class="card"><div class="cardhead"><h3>Clinical safety checklist</h3></div><div class="activity"><div class="bubble">♡</div><div><strong>Allergies</strong><p>Check and document allergies before prescribing.</p></div></div><div class="activity"><div class="bubble">✓</div><div><strong>Patient identification</strong><p>Confirm two patient identifiers.</p></div></div><div class="activity"><div class="bubble">▣</div><div><strong>Medication review</strong><p>Check dose, contraindications and interactions.</p></div></div><div class="activity"><div class="bubble">🔒</div><div><strong>Confidential record</strong><p>Clinical notes are restricted by role in this demo.</p></div></div></div></div>
+  <div class="card" style="margin-top:16px"><div class="cardhead"><h3>Recent consultation notes</h3></div><div class="tablewrap"><table><thead><tr><th>Date</th><th>Patient</th><th>Clinician</th><th>Assessment</th><th>Plan</th></tr></thead><tbody id="consultTable"></tbody></table></div></div>
+</section>
+
+<section id="laboratory" class="section">
+  <div class="section-title"><div><h2>Laboratory & Radiology</h2><p>Order and track laboratory investigations and imaging studies.</p></div><button class="btn primary" onclick="openModal('labModal')">＋ New order</button></div>
+  <div class="card"><div class="cardhead"><h3>Laboratory worklist</h3><span class="pill">Sample tracking</span></div><div class="tablewrap"><table><thead><tr><th>Order ID</th><th>Patient</th><th>Test</th><th>Ordered</th><th>Status</th><th>Result / action</th></tr></thead><tbody id="labTable"></tbody></table></div></div>
+</section>
+
+<section id="pharmacy" class="section">
+  <div class="section-title"><div><h2>Pharmacy & POS</h2><p>Search products, scan barcodes and create sales with printable receipts.</p></div><button class="btn" onclick="openModal('scannerModal')">▦ Scan barcode</button></div>
+  <div class="grid split"><div class="card"><div class="cardhead"><h3>Medicine catalogue</h3><span class="pill">KES</span></div><input id="productSearch" placeholder="Search medicine or scan barcode…" oninput="renderProducts()" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:11px;background:var(--bg);color:var(--text);margin-bottom:14px"><div id="productGrid" class="grid product-grid"></div></div><div class="card"><div class="cardhead"><div><h3>Current sale</h3><p id="cartCount">0 items</p></div><button class="btn small" onclick="clearCart()">Clear</button></div><div id="cartItems"><div class="empty">Add products to start a sale.</div></div><div style="border-top:1px solid var(--line);margin-top:14px;padding-top:14px"><div style="display:flex;justify-content:space-between;margin-bottom:13px"><span class="muted">Total</span><strong id="cartTotal">KES 0.00</strong></div><div class="field" style="margin-bottom:10px"><label>Patient (optional)</label><select id="salePatient"></select></div><div class="field" style="margin-bottom:10px"><label>Sale time</label><input id="saleTime" type="time" value="09:00"></div><div class="field" style="margin-bottom:10px"><label>Payment method</label><select id="paymentMethod"><option>Cash</option><option>M-Pesa</option><option>Insurance / credit</option><option>Card</option></select></div><button class="btn primary" style="width:100%;justify-content:center" onclick="checkout()">Complete sale & receipt →</button><p class="smalltext muted">Demo only: no live payment is initiated.</p></div></div></div>
+  <div class="card" style="margin-top:16px"><div class="cardhead"><h3>Recent pharmacy transactions</h3><button class="btn small" onclick="showSection('billing')">All receipts →</button></div><div class="tablewrap"><table><thead><tr><th>Receipt</th><th>Date</th><th>Items</th><th>Payment</th><th>Total</th><th>Action</th></tr></thead><tbody id="salesTable"></tbody></table></div></div>
+</section>
+
+<section id="inventory" class="section">
+  <div class="section-title"><div><h2>Inventory & Suppliers</h2><p>Batch-level stock control, expiry monitoring and purchasing.</p></div><div class="actions"><button class="btn" onclick="exportCSV()">⇩ Export CSV</button><button class="btn primary" onclick="openModal('productModal')">＋ Add item</button></div></div>
+  <div class="grid stats"><div class="card stat"><div><div class="label">Catalogue items</div><div class="value" id="inventoryCount">6</div></div><div class="stat-icon">▤</div></div><div class="card stat"><div><div class="label">Low stock</div><div class="value" id="inventoryLow">3</div></div><div class="stat-icon">⚠</div></div><div class="card stat"><div><div class="label">Expiring soon</div><div class="value">2</div></div><div class="stat-icon">◷</div></div><div class="card stat"><div><div class="label">Suppliers</div><div class="value">12</div></div><div class="stat-icon">♧</div></div></div>
+  <div class="card"><div class="cardhead"><h3>Stock ledger</h3><input id="inventoryFilter" placeholder="Filter items…" oninput="renderInventory()" style="max-width:220px;padding:9px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text)"></div><div class="tablewrap"><table><thead><tr><th>Product</th><th>Barcode</th><th>Batch</th><th>Expiry</th><th>Stock</th><th>Reorder at</th><th>Unit cost</th><th>Retail price</th><th>Action</th></tr></thead><tbody id="inventoryTable"></tbody></table></div></div>
+  <div class="grid content-grid" style="margin-top:16px"><div class="card"><div class="cardhead"><h3>Supplier directory</h3><button class="btn small" onclick="openModal('supplierModal')">＋ Add supplier</button></div><div class="tablewrap"><table><thead><tr><th>Supplier</th><th>Contact</th><th>Terms</th></tr></thead><tbody id="supplierTable"></tbody></table></div></div><div class="card"><div class="cardhead"><h3>Stock automations</h3></div><div class="security-row"><div><strong>Low-stock alert</strong><p>Flag items at or below reorder quantity.</p></div><span class="pill">Enabled</span></div><div class="security-row"><div><strong>Expiry monitoring</strong><p>Surface near-expiry and expired batches.</p></div><span class="pill">Enabled</span></div><div class="security-row"><div><strong>FEFO dispensing</strong><p>Recommend earliest-expiring available batch.</p></div><span class="pill">Policy</span></div></div></div>
+</section>
+
+<section id="billing" class="section">
+  <div class="section-title"><div><h2>Billing & Receipts</h2><p>Transactions, receipts and payment reconciliation.</p></div><div class="actions"><button class="btn" onclick="exportSalesCSV()">⇩ Export sales</button><button class="btn" onclick="printReport()">⎙ Print report</button></div></div>
+  <div class="grid stats"><div class="card stat"><div><div class="label">Today's collections</div><div class="value" id="billingRevenue">KES 34,850</div></div><div class="stat-icon">↗</div></div><div class="card stat"><div><div class="label">Transactions</div><div class="value" id="billingCount">0</div></div><div class="stat-icon">▧</div></div><div class="card stat"><div><div class="label">Payment channels</div><div class="value">4</div></div><div class="stat-icon">⇄</div></div><div class="card stat"><div><div class="label">Refund controls</div><div class="value">On</div></div><div class="stat-icon">🔒</div></div></div>
+  <div class="card"><div class="cardhead"><h3>Transaction ledger</h3></div><div class="tablewrap"><table><thead><tr><th>Receipt</th><th>Date</th><th>Patient</th><th>Items</th><th>Method</th><th>Total</th><th>Receipt</th></tr></thead><tbody id="billingTable"></tbody></table></div></div>
+</section>
+
+<section id="insurance" class="section">
+  <div class="section-title"><div><h2>Insurance & Claims</h2><p>Track payer details, claim status and remittance follow-up.</p></div><button class="btn primary" onclick="openModal('claimModal')">＋ New claim</button></div>
+  <div class="card"><div class="cardhead"><h3>Claims worklist</h3><span class="pill warn">Demo workflow</span></div><div class="tablewrap"><table><thead><tr><th>Claim ID</th><th>Patient</th><th>Payer</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead><tbody id="claimsTable"></tbody></table></div></div>
+  <p class="smalltext muted" style="margin-top:12px">Payer connectivity, eligibility checks and submission require approved credentials and a verified integration.</p>
+</section>
+
+<!-- ============ PATIENT ADMINISTRATION ============ -->
+<section id="admin" class="section">
+  <div class="section-title"><div><h2>Patient Administration</h2><p>Master patient index, admissions, transfers and discharge management.</p></div><div class="actions"><button class="btn" onclick="printReport()">⎙ Print registry</button><button class="btn primary" onclick="openModal('patientModal')">＋ Register patient</button></div></div>
+  <div class="grid stats">
+    <div class="card stat"><div><div class="label">Total patients</div><div class="value" id="adminTotalPatients">0</div><div class="trend">Master index</div></div><div class="stat-icon">🗂</div></div>
+    <div class="card stat"><div><div class="label">Inpatient census</div><div class="value" id="adminInpatient">0</div><div class="trend">Currently admitted</div></div><div class="stat-icon">🛏</div></div>
+    <div class="card stat"><div><div class="label">Bed occupancy</div><div class="value" id="adminBedOcc">0%</div><div class="trend">All wards</div></div><div class="stat-icon">▤</div></div>
+    <div class="card stat"><div><div class="label">Discharged today</div><div class="value" id="adminDischarged">0</div><div class="trend">Completed stays</div></div><div class="stat-icon">✓</div></div>
+  </div>
+  <div class="grid content-grid">
+    <div class="card"><div class="cardhead"><h3>Master patient index</h3><input id="adminSearch" placeholder="Search patients…" oninput="renderAdmin()" style="max-width:240px;padding:9px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text)"></div><div class="tablewrap"><table><thead><tr><th>Patient ID</th><th>Name</th><th>Phone</th><th>Branch</th><th>Status</th><th>Action</th></tr></thead><tbody id="adminTable"></tbody></table></div></div>
+    <div class="card"><div class="cardhead"><h3>Bed map</h3><p>Live bed availability across wards</p></div><div id="bedMap"></div></div>
+  </div>
+  <div class="card" style="margin-top:16px"><div class="cardhead"><h3>Recent admissions</h3><button class="btn small" onclick="openModal('admissionModal')">＋ Admit patient</button></div><div class="tablewrap"><table><thead><tr><th>Patient</th><th>Ward / Bed</th><th>Admitted</th><th>Diagnosis</th><th>Status</th><th>Action</th></tr></thead><tbody id="admissionTable"></tbody></table></div></div>
+</section>
+
+<!-- ============ EMERGENCY & OUTPATIENT ============ -->
+<section id="outpatient" class="section">
+  <div class="section-title"><div><h2>Emergency & Outpatient</h2><p>Triage, OPD encounters, walk-in care and emergency case tracking.</p></div><div class="actions"><button class="btn" onclick="openModal('emergencyModal')">🚨 Emergency case</button><button class="btn primary" onclick="openModal('opdEncounterModal')">＋ New OPD encounter</button></div></div>
+  <div class="grid stats">
+    <div class="card stat"><div><div class="label">Active emergencies</div><div class="value" id="opdEmergCount">0</div><div class="trend">Triage P1–P3</div></div><div class="stat-icon">🚨</div></div>
+    <div class="card stat"><div><div class="label">OPD today</div><div class="value" id="opdToday">0</div><div class="trend">Walk-in encounters</div></div><div class="stat-icon">🩺</div></div>
+    <div class="card stat"><div><div class="label">Waiting triage</div><div class="value" id="opdWaiting">0</div><div class="trend">Not yet seen</div></div><div class="stat-icon">◷</div></div>
+    <div class="card stat"><div><div class="label">Avg. wait</div><div class="value">14 min</div><div class="trend">Demo estimate</div></div><div class="stat-icon">↗</div></div>
+  </div>
+  <div class="card"><div class="cardhead"><h3>Emergency case log</h3><span class="pill red">Priority triage</span></div><div class="tablewrap"><table><thead><tr><th>Case ID</th><th>Patient</th><th>Triage</th><th>Complaint</th><th>Arrived</th><th>Status</th><th>Action</th></tr></thead><tbody id="emergencyTable"></tbody></table></div></div>
+  <div class="card" style="margin-top:16px"><div class="cardhead"><h3>Outpatient encounters</h3></div><div class="tablewrap"><table><thead><tr><th>Encounter</th><th>Patient</th><th>Type</th><th>Clinician</th><th>Complaint</th><th>Status</th><th>Action</th></tr></thead><tbody id="opdTable"></tbody></table></div></div>
+</section>
+
+<!-- ============ INPATIENT & NURSING ============ -->
+<section id="inpatient" class="section">
+  <div class="section-title"><div><h2>Inpatient & Nursing</h2><p>Ward management, nursing observations and daily care records.</p></div><div class="actions"><button class="btn" onclick="openModal('nursingNoteModal')">📝 Nursing note</button><button class="btn primary" onclick="openModal('admissionModal')">＋ Admit patient</button></div></div>
+  <div class="grid stats">
+    <div class="card stat"><div><div class="label">Admitted patients</div><div class="value" id="ipAdmitted">0</div><div class="trend">Current census</div></div><div class="stat-icon">🛏</div></div>
+    <div class="card stat"><div><div class="label">Available beds</div><div class="value" id="ipFree">0</div><div class="trend">Across wards</div></div><div class="stat-icon">▤</div></div>
+    <div class="card stat"><div><div class="label">Nursing notes today</div><div class="value" id="ipNotes">0</div><div class="trend">Observations logged</div></div><div class="stat-icon">📝</div></div>
+    <div class="card stat"><div><div class="label">Vitals due</div><div class="value" id="ipVitals">0</div><div class="trend">Next observation round</div></div><div class="stat-icon">♡</div></div>
+  </div>
+  <div class="card"><div class="cardhead"><h3>Ward census</h3></div><div class="tablewrap"><table><thead><tr><th>Patient</th><th>Ward / Bed</th><th>Consultant</th><th>Diagnosis</th><th>Admitted</th><th>Day</th><th>Action</th></tr></thead><tbody id="wardTable"></tbody></table></div></div>
+  <div class="card" style="margin-top:16px"><div class="cardhead"><h3>Nursing notes & observations</h3></div><div class="tablewrap"><table><thead><tr><th>Time</th><th>Patient</th><th>Nurse</th><th>Observation</th><th>Vitals</th></tr></thead><tbody id="nursingTable"></tbody></table></div></div>
+</section>
+
+<!-- ============ THEATRE & ICU ============ -->
+<section id="theatre" class="section">
+  <div class="section-title"><div><h2>Theatre & ICU</h2><p>Surgical scheduling, theatre lists and intensive care tracking.</p></div><div class="actions"><button class="btn" onclick="openModal('icuModal')">💉 Admit to ICU</button><button class="btn primary" onclick="openModal('theatreModal')">🔬 Schedule surgery</button></div></div>
+  <div class="grid stats">
+    <div class="card stat"><div><div class="label">Scheduled surgeries</div><div class="value" id="thSchedCount">0</div><div class="trend">Upcoming theatre list</div></div><div class="stat-icon">🔬</div></div>
+    <div class="card stat"><div><div class="label">ICU occupancy</div><div class="value" id="thICU">0/4</div><div class="trend">Critical care beds</div></div><div class="stat-icon">💉</div></div>
+    <div class="card stat"><div><div class="label">In recovery</div><div class="value" id="thRecovery">0</div><div class="trend">Post-op monitoring</div></div><div class="stat-icon">♡</div></div>
+    <div class="card stat"><div><div class="label">Theatre utilization</div><div class="value">78%</div><div class="trend">This week</div></div><div class="stat-icon">▤</div></div>
+  </div>
+  <div class="card"><div class="cardhead"><h3>Theatre list</h3><span class="pill warn">Scheduled</span></div><div class="tablewrap"><table><thead><tr><th>Case ID</th><th>Patient</th><th>Procedure</th><th>Surgeon</th><th>Theatre</th><th>Scheduled</th><th>Status</th><th>Action</th></tr></thead><tbody id="theatreTable"></tbody></table></div></div>
+  <div class="card" style="margin-top:16px"><div class="cardhead"><h3>ICU bed board</h3><span class="pill red">Critical care</span></div><div class="tablewrap"><table><thead><tr><th>Bed</th><th>Patient</th><th>Diagnosis</th><th>Ventilated</th><th>Day</th><th>Status</th><th>Action</th></tr></thead><tbody id="icuTable"></tbody></table></div></div>
+</section>
+
+<!-- ============ MATERNITY ============ -->
+<section id="maternity" class="section">
+  <div class="section-title"><div><h2>Maternity</h2><p>Antenatal, labour, delivery and postnatal care records.</p></div><div class="actions"><button class="btn" onclick="openModal('ancModal')">🤰 ANC visit</button><button class="btn primary" onclick="openModal('maternityModal')">🍼 New admission</button></div></div>
+  <div class="grid stats">
+    <div class="card stat"><div><div class="label">ANC visits</div><div class="value" id="matANC">0</div><div class="trend">Registered this month</div></div><div class="stat-icon">🤰</div></div>
+    <div class="card stat"><div><div class="label">In labour</div><div class="value" id="matLabour">0</div><div class="trend">Active labour ward</div></div><div class="stat-icon">🍼</div></div>
+    <div class="card stat"><div><div class="label">Deliveries today</div><div class="value" id="matDeliv">0</div><div class="trend">Live births</div></div><div class="stat-icon">♡</div></div>
+    <div class="card stat"><div><div class="label">Postnatal patients</div><div class="value" id="matPNC">0</div><div class="trend">In recovery room</div></div><div class="stat-icon">✓</div></div>
+  </div>
+  <div class="card"><div class="cardhead"><h3>Maternity register</h3></div><div class="tablewrap"><table><thead><tr><th>Case ID</th><th>Mother</th><th>Gravida/Para</th><th>Gestation</th><th>Stage</th><th>Outcome</th><th>Action</th></tr></thead><tbody id="matTable"></tbody></table></div></div>
+  <div class="card" style="margin-top:16px"><div class="cardhead"><h3>Antenatal care (ANC) records</h3></div><div class="tablewrap"><table><thead><tr><th>Date</th><th>Patient</th><th>Gestation</th><th>BP</th><th>Weight</th><th>Next visit</th></tr></thead><tbody id="ancTable"></tbody></table></div></div>
+</section>
+
+
+<section id="reports" class="section">
+  <div class="section-title"><div><h2>Reports & Analytics</h2><p>Management indicators across clinical, pharmacy and financial operations.</p></div><div class="actions"><button class="btn" onclick="exportCSV()">⇩ Export stock</button><button class="btn" onclick="printReport()">⎙ Print report</button></div></div>
+  <div class="grid content-grid"><div class="card"><div class="cardhead"><h3>Revenue mix</h3><p>Illustrative distribution</p></div><div class="chart-wrap"><canvas id="mixChart"></canvas></div><div class="legend"><span><i class="dot" style="background:#0878bd"></i>Clinic</span><span><i class="dot" style="background:#16a36a"></i>Pharmacy</span><span><i class="dot" style="background:#f3b64c"></i>Lab</span></div></div><div class="card"><div class="cardhead"><h3>Inventory risk</h3></div><div class="chart-wrap"><canvas id="stockChart"></canvas></div><p class="smalltext muted">Chart updates when inventory changes.</p></div></div>
+  <div class="grid stats"><div class="card"><div class="label">Registered patients</div><div class="value" id="reportPatients">0</div><div class="smalltext muted">Total local demo records</div></div><div class="card"><div class="label">Consultation notes</div><div class="value" id="reportConsults">0</div><div class="smalltext muted">Saved notes</div></div><div class="card"><div class="label">Sales recorded</div><div class="value" id="reportSales">0</div><div class="smalltext muted">Completed demo transactions</div></div><div class="card"><div class="label">Inventory value</div><div class="value" id="reportStockValue">KES 0</div><div class="smalltext muted">At recorded unit cost</div></div></div>
+</section>
+
+<section id="branches" class="section">
+  <div class="section-title"><div><h2>Branches & Facilities</h2><p>Choose single-site operation or configure a multi-branch structure.</p></div><button class="btn primary" onclick="openModal('branchModal')">＋ Add branch</button></div>
+  <div class="grid product-grid" id="branchGrid"></div><div class="card" style="margin-top:16px"><div class="cardhead"><h3>Inter-branch stock transfers</h3><button class="btn small" onclick="openModal('transferModal')">＋ New transfer</button></div><div class="tablewrap"><table><thead><tr><th>Transfer ID</th><th>From</th><th>To</th><th>Item</th><th>Qty</th><th>Status</th></tr></thead><tbody id="transferTable"></tbody></table></div></div>
+</section>
+
+<section id="automation" class="section">
+  <div class="section-title"><div><h2>Automations & Integrations</h2><p>Rules that reduce manual work while preserving human review.</p></div><span class="pill">Rules engine · Demo</span></div>
+  <div class="grid content-grid"><div class="card"><div class="cardhead"><h3>Automation rules</h3><p>Tap a switch to enable or disable a demo rule.</p></div>
+    <div class="security-row"><div><strong>Low-stock notifications</strong><p>Flag stock at or below the reorder threshold.</p></div><button class="toggle on" aria-label="Toggle low stock" onclick="toggleRule(this)"></button></div>
+    <div class="security-row"><div><strong>Expiry alerts</strong><p>Identify near-expiry stock for review.</p></div><button class="toggle on" aria-label="Toggle expiry" onclick="toggleRule(this)"></button></div>
+    <div class="security-row"><div><strong>Appointment reminders</strong><p>Queue reminders for a configured messaging provider.</p></div><button class="toggle" aria-label="Toggle reminders" onclick="toggleRule(this)"></button></div>
+    <div class="security-row"><div><strong>Daily close summary</strong><p>Prepare cash, M-Pesa and sales totals for review.</p></div><button class="toggle on" aria-label="Toggle daily close" onclick="toggleRule(this)"></button></div>
+    <div class="security-row"><div><strong>Prescription review alerts</strong><p>Route potential medication issues to an authorized clinician or pharmacist.</p></div><button class="toggle on" aria-label="Toggle prescription checks" onclick="toggleRule(this)"></button></div>
+  </div><div class="card"><div class="cardhead"><h3>Integration connections</h3></div>
+    <div class="security-row"><div><strong>Barcode scanner</strong><p>Camera API or keyboard scanner input</p></div><span class="pill">Local-ready</span></div>
+    <div class="security-row"><div><strong>M-Pesa Daraja</strong><p>Payment requests and callback verification</p></div><span class="pill warn">Setup needed</span></div>
+    <div class="security-row"><div><strong>SMS / email gateway</strong><p>Appointment and refill reminders</p></div><span class="pill warn">Setup needed</span></div>
+    <div class="security-row"><div><strong>Insurance / health systems</strong><p>Use approved APIs and credentials</p></div><span class="pill warn">Setup needed</span></div>
+    <div class="security-row"><div><strong>Delegated tasks</strong><p>Assign purchase review, claims follow-up and stock counts.</p></div><button class="btn small" onclick="openModal('taskModal')">＋ Assign task</button></div>
+  </div></div>
+  <div class="card" style="margin-top:16px"><div class="cardhead"><h3>Delegated task board</h3></div><div class="tablewrap"><table><thead><tr><th>Task</th><th>Assigned to</th><th>Priority</th><th>Status</th></tr></thead><tbody id="taskTable"></tbody></table></div></div>
+</section>
+
+<section id="settings" class="section">
+  <div class="section-title"><div><h2>Users, Roles & Security</h2><p>Layered access controls for clinical and business operations.</p></div><button class="btn primary" onclick="openModal('userModal')">＋ Add user</button></div>
+  <div class="grid content-grid"><div class="card"><div class="cardhead"><h3>User accounts</h3><span class="pill">Role-based</span></div><div class="tablewrap"><table><thead><tr><th>User</th><th>Role</th><th>Access level</th><th>Status</th></tr></thead><tbody id="usersTable"></tbody></table></div></div><div class="card"><div class="cardhead"><h3>Security layers</h3></div>
+    <div class="security-row"><div><strong>Layer 1 · Authentication</strong><p>Role-aware demo login; production should use secure server sessions and MFA.</p></div><span class="pill">Required</span></div>
+    <div class="security-row"><div><strong>Layer 2 · Authorization</strong><p>Role-specific modules and least-privilege access.</p></div><span class="pill">Role-based</span></div>
+    <div class="security-row"><div><strong>Layer 3 · Patient privacy</strong><p>Restrict access to sensitive clinical records.</p></div><span class="pill">Policy</span></div>
+    <div class="security-row"><div><strong>Layer 4 · Audit trail</strong><p>Log important user actions and transaction changes.</p></div><span class="pill">Enabled</span></div>
+    <div class="security-row"><div><strong>Layer 5 · Backup & recovery</strong><p>Production requires encrypted backups, restore tests and retention policies.</p></div><span class="pill warn">Configure</span></div>
+    <div class="security-row"><div><strong>Layer 6 · Encryption & hosting</strong><p>Use HTTPS, encrypted storage and secure key management in production.</p></div><span class="pill warn">Server setup</span></div>
+  </div></div>
+  <div class="card" style="margin-top:16px"><div class="cardhead"><h3>Audit activity</h3><button class="btn small" onclick="downloadAudit()">⇩ Download log</button></div><div class="tablewrap"><table><thead><tr><th>Timestamp</th><th>User</th><th>Action</th><th>Details</th></tr></thead><tbody id="auditTable"></tbody></table></div></div>
+</section>
+<div class="footer-note">CarePoint demo interface · Sample data only · Protect patient data and validate clinical workflows before real-world use.</div>
+</main></div>
+<nav class="mobile-nav">
+  <button class="active" data-page="dashboard" onclick="showSection('dashboard')"><span>▦</span>Home</button>
+  <button data-page="patients" onclick="showSection('patients')"><span>♙</span>Patients</button>
+  <button data-page="outpatient" onclick="showSection('outpatient')"><span>🩺</span>Clinic</button>
+<button data-page="inpatient" onclick="showSection('inpatient')"><span>🛏</span>Ward</button>
+  <button data-page="pharmacy" onclick="showSection('pharmacy')"><span>▣</span>Pharmacy</button>
+  <button data-page="inventory" onclick="showSection('inventory')"><span>▤</span>Stock</button>
+  <button data-page="reports" onclick="showSection('reports')"><span>▥</span>Reports</button>
+  <button onclick="openModal('mobileMenu')"><span>☰</span>More</button>
+</nav>
+</div>
+
+<div id="toast" class="toast" role="status"></div>
+<div id="loginScreen" class="login-screen"><div class="login-card"><div class="logo">✚</div><h2>Welcome to CarePoint</h2><p>Sign in to your clinic workspace.</p><div class="field"><label>Username</label><input id="loginUser" value="admin" autocomplete="username"></div><div class="field"><label>Password</label><input id="loginPass" type="password" value="demo123" autocomplete="current-password"></div><div class="field"><label>Demo role</label><select id="loginRole"><option>Administrator</option><option>Clinician</option><option>Pharmacist</option><option>Receptionist</option><option>Cashier</option><option>Lab Technician</option><option>Inventory Officer</option><option>Branch Manager</option></select></div><button class="btn primary" style="width:100%;justify-content:center;margin-top:8px" onclick="login()">Sign in securely →</button><div class="login-note">Prototype credentials only: use any username and the demo password shown above. This is not production authentication. Do not enter real patient data into this demo.</div></div></div>
+
+<div class="modal" id="patientModal"><div class="modal-box"><div class="modal-head"><h3>Register patient</h3><button class="iconbtn" onclick="closeModal('patientModal')">✕</button></div><form onsubmit="addPatient(event)"><div class="formgrid"><div class="field"><label>Full name *</label><input id="pName" required></div><div class="field"><label>Phone *</label><input id="pPhone" required inputmode="tel" placeholder="07xx xxx xxx"></div><div class="field"><label>Age</label><input id="pAge" type="number" min="0" max="120"></div><div class="field"><label>Sex</label><select id="pSex"><option>Not specified</option><option>Female</option><option>Male</option><option>Other</option></select></div><div class="field"><label>Branch</label><select id="pBranch"><option>Central Clinic</option><option>Westlands Branch</option><option>Kisumu Branch</option></select></div><div class="field"><label>Allergies / alerts</label><input id="pAllergy" placeholder="e.g. penicillin, none known"></div><div class="field full"><label>Notes</label><textarea id="pNotes" rows="2"></textarea></div></div><button class="btn primary" style="margin-top:16px">Save patient</button></form></div></div>
+
+<div class="modal" id="productModal"><div class="modal-box"><div class="modal-head"><h3>Add product / service</h3><button class="iconbtn" onclick="closeModal('productModal')">✕</button></div><form onsubmit="addProduct(event)"><div class="formgrid"><div class="field"><label>Item name *</label><input id="iName" required></div><div class="field"><label>Category</label><select id="iCategory"><option>Medicine</option><option>Medical supply</option><option>Service</option><option>Laboratory</option><option>Other</option></select></div><div class="field"><label>Barcode (unique)</label><input id="iBarcode" placeholder="Scan or type barcode"></div><div class="field"><label>Batch number</label><input id="iBatch" placeholder="Batch / lot"></div><div class="field"><label>Expiry date</label><input id="iExpiry" type="date"></div><div class="field"><label>Quantity in stock</label><input id="iStock" type="number" min="0" value="0" required></div><div class="field"><label>Reorder quantity</label><input id="iReorder" type="number" min="0" value="10" required></div><div class="field"><label>Unit cost (KES)</label><input id="iCost" type="number" min="0" step=".01" value="0" required></div><div class="field"><label>Retail price (KES)</label><input id="iPrice" type="number" min="0" step=".01" value="0" required></div><div class="field"><label>Image URL (optional)</label><input id="iImage" type="url" placeholder="https://…"></div></div><button class="btn primary" style="margin-top:16px">Save item</button></form></div></div>
+
+<div class="modal" id="appointmentModal"><div class="modal-box"><div class="modal-head"><h3>New appointment</h3><button class="iconbtn" onclick="closeModal('appointmentModal')">✕</button></div><form onsubmit="addAppointment(event)"><div class="formgrid"><div class="field"><label>Patient</label><select id="aPatient"></select></div><div class="field"><label>Date & time</label><input id="aTime" type="datetime-local" required></div><div class="field"><label>Reason</label><input id="aReason" required></div><div class="field"><label>Provider</label><select id="aProvider"><option>Dr. Amina Otieno</option><option>Clinical Officer</option><option>Dr. James Mwangi</option></select></div></div><button class="btn primary" style="margin-top:16px">Save appointment</button></form></div></div>
+
+<div class="modal" id="consultModal"><div class="modal-box"><div class="modal-head"><h3>Start consultation</h3><button class="iconbtn" onclick="closeModal('consultModal')">✕</button></div><p class="muted smalltext">Open the Consultations workspace to record the complete clinical note.</p><button class="btn primary" onclick="closeModal('consultModal');showSection('consultations')">Open consultation workspace →</button></div></div>
+
+<div class="modal" id="labModal"><div class="modal-box"><div class="modal-head"><h3>Order laboratory / radiology test</h3><button class="iconbtn" onclick="closeModal('labModal')">✕</button></div><form onsubmit="addLab(event)"><div class="formgrid">
+  <div class="field"><label>Patient *</label><select id="labPatient" required></select></div>
+  <div class="field"><label>Department</label><select id="labDept"><option value="lab">Laboratory</option><option value="rad">Radiology / Imaging</option></select></div>
+  <div class="field full"><label>Test / Investigation *</label><select id="labTest" required><option>Full blood count</option><option>Malaria test</option><option>Blood glucose</option><option>Urinalysis</option><option>Pregnancy test</option><option>Lipid profile</option><option>Liver function tests</option><option>Renal function tests</option><option>HbA1c</option><option>Thyroid function</option><option>Urine culture</option><option>Chest X-ray</option><option>Abdominal ultrasound</option><option>Pelvic ultrasound</option><option>CT scan head</option><option>CT scan abdomen</option><option>MRI lumbar spine</option><option>Mammogram</option><option>Other</option></select></div>
+  <div class="field"><label>Priority</label><select id="labPriority"><option>Routine</option><option>Urgent</option><option>STAT</option></select></div>
+  <div class="field"><label>Requested by</label><input id="labClinician" value="Dr. Amina Otieno"></div>
+  <div class="field full"><label>Clinical indication</label><input id="labIndication" placeholder="Why is this test requested?"></div>
+</div><button class="btn primary" style="margin-top:16px">Create order</button></form></div></div>
+
+<div class="modal" id="scannerModal"><div class="modal-box"><div class="modal-head"><h3>Barcode scanner</h3><button class="iconbtn" onclick="stopScanner();closeModal('scannerModal')">✕</button></div><div class="scanner-box"><video id="scannerVideo" playsinline></video><div id="scannerIcon" style="font-size:38px;margin-bottom:8px">▦</div><p class="muted smalltext">Camera scanning requires browser permission and a supported device. Keyboard barcode scanners also work by typing into the barcode field.</p><button class="btn primary" onclick="startScanner()">Open camera scanner</button></div><form onsubmit="scanManual(event)" style="margin-top:15px"><div class="field"><label>Enter / scan barcode</label><input id="manualBarcode" autocomplete="off" autofocus placeholder="Scan barcode here…"></div><button class="btn" style="margin-top:10px">Find item</button></form><p class="smalltext muted">Offline: product lookup uses the locally saved catalogue. Camera API support depends on browser/device.</p></div></div>
+
+<div class="modal" id="supplierModal"><div class="modal-box"><div class="modal-head"><h3>Add supplier</h3><button class="iconbtn" onclick="closeModal('supplierModal')">✕</button></div><form onsubmit="addSupplier(event)"><div class="formgrid"><div class="field"><label>Supplier name</label><input id="sName" required></div><div class="field"><label>Contact</label><input id="sContact"></div><div class="field full"><label>Payment terms</label><input id="sTerms" placeholder="e.g. 30 days / cash"></div></div><button class="btn primary" style="margin-top:16px">Save supplier</button></form></div></div>
+
+<div class="modal" id="claimModal"><div class="modal-box"><div class="modal-head"><h3>New insurance claim</h3><button class="iconbtn" onclick="closeModal('claimModal')">✕</button></div><form onsubmit="addClaim(event)"><div class="formgrid"><div class="field"><label>Patient</label><select id="claimPatient"></select></div><div class="field"><label>Payer</label><input id="claimPayer" required placeholder="Insurer / scheme"></div><div class="field"><label>Claim amount (KES)</label><input id="claimAmount" type="number" min="0" required></div><div class="field"><label>Status</label><select id="claimStatus"><option>Draft</option><option>Submitted</option><option>Under review</option></select></div></div><button class="btn primary" style="margin-top:16px">Save claim</button></form></div></div>
+
+<div class="modal" id="branchModal"><div class="modal-box"><div class="modal-head"><h3>Add branch</h3><button class="iconbtn" onclick="closeModal('branchModal')">✕</button></div><form onsubmit="addBranch(event)"><div class="formgrid"><div class="field"><label>Branch name</label><input id="bName" required></div><div class="field"><label>Location</label><input id="bLocation" required></div><div class="field"><label>Branch type</label><select id="bType"><option>Clinic + Pharmacy</option><option>Clinic</option><option>Pharmacy</option><option>Laboratory</option></select></div></div><button class="btn primary" style="margin-top:16px">Save branch</button></form></div></div>
+
+<div class="modal" id="transferModal"><div class="modal-box"><div class="modal-head"><h3>New stock transfer</h3><button class="iconbtn" onclick="closeModal('transferModal')">✕</button></div><form onsubmit="addTransfer(event)"><div class="formgrid"><div class="field"><label>From branch</label><select id="tFrom"><option>Central Clinic</option><option>Westlands Branch</option><option>Kisumu Branch</option></select></div><div class="field"><label>To branch</label><select id="tTo"><option>Westlands Branch</option><option>Kisumu Branch</option><option>Central Clinic</option></select></div><div class="field"><label>Item</label><select id="tItem"></select></div><div class="field"><label>Quantity</label><input id="tQty" type="number" min="1" value="1" required></div></div><button class="btn primary" style="margin-top:16px">Request transfer</button></form></div></div>
+
+<div class="modal" id="taskModal"><div class="modal-box"><div class="modal-head"><h3>Delegate task</h3><button class="iconbtn" onclick="closeModal('taskModal')">✕</button></div><form onsubmit="addTask(event)"><div class="formgrid"><div class="field full"><label>Task description</label><input id="taskName" required></div><div class="field"><label>Assigned to</label><select id="taskAssignee"><option>Inventory Officer</option><option>Pharmacist</option><option>Branch Manager</option><option>Cashier</option><option>Administrator</option></select></div><div class="field"><label>Priority</label><select id="taskPriority"><option>Normal</option><option>High</option><option>Urgent</option></select></div></div><button class="btn primary" style="margin-top:16px">Assign task</button></form></div></div>
+
+<div class="modal" id="userModal"><div class="modal-box"><div class="modal-head"><h3>Add demo user</h3><button class="iconbtn" onclick="closeModal('userModal')">✕</button></div><form onsubmit="addUser(event)"><div class="formgrid"><div class="field"><label>Full name</label><input id="uName" required></div><div class="field"><label>Username</label><input id="uLogin" required></div><div class="field"><label>Role</label><select id="uRole"><option>Clinician</option><option>Pharmacist</option><option>Receptionist</option><option>Cashier</option><option>Lab Technician</option><option>Inventory Officer</option><option>Branch Manager</option><option>Administrator</option></select></div></div><button class="btn primary" style="margin-top:16px">Add user</button></form><p class="smalltext muted">Demo accounts are local UI records only; production user provisioning must use the server identity service.</p></div></div>
+
+<div class="modal" id="workflowModal"><div class="modal-box"><div class="modal-head"><h3>How CarePoint modules work together</h3><button class="iconbtn" onclick="closeModal('workflowModal')">✕</button></div><div class="activity"><div class="bubble">1</div><div><strong>Patient & appointment</strong><p>Reception creates a patient profile and visit queue entry.</p></div></div><div class="activity"><div class="bubble">2</div><div><strong>Clinical encounter</strong><p>Authorized clinician records history, vital signs, assessment and orders.</p></div></div><div class="activity"><div class="bubble">3</div><div><strong>Laboratory & pharmacy</strong><p>Orders are tracked; pharmacist verifies prescriptions and records batch/quantity dispensed.</p></div></div><div class="activity"><div class="bubble">4</div><div><strong>Billing</strong><p>Applicable charges are billed and receipts are generated for completed demo sales.</p></div></div><div class="activity"><div class="bubble">5</div><div><strong>Reports, audit & branch</strong><p>Transactions update dashboard metrics; access and changes should be audited in production.</p></div></div></div></div>
+
+<div class="modal" id="helpModal"><div class="modal-box"><div class="modal-head"><h3>CarePoint quick help</h3><button class="iconbtn" onclick="closeModal('helpModal')">✕</button></div><p class="muted">This is a front-end prototype using browser-local storage for demo records. Use sample data only.</p><ul class="smalltext"><li>Use the left menu or bottom mobile menu to navigate.</li><li>Add products, search the catalogue, scan barcodes or create a sale.</li><li>Print a receipt or save it as PDF from the print dialog.</li><li>Export stock, sales and audit logs as CSV.</li><li>Change user role from the login screen to preview access levels.</li></ul><p class="smalltext">Production requires server-side authentication, a secure database, backups, encryption, tested offline sync, and validated health-system integrations.</p></div></div>
+
+<div class="modal" id="mobileMenu"><div class="modal-box"><div class="modal-head"><h3>More modules</h3><button class="iconbtn" onclick="closeModal('mobileMenu')">✕</button></div><div class="grid" style="grid-template-columns:repeat(2,1fr)"><button class="btn" onclick="goModalPage('appointments')">◷ Appointments</button>
+<button class="btn" onclick="goModalPage('admin')">🗂 Admin</button>
+<button class="btn" onclick="goModalPage('theatre')">🔬 Theatre & ICU</button>
+<button class="btn" onclick="goModalPage('maternity')">🍼 Maternity</button>
+<button class="btn" onclick="goModalPage('consultations')">⚕ Consultations</button><button class="btn" onclick="goModalPage('laboratory')">⚗ Laboratory</button><button class="btn" onclick="goModalPage('billing')">▧ Billing</button><button class="btn" onclick="goModalPage('insurance')">♡ Insurance</button><button class="btn" onclick="goModalPage('branches')">⌖ Branches</button><button class="btn" onclick="goModalPage('automation')">⟳ Automations</button><button class="btn" onclick="goModalPage('settings')">⚙ Security</button><button class="btn danger" onclick="closeModal('mobileMenu');logout()">↪ Log out</button></div></div></div>
+
+<div class="modal" id="receiptModal"><div class="modal-box"><div class="modal-head no-print"><h3>Sale receipt</h3><button class="iconbtn" onclick="closeModal('receiptModal')">✕</button></div><div id="receiptPrint" class="receipt"></div><div class="actions no-print" style="justify-content:center;margin-top:18px;flex-wrap:wrap"><button class="btn primary" onclick="printReceipt()">⎙ Print / Save PDF</button><button class="btn" onclick="downloadReceipt()">⇩ Download HTML</button><button class="btn green" onclick="shareWhatsApp()">✆ Share on WhatsApp</button><button class="btn" onclick="shareNative()">⇪ Share…</button></div></div></div>
+
+<!-- ============ NEW MODALS ============ -->
+<div class="modal" id="admissionModal"><div class="modal-box"><div class="modal-head"><h3>Admit patient</h3><button class="iconbtn" onclick="closeModal('admissionModal')">✕</button></div><form onsubmit="addAdmission(event)"><div class="formgrid">
+  <div class="field"><label>Patient *</label><select id="admPatient" required></select></div>
+  <div class="field"><label>Ward type</label><select id="admWard"><option value="general">General ward</option><option value="icu">ICU</option><option value="maternity">Maternity</option><option value="isolation">Isolation</option></select></div>
+  <div class="field"><label>Bed / room</label><input id="admBed" placeholder="e.g. GEN-04" required></div>
+  <div class="field"><label>Consultant</label><input id="admConsultant" value="Dr. Amina Otieno"></div>
+  <div class="field full"><label>Admitting diagnosis</label><input id="admDiagnosis" required></div>
+  <div class="field full"><label>Clinical notes</label><textarea id="admNotes" rows="2"></textarea></div>
+</div><button class="btn primary" style="margin-top:16px">Admit patient</button></form></div></div>
+
+<div class="modal" id="emergencyModal"><div class="modal-box"><div class="modal-head"><h3>New emergency case</h3><button class="iconbtn" onclick="closeModal('emergencyModal')">✕</button></div><form onsubmit="addEmergency(event)"><div class="formgrid">
+  <div class="field"><label>Patient (or Walk-in)</label><select id="emPatient"><option value="">— Walk-in / unknown —</option></select></div>
+  <div class="field"><label>Triage priority *</label><select id="emTriage" required><option value="P1">P1 — Immediate / life-threatening</option><option value="P2">P2 — Emergency</option><option value="P3">P3 — Urgent</option><option value="P4">P4 — Non-urgent</option></select></div>
+  <div class="field full"><label>Presenting complaint *</label><input id="emComplaint" required placeholder="e.g. Road traffic accident — head injury"></div>
+  <div class="field"><label>Vitals: BP</label><input id="emBP" placeholder="120/80"></div>
+  <div class="field"><label>Vitals: Pulse</label><input id="emPulse" type="number" placeholder="bpm"></div>
+  <div class="field"><label>Vitals: SpO₂ (%)</label><input id="emSpo2" type="number" placeholder="%"></div>
+  <div class="field"><label>Vitals: Temperature (°C)</label><input id="emTemp" type="number" step=".1"></div>
+  <div class="field full"><label>Initial action / treatment</label><textarea id="emAction" rows="2"></textarea></div>
+</div><button class="btn primary" style="margin-top:16px">Log emergency case</button></form></div></div>
+
+<div class="modal" id="opdEncounterModal"><div class="modal-box"><div class="modal-head"><h3>New OPD encounter</h3><button class="iconbtn" onclick="closeModal('opdEncounterModal')">✕</button></div><form onsubmit="addOPD(event)"><div class="formgrid">
+  <div class="field"><label>Patient *</label><select id="opdPatient" required></select></div>
+  <div class="field"><label>Encounter type</label><select id="opdType"><option>Outpatient (new)</option><option>Outpatient (follow-up)</option><option>Specialist clinic</option><option>Walk-in</option></select></div>
+  <div class="field"><label>Clinician *</label><select id="opdClinician" required><option>Dr. Amina Otieno</option><option>Clinical Officer</option><option>Dr. James Mwangi</option></select></div>
+  <div class="field"><label>Visit date</label><input id="opdDate" type="datetime-local" required></div>
+  <div class="field full"><label>Presenting complaint *</label><input id="opdComplaint" required></div>
+  <div class="field full"><label>Plan</label><textarea id="opdPlan" rows="2"></textarea></div>
+</div><button class="btn primary" style="margin-top:16px">Create encounter</button></form></div></div>
+
+<div class="modal" id="nursingNoteModal"><div class="modal-box"><div class="modal-head"><h3>Nursing note / observation</h3><button class="iconbtn" onclick="closeModal('nursingNoteModal')">✕</button></div><form onsubmit="addNursingNote(event)"><div class="formgrid">
+  <div class="field full"><label>Patient (admitted) *</label><select id="nnPatient" required></select></div>
+  <div class="field"><label>Nurse</label><input id="nnNurse" value="Nurse On-duty"></div>
+  <div class="field"><label>Observation time</label><input id="nnTime" type="datetime-local"></div>
+  <div class="field full"><label>Observation / note *</label><textarea id="nnNote" rows="3" required></textarea></div>
+  <div class="field"><label>Vitals: Temp (°C)</label><input id="nnTemp" type="number" step=".1"></div>
+  <div class="field"><label>Vitals: BP</label><input id="nnBP" placeholder="120/80"></div>
+  <div class="field"><label>Vitals: Pulse</label><input id="nnPulse" type="number"></div>
+  <div class="field"><label>Vitals: SpO₂ (%)</label><input id="nnSpo2" type="number"></div>
+</div><button class="btn primary" style="margin-top:16px">Save nursing note</button></form></div></div>
+
+<div class="modal" id="theatreModal"><div class="modal-box"><div class="modal-head"><h3>Schedule surgery</h3><button class="iconbtn" onclick="closeModal('theatreModal')">✕</button></div><form onsubmit="addTheatreCase(event)"><div class="formgrid">
+  <div class="field"><label>Patient *</label><select id="thPatient" required></select></div>
+  <div class="field"><label>Procedure *</label><input id="thProcedure" required></div>
+  <div class="field"><label>Surgeon *</label><input id="thSurgeon" value="Dr. James Mwangi"></div>
+  <div class="field"><label>Theatre</label><select id="thRoom"><option>Theatre 1</option><option>Theatre 2</option><option>Theatre 3</option></select></div>
+  <div class="field"><label>Scheduled date & time *</label><input id="thTime" type="datetime-local" required></div>
+  <div class="field"><label>Anaesthesia</label><select id="thAnaes"><option>General</option><option>Spinal</option><option>Local</option><option>Regional</option></select></div>
+  <div class="field full"><label>Pre-op notes</label><textarea id="thNotes" rows="2"></textarea></div>
+</div><button class="btn primary" style="margin-top:16px">Schedule case</button></form></div></div>
+
+<div class="modal" id="icuModal"><div class="modal-box"><div class="modal-head"><h3>ICU admission</h3><button class="iconbtn" onclick="closeModal('icuModal')">✕</button></div><form onsubmit="addICU(event)"><div class="formgrid">
+  <div class="field"><label>Patient *</label><select id="icuPatient" required></select></div>
+  <div class="field"><label>ICU bed *</label><select id="icuBed" required><option>ICU-1</option><option>ICU-2</option><option>ICU-3</option><option>ICU-4</option></select></div>
+  <div class="field full"><label>Diagnosis *</label><input id="icuDiagnosis" required></div>
+  <div class="field"><label>Ventilated</label><select id="icuVent"><option>No</option><option>Yes</option></select></div>
+  <div class="field"><label>Sedation</label><select id="icuSed"><option>None</option><option>Light</option><option>Deep</option></select></div>
+  <div class="field full"><label>Clinical notes</label><textarea id="icuNotes" rows="2"></textarea></div>
+</div><button class="btn primary" style="margin-top:16px">Admit to ICU</button></form></div></div>
+
+<div class="modal" id="maternityModal"><div class="modal-box"><div class="modal-head"><h3>Maternity admission</h3><button class="iconbtn" onclick="closeModal('maternityModal')">✕</button></div><form onsubmit="addMaternity(event)"><div class="formgrid">
+  <div class="field"><label>Patient *</label><select id="matPatient" required></select></div>
+  <div class="field"><label>Admission type</label><select id="matType"><option>Labour</option><option>Antenatal</option><option>Postnatal</option><option>Caesarean</option></select></div>
+  <div class="field"><label>Gravida</label><input id="matGravida" type="number" min="1" value="1"></div>
+  <div class="field"><label>Para</label><input id="matPara" type="number" min="0" value="0"></div>
+  <div class="field"><label>Gestation (weeks)</label><input id="matGest" type="number" min="1" max="45" value="38"></div>
+  <div class="field"><label>EDD</label><input id="matEDD" type="date"></div>
+  <div class="field full"><label>Notes</label><textarea id="matNotes" rows="2"></textarea></div>
+</div><button class="btn primary" style="margin-top:16px">Admit to maternity</button></form></div></div>
+
+<div class="modal" id="ancModal"><div class="modal-box"><div class="modal-head"><h3>Antenatal care visit</h3><button class="iconbtn" onclick="closeModal('ancModal')">✕</button></div><form onsubmit="addANC(event)"><div class="formgrid">
+  <div class="field"><label>Patient *</label><select id="ancPatient" required></select></div>
+  <div class="field"><label>Gestation (weeks) *</label><input id="ancGest" type="number" min="1" max="45" required></div>
+  <div class="field"><label>BP</label><input id="ancBP" placeholder="120/80"></div>
+  <div class="field"><label>Weight (kg)</label><input id="ancWeight" type="number" step=".1"></div>
+  <div class="field"><label>Fundal height (cm)</label><input id="ancFundal" type="number" step=".1"></div>
+  <div class="field"><label>Fetal heart rate</label><input id="ancFHR" type="number" placeholder="bpm"></div>
+  <div class="field full"><label>Notes</label><textarea id="ancNotes" rows="2"></textarea></div>
+  <div class="field"><label>Next visit</label><input id="ancNext" type="date"></div>
+</div><button class="btn primary" style="margin-top:16px">Save ANC visit</button></form></div></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const money=n=>'KES '+Number(n||0).toLocaleString('en-KE',{minimumFractionDigits:2,maximumFractionDigits:2});
+const today=()=>new Date().toISOString().slice(0,10);
+const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const img=(q)=>`https://images.unsplash.com/${q}?auto=format&fit=crop&w=520&q=80`;
+const demoProducts=[
+{id:1,name:'Paracetamol 500mg',category:'Medicine',barcode:'616110001001',batch:'PCM2408',expiry:'2027-08-31',stock:120,reorder:25,cost:2.2,price:5,image:img('photo-1607619056574-7b8d3ee536b2')},
+{id:2,name:'Vitamin C Tablets',category:'Medicine',barcode:'616110001002',batch:'VTC2411',expiry:'2027-11-30',stock:18,reorder:20,cost:8,price:15,image:img('photo-1550572017-edd951b55104')},
+{id:3,name:'Digital Thermometer',category:'Medical supply',barcode:'616110001003',batch:'THM2501',expiry:'',stock:7,reorder:10,cost:350,price:550,image:img('photo-1583947215259-38e31be8751f')},
+{id:4,name:'Hand Sanitizer 500ml',category:'Medical supply',barcode:'616110001004',batch:'HS2502',expiry:'2027-02-28',stock:42,reorder:12,cost:180,price:250,image:img('photo-1584744982491-665216d95f8b')},
+{id:5,name:'Surgical Face Masks',category:'Medical supply',barcode:'616110001005',batch:'MSK2503',expiry:'2028-03-31',stock:9,reorder:15,cost:6,price:12,image:img('photo-1584634731339-252c581abfc5')},
+{id:6,name:'ORS Sachet',category:'Medicine',barcode:'616110001006',batch:'ORS2504',expiry:'2027-04-30',stock:85,reorder:20,cost:12,price:20,image:img('photo-1608248543803-ba4f8c70ae0b')}
+];
+function load(key, fallback){try{let v=localStorage.getItem('carepoint_'+key);return v?JSON.parse(v):fallback}catch(e){return fallback}}
+function save(key,val){try{localStorage.setItem('carepoint_'+key,JSON.stringify(val));return true}catch(e){toast('Storage unavailable or full. Export your records.');return false}}
+let products=load('products',demoProducts),patients=load('patients',[
+{id:'CP-1001',name:'Mary Wanjiku',phone:'0712 345 678',age:34,sex:'Female',branch:'Central Clinic',allergy:'None known',notes:'',lastVisit:today()},
+{id:'CP-1002',name:'Peter Otieno',phone:'0722 456 789',age:42,sex:'Male',branch:'Kisumu Branch',allergy:'Ask patient',notes:'',lastVisit:today()},
+{id:'CP-1003',name:'Grace Njeri',phone:'0700 123 456',age:27,sex:'Female',branch:'Central Clinic',allergy:'Penicillin (reported)',notes:'',lastVisit:today()}
+]);
+let appointments=load('appointments',[
+{id:'APT-001',time:'09:00',patient:'Mary Wanjiku',reason:'General consultation',provider:'Dr. Amina Otieno',status:'Waiting'},
+{id:'APT-002',time:'09:30',patient:'Peter Otieno',reason:'Follow-up',provider:'Clinical Officer',status:'In consultation'},
+{id:'APT-003',time:'10:00',patient:'Grace Njeri',reason:'Review',provider:'Dr. James Mwangi',status:'Waiting'}
+]);
+let sales=load('sales',[]),consults=load('consults',[]),labs=load('labs',[
+{id:'LAB-1001',patient:'Mary Wanjiku',test:'Full blood count',date:today(),status:'Sample pending',result:''},
+{id:'LAB-1002',patient:'Peter Otieno',test:'Malaria test',date:today(),status:'In progress',result:''}
+]),suppliers=load('suppliers',[{name:'MedSupply Kenya',contact:'+254 700 000 111',terms:'30 days'},{name:'Afya Distributors',contact:'+254 711 000 222',terms:'Cash / 14 days'}]),claims=load('claims',[]),branches=load('branches',[{name:'Central Clinic',location:'Nairobi CBD',type:'Clinic + Pharmacy'},{name:'Westlands Branch',location:'Westlands, Nairobi',type:'Clinic + Pharmacy'},{name:'Kisumu Branch',location:'Kisumu, Kenya',type:'Clinic + Pharmacy'}]),transfers=load('transfers',[]),tasks=load('tasks',[{name:'Complete weekly stock count',assignee:'Inventory Officer',priority:'High',status:'Assigned'},{name:'Review pending payer claims',assignee:'Branch Manager',priority:'Normal',status:'Assigned'}]),users=load('users',[{name:'Alex Admin',login:'admin',role:'Administrator',status:'Active'},{name:'Dr. Amina Otieno',login:'clinician',role:'Clinician',status:'Active'},{name:'Kevin Pharmacist',login:'pharmacist',role:'Pharmacist',status:'Active'},{name:'Faith Reception',login:'reception',role:'Receptionist',status:'Active'},{name:'David Cashier',login:'cashier',role:'Cashier',status:'Active'}]),audit=load('audit',[]);
+let cart=[],currentUser={name:'Alex Admin',role:'Administrator',login:'admin'},lastReceipt=null,scannerStream=null;
+/* ---------- New clinical module stores ---------- */
+let outpatientEncounters = load('outpatientEncounters', []);
+let emergencyCases     = load('emergencyCases', []);
+let admissions         = load('admissions', []);
+let nursingNotes       = load('nursingNotes', []);
+let theatreCases       = load('theatreCases', []);
+let icuCases           = load('icuCases', []);
+let maternityCases     = load('maternityCases', []);
+let radiologyOrders    = load('radiologyOrders', []);
+let beds               = load('beds', {
+  general:  10,
+  icu:      4,
+  maternity: 6,
+  isolation: 2
+});
+let bedOccupancy = load('bedOccupancy', {}); // { bedId: { patient, admittedAt, type } }
+let encounterCounter = load('encounterCounter', { outpatient: 1000, emergency: 500, admission: 100, theatre: 50, icu: 20, maternity: 10, radiology: 200 });
+const roleAccess={
+'Administrator':['dashboard','patients','appointments','consultations','laboratory','pharmacy','inventory','billing','insurance','reports','branches','automation','settings'],
+'Clinician':['dashboard','patients','appointments','consultations','laboratory','reports'],
+'Pharmacist':['dashboard','patients','pharmacy','inventory','billing','reports'],
+'Receptionist':['dashboard','patients','appointments'],
+'Cashier':['dashboard','billing','pharmacy','reports'],
+'Lab Technician':['dashboard','patients','laboratory'],
+'Inventory Officer':['dashboard','pharmacy','inventory','branches','reports'],
+'Branch Manager':['dashboard','patients','appointments','consultations','laboratory','pharmacy','inventory','billing','insurance','reports','branches','automation']
+};
+function logAction(action,details=''){audit.unshift({time:new Date().toLocaleString(),user:currentUser?.login||'demo',action,details});audit=audit.slice(0,250);save('audit',audit);renderAudit()}
+function toast(msg){let t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(window._toastTimer);window._toastTimer=setTimeout(()=>t.classList.remove('show'),2700)}
+function showSection(id){let allowed=roleAccess[currentUser?.role]||roleAccess.Administrator;if(!allowed.includes(id)){toast('Your role does not have permission to open this module.');return}document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===id));document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===id));if(id==='dashboard'||id==='reports')drawCharts();if(id==='patients')renderPatients();if(id==='pharmacy')renderProducts();if(id==='inventory')renderInventory();window.scrollTo({top:0,behavior:'smooth'})}
+function openModal(id){document.getElementById(id).classList.add('show');if(['patientModal','appointmentModal','consultModal','labModal','claimModal','supplierModal','branchModal','taskModal','userModal','productModal'].includes(id))refreshPatientSelects();if(id==='transferModal')$('tItem').innerHTML=products.map(p=>`<option value="${p.id}">${safe(p.name)} · ${p.stock} in stock</option>`).join('')}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+function goModalPage(id){closeModal('mobileMenu');showSection(id)}
+function toggleTheme(){document.body.classList.toggle('dark');save('theme',document.body.classList.contains('dark')?'dark':'light');drawCharts()}
+function login(){let role=$('loginRole').value,login=$('loginUser').value.trim()||'demo';if($('loginPass').value!=='demo123'){toast('Demo password is demo123.');return}currentUser={name:login,login,role};$('welcomeName').textContent=login;$('avatar').textContent=login.slice(0,2).toUpperCase();$('loginScreen').classList.remove('show');applyPermissions();logAction('Login',`Role: ${role}`);toast('Signed in as '+role)}
+function logout(){logAction('Logout','User signed out');$('loginScreen').classList.add('show')}
+function applyPermissions(){let allowed=roleAccess[currentUser.role]||[];document.querySelectorAll('[data-page]').forEach(b=>{let ok=allowed.includes(b.dataset.page);b.style.display=ok?'':'none'});if(!allowed.includes(document.querySelector('.section.active')?.id))showSection(allowed[0]||'dashboard')}
+function renderPatients(){let q=($('patientFilter')?.value||'').toLowerCase();let list=patients.filter(p=>(p.name+' '+p.id+' '+p.phone).toLowerCase().includes(q));$('patientTable').innerHTML=list.map(p=>`<tr><td><strong>${safe(p.name)}</strong><div class="smalltext muted">${safe(p.sex||'')}</div></td><td>${safe(p.id)}</td><td>${safe(p.phone)}</td><td>${safe(p.age||'—')}</td><td>${safe(p.lastVisit||'—')}</td><td><button class="btn small" onclick="viewPatient('${p.id}')">View</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty">No patients found.</td></tr>'; $('recentPatients').innerHTML=patients.slice(-5).reverse().map(p=>`<tr><td><strong>${safe(p.name)}</strong></td><td>${safe(p.id)}</td><td>${safe(p.lastVisit||today())}</td><td><span class="pill">Registered</span></td></tr>`).join('');refreshPatientSelects();updateMetrics()}
+function viewPatient(id){let p=patients.find(x=>x.id===id);if(!p)return;alert(`Patient: ${p.name}\nID: ${p.id}\nPhone: ${p.phone}\nAge: ${p.age||'—'}\nBranch: ${p.branch||'—'}\nAllergy alert: ${p.allergy||'Not recorded'}\nNotes: ${p.notes||'None'}`);logAction('Viewed patient',id)}
+function addPatient(e){e.preventDefault();let phone=$('pPhone').value.trim();if(!/^[+0-9 ()-]{7,18}$/.test(phone)){toast('Enter a valid phone number.');return}let p={id:'CP-'+(1000+Date.now()%899999),name:$('pName').value.trim(),phone,age:$('pAge').value,sex:$('pSex').value,branch:$('pBranch').value,allergy:$('pAllergy').value.trim(),notes:$('pNotes').value,lastVisit:today()};patients.push(p);save('patients',patients);logAction('Patient registered',p.id+' · '+p.name);e.target.reset();closeModal('patientModal');renderAll();showSection('patients');toast('Patient record created.')}
+function refreshPatientSelects(){['salePatient','consultPatient','aPatient','labPatient','claimPatient'].forEach(id=>{let el=$(id);if(!el)return;let val=el.value;el.innerHTML='<option value="">Select patient…</option>'+patients.map(p=>`<option value="${safe(p.name)}">${safe(p.name)} · ${safe(p.id)}</option>`).join('');if([...el.options].some(o=>o.value===val))el.value=val})}
+function renderAppointments(){$('appointmentTable').innerHTML=appointments.map((a,i)=>`<tr><td>${safe(a.time)}</td><td>${safe(a.patient)}</td><td>${safe(a.reason)}</td><td>${safe(a.provider)}</td><td><span class="pill ${a.status==='Waiting'?'warn':''}">${safe(a.status)}</span></td><td><button class="btn small" onclick="advanceAppointment(${i})">Next status</button></td></tr>`).join('')||'<tr><td colspan="6">No appointments.</td></tr>'}
+function addAppointment(e){e.preventDefault();let d=new Date($('aTime').value);if(isNaN(d))return toast('Choose a valid date and time.');appointments.push({id:'APT-'+Date.now().toString().slice(-6),time:d.toLocaleString(),patient:$('aPatient').value||'Walk-in',reason:$('aReason').value,provider:$('aProvider').value,status:'Waiting'});save('appointments',appointments);logAction('Appointment created',$('aPatient').value);e.target.reset();closeModal('appointmentModal');renderAppointments();toast('Appointment added.')}
+function advanceAppointment(i){let states=['Waiting','In consultation','Completed'];let a=appointments[i];a.status=states[(states.indexOf(a.status)+1)%states.length];save('appointments',appointments);logAction('Appointment status changed',a.id+' → '+a.status);renderAppointments();toast('Appointment status: '+a.status)}
+function saveConsultation(){if(!['Administrator','Clinician','Branch Manager'].includes(currentUser.role))return toast('Only an authorized clinician may save consultation notes.');let patient=$('consultPatient').value;if(!patient)return toast('Select a patient first.');let c={id:'CON-'+Date.now().toString().slice(-6),date:new Date().toLocaleString(),patient,clinician:$('consultClinician').value,temp:$('vTemp').value,bp:$('vBP').value,pulse:$('vPulse').value,weight:$('vWeight').value,notes:$('clinicalNotes').value,diagnosis:$('diagnosis').value,plan:$('plan').value,prescription:$('prescriptionNotes').value};if(!c.diagnosis&&!c.notes)return toast('Add clinical notes or assessment.');consults.unshift(c);save('consults',consults);logAction('Clinical note saved',c.id+' · '+patient);renderConsults();toast('Clinical note saved locally.');['vTemp','vBP','vPulse','vWeight','clinicalNotes','diagnosis','plan','prescriptionNotes'].forEach(id=>$(id).value='')}
+function renderConsults(){$('consultTable').innerHTML=consults.map(c=>`<tr><td>${safe(c.date)}</td><td>${safe(c.patient)}</td><td>${safe(c.clinician)}</td><td>${safe(c.diagnosis||'—')}</td><td>${safe(c.plan||'—')}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">No notes recorded yet.</td></tr>'}
+function addLab(e){e.preventDefault();labs.unshift({id:'LAB-'+Date.now().toString().slice(-6),patient:$('labPatient').value||'Unassigned',test:$('labTest').value,date:today(),status:'Sample pending',result:''});save('labs',labs);logAction('Lab order created',$('labTest').value);e.target.reset();closeModal('labModal');renderLabs();toast('Lab order created.')}
+function renderLabs(){$('labTable').innerHTML=labs.map((l,i)=>`<tr><td>${safe(l.id)}</td><td>${safe(l.patient)}</td><td>${safe(l.test)}</td><td>${safe(l.date)}</td><td><span class="pill ${l.status==='Sample pending'?'warn':''}">${safe(l.status)}</span></td><td><button class="btn small" onclick="updateLab(${i})">${l.result?'Edit result':'Update result'}</button></td></tr>`).join('')||'<tr><td colspan="6">No lab orders.</td></tr>'}
+function updateLab(i){let result=prompt('Enter result / comment (authorized lab staff only):',labs[i].result||'');if(result===null)return;labs[i].result=result;labs[i].status='Result entered — review required';save('labs',labs);logAction('Lab result entered',labs[i].id);renderLabs();toast('Result saved; clinical review required.')}
+function renderProducts(){let q=($('productSearch')?.value||'').toLowerCase();let list=products.filter(p=>(p.name+' '+p.barcode+' '+p.category).toLowerCase().includes(q));$('productGrid').innerHTML=list.map(p=>`<div class="card product-card"><img src="${safe(p.image||img('photo-1584308666744-24d5c474f2ae'))}" alt="${safe(p.name)}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=520&q=80'"><div class="product-info"><h4>${safe(p.name)}</h4><p>${safe(p.category)} · ${p.stock} in stock</p><div class="product-bottom"><strong>${money(p.price)}</strong><button class="btn primary small" onclick="addToCart(${p.id})" ${p.category==='Service'?'':' '+(p.stock<=0?'disabled':'')}>＋ Add</button></div></div></div>`).join('')||'<div class="empty">No catalogue items match.</div>'}
+function addToCart(id){let p=products.find(x=>x.id===id);if(!p)return;if(p.category!=='Service'&&p.stock<1)return toast('Out of stock.');let line=cart.find(x=>x.id===id);if(line){if(p.category!=='Service'&&line.qty>=p.stock)return toast('Not enough stock available.');line.qty++}else cart.push({id:p.id,name:p.name,price:Number(p.price),qty:1,category:p.category});renderCart();toast(p.name+' added to sale.')}
+function renderCart(){$('cartCount').textContent=cart.reduce((a,b)=>a+b.qty,0)+' items';$('cartTotal').textContent=money(cart.reduce((a,b)=>a+b.price*b.qty,0));$('cartItems').innerHTML=cart.map((c,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)"><div style="flex:1;min-width:0"><strong style="font-size:12px">${safe(c.name)}</strong><div class="smalltext muted">${money(c.price)} each</div></div><button class="btn small" onclick="changeQty(${i},-1)">−</button><strong>${c.qty}</strong><button class="btn small" onclick="changeQty(${i},1)">＋</button><button class="btn small danger" onclick="removeCart(${i})">×</button></div>`).join('')||'<div class="empty">Add products to start a sale.</div>'}
+function changeQty(i,d){let c=cart[i],p=products.find(x=>x.id===c.id);if(d>0&&p.category!=='Service'&&c.qty>=p.stock)return toast('Insufficient stock.');c.qty+=d;if(c.qty<=0)cart.splice(i,1);renderCart()}
+function removeCart(i){cart.splice(i,1);renderCart()}function clearCart(){cart=[];renderCart()}
+function checkout(){if(!cart.length)return toast('Add at least one item.');for(let c of cart){let p=products.find(x=>x.id===c.id);if(p.category!=='Service'&&p.stock<c.qty)return toast('Insufficient stock for '+p.name)}let total=cart.reduce((a,c)=>a+c.price*c.qty,0);let receipt={id:'CP-'+Date.now().toString().slice(-8),date:new Date().toLocaleString(),time:$('saleTime').value||'',patient:$('salePatient').value||'Walk-in',method:$('paymentMethod').value,total,items:cart.map(c=>({...c})),user:currentUser.login,branch:branches[0]?.name||'Main Branch'};cart.forEach(c=>{let p=products.find(x=>x.id===c.id);if(p.category!=='Service')p.stock-=c.qty});sales.unshift(receipt);save('products',products);save('sales',sales);logAction('Sale completed',receipt.id+' · '+money(total));lastReceipt=receipt;cart=[];renderAll();renderCart();showReceipt(receipt);toast('Sale recorded. Receipt ready.')}
+function receiptHTML(r){return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Receipt ${safe(r.id)}</title><style>body{font:13px/1.4 monospace;padding:24px;max-width:420px;margin:auto;color:#111}h2,p{text-align:center;margin:6px 0}table{width:100%;border-collapse:collapse}td,th{padding:6px;border-bottom:1px solid #ddd;text-align:left}.r{text-align:right}.tot{font-weight:700;font-size:15px}</style></head><body><h2>CAREPOINT CLINIC &amp; PHARMACY</h2><p>${safe(r.branch||'Main Branch')}</p><hr><p>RECEIPT: ${safe(r.id)}<br>${safe(r.date)}${r.time?'<br>Time: '+safe(r.time):''}<br>Served by: ${safe(r.user||'staff')}</p><hr><p style="text-align:left">Patient: ${safe(r.patient)}<br>Payment: ${safe(r.method)}</p><table><thead><tr><th>Item</th><th>Qty</th><th class="r">Amount</th></tr></thead><tbody>${r.items.map(i=>`<tr><td>${safe(i.name)}</td><td>${i.qty}</td><td class="r">${money(i.price*i.qty)}</td></tr>`).join('')}</tbody></table><hr><h3 class="r tot">TOTAL: ${money(r.total)}</h3><p>Thank you. Get well soon.</p><p style="font-size:10px">Demo receipt — confirm tax and fiscal requirements before production use.</p></body></html>`}
+function showReceipt(r){$('receiptPrint').innerHTML=`<h2>CAREPOINT CLINIC & PHARMACY</h2><p>${safe(r.branch||'Main Branch')}</p><hr><p>RECEIPT: ${safe(r.id)}<br>${safe(r.date)}${r.time?'<br>Time: '+safe(r.time):''}<br>Served by: ${safe(r.user||'staff')}</p><hr><p style="text-align:left">Patient: ${safe(r.patient)}<br>Payment: ${safe(r.method)}</p><table><thead><tr><th>Item</th><th>Qty</th><th>Amount</th></tr></thead><tbody>${r.items.map(i=>`<tr><td>${safe(i.name)}</td><td>${i.qty}</td><td>${money(i.price*i.qty)}</td></tr>`).join('')}</tbody></table><hr><h3 style="text-align:right">TOTAL: ${money(r.total)}</h3><p>Thank you. Get well soon.</p><p style="font-size:10px">Demo receipt — confirm tax and fiscal requirements before production use.</p>`;$('receiptModal').classList.add('show')}
+function printReceipt(){if(!lastReceipt)return;let w=window.open('','_blank','width=480,height=640');if(!w){toast('Popup blocked — allow popups to print.');return}w.document.write(receiptHTML(lastReceipt));w.document.close();w.focus();setTimeout(()=>{w.print()},350)}
+function downloadReceipt(){if(!lastReceipt)return;let blob=new Blob([receiptHTML(lastReceipt)],{type:'text/html'});downloadBlob(blob,`receipt-${lastReceipt.id}.html`)}
+function shareWhatsApp(){if(!lastReceipt)return;let lines=[`*CAREPOINT CLINIC & PHARMACY*`,`Receipt: ${lastReceipt.id}`,`Date: ${lastReceipt.date}${lastReceipt.time?' '+lastReceipt.time:''}`,`Patient: ${lastReceipt.patient}`,`Payment: ${lastReceipt.method}`,'',...lastReceipt.items.map(i=>`• ${i.name} x${i.qty} = ${money(i.price*i.qty)}`),'',`*TOTAL: ${money(lastReceipt.total)}*`,'Thank you. Get well soon.'].join('\n');let url='https://wa.me/?text='+encodeURIComponent(lines);window.open(url,'_blank')}
+function shareNative(){if(!lastReceipt)return;let text=`CarePoint receipt ${lastReceipt.id} — ${money(lastReceipt.total)}`;if(navigator.share){navigator.share({title:'CarePoint receipt',text}).catch(()=>{})}else if(navigator.clipboard){navigator.clipboard.writeText(text).then(()=>toast('Receipt summary copied.')).catch(()=>toast('Sharing not available on this browser.'))}else{toast('Sharing not available on this browser.')}}
+function printReport(){let rows=products.map(p=>`<tr><td>${safe(p.name)}</td><td>${safe(p.category)}</td><td>${p.stock}</td><td>${money(p.cost)}</td><td>${money(p.price)}</td></tr>`).join('');let sales_rows=sales.map(s=>`<tr><td>${safe(s.id)}</td><td>${safe(s.date)}</td><td>${safe(s.patient)}</td><td>${safe(s.method)}</td><td>${money(s.total)}</td></tr>`).join('')||'<tr><td colspan=5>—</td></tr>';let w=window.open('','_blank','width=800,height=900');if(!w){toast('Popup blocked — allow popups to print reports.');return}w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>CarePoint report ${today()}</title><style>body{font:12px system-ui;padding:24px}table{width:100%;border-collapse:collapse;margin-bottom:22px}th,td{border-bottom:1px solid #ccc;padding:6px;text-align:left}h1{font-size:18px}</style></head><body><h1>CarePoint operational report — ${today()}</h1><h2>Stock</h2><table><thead><tr><th>Item</th><th>Category</th><th>Stock</th><th>Cost</th><th>Price</th></tr></thead><tbody>${rows}</tbody></table><h2>Sales</h2><table><thead><tr><th>Receipt</th><th>Date</th><th>Patient</th><th>Method</th><th>Total</th></tr></thead><tbody>${sales_rows}</tbody></table><p>Inventory value: ${money(products.reduce((a,p)=>a+p.stock*p.cost,0))} · Sales total: ${money(sales.reduce((a,s)=>a+s.total,0))}</p></body></html>`);w.document.close();setTimeout(()=>w.print(),350)}
+function renderSales(){$('salesTable').innerHTML=sales.slice(0,15).map(s=>`<tr><td>${safe(s.id)}</td><td>${safe(s.date)}</td><td>${s.items.length} item(s)</td><td>${safe(s.method)}</td><td>${money(s.total)}</td><td><button class="btn small" onclick="reprint('${s.id}')">View / print</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty">No sales recorded in this browser yet.</td></tr>';$('billingTable').innerHTML=sales.map(s=>`<tr><td>${safe(s.id)}</td><td>${safe(s.date)}</td><td>${safe(s.patient)}</td><td>${s.items.length}</td><td>${safe(s.method)}</td><td>${money(s.total)}</td><td><button class="btn small" onclick="reprint('${s.id}')">Receipt</button></td></tr>`).join('')||'<tr><td colspan="7" class="empty">No transactions recorded.</td></tr>'}
+function reprint(id){let s=sales.find(x=>x.id===id);if(s){lastReceipt=s;showReceipt(s)}}
+function renderInventory(){let q=($('inventoryFilter')?.value||'').toLowerCase();let list=products.filter(p=>(p.name+' '+p.barcode+' '+p.batch).toLowerCase().includes(q));$('inventoryTable').innerHTML=list.map(p=>`<tr><td><div class="prod"><img src="${safe(p.image||'')}" alt="" onerror="this.style.display='none'"><div><strong>${safe(p.name)}</strong><small>${safe(p.category)}</small></div></div></td><td>${safe(p.barcode||'—')}</td><td>${safe(p.batch||'—')}</td><td>${safe(p.expiry||'—')}</td><td><span class="pill ${p.stock<=p.reorder?'warn':''}">${p.stock}</span></td><td>${p.reorder}</td><td>${money(p.cost)}</td><td>${money(p.price)}</td><td><button class="btn small" onclick="restock(${p.id})">＋ Stock</button></td></tr>`).join('')||'<tr><td colspan="9">No items found.</td></tr>';renderStockHealth();updateMetrics()}
+function restock(id){let p=products.find(x=>x.id===id);let qty=Number(prompt('Quantity received for '+p.name+':','10'));if(!Number.isFinite(qty)||qty<=0||!Number.isInteger(qty))return;if(!confirm(`Add ${qty} units to ${p.name}?`))return;p.stock+=qty;save('products',products);logAction('Stock received',p.name+' +'+qty);renderAll();toast('Stock updated.')}
+function addProduct(e){e.preventDefault();let name=$('iName').value.trim(),barcode=$('iBarcode').value.trim();if(barcode&&products.some(p=>p.barcode===barcode))return toast('Barcode already exists.');let p={id:Date.now(),name,category:$('iCategory').value,barcode:barcode||('CP'+Date.now()),batch:$('iBatch').value,expiry:$('iExpiry').value,stock:Number($('iStock').value),reorder:Number($('iReorder').value),cost:Number($('iCost').value),price:Number($('iPrice').value),image:$('iImage').value||img('photo-1584308666744-24d5c474f2ae')};products.push(p);save('products',products);logAction('Product added',name);e.target.reset();closeModal('productModal');renderAll();showSection('inventory');toast('Item added to catalogue.')}
+function renderStockHealth(){$('stockHealth').innerHTML=products.slice().sort((a,b)=>(a.stock/a.reorder)-(b.stock/b.reorder)).slice(0,4).map(p=>`<div style="padding:9px 0"><div style="display:flex;justify-content:space-between;gap:8px;font-size:11px"><strong>${safe(p.name)}</strong><span class="${p.stock<=p.reorder?'':'muted'}">${p.stock} units</span></div><div class="stockbar"><span style="width:${Math.max(3,Math.min(100,p.stock/Math.max(1,p.reorder*2)*100))}%;background:${p.stock<=p.reorder?'#d98b17':'#16a36a'}"></span></div></div>`).join('')}
+function addSupplier(e){e.preventDefault();suppliers.push({name:$('sName').value,contact:$('sContact').value,terms:$('sTerms').value});save('suppliers',suppliers);logAction('Supplier added',$('sName').value);e.target.reset();closeModal('supplierModal');renderSuppliers();toast('Supplier saved.')}
+function renderSuppliers(){$('supplierTable').innerHTML=suppliers.map(s=>`<tr><td><strong>${safe(s.name)}</strong></td><td>${safe(s.contact||'—')}</td><td>${safe(s.terms||'—')}</td></tr>`).join('')}
+function addClaim(e){e.preventDefault();claims.unshift({id:'CLM-'+Date.now().toString().slice(-6),patient:$('claimPatient').value||'Unassigned',payer:$('claimPayer').value,amount:Number($('claimAmount').value),status:$('claimStatus').value});save('claims',claims);logAction('Insurance claim created',$('claimPayer').value);e.target.reset();closeModal('claimModal');renderClaims();toast('Claim saved in demo worklist.')}
+function renderClaims(){$('claimsTable').innerHTML=claims.map((c,i)=>`<tr><td>${safe(c.id)}</td><td>${safe(c.patient)}</td><td>${safe(c.payer)}</td><td>${money(c.amount)}</td><td><span class="pill warn">${safe(c.status)}</span></td><td><button class="btn small" onclick="advanceClaim(${i})">Update</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty">No claims added.</td></tr>'}
+function advanceClaim(i){let states=['Draft','Submitted','Under review','Approved','Paid','Rejected'];let c=claims[i];c.status=states[(states.indexOf(c.status)+1)%states.length];save('claims',claims);logAction('Claim status changed',c.id+' → '+c.status);renderClaims()}
+function addBranch(e){e.preventDefault();branches.push({name:$('bName').value,location:$('bLocation').value,type:$('bType').value});save('branches',branches);logAction('Branch added',$('bName').value);e.target.reset();closeModal('branchModal');renderBranches();toast('Branch added.')}
+function renderBranches(){$('branchGrid').innerHTML=branches.map((b,i)=>`<div class="card"><div class="stat"><div><span class="pill">${i===0?'Primary':'Branch'}</span><h3 style="margin:12px 0 5px;font-size:15px">${safe(b.name)}</h3><p class="muted smalltext">${safe(b.location)}</p><p class="smalltext">${safe(b.type)}</p></div><div class="stat-icon">⌖</div></div><button class="btn small" onclick="toast('Branch settings require authorized admin configuration.')">Manage branch →</button></div>`).join('');$('transferTable').innerHTML=transfers.map(t=>`<tr><td>${safe(t.id)}</td><td>${safe(t.from)}</td><td>${safe(t.to)}</td><td>${safe(t.item)}</td><td>${t.qty}</td><td><span class="pill warn">${safe(t.status)}</span></td></tr>`).join('')||'<tr><td colspan="6" class="empty">No transfers requested.</td></tr>'}
+function addTransfer(e){e.preventDefault();let from=$('tFrom').value,to=$('tTo').value,prod=products.find(p=>p.id===Number($('tItem').value)),qty=Number($('tQty').value);if(from===to)return toast('Choose different source and destination branches.');if(!prod||qty<1)return toast('Choose an item and valid quantity.');if(qty>prod.stock)return toast('Requested quantity exceeds available stock.');transfers.unshift({id:'TR-'+Date.now().toString().slice(-6),from,to,item:prod.name,qty,status:'Pending approval'});save('transfers',transfers);logAction('Stock transfer requested',prod.name+' '+from+' → '+to);e.target.reset();closeModal('transferModal');renderBranches();toast('Transfer request created; stock is unchanged pending approval.')}
+function addTask(e){e.preventDefault();tasks.unshift({name:$('taskName').value,assignee:$('taskAssignee').value,priority:$('taskPriority').value,status:'Assigned'});save('tasks',tasks);logAction('Task delegated',$('taskName').value);e.target.reset();closeModal('taskModal');renderTasks();toast('Task assigned.')}
+function renderTasks(){$('taskTable').innerHTML=tasks.map((t,i)=>`<tr><td>${safe(t.name)}</td><td>${safe(t.assignee)}</td><td><span class="pill ${t.priority==='Urgent'?'red':t.priority==='High'?'warn':''}">${safe(t.priority)}</span></td><td><button class="btn small" onclick="completeTask(${i})">${safe(t.status)} · Update</button></td></tr>`).join('')}
+function completeTask(i){tasks[i].status=tasks[i].status==='Completed'?'Assigned':'Completed';save('tasks',tasks);logAction('Task status changed',tasks[i].name+' → '+tasks[i].status);renderTasks()}
+function addUser(e){e.preventDefault();let login=$('uLogin').value.trim();if(users.some(u=>u.login.toLowerCase()===login.toLowerCase()))return toast('Username already exists.');users.push({name:$('uName').value,login,role:$('uRole').value,status:'Active'});save('users',users);logAction('Demo user added',login+' · '+$('uRole').value);e.target.reset();closeModal('userModal');renderUsers();toast('Demo user added. Production setup must provision credentials securely.')}
+function renderUsers(){$('usersTable').innerHTML=users.map(u=>`<tr><td><strong>${safe(u.name)}</strong><div class="smalltext muted">${safe(u.login)}</div></td><td>${safe(u.role)}</td><td>${(roleAccess[u.role]||[]).length} modules</td><td><span class="pill">${safe(u.status)}</span></td></tr>`).join('')}
+function renderAudit(){$('auditTable').innerHTML=audit.slice(0,35).map(a=>`<tr><td>${safe(a.time)}</td><td>${safe(a.user)}</td><td>${safe(a.action)}</td><td>${safe(a.details)}</td></tr>`).join('')||'<tr><td colspan="4" class="empty">No activity logged yet.</td></tr>'}
+function downloadAudit(){downloadBlob(new Blob([JSON.stringify(audit,null,2)],{type:'application/json'}),'carepoint-audit-demo.json')}
+function downloadBlob(blob,name){let url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+function exportCSV(){let rows=[['Name','Category','Barcode','Batch','Expiry','Stock','Reorder','Cost','Price'],...products.map(p=>[p.name,p.category,p.barcode,p.batch,p.expiry,p.stock,p.reorder,p.cost,p.price])];downloadBlob(new Blob([rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),'carepoint-inventory.csv')}
+function exportSalesCSV(){let rows=[['Receipt','Date','Patient','Payment','Total','Items'],...sales.map(s=>[s.id,s.date,s.patient,s.method,s.total,s.items.map(i=>`${i.name} x${i.qty}`).join('; ')])];downloadBlob(new Blob([rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),'carepoint-sales.csv')}
+function globalSearch(q){if(!q.trim())return;let v=q.toLowerCase();if(patients.some(p=>(p.name+p.id+p.phone).toLowerCase().includes(v))){showSection('patients');$('patientFilter').value=q;renderPatients()}else if(products.some(p=>(p.name+p.barcode).toLowerCase().includes(v))){showSection('pharmacy');$('productSearch').value=q;renderProducts()}else if(sales.some(s=>s.id.toLowerCase().includes(v))){showSection('billing')}}
+function scanManual(e){if(e&&e.preventDefault)e.preventDefault();let code=($('manualBarcode').value||'').trim();if(!code)return;let p=products.find(x=>x.barcode===code);if(!p){toast('Barcode not found: '+code);return}addToCart(p.id);$('manualBarcode').value='';logAction('Barcode scan',code)}
+async function startScanner(){if(!('BarcodeDetector' in window)){let code=prompt('Camera barcode unavailable in this browser.\nEnter the barcode number:');if(code){$('manualBarcode').value=code.trim();scanManual()}return}try{scannerStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});let video=$('scannerVideo');video.srcObject=scannerStream;video.style.display='block';$('scannerIcon').style.display='none';await video.play();let detector=new BarcodeDetector({formats:['ean_13','ean_8','code_128','upc_a','upc_e']});let scan=async()=>{if(!scannerStream||!$('scannerModal').classList.contains('show'))return;try{let codes=await detector.detect(video);if(codes.length){$('manualBarcode').value=codes[0].rawValue;scanManual();stopScanner();return}}catch(e){}requestAnimationFrame(scan)};scan()}catch(e){toast('Camera unavailable. Enter the barcode manually.');let code=prompt('Enter barcode:');if(code){$('manualBarcode').value=code.trim();scanManual()}}}
+function stopScanner(){if(scannerStream){scannerStream.getTracks().forEach(t=>t.stop());scannerStream=null}if($('scannerVideo')){$('scannerVideo').style.display='none';$('scannerVideo').srcObject=null}$('scannerIcon').style.display='block'}
+function toggleRule(el){el.classList.toggle('on');logAction('Automation rule toggled',el.getAttribute('aria-label')+' '+(el.classList.contains('on')?'enabled':'disabled'));toast('Rule '+(el.classList.contains('on')?'enabled':'disabled')+'. External messages still require a configured provider.')}
+function updateMetrics(){let low=products.filter(p=>p.category!=='Service'&&p.stock<=p.reorder).length;$('statLow').textContent=low;$('inventoryLow').textContent=low;$('inventoryCount').textContent=products.length;$('activityStock').textContent=low+' products at reorder level';$('statSales').textContent=money(sales.reduce((a,s)=>a+s.total,0));$('billingRevenue').textContent=money(sales.reduce((a,s)=>a+s.total,0));$('billingCount').textContent=sales.length;$('reportPatients').textContent=patients.length;$('reportConsults').textContent=consults.length;$('reportSales').textContent=sales.length;$('reportStockValue').textContent=money(products.reduce((a,p)=>a+p.stock*p.cost,0));}
+function renderAll(){renderPatients();renderAppointments();renderConsults();renderLabs();renderProducts();renderInventory();renderSales();renderSuppliers();renderClaims();renderBranches();renderTasks();renderUsers();renderAudit();updateMetrics();drawCharts()}
+function drawCharts(){drawRevenue();drawMix();drawStock()}
+function canvasSetup(id){let c=$(id);if(!c)return null;let rect=c.getBoundingClientRect();if(!rect.width)return null;let dpr=window.devicePixelRatio||1;c.width=rect.width*dpr;c.height=rect.height*dpr;let ctx=c.getContext('2d');ctx.scale(dpr,dpr);return {ctx,w:rect.width,h:rect.height}}
+function drawRevenue(){let o=canvasSetup('revenueChart');if(!o)return;let {ctx,w,h}=o,dark=document.body.classList.contains('dark'),muted=dark?'#9bb0bf':'#6c8191',line=dark?'#2a4050':'#dfe8ef';ctx.clearRect(0,0,w,h);let labels=$('chartRange')?.value==='Last 30 days'?['W1','W2','W3','W4']:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],a=labels.length===4?[22,29,25,39]:[18,27,23,36,31,44,39],b=labels.length===4?[15,19,24,30]:[12,17,21,19,28,32,25],max=50,left=30,right=10,top=14,bottom=26,cw=w-left-right,ch=h-top-bottom;ctx.font='10px system-ui';ctx.strokeStyle=line;ctx.fillStyle=muted;for(let i=0;i<5;i++){let y=top+ch*i/4;ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(w-right,y);ctx.stroke();ctx.fillText(String(50-i*12.5),2,y+3)}labels.forEach((l,i)=>{let x=left+cw*(i+.5)/labels.length;ctx.fillStyle=muted;ctx.fillText(l,x-10,h-7)});function lineSeries(data,color){ctx.beginPath();data.forEach((v,i)=>{let x=left+cw*(i+.5)/data.length,y=top+ch*(1-v/max);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.stroke();data.forEach((v,i)=>{let x=left+cw*(i+.5)/data.length,y=top+ch*(1-v/max);ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fillStyle=color;ctx.fill()})}lineSeries(a,'#0878bd');lineSeries(b,'#16a36a')}
+function drawMix(){let o=canvasSetup('mixChart');if(!o)return;let {ctx,w,h}=o;ctx.clearRect(0,0,w,h);let vals=[52,35,13],colors=['#0878bd','#16a36a','#f3b64c'],cx=w/2,cy=h/2,r=Math.min(w,h)*.33,inner=r*.6,start=-Math.PI/2;vals.forEach((v,i)=>{let end=start+Math.PI*2*v/100;ctx.beginPath();ctx.arc(cx,cy,r,start,end);ctx.arc(cx,cy,inner,end,start,true);ctx.closePath();ctx.fillStyle=colors[i];ctx.fill();start=end});ctx.textAlign='center';ctx.fillStyle=document.body.classList.contains('dark')?'#e7f0f6':'#183247';ctx.font='bold 18px system-ui';ctx.fillText('KES',cx,cy-2);ctx.font='11px system-ui';ctx.fillText('revenue mix',cx,cy+15)}
+function drawStock(){let o=canvasSetup('stockChart');if(!o)return;let {ctx,w,h}=o;ctx.clearRect(0,0,w,h);let list=products.slice(0,5),max=Math.max(1,...list.map(p=>p.stock)),barW=Math.min(34,(w-35)/Math.max(1,list.length)-10),gap=(w-35)/Math.max(1,list.length),base=h-28;list.forEach((p,i)=>{let x=20+i*gap+(gap-barW)/2,bh=(base-18)*p.stock/max;ctx.fillStyle=p.stock<=p.reorder?'#d98b17':'#16a36a';ctx.beginPath();ctx.roundRect(x,base-bh,barW,bh,5);ctx.fill();ctx.fillStyle=document.body.classList.contains('dark')?'#9bb0bf':'#6c8191';ctx.font='9px system-ui';ctx.textAlign='center';ctx.fillText(p.name.split(' ')[0],x+barW/2,h-8);ctx.fillText(String(p.stock),x+barW/2,base-bh-5)})}
+document.addEventListener('keydown',e=>{if(e.key!=='Enter')return;const t=e.target;if(t&&t.tagName==='TEXTAREA')return;if(t&&(t.tagName==='INPUT'||t.tagName==='SELECT')){if(!['manualBarcode','productSearch','globalSearch'].includes(t.id))return}let code=($('manualBarcode')&&$('manualBarcode').value||'').trim();if(!code)return;scanManual()});
+function init(){if(load('theme','light')==='dark')document.body.classList.add('dark');renderAll();refreshPatientSelects();$('loginScreen').classList.add('show');window.addEventListener('resize',()=>drawCharts());document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal.show').forEach(m=>m.classList.remove('show'))})}
+/* ============================================================
+   NEW CLINICAL MODULES
+   ============================================================ */
+function nextEncounterId(prefix){
+  encounterCounter[prefix] = (encounterCounter[prefix]||0) + 1;
+  save('encounterCounter', encounterCounter);
+  return ({outpatient:'OPD', emergency:'EMG', admission:'ADM', theatre:'THR', icu:'ICU', maternity:'MAT', radiology:'RAD'}[prefix]||prefix.toUpperCase()) + '-' + encounterCounter[prefix];
+}
+function bedsUsedInWard(type){
+  return Object.values(bedOccupancy).filter(b => b.type === type).length;
+}
+function renderAdmin(){
+  const q = ($('adminSearch')?.value||'').toLowerCase();
+  const list = patients.filter(p => (p.name+' '+p.id+' '+p.phone).toLowerCase().includes(q));
+  $('adminTable').innerHTML = list.map(p => {
+    const admitted = admissions.find(a => a.patient === p.name && a.status === 'Admitted');
+    return `<tr><td>${safe(p.id)}</td><td><strong>${safe(p.name)}</strong></td><td>${safe(p.phone||'—')}</td><td>${safe(p.branch||'—')}</td><td>${admitted ? '<span class="pill red">Inpatient</span>' : '<span class="pill">Outpatient</span>'}</td><td><button class="btn small" onclick="viewPatient('${p.id}')">View</button></td></tr>`;
+  }).join('') || '<tr><td colspan="6" class="empty">No patients.</td></tr>';
+  const totalBeds = Object.values(beds).reduce((a,b)=>a+b,0);
+  const occupied = Object.keys(bedOccupancy).length;
+  $('adminTotalPatients').textContent = patients.length;
+  $('adminInpatient').textContent = admissions.filter(a=>a.status==='Admitted').length;
+  $('adminBedOcc').textContent = (totalBeds ? Math.round(occupied/totalBeds*100) : 0) + '%';
+  $('adminDischarged').textContent = admissions.filter(a=>a.status==='Discharged').length;
+  // Bed map
+  const wards = [['general','General ward','🛏'],['icu','ICU','💉'],['maternity','Maternity','🍼'],['isolation','Isolation','⚠']];
+  $('bedMap').innerHTML = wards.map(([type,label,icon])=>{
+    const n = beds[type]||0, used = bedsUsedInWard(type);
+    let chips = '';
+    for(let i=1;i<=n;i++){
+      const bedId = `${type.toUpperCase()}-${String(i).padStart(2,'0')}`;
+      const occ = bedOccupancy[bedId];
+      chips += `<div title="${occ?('Occupied: '+occ.patient):'Available'}" style="padding:8px;border:1px solid var(--line);border-radius:8px;text-align:center;font-size:10px;font-weight:700;background:${occ?'#ffe8e9':'var(--mint)'};color:${occ?'var(--danger)':'var(--green)'}">${bedId.split('-')[1]}</div>`;
+    }
+    return `<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:6px"><strong>${icon} ${label}</strong><span class="muted">${used}/${n}</span></div><div style="display:grid;grid-template-columns:repeat(${Math.min(n,6)},1fr);gap:4px">${chips}</div></div>`;
+  }).join('');
+  $('admissionTable').innerHTML = admissions.slice(0,15).map((a,i)=>`<tr><td>${safe(a.patient)}</td><td>${safe(a.ward.toUpperCase())}-${safe(a.bed)}</td><td>${new Date(a.admittedAt).toLocaleDateString()}</td><td>${safe(a.diagnosis||'—')}</td><td><span class="pill ${a.status==='Admitted'?'warn':''}">${safe(a.status)}</span></td><td>${a.status==='Admitted'?`<button class="btn small" onclick="discharge(${i})">Discharge</button>`:'—'}</td></tr>`).join('') || '<tr><td colspan="6" class="empty">No admissions.</td></tr>';
+}
+function addAdmission(e){
+  e.preventDefault();
+  const patient = $('admPatient').value;
+  if(!patient) return toast('Select a patient.');
+  const ward = $('admWard').value, bed = $('admBed').value.trim();
+  const bedId = `${ward.toUpperCase()}-${bed.replace(/^[A-Z]+-/,'').padStart(2,'0')}`;
+  if(bedOccupancy[bedId]) return toast('That bed is already occupied.');
+  if(bedsUsedInWard(ward) >= beds[ward]) return toast('No free beds in this ward.');
+  const a = {
+    id: nextEncounterId('admission'), patient, ward, bed, bedId,
+    consultant: $('admConsultant').value, diagnosis: $('admDiagnosis').value,
+    notes: $('admNotes').value, admittedAt: new Date().toISOString(), status: 'Admitted'
+  };
+  admissions.unshift(a);
+  bedOccupancy[bedId] = { patient, admittedAt: a.admittedAt, type: ward };
+  save('admissions', admissions); save('bedOccupancy', bedOccupancy);
+  logAction('Patient admitted', a.id+' · '+patient+' → '+bedId);
+  e.target.reset(); closeModal('admissionModal');
+  renderAdmin(); renderInpatient();
+  toast('Patient admitted to '+bedId);
+}
+function discharge(i){
+  const a = admissions[i];
+  if(!a || a.status !== 'Admitted') return;
+  if(!confirm('Discharge '+a.patient+'?')) return;
+  a.status = 'Discharged';
+  a.dischargedAt = new Date().toISOString();
+  delete bedOccupancy[a.bedId];
+  save('admissions', admissions); save('bedOccupancy', bedOccupancy);
+  logAction('Patient discharged', a.id+' · '+a.patient);
+  renderAdmin(); renderInpatient();
+  toast('Patient discharged.');
+}
+
+/* ---------- Emergency & OPD ---------- */
+function renderOutpatient(){
+  const todayStr = new Date().toDateString();
+  $('opdEmergCount').textContent = emergencyCases.filter(e => e.status !== 'Closed').length;
+  $('opdToday').textContent = outpatientEncounters.filter(e => new Date(e.createdAt).toDateString() === todayStr).length;
+  $('opdWaiting').textContent = outpatientEncounters.filter(e => e.status === 'Waiting').length;
+  $('emergencyTable').innerHTML = emergencyCases.map((e,i)=>`<tr><td>${safe(e.id)}</td><td>${safe(e.patient||'Walk-in')}</td><td><span class="pill ${e.triage==='P1'?'red':e.triage==='P2'?'warn':''}">${safe(e.triage)}</span></td><td>${safe(e.complaint)}</td><td>${new Date(e.createdAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</td><td>${safe(e.status)}</td><td>${e.status!=='Closed'?`<button class="btn small" onclick="advanceEmergency(${i})">Advance</button>`:'—'}</td></tr>`).join('') || '<tr><td colspan="7" class="empty">No emergency cases.</td></tr>';
+  $('opdTable').innerHTML = outpatientEncounters.map((e,i)=>`<tr><td>${safe(e.id)}</td><td>${safe(e.patient)}</td><td>${safe(e.type)}</td><td>${safe(e.clinician)}</td><td>${safe(e.complaint)}</td><td><span class="pill ${e.status==='Waiting'?'warn':''}">${safe(e.status)}</span></td><td>${e.status!=='Closed'?`<button class="btn small" onclick="advanceOPD(${i})">Advance</button>`:'—'}</td></tr>`).join('') || '<tr><td colspan="7" class="empty">No OPD encounters.</td></tr>';
+}
+function addEmergency(e){
+  e.preventDefault();
+  const em = {
+    id: nextEncounterId('emergency'),
+    patient: $('emPatient').value || 'Walk-in',
+    triage: $('emTriage').value,
+    complaint: $('emComplaint').value,
+    vitals: { bp: $('emBP').value, pulse: $('emPulse').value, spo2: $('emSpo2').value, temp: $('emTemp').value },
+    action: $('emAction').value,
+    createdAt: new Date().toISOString(),
+    status: 'Triaged'
+  };
+  emergencyCases.unshift(em);
+  save('emergencyCases', emergencyCases);
+  logAction('Emergency case logged', em.id+' · '+em.triage);
+  e.target.reset(); closeModal('emergencyModal');
+  renderOutpatient();
+  toast('Emergency case '+em.id+' logged.');
+}
+function advanceEmergency(i){
+  const states = ['Triaged','In treatment','Stabilised','Admitted','Closed'];
+  const em = emergencyCases[i];
+  em.status = states[(states.indexOf(em.status)+1)%states.length];
+  save('emergencyCases', emergencyCases);
+  logAction('Emergency status', em.id+' → '+em.status);
+  renderOutpatient();
+}
+function addOPD(e){
+  e.preventDefault();
+  const op = {
+    id: nextEncounterId('outpatient'),
+    patient: $('opdPatient').value,
+    type: $('opdType').value,
+    clinician: $('opdClinician').value,
+    visitAt: $('opdDate').value,
+    complaint: $('opdComplaint').value,
+    plan: $('opdPlan').value,
+    createdAt: new Date().toISOString(),
+    status: 'Waiting'
+  };
+  outpatientEncounters.unshift(op);
+  save('outpatientEncounters', outpatientEncounters);
+  logAction('OPD encounter', op.id+' · '+op.patient);
+  e.target.reset(); closeModal('opdEncounterModal');
+  renderOutpatient();
+  toast('OPD encounter created.');
+}
+function advanceOPD(i){
+  const states = ['Waiting','In consultation','Completed','Closed'];
+  const op = outpatientEncounters[i];
+  op.status = states[(states.indexOf(op.status)+1)%states.length];
+  save('outpatientEncounters', outpatientEncounters);
+  renderOutpatient();
+}
+
+/* ---------- Inpatient & Nursing ---------- */
+function renderInpatient(){
+  const admitted = admissions.filter(a => a.status === 'Admitted');
+  const totalBeds = Object.values(beds).reduce((a,b)=>a+b,0);
+  $('ipAdmitted').textContent = admitted.length;
+  $('ipFree').textContent = totalBeds - Object.keys(bedOccupancy).length;
+  $('ipNotes').textContent = nursingNotes.filter(n => new Date(n.createdAt).toDateString() === new Date().toDateString()).length;
+  $('ipVitals').textContent = admitted.length;
+  $('wardTable').innerHTML = admitted.map(a => {
+    const days = Math.max(1, Math.round((Date.now() - new Date(a.admittedAt).getTime())/(1000*60*60*24)));
+    return `<tr><td>${safe(a.patient)}</td><td>${safe(a.bedId)}</td><td>${safe(a.consultant||'—')}</td><td>${safe(a.diagnosis||'—')}</td><td>${new Date(a.admittedAt).toLocaleDateString()}</td><td>Day ${days}</td><td><button class="btn small" onclick="openNursingNote('${safe(a.patient)}')">Add note</button></td></tr>`;
+  }).join('') || '<tr><td colspan="7" class="empty">No inpatients.</td></tr>';
+  $('nursingTable').innerHTML = nursingNotes.slice(0,15).map(n=>`<tr><td>${new Date(n.createdAt).toLocaleString([], {hour:'2-digit',minute:'2-digit'})}</td><td>${safe(n.patient)}</td><td>${safe(n.nurse)}</td><td>${safe(n.note)}</td><td>${n.vitals?Object.entries(n.vitals).filter(([k,v])=>v).map(([k,v])=>k+':'+v).join(' · '):'—'}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">No nursing notes.</td></tr>';
+}
+function openNursingNote(patientName){
+  openModal('nursingNoteModal');
+  setTimeout(() => { const s = $('nnPatient'); if(s && patientName){ const opt = [...s.options].find(o=>o.value===patientName); if(opt) s.value = patientName; } }, 50);
+}
+function addNursingNote(e){
+  e.preventDefault();
+  const n = {
+    id: 'NN-'+Date.now().toString().slice(-6),
+    patient: $('nnPatient').value,
+    nurse: $('nnNurse').value,
+    time: $('nnTime').value || new Date().toISOString(),
+    note: $('nnNote').value,
+    vitals: { temp: $('nnTemp').value, bp: $('nnBP').value, pulse: $('nnPulse').value, spo2: $('nnSpo2').value },
+    createdAt: new Date().toISOString()
+  };
+  nursingNotes.unshift(n);
+  save('nursingNotes', nursingNotes);
+  logAction('Nursing note', n.patient);
+  e.target.reset(); closeModal('nursingNoteModal');
+  renderInpatient();
+  toast('Nursing note saved.');
+}
+
+/* ---------- Theatre & ICU ---------- */
+function renderTheatre(){
+  $('thSchedCount').textContent = theatreCases.filter(t => t.status === 'Scheduled').length;
+  const icuOccupied = Object.values(bedOccupancy).filter(b=>b.type==='icu').length;
+  $('thICU').textContent = icuOccupied+'/'+beds.icu;
+  $('thRecovery').textContent = theatreCases.filter(t => t.status === 'Recovery').length;
+  $('theatreTable').innerHTML = theatreCases.map((t,i)=>`<tr><td>${safe(t.id)}</td><td>${safe(t.patient)}</td><td>${safe(t.procedure)}</td><td>${safe(t.surgeon)}</td><td>${safe(t.room)}</td><td>${new Date(t.scheduledAt).toLocaleString([], {dateStyle:'short',timeStyle:'short'})}</td><td><span class="pill ${t.status==='Scheduled'?'warn':''}">${safe(t.status)}</span></td><td>${t.status!=='Completed'?`<button class="btn small" onclick="advanceTheatre(${i})">Advance</button>`:'—'}</td></tr>`).join('') || '<tr><td colspan="8" class="empty">No surgeries scheduled.</td></tr>';
+  $('icuTable').innerHTML = icuCases.map((c,i)=>`<tr><td>${safe(c.bed)}</td><td>${safe(c.patient)}</td><td>${safe(c.diagnosis)}</td><td>${c.ventilated==='Yes'?'<span class="pill red">Yes</span>':'No'}</td><td>Day ${Math.max(1,Math.round((Date.now()-new Date(c.admittedAt).getTime())/86400000))}</td><td><span class="pill warn">${safe(c.status)}</span></td><td>${c.status!=='Discharged'?`<button class="btn small" onclick="dischargeICU(${i})">Discharge</button>`:'—'}</td></tr>`).join('') || '<tr><td colspan="7" class="empty">No ICU patients.</td></tr>';
+}
+function addTheatreCase(e){
+  e.preventDefault();
+  const t = {
+    id: nextEncounterId('theatre'),
+    patient: $('thPatient').value,
+    procedure: $('thProcedure').value,
+    surgeon: $('thSurgeon').value,
+    room: $('thRoom').value,
+    scheduledAt: $('thTime').value,
+    anaesthesia: $('thAnaes').value,
+    notes: $('thNotes').value,
+    status: 'Scheduled',
+    createdAt: new Date().toISOString()
+  };
+  theatreCases.unshift(t);
+  save('theatreCases', theatreCases);
+  logAction('Surgery scheduled', t.id+' · '+t.patient);
+  e.target.reset(); closeModal('theatreModal');
+  renderTheatre();
+  toast('Surgery scheduled.');
+}
+function advanceTheatre(i){
+  const states = ['Scheduled','In theatre','Recovery','Completed'];
+  const t = theatreCases[i];
+  t.status = states[(states.indexOf(t.status)+1)%states.length];
+  save('theatreCases', theatreCases);
+  renderTheatre();
+}
+function addICU(e){
+  e.preventDefault();
+  const bed = $('icuBed').value;
+  if(icuCases.some(c => c.bed === bed && c.status !== 'Discharged')) return toast('That ICU bed is already occupied.');
+  const c = {
+    id: nextEncounterId('icu'),
+    patient: $('icuPatient').value,
+    bed,
+    diagnosis: $('icuDiagnosis').value,
+    ventilated: $('icuVent').value,
+    sedation: $('icuSed').value,
+    notes: $('icuNotes').value,
+    admittedAt: new Date().toISOString(),
+    status: 'Admitted'
+  };
+  icuCases.unshift(c);
+  bedOccupancy['ICU-'+bed.replace(/^ICU-/,'')] = { patient: c.patient, admittedAt: c.admittedAt, type: 'icu' };
+  save('icuCases', icuCases); save('bedOccupancy', bedOccupancy);
+  logAction('ICU admission', c.id+' · '+c.patient);
+  e.target.reset(); closeModal('icuModal');
+  renderTheatre(); renderAdmin();
+  toast('Patient admitted to '+bed);
+}
+function dischargeICU(i){
+  const c = icuCases[i];
+  if(!confirm('Discharge ICU patient '+c.patient+'?')) return;
+  c.status = 'Discharged';
+  delete bedOccupancy['ICU-'+c.bed.replace(/^ICU-/,'')];
+  save('icuCases', icuCases); save('bedOccupancy', bedOccupancy);
+  logAction('ICU discharge', c.patient);
+  renderTheatre(); renderAdmin();
+  toast('ICU discharged.');
+}
+
+/* ---------- Maternity ---------- */
+function renderMaternity(){
+  $('matANC').textContent = maternityCases.filter(m => m.type === 'Antenatal').length;
+  $('matLabour').textContent = maternityCases.filter(m => m.type === 'Labour' && m.status === 'Admitted').length;
+  $('matDeliv').textContent = maternityCases.filter(m => m.outcome && new Date(m.deliveredAt).toDateString() === new Date().toDateString()).length;
+  $('matPNC').textContent = maternityCases.filter(m => m.type === 'Postnatal').length;
+  $('matTable').innerHTML = maternityCases.map((m,i)=>`<tr><td>${safe(m.id)}</td><td>${safe(m.patient)}</td><td>${safe(m.gravida||'—')}/${safe(m.para||'—')}</td><td>${safe(m.gestation||'—')}w</td><td><span class="pill ${m.status==='Admitted'?'warn':''}">${safe(m.status)}</span></td><td>${safe(m.outcome||'—')}</td><td>${m.status==='Admitted'?`<button class="btn small" onclick="recordDelivery(${i})">Record delivery</button>`:'—'}</td></tr>`).join('') || '<tr><td colspan="7" class="empty">No maternity cases.</td></tr>';
+  const anc = maternityCases.filter(m => m.ancVisits && m.ancVisits.length);
+  $('ancTable').innerHTML = anc.flatMap(m => m.ancVisits.map(v => `<tr><td>${safe(v.date)}</td><td>${safe(m.patient)}</td><td>${safe(v.gestation)}w</td><td>${safe(v.bp||'—')}</td><td>${safe(v.weight||'—')}</td><td>${safe(v.nextVisit||'—')}</td></tr>`)).join('') || '<tr><td colspan="6" class="empty">No ANC visits.</td></tr>';
+}
+function addMaternity(e){
+  e.preventDefault();
+  const m = {
+    id: nextEncounterId('maternity'),
+    patient: $('matPatient').value,
+    type: $('matType').value,
+    gravida: $('matGravida').value,
+    para: $('matPara').value,
+    gestation: $('matGest').value,
+    edd: $('matEDD').value,
+    notes: $('matNotes').value,
+    admittedAt: new Date().toISOString(),
+    status: 'Admitted',
+    ancVisits: []
+  };
+  maternityCases.unshift(m);
+  save('maternityCases', maternityCases);
+  logAction('Maternity admission', m.id+' · '+m.patient);
+  e.target.reset(); closeModal('maternityModal');
+  renderMaternity();
+  toast('Maternity admission recorded.');
+}
+function recordDelivery(i){
+  const m = maternityCases[i];
+  const outcome = prompt('Delivery outcome (e.g. SVD, C-section):','SVD');
+  if(!outcome) return;
+  m.outcome = outcome;
+  m.deliveredAt = new Date().toISOString();
+  m.status = 'Delivered';
+  save('maternityCases', maternityCases);
+  logAction('Delivery recorded', m.id+' · '+m.patient+' · '+outcome);
+  renderMaternity();
+  toast('Delivery outcome recorded.');
+}
+function addANC(e){
+  e.preventDefault();
+  const patient = $('ancPatient').value;
+  let record = maternityCases.find(m => m.patient === patient);
+  if(!record){
+    record = { id: nextEncounterId('maternity'), patient, type:'Antenatal', status:'Active', ancVisits:[], admittedAt: new Date().toISOString() };
+    maternityCases.unshift(record);
+  }
+  if(!record.ancVisits) record.ancVisits = [];
+  record.ancVisits.push({
+    date: new Date().toLocaleDateString(),
+    gestation: $('ancGest').value,
+    bp: $('ancBP').value,
+    weight: $('ancWeight').value,
+    fundal: $('ancFundal').value,
+    fhr: $('ancFHR').value,
+    notes: $('ancNotes').value,
+    nextVisit: $('ancNext').value
+  });
+  save('maternityCases', maternityCases);
+  logAction('ANC visit', patient);
+  e.target.reset(); closeModal('ancModal');
+  renderMaternity();
+  toast('ANC visit saved.');
+}
+
+/* ---------- Radiology (extends Laboratory tab) ---------- */
+function renderRadiology(){
+  // Append radiology rows to the lab table
+  const radRows = radiologyOrders.map((r,i)=>`<tr><td>${safe(r.id)}</td><td>${safe(r.patient)}</td><td>${safe(r.test)}</td><td>${safe(r.date)}</td><td><span class="pill ${r.status==='Pending'?'warn':''}">${safe(r.status)}</span></td><td><button class="btn small" onclick="updateRadiology(${i})">${r.result?'Edit':'Enter report'}</button></td></tr>`).join('');
+  const labTable = $('labTable');
+  if(labTable) labTable.innerHTML += radRows;
+}
+function updateRadiology(i){
+  const result = prompt('Enter radiology report / impression:', radiologyOrders[i].result || '');
+  if(result === null) return;
+  radiologyOrders[i].result = result;
+  radiologyOrders[i].status = 'Reported';
+  save('radiologyOrders', radiologyOrders);
+  logAction('Radiology report', radiologyOrders[i].id);
+  renderLabs();
+  toast('Radiology report saved.');
+}
+
+/* ---------- Override addLab to route lab vs radiology ---------- */
+const _originalAddLab = addLab;
+addLab = function(e){
+  e.preventDefault();
+  const dept = $('labDept').value;
+  const test = $('labTest').value;
+  if(dept === 'rad'){
+    const r = {
+      id: nextEncounterId('radiology'),
+      patient: $('labPatient').value || 'Unassigned',
+      test,
+      priority: $('labPriority').value,
+      clinician: $('labClinician').value,
+      indication: $('labIndication').value,
+      date: today(),
+      status: 'Pending',
+      result: ''
+    };
+    radiologyOrders.unshift(r);
+    save('radiologyOrders', radiologyOrders);
+    logAction('Radiology order', r.id+' · '+test);
+    e.target.reset(); closeModal('labModal');
+    renderLabs();
+    toast('Radiology order created.');
+  } else {
+    // fall back to original lab logic but with the new fields
+    labs.unshift({
+      id:'LAB-'+Date.now().toString().slice(-6),
+      patient:$('labPatient').value||'Unassigned',
+      test,
+      priority:$('labPriority').value,
+      clinician:$('labClinician').value,
+      indication:$('labIndication').value,
+      date:today(),
+      status:'Sample pending',
+      result:''
+    });
+    save('labs', labs);
+    logAction('Lab order created', test);
+    e.target.reset(); closeModal('labModal');
+    renderLabs();
+    toast('Lab order created.');
+  }
+};
+
+/* ---------- Enhance refreshPatientSelects for new selects ---------- */
+const _originalRefresh = refreshPatientSelects;
+refreshPatientSelects = function(){
+  _originalRefresh();
+  const newIds = ['admPatient','emPatient','opdPatient','nnPatient','thPatient','icuPatient','matPatient','ancPatient'];
+  newIds.forEach(id=>{
+    const el = $(id);
+    if(!el) return;
+    const val = el.value;
+    const allowWalkin = id === 'emPatient';
+    el.innerHTML = (allowWalkin ? '<option value="">— Walk-in / unknown —</option>' : '<option value="">Select patient…</option>') +
+      patients.map(p=>`<option value="${safe(p.name)}">${safe(p.name)} · ${safe(p.id)}</option>`).join('');
+    if([...el.options].some(o=>o.value===val)) el.value = val;
+  });
+};
+
+/* ---------- Render hooks in showSection ---------- */
+const _originalShowSection = showSection;
+showSection = function(id){
+  _originalShowSection(id);
+  if(id === 'admin') renderAdmin();
+  if(id === 'outpatient') renderOutpatient();
+  if(id === 'inpatient') renderInpatient();
+  if(id === 'theatre') renderTheatre();
+  if(id === 'maternity') renderMaternity();
+};
+
+/* ---------- Extend role access ---------- */
+roleAccess.Administrator.push('admin','outpatient','inpatient','theatre','maternity');
+roleAccess['Branch Manager'].push('admin','outpatient','inpatient','theatre','maternity');
+roleAccess.Clinician.push('admin','outpatient','inpatient','theatre','maternity');
+roleAccess.Pharmacist.push('admin');
+roleAccess.Receptionist.push('admin','outpatient');
+roleAccess['Lab Technician'].push('laboratory');
+
+/* ---------- Wire renderAll to new modules ---------- */
+const _originalRenderAll = renderAll;
+renderAll = function(){
+  _originalRenderAll();
+  try { renderAdmin(); } catch(e){}
+  try { renderOutpatient(); } catch(e){}
+  try { renderInpatient(); } catch(e){}
+  try { renderTheatre(); } catch(e){}
+  try { renderMaternity(); } catch(e){}
+  try { renderRadiology(); } catch(e){}
+};
+
+init();
+</script>
+</body>
+</html>

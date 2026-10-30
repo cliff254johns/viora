@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>cashlink airtime · instant M‑PESA conversion</title>
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', 'Segoe UI', Roboto, system-ui, sans-serif;
+    }
+
+    body {
+      background: #f0f7f0;
+      background-image: radial-gradient(circle at 10% 20%, rgba(0,166,81,0.03) 0%, transparent 30%),
+                        radial-gradient(circle at 90% 80%, rgba(230,0,0,0.03) 0%, transparent 30%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+
+    /* main glassmorphic card */
+    .card {
+      max-width: 560px;
+      width: 100%;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(2px);
+      border-radius: 48px 48px 36px 36px;
+      box-shadow: 0 30px 50px rgba(0, 80, 0, 0.2), 0 15px 25px rgba(200,0,0,0.1);
+      border: 1px solid rgba(0,166,81,0.3);
+      overflow: hidden;
+    }
+
+    .header-stripe {
+      background: linear-gradient(90deg, #00a651 0%, #00a651 50%, #e60000 50%, #e60000 100%);
+      height: 14px;
+    }
+
+    .brand-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px 4px 24px;
+    }
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 1.9rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .cashlink-green { color: #00a651; }
+    .cashlink-red { color: #e60000; }
+    .power-badge {
+      background: #1e3a1e;
+      color: white;
+      padding: 6px 16px;
+      border-radius: 60px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .divider {
+      height: 2px;
+      background: repeating-linear-gradient(90deg, #00a651 0px, #00a651 8px, #e60000 8px, #e60000 16px);
+      margin: 4px 24px 14px 24px;
+      border-radius: 4px;
+    }
+
+    .content {
+      padding: 4px 24px 28px 24px;
+    }
+
+    /* mode selector */
+    .mode-switch {
+      display: flex;
+      gap: 8px;
+      background: #e9f3e9;
+      padding: 6px;
+      border-radius: 80px;
+      margin: 10px 0 20px 0;
+      border: 1px solid #b8e0b8;
+    }
+    .mode-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 12px 8px;
+      border-radius: 60px;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #1e3a1e;
+      transition: 0.2s;
+      cursor: pointer;
+    }
+    .mode-btn.active {
+      background: white;
+      box-shadow: 0 6px 12px rgba(0,100,0,0.2);
+      color: #00a651;
+    }
+    .mode-btn i { margin-right: 6px; }
+
+    .tagline {
+      background: #f1f9f1;
+      padding: 12px 18px;
+      border-radius: 40px;
+      margin: 16px 0 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-left: 6px solid #e60000;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #1e3a1e;
+    }
+
+    .info-panel {
+      background: #ffffff;
+      border-radius: 32px;
+      padding: 18px 20px;
+      margin: 18px 0;
+      border: 1px solid #b7e0b7;
+      box-shadow: inset 0 2px 6px rgba(0,80,0,0.05);
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .info-label { font-weight: 600; color: #2b2b2b; display: flex; align-items: center; gap: 6px; }
+    .info-value { font-weight: 700; padding: 4px 14px; border-radius: 50px; }
+    .value-green { background: #e3f5e3; color: #008040; }
+    .value-red { background: #ffe6e6; color: #b30000; }
+    .net-amount { font-size: 1.8rem; font-weight: 800; color: #00a651; }
+
+    .input-field {
+      margin-bottom: 16px;
+    }
+    label { font-weight: 600; color: #1e3a1e; margin-bottom: 5px; display: block; font-size: 0.9rem; }
+    .input-wrapper {
+      display: flex;
+      align-items: center;
+      background: white;
+      border: 1.5px solid #c0e0c0;
+      border-radius: 70px;
+      padding: 0 20px;
+      transition: 0.2s;
+    }
+    .input-wrapper:focus-within { border-color: #e60000; box-shadow: 0 0 0 3px rgba(230,0,0,0.1); }
+    .input-wrapper i { color: #00a651; margin-right: 10px; font-size: 1.2rem; }
+    input {
+      border: none;
+      outline: none;
+      width: 100%;
+      font-size: 1.2rem;
+      padding: 16px 0;
+      background: transparent;
+    }
+    input[type=number]::-webkit-inner-spin-button { opacity: 0.5; }
+
+    .quick-amounts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 15px 0 10px;
+    }
+    .quick-btn {
+      background: #f0faf0;
+      border: 1px solid #00a651;
+      color: #006633;
+      padding: 10px 18px;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: 0.1s;
+    }
+    .quick-btn:hover { background: #00a651; color: white; }
+
+    .action-btn {
+      background: #e60000;
+      width: 100%;
+      border: none;
+      color: white;
+      font-weight: 800;
+      font-size: 1.8rem;
+      padding: 18px 0;
+      border-radius: 80px;
+      margin: 20px 0 14px;
+      box-shadow: 0 14px 22px -12px #cc0000;
+      transition: all 0.15s;
+      cursor: pointer;
+      border: 2px solid #e60000;
+    }
+    .action-btn:hover { background: #c20000; transform: scale(1.01); }
+    .action-btn:active { transform: scale(0.98); }
+
+    /* USSD & copy row */
+    .ussd-section {
+      background: #f0faf0;
+      border-radius: 34px;
+      padding: 18px;
+      margin: 18px 0 12px;
+      border: 2px dashed #00a651;
+    }
+    .ussd-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .ussd-code-box {
+      background: white;
+      padding: 14px 18px;
+      border-radius: 60px;
+      font-family: 'Courier New', monospace;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #1e3a1e;
+      text-align: center;
+      border: 2px solid #00a651;
+      word-break: break-all;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .copy-btn {
+      background: #00a651;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 40px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .copy-btn i { margin-right: 6px; }
+
+    .history-panel {
+      background: #fcfcfc;
+      border-radius: 28px;
+      padding: 16px;
+      margin: 18px 0 8px;
+      border: 1px solid #c0e0c0;
+    }
+    .history-title {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 700;
+      color: #1e3a1e;
+      margin-bottom: 12px;
+    }
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .history-item {
+      background: white;
+      border-radius: 50px;
+      padding: 10px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid #e0f0e0;
+      cursor: pointer;
+      transition: 0.1s;
+    }
+    .history-item:hover { background: #e0ffe0; border-color: #00a651; }
+    .history-amount { font-weight: 800; color: #008040; }
+    .history-net { color: #e60000; }
+    .history-ago { font-size: 0.75rem; color: #888; }
+
+    .error-msg {
+      color: #e60000;
+      font-weight: 600;
+      margin: 6px 0 0 14px;
+      font-size: 0.9rem;
+      min-height: 22px;
+    }
+    .small-note {
+      font-size: 0.8rem;
+      color: #5b5b5b;
+      margin-top: 10px;
+      text-align: center;
+      background: #f3f9f3;
+      padding: 10px 20px;
+      border-radius: 60px;
+    }
+    .small-note i { color: #00a651; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="header-stripe"></div>
+  <div class="brand-bar">
+    <div class="brand-logo">
+      <span class="cashlink-green">cashlink</span>
+      <span class="cashlink-red">airtime</span>
+    </div>
+    <span class="power-badge"><i class="fas fa-bolt"></i> 25% fee</span>
+  </div>
+  <div class="divider"></div>
+
+  <div class="content">
+    <!-- mode switch -->
+    <div class="mode-switch">
+      <button class="mode-btn active" id="modeConvert"><i class="fas fa-arrow-up"></i> Convert</button>
+      <button class="mode-btn" id="modeReceive"><i class="fas fa-arrow-down"></i> Receive exact</button>
+    </div>
+
+    <!-- tagline / speed info -->
+    <div class="tagline">
+      <i class="fas fa-stopwatch cashlink-green" style="font-size: 1.6rem;"></i> 
+      takes seconds • min 100 KES • fixed service <strong class="cashlink-red">0746332443</strong>
+    </div>
+
+    <!-- live info panel (dynamic) -->
+    <div class="info-panel" id="infoPanel">
+      <!-- filled by js -->
+    </div>
+
+    <!-- phone input (your line) -->
+    <div class="input-field">
+      <label><i class="fas fa-phone-alt cashlink-green"></i> Your Safaricom number</label>
+      <div class="input-wrapper">
+        <i class="fas fa-flag-ke"></i>
+        <input type="tel" id="phoneInput" placeholder="07XX XXX XXX" value="0712345678">
+      </div>
+      <div class="small-note" style="margin-top: 4px; background: none; padding: 0; text-align: left;">
+        <i class="fas fa-info-circle"></i> e.g., 0712 345 678
+      </div>
+    </div>
+
+    <!-- amount area (dynamic) -->
+    <div id="amountArea"></div>
+
+    <!-- quick select buttons -->
+    <div class="quick-amounts" id="quickAmounts">
+      <!-- injected by js -->
+    </div>
+
+    <!-- main action button -->
+    <button class="action-btn" id="mainAction"><i class="fas fa-dial"></i> CONVERT</button>
+
+    <!-- USSD block + copy -->
+    <div class="ussd-section">
+      <div class="ussd-header">
+        <span><i class="fas fa-dial cashlink-green"></i> USSD code (tap to dial)</span>
+        <button class="copy-btn" id="copyUssdBtn"><i class="far fa-copy"></i> copy</button>
+      </div>
+      <div class="ussd-code-box" id="ussdDisplay">
+        <span id="ussdText">*140*100*0746332443#</span>
+        <i class="fas fa-phone-alt cashlink-red" style="font-size: 1.4rem;"></i>
+      </div>
+      <div class="error-msg" id="errorMsg"></div>
+      <div class="small-note" style="margin-top: 12px;">
+        <i class="fas fa-lock cashlink-green"></i> 0746332443 (service) is fixed — you’ll receive M-PESA from it.
+      </div>
+    </div>
+
+    <!-- history panel -->
+    <div class="history-panel">
+      <div class="history-title">
+        <span><i class="fas fa-clock cashlink-green"></i> recent conversions</span>
+        <span style="color:#e60000; font-size:0.8rem; cursor:pointer;" id="clearHistory"><i class="far fa-trash-alt"></i> clear</span>
+      </div>
+      <div class="history-list" id="historyList">
+        <!-- dynamically populated -->
+        <div style="padding: 10px; color: #aaa; text-align: center;">No history yet</div>
+      </div>
+    </div>
+
+    <div class="small-note">
+      ⚡ Dial <strong>*140*[amount]*0746332443#</strong> from your Safaricom line. 25% fee deducted, net sent to your M-PESA.
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    // ----- constants -----
+    const SERVICE_NUMBER = '0746332443';   // updated number
+    const FEE_RATE = 0.25; // 25%
+    const MIN_AIRTIME = 100;
+    const MIN_RECEIVE = Math.ceil(MIN_AIRTIME * (1 - FEE_RATE)); // 75
+
+    // ----- DOM elements -----
+    const phoneInput = document.getElementById('phoneInput');
+    const modeConvertBtn = document.getElementById('modeConvert');
+    const modeReceiveBtn = document.getElementById('modeReceive');
+    const infoPanel = document.getElementById('infoPanel');
+    const amountArea = document.getElementById('amountArea');
+    const quickAmounts = document.getElementById('quickAmounts');
+    const mainAction = document.getElementById('mainAction');
+    const ussdDisplay = document.getElementById('ussdText');
+    const copyUssdBtn = document.getElementById('copyUssdBtn');
+    const errorMsg = document.getElementById('errorMsg');
+    const historyList = document.getElementById('historyList');
+    const clearHistoryBtn = document.getElementById('clearHistory');
+
+    // ----- state -----
+    let currentMode = 'convert'; // 'convert' or 'receive'
+    let convertAmount = 200;      // for convert mode
+    let receiveAmount = 150;      // for receive mode
+    let history = [];             // array of {amount, net, timestamp}
+
+    // ----- load history from localStorage -----
+    function loadHistory() {
+      try {
+        const stored = localStorage.getItem('cashlinkHistory');
+        if (stored) {
+          history = JSON.parse(stored);
+          if (!Array.isArray(history)) history = [];
+        }
+      } catch (e) { history = []; }
+      renderHistory();
+    }
+    function saveHistory() {
+      localStorage.setItem('cashlinkHistory', JSON.stringify(history.slice(0, 5)));
+    }
+
+    // ----- add conversion to history (only forward mode) -----
+    function addHistoryEntry(amount, net) {
+      if (amount < MIN_AIRTIME) return;
+      const entry = {
+        amount: amount,
+        net: net,
+        timestamp: Date.now()
+      };
+      history.unshift(entry);
+      if (history.length > 5) history.pop();
+      saveHistory();
+      renderHistory();
+    }
+
+    // ----- render history list -----
+    function renderHistory() {
+      if (history.length === 0) {
+        historyList.innerHTML = '<div style="padding: 10px; color: #aaa; text-align: center;">⏳ No history yet</div>';
+        return;
+      }
+      let html = '';
+      history.slice(0, 5).forEach((item, idx) => {
+        const date = new Date(item.timestamp);
+        const ago = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        html += `<div class="history-item" data-index="${idx}">
+          <span class="history-amount">${item.amount} KES</span>
+          <span class="history-net">→ ${item.net} KES</span>
+          <span class="history-ago">${ago}</span>
+        </div>`;
+      });
+      historyList.innerHTML = html;
+      // attach click to each item
+      document.querySelectorAll('.history-item').forEach(el => {
+        el.addEventListener('click', (e) => {
+          const index = el.dataset.index;
+          const entry = history[index];
+          if (entry) {
+            convertAmount = entry.amount;
+            receiveAmount = Math.floor(entry.net); // approximate
+            currentMode = 'convert';
+            updateModeUI();
+            updateAll();
+          }
+        });
+      });
+    }
+
+    // clear history
+    clearHistoryBtn.addEventListener('click', () => {
+      history = [];
+      saveHistory();
+      renderHistory();
+    });
+
+    // ----- helpers -----
+    function validatePhone() {
+      let phone = phoneInput.value.trim().replace(/\s+/g, '');
+      const isValid = /^(07|01|2547|2541|\+2547|\+2541)\d{7,8}$/.test(phone);
+      return isValid;
+    }
+
+    function getPhoneWarning() {
+      return validatePhone() ? '' : '⚠️ Enter a valid Safaricom number (e.g., 0712345678)';
+    }
+
+    // ----- dynamic info panel & amount inputs based on mode -----
+    function renderAmountArea() {
+      if (currentMode === 'convert') {
+        amountArea.innerHTML = `
+          <div class="input-field">
+            <label><i class="fas fa-coins cashlink-green"></i> Airtime to convert (KES)</label>
+            <div class="input-wrapper">
+              <i>KES</i>
+              <input type="number" id="amountInput" min="${MIN_AIRTIME}" step="1" value="${convertAmount}" placeholder="e.g. 200">
+            </div>
+          </div>
+        `;
+        // quick amounts for convert
+        quickAmounts.innerHTML = [100,200,500,1000].map(v => 
+          `<span class="quick-btn" data-quick="${v}">${v} KES</span>`
+        ).join('');
+        document.querySelectorAll('.quick-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const val = parseInt(e.target.dataset.quick, 10);
+            document.getElementById('amountInput').value = val;
+            convertAmount = val;
+            updateAll();
+          });
+        });
+        const inp = document.getElementById('amountInput');
+        if (inp) {
+          inp.addEventListener('input', (e) => {
+            let val = parseInt(e.target.value, 10);
+            if (isNaN(val) || val < MIN_AIRTIME) val = MIN_AIRTIME;
+            convertAmount = val;
+            updateAll();
+          });
+          inp.value = convertAmount;
+        }
+      } else { // receive mode
+        amountArea.innerHTML = `
+          <div class="input-field">
+            <label><i class="fas fa-hand-holding-heart cashlink-green"></i> Desired receive amount (KES)</label>
+            <div class="input-wrapper">
+              <i>KES</i>
+              <input type="number" id="receiveInput" min="${MIN_RECEIVE}" step="1" value="${receiveAmount}" placeholder="e.g. 100">
+            </div>
+          </div>
+        `;
+        quickAmounts.innerHTML = [75, 150, 300, 600].map(v => 
+          `<span class="quick-btn" data-receive="${v}">${v} KES</span>`
+        ).join('');
+        document.querySelectorAll('.quick-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const val = parseInt(e.target.dataset.receive, 10);
+            document.getElementById('receiveInput').value = val;
+            receiveAmount = val;
+            updateAll();
+          });
+        });
+        const inp = document.getElementById('receiveInput');
+        if (inp) {
+          inp.addEventListener('input', (e) => {
+            let val = parseInt(e.target.value, 10);
+            if (isNaN(val) || val < MIN_RECEIVE) val = MIN_RECEIVE;
+            receiveAmount = val;
+            updateAll();
+          });
+          inp.value = receiveAmount;
+        }
+      }
+    }
+
+    // update info panel, ussd, errors
+    function updateAll() {
+      const phoneWarning = getPhoneWarning();
+      let amountValid = true;
+      let finalAmount = 0; // the amount used in USSD (airtime)
+      let net = 0;
+      let errorText = phoneWarning;
+
+      if (currentMode === 'convert') {
+        let raw = document.getElementById('amountInput')?.value;
+        if (raw) convertAmount = parseInt(raw, 10) || MIN_AIRTIME;
+        if (convertAmount < MIN_AIRTIME) convertAmount = MIN_AIRTIME;
+        finalAmount = convertAmount;
+        net = Math.floor(finalAmount * (1 - FEE_RATE));
+        if (finalAmount < MIN_AIRTIME) {
+          errorText = errorText || `⛔ Minimum airtime is ${MIN_AIRTIME} KES.`;
+          amountValid = false;
+        }
+        infoPanel.innerHTML = `
+          <div class="info-row"><span class="info-label"><i class="fas fa-arrow-up cashlink-green"></i> you convert</span><span class="info-value value-green">${finalAmount} KES</span></div>
+          <div class="info-row"><span class="info-label"><i class="fas fa-percent cashlink-red"></i> 25% fee</span><span class="info-value value-red">-${finalAmount - net} KES</span></div>
+          <div class="info-row" style="margin-bottom:0;"><span class="info-label"><i class="fas fa-mpesa cashlink-green"></i> you receive</span><span class="net-amount">${net} KES</span></div>
+        `;
+      } else {
+        let raw = document.getElementById('receiveInput')?.value;
+        if (raw) receiveAmount = parseInt(raw, 10) || MIN_RECEIVE;
+        if (receiveAmount < MIN_RECEIVE) receiveAmount = MIN_RECEIVE;
+        finalAmount = Math.ceil(receiveAmount / (1 - FEE_RATE));
+        net = receiveAmount;
+        if (finalAmount < MIN_AIRTIME) finalAmount = MIN_AIRTIME;
+        if (receiveAmount < MIN_RECEIVE) {
+          errorText = errorText || `⛔ Minimum receive is ${MIN_RECEIVE} KES.`;
+          amountValid = false;
+        }
+        infoPanel.innerHTML = `
+          <div class="info-row"><span class="info-label"><i class="fas fa-arrow-down cashlink-green"></i> you want</span><span class="info-value value-green">${receiveAmount} KES</span></div>
+          <div class="info-row"><span class="info-label"><i class="fas fa-coins cashlink-red"></i> airtime needed</span><span class="info-value value-red">${finalAmount} KES</span></div>
+          <div class="info-row" style="margin-bottom:0;"><span class="info-label"><i class="fas fa-mpesa cashlink-green"></i> net M-PESA</span><span class="net-amount">${net} KES</span></div>
+        `;
+      }
+
+      const ussd = `*140*${finalAmount}*${SERVICE_NUMBER}#`;
+      ussdDisplay.innerText = ussd;
+      errorMsg.innerText = errorText;
+      mainAction.innerHTML = currentMode === 'convert' ? '<i class="fas fa-dial"></i> CONVERT AIRTIME' : '<i class="fas fa-calculator"></i> DIAL FOR RECEIVE';
+    }
+
+    // mode switching UI
+    function updateModeUI() {
+      if (currentMode === 'convert') {
+        modeConvertBtn.classList.add('active');
+        modeReceiveBtn.classList.remove('active');
+      } else {
+        modeReceiveBtn.classList.add('active');
+        modeConvertBtn.classList.remove('active');
+      }
+      renderAmountArea();
+      updateAll();
+    }
+
+    modeConvertBtn.addEventListener('click', () => {
+      currentMode = 'convert';
+      updateModeUI();
+    });
+    modeReceiveBtn.addEventListener('click', () => {
+      currentMode = 'receive';
+      updateModeUI();
+    });
+
+    // main action: open dialler with current USSD
+    mainAction.addEventListener('click', () => {
+      const phoneWarn = getPhoneWarning();
+      if (phoneWarn && !confirm(phoneWarn + ' Still dial?')) return;
+
+      let finalAmount = 0;
+      if (currentMode === 'convert') {
+        finalAmount = parseInt(document.getElementById('amountInput')?.value, 10) || MIN_AIRTIME;
+        if (finalAmount < MIN_AIRTIME) finalAmount = MIN_AIRTIME;
+        const net = Math.floor(finalAmount * (1 - FEE_RATE));
+        addHistoryEntry(finalAmount, net);
+      } else {
+        const receiveVal = parseInt(document.getElementById('receiveInput')?.value, 10) || MIN_RECEIVE;
+        finalAmount = Math.ceil(receiveVal / (1 - FEE_RATE));
+        if (finalAmount < MIN_AIRTIME) finalAmount = MIN_AIRTIME;
+        addHistoryEntry(finalAmount, receiveVal);
+      }
+
+      const ussd = `*140*${finalAmount}*${SERVICE_NUMBER}#`;
+      const encoded = ussd.replace(/#/g, '%23');
+      window.location.href = `tel:${encoded}`;
+
+      setTimeout(() => {
+        if (window.innerWidth > 800) alert('📱 USSD code: ' + ussd);
+      }, 200);
+    });
+
+    // copy USSD
+    copyUssdBtn.addEventListener('click', () => {
+      const code = ussdDisplay.innerText;
+      navigator.clipboard?.writeText(code).then(() => {
+        alert('✅ Copied: ' + code);
+      }).catch(() => prompt('Manual copy', code));
+    });
+
+    phoneInput.addEventListener('input', updateAll);
+
+    // init
+    loadHistory();
+    updateModeUI();
+    phoneInput.placeholder = '07XX XXX XXX';
+  })();
+</script>
+</body>
+</html>

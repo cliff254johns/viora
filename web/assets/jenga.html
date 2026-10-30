@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Jenga Hardware | Build Kenya with Quality</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    :root { --primary: #1a4a2e; --secondary: #e67e22; --bg: #f5f7fb; --text: #1e2a32; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); scroll-behavior: smooth; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 0 28px; }
+
+    /* Header */
+    .header { background: linear-gradient(135deg, #0f2c1f 0%, var(--primary) 100%); color: white; padding: 20px 0; border-radius: 0 0 32px 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+    .header-content { display: flex; justify-content: space-between; align-items: center; }
+    .logo h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: -1px; }
+    .logo span { color: var(--secondary); }
+    .header-actions { display: flex; gap: 15px; }
+    .action-btn { background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 50px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600; transition: 0.2s; }
+    .action-btn:hover { background: rgba(255,255,255,0.2); }
+    .cart-count { background: var(--secondary); padding: 2px 8px; border-radius: 20px; font-size: 0.8rem; }
+
+    /* Controls */
+    .control-section { margin: 30px 0; display: flex; flex-direction: column; gap: 20px; }
+    .tabs { display: flex; gap: 10px; background: white; padding: 8px; border-radius: 50px; width: fit-content; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    .tab-btn { padding: 10px 25px; border-radius: 40px; border: none; cursor: pointer; font-weight: 600; background: transparent; color: #666; transition: 0.3s; }
+    .tab-btn.active { background: var(--primary); color: white; }
+
+    .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; background: white; padding: 20px; border-radius: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+    .filters select, .store-dropdown { padding: 12px; border-radius: 12px; border: 1px solid #ddd; outline: none; background: white; font-weight: 500; cursor: pointer; width: 100%; }
+    
+    /* Store dropdown row */
+    .store-filter-row { background: white; padding: 15px 20px; border-radius: 24px; margin-top: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+    .store-filter-row label { font-weight: 600; color: var(--primary); background: #eef2f0; padding: 6px 14px; border-radius: 30px; font-size: 0.9rem; }
+    .store-dropdown { flex: 2; min-width: 200px; background: white; }
+
+    /* Products */
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; margin-top: 25px; }
+    .product-card { background: white; border-radius: 24px; overflow: hidden; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.05); cursor: pointer; }
+    .product-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+    .product-img { width: 100%; height: 180px; background: #eef2f0; display: flex; align-items: center; justify-content: center; font-size: 3rem; }
+    .product-info { padding: 20px; }
+    .store-badge { font-size: 0.7rem; background: #f0f2f5; display: inline-block; padding: 4px 10px; border-radius: 30px; color: #555; font-weight: 600; margin-bottom: 8px; }
+    .badge-cat { font-size: 0.7rem; background: #e9ecef; border-radius: 20px; padding: 2px 12px; width: fit-content; margin-bottom: 8px; }
+    .price-tag { font-size: 1.5rem; font-weight: 800; color: var(--primary); margin: 10px 0; }
+    .add-btn { width: 100%; padding: 12px; border: none; border-radius: 12px; background: var(--primary); color: white; font-weight: 700; cursor: pointer; transition: 0.2s; }
+    .add-btn:active { transform: scale(0.98); }
+
+    /* Cart Modal */
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; }
+    .modal-content { background: white; width: 90%; max-width: 600px; padding: 30px; border-radius: 32px; max-height: 90vh; overflow-y: auto; }
+    .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
+    .qty-input { width: 60px; padding: 5px; border-radius: 8px; border: 1px solid #ddd; text-align: center; }
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e2a32; color: white; padding: 12px 25px; border-radius: 50px; z-index: 2000; font-weight: 500; box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="container header-content">
+    <div class="logo"><h1>JENGA<span>.</span>HARDWARE</h1></div>
+    <div class="header-actions">
+      <div class="action-btn" id="openCart"><i class="fas fa-shopping-cart"></i> <span id="cartCount" class="cart-count">0</span></div>
+      <div class="action-btn" onclick="openAdmin()"><i class="fas fa-lock"></i></div>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <section class="control-section">
+    <div class="tabs">
+      <button class="tab-btn active" data-target="shopTab">Marketplace</button>
+      <button class="tab-btn" data-target="trackTab">Track Order</button>
+    </div>
+
+    <div id="shopTab" class="tab-pane active">
+      <div class="filters">
+        <select id="locationFilter">
+          <option value="all">📍 All Locations (Kenya)</option>
+          <option value="Nairobi">Nairobi</option>
+          <option value="Mombasa">Mombasa</option>
+          <option value="Meru">Meru</option>
+          <option value="Kisumu">Kisumu</option>
+          <option value="Nakuru">Nakuru</option>
+          <option value="Eldoret">Eldoret</option>
+          <option value="Thika">Thika</option>
+          <option value="Nyeri">Nyeri</option>
+          <option value="Machakos">Machakos</option>
+          <option value="Malindi">Malindi</option>
+          <option value="Kitale">Kitale</option>
+        </select>
+        <select id="categoryFilter">
+          <option value="all">📦 All Categories</option>
+          <option value="Cement">🏗️ Cement & Concrete</option>
+          <option value="Metal">🔩 Metal & Steel</option>
+          <option value="Timber">🌲 Timber & Wood</option>
+          <option value="Roofing">🏠 Roofing Sheets</option>
+          <option value="Electrical">⚡ Electrical</option>
+          <option value="Plumbing">🚰 Plumbing & Pipes</option>
+          <option value="Paint">🎨 Paint & Finishes</option>
+          <option value="Tools">🛠️ Tools & Hardware</option>
+          <option value="Tiles">🔲 Tiles & Flooring</option>
+          <option value="Sand">⛰️ Sand & Ballast</option>
+        </select>
+      </div>
+
+      <!-- Dropdown for Store Selection (replaces chips) -->
+      <div class="store-filter-row">
+        <label><i class="fas fa-store"></i> Choose Hardware</label>
+        <select id="storeDropdown" class="store-dropdown">
+          <option value="all">🏢 All Stores (Kenya wide)</option>
+        </select>
+      </div>
+      
+      <div class="product-grid" id="productGrid"></div>
+    </div>
+
+    <div id="trackTab" class="tab-pane">
+        <div style="background: white; padding: 50px; border-radius: 32px; text-align: center;">
+            <h2>📦 Track Your Delivery</h2>
+            <input type="text" id="trackId" placeholder="Enter order ID (e.g. JG-1234)" style="padding: 15px; width: 300px; border-radius: 12px; border: 1px solid #ddd; margin: 20px 0;">
+            <br>
+            <button class="add-btn" style="width: 200px;" onclick="trackOrder()">Locate Package</button>
+            <div id="trackResult" style="margin-top: 30px;"></div>
+        </div>
+    </div>
+  </section>
+</main>
+
+<div id="cartModal" class="modal">
+  <div class="modal-content">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+        <h3>🧱 Your Construction Cart</h3>
+        <button onclick="closeCart()" style="background:none; border:none; font-size: 1.5rem; cursor:pointer;">&times;</button>
+    </div>
+    <div id="cartItems"></div>
+    <div style="margin-top: 25px; padding-top: 20px; border-top: 2px solid #f5f5f5;">
+        <div style="display:flex; justify-content:space-between;"><span>Subtotal:</span><span id="subTotal">KSh 0</span></div>
+        <div style="display:flex; justify-content:space-between; color: var(--primary);"><span>Bulk Discount (5% over KSh 50,000):</span><span id="discount">KSh 0</span></div>
+        <div style="display:flex; justify-content:space-between; font-size: 1.4rem; font-weight: 800; margin-top: 10px;"><span>Total:</span><span id="grandTotal">KSh 0</span></div>
+    </div>
+    <div style="margin-top: 25px;">
+        <input type="text" id="custName" placeholder="Full Name" style="width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #ddd;">
+        <input type="text" id="custPhone" placeholder="M-Pesa Number (07XX XXX XXX)" style="width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #ddd;">
+        <input type="text" id="custLoc" placeholder="Delivery Site Address (e.g. site, landmark)" style="width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 10px; border: 1px solid #ddd;">
+        <button class="add-btn" onclick="processOrder()"><i class="fas fa-phone-alt"></i> Complete Order via M-Pesa</button>
+        <button class="add-btn" style="background: white; color: var(--primary); border: 1px solid var(--primary); margin-top: 10px;" onclick="downloadQuote()">📄 Download Pro-Forma Invoice</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==============================================
+// EXPANDED DATABASE: 11 STORES & 50+ PRODUCTS
+// ==============================================
+const EXPANDED_STORES = [
+    { id: 1, name: "Mao Hardware", location: "Nairobi", products: [
+        { id: 101, name: "Bamburi Cement Nguvu 50kg", price: 780, cat: "Cement", img: "🏗️" },
+        { id: 102, name: "Y12 Twisted Bars (12m)", price: 1450, cat: "Metal", img: "🔩" },
+        { id: 103, name: "V-Iron Roofing Sheet 3m", price: 2100, cat: "Roofing", img: "🏠" },
+        { id: 104, name: "4 Inch Galvanized Nails (5kg)", price: 950, cat: "Metal", img: "📌" },
+        { id: 105, name: "Masonry Trowel (Steel Blade)", price: 560, cat: "Tools", img: "🛠️" }
+    ]},
+    { id: 2, name: "Coastal Builders", location: "Mombasa", products: [
+        { id: 201, name: "Rhino Cement 50kg", price: 750, cat: "Cement", img: "🏗️" },
+        { id: 202, name: "PPR Pipes 20mm (Green)", price: 450, cat: "Plumbing", img: "🚰" },
+        { id: 203, name: "Marine Plywood (8x4ft)", price: 3250, cat: "Timber", img: "🌲" },
+        { id: 204, name: "Roofing Nails (Box)", price: 1200, cat: "Metal", img: "📌" }
+    ]},
+    { id: 3, name: "Mt. Kenya Supplies", location: "Meru", products: [
+        { id: 301, name: "Blue Triangle Cement", price: 790, cat: "Cement", img: "🏗️" },
+        { id: 302, name: "Cyprus Timber 2x2 (per ft)", price: 45, cat: "Timber", img: "🌲" },
+        { id: 303, name: "Paint Brush Set (4pcs)", price: 380, cat: "Tools", img: "🎨" },
+        { id: 304, name: "Exterior Emulsion Paint (20L)", price: 4200, cat: "Paint", img: "🎨" }
+    ]},
+    { id: 4, name: "Lakeside Construction", location: "Kisumu", products: [
+        { id: 401, name: "Mabati GCI Box Profile", price: 1850, cat: "Roofing", img: "🏠" },
+        { id: 402, name: "Binding Wire (7kg Roll)", price: 1200, cat: "Metal", img: "🔩" },
+        { id: 403, name: "PVC Waste Pipe 50mm", price: 680, cat: "Plumbing", img: "🚰" }
+    ]},
+    { id: 5, name: "Rift Valley Materials", location: "Nakuru", products: [
+        { id: 501, name: "Simba Cement 50kg", price: 740, cat: "Cement", img: "🏗️" },
+        { id: 502, name: "Conduit Pipes 20mm", price: 180, cat: "Electrical", img: "⚡" },
+        { id: 503, name: "Ceramic Floor Tiles (30x30cm)", price: 1090, cat: "Tiles", img: "🔲" },
+        { id: 504, name: "Cable Wire 2.5mm (90m)", price: 2200, cat: "Electrical", img: "⚡" }
+    ]},
+    { id: 6, name: "Eldoret Iron & Steel", location: "Eldoret", products: [
+        { id: 601, name: "Mild Steel Plates (6mm)", price: 3450, cat: "Metal", img: "🔩" },
+        { id: 602, name: "Welding Electrodes (2.5mm 5kg)", price: 2150, cat: "Tools", img: "🛠️" },
+        { id: 603, name: "Square Hollow Sections", price: 2780, cat: "Metal", img: "🔩" },
+        { id: 604, name: "Angle Iron 40x40mm", price: 1890, cat: "Metal", img: "📐" }
+    ]},
+    { id: 7, name: "Thika Building Center", location: "Thika", products: [
+        { id: 701, name: "Vitrified Tiles (60x60cm)", price: 2350, cat: "Tiles", img: "🔲" },
+        { id: 702, name: "Dulux WeatherShield Paint (15L)", price: 5600, cat: "Paint", img: "🎨" },
+        { id: 703, name: "Aluminum Window Frame Set", price: 4450, cat: "Metal", img: "🪟" },
+        { id: 704, name: "Universal Ceiling Rose", price: 320, cat: "Electrical", img: "⚡" }
+    ]},
+    { id: 8, name: "Nyeri Timber Merchants", location: "Nyeri", products: [
+        { id: 801, name: "C16 Structural Timber (2x4)", price: 295, cat: "Timber", img: "🌲" },
+        { id: 802, name: "18mm Plywood (Shuttering)", price: 2670, cat: "Timber", img: "🌲" },
+        { id: 803, name: "Hardwood Flooring (per m²)", price: 1250, cat: "Timber", img: "🌲" },
+        { id: 804, name: "Wood Preserver (5L)", price: 1890, cat: "Paint", img: "🎨" }
+    ]},
+    { id: 9, name: "Machakos Quarry Solutions", location: "Machakos", products: [
+        { id: 901, name: "Crushed Ballast (1 Ton)", price: 3450, cat: "Sand", img: "⛰️" },
+        { id: 902, name: "River Sand (per cubic m)", price: 2750, cat: "Sand", img: "⛰️" },
+        { id: 903, name: "Ndarugu Stone Chippings", price: 3100, cat: "Sand", img: "⛰️" },
+        { id: 904, name: "Block Making Cement", price: 735, cat: "Cement", img: "🏗️" }
+    ]},
+    { id: 10, name: "Malindi Coast Hardware", location: "Malindi", products: [
+        { id: 1001, name: "Polyethylene Water Tank (2000L)", price: 18500, cat: "Plumbing", img: "💧" },
+        { id: 1002, name: "CPVC Plumbing Fittings Kit", price: 1470, cat: "Plumbing", img: "🚰" },
+        { id: 1003, name: "Beach Wood Poles (6m)", price: 2250, cat: "Timber", img: "🌲" },
+        { id: 1004, name: "Chlorinated Rubber Paint", price: 3780, cat: "Paint", img: "🎨" }
+    ]},
+    { id: 11, name: "Kitale Farm & Build", location: "Kitale", products: [
+        { id: 1101, name: "Chain Link Fence Mesh", price: 4680, cat: "Metal", img: "⛓️" },
+        { id: 1102, name: "Concrete Fence Posts", price: 850, cat: "Cement", img: "🏗️" },
+        { id: 1103, name: "PVC Gutter System (6m)", price: 2340, cat: "Plumbing", img: "🚰" },
+        { id: 1104, name: "Post Hole Digger Tool", price: 1890, cat: "Tools", img: "🛠️" }
+    ]}
+];
+
+let stores = JSON.parse(localStorage.getItem('jg_stores'));
+if (!stores || stores.length < 11) {
+    stores = EXPANDED_STORES;
+    localStorage.setItem('jg_stores', JSON.stringify(stores));
+} else {
+    if (stores.length < 11) stores = EXPANDED_STORES;
+    localStorage.setItem('jg_stores', JSON.stringify(stores));
+}
+
+let orders = JSON.parse(localStorage.getItem('jg_orders')) || [];
+let cart = [];
+let activeStore = 'all'; // 'all' or store id
+
+// Helper functions
+function showToast(message) {
+    const t = document.createElement('div'); t.className = 'toast'; t.innerText = message;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2600);
+}
+
+// Populate store dropdown
+function populateStoreDropdown() {
+    const dropdown = document.getElementById('storeDropdown');
+    dropdown.innerHTML = '<option value="all">🏢 All Stores (Kenya wide)</option>';
+    stores.forEach(store => {
+        const option = document.createElement('option');
+        option.value = store.id;
+        option.textContent = `🏪 ${store.name} (${store.location})`;
+        if (activeStore == store.id) option.selected = true;
+        dropdown.appendChild(option);
+    });
+    // ensure 'all' is selected if activeStore === 'all'
+    if (activeStore === 'all') dropdown.value = 'all';
+    dropdown.onchange = (e) => {
+        const val = e.target.value;
+        activeStore = val === 'all' ? 'all' : parseInt(val);
+        renderProducts();
+    };
+}
+
+// Render products based on location, category, and selected store dropdown
+function renderProducts() {
+    const loc = document.getElementById('locationFilter').value;
+    const cat = document.getElementById('categoryFilter').value;
+    const grid = document.getElementById('productGrid');
+    
+    let filtered = [];
+    stores.forEach(store => {
+        // location filter
+        if (loc === 'all' || store.location === loc) {
+            // store filter: activeStore can be 'all' or numeric id
+            if (activeStore === 'all' || store.id === activeStore) {
+                store.products.forEach(prod => {
+                    if (cat === 'all' || prod.cat === cat) {
+                        filtered.push({...prod, storeName: store.name, storeLocation: store.location});
+                    }
+                });
+            }
+        }
+    });
+
+    if (filtered.length === 0) {
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding: 60px; background:white; border-radius:28px;">🧱 No products match the selected filters. Try a different location, category, or hardware store.</div>`;
+        return;
+    }
+
+    grid.innerHTML = filtered.map(p => `
+        <div class="product-card">
+            <div class="product-img">${p.img || '🔨'}</div>
+            <div class="product-info">
+                <span class="store-badge"><i class="fas fa-store"></i> ${p.storeName} • ${p.storeLocation}</span>
+                <div class="badge-cat">${p.cat}</div>
+                <h3 style="font-size: 1.1rem; margin: 5px 0;">${p.name}</h3>
+                <div class="price-tag">KSh ${p.price.toLocaleString()}</div>
+                <button class="add-btn" onclick="addToCart(${p.id}, '${p.name.replace(/'/g, "\\'")}', ${p.price})"><i class="fas fa-cart-plus"></i> Add to Cart</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Cart functions
+function addToCart(id, name, price) {
+    const existing = cart.find(i => i.id === id);
+    if (existing) existing.qty++;
+    else cart.push({ id, name, price, qty: 1 });
+    updateCartUI();
+    showToast(`✔️ ${name} added to cart`);
+}
+
+function updateCartUI() {
+    const list = document.getElementById('cartItems');
+    const totalQty = cart.reduce((a,b) => a + b.qty, 0);
+    document.getElementById('cartCount').innerText = totalQty;
+    
+    if (cart.length === 0) {
+        list.innerHTML = `<div style="text-align:center; padding:30px;"><i class="fas fa-tools"></i> Your construction list is empty. Add cement, iron sheets, timber & more.</div>`;
+    } else {
+        list.innerHTML = cart.map(item => `
+            <div class="cart-item">
+                <div>
+                    <strong>${item.name}</strong><br>
+                    <small>KSh ${item.price.toLocaleString()} / unit</small>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <input type="number" class="qty-input" value="${item.qty}" min="1" onchange="updateQty(${item.id}, this.value)">
+                    <button onclick="removeFromCart(${item.id})" style="color:#c0392b; background:none; border:none; font-size:1.2rem; cursor:pointer;">🗑️</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    let sub = cart.reduce((a,b) => a + (b.price * b.qty), 0);
+    let disc = sub > 50000 ? sub * 0.05 : 0;
+    document.getElementById('subTotal').innerText = `KSh ${sub.toLocaleString()}`;
+    document.getElementById('discount').innerText = `-KSh ${disc.toLocaleString()}`;
+    document.getElementById('grandTotal').innerText = `KSh ${(sub - disc).toLocaleString()}`;
+}
+
+window.updateQty = (id, val) => {
+    const item = cart.find(i => i.id === id);
+    if (item) item.qty = parseInt(val) || 1;
+    updateCartUI();
+};
+
+window.removeFromCart = (id) => {
+    cart = cart.filter(i => i.id !== id);
+    updateCartUI();
+};
+
+// M-Pesa checkout simulation
+async function processOrder() {
+    const name = document.getElementById('custName').value.trim();
+    const phone = document.getElementById('custPhone').value.trim();
+    const address = document.getElementById('custLoc').value.trim();
+    if (!name || !phone || cart.length === 0) {
+        showToast("❌ Please fill name, phone, and add items.");
+        return;
+    }
+    if (phone.length < 9) {
+        showToast("📱 Enter valid M-Pesa number");
+        return;
+    }
+
+    showToast("📲 Requesting STK Push... Simulating M-Pesa payment");
+    await new Promise(r => setTimeout(r, 1800));
+    
+    const totalVal = document.getElementById('grandTotal').innerText;
+    const orderId = "JG-" + Math.floor(1000 + Math.random() * 9000);
+    const newOrder = { id: orderId, name, total: totalVal, status: '✅ Paid & Processing', date: new Date().toISOString(), address };
+    orders.unshift(newOrder);
+    localStorage.setItem('jg_orders', JSON.stringify(orders));
+    
+    cart = [];
+    updateCartUI();
+    closeCart();
+    alert(`🎉 Success! Order ${orderId} confirmed. M-Pesa payment received. You'll receive SMS updates. We are dispatching from nearest store.`);
+    showToast(`Order ${orderId} placed! Track in 'Track Order' tab.`);
+    document.getElementById('custName').value = '';
+    document.getElementById('custPhone').value = '';
+    document.getElementById('custLoc').value = '';
+}
+
+function downloadQuote() {
+    if (cart.length === 0) return alert("➕ Add materials to generate quotation.");
+    let text = `══════ JENGA HARDWARE PRO-FORMA INVOICE ══════\nDate: ${new Date().toLocaleString()}\nCustomer: ${document.getElementById('custName').value || '—'}\n───────────────────────────────────────────\n`;
+    cart.forEach(i => text += `• ${i.name}  x${i.qty}  =  KSh ${(i.price * i.qty).toLocaleString()}\n`);
+    text += `───────────────────────────────────────────\nSubtotal: ${document.getElementById('subTotal').innerText}\nDiscount: ${document.getElementById('discount').innerText}\nGRAND TOTAL: ${document.getElementById('grandTotal').innerText}\n───────────────────────────────────────────\n📍 Delivery: ${document.getElementById('custLoc').value || 'Site location'}\nJenga Hardware | Quality ya Kujenga Kenya.`;
+    const blob = new Blob([text], {type: 'text/plain'});
+    const a = document.createElement('a');
+    a.download = `Jenga_Quote_${Date.now()}.txt`;
+    a.href = URL.createObjectURL(blob);
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast("📄 Invoice downloaded");
+}
+
+// Order tracking
+window.trackOrder = function() {
+    const id = document.getElementById('trackId').value.trim();
+    const order = orders.find(o => o.id === id);
+    const resDiv = document.getElementById('trackResult');
+    if (!order) {
+        resDiv.innerHTML = `<div style="background:#fff2f0; padding:20px; border-radius:16px; color:#b91c1c;">❌ Order not found. Check ID like JG-XXXX.</div>`;
+    } else {
+        resDiv.innerHTML = `<div style="background:#eef6ec; padding:20px; border-radius:16px; border-left: 5px solid var(--primary);">
+            <i class="fas fa-truck-fast" style="font-size:1.5rem; color:var(--primary);"></i>
+            <h3 style="margin-top:8px;">Order: ${order.id}</h3>
+            <p>📌 Status: <strong>${order.status}</strong></p>
+            <p>💰 Amount: ${order.total}</p>
+            <p>📅 Ordered: ${new Date(order.date).toLocaleDateString()}</p>
+            <p>🏡 Delivery site: ${order.address || 'Nairobi region'}</p>
+            <p><i class="fas fa-check-circle"></i> ETA: 2-3 business days (Kenya wide)</p>
+        </div>`;
+    }
+};
+
+// Event listeners & initialization
+document.getElementById('openCart').onclick = () => document.getElementById('cartModal').style.display = 'flex';
+window.closeCart = () => document.getElementById('cartModal').style.display = 'none';
+document.getElementById('locationFilter').onchange = () => renderProducts();
+document.getElementById('categoryFilter').onchange = () => renderProducts();
+
+// Tabs
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.onclick = () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.target).classList.add('active');
+        if (btn.dataset.target === 'trackTab') document.getElementById('trackResult').innerHTML = "";
+    };
+});
+
+window.openAdmin = () => { showToast("🔐 Admin portal: Manage inventory coming soon. Contact Jenga support."); };
+
+// initialize store dropdown and render
+populateStoreDropdown();
+renderProducts();
+</script>
+</body>
+</html>

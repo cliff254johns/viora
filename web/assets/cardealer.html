@@ -1,0 +1,2134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="description" content="Explore quality SUVs, saloons, hybrids and performance cars at Veloce Nairobi. Enquire on WhatsApp.">
+    <meta name="theme-color" content="#08080c">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>VELOCE NAIROBI | Performance Automotive</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.162.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.162.0/examples/jsm/",
+            "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js",
+            "gsap/ScrollTrigger": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/ScrollTrigger.js"
+        }
+    }
+    </script>
+
+    <script>
+        (function () {
+            var start = Date.now();
+            function hideLoader(reason) {
+                var l = document.getElementById('loader');
+                if (!l) return;
+                if (l.classList.contains('hidden')) return;
+                console.warn('[Veloce] Preloader hidden:', reason);
+                var bar = document.getElementById('loader-bar');
+                if (bar) bar.style.width = '100%';
+                l.classList.add('hidden');
+                var badge = document.getElementById('car-badge');
+                if (badge) badge.classList.add('visible');
+            }
+            var iv = setInterval(function () {
+                var l = document.getElementById('loader');
+                if (!l) { clearInterval(iv); return; }
+                if (l.classList.contains('hidden')) { clearInterval(iv); return; }
+                if (Date.now() - start > 2500) {
+                    hideLoader('2.5s failsafe timer');
+                    clearInterval(iv);
+                }
+            }, 100);
+            window.addEventListener('error', function (e) {
+                console.error('[Veloce] Error:', e.message, 'at', e.filename + ':' + e.lineno);
+                hideLoader('runtime error caught');
+            }, true);
+            window.addEventListener('unhandledrejection', function (e) {
+                console.error('[Veloce] Unhandled promise rejection:', e.reason);
+                hideLoader('promise rejection caught');
+            });
+            window.__veloceHideLoader = hideLoader;
+        })();
+    </script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #08080c;
+            --bg-elevated: #0e0e14;
+            --surface: #14141c;
+            --text-primary: #f5f5f7;
+            --text-secondary: rgba(245, 245, 247, 0.85);
+            --text-muted: rgba(245, 245, 247, 0.6);
+            --accent: #c8a44d;
+            --accent-glow: rgba(200, 164, 77, 0.3);
+            --border: rgba(255, 255, 255, 0.08);
+            --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-display: 'Playfair Display', Georgia, serif;
+            --shadow-heavy: 0 25px 60px rgba(0, 0, 0, 0.7);
+            --shadow-glow: 0 0 40px var(--accent-glow);
+            --radius: 12px;
+            --radius-lg: 20px;
+            --nav-height: 72px;
+        }
+
+        html { scroll-behavior: auto; background: var(--bg); }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            font-size: 1.08rem;
+            line-height: 1.8;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+
+        #webgl-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s ease, visibility 0.8s;
+        }
+        #loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+        .loader-brand {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            letter-spacing: 0.2em;
+            color: var(--accent);
+            margin-bottom: 2rem;
+        }
+        .loader-bar-container {
+            width: 200px; height: 2px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px; overflow: hidden;
+        }
+        .loader-bar {
+            height: 100%; width: 0%;
+            background: var(--accent);
+            transition: width 0.3s ease;
+            box-shadow: 0 0 12px var(--accent);
+        }
+        .loader-text {
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: var(--nav-height);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 3rem;
+            z-index: 1000;
+            transition: background 0.4s, backdrop-filter 0.4s, border-color 0.4s;
+            border-bottom: 1px solid transparent;
+        }
+        .nav.scrolled {
+            background: rgba(8, 8, 12, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom-color: var(--border);
+        }
+        .nav-logo {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+        .nav-logo span { color: var(--accent); }
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+            align-items: center;
+        }
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            position: relative;
+            transition: color 0.3s;
+        }
+        .nav-links a:hover { color: var(--text-primary); }
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -6px; left: 0;
+            width: 0; height: 1px;
+            background: var(--accent);
+            transition: width 0.3s;
+        }
+        .nav-links a:hover::after { width: 100%; }
+        .nav-cta {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 0.6rem 1.5rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        .nav-cta:hover {
+            background: var(--accent);
+            color: var(--bg);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .car-badge {
+            position: fixed;
+            top: calc(var(--nav-height) + 1.5rem);
+            left: 3rem;
+            z-index: 900;
+            background: rgba(8, 8, 12, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 0.5rem 1.2rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.6s, transform 0.6s;
+        }
+        .car-badge.visible { opacity: 1; transform: translateY(0); }
+        .car-badge .dot {
+            width: 6px; height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent);
+        }
+
+        .section-dots {
+            position: fixed;
+            right: 2.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 900;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .section-dots .dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            border: none; cursor: pointer;
+            transition: all 0.4s;
+        }
+        .section-dots .dot.active {
+            background: var(--accent);
+            box-shadow: 0 0 12px var(--accent);
+            transform: scale(1.3);
+        }
+        .section-dots .dot:hover { background: rgba(255,255,255,0.5); }
+
+        .progress-bar {
+            position: fixed;
+            top: 0; left: 0;
+            height: 2px;
+            background: var(--accent);
+            z-index: 1001;
+            width: 0%;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .hud {
+            position: fixed;
+            bottom: 2rem; right: 2rem;
+            z-index: 900;
+            background: rgba(8, 8, 12, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 0.6rem 1.4rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 0.04em;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            pointer-events: none;
+        }
+        .hud .hud-sep { color: rgba(255,255,255,0.15); }
+
+        .wa-pill {
+            position: fixed;
+            bottom: 2rem; left: 2rem;
+            z-index: 900;
+            background: #25D366;
+            color: #fff;
+            padding: 0.8rem 1.6rem;
+            border-radius: 100px;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.85rem;
+            letter-spacing: 0.02em;
+            box-shadow: 0 8px 30px rgba(37, 211, 102, 0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        .wa-pill:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(37, 211, 102, 0.4);
+        }
+
+        .back-top {
+            position: fixed;
+            bottom: 6rem; right: 2rem;
+            z-index: 900;
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            background: rgba(8, 8, 12, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.4s, visibility 0.4s, background 0.3s;
+        }
+        .back-top.visible { opacity: 1; visibility: visible; }
+        .back-top:hover { background: var(--accent); color: var(--bg); }
+
+        .content-wrapper {
+            position: relative;
+            z-index: 1;
+            pointer-events: none;
+        }
+        .interactive { pointer-events: auto; }
+
+        .section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 6rem 3rem;
+            position: relative;
+        }
+        .section-inner {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .hero {
+            justify-content: flex-start;
+            padding-top: calc(var(--nav-height) + 6rem);
+            text-align: center;
+        }
+        .hero h1 {
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 700;
+            line-height: 1.05;
+            letter-spacing: 0.02em;
+            color: var(--text-primary);
+            text-shadow: 0 4px 30px rgba(0, 0, 0, 0.8);
+            margin-bottom: 1rem;
+        }
+        .hero-sub {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 3rem;
+            text-shadow: 0 2px 15px rgba(0, 0, 0, 0.6);
+        }
+
+        .viewer-wrap {
+            width: 100%;
+            max-width: 900px;
+            aspect-ratio: 16/9;
+            margin: 0 auto 2rem;
+            position: relative;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            pointer-events: auto;
+            cursor: grab;
+            touch-action: pan-y;
+            box-shadow: var(--shadow-heavy);
+        }
+        .viewer-wrap:active { cursor: grabbing; }
+        .viewer-photo { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; transform:perspective(1100px) rotateY(0deg) scale(.96); transition:filter .35s; z-index:1; user-select:none; -webkit-user-drag:none; }
+        .viewer-wrap::after { content:""; position:absolute; inset:0; z-index:1; pointer-events:none; background:linear-gradient(180deg,rgba(4,5,8,.03),rgba(4,5,8,.04) 55%,rgba(4,5,8,.55)); }
+        .viewer-wrap .viewer-hint { z-index:3; background:rgba(0,0,0,.55); padding:.35rem .75rem; border-radius:99px; }
+        .viewer-hint {
+            position: absolute;
+            bottom: 1rem; left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0.7;
+            z-index: 2;
+        }
+
+        .hero-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+        }
+        .hero-car-name {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .hero-specs {
+            display: flex;
+            gap: 2.5rem;
+            margin: 1rem 0 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .hero-spec-item { text-align: center; }
+        .hero-spec-value {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+        .hero-spec-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-top: 0.2rem;
+        }
+        .cta-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.8rem;
+            background: var(--accent);
+            color: var(--bg);
+            padding: 1rem 2.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 0.04em;
+            text-decoration: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: none;
+            cursor: pointer;
+            font-family: var(--font-body);
+        }
+        .cta-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .scroll-hint {
+            position: absolute;
+            bottom: 2rem; left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            animation: float 2.5s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(8px); }
+        }
+
+        .section-heading {
+            font-family: var(--font-display);
+            font-size: clamp(2.2rem, 5vw, 3.5rem);
+            font-weight: 600;
+            line-height: 1.1;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        .section-sub {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            max-width: 600px;
+            margin-bottom: 3rem;
+        }
+
+        .carousel-section { padding-top: 4rem; }
+        .carousel-wrapper { position:relative; width:100%; overflow:hidden; padding:1.25rem 0 2rem; }
+        .carousel-track { display:flex; gap:1.25rem; padding:1rem .25rem 1.5rem; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; scroll-behavior:smooth; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.35) transparent; overscroll-behavior-x:contain; touch-action:pan-x pan-y; }
+        .carousel-track::-webkit-scrollbar { height:7px; }
+        .carousel-track::-webkit-scrollbar-thumb { background:rgba(255,255,255,.3); border-radius:20px; }
+        .carousel-controls { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin:.5rem 0; }
+        .carousel-arrows { display:flex; gap:.6rem; }
+        .carousel-arrows button,.glass-control { border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.12); color:#fff; border-radius:12px; padding:.7rem 1rem; font:inherit; font-weight:750; cursor:pointer; backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); }
+        .carousel-arrows button { min-width:46px; min-height:44px; font-size:1.2rem; }
+        .glass-note { margin:0; color:#fff; font-size:.9rem; padding:.6rem .85rem; }
+        .glass-panel { background:rgba(12,16,24,.72)!important; border:1px solid rgba(255,255,255,.18)!important; border-radius:18px; padding:1rem; box-shadow:0 12px 36px rgba(0,0,0,.2); backdrop-filter:blur(22px) saturate(140%); -webkit-backdrop-filter:blur(22px) saturate(140%); }
+        .carousel-card { scroll-snap-align:start; }
+        .carousel-card {
+            flex: 0 0 320px;
+            background:rgba(13,17,27,.76);
+            backdrop-filter:blur(20px) saturate(135%); -webkit-backdrop-filter:blur(20px) saturate(135%);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: transform 0.4s, border-color 0.4s, box-shadow 0.4s;
+            cursor: pointer;
+            pointer-events: auto;
+        }
+        .carousel-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(200, 164, 77, 0.4);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .carousel-card.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+        .inventory-tools { display:flex; flex-wrap:wrap; gap:.8rem; margin:0 0 1rem; align-items:center; }
+        .inventory-tools input,.inventory-tools select { min-height:44px; padding:.7rem .9rem; background:rgba(8,12,20,.9); color:#fff; border:1px solid rgba(255,255,255,.25); border-radius:10px; font:inherit; }
+        .inventory-tools select option { color:#111; background:#fff; }
+        .inventory-count { padding:.55rem .75rem; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.16); border-radius:10px; color:#fff!important; }
+        .inventory-tools input { flex:1; min-width:180px; }
+        .inventory-count { color:var(--text-muted); font-size:.85rem; }
+        .carousel-card-img {
+            width: 100%;
+            aspect-ratio: 16/10;
+            object-fit: cover;
+            display: block;
+            background: #1a1a22;
+        }
+        .carousel-card-body { padding:1.25rem 1.25rem 1.35rem; background:linear-gradient(145deg,rgba(15,20,31,.96),rgba(19,22,32,.82)); }
+        .carousel-card-name,.carousel-card-meta { display:block; width:fit-content; max-width:100%; padding:.28rem .48rem; border-radius:7px; background:rgba(255,255,255,.075); color:#fff; }
+        .carousel-card-meta { color:#e2e7f0; }
+        .save-car { width:100%; margin-top:.55rem; border:1px solid rgba(255,255,255,.2); border-radius:9px; padding:.65rem; background:rgba(255,255,255,.1); color:#fff; font-weight:750; cursor:pointer; }
+        .save-car[aria-pressed="true"] { background:rgba(207,35,53,.3); border-color:#ff6575; color:#fff; }
+        .carousel-card-name {
+            font-weight: 600;
+            font-size: 1.05rem;
+            margin-bottom: 0.3rem;
+        }
+        .carousel-card-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+        .carousel-card-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .carousel-card-actions button,
+        .carousel-card-actions a {
+            flex: 1;
+            min-width: 80px;
+            padding: 0.5rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+        }
+        .carousel-card-actions .btn-gold {
+            background: var(--accent);
+            color: var(--bg);
+            border-color: var(--accent);
+        }
+        .carousel-card-actions .btn-gold:hover { opacity: 0.85; }
+        .carousel-card-actions .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+        .heritage-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+        .heritage-text h2 {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+        }
+        .heritage-text p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+        }
+        .heritage-stats {
+            display: flex;
+            gap: 3rem;
+            margin-top: 2rem;
+        }
+        .heritage-stat-value {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: var(--accent);
+            line-height: 1;
+        }
+        .heritage-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-top: 0.4rem;
+        }
+        .placeholder-image {
+            width: 100%;
+            aspect-ratio: 4/3;
+            border-radius: var(--radius-lg);
+            background: linear-gradient(135deg, #0e0e14 0%, #1a1a26 100%);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-align: center;
+            padding: 2rem;
+        }
+        .placeholder-image .ph-title {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            color: var(--accent);
+        }
+
+        .specs-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+        .spec-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            text-align: center;
+            transition: border-color 0.3s, transform 0.3s;
+        }
+        .spec-card:hover {
+            border-color: rgba(200,164,77,0.3);
+            transform: translateY(-4px);
+        }
+        .spec-value {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: var(--accent);
+            line-height: 1;
+        }
+        .spec-unit {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.2rem;
+        }
+        .spec-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-top: 0.75rem;
+        }
+
+        .interior-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+        .interior-text h2 {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 1.5rem;
+        }
+        .interior-text ul { list-style: none; margin: 2rem 0; }
+        .interior-text li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        .interior-text li strong { color: var(--text-primary); }
+
+        .financing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+        .finance-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 2.5rem 2rem;
+            text-align: center;
+            transition: border-color 0.3s, transform 0.3s;
+        }
+        .finance-card:hover {
+            border-color: rgba(200,164,77,0.3);
+            transform: translateY(-4px);
+        }
+        .finance-card h3 {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .finance-rate {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+        .finance-term {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+        .finance-card .cta-primary { padding:.75rem 1.5rem; font-size:.85rem; width:100%; justify-content:center; }
+        .finance-calculator h3 { font-size:1.5rem; margin-bottom:.7rem; font-weight:850; }
+        .finance-calc-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; }
+        .finance-calc-grid label { display:flex; flex-direction:column; gap:.45rem; color:#fff; font-weight:750; background:rgba(255,255,255,.07); padding:.8rem; border-radius:10px; }
+        .finance-calc-grid input,.finance-calc-grid select { width:100%; min-height:44px; padding:.7rem; border:1px solid rgba(255,255,255,.25); background:rgba(5,8,14,.9); color:#fff; border-radius:9px; font:inherit; }
+        .finance-estimate { display:grid; gap:.4rem; margin-top:1.2rem; padding:1.1rem; border-radius:14px; background:rgba(180,25,42,.2); border:1px solid rgba(255,100,120,.45); }
+        .finance-estimate span,.finance-estimate small { color:#f2f4fa; }
+        .finance-estimate strong { font-size:clamp(1.6rem,4vw,2.5rem); color:#fff; font-weight:900; }
+        @media(max-width:768px) { .finance-calc-grid { grid-template-columns:1fr; } }
+
+        .test-drive-form {
+            max-width: 600px;
+            margin: 0 auto;
+            display: grid;
+            gap: 1rem;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+        .form-group label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.4rem;
+        }
+        .form-group input,
+        .form-group select {
+            padding: 0.85rem 1rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            transition: border-color 0.3s;
+            outline: none;
+        }
+        .form-group input:focus,
+        .form-group select:focus { border-color: var(--accent); }
+        .test-drive-form .cta-primary {
+            margin-top: 0.5rem;
+            justify-content: center;
+        }
+
+        .footer {
+            padding: 4rem 3rem 2rem;
+            border-top: 1px solid var(--border);
+            background: var(--bg);
+            position: relative;
+            z-index: 1;
+            pointer-events: auto;
+        }
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 3rem;
+        }
+        .footer-brand {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+        .footer-brand span { color: var(--accent); }
+        .footer p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            line-height: 1.8;
+        }
+        .footer h4 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+        .footer-links { list-style: none; }
+        .footer-links li { margin-bottom: 0.5rem; }
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+        .footer-links a:hover { color: var(--accent); }
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 3rem auto 0;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: rgba(8, 8, 12, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
+            padding: 0.5rem 0 calc(0.5rem + env(safe-area-inset-bottom));
+            z-index: 1000;
+        }
+        .mobile-nav-inner {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.6rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 0.4rem 0.8rem;
+            transition: color 0.2s;
+            border: none;
+            background: none;
+            cursor: pointer;
+        }
+        .mobile-nav-item.active,
+        .mobile-nav-item:hover { color: var(--accent); }
+        .mobile-nav-item svg {
+            width: 20px; height: 20px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.5;
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        .hero-copy,.hero-description,.hero-sub,.hero-specs,.section-heading,.section-sub,.heritage-text p,.heritage-stats,.spec-card,.financing-card,.form-panel,.form-intro,.footer-inner h3,.footer-inner p,.car-badge,.hud,.wa-pill,.nav-cta,.nav-links a,.mobile-nav-item,.loader-text,.heritage-stat-label,.heritage-stat-value,.section-heading,.form-group label,.form-note,.feature-copy,.performance-copy,.interior-copy { background:rgba(8,12,20,.68); border:1px solid rgba(255,255,255,.15); border-radius:12px; padding:.45rem .7rem; box-decoration-break:clone; -webkit-box-decoration-break:clone; backdrop-filter:blur(16px) saturate(135%); -webkit-backdrop-filter:blur(16px) saturate(135%); text-shadow:0 2px 8px rgba(0,0,0,.85); }
+        .section-heading { display:table; max-width:100%; padding:.55rem .85rem; }
+        .section-sub { padding:.7rem .85rem; color:#f0f3fa!important; }
+        .hero h1,.hero h2,.section h2,.section h3,.heritage-stat-value,.carousel-card-name { color:#fff; text-shadow:0 3px 12px rgba(0,0,0,.95); font-weight:800; }
+        .carousel-card[hidden] { display:none !important; }
+        button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+        @media (prefers-reduced-motion: reduce) { *,*::before,*::after { scroll-behavior:auto !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; } }
+        @media (max-width: 1024px) {
+            .nav { padding: 0 1.5rem; }
+            .section { padding: 5rem 1.5rem; }
+            .car-badge { left: 1.5rem; }
+            .heritage-grid { grid-template-columns: 1fr; gap: 2rem; }
+            .interior-grid { grid-template-columns: 1fr; gap: 2rem; }
+            .specs-grid { grid-template-columns: repeat(2, 1fr); }
+            .financing-grid { grid-template-columns: 1fr; }
+            .footer-inner { grid-template-columns: 1fr; gap: 2rem; }
+            .section-dots { display: none; }
+        }
+
+        @media (max-width: 768px) {
+            body { font-size: 1rem; padding-bottom: 64px; }
+            .nav { display: none; }
+            .mobile-nav { display: block; }
+            .hero { padding-top: 4rem; }
+            .hero h1 { font-size: 2.5rem; }
+            .hero-specs { gap: 1.5rem; }
+            .viewer-wrap { aspect-ratio: 4/3; }
+            .carousel-card { flex:0 0 min(82vw,340px); }
+            .carousel-controls { align-items:flex-start; }
+            .glass-note { font-size:.82rem; }
+            .inventory-tools { padding:.8rem; }
+            .carousel-track { gap:.85rem; }
+            .viewer-wrap { min-height:220px; }
+            .viewer-photo { object-fit:contain; background:#08080c; }
+            .inventory-tools input,.inventory-tools select { width:100%; }
+            .form-row { grid-template-columns: 1fr; }
+            .specs-grid { grid-template-columns: 1fr 1fr; }
+            .heritage-stats { flex-wrap: wrap; gap: 1.5rem; }
+            .wa-pill { bottom: 5rem; left: 1rem; font-size: 0.75rem; padding: 0.6rem 1.2rem; }
+            .back-top { bottom: 5rem; right: 1rem; }
+            .hud { display: none; }
+            .car-badge { left: 1rem; top: 1rem; font-size: 0.7rem; padding: 0.4rem 1rem; }
+            .footer-bottom { flex-direction: column; gap: 1rem; text-align: center; }
+        }
+
+        @media (max-width: 480px) {
+            .section { padding: 4rem 1rem; }
+            .hero h1 { font-size: 2rem; }
+            .specs-grid { grid-template-columns: 1fr 1fr; gap:.75rem; }
+            .spec-card { padding:1.2rem .6rem; }
+            .hero-sub { font-size:.8rem; letter-spacing:.06em; }
+        }
+
+        /* Added for feature enhancement */
+        .carousel-track::after { content:''; flex:0 0 1px; }
+        .notification-toast { position:fixed; bottom:100px; left:50%; transform:translateX(-50%); background:var(--accent); color:#08080c; padding:12px 24px; border-radius:100px; font-weight:600; z-index:10001; animation:fadeUp 0.3s ease; }
+        @keyframes fadeUp { from { opacity:0; transform:translateX(-50%) translateY(20px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+        /* Carousel auto-scroll indicator */
+        .carousel-autoplay-indicator { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--accent); margin-left:8px; animation:pulse 1.5s infinite; }
+        @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(0.8); } }
+    </style>
+</head>
+<body>
+
+    <div id="loader">
+        <div class="loader-brand">VELOCE</div>
+        <div class="loader-bar-container">
+            <div class="loader-bar" id="loader-bar"></div>
+        </div>
+        <div class="loader-text" id="loader-text">Preparing showroom</div>
+    </div>
+
+    <div class="progress-bar" id="progress-bar"></div>
+
+    <nav class="nav" id="nav">
+        <a href="#" class="nav-logo">VELOCE<span>.</span></a>
+        <ul class="nav-links">
+            <li><a href="#collection">Inventory</a></li>
+            <li><a href="#financing">Financing</a></li>
+            <li><a href="#heritage">About</a></li>
+        </ul>
+        <a href="https://wa.me/254700000000?text=Hi%20Veloce%2C%20I'd%20like%20to%20speak%20to%20sales." class="nav-cta" target="_blank" rel="noopener">Speak to sales</a>
+    </nav>
+
+    <div class="car-badge" id="car-badge">
+        <span class="dot"></span>
+        Now viewing: <strong id="badge-car-name">Porsche 911 GT3 RS</strong>
+    </div>
+
+    <div class="section-dots" id="section-dots">
+        <button class="dot active" data-section="hero" aria-label="Hero section"></button>
+        <button class="dot" data-section="collection" aria-label="Collection section"></button>
+        <button class="dot" data-section="heritage" aria-label="Heritage section"></button>
+        <button class="dot" data-section="performance" aria-label="Performance section"></button>
+        <button class="dot" data-section="interior" aria-label="Interior section"></button>
+        <button class="dot" data-section="financing" aria-label="Financing section"></button>
+        <button class="dot" data-section="testdrive" aria-label="Test drive section"></button>
+    </div>
+
+    <div class="hud" id="hud">
+        <span>360°</span>
+        <span class="hud-sep">·</span>
+        <span>36 frames</span>
+        <span class="hud-sep">·</span>
+        <span>drag to rotate</span>
+    </div>
+
+    <a href="https://wa.me/254700000000?text=Hi%20Veloce%2C%20I'd%20like%20to%20book%20a%20test%20drive." class="wa-pill interactive" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        WhatsApp
+    </a>
+
+    <button class="back-top interactive" id="back-top" aria-label="Back to top">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
+    </button>
+
+    <nav class="mobile-nav">
+        <div class="mobile-nav-inner">
+            <a href="#" class="mobile-nav-item active" aria-label="Home">
+                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                Home
+            </a>
+            <a href="#collection" class="mobile-nav-item" aria-label="Inventory">
+                <svg viewBox="0 0 24 24"><rect x="1" y="3" width="22" height="18" rx="2"/><line x1="1" y1="9" x2="23" y2="9"/></svg>
+                Inventory
+            </a>
+            <a href="#testdrive" class="mobile-nav-item" aria-label="Test Drive">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+                Test Drive
+            </a>
+            <a href="https://wa.me/254700000000?text=Hi%20Veloce%2C%20I'd%20like%20to%20chat." class="mobile-nav-item" target="_blank" rel="noopener" aria-label="Chat">
+                <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+                Chat
+            </a>
+        </div>
+    </nav>
+
+    <canvas id="webgl-canvas"></canvas>
+
+    <div class="content-wrapper">
+        <section class="section hero" id="hero">
+            <div class="section-inner">
+                <h1 class="reveal">Veloce Nairobi</h1>
+                <p class="hero-sub reveal">Nairobi's premier performance dealership</p>
+
+                <div class="viewer-wrap interactive" id="viewer" aria-label="360 degree car viewer. Drag to rotate." role="img">
+                    <div class="viewer-hint">Drag or swipe to rotate · Scroll to explore</div>
+                </div>
+
+                <div class="hero-info reveal">
+                    <div class="hero-car-name" id="hero-car-name">Porsche 911 GT3 RS</div>
+                    <div class="hero-specs">
+                        <div class="hero-spec-item">
+                            <div class="hero-spec-value" id="hero-spec-0to60">3.0s</div>
+                            <div class="hero-spec-label">0–60 mph</div>
+                        </div>
+                        <div class="hero-spec-item">
+                            <div class="hero-spec-value" id="hero-spec-top">296 km/h</div>
+                            <div class="hero-spec-label">Top speed</div>
+                        </div>
+                        <div class="hero-spec-item">
+                            <div class="hero-spec-value" id="hero-spec-hp">518 hp</div>
+                            <div class="hero-spec-label">Power</div>
+                        </div>
+                    </div>
+                    <a href="https://wa.me/254700000000?text=Hi%20Veloce%2C%20I'd%20like%20to%20book%20a%20test%20drive%20for%20the%20Porsche%20911%20GT3%20RS." class="cta-primary interactive" target="_blank" rel="noopener">
+                        Book a test drive
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                </div>
+            </div>
+            <div class="scroll-hint">
+                <span>Scroll to explore</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            </div>
+        </section>
+
+        <section class="section carousel-section" id="collection">
+            <div class="section-inner">
+                <h2 class="section-heading reveal">The Collection <span class="carousel-autoplay-indicator"></span></h2>
+                <p class="section-sub reveal">Explore a curated selection of performance cars, premium SUVs, family vehicles and pickups available to source in Kenya.</p>
+
+                <div class="inventory-tools glass-panel" aria-label="Inventory controls">
+                    <input id="car-search" type="search" placeholder="Search make, model or engine…" aria-label="Search vehicles">
+                    <select id="car-type" aria-label="Filter by vehicle type"><option value="all">All vehicle types</option><option value="Performance">Performance</option><option value="SUV">SUV</option><option value="Saloon">Saloon</option><option value="Pickup">Pickup</option><option value="Hybrid / EV">Hybrid / EV</option></select>
+                    <select id="car-sort" aria-label="Sort vehicles"><option value="featured">Featured first</option><option value="name">Name A–Z</option><option value="price">Price (when listed)</option></select>
+                    <button type="button" id="favorites-filter" class="glass-control" aria-pressed="false">♡ Saved cars <span id="saved-count">0</span></button>
+                    <span class="inventory-count" id="inventory-count" aria-live="polite">16 vehicles</span>
+                </div>
+                <div class="carousel-controls">
+                    <p class="glass-note">Swipe or drag to explore · Save favourites to build your shortlist</p>
+                    <div class="carousel-arrows"><button type="button" id="carousel-prev" aria-label="Previous vehicles">←</button><button type="button" id="carousel-next" aria-label="Next vehicles">→</button></div>
+                </div>
+                <div class="carousel-wrapper interactive" aria-label="Vehicle carousel">
+                    <div class="carousel-track" id="carousel-track" tabindex="0" aria-label="Vehicle listings"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="heritage">
+            <div class="section-inner">
+                <div class="heritage-grid">
+                    <div class="heritage-text reveal">
+                        <h2>Crafted, not collected</h2>
+                        <p>Veloce Nairobi helps drivers explore carefully selected vehicles across Kenya. We don't sell cars—we curate experiences for drivers who understand the difference between transportation and transcendence.</p>
+                        <p>Every vehicle in our showroom is hand-selected, thoroughly inspected, and prepared to a standard that borders on obsession. Because when you've waited this long for the right car, settling is not an option.</p>
+                        <div class="heritage-stats">
+                            <div>
+                                <div class="heritage-stat-value">16</div>
+                                <div class="heritage-stat-label">Vehicles to explore</div>
+                            </div>
+                            <div>
+                                <div class="heritage-stat-value">Kenya</div>
+                                <div class="heritage-stat-label">Market focus</div>
+                            </div>
+                            <div>
+                                <div class="heritage-stat-value">5+</div>
+                                <div class="heritage-stat-label">Vehicle categories</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="reveal">
+                        <img class="placeholder-image real-detail-image" src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1400&q=85" alt="Porsche sports car detail" loading="lazy" style="object-fit:cover;padding:0;">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="performance">
+            <div class="section-inner">
+                <h2 class="section-heading reveal">Numbers that matter</h2>
+                <p class="section-sub reveal">Because passion without precision is just noise.</p>
+
+                <div class="specs-grid">
+                    <div class="spec-card reveal">
+                        <div class="spec-value" data-count="3.0" data-decimals="1">0<span class="spec-unit">s</span></div>
+                        <div class="spec-label">0–60 mph</div>
+                    </div>
+                    <div class="spec-card reveal">
+                        <div class="spec-value" data-count="296">0<span class="spec-unit">km/h</span></div>
+                        <div class="spec-label">Top speed</div>
+                    </div>
+                    <div class="spec-card reveal">
+                        <div class="spec-value" data-count="518">0<span class="spec-unit">hp</span></div>
+                        <div class="spec-label">Power</div>
+                    </div>
+                    <div class="spec-card reveal">
+                        <div class="spec-value" data-count="465">0<span class="spec-unit">Nm</span></div>
+                        <div class="spec-label">Torque</div>
+                    </div>
+                    <div class="spec-card reveal">
+                        <div class="spec-value" data-count="1450">0<span class="spec-unit">kg</span></div>
+                        <div class="spec-label">Weight</div>
+                    </div>
+                    <div class="spec-card reveal">
+                        <div class="spec-value" data-count="378">0<span class="spec-unit">km</span></div>
+                        <div class="spec-label">Range</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="interior">
+            <div class="section-inner">
+                <div class="interior-grid">
+                    <div class="reveal">
+                        <img class="placeholder-image" src="https://images.unsplash.com/photo-1504215680853-026ed2a45def?auto=format&fit=crop&w=1400&q=85" alt="Modern car interior and cockpit" loading="lazy" style="object-fit:cover;padding:0;aspect-ratio:16/10;">
+                    </div>
+                    <div class="interior-text reveal">
+                        <h2>Inside the cockpit</h2>
+                        <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">Where carbon fibre meets Alcantara, and every surface has a purpose.</p>
+                        <ul>
+                            <li><strong>Race-derived materials</strong> — Carbon bucket seats, Alcantara-wrapped wheel, exposed carbon trim. Weight saved, feel amplified.</li>
+                            <li><strong>Driver-first technology</strong> — Configurable digital cockpit, track telemetry, and a chassis that communicates through your fingertips.</li>
+                            <li><strong>Purposeful comfort</strong> — Climate control, premium audio, and ergonomics designed for the long drive home after the track day.</li>
+                        </ul>
+                        <a href="https://wa.me/254700000000?text=Hi%20Veloce%2C%20I'd%20like%20to%20configure%20my%20interior." class="cta-primary interactive" target="_blank" rel="noopener">
+                            Configure yours
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="financing">
+            <div class="section-inner">
+                <h2 class="section-heading reveal">Own it your way</h2>
+                <p class="section-sub reveal">Flexible structures for discerning buyers. Transparent terms, no surprises.</p>
+
+                <div class="financing-grid">
+                    <div class="finance-card reveal">
+                        <h3>Cash</h3>
+                        <div class="finance-rate">POA</div>
+                        <div class="finance-term">Direct purchase · Immediate delivery</div>
+                        <a href="https://wa.me/254700000000?text=Hi%20Veloce%2C%20I'm%20interested%20in%20a%20cash%20purchase." class="cta-primary interactive" target="_blank" rel="noopener">Enquire</a>
+                    </div>
+                    <div class="finance-card reveal">
+                        <h3>Finance</h3>
+                        <div class="finance-rate">Tailored</div>
+                        <div class="finance-term">Ask about lender terms and deposit requirements</div>
+                        <a href="https://wa.me/254700000000?text=Hi%20Veloce%2C%20I'd%20like%20a%20finance%20quote." class="cta-primary interactive" target="_blank" rel="noopener">Get quote</a>
+                    </div>
+                    <div class="finance-card reveal">
+                        <h3>Lease</h3>
+                        <div class="finance-rate">POA</div>
+                        <div class="finance-term">Ask about available leasing options</div>
+                        <a href="https://wa.me/254700000000?text=Hi%20Veloce%2C%20I'd%20like%20lease%20details." class="cta-primary interactive" target="_blank" rel="noopener">Get quote</a>
+                    </div>
+                </div>
+                <div class="finance-calculator glass-panel reveal" style="margin-top:2rem;max-width:850px;">
+                    <h3>Estimate your monthly payment</h3>
+                    <p class="section-sub">Illustrative estimate only. Actual rates, fees and eligibility depend on your lender.</p>
+                    <div class="finance-calc-grid">
+                        <label>Vehicle price (KES)<input id="finance-price" type="number" min="100000" step="50000" value="4500000"></label>
+                        <label>Deposit (KES)<input id="finance-deposit" type="number" min="0" step="50000" value="900000"></label>
+                        <label>Annual interest (%)<input id="finance-rate-input" type="number" min="0" max="50" step="0.5" value="15"></label>
+                        <label>Loan term<select id="finance-term-input"><option value="12">12 months</option><option value="24">24 months</option><option value="36" selected>36 months</option><option value="48">48 months</option><option value="60">60 months</option><option value="72">72 months</option></select></label>
+                    </div>
+                    <div class="finance-estimate" aria-live="polite"><span>Estimated monthly instalment</span><strong id="finance-monthly">KES 0</strong><small id="finance-loan-note">Loan amount: KES 0 · excludes fees and insurance</small></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="testdrive">
+            <div class="section-inner" style="text-align:center;">
+                <h2 class="section-heading reveal">The seat is yours</h2>
+                <p class="section-sub reveal" style="margin-left:auto;margin-right:auto;">No pressure. No scripts. Just you, the car, and an empty stretch of road.</p>
+
+                <form class="test-drive-form reveal" id="test-drive-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="td-name">Full name</label>
+                            <input type="text" id="td-name" placeholder="Your name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="td-phone">Phone</label>
+                            <input type="tel" id="td-phone" placeholder="+254 7XX XXX XXX" autocomplete="tel" pattern="[+0-9 ()-]{9,20}" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="td-car">Car</label>
+                            <select id="td-car">
+                                <option>Porsche 911 GT3 RS</option>
+                                <option>Mercedes-AMG GT 63</option>
+                                <option>BMW M5 CS</option>
+                                <option>Audi RS e-tron GT</option>
+                                <option>Range Rover Sport SV</option>
+                                <option>Tesla Model S Plaid</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="td-date">Preferred date</label>
+                            <input type="date" id="td-date">
+                        </div>
+                    </div>
+                    <button type="submit" class="cta-primary interactive">
+                        Book via WhatsApp
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <div class="footer-inner">
+                <div>
+                    <div class="footer-brand">VELOCE<span>.</span></div>
+                    <p>Nairobi's premier performance dealership.<br>Curated automobiles for the discerning driver.<br>Since 1987.</p>
+                </div>
+                <div>
+                    <h4>Contact</h4>
+                    <ul class="footer-links">
+                        <li><a href="https://wa.me/254700000000" target="_blank" rel="noopener">+254 700 000 000</a></li>
+                        <li><a href="mailto:sales@velocenairobi.com">sales@velocenairobi.com</a></li>
+                        <li>Westlands, Nairobi</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Hours</h4>
+                    <ul class="footer-links">
+                        <li>Mon–Fri: 9am – 7pm</li>
+                        <li>Saturday: 10am – 5pm</li>
+                        <li>Sunday: By appointment</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© 2026 Veloce Nairobi. All rights reserved.</span>
+                <span>Performance · Precision · Passion</span>
+            </div>
+        </footer>
+    </div>
+
+    <script type="module">
+        console.log('[Veloce] Module starting...');
+
+        import * as THREE from 'three';
+        import { gsap } from 'gsap';
+        import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+        console.log('[Veloce] Imports OK. THREE r' + THREE.REVISION);
+
+        gsap.registerPlugin(ScrollTrigger);
+
+        const CONFIG = {
+            whatsapp: '254700000000',
+            cars: [
+                {id:'porsche',name:'Porsche 911 GT3 RS',category:'Performance',colorHex:0x1a4d7a,specs:{zeroTo60:'3.0s',topSpeed:'296 km/h',hp:'518 hp'},engine:'4.0L Flat-Six',price:'Price on request',heroUrl:'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1600&q=88'},
+                {id:'amg',name:'Mercedes-AMG GT 63',category:'Performance',colorHex:0x2a2a2a,specs:{zeroTo60:'3.1s',topSpeed:'315 km/h',hp:'577 hp'},engine:'4.0L V8 Biturbo',price:'Price on request',heroUrl:'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1600&q=85'},
+                {id:'bmw',name:'BMW M5 CS',category:'Performance',colorHex:0x4a4a4a,specs:{zeroTo60:'2.9s',topSpeed:'305 km/h',hp:'627 hp'},engine:'4.4L V8 Twin-Turbo',price:'Price on request',heroUrl:'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1600&q=85'},
+                {id:'audi',name:'Audi RS e-tron GT',category:'Hybrid / EV',colorHex:0x5a5a5a,specs:{zeroTo60:'3.1s',topSpeed:'250 km/h',hp:'637 hp'},engine:'Dual Electric Motor',price:'Price on request',heroUrl:'https://images.unsplash.com/photo-1606152421802-db97b9c7a11b?auto=format&fit=crop&w=1600&q=85'},
+                {id:'range',name:'Range Rover Sport SV',category:'SUV',colorHex:0x3a2a1a,specs:{zeroTo60:'3.6s',topSpeed:'290 km/h',hp:'626 hp'},engine:'4.4L V8 Twin-Turbo',price:'Price on request',heroUrl:'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=1600&q=85'},
+                {id:'tesla',name:'Tesla Model S Plaid',category:'Hybrid / EV',colorHex:0x1a2a4a,specs:{zeroTo60:'1.99s',topSpeed:'322 km/h',hp:'1,020 hp'},engine:'Tri-Motor Electric',price:'Price on request',heroUrl:'https://images.unsplash.com/photo-1560958089-b8a1929cec3a?auto=format&fit=crop&w=1600&q=85'},
+                {id:'toyota-landcruiser',name:'Toyota Land Cruiser 300',category:'SUV',colorHex:0x51483d,specs:{zeroTo60:'—',topSpeed:'210 km/h',hp:'305 hp'},engine:'3.5L V6 Twin-Turbo',price:'Price on request',heroUrl:'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&fit=crop&w=1600&q=85'},
+                {id:'prado',name:'Toyota Land Cruiser Prado',category:'SUV',colorHex:0x5b5549,specs:{zeroTo60:'—',topSpeed:'180 km/h',hp:'201 hp'},engine:'2.8L Turbo Diesel',price:'Price on request',heroUrl:'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=1600&q=85'},
+                {id:'harrier',name:'Toyota Harrier Hybrid',category:'Hybrid / EV',colorHex:0x252c35,specs:{zeroTo60:'—',topSpeed:'180 km/h',hp:'218 hp'},engine:'2.5L Hybrid',price:'Price on request',heroUrl:'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1600&q=85'},
+                {id:'rav4',name:'Toyota RAV4',category:'SUV',colorHex:0x343b42,specs:{zeroTo60:'—',topSpeed:'200 km/h',hp:'203 hp'},engine:'2.0L Petrol / Hybrid options',price:'Price on request',heroUrl:'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=1600&q=85'},
+                {id:'cx5',name:'Mazda CX-5',category:'SUV',colorHex:0x7b1e24,specs:{zeroTo60:'—',topSpeed:'195 km/h',hp:'187 hp'},engine:'2.5L Petrol',price:'Price on request',heroUrl:'https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?auto=format&fit=crop&w=1600&q=85'},
+                {id:'c-class',name:'Mercedes-Benz C-Class',category:'Saloon',colorHex:0x22252a,specs:{zeroTo60:'—',topSpeed:'240 km/h',hp:'255 hp'},engine:'2.0L Turbo',price:'Price on request',heroUrl:'https://images.unsplash.com/photo-1618843479618-39b9b5e4b9c5?auto=format&fit=crop&w=1600&q=85'},
+                {id:'camry',name:'Toyota Camry Hybrid',category:'Saloon',colorHex:0x34383c,specs:{zeroTo60:'—',topSpeed:'180 km/h',hp:'208 hp'},engine:'2.5L Hybrid',price:'Price on request',heroUrl:'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?auto=format&fit=crop&w=1600&q=85'},
+                {id:'hilux',name:'Toyota Hilux Double Cab',category:'Pickup',colorHex:0x4c5154,specs:{zeroTo60:'—',topSpeed:'175 km/h',hp:'201 hp'},engine:'2.8L Turbo Diesel',price:'Price on request',heroUrl:'https://images.unsplash.com/photo-1551830820-330a71b99659?auto=format&fit=crop&w=1600&q=85'},
+                {id:'forester',name:'Subaru Forester',category:'SUV',colorHex:0x27394a,specs:{zeroTo60:'—',topSpeed:'200 km/h',hp:'182 hp'},engine:'2.5L Boxer Petrol',price:'Price on request',heroUrl:'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1600&q=85'},
+                {id:'volvo-xc60',name:'Volvo XC60',category:'SUV',colorHex:0x343434,specs:{zeroTo60:'—',topSpeed:'180 km/h',hp:'247 hp'},engine:'2.0L Mild Hybrid',price:'Price on request',heroUrl:'https://images.unsplash.com/photo-1606016159991-dfe4f2746ad5?auto=format&fit=crop&w=1600&q=85'}
+            ]
+        };
+
+        const loaderEl = document.getElementById('loader');
+        const loaderBar = document.getElementById('loader-bar');
+        const loaderText = document.getElementById('loader-text');
+        const badgeCarName = document.getElementById('badge-car-name');
+        const heroCarName = document.getElementById('hero-car-name');
+        const heroSpec0 = document.getElementById('hero-spec-0to60');
+        const heroSpecTop = document.getElementById('hero-spec-top');
+        const heroSpecHp = document.getElementById('hero-spec-hp');
+        const carouselTrack = document.getElementById('carousel-track');
+        const progressBar = document.getElementById('progress-bar');
+        const backTopBtn = document.getElementById('back-top');
+        const nav = document.getElementById('nav');
+        const sectionDots = document.querySelectorAll('.section-dots .dot');
+        const carBadge = document.getElementById('car-badge');
+        const viewerEl = document.getElementById('viewer');
+
+        let activeCarIndex = 0;
+        let lastDragTime = 0;
+        let loadedTextures = [];
+        let scene, camera, renderer, carPlane, reflectionPlane, floor, ambientLight, spotLights = [];
+        let clock = new THREE.Clock();
+        let dustParticles;
+        let reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // Auto-scroll state
+        let autoScrollInterval = null;
+        let autoScrollActive = true;
+        let autoScrollPausedUntil = 0;
+        const AUTO_SCROLL_SPEED = 3000; // ms between scroll steps
+        const AUTO_SCROLL_RESUME_DELAY = 5000; // ms to pause after user interaction
+
+        const cardImageCache = new Map();
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'notification-toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2000);
+        }
+
+        function makeCarCardCanvas(car, w = 1024, h = 640) {
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+
+            const c = new THREE.Color(car.colorHex);
+            const r = Math.round(c.r * 255);
+            const g = Math.round(c.g * 255);
+            const b = Math.round(c.b * 255);
+
+            const grad = ctx.createLinearGradient(0, 0, w, h);
+            grad.addColorStop(0, `rgb(${Math.min(r + 40, 255)},${Math.min(g + 40, 255)},${Math.min(b + 40, 255)})`);
+            grad.addColorStop(0.55, `rgb(${Math.max(r, 0)},${Math.max(g, 0)},${Math.max(b, 0)})`);
+            grad.addColorStop(1, `rgb(${Math.max(r - 50, 0)},${Math.max(g - 50, 0)},${Math.max(b - 50, 0)})`);
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, w, h);
+
+            const vg = ctx.createRadialGradient(w/2, h/2, h*0.15, w/2, h/2, h*1.1);
+            vg.addColorStop(0, 'rgba(0,0,0,0)');
+            vg.addColorStop(1, 'rgba(0,0,0,0.6)');
+            ctx.fillStyle = vg;
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 14; i++) {
+                const y = h * 0.62 + i * (h * 0.03);
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(w, y);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = '#c8a44d';
+            ctx.fillRect(w * 0.08, h * 0.46, w * 0.06, 3);
+
+            ctx.fillStyle = 'rgba(200,164,77,0.9)';
+            ctx.font = `600 ${Math.round(w * 0.018)}px Inter, sans-serif`;
+            ctx.textAlign = 'left';
+            ctx.fillText('VELOCE NAIROBI', w * 0.08, h * 0.42);
+
+            ctx.fillStyle = '#f5f5f7';
+            const fs = Math.round(w * 0.058);
+            ctx.font = `600 ${fs}px "Playfair Display", Georgia, serif`;
+            const words = car.name.split(' ');
+            let line = '';
+            let y = h * 0.62;
+            for (let n = 0; n < words.length; n++) {
+                const test = line + words[n] + ' ';
+                if (ctx.measureText(test).width > w * 0.85 && n > 0) {
+                    ctx.fillText(line.trim(), w * 0.08, y);
+                    line = words[n] + ' ';
+                    y += fs * 1.1;
+                } else {
+                    line = test;
+                }
+            }
+            ctx.fillText(line.trim(), w * 0.08, y);
+
+            ctx.fillStyle = 'rgba(245,245,247,0.7)';
+            ctx.font = `400 ${Math.round(w * 0.02)}px Inter, sans-serif`;
+            ctx.fillText(car.engine, w * 0.08, y + fs * 0.9);
+
+            const hl = ctx.createLinearGradient(0, 0, 0, h * 0.35);
+            hl.addColorStop(0, 'rgba(255,255,255,0.09)');
+            hl.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = hl;
+            ctx.fillRect(0, 0, w, h * 0.35);
+
+            return canvas;
+        }
+
+        function getCardTexture(car) {
+            if (cardImageCache.has(car.id)) return cardImageCache.get(car.id);
+            const tex = new THREE.CanvasTexture(makeCarCardCanvas(car));
+            tex.colorSpace = THREE.SRGBColorSpace;
+            cardImageCache.set(car.id, tex);
+            return tex;
+        }
+
+        function getCardDataURL(car) {
+            const key = car.id + '_url';
+            if (cardImageCache.has(key)) return cardImageCache.get(key);
+            const url = makeCarCardCanvas(car, 800, 500).toDataURL('image/png');
+            cardImageCache.set(key, url);
+            return url;
+        }
+
+        function initThree() {
+            console.log('[Veloce] initThree...');
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x050508);
+            scene.fog = new THREE.Fog(0x050508, 15, 45);
+
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(0, 1.5, 7);
+            camera.lookAt(0, 0.8, 0);
+
+            renderer = new THREE.WebGLRenderer({
+                canvas: document.getElementById('webgl-canvas'),
+                antialias: true,
+                powerPreference: 'high-performance',
+                alpha: false
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 768 ? 1.25 : 1.75));
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            const floorGeo = new THREE.PlaneGeometry(60, 60);
+            const floorMat = new THREE.MeshStandardMaterial({
+                color: 0x0a0a10,
+                metalness: 0.95,
+                roughness: 0.15
+            });
+            floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.position.y = -0.02;
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            const gridHelper = new THREE.GridHelper(40, 40, 0x1a1a2a, 0x0d0d15);
+            gridHelper.position.y = 0.001;
+            scene.add(gridHelper);
+
+            ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
+            scene.add(ambientLight);
+
+            const keyLight = new THREE.SpotLight(0xffffff, 800);
+            keyLight.position.set(4, 10, 5);
+            keyLight.angle = 0.35;
+            keyLight.penumbra = 0.6;
+            keyLight.decay = 1.5;
+            keyLight.distance = 40;
+            keyLight.castShadow = true;
+            keyLight.shadow.mapSize.width = 1024;
+            keyLight.shadow.mapSize.height = 1024;
+            scene.add(keyLight);
+            spotLights.push(keyLight);
+
+            const fillLight = new THREE.SpotLight(0xc8a44d, 400);
+            fillLight.position.set(-6, 8, 3);
+            fillLight.angle = 0.4;
+            fillLight.penumbra = 0.7;
+            fillLight.decay = 1.5;
+            fillLight.distance = 40;
+            scene.add(fillLight);
+            spotLights.push(fillLight);
+
+            const rimLight = new THREE.PointLight(0x4488ff, 100, 20);
+            rimLight.position.set(0, 3, -6);
+            scene.add(rimLight);
+
+            const dustGeo = new THREE.BufferGeometry();
+            const dustCount = 400;
+            const dustPositions = new Float32Array(dustCount * 3);
+            for (let i = 0; i < dustCount * 3; i += 3) {
+                dustPositions[i] = (Math.random() - 0.5) * 20;
+                dustPositions[i + 1] = Math.random() * 8;
+                dustPositions[i + 2] = (Math.random() - 0.5) * 20;
+            }
+            dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
+            const dustMat = new THREE.PointsMaterial({
+                color: 0xccbb99,
+                size: 0.03,
+                transparent: true,
+                opacity: 0.5,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            });
+            dustParticles = new THREE.Points(dustGeo, dustMat);
+            scene.add(dustParticles);
+
+            const planeGeo = new THREE.PlaneGeometry(5.5, 3.1);
+            const planeMat = new THREE.MeshBasicMaterial({
+                transparent: true,
+                side: THREE.DoubleSide,
+                depthWrite: false
+            });
+            carPlane = new THREE.Mesh(planeGeo, planeMat);
+            carPlane.position.set(0, 1.2, 0);
+            scene.add(carPlane);
+
+            const refGeo = new THREE.PlaneGeometry(5.5, 3.1);
+            const refMat = new THREE.MeshBasicMaterial({
+                transparent: true,
+                opacity: 0.22,
+                depthWrite: false,
+                side: THREE.DoubleSide
+            });
+            reflectionPlane = new THREE.Mesh(refGeo, refMat);
+            reflectionPlane.position.set(0, -0.05, 0);
+            reflectionPlane.scale.y = -1;
+            reflectionPlane.rotation.x = -Math.PI / 2;
+            scene.add(reflectionPlane);
+
+            window.addEventListener('resize', onResize);
+
+            const viewerPhoto = document.createElement('img');
+            viewerPhoto.className = 'viewer-photo';
+            viewerPhoto.alt = CONFIG.cars[0].name;
+            viewerPhoto.draggable = false;
+            viewerPhoto.src = CONFIG.cars[0].heroUrl;
+            viewerPhoto.onerror = () => { viewerPhoto.onerror = null; viewerPhoto.src = 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1400&q=80'; };
+            viewerEl.prepend(viewerPhoto);
+            loadCarTexture(0, true);
+            console.log('[Veloce] initThree complete');
+        }
+
+        function onResize() {
+            if (!camera || !renderer) return;
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 768 ? 1.25 : 1.75));
+        }
+
+        function loadCarTexture(carIndex, isInitial = false) {
+            console.log('[Veloce] loadCarTexture', carIndex, 'isInitial:', isInitial);
+            const car = CONFIG.cars[carIndex];
+
+            loadedTextures.forEach(t => { try { t.dispose(); } catch(e){} });
+            loadedTextures = [];
+
+            const applyTexture = (texture) => {
+                texture.colorSpace = THREE.SRGBColorSpace;
+                texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+                loadedTextures.push(texture);
+                carPlane.material.map = texture;
+                carPlane.material.needsUpdate = true;
+                reflectionPlane.material.map = texture;
+                reflectionPlane.material.needsUpdate = true;
+                updateAmbientColor(car);
+                updateCarUI(carIndex);
+
+                if (isInitial) {
+                    loaderBar.style.width = '100%';
+                    setTimeout(() => {
+                        if (typeof window.__veloceHideLoader === 'function') {
+                            window.__veloceHideLoader('texture applied');
+                        } else {
+                            loaderEl.classList.add('hidden');
+                            carBadge.classList.add('visible');
+                        }
+                    }, 250);
+                }
+            };
+
+            const fallback = () => applyTexture(getCardTexture(car));
+            if (car.heroUrl) {
+                const texLoader = new THREE.TextureLoader();
+                texLoader.setCrossOrigin('anonymous');
+                texLoader.load(car.heroUrl, texture => applyTexture(texture), undefined, err => {
+                    console.warn('[Veloce] Car photo unavailable; using generated fallback.', err);
+                    fallback();
+                });
+            } else fallback();
+        }
+
+        function updateAmbientColor(car) {
+            const color = new THREE.Color(car.colorHex);
+            ambientLight.color.lerp(color, 0.18);
+            if (spotLights[1]) spotLights[1].color.lerp(color, 0.3);
+        }
+
+        function updateCarUI(index) {
+            const car = CONFIG.cars[index];
+            badgeCarName.textContent = car.name;
+            const photo = viewerEl && viewerEl.querySelector('.viewer-photo');
+            if (photo && photo.src !== car.heroUrl) { photo.src = car.heroUrl; photo.alt = car.name; photo.style.transform = 'perspective(1100px) rotateY(0deg) scale(.96)'; }
+            heroCarName.textContent = car.name;
+            heroSpec0.textContent = car.specs.zeroTo60;
+            heroSpecTop.textContent = car.specs.topSpeed;
+            heroSpecHp.textContent = car.specs.hp;
+
+            document.querySelectorAll('.carousel-card').forEach((card, i) => {
+                card.classList.toggle('active', Number(card.dataset.index) === index);
+            });
+
+            const tdCar = document.getElementById('td-car');
+            if (tdCar) tdCar.value = car.name;
+        }
+
+        function setupViewerInteraction() {
+            if (!viewerEl) return;
+
+            let isDown = false;
+            let startX = 0;
+            let rafId = null;
+            let targetRot = 0;
+            const photo = viewerEl.querySelector('.viewer-photo');
+
+            const startDrag = (e) => {
+                isDown = true;
+                startX = e.clientX;
+                lastDragTime = Date.now();
+                try { viewerEl.setPointerCapture(e.pointerId); } catch(err){}
+                e.preventDefault();
+            };
+
+            const moveDrag = (e) => {
+                if (!isDown) return;
+                const dx = e.clientX - startX;
+                targetRot = Math.max(-32, Math.min(32, dx * 0.35));
+                if (photo) photo.style.transform = `perspective(1100px) rotateY(${targetRot}deg) scale(.96)`;
+                lastDragTime = Date.now();
+                if (!rafId) rafId = requestAnimationFrame(applyRot);
+            };
+
+            const applyRot = () => {
+                rafId = null;
+                if (!carPlane) return;
+                carPlane.rotation.y = THREE.MathUtils.degToRad(targetRot);
+                if (reflectionPlane) reflectionPlane.rotation.z = carPlane.rotation.y;
+            };
+
+            const endDrag = (e) => {
+                if (!isDown) return;
+                isDown = false;
+                try { viewerEl.releasePointerCapture(e.pointerId); } catch(err){}
+                targetRot = 0;
+                if (photo) photo.style.transform = 'perspective(1100px) rotateY(0deg) scale(.96)';
+                gsap.to(carPlane.rotation, { y: 0, duration: 0.7, ease: 'power2.out' });
+                if (reflectionPlane) gsap.to(reflectionPlane.rotation, { z: 0, duration: 0.7, ease: 'power2.out' });
+            };
+
+            viewerEl.addEventListener('pointerdown', startDrag);
+            viewerEl.addEventListener('pointermove', moveDrag);
+            viewerEl.addEventListener('pointerup', endDrag);
+            viewerEl.addEventListener('pointercancel', endDrag);
+
+            viewerEl.setAttribute('tabindex', '0');
+        }
+
+        function buildCarousel() {
+            if (!carouselTrack) return;
+            carouselTrack.innerHTML = '';
+
+            CONFIG.cars.forEach((car, index) => {
+                const card = document.createElement('div');
+                card.className = `carousel-card${index === 0 ? ' active' : ''}`;
+                card.dataset.index = index;
+
+                const imgSrc = car.heroUrl || getCardDataURL(car);
+
+                card.innerHTML = `
+                    <img class="carousel-card-img" src="${imgSrc}" alt="${car.name}" loading="lazy">
+                    <div class="carousel-card-body">
+                        <div class="carousel-card-name">${car.name}</div>
+                        <div class="carousel-card-meta">${car.engine} · ${car.price}</div>
+                        <div class="carousel-card-actions">
+                            <button class="btn-gold interactive" data-action="view" data-index="${index}">View 360°</button>
+                            <a href="https://wa.me/${CONFIG.whatsapp}?text=Hi%20Veloce%2C%20I'd%20like%20to%20book%20a%20test%20drive%20for%20the%20${encodeURIComponent(car.name)}." class="btn-outline interactive" target="_blank" rel="noopener">Test drive</a>
+                            <button class="btn-outline interactive" data-action="compare" data-index="${index}">Compare</button>
+                        </div>
+                        <button class="save-car" type="button" data-action="save" data-index="${index}" aria-pressed="false">♡ Save to shortlist</button>
+                    </div>
+                `;
+                const cardImg = card.querySelector('.carousel-card-img');
+                cardImg.addEventListener('error', () => { cardImg.onerror = null; cardImg.src = getCardDataURL(car); });
+                carouselTrack.appendChild(card);
+
+                card.addEventListener('click', (e) => {
+                    if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A') return;
+                    selectCar(index);
+                    pauseAutoScroll();
+                });
+
+                card.querySelector('[data-action="view"]').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    selectCar(index);
+                    pauseAutoScroll();
+                    document.getElementById('hero').scrollIntoView({ behavior: 'smooth' });
+                });
+
+                card.querySelector('[data-action="compare"]').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    pauseAutoScroll();
+                    const current = CONFIG.cars[activeCarIndex];
+                    const details = item => `${item.name}\nCategory: ${item.category}\nEngine: ${item.engine}\nPower: ${item.specs.hp}\nTop speed: ${item.specs.topSpeed}\nPrice: ${item.price}`;
+                    window.alert(`VEHICLE COMPARISON\n\n${details(current)}\n\n————————————\n\n${details(car)}\n\nFinal specifications and availability should be confirmed with the dealer.`);
+                });
+            });
+        }
+
+        // Auto-scroll functions
+        function startAutoScroll() {
+            stopAutoScroll();
+            if (!autoScrollActive || reducedMotion) return;
+            autoScrollInterval = setInterval(() => {
+                if (!autoScrollActive) return;
+                if (Date.now() < autoScrollPausedUntil) return;
+                if (!carouselTrack) return;
+                // Check if carousel is visible in viewport
+                const rect = carouselTrack.getBoundingClientRect();
+                const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+                if (!isVisible) return;
+                // Check if there are visible cards
+                const visibleCards = [...carouselTrack.querySelectorAll('.carousel-card:not([hidden])')];
+                if (visibleCards.length === 0) return;
+                // Find current scroll position
+                const maxScroll = carouselTrack.scrollWidth - carouselTrack.clientWidth;
+                if (maxScroll <= 0) return;
+                // If near end, scroll back to start
+                if (carouselTrack.scrollLeft >= maxScroll - 10) {
+                    carouselTrack.scrollTo({ left: 0, behavior: 'smooth' });
+                } else {
+                    // Get first visible card width + gap
+                    const card = visibleCards[0];
+                    const cardWidth = card.offsetWidth;
+                    const gap = 20; // approximate gap
+                    carouselTrack.scrollBy({ left: cardWidth + gap, behavior: 'smooth' });
+                }
+            }, AUTO_SCROLL_SPEED);
+        }
+
+        function stopAutoScroll() {
+            if (autoScrollInterval) {
+                clearInterval(autoScrollInterval);
+                autoScrollInterval = null;
+            }
+        }
+
+        function pauseAutoScroll() {
+            autoScrollPausedUntil = Date.now() + AUTO_SCROLL_RESUME_DELAY;
+        }
+
+        function toggleAutoScroll() {
+            autoScrollActive = !autoScrollActive;
+            if (autoScrollActive) {
+                startAutoScroll();
+                showToast('Auto-scroll enabled');
+            } else {
+                stopAutoScroll();
+                showToast('Auto-scroll paused');
+            }
+            // Update indicator
+            const indicator = document.querySelector('.carousel-autoplay-indicator');
+            if (indicator) {
+                indicator.style.display = autoScrollActive ? 'inline-block' : 'none';
+            }
+        }
+
+        function setupInventoryFilters() {
+            const search = document.getElementById('car-search');
+            const type = document.getElementById('car-type');
+            const sort = document.getElementById('car-sort');
+            const count = document.getElementById('inventory-count');
+            const favFilter = document.getElementById('favorites-filter');
+            const savedCount = document.getElementById('saved-count');
+            const saved = new Set();
+            let favoritesOnly = false;
+            const cards = [...carouselTrack.querySelectorAll('.carousel-card')];
+            const syncSaved = () => {
+                savedCount.textContent = saved.size;
+                cards.forEach(card => {
+                    const isSaved = saved.has(Number(card.dataset.index));
+                    const btn = card.querySelector('[data-action="save"]');
+                    if (btn) { btn.setAttribute('aria-pressed', String(isSaved)); btn.textContent = isSaved ? '♥ Saved to shortlist' : '♡ Save to shortlist'; }
+                });
+                favFilter.setAttribute('aria-pressed', String(favoritesOnly));
+                favFilter.textContent = `${favoritesOnly ? '♥ Showing saved' : '♡ Saved cars'} ${saved.size}`;
+            };
+            const render = () => {
+                const q = (search.value || '').trim().toLowerCase();
+                const category = type.value;
+                let visible = cards.filter(card => {
+                    const car = CONFIG.cars[Number(card.dataset.index)];
+                    const matchesQuery = `${car.name} ${car.engine} ${car.category}`.toLowerCase().includes(q);
+                    return matchesQuery && (category === 'all' || car.category === category) && (!favoritesOnly || saved.has(Number(card.dataset.index)));
+                });
+                if (sort.value === 'name') visible.sort((a,b) => CONFIG.cars[+a.dataset.index].name.localeCompare(CONFIG.cars[+b.dataset.index].name));
+                else if (sort.value === 'price') visible.sort((a,b) => {
+                    const price = car => { const m = String(car.price).replace(/,/g,'').match(/[0-9]+/); return m ? Number(m[0]) : Number.MAX_SAFE_INTEGER; };
+                    return price(CONFIG.cars[+a.dataset.index]) - price(CONFIG.cars[+b.dataset.index]);
+                });
+                cards.forEach(card => { card.hidden = !visible.includes(card); });
+                visible.forEach(card => carouselTrack.appendChild(card));
+                carouselTrack.scrollTo({left:0,behavior:'smooth'});
+                count.textContent = `${visible.length} vehicle${visible.length === 1 ? '' : 's'} found`;
+                syncSaved();
+                // Restart auto-scroll after filter change
+                pauseAutoScroll();
+            };
+            cards.forEach(card => card.querySelector('[data-action="save"]')?.addEventListener('click', e => {
+                e.stopPropagation(); const index = Number(card.dataset.index);
+                if (saved.has(index)) saved.delete(index); else saved.add(index);
+                render();
+                showToast(saved.has(index) ? 'Added to shortlist' : 'Removed from shortlist');
+            }));
+            [search,type,sort].forEach(el => el && el.addEventListener('input', render));
+            favFilter?.addEventListener('click', () => { favoritesOnly = !favoritesOnly; render(); });
+            document.getElementById('carousel-prev')?.addEventListener('click', () => { carouselTrack.scrollBy({left:-Math.max(280,carouselTrack.clientWidth*.82),behavior:'smooth'}); pauseAutoScroll(); });
+            document.getElementById('carousel-next')?.addEventListener('click', () => { carouselTrack.scrollBy({left:Math.max(280,carouselTrack.clientWidth*.82),behavior:'smooth'}); pauseAutoScroll(); });
+            carouselTrack.addEventListener('keydown', e => { if(e.key === 'ArrowRight') { carouselTrack.scrollBy({left:340,behavior:'smooth'}); pauseAutoScroll(); } if(e.key === 'ArrowLeft') { carouselTrack.scrollBy({left:-340,behavior:'smooth'}); pauseAutoScroll(); } });
+            render();
+
+            // Double-click on carousel toggle auto-scroll
+            carouselTrack.addEventListener('dblclick', (e) => {
+                if (e.target.closest('.carousel-card')) return;
+                toggleAutoScroll();
+            });
+
+            // Start auto-scroll
+            startAutoScroll();
+        }
+
+        function selectCar(index) {
+            if (index === activeCarIndex) return;
+            activeCarIndex = index;
+
+            gsap.to(camera.position, {
+                x: 0, y: 1.2, z: 6,
+                duration: 1.2,
+                ease: 'power2.inOut',
+                onUpdate: () => camera.lookAt(0, 0.8, 0)
+            });
+
+            loadCarTexture(index);
+
+            const card = carouselTrack.querySelector(`.carousel-card[data-index="${index}"]`);
+            if (card && !card.hidden) card.scrollIntoView({ behavior:'smooth', block:'nearest', inline:'center' });
+            document.querySelectorAll('.carousel-card').forEach(item => item.classList.toggle('active', Number(item.dataset.index) === index));
+            if (badgeCarName) badgeCarName.textContent = CONFIG.cars[index]?.name || 'Selected vehicle';
+        }
+
+        function setupScrollTriggers() {
+            ScrollTrigger.create({
+                trigger: document.body,
+                start: 'top top',
+                end: 'bottom bottom',
+                onUpdate: (self) => {
+                    progressBar.style.width = `${self.progress * 100}%`;
+                }
+            });
+
+            const cameraStates = [
+                { trigger: '#hero', pos: { x: 0, y: 1.5, z: 7 }, look: { x: 0, y: 0.8, z: 0 } },
+                { trigger: '#collection', pos: { x: 2, y: 1.8, z: 6 }, look: { x: 0, y: 0.8, z: 0 } },
+                { trigger: '#heritage', pos: { x: -1.5, y: 0.6, z: 5 }, look: { x: 0.5, y: 1, z: 0 } },
+                { trigger: '#performance', pos: { x: 4, y: 1.2, z: 4 }, look: { x: 0, y: 0.8, z: 0 } },
+                { trigger: '#interior', pos: { x: 0, y: 2.5, z: 3 }, look: { x: 0, y: 1.2, z: 0 } },
+                { trigger: '#financing', pos: { x: -2, y: 1.5, z: 6 }, look: { x: 0, y: 0.8, z: 0 } },
+                { trigger: '#testdrive', pos: { x: 0, y: 5, z: 8 }, look: { x: 0, y: 0.5, z: 0 } }
+            ];
+
+            if (!reducedMotion) {
+                cameraStates.forEach((state) => {
+                    ScrollTrigger.create({
+                        trigger: state.trigger,
+                        start: 'top center',
+                        end: 'bottom center',
+                        scrub: 1.2,
+                        onEnter: () => updateCameraState(state.pos, state.look),
+                        onEnterBack: () => updateCameraState(state.pos, state.look)
+                    });
+                });
+            }
+
+            sectionDots.forEach(dot => {
+                dot.addEventListener('click', () => {
+                    const el = document.getElementById(dot.dataset.section);
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                });
+            });
+
+            const sectionIds = ['hero', 'collection', 'heritage', 'performance', 'interior', 'financing', 'testdrive'];
+            sectionIds.forEach((id, i) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                ScrollTrigger.create({
+                    trigger: el,
+                    start: 'top center',
+                    end: 'bottom center',
+                    onEnter: () => setActiveDot(i),
+                    onEnterBack: () => setActiveDot(i)
+                });
+            });
+        }
+
+        function updateCameraState(pos, look) {
+            gsap.to(camera.position, {
+                x: pos.x, y: pos.y, z: pos.z,
+                duration: 1.5,
+                ease: 'power2.inOut',
+                onUpdate: () => {
+                    camera.lookAt(look.x, look.y, look.z);
+                }
+            });
+        }
+
+        function setActiveDot(index) {
+            sectionDots.forEach((d, i) => d.classList.toggle('active', i === index));
+        }
+
+        function setupReveal() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) entry.target.classList.add('visible');
+                });
+            }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        }
+
+        function setupCountUp() {
+            const counted = new Set();
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !counted.has(entry.target)) {
+                        counted.add(entry.target);
+                        const el = entry.target;
+                        const target = parseFloat(el.dataset.count);
+                        const decimals = parseInt(el.dataset.decimals) || 0;
+                        const unit = el.querySelector('.spec-unit');
+                        const unitHTML = unit ? unit.outerHTML : '';
+
+                        gsap.to({ val: 0 }, {
+                            val: target,
+                            duration: 2,
+                            ease: 'power2.out',
+                            onUpdate: function() {
+                                const v = this.targets()[0].val;
+                                el.innerHTML = v.toFixed(decimals) + unitHTML;
+                            }
+                        });
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            document.querySelectorAll('.spec-value[data-count]').forEach(el => observer.observe(el));
+        }
+
+        function setupFinanceCalculator() {
+            const priceEl = document.getElementById('finance-price');
+            const depositEl = document.getElementById('finance-deposit');
+            const rateEl = document.getElementById('finance-rate-input');
+            const termEl = document.getElementById('finance-term-input');
+            const monthlyEl = document.getElementById('finance-monthly');
+            const noteEl = document.getElementById('finance-loan-note');
+            const kes = n => 'KES ' + Math.round(n).toLocaleString('en-KE');
+            const update = () => {
+                const price = Math.max(0, Number(priceEl.value) || 0);
+                const deposit = Math.min(price, Math.max(0, Number(depositEl.value) || 0));
+                const principal = Math.max(0, price - deposit);
+                const annual = Math.min(50, Math.max(0, Number(rateEl.value) || 0));
+                const months = Math.max(1, Number(termEl.value) || 36);
+                const r = annual / 1200;
+                const payment = principal === 0 ? 0 : r === 0 ? principal / months : principal * r / (1 - Math.pow(1 + r, -months));
+                monthlyEl.textContent = kes(payment);
+                noteEl.textContent = `Loan amount: ${kes(principal)} · ${months} months · excludes lender fees, insurance and taxes`;
+            };
+            [priceEl,depositEl,rateEl,termEl].forEach(el => el?.addEventListener('input', update));
+            update();
+        }
+
+        function setupForm() {
+            const form = document.getElementById('test-drive-form');
+            if (!form) return;
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = document.getElementById('td-name').value;
+                const phone = document.getElementById('td-phone').value;
+                const car = document.getElementById('td-car').value;
+                const date = document.getElementById('td-date').value;
+                const msg = `Hi Veloce Nairobi, I'd like to book a test drive.\n\nName: ${name}\nPhone: ${phone}\nCar: ${car}\nPreferred date: ${date || 'Flexible'}`;
+                const url = `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(msg)}`;
+                const opened = window.open(url, '_blank', 'noopener,noreferrer');
+                if (!opened) window.location.href = url;
+            });
+        }
+
+        function setupNav() {
+            window.addEventListener('scroll', () => {
+                const scrollY = window.scrollY;
+                nav.classList.toggle('scrolled', scrollY > 50);
+                backTopBtn.classList.toggle('visible', scrollY > 800);
+            });
+
+            backTopBtn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+            const elapsed = clock.getElapsedTime();
+
+            if (dustParticles) {
+                dustParticles.rotation.y += delta * 0.02;
+                const positions = dustParticles.geometry.attributes.position.array;
+                for (let i = 1; i < positions.length; i += 3) {
+                    positions[i] += Math.sin(elapsed + i) * 0.002;
+                }
+                dustParticles.geometry.attributes.position.needsUpdate = true;
+            }
+
+            spotLights.forEach((light, i) => {
+                light.position.x += Math.sin(elapsed * 0.3 + i) * 0.002;
+            });
+
+            if (renderer && scene && camera) renderer.render(scene, camera);
+        }
+
+        function boot() {
+            console.log('[Veloce] boot...');
+
+            try {
+                initThree();
+            } catch (err) {
+                console.error('[Veloce] initThree failed:', err);
+                if (typeof window.__veloceHideLoader === 'function') {
+                    window.__veloceHideLoader('initThree error');
+                }
+                return;
+            }
+
+            try { buildCarousel(); setupInventoryFilters(); } catch (err) { console.error('[Veloce] carousel failed:', err); }
+            try { setupViewerInteraction(); } catch (err) { console.error('[Veloce] viewer failed:', err); }
+            try { setupScrollTriggers(); } catch (err) { console.error('[Veloce] scroll triggers failed:', err); }
+            try { setupReveal(); } catch (err) { console.error('[Veloce] reveal failed:', err); }
+            try { setupCountUp(); } catch (err) { console.error('[Veloce] countup failed:', err); }
+            try { setupForm(); } catch (err) { console.error('[Veloce] form failed:', err); }
+            try { setupFinanceCalculator(); } catch (err) { console.error('[Veloce] finance calculator failed:', err); }
+            try { setupNav(); } catch (err) { console.error('[Veloce] nav failed:', err); }
+
+            animate();
+
+            let t = 0;
+            const texts = ['Preparing showroom', 'Warming the lights', 'Polishing reflections'];
+            const txtIv = setInterval(() => {
+                t++;
+                if (t >= texts.length) { clearInterval(txtIv); return; }
+                if (loaderText) loaderText.textContent = texts[t];
+            }, 800);
+
+            console.log('[Veloce] boot complete');
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', boot);
+        } else {
+            boot();
+        }
+    </script>
+</body>
+</html>

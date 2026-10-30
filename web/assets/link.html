@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>2link • Neural Match</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', 'Plus Jakarta Sans', sans-serif;
+            background: #0A0D14;
+            color: #F0F0F0;
+            overflow-x: hidden;
+            font-size: 18px; /* increased base font */
+        }
+        .bg-aura {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 10%, #1e1a3a, #03050b);
+            z-index: -2;
+        }
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(rgba(255, 68, 170, 0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255, 68, 170, 0.03) 1px, transparent 1px);
+            background-size: 45px 45px;
+            pointer-events: none;
+            z-index: -1;
+        }
+        .container { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem; position: relative; z-index: 2; }
+        .glass-nav {
+            background: rgba(15, 20, 30, 0.7);
+            backdrop-filter: blur(16px);
+            border-radius: 2rem;
+            padding: 0.8rem 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 80, 180, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .logo h1 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 2.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #FFFFFF, #FF66C0, #AA66FF);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .slogan {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #ffbbdd;
+            margin-top: 4px;
+            letter-spacing: 0.3px;
+        }
+        .stats-badge {
+            background: #1e1a2fcc;
+            padding: 0.5rem 1.2rem;
+            border-radius: 60px;
+            border: 1px solid #ff66c0;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        .admin-btn {
+            background: linear-gradient(95deg, #ff44aa, #aa44ff);
+            border: none;
+            padding: 0.6rem 1.4rem;
+            border-radius: 60px;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            color: white;
+        }
+        .neural-premium {
+            background: rgba(12, 16, 26, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 2rem;
+            padding: 1.8rem;
+            margin-bottom: 1.8rem;
+            border: 1px solid rgba(255, 100, 200, 0.4);
+        }
+        .neural-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-bottom: 1.8rem;
+        }
+        .title-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .title-section i { font-size: 2rem; background: linear-gradient(135deg, #FF66C0, #AA66FF); background-clip: text; -webkit-background-clip: text; color: transparent; }
+        .title-section h2 { font-size: 1.8rem; font-weight: 800; }
+        .ai-badge { background: #ff44aa30; padding: 0.3rem 1rem; border-radius: 60px; font-size: 0.85rem; font-weight: 600; border: 1px solid #ff66c0; }
+        .match-grid { display: flex; flex-wrap: wrap; gap: 1.8rem; margin-bottom: 1.8rem; }
+        .match-card { flex: 1; min-width: 200px; background: #0F1322; border-radius: 1.5rem; padding: 1.2rem; border: 1px solid #2a2e4a; }
+        .match-card label { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; text-transform: uppercase; font-weight: 800; margin-bottom: 1rem; color: #ff99cc; }
+        .dual-range-slider { position: relative; width: 100%; height: 5px; background: #2a2e4a; border-radius: 5px; margin: 25px 0 15px; }
+        .dual-range-slider .track { position: absolute; height: 5px; background: linear-gradient(90deg, #ff44aa, #aa44ff); border-radius: 5px; pointer-events: none; }
+        .dual-range-slider input { position: absolute; width: 100%; background: none; pointer-events: none; -webkit-appearance: none; top: -10px; }
+        .dual-range-slider input::-webkit-slider-thumb { pointer-events: auto; -webkit-appearance: none; width: 20px; height: 20px; background: #ff66c0; border-radius: 50%; cursor: pointer; }
+        .range-values { display: flex; justify-content: space-between; font-size: 1rem; font-weight: 700; margin-top: 10px; }
+        .range-values span { background: #1e1a2f; padding: 0.2rem 0.8rem; border-radius: 40px; border: 1px solid #ff66c055; }
+        .modern-select, .modern-input { background: #1A1E2C; border: 1px solid #2a2e4a; border-radius: 60px; padding: 0.7rem 1rem; width: 100%; color: white; font-size: 0.95rem; outline: none; }
+        .verify-toggle { display: flex; align-items: center; gap: 12px; margin-top: 0.5rem; font-size: 0.9rem; }
+        .verify-toggle input { width: 20px; height: 20px; accent-color: #ff66c0; }
+        .neural-actions { display: flex; gap: 1.2rem; flex-wrap: wrap; align-items: center; }
+        .btn-primary { background: linear-gradient(95deg, #ff44aa, #aa44ff); border: none; padding: 0.7rem 1.8rem; border-radius: 60px; font-weight: 800; font-size: 1rem; color: white; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-outline { background: transparent; border: 1px solid #ff66c0; padding: 0.7rem 1.8rem; border-radius: 60px; font-weight: 700; font-size: 1rem; color: #ffccff; cursor: pointer; }
+        .neural-feedback { background: #1A1E2C; border-radius: 60px; padding: 0.5rem 1.2rem; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+        .search-bar {
+            background: rgba(12, 16, 26, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 2rem;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid rgba(255, 100, 200, 0.4);
+        }
+        .search-bar i { font-size: 1.3rem; color: #ff99cc; }
+        .search-bar input {
+            flex: 1;
+            background: #1A1E2C;
+            border: none;
+            border-radius: 60px;
+            padding: 0.8rem 1.2rem;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+        }
+        .search-bar input::placeholder { font-size: 0.9rem; color: #aaa; }
+        .profiles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem; margin-top: 0.5rem; }
+        .tulink-card { background: rgba(18, 22, 35, 0.9); backdrop-filter: blur(4px); border-radius: 1.8rem; overflow: hidden; transition: 0.2s; border: 1px solid rgba(255, 68, 170, 0.3); position: relative; }
+        .tulink-card:hover { transform: translateY(-5px); border-color: #ff66c0; }
+        .ai-score { position: absolute; top: 12px; right: 12px; background: #aa44ffcc; backdrop-filter: blur(4px); padding: 0.3rem 0.8rem; border-radius: 30px; font-weight: 800; font-size: 0.85rem; }
+        .card-img { width: 100%; height: 280px; object-fit: cover; }
+        .card-info { padding: 1rem; }
+        .card-info > div:first-of-type { font-size: 1.3rem; font-weight: 800; margin-bottom: 4px; }
+        .card-info .bio { font-size: 0.9rem; line-height: 1.4; margin: 8px 0; }
+        .card-info .tags span { font-size: 0.8rem; }
+        .wa-btn { width: 100%; background: linear-gradient(95deg, #25D366, #128C7E); border: none; padding: 12px; border-radius: 60px; font-weight: 800; font-size: 1rem; color: white; display: flex; justify-content: center; gap: 8px; cursor: pointer; margin-top: 12px; }
+        .ai-chat { position: fixed; bottom: 20px; right: 20px; z-index: 1000; }
+        .chat-toggle { background: linear-gradient(135deg, #ff44aa, #aa44ff); border-radius: 60px; padding: 0.8rem 1.2rem; cursor: pointer; font-weight: 800; font-size: 0.95rem; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+        .chat-window { display: none; width: 320px; background: #11141f; border-radius: 1.5rem; overflow: hidden; border: 1px solid #ff66c0; position: absolute; bottom: 80px; right: 0; flex-direction: column; }
+        .chat-header { background: #1e1a2f; padding: 0.8rem; font-weight: 800; font-size: 1rem; }
+        .chat-body { height: 280px; overflow-y: auto; padding: 0.8rem; font-size: 0.9rem; }
+        .chat-input-area { display: flex; padding: 0.6rem; background: #0a0c14; gap: 8px; }
+        .chat-input { flex: 1; border-radius: 60px; border: none; padding: 0.6rem 1rem; background: #2a2a3a; color: white; font-size: 0.9rem; }
+        .footer { text-align: center; margin-top: 2.5rem; padding: 1rem; font-size: 0.8rem; color: #aaa; }
+        /* Admin panel larger fonts */
+        .admin-card { font-size: 0.95rem; }
+        .admin-table th, .admin-table td { font-size: 0.9rem; padding: 12px 10px; }
+        .add-queen-form input, .add-queen-form select, .add-queen-form button { font-size: 0.9rem; padding: 0.6rem 1rem; }
+        .wa-config label, .wa-config input { font-size: 0.95rem; }
+        @media (max-width: 700px) {
+            .container { padding: 1rem; }
+            .match-grid { flex-direction: column; }
+            body { font-size: 16px; }
+            .logo h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-aura"></div>
+<div class="grid-overlay"></div>
+<div class="container">
+    <div class="glass-nav">
+        <div class="logo">
+            <h1><i class="fas fa-link"></i> 2link</h1>
+            <div class="slogan"><i class="fas fa-heart" style="font-size: 0.7rem;"></i> Two hearts, one link — connect meaningfully <i class="fas fa-heart" style="font-size: 0.7rem;"></i></div>
+        </div>
+        <div class="stats-badge"><i class="fas fa-female"></i> <span id="totalQueens">0</span> Queens</div>
+        <button class="admin-btn" id="openAdminBtn"><i class="fas fa-crown"></i> Admin</button>
+    </div>
+
+    <div class="neural-premium">
+        <div class="neural-header">
+            <div class="title-section"><i class="fas fa-brain"></i><h2>Neural Match</h2><div class="ai-badge">AI</div></div>
+            <div id="neuralStatusBadge" class="ai-badge">Ready</div>
+        </div>
+        <div class="match-grid">
+            <div class="match-card">
+                <label><i class="fas fa-calendar-alt"></i> Age preference</label>
+                <div class="dual-range-slider"><div class="track" id="sliderTrack"></div><input type="range" id="ageMinInput" min="18" max="60" value="20"><input type="range" id="ageMaxInput" min="18" max="60" value="35"></div>
+                <div class="range-values"><span id="minAgeLabel">20</span> — <span id="maxAgeLabel">35</span></div>
+            </div>
+            <div class="match-card">
+                <label><i class="fas fa-map-marker-alt"></i> Preferred county</label>
+                <select id="neuralCounty" class="modern-select"><option value="any">Anywhere Kenya</option><option>Nairobi</option><option>Mombasa</option><option>Kisumu</option><option>Nakuru</option><option>Eldoret</option></select>
+            </div>
+            <div class="match-card">
+                <label><i class="fas fa-heart"></i> Interests (comma)</label>
+                <input type="text" id="neuralInterests" class="modern-input" placeholder="e.g., fitness, travel, food">
+            </div>
+            <div class="match-card">
+                <label><i class="fas fa-check-circle"></i> Verification</label>
+                <div class="verify-toggle"><input type="checkbox" id="neuralVerifiedOnly"><span>Show only verified queens 👑</span></div>
+            </div>
+        </div>
+        <div class="neural-actions">
+            <button id="runNeuralMatch" class="btn-primary"><i class="fas fa-magic"></i> Find Matches</button>
+            <button id="resetNeural" class="btn-outline">Reset</button>
+            <div id="neuralFeedback" class="neural-feedback"><i class="fas fa-info-circle"></i> Set preferences → AI scores every queen</div>
+        </div>
+    </div>
+
+    <!-- Search bar by name -->
+    <div class="search-bar">
+        <i class="fas fa-search"></i>
+        <input type="text" id="nameSearchInput" placeholder="Search by name... e.g., Aisha, Wanjiku">
+        <i class="fas fa-times-circle" id="clearSearchBtn" style="cursor:pointer; color:#ff88aa; display:none;"></i>
+    </div>
+
+    <div id="profilesGrid" class="profiles-grid"></div>
+    <div class="footer"><i class="fab fa-whatsapp"></i> Tap "Connect" → WhatsApp admin • Real contact shared after verification</div>
+</div>
+
+<div class="ai-chat">
+    <div class="chat-toggle" id="chatToggleBtn"><i class="fas fa-comment-dots"></i> AI Chat</div>
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header">2link Neural AI <span id="closeChat" style="float:right; cursor:pointer;">✖</span></div>
+        <div class="chat-body" id="chatMessages">💬 Ask me: "Find a queen in Nairobi", "Recommend verified"</div>
+        <div class="chat-input-area"><input type="text" id="chatInput" class="chat-input" placeholder="Ask AI..."><button id="sendChatBtn" style="background:#ff44aa; border:none; border-radius:60px; padding:0 14px; font-weight:bold;">Send</button></div>
+    </div>
+</div>
+
+<div id="adminOverlay" class="admin-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.96); backdrop-filter:blur(12px); z-index:2000; justify-content:center; align-items:center;">
+    <div class="admin-card" style="background:#11151f; border-radius:1.5rem; max-width:1300px; width:95%; max-height:90vh; overflow-y:auto; padding:1.5rem; border:1px solid #ff66c0;">
+        <div class="admin-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; padding-bottom:0.8rem; border-bottom:1px solid #2a2e4a;">
+            <h2 style="font-size:1.6rem;"><i class="fas fa-crown"></i> Admin Neural Control</h2>
+            <button class="close-admin-btn" id="closeAdminX" style="background:none; border:none; font-size:2rem; color:#ff88aa; cursor:pointer;">&times;</button>
+        </div>
+        <div class="wa-config" style="background:#1a1e2c; border-radius:1rem; padding:1rem; margin-bottom:1.5rem; display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+            <label style="font-weight:800;"><i class="fab fa-whatsapp"></i> Admin WhatsApp:</label>
+            <input type="text" id="adminWhatsApp" value="254712345678" style="background:#0f111a; border:1px solid #2a2e4a; border-radius:60px; padding:0.6rem 1rem; color:white; font-size:0.95rem;">
+        </div>
+        <h3 style="font-size:1.3rem; margin-bottom:1rem;">👑 Manage Queens (Only Women)</h3>
+        <div class="admin-table-container" style="overflow-x:auto; margin:1rem 0;">
+            <table class="admin-table" style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+                <thead><tr style="background:#1e1a2f; color:#ff99cc;"><th>Name</th><th>Age/Location</th><th>Real Phone</th><th>Verified</th><th>Tags</th><th>Actions</th></tr></thead>
+                <tbody id="adminTableBody"></tbody>
+            </table>
+        </div>
+        <div class="add-queen-form" style="background:#0f1322; border-radius:1rem; padding:1rem; margin-top:1.5rem; display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end;">
+            <input type="text" id="newName" placeholder="Full name" style="background:#1A1E2C; border:1px solid #2a2e4a; border-radius:60px; padding:0.6rem 1rem; color:white; flex:1; min-width:130px;">
+            <input type="number" id="newAge" placeholder="Age" style="background:#1A1E2C; border:1px solid #2a2e4a; border-radius:60px; padding:0.6rem 1rem; color:white; width:90px;">
+            <input type="text" id="newLocation" placeholder="County" style="background:#1A1E2C; border:1px solid #2a2e4a; border-radius:60px; padding:0.6rem 1rem; color:white; flex:1;">
+            <input type="text" id="newBio" placeholder="Short bio" style="background:#1A1E2C; border:1px solid #2a2e4a; border-radius:60px; padding:0.6rem 1rem; color:white; flex:1;">
+            <input type="text" id="newPhoto" placeholder="Image URL" style="background:#1A1E2C; border:1px solid #2a2e4a; border-radius:60px; padding:0.6rem 1rem; color:white; flex:1;">
+            <input type="text" id="newPhone" placeholder="Real WhatsApp" style="background:#1A1E2C; border:1px solid #2a2e4a; border-radius:60px; padding:0.6rem 1rem; color:white; flex:1;">
+            <input type="text" id="newTags" placeholder="Tags (comma)" style="background:#1A1E2C; border:1px solid #2a2e4a; border-radius:60px; padding:0.6rem 1rem; color:white; width:150px;">
+            <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" id="newVerified" style="width:18px; height:18px;"> Verified</label>
+            <button id="addQueenBtn" style="background:#ff44aa; border:none; border-radius:60px; padding:0.6rem 1.2rem; font-weight:bold; color:white; cursor:pointer;">+ Add Queen</button>
+        </div>
+        <button id="adminLogoutBtn" style="margin-top:1.5rem; background:#2a2e4a; border:none; border-radius:60px; padding:0.6rem 1.2rem; cursor:pointer; font-weight:bold;">Close Admin Panel</button>
+    </div>
+</div>
+
+<script>
+    let profiles = [], adminWhatsApp = "254712345678", neuralPreferences = null, compatibilityScores = {};
+    let currentNameSearch = "";
+
+    const defaultQueens = [
+        { id: 1, name: "Aisha Makena", age: 26, gender: "Female", location: "Mombasa", bio: "Ocean lover, looking for real chemistry.", photoUrl: "https://randomuser.me/api/portraits/women/68.jpg", realPhone: "+254711223344", verified: true, tags: ["beach","coffee"] },
+        { id: 2, name: "Wanjiku Kariuki", age: 29, gender: "Female", location: "Nairobi", bio: "Ambitious, loves fine dining.", photoUrl: "https://randomuser.me/api/portraits/women/44.jpg", realPhone: "+254722334455", verified: true, tags: ["foodie","career"] },
+        { id: 3, name: "Zuri Adhiambo", age: 24, gender: "Female", location: "Kisumu", bio: "Sunset chaser, adventurous.", photoUrl: "https://randomuser.me/api/portraits/women/90.jpg", realPhone: "+254733445566", verified: false, tags: ["nature","music"] },
+        { id: 4, name: "Ciku Mwangi", age: 32, gender: "Female", location: "Nakuru", bio: "Wildlife photographer, kind.", photoUrl: "https://randomuser.me/api/portraits/women/55.jpg", realPhone: "+254744556677", verified: true, tags: ["photography","hiking"] },
+        { id: 5, name: "Faith Jepchirchir", age: 27, gender: "Female", location: "Eldoret", bio: "Fitness model, marathon spirit.", photoUrl: "https://randomuser.me/api/portraits/women/33.jpg", realPhone: "+254755667788", verified: true, tags: ["gym","travel"] },
+        { id: 6, name: "Lulu Akinyi", age: 22, gender: "Female", location: "Kiambu", bio: "Creative designer, road trips.", photoUrl: "https://randomuser.me/api/portraits/women/42.jpg", realPhone: "+254766778899", verified: false, tags: ["art","adventure"] },
+        { id: 7, name: "Nasra Hassan", age: 30, gender: "Female", location: "Mombasa", bio: "Business owner, respectful.", photoUrl: "https://randomuser.me/api/portraits/women/79.jpg", realPhone: "+254777889900", verified: true, tags: ["boss","beach"] }
+    ];
+    function loadData() { const s = localStorage.getItem("2link_neural_db"); profiles = s ? JSON.parse(s) : defaultQueens; profiles = profiles.filter(p => p.gender === "Female"); saveData(); }
+    function saveData() { localStorage.setItem("2link_neural_db", JSON.stringify(profiles)); document.getElementById("totalQueens").innerText = profiles.length; }
+    const minSlider = document.getElementById("ageMinInput"), maxSlider = document.getElementById("ageMaxInput"), minLabel = document.getElementById("minAgeLabel"), maxLabel = document.getElementById("maxAgeLabel"), track = document.getElementById("sliderTrack");
+    function updateSlider() { let min = +minSlider.value, max = +maxSlider.value; if(min>max) { [min,max]=[max,min]; minSlider.value=min; maxSlider.value=max; } minLabel.innerText=min; maxLabel.innerText=max; const pMin=(min-18)/42*100, pMax=(max-18)/42*100; track.style.left=pMin+'%'; track.style.width=(pMax-pMin)+'%'; }
+    minSlider.addEventListener("input", updateSlider); maxSlider.addEventListener("input", updateSlider); updateSlider();
+    function computeScores(pref) { if(!pref) { compatibilityScores={}; return; } let scores={}; profiles.forEach(p=>{ let s=50; if(p.age>=pref.minAge&&p.age<=pref.maxAge) s+=25; else if(Math.abs(p.age-(pref.minAge+pref.maxAge)/2)<=5) s+=10; else s-=8; if(pref.county!=="any"&&p.location.includes(pref.county)) s+=25; if(pref.interests?.length){ let m=0; pref.interests.forEach(i=>{ if(p.tags?.some(t=>t.toLowerCase().includes(i))) m++; if(p.bio.toLowerCase().includes(i)) m++; }); s+=Math.min(m*12,35); } if(pref.verifiedOnly&&p.verified) s+=20; else if(pref.verifiedOnly&&!p.verified) s-=15; scores[p.id]=Math.min(99,Math.max(15,Math.floor(s))); }); compatibilityScores=scores; }
+    
+    function renderPublic() {
+        let filtered = [...profiles];
+        if (neuralPreferences && Object.keys(compatibilityScores).length) {
+            filtered = filtered.filter(p => p.age >= neuralPreferences.minAge && p.age <= neuralPreferences.maxAge);
+            if (neuralPreferences.county !== "any") filtered = filtered.filter(p => p.location.includes(neuralPreferences.county));
+            if (neuralPreferences.verifiedOnly) filtered = filtered.filter(p => p.verified);
+            if (currentNameSearch) {
+                filtered = filtered.filter(p => p.name.toLowerCase().includes(currentNameSearch.toLowerCase()));
+            }
+            filtered.sort((a,b) => (compatibilityScores[b.id]||0) - (compatibilityScores[a.id]||0));
+        } else {
+            if (currentNameSearch) {
+                filtered = filtered.filter(p => p.name.toLowerCase().includes(currentNameSearch.toLowerCase()));
+            }
+        }
+        const grid = document.getElementById("profilesGrid");
+        if (!filtered.length) { grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:2rem;">No matches. Adjust search or Neural Match.</div>`; return; }
+        grid.innerHTML = filtered.map(p => `
+            <div class="tulink-card">
+                <div class="ai-score"><i class="fas fa-chart-line"></i> ${compatibilityScores[p.id] || '?'}%</div>
+                ${p.verified ? '<div style="position:absolute; top:10px; left:10px; background:#ffaa33; padding:2px 8px; border-radius:30px; font-size:0.7rem;">✓ Verified</div>' : ''}
+                <img class="card-img" src="${p.photoUrl}" onerror="this.src='https://randomuser.me/api/portraits/women/1.jpg'">
+                <div class="card-info">
+                    <div style="display:flex; justify-content:space-between; font-weight:800; font-size:1.3rem;"><span>${escapeHtml(p.name)}</span><span style="background:#ff44aa33; padding:4px 12px; border-radius:40px;">${p.age}</span></div>
+                    <div style="margin:5px 0;"><i class="fas fa-map-pin"></i> ${escapeHtml(p.location)}</div>
+                    <div class="bio" style="margin:8px 0; font-size:0.95rem;">${escapeHtml(p.bio.substring(0,90))}</div>
+                    <div>${p.tags?.map(t=>`<span style="background:#2a2a3a; padding:4px 10px; border-radius:30px; font-size:0.8rem; margin-right:6px;">#${t}</span>`).join('')||''}</div>
+                    <button class="wa-btn" data-id="${p.id}" data-name="${escapeHtml(p.name)}" data-age="${p.age}" data-location="${escapeHtml(p.location)}" data-bio="${escapeHtml(p.bio)}"><i class="fab fa-whatsapp"></i> Connect via WhatsApp</button>
+                </div>
+            </div>
+        `).join('');
+        document.querySelectorAll('.wa-btn').forEach(btn => btn.addEventListener('click', handleInterest));
+    }
+
+    function handleInterest(e){ const btn=e.currentTarget; const msg=`2link interest: ${btn.dataset.name}, ${btn.dataset.age} from ${btn.dataset.location}. Bio: ${btn.dataset.bio}. Please connect us.`; let wa=adminWhatsApp.replace(/\D/g,''); if(!wa.startsWith('254')) wa='254'+wa; window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`,'_blank'); }
+    
+    document.getElementById("runNeuralMatch").onclick=()=>{ neuralPreferences={ minAge:+minSlider.value, maxAge:+maxSlider.value, county:document.getElementById("neuralCounty").value, interests:document.getElementById("neuralInterests").value.split(",").map(i=>i.trim().toLowerCase()).filter(i=>i), verifiedOnly:document.getElementById("neuralVerifiedOnly").checked }; computeScores(neuralPreferences); renderPublic(); document.getElementById("neuralFeedback").innerHTML=`<i class="fas fa-check-circle"></i> AI active – ${profiles.length} queens scored.`; document.getElementById("neuralStatusBadge").innerHTML="Active"; };
+    document.getElementById("resetNeural").onclick=()=>{ neuralPreferences=null; compatibilityScores={}; minSlider.value=20; maxSlider.value=35; updateSlider(); document.getElementById("neuralCounty").value="any"; document.getElementById("neuralInterests").value=""; document.getElementById("neuralVerifiedOnly").checked=false; renderPublic(); document.getElementById("neuralFeedback").innerHTML=`<i class="fas fa-info-circle"></i> Reset. Set preferences → Find Matches.`; document.getElementById("neuralStatusBadge").innerHTML="Ready"; };
+    
+    const nameSearchInput = document.getElementById("nameSearchInput");
+    const clearSearchBtn = document.getElementById("clearSearchBtn");
+    nameSearchInput.addEventListener("input", (e) => {
+        currentNameSearch = e.target.value;
+        clearSearchBtn.style.display = currentNameSearch ? "inline-block" : "none";
+        renderPublic();
+    });
+    clearSearchBtn.addEventListener("click", () => {
+        nameSearchInput.value = "";
+        currentNameSearch = "";
+        clearSearchBtn.style.display = "none";
+        renderPublic();
+    });
+
+    function renderAdminTable(){ const tbody=document.getElementById("adminTableBody"); tbody.innerHTML=profiles.map(p=>`<tr><td><strong>${escapeHtml(p.name)}</strong></td><td>${p.age}/${escapeHtml(p.location)}</td><td><i class="fab fa-whatsapp"></i> ${escapeHtml(p.realPhone)}</td><td>${p.verified?'✅ Verified':'❌ Not verified'}</td><td><input type="text" class="tag-edit" data-id="${p.id}" value="${(p.tags||[]).join(',')}" style="background:#1A1E2C; border-radius:30px; padding:6px; width:120px;"></td><td class="action-icons"><i class="fas fa-edit edit-icon" data-id="${p.id}"></i> <i class="fas fa-trash delete-icon" data-id="${p.id}"></i> <i class="fab fa-whatsapp wa-admin-icon" data-phone="${p.realPhone}"></i></td></tr>`).join(''); document.querySelectorAll('.edit-icon').forEach(icon=>icon.addEventListener('click',()=>{ const id=+icon.dataset.id; editProfile(id); })); document.querySelectorAll('.delete-icon').forEach(icon=>icon.addEventListener('click',()=>{ if(confirm("Delete queen?")){ profiles=profiles.filter(p=>p.id!==+icon.dataset.id); saveData(); renderAdminTable(); renderPublic(); } })); document.querySelectorAll('.wa-admin-icon').forEach(wa=>wa.addEventListener('click',()=>{ let ph=wa.dataset.phone.replace(/\D/g,''); if(!ph.startsWith('254')) ph='254'+ph; window.open(`https://wa.me/${ph}`); })); document.querySelectorAll('.tag-edit').forEach(inp=>inp.addEventListener('change',(e)=>{ const id=+inp.dataset.id; const prof=profiles.find(p=>p.id===id); if(prof) prof.tags=inp.value.split(',').map(s=>s.trim()); saveData(); renderPublic(); if(neuralPreferences) computeScores(neuralPreferences); renderPublic(); })); }
+    function editProfile(id){ const p=profiles.find(x=>x.id===id); if(!p) return; p.name=prompt("Name",p.name)||p.name; p.age=parseInt(prompt("Age",p.age))||p.age; p.location=prompt("County",p.location)||p.location; p.bio=prompt("Bio",p.bio)||p.bio; p.photoUrl=prompt("Image URL",p.photoUrl)||p.photoUrl; p.realPhone=prompt("Real WhatsApp",p.realPhone)||p.realPhone; p.verified=confirm("Verified queen?"); saveData(); renderAdminTable(); renderPublic(); if(neuralPreferences) computeScores(neuralPreferences); renderPublic(); }
+    function addQueen(){ const name=document.getElementById("newName").value.trim(); if(!name) return; const newId=profiles.length?Math.max(...profiles.map(p=>p.id))+1:10; profiles.push({ id:newId, name, gender:"Female", age:parseInt(document.getElementById("newAge").value)||25, location:document.getElementById("newLocation").value, bio:document.getElementById("newBio").value||"New queen", photoUrl:document.getElementById("newPhoto").value||"https://randomuser.me/api/portraits/women/99.jpg", realPhone:document.getElementById("newPhone").value, verified:document.getElementById("newVerified").checked, tags: document.getElementById("newTags").value.split(",").map(s=>s.trim()) }); saveData(); renderAdminTable(); renderPublic(); document.getElementById("newName").value=""; document.getElementById("newAge").value=""; document.getElementById("newLocation").value=""; document.getElementById("newBio").value=""; document.getElementById("newPhoto").value=""; document.getElementById("newPhone").value=""; document.getElementById("newTags").value=""; document.getElementById("newVerified").checked=false; alert("Queen added successfully!"); }
+    document.getElementById("addQueenBtn").onclick=addQueen; const adminModal=document.getElementById("adminOverlay"); document.getElementById("openAdminBtn").onclick=()=>{ const pwd=prompt("Admin password:"); if(pwd==="2link2025"){ renderAdminTable(); adminModal.style.display="flex"; } else if(pwd) alert("Wrong password"); }; document.getElementById("closeAdminX").onclick=()=>adminModal.style.display="none"; document.getElementById("adminLogoutBtn").onclick=()=>adminModal.style.display="none"; document.getElementById("adminWhatsApp").addEventListener("change",(e)=>{ adminWhatsApp=e.target.value.replace(/\D/g,''); localStorage.setItem("2link_admin_wa",adminWhatsApp); alert("Admin WhatsApp updated"); }); function loadAdminWa(){ const saved=localStorage.getItem("2link_admin_wa"); if(saved) adminWhatsApp=saved; document.getElementById("adminWhatsApp").value=adminWhatsApp; }
+    const chatWin=document.getElementById("chatWindow"); document.getElementById("chatToggleBtn").onclick=()=>{ chatWin.style.display=chatWin.style.display==="flex"?"none":"flex"; }; document.getElementById("closeChat").onclick=()=>chatWin.style.display="none"; document.getElementById("sendChatBtn").onclick=()=>{ const input=document.getElementById("chatInput"); const msg=input.value.trim(); if(!msg) return; const chatBody=document.getElementById("chatMessages"); chatBody.innerHTML+=`<div><strong>You:</strong> ${escapeHtml(msg)}</div>`; let reply="Try 'Find queen in Nairobi' or use Neural Match."; const lower=msg.toLowerCase(); if(lower.includes("find")||lower.includes("recommend")){ let filtered=[...profiles]; if(lower.includes("nairobi")) filtered=filtered.filter(p=>p.location.includes("Nairobi")); if(lower.includes("mombasa")) filtered=filtered.filter(p=>p.location.includes("Mombasa")); if(filtered.length){ const r=filtered[Math.floor(Math.random()*filtered.length)]; reply=`Suggest: ${r.name}, ${r.age} from ${r.location}.`; } else reply="No matches found."; } chatBody.innerHTML+=`<div><strong>🧠 2link AI:</strong> ${reply}</div>`; chatBody.scrollTop=chatBody.scrollHeight; input.value=""; };
+    function escapeHtml(str){ return String(str).replace(/[&<>]/g, m=>({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
+    loadData(); loadAdminWa(); renderPublic();
+</script>
+</body>
+</html>

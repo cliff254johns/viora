@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Flick Chat — Private & Group Messaging</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
+    <style>
+        :root {
+            --navy: #001f3f;
+            --burgundy: #800020;
+            --bubble-me-bg: #dcf8c6;
+            --bubble-them-bg: #ffffff;
+            --whatsapp-bg: #e5ddd5;
+            --chat-bg-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+        }
+        body { background-color: var(--navy); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; overflow: hidden; }
+        .bg-navy { background-color: var(--navy); }
+        .bg-burgundy { background-color: var(--burgundy); }
+        .chat-bg { 
+            background-color: var(--whatsapp-bg); 
+            background-image: var(--chat-bg-image); 
+            background-repeat: repeat; 
+        }
+        .app-container { height: 100vh; height: 100svh; display: flex; flex-direction: column; overflow: hidden; background: white; }
+        .bubble { max-width: 85%; padding: 8px 12px; border-radius: 18px; box-shadow: 0 1px 2px rgba(0,0,0,0.15); word-wrap: break-word; font-size: 15px; }
+        .bubble-me { background-color: var(--bubble-me-bg); border-bottom-right-radius: 4px; align-self: flex-end; margin-left: auto; }
+        .bubble-them { background-color: var(--bubble-them-bg); border-bottom-left-radius: 4px; align-self: flex-start; margin-right: auto; }
+        .msg-meta { display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin-top: 2px; }
+        .timestamp { font-size: 10px; color: #6b7280; }
+        .status-tick { width: 14px; height: 14px; }
+        .tick-blue { color: #34b7f1; }
+        .unread-badge { background-color: #ef4444; color: white; border-radius: 9999px; font-size: 11px; font-weight: bold; padding: 0px 6px; min-width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; margin-left: 8px; }
+        #modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+        #modal-overlay.active { display: flex; }
+        #modal-content { background: white; border-radius: 1.5rem; width: 100%; max-width: 450px; max-height: 80vh; overflow-y: auto; padding: 1.5rem; }
+        #call-overlay { display: none; position: fixed; inset: 0; background: #111; z-index: 300; flex-direction: column; align-items: center; color: white; }
+        #call-overlay.active { display: flex; }
+        .active-chat-view { display: flex !important; }
+        .hidden-mobile { display: none !important; }
+        @media (min-width: 768px) { .hidden-mobile { display: flex !important; } }
+        #emoji-container { display: none; position: absolute; bottom: 80px; left: 10px; z-index: 100; }
+        #emoji-container.active { display: block; }
+        .google-icon {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%23FFC107' d='M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z'/%3E%3Cpath fill='%23FF3D00' d='M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z'/%3E%3Cpath fill='%234CAF50' d='M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z'/%3E%3Cpath fill='%231976D2' d='M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z'/%3E%3C/svg%3E");
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <!-- CALL UI (placeholder) -->
+    <div id="call-overlay">
+        <div id="video-wrapper" class="video-container hidden">
+            <video id="remote-video" autoplay playsinline></video>
+            <video id="local-video" autoplay playsinline muted></video>
+        </div>
+        <div class="mt-20 flex flex-col items-center z-10 text-center px-4">
+            <div id="call-avatar" class="w-24 h-24 bg-burgundy rounded-full flex items-center justify-center text-3xl font-bold mb-4 shadow-lg uppercase text-white">?</div>
+            <h2 id="call-name" class="text-2xl font-bold">Contact</h2>
+            <p id="call-status" class="opacity-70 animate-pulse">Connecting...</p>
+        </div>
+        <div class="absolute bottom-12 flex gap-10 z-20">
+            <button onclick="endCall()" class="w-16 h-16 bg-red-500 text-white rounded-full flex items-center justify-center shadow-xl"><i data-lucide="phone-off"></i></button>
+        </div>
+    </div>
+
+    <div id="modal-overlay" onclick="closeModal()">
+        <div id="modal-content" onclick="event.stopPropagation()"></div>
+    </div>
+
+    <!-- AUTH SCREEN -->
+    <div id="auth-screen" class="fixed inset-0 z-[100] flex items-center justify-center bg-navy p-4">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl">
+            <h1 class="text-3xl font-black text-center mb-8 text-navy">Flick Chat</h1>
+            <div class="space-y-4">
+                <input id="reg-username" type="text" placeholder="Display Name (Signup only)" class="w-full p-4 bg-gray-100 rounded-2xl outline-none border focus:border-navy">
+                <input id="email" type="email" placeholder="Email" class="w-full p-4 bg-gray-100 rounded-2xl outline-none border focus:border-navy">
+                <input id="password" type="password" placeholder="Password" class="w-full p-4 bg-gray-100 rounded-2xl outline-none border focus:border-navy">
+                <button onclick="handleAuth('login')" class="w-full bg-navy text-white py-4 rounded-2xl font-bold hover:opacity-90">Sign In</button>
+                <button onclick="handleAuth('signup')" class="w-full border-2 border-burgundy text-burgundy py-4 rounded-2xl font-bold">Sign Up</button>
+                <button onclick="googleSignIn()" class="w-full bg-white border border-gray-300 py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition hover:bg-gray-50">
+                    <span class="google-icon"></span>
+                    <span>Sign in with Google</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CHAT UI -->
+    <div id="chat-screen" class="hidden flex flex-1 h-full w-full overflow-hidden">
+        <aside id="sidebar" class="w-full md:w-80 flex-shrink-0 border-r flex flex-col bg-white">
+            <header class="p-4 bg-navy text-white">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="font-bold text-xl tracking-tight">Flick Chat</h2>
+                </div>
+                <input id="contact-search" type="text" placeholder="Search chats..." class="w-full bg-white/10 py-2 px-4 rounded-xl text-xs text-white placeholder-gray-300 outline-none mb-4">
+                <div class="flex gap-2">
+                    <button onclick="showGroupModal()" class="flex-1 bg-white/10 py-2 rounded-xl text-xs font-bold hover:bg-white/20">New Group</button>
+                    <button onclick="showProfileModal()" class="flex-1 bg-burgundy py-2 rounded-xl text-xs font-bold hover:opacity-90">My Profile</button>
+                </div>
+            </header>
+            <div id="contact-list" class="flex-1 overflow-y-auto"></div>
+        </aside>
+
+        <main id="main-chat" class="hidden md:flex flex-1 flex-col h-full relative bg-white">
+            <header class="bg-navy text-white px-4 py-3 flex items-center gap-3">
+                <button onclick="backToContacts()" class="md:hidden"><i data-lucide="chevron-left"></i></button>
+                <div class="relative">
+                    <img id="header-img" class="w-10 h-10 rounded-full object-cover hidden">
+                    <div id="header-avatar" class="w-10 h-10 bg-burgundy rounded-full flex items-center justify-center font-bold text-white uppercase">?</div>
+                    <div id="online-indicator" class="hidden absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-navy rounded-full"></div>
+                </div>
+                <div class="flex-1">
+                    <h2 id="chatting-with-name" class="font-bold text-sm">Select a contact</h2>
+                    <p id="chat-status-sub" class="text-[10px] text-gray-300">...</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="initiateCall('voice')" class="p-2 hover:bg-white/10 rounded-full"><i data-lucide="phone"></i></button>
+                    <button onclick="initiateCall('video')" class="p-2 hover:bg-white/10 rounded-full"><i data-lucide="video"></i></button>
+                </div>
+            </header>
+
+            <div id="messages-list" class="flex-1 overflow-y-auto p-4 space-y-3 chat-bg flex flex-col"></div>
+            <div id="emoji-container"><emoji-picker></emoji-picker></div>
+            <div id="input-container" class="hidden p-3 border-t bg-white flex items-center gap-2">
+                <button onclick="toggleEmojiPicker()" class="p-2 text-gray-500"><i data-lucide="smile"></i></button>
+                <button onclick="triggerFilePicker()" class="p-2 text-gray-500"><i data-lucide="paperclip"></i></button>
+                <input id="msg-input" type="text" placeholder="Type a message" class="flex-1 rounded-full py-2 px-4 outline-none border focus:border-navy bg-gray-50">
+                <input id="file-input" type="file" class="hidden" onchange="handleFileSend(event)">
+                <button onclick="sendMsg()" class="p-2 bg-burgundy text-white rounded-full shadow-lg"><i data-lucide="send"></i></button>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, deleteUser, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, setDoc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAXUAljaL8c34Tc8N64yYM8sEKV3Alln18",
+        authDomain: "mychatapp-dd3a9.firebaseapp.com",
+        projectId: "mychatapp-dd3a9",
+        storageBucket: "mychatapp-dd3a9.firebasestorage.app",
+        messagingSenderId: "528066285762",
+        appId: "1:528066285762:web:a1dc3bd07f214d67c7ab5b"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null, userData = null, activeChatId = null, activeChatType = 'private';
+    let allUsers = [], allGroups = [], allMessages = [];
+    let unreadCounts = new Map();
+    let messagesUnsubscribe = null;
+
+    // ------------------- ONLINE / OFFLINE STATUS + EXIT CONFIRMATION -------------------
+    const setUserStatus = async (status) => {
+        if (currentUser) {
+            await updateDoc(doc(db, "users", currentUser.uid), { status, lastSeen: serverTimestamp() }).catch(e=>console.warn);
+        }
+    };
+
+    window.addEventListener('beforeunload', (e) => {
+        if (currentUser) {
+            setUserStatus('offline');
+            e.preventDefault();
+            e.returnValue = 'You have active chats. Are you sure you want to leave?';
+            return e.returnValue;
+        }
+    });
+    
+    document.addEventListener('visibilitychange', () => {
+        if (!currentUser) return;
+        if (document.hidden) setUserStatus('offline');
+        else setUserStatus('online');
+    });
+    
+    // ------------------- UNREAD COUNTS -------------------
+    function computeUnreadCounts() {
+        if (!userData) return;
+        const newUnread = new Map();
+        const privateLastRead = userData.lastRead || {};
+        const groupLastRead = userData.groupLastRead || {};
+        
+        for (const msg of allMessages) {
+            if (msg.senderId === currentUser?.uid) continue;
+            const isGroup = !!msg.groupId;
+            const chatId = isGroup ? msg.groupId : (msg.senderId === currentUser?.uid ? msg.receiverId : msg.senderId);
+            if (!chatId) continue;
+            let lastReadTs = 0;
+            if (isGroup) lastReadTs = groupLastRead[chatId] || 0;
+            else lastReadTs = privateLastRead[chatId] || 0;
+            const msgTs = msg.createdAt?.seconds || 0;
+            if (msgTs > lastReadTs) newUnread.set(chatId, (newUnread.get(chatId) || 0) + 1);
+        }
+        unreadCounts = newUnread;
+        renderSidebar();
+    }
+
+    function startMessagesListener() {
+        if (messagesUnsubscribe) messagesUnsubscribe();
+        const q = query(collection(db, "messages"), orderBy("createdAt", "asc"));
+        messagesUnsubscribe = onSnapshot(q, (snapshot) => {
+            allMessages = [];
+            snapshot.forEach(docSnap => allMessages.push({ id: docSnap.id, ...docSnap.data() }));
+            computeUnreadCounts();
+            if (activeChatId) renderCurrentChat();
+        });
+    }
+
+    function renderCurrentChat() {
+        const container = document.getElementById('messages-list');
+        if (!container || !activeChatId) return;
+        const filtered = allMessages.filter(msg => {
+            if (activeChatType === 'private') return (msg.senderId === currentUser.uid && msg.receiverId === activeChatId) || (msg.senderId === activeChatId && msg.receiverId === currentUser.uid);
+            else return msg.groupId === activeChatId;
+        });
+        container.innerHTML = '';
+        filtered.forEach(msg => {
+            const isMe = msg.senderId === currentUser.uid;
+            const time = msg.createdAt ? new Date(msg.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+            let tickHtml = '';
+            if (isMe && activeChatType === 'private') {
+                const lastReadUser = allUsers.find(u => u.uid === activeChatId);
+                const lastReadTime = lastReadUser?.lastRead?.[currentUser.uid]?.seconds || 0;
+                const msgTime = msg.createdAt?.seconds || 0;
+                const tickIcon = msgTime > 0 && lastReadTime >= msgTime ? "check-check" : "check";
+                const tickColor = (msgTime > 0 && lastReadTime >= msgTime) ? "tick-blue" : "tick-gray";
+                tickHtml = `<i data-lucide="${tickIcon}" class="status-tick ${tickColor}"></i>`;
+            }
+            const fileHtml = msg.file ? `<img src="${msg.file}" class="max-w-64 rounded-lg mt-2 max-h-48">` : '';
+            container.innerHTML += `<div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+                <div class="bubble ${isMe ? 'bubble-me' : 'bubble-them'}">
+                    ${msg.text ? `<p>${escapeHtml(msg.text)}</p>` : ''}${fileHtml}
+                    <div class="msg-meta"><span class="timestamp">${time}</span>${tickHtml}</div>
+                </div>
+            </div>`;
+        });
+        container.scrollTop = container.scrollHeight;
+        lucide.createIcons();
+    }
+
+    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+    window.renderSidebar = (filter = '') => {
+        const listDiv = document.getElementById('contact-list');
+        if (!listDiv) return;
+        listDiv.innerHTML = `<div class="p-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Recent Chats</div>`;
+        
+        allGroups.filter(g => !filter || g.name.toLowerCase().includes(filter)).forEach(g => {
+            const unread = unreadCounts.get(g.id) || 0;
+            listDiv.innerHTML += `<div onclick="openChat('${g.id}','${escapeHtml(g.name)}','group')" class="p-4 border-b flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors">
+                <div class="flex items-center gap-3"><div class="w-11 h-11 bg-navy text-white rounded-2xl flex items-center justify-center font-bold uppercase">${escapeHtml(g.name[0])}</div>
+                <span class="font-bold text-navy text-sm">${escapeHtml(g.name)}</span></div>
+                ${unread > 0 ? `<span class="unread-badge">${unread}</span>` : ''}
+            </div>`;
+        });
+        allUsers.filter(u => u.uid !== currentUser?.uid && (!filter || u.username.toLowerCase().includes(filter))).forEach(u => {
+            const unread = unreadCounts.get(u.uid) || 0;
+            const avatarHtml = u.photo ? 
+                `<img src="${u.photo}" class="w-11 h-11 rounded-full object-cover border border-gray-200">` : 
+                `<div class="w-11 h-11 bg-burgundy text-white rounded-full flex items-center justify-center font-bold uppercase text-lg">${escapeHtml(u.username[0])}</div>`;
+            listDiv.innerHTML += `<div onclick="openChat('${u.uid}','${escapeHtml(u.username)}','private')" class="p-4 border-b flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors">
+                <div class="flex items-center gap-3"><div class="relative">${avatarHtml}<div class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${u.status === 'online' ? 'bg-green-500' : 'bg-gray-300'}"></div></div>
+                <span class="font-bold text-navy text-sm">${escapeHtml(u.username)}</span></div>
+                ${unread > 0 ? `<span class="unread-badge">${unread}</span>` : ''}
+            </div>`;
+        });
+        lucide.createIcons();
+    };
+
+    window.openChat = async (id, name, type) => {
+        activeChatId = id;
+        activeChatType = type;
+        document.getElementById('sidebar').classList.add('hidden-mobile');
+        document.getElementById('main-chat').classList.add('active-chat-view');
+        document.getElementById('input-container').classList.remove('hidden');
+        document.getElementById('chatting-with-name').innerText = name;
+        const updateObj = {};
+        if (type === 'private') updateObj[`lastRead.${id}`] = serverTimestamp();
+        else updateObj[`groupLastRead.${id}`] = serverTimestamp();
+        await updateDoc(doc(db, "users", currentUser.uid), updateObj);
+        if (type === 'private') { 
+            if (!userData.lastRead) userData.lastRead = {}; 
+            userData.lastRead[id] = Math.floor(Date.now()/1000); 
+        } else { 
+            if (!userData.groupLastRead) userData.groupLastRead = {}; 
+            userData.groupLastRead[id] = Math.floor(Date.now()/1000); 
+        }
+        computeUnreadCounts();
+        updateHeaderInfo();
+        renderCurrentChat();
+    };
+
+    function updateHeaderInfo() {
+        const u = allUsers.find(x => x.uid === activeChatId);
+        const statusSub = document.getElementById('chat-status-sub');
+        const onlineInd = document.getElementById('online-indicator');
+        const hAvatar = document.getElementById('header-avatar');
+        const hImg = document.getElementById('header-img');
+        if(activeChatType === 'private' && u) {
+            statusSub.innerText = u.status === 'online' ? 'Online' : 'Offline';
+            onlineInd.classList.toggle('hidden', u.status !== 'online');
+            if(u.photo) { 
+                hImg.src = u.photo; 
+                hImg.classList.remove('hidden'); 
+                hAvatar.classList.add('hidden'); 
+            } else { 
+                hAvatar.innerText = u.username[0] || '?'; 
+                hAvatar.classList.remove('hidden'); 
+                hImg.classList.add('hidden'); 
+            }
+        } else {
+            statusSub.innerText = 'Group chat';
+            onlineInd.classList.add('hidden');
+            hAvatar.innerText = document.getElementById('chatting-with-name').innerText[0] || 'G';
+            hImg.classList.add('hidden');
+            hAvatar.classList.remove('hidden');
+        }
+    }
+
+    window.sendMsg = async () => {
+        const input = document.getElementById('msg-input');
+        if(!input.value.trim()) return;
+        await addDoc(collection(db, "messages"), {
+            text: input.value.trim(), senderId: currentUser.uid, createdAt: serverTimestamp(),
+            receiverId: activeChatType === 'private' ? activeChatId : null,
+            groupId: activeChatType === 'group' ? activeChatId : null
+        });
+        input.value = '';
+    };
+
+    // ------------------- PROFILE & DELETE (with photo upload visible to others) -------------------
+    window.showProfileModal = () => {
+        const content = `
+            <div class="flex flex-col items-center gap-4 text-center">
+                <h2 class="text-xl font-black text-navy">Profile Settings</h2>
+                <div class="relative cursor-pointer" onclick="document.getElementById('p-upload').click()">
+                    ${userData.photo ? `<img src="${userData.photo}" class="w-24 h-24 rounded-full object-cover border-4 border-burgundy">` : `<div class="w-24 h-24 bg-burgundy text-white rounded-full flex items-center justify-center text-3xl font-bold uppercase">${userData.username[0]}</div>`}
+                    <div class="absolute bottom-0 right-0 bg-white rounded-full p-1"><i data-lucide="camera" class="w-5 h-5 text-navy"></i></div>
+                </div>
+                <input id="p-upload" type="file" class="hidden" onchange="uploadProfilePhoto(event)">
+                <input id="p-username" type="text" value="${userData.username}" class="w-full p-4 bg-gray-100 rounded-xl font-bold border focus:border-navy outline-none">
+                <button onclick="saveProfile()" class="w-full bg-navy text-white py-4 rounded-xl font-bold">Save Changes</button>
+                <button onclick="deleteAccountPrompt()" class="w-full bg-red-600 text-white py-4 rounded-xl font-bold mt-2">⚠️ Delete Account Permanently</button>
+                <button onclick="signOutUser()" class="w-full text-red-500 font-bold py-2 mt-2">Sign Out</button>
+            </div>`;
+        document.getElementById('modal-content').innerHTML = content;
+        document.getElementById('modal-overlay').classList.add('active');
+        lucide.createIcons();
+    };
+
+    window.deleteAccountPrompt = () => {
+        const pwd = prompt("⚠️ This action is irreversible. Enter your password to delete your account:");
+        if (pwd !== null) deleteAccountWithReauth(pwd);
+    };
+    async function deleteAccountWithReauth(password) {
+        try {
+            const user = auth.currentUser;
+            if (!user) throw new Error("No user");
+            let credential = null;
+            if (user.email && password) credential = EmailAuthProvider.credential(user.email, password);
+            if (credential) await reauthenticateWithCredential(user, credential);
+            await deleteDoc(doc(db, "users", user.uid));
+            await deleteUser(user);
+            await signOut(auth);
+            alert("Account deleted successfully.");
+            location.reload();
+        } catch (err) { alert("Deletion failed: " + err.message); }
+    };
+    
+    window.signOutUser = async () => {
+        await setUserStatus('offline');
+        await signOut(auth);
+    };
+    
+    window.uploadProfilePhoto = (e) => {
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+            await updateDoc(doc(db, "users", currentUser.uid), { photo: ev.target.result });
+            userData.photo = ev.target.result;
+            showProfileModal(); // refresh modal
+            // Sidebar will auto-update via onSnapshot
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    };
+    
+    window.saveProfile = async () => {
+        const name = document.getElementById('p-username').value;
+        await updateDoc(doc(db, "users", currentUser.uid), { username: name });
+        userData.username = name;
+        closeModal(); renderSidebar();
+    };
+    
+    // ------------------- GROUP -------------------
+    window.showGroupModal = () => {
+        let membersHtml = '';
+        allUsers.filter(u => u.uid !== currentUser.uid).forEach(u => {
+            membersHtml += `<label class="flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-50"><input type="checkbox" name="g-mem" value="${u.uid}" class="w-5 h-5 accent-burgundy"><span class="font-bold text-sm text-navy">${escapeHtml(u.username)}</span></label>`;
+        });
+        document.getElementById('modal-content').innerHTML = `<h2 class="text-xl font-black mb-4 text-navy">Create Group</h2><input id="g-name" type="text" placeholder="Group Name" class="w-full p-4 bg-gray-100 rounded-xl mb-4 border focus:border-navy outline-none"><div class="max-h-48 overflow-y-auto divide-y border rounded-xl mb-4">${membersHtml}</div><button onclick="createGroup()" class="w-full bg-burgundy text-white py-4 rounded-xl font-bold">Create Group</button>`;
+        document.getElementById('modal-overlay').classList.add('active');
+    };
+    
+    window.createGroup = async () => {
+        const name = document.getElementById('g-name').value.trim();
+        const members = Array.from(document.querySelectorAll('input[name="g-mem"]:checked')).map(i => i.value);
+        if(!name || members.length === 0) return alert("Group name + members required");
+        members.push(currentUser.uid);
+        await addDoc(collection(db, "groups"), { name, members, createdBy: currentUser.uid, createdAt: serverTimestamp() });
+        closeModal();
+    };
+    
+    // ------------------- UTILITIES -------------------
+    window.initiateCall = async (type) => { alert("Call Demo: WebRTC requires TURN server. Feature limited for prototype."); };
+    window.endCall = () => document.getElementById('call-overlay').classList.remove('active');
+    window.closeModal = () => document.getElementById('modal-overlay').classList.remove('active');
+    window.backToContacts = () => { document.getElementById('sidebar').classList.remove('hidden-mobile'); document.getElementById('main-chat').classList.remove('active-chat-view'); };
+    window.toggleEmojiPicker = () => document.getElementById('emoji-container').classList.toggle('active');
+    window.triggerFilePicker = () => document.getElementById('file-input').click();
+    window.handleFileSend = (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+            await addDoc(collection(db, "messages"), { file: ev.target.result, senderId: currentUser.uid, createdAt: serverTimestamp(), receiverId: activeChatType === 'private' ? activeChatId : null, groupId: activeChatType === 'group' ? activeChatId : null, fileName: file.name });
+        };
+        reader.readAsDataURL(file);
+        e.target.value = '';
+    };
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        const picker = document.querySelector('emoji-picker');
+        if(picker) picker.addEventListener('emoji-click', e => {
+            const input = document.getElementById('msg-input');
+            input.value += e.detail.unicode;
+            document.getElementById('emoji-container').classList.remove('active');
+        });
+    });
+    
+    // ------------------- AUTH -------------------
+    window.handleAuth = async (type) => {
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('password').value;
+        const name = document.getElementById('reg-username').value;
+        try {
+            if (type === 'signup') {
+                if(!name || !email || !pass) throw new Error("Fill all fields");
+                const res = await createUserWithEmailAndPassword(auth, email, pass);
+                await setDoc(doc(db, "users", res.user.uid), { uid: res.user.uid, username: name, email, photo: null, status: 'online', lastRead: {}, groupLastRead: {}, createdAt: serverTimestamp() });
+            } else { await signInWithEmailAndPassword(auth, email, pass); }
+        } catch (e) { alert(e.message); }
+    };
+    
+    window.googleSignIn = () => signInWithPopup(auth, new GoogleAuthProvider());
+    
+    onAuthStateChanged(auth, async (u) => {
+        if (u) {
+            currentUser = u;
+            const userRef = doc(db, "users", u.uid);
+            const snap = await getDoc(userRef);
+            if (!snap.exists()) {
+                const display = u.displayName || u.email.split('@')[0];
+                await setDoc(userRef, { uid: u.uid, username: display, email: u.email, photo: u.photoURL || null, status: 'online', lastRead: {}, groupLastRead: {} });
+            } else await updateDoc(userRef, { status: 'online' });
+            userData = (await getDoc(userRef)).data();
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('chat-screen').classList.remove('hidden');
+            onSnapshot(collection(db, "users"), snap => { allUsers = snap.docs.map(d=>d.data()); renderSidebar(); updateHeaderInfo(); computeUnreadCounts(); });
+            onSnapshot(collection(db, "groups"), snap => { allGroups = snap.docs.map(d=>({id: d.id, ...d.data()})).filter(g=>g.members?.includes(currentUser.uid)); renderSidebar(); computeUnreadCounts(); });
+            startMessagesListener();
+            setUserStatus('online');
+        } else {
+            if(messagesUnsubscribe) messagesUnsubscribe();
+            currentUser = null;
+            document.getElementById('auth-screen').classList.remove('hidden');
+            document.getElementById('chat-screen').classList.add('hidden');
+        }
+    });
+    
+    document.getElementById('contact-search')?.addEventListener('input', (e) => renderSidebar(e.target.value.toLowerCase()));
+    lucide.createIcons();
+</script>
+</body>
+</html>

@@ -1,0 +1,1984 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#176B87">
+<title>Clinic / Hospital / Diagnostic Lab — Healthcare Manager</title>
+<style>
+:root{color-scheme:light;--primary:#176B87;--accent:#48A9A6;--success:#247A54;--warning:#A96812;--danger:#B93838;--bg:#F3F7FA;--card:#FFFFFF;--border:#D8E3EA;--text:#203746;--muted:#607887;--shadow:0 5px 18px rgba(28,66,85,.08);--radius:10px;--input:#fff}
+[data-theme="dark"]{color-scheme:dark;--primary:#62C0D8;--accent:#73D4CE;--success:#55C995;--warning:#F0BB62;--danger:#FF7777;--bg:#101B25;--card:#192936;--border:#304553;--text:#EAF2F7;--muted:#A7BAC7;--shadow:0 5px 18px rgba(0,0,0,.22);--input:#13222D}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer;min-height:44px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);padding:9px 13px;font-weight:650}
+button.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+button.danger{color:var(--danger)}
+button.green{background:#16a36a;color:#fff;border-color:#16a36a}
+button:active{transform:scale(.98)}
+input,select,textarea{width:100%;min-height:44px;padding:10px 11px;border:1px solid var(--border);border-radius:8px;background:var(--input);color:var(--text);font-size:16px}
+textarea{min-height:90px;resize:vertical}
+label{display:block;font-weight:650;font-size:13px;margin:0 0 5px}
+.muted,small{color:var(--muted)}
+h1,h2,h3,p{margin-top:0}
+h1{font-size:28px;line-height:1.2;margin-bottom:8px}
+h2{font-size:21px;margin-bottom:12px}
+h3{font-size:16px;margin-bottom:8px}
+.app{display:none;min-height:100vh}
+.login{min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(ellipse at top left,var(--accent),transparent 48%),radial-gradient(ellipse at bottom right,var(--primary),var(--bg) 60%)}
+.login-card{width:min(440px,100%);background:var(--card);border:1px solid var(--border);border-radius:18px;padding:28px;box-shadow:var(--shadow)}
+.brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:18px}
+.brand-mark{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:var(--primary);color:#fff;font-size:23px}
+.login form{display:grid;gap:14px;margin-top:24px}
+.shell{display:grid;grid-template-columns:250px minmax(0,1fr);min-height:100vh}
+aside{border-right:1px solid var(--border);background:var(--card);padding:18px 12px;position:sticky;top:0;height:100vh;overflow:auto}
+.side-brand{padding:4px 8px 22px;border-bottom:1px solid var(--border);margin-bottom:14px}
+.nav{display:grid;gap:4px}
+.nav button{text-align:left;border-color:transparent;background:transparent;display:flex;align-items:center;gap:11px;width:100%;font-weight:600}
+.nav button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.nav .nav-icon{width:25px;text-align:center;font-size:18px}
+main{min-width:0}
+#sidebarBackdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:14}
+.topbar{height:72px;padding:12px 24px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:5}
+.topbar h2{margin:0;flex:1}
+.badges{display:flex;gap:6px;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border-radius:99px;background:var(--bg);border:1px solid var(--border);font-size:11px;font-weight:750;white-space:nowrap}
+.badge.good{color:var(--success)}
+.badge.warn{color:var(--warning)}
+.content{padding:24px;max-width:1500px;margin:auto}
+.data-notice{padding:12px 14px;border:1px solid var(--border);background:var(--card);border-radius:10px;color:var(--muted);margin-bottom:18px;font-size:13px}
+.grid{display:grid;gap:16px}
+.grid.stats{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:20px}
+.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);min-width:0;overflow:hidden}
+.stat-value{font-size:27px;font-weight:800;letter-spacing:-.5px}
+.stat-label{font-size:13px;color:var(--muted)}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:20px 0 12px;flex-wrap:wrap}
+.section-head h2{margin:0}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.tile{position:relative;min-height:118px;text-align:left;padding:15px;border:1px solid var(--border);border-radius:14px;background:var(--card);display:flex;flex-direction:column;align-items:flex-start;gap:7px;box-shadow:var(--shadow)}
+.tile-icon{font-size:25px}
+.tile strong{font-size:14px}
+.tile small{font-size:12px}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:16px 0}
+.toolbar .actions{display:flex;gap:8px;flex-wrap:wrap}
+.search{max-width:360px}
+.table-wrap{width:100%;overflow-x:auto;overflow-y:hidden;max-width:100%}
+table{width:100%;border-collapse:collapse;font-size:14px;table-layout:auto}
+th{text-align:left;font-size:12px;color:var(--muted);font-weight:750;background:var(--bg)}
+th,td{padding:12px 10px;border-bottom:1px solid var(--border);vertical-align:top;word-break:break-word;white-space:normal}
+td{overflow-wrap:anywhere}
+td.nowrap,th.nowrap{white-space:nowrap}
+.table-actions{display:flex;gap:5px;flex-wrap:wrap}
+.table-actions button{min-height:34px;padding:5px 8px;font-size:12px}
+.empty{padding:30px;text-align:center;color:var(--muted)}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.field.full{grid-column:1/-1}
+.form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;flex-wrap:wrap}
+.status{display:inline-block;padding:4px 8px;border-radius:99px;font-size:11px;font-weight:750;background:var(--bg);border:1px solid var(--border)}
+.status.pending{color:var(--warning)}
+.status.done{color:var(--success)}
+.status.danger{color:var(--danger)}
+.status.info{color:var(--primary)}
+.modal-root:empty{display:none}
+.modal-root{position:fixed;inset:0;background:rgba(9,24,34,.55);z-index:20;display:grid;place-items:center;padding:18px}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;width:min(720px,100%);max-height:90vh;overflow:auto;box-shadow:var(--shadow)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px}
+.modal-head h2{margin:0}
+.toast-root{position:fixed;right:16px;bottom:20px;z-index:50;display:grid;gap:8px;max-width:min(390px,calc(100vw - 32px))}
+.toast{padding:12px 15px;background:var(--text);color:var(--card);border-radius:9px;box-shadow:var(--shadow)}
+.bottom-nav{display:none}
+.mobile-menu{display:none}
+.hidden{display:none!important}
+.alert-card{border-left:4px solid var(--warning);margin-bottom:9px}
+.alert-card.danger{border-left-color:var(--danger)}
+.alert-card.info{border-left-color:var(--primary)}
+.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.login-note{padding:10px;border-radius:8px;background:var(--bg);font-size:12px;color:var(--muted)}
+.split{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.receipt{font-family:ui-monospace,monospace;max-width:400px;margin:auto;color:#111;background:#fff;padding:20px}
+.receipt hr{border:0;border-top:1px dashed #888}
+.receipt table{font-size:12px}
+.receipt td,.receipt th{padding:5px;border-color:#ddd;color:#111;background:#fff}
+.mp-stk{background:linear-gradient(135deg,#0f7a5a,#14b8a6);color:#fff;padding:16px;border-radius:12px;margin-top:12px}
+.pay-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.pay-tabs button{border:1px solid var(--border);background:var(--bg);color:var(--muted);padding:8px 12px;border-radius:9px;font-size:11px;font-weight:700}
+.pay-tabs button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.eyebrow{font-size:10px;letter-spacing:1.7px;font-weight:850;color:var(--primary);margin-bottom:7px}
+.exec-header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-bottom:20px}
+.exec-header h1{font-size:clamp(25px,3vw,36px);letter-spacing:-1px;margin:0 0 7px}
+.exec-banner{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:24px 26px;margin-bottom:18px;border-radius:18px;color:white;background:linear-gradient(115deg,#103b55 0%,#176b87 56%,#168b82 100%);box-shadow:0 14px 35px rgba(23,107,135,.18)}
+.exec-banner .eyebrow{color:#c5f2ee}
+.exec-value{font-size:clamp(30px,4vw,42px);font-weight:850;letter-spacing:-1.3px;line-height:1.2}
+.exec-sub{font-size:12px;opacity:.82;margin-top:5px}
+.banner-metrics{display:flex;gap:22px;flex-wrap:wrap}
+.banner-metrics div{display:grid;gap:5px}
+.banner-metrics span{font-size:11px;opacity:.8}
+.banner-metrics b{font-size:18px}
+.analytics-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(280px,1fr);gap:16px;margin-bottom:16px}
+.secondary-analytics{grid-template-columns:repeat(2,minmax(0,1fr))}
+.chart-card{min-width:0;border:1px solid var(--border);border-radius:14px;background:var(--card);padding:18px;box-shadow:var(--shadow);overflow:hidden}
+.chart-title{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.chart-title h3{font-size:15px;margin:0}
+.chart-legend{display:flex;gap:12px;flex-wrap:wrap}
+.chart-legend span{display:inline-flex;align-items:center;gap:5px;color:var(--muted);font-size:11px}
+.chart-legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.chart-scroll{width:100%;overflow-x:auto}
+.analytics-svg{width:100%;height:auto;min-width:340px;display:block;color:var(--muted)}
+.chart-empty{min-height:150px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:7px;color:var(--muted);text-align:center}
+.bar-chart{display:grid;gap:13px;padding:5px 0}
+.bar-row{display:grid;grid-template-columns:minmax(90px,1fr) minmax(70px,1.3fr) auto;align-items:center;gap:10px;font-size:12px}
+.bar-row>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+.bar-track{height:9px;border-radius:99px;background:var(--bg);overflow:hidden}
+.bar-track i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#176b87,#48a9a6)}
+.queue-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0}
+.queue-tabs button{border:1px solid var(--border);background:var(--bg);color:var(--muted);padding:8px 12px;border-radius:9px;font-size:12px;font-weight:700}
+.queue-tabs button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.patient-card{border:1px solid var(--border);border-radius:12px;padding:14px;background:var(--card)}
+.patient-card h4{margin:0 0 6px;font-size:15px}
+.patient-card .meta{font-size:12px;color:var(--muted);margin-bottom:8px}
+.triage-chip{display:inline-block;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:750}
+.triage-P1{background:#ffe6e6;color:#b83232}
+.triage-P2{background:#fff3d9;color:#996515}
+.triage-P3{background:#e6f4ff;color:#176b87}
+.triage-P4{background:#e6f8ee;color:#247a54}
+[data-theme="dark"] .triage-P1{background:#482727;color:#ffaaaa}
+[data-theme="dark"] .triage-P2{background:#44361b;color:#ffd37a}
+[data-theme="dark"] .triage-P3{background:#1a3344;color:#62c0d8}
+[data-theme="dark"] .triage-P4{background:#1a3a2e;color:#55c995}
+.cds-alert{padding:10px 12px;border-radius:8px;background:#fff4dc;border-left:3px solid var(--warning);font-size:12px;margin-bottom:8px}
+.cds-alert.red{background:#ffe8e9;border-left-color:var(--danger)}
+.cds-alert.green{background:#e6f8ee;border-left-color:var(--success)}
+.vital-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:6px;background:var(--bg);font-size:11px;margin:0 4px 4px 0;border:1px solid var(--border)}
+.timeline{position:relative;padding-left:20px;margin:14px 0}
+.timeline:before{content:"";position:absolute;left:6px;top:4px;bottom:4px;width:2px;background:var(--border)}
+.timeline-item{position:relative;padding:0 0 14px 10px;font-size:13px}
+.timeline-item:before{content:"";position:absolute;left:-18px;top:4px;width:10px;height:10px;border-radius:50%;background:var(--primary);border:2px solid var(--card)}
+.timeline-item .when{font-size:11px;color:var(--muted)}
+@media(max-width:1024px){.shell{grid-template-columns:220px minmax(0,1fr)}.grid.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}.content{padding:18px}}
+@media(max-width:900px){.analytics-grid,.secondary-analytics{grid-template-columns:1fr}.exec-banner{align-items:flex-start;flex-direction:column}.banner-metrics{width:100%;justify-content:space-between}.grid.three{grid-template-columns:1fr}}
+@media(max-width:760px){.shell{display:block}aside{position:fixed;z-index:15;left:0;top:0;bottom:0;height:100dvh;width:min(300px,85vw);transform:translateX(-105%);transition:transform .2s;box-shadow:var(--shadow)}body.drawer-open aside{transform:translateX(0)}#sidebarBackdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:14}body.drawer-open #sidebarBackdrop{display:block}.mobile-menu{display:inline-block}.topbar{height:62px;padding:8px 12px}.topbar h2{font-size:17px}.content{padding:14px 12px calc(90px + env(safe-area-inset-bottom))}.grid.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.stat-value{font-size:22px}.card{padding:14px}.tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.tile{min-height:112px;padding:13px}.grid.two,.grid.three{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.bottom-nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:fixed;z-index:10;bottom:0;left:0;right:0;padding:7px 7px calc(7px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--border);gap:4px}.bottom-nav button{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:52px;padding:5px 2px;font-size:10px}.bottom-nav button span{font-size:19px}.bottom-nav button.active{color:var(--primary);background:var(--bg);border-radius:12px}.toolbar{align-items:stretch}.search{max-width:none;width:100%}.toolbar .actions{width:100%}.toolbar .actions button{flex:1}.modal-root{padding:0;align-items:end}.modal{border-radius:16px 16px 0 0;width:100%;max-height:92dvh;padding:20px 15px calc(18px + env(safe-area-inset-bottom))}.form-actions{display:grid;grid-template-columns:1fr}.form-actions button{width:100%}.table-wrap table,.table-wrap tbody,.table-wrap tr,.table-wrap td{display:block;width:100%}.table-wrap thead{display:none}.table-wrap tr{border:1px solid var(--border);border-radius:10px;margin-bottom:10px;padding:7px 10px;background:var(--card)}.table-wrap td{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;text-align:right;border-bottom:1px solid var(--border);padding:9px 0;min-width:0}.table-wrap td:last-child{border-bottom:0}.table-wrap td:before{content:attr(data-label);font-weight:700;color:var(--muted);text-align:left;flex:0 0 36%;max-width:42%;overflow-wrap:anywhere}.table-wrap td>*{max-width:64%}.table-actions{justify-content:flex-end}.table-actions button{min-height:38px}.section-head{margin-top:18px}}
+@media print{
+  body{background:#fff!important;color:#000!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .shell,.login,.topbar,.bottom-nav,.no-print,aside,#sidebarBackdrop,.toast-root,.queue-tabs,.toolbar,.form-actions,.pay-tabs,.mp-stk{display:none!important}
+  .content{padding:0!important;max-width:none!important;margin:0!important}
+  .card{box-shadow:none!important;border:1px solid #ccc!important;break-inside:avoid;page-break-inside:avoid}
+  .grid.stats{display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:8pt}
+  .analytics-grid,.grid.two,.grid.three{display:block!important}
+  .analytics-grid>*,.grid.two>*,.grid.three>*{margin-bottom:8pt}
+  table{width:100%!important;border-collapse:collapse!important}
+  th,td{border:1px solid #999!important;padding:4pt 6pt!important;color:#000!important;background:#fff!important}
+  thead{display:table-header-group!important}
+  tr{break-inside:avoid;page-break-inside:avoid}
+  body.printing-modal #app{display:none!important}
+  body.printing-modal .modal-root:not(:empty){display:block!important;position:static!important;background:transparent!important;padding:0!important}
+  body.printing-modal .modal{border:none!important;box-shadow:none!important;max-width:100%!important;max-height:none!important;overflow:visible!important;padding:0!important}
+  body.printing-modal .modal-head{display:none!important}
+  body.printing-modal .receipt{background:#fff!important;color:#000!important;border:none!important}
+  .receipt{border:none!important;max-width:100%!important;padding:0!important}
+  @page{margin:12mm}
+}
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="login">
+  <div class="login-card">
+    <div class="brand"><div class="brand-mark">✚</div><div>Clinic / Hospital / Diagnostic Lab<small style="display:block;font-weight:500">Healthcare Operations Manager</small></div></div>
+    <p style="margin-top:20px">A calm, connected workspace for patient care and clinic operations.</p>
+    <form id="loginForm">
+      <div>
+        <label for="loginRole">Demo role</label>
+        <select id="loginRole">
+          <option value="owner">Owner / Administrator</option>
+          <option value="manager">Clinic Manager</option>
+          <option value="receptionist">Receptionist</option>
+          <option value="clinician">Doctor / Clinical Officer</option>
+          <option value="nurse">Nurse / Triage</option>
+          <option value="lab">Laboratory Technician</option>
+          <option value="dispenser">Pharmacist / Dispenser</option>
+          <option value="cashier">Cashier</option>
+          <option value="developer">Developer (hidden role)</option>
+        </select>
+      </div>
+      <div>
+        <label for="loginName">Display name</label>
+        <input id="loginName" value="Clifford">
+      </div>
+      <button class="primary" type="button" id="loginBtn">Open demo workspace</button>
+    </form>
+    <p class="login-note">Demonstration only. This offline prototype is not a certified medical record system. Use fictional records only.</p>
+  </div>
+</div>
+
+<div id="app" class="app">
+  <div class="shell">
+    <aside id="sidebar">
+      <div class="side-brand brand"><div class="brand-mark">✚</div><div>Clinic / Hospital / Diagnostic Lab<small style="display:block;font-weight:500">Healthcare Manager</small></div></div>
+      <nav id="sideNav" class="nav"></nav>
+      <div style="padding:16px 8px;font-size:12px;color:var(--muted)">Offline-first demo · <span id="sideMode">Local</span></div>
+    </aside>
+    <div id="sidebarBackdrop" onclick="closeDrawer()"></div>
+    <main>
+      <header class="topbar">
+        <button class="mobile-menu" onclick="toggleDrawer()" aria-label="Open navigation">☰</button>
+        <h2 id="pageTitle">Overview</h2>
+        <div class="badges">
+          <span id="storageBadge" class="badge good">Local storage</span>
+          <span id="modeBadge" class="badge">Local</span>
+        </div>
+        <button onclick="navigate('intelligence')" aria-label="Notifications">♧</button>
+      </header>
+      <section id="view" class="content"></section>
+    </main>
+  </div>
+  <nav id="bottomNav" class="bottom-nav"></nav>
+</div>
+
+<div id="modalRoot" class="modal-root"></div>
+<div id="receiptRoot" class="modal-root"></div>
+<div id="toastRoot" class="toast-root" aria-live="polite"></div>
+
+<script>
+'use strict';
+
+var APP = 'clinic-manager-v4';
+var BUSINESS = {name:'Clinic / Hospital / Diagnostic Lab', pin:'P051234567X', till:'522533', paybill:'247247'};
+
+var safeStore = {
+  get: function(k){ try { return window.localStorage.getItem(k); } catch(e){ return null; } },
+  set: function(k,v){ try { window.localStorage.setItem(k,v); return true; } catch(e){ return false; } },
+  remove: function(k){ try { window.localStorage.removeItem(k); return true; } catch(e){ return false; } }
+};
+var safeSession = {
+  get: function(k){ try { return window.sessionStorage.getItem(k); } catch(e){ return null; } },
+  set: function(k,v){ try { window.sessionStorage.setItem(k,v); return true; } catch(e){ return false; } },
+  remove: function(k){ try { window.sessionStorage.removeItem(k); return true; } catch(e){ return false; } }
+};
+
+function $(sel){ return document.querySelector(sel); }
+function $id(id){ return document.getElementById(id); }
+function esc(v){ return String(v == null ? '' : v).replace(/[&<>"']/g, function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+}); }
+function money(minor){ return 'Ksh ' + (Number(minor||0)/100).toLocaleString('en-KE',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function nowISO(){ return new Date().toISOString(); }
+function dateText(v){
+  if(!v) return '—';
+  try { return new Date(v).toLocaleString('en-KE',{dateStyle:'medium',timeStyle:'short',timeZone:'Africa/Nairobi'}); }
+  catch(e){ return String(v); }
+}
+function dayKey(){
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function dayKeyFor(iso){
+  if(!iso) return '';
+  try {
+    var d = new Date(iso);
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  } catch(e){ return String(iso).slice(0,10); }
+}
+function uid(prefix){
+  return prefix + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,6).toUpperCase();
+}
+function roleLabel(r){
+  var map = {
+    owner:'Owner / Administrator', manager:'Clinic Manager', receptionist:'Receptionist',
+    clinician:'Doctor / Clinical Officer', nurse:'Nurse / Triage', lab:'Laboratory Technician',
+    dispenser:'Pharmacist / Dispenser', cashier:'Cashier', developer:'Developer'
+  };
+  return map[r] || r;
+}
+
+var db = null;
+var session = null;
+var current = 'dashboard';
+var currentReceipt = null;
+var scanStream = null;
+var scanActive = false;
+
+function seed(){
+  return {
+    patients: [
+      {id:'PT-1001', name:'Amina Wanjiku', phone:'0712345678', dob:'1992-04-11', sex:'Female', pin:'A012345678Z', barcode:'PT1001', blood:'O+', allergies:'Penicillin', createdAt:nowISO(), notes:'Sample patient record'},
+      {id:'PT-1002', name:'Brian Otieno', phone:'0722334455', dob:'1985-09-02', sex:'Male', pin:'A987654321Y', barcode:'PT1002', blood:'A+', allergies:'None', createdAt:nowISO(), notes:'Sample patient record'},
+      {id:'PT-1003', name:'Grace Njeri', phone:'0733445566', dob:'1998-11-20', sex:'Female', pin:'', barcode:'PT1003', blood:'B+', allergies:'Sulfa drugs', createdAt:nowISO(), notes:'Sample patient record'}
+    ],
+    staff: [
+      {id:'ST-001', name:'Dr. Njeri Kamau', role:'clinician', barcode:'STAFF001', active:true},
+      {id:'ST-002', name:'Faith Achieng', role:'lab', barcode:'STAFF002', active:true},
+      {id:'ST-003', name:'Peter Mwangi', role:'dispenser', barcode:'STAFF003', active:true},
+      {id:'ST-004', name:'Nurse Mary Wanjiku', role:'nurse', barcode:'STAFF004', active:true}
+    ],
+    encounters: [
+      {id:'ENC-1001', patientId:'PT-1001', patientName:'Amina Wanjiku', complaint:'Headache and fatigue', triage:'BP 120/80; Temp 36.8°C', vitals:{temp:'36.8',bp:'120/80',pulse:'72',weight:'62',spo2:'98'}, diagnosis:'Tension headache', notes:'Patient reports 2-day headache. No fever. Neuro exam normal.', clinician:'Dr. Njeri Kamau', status:'In consultation', triageLevel:'P3', createdAt:nowISO(), sample:true}
+    ],
+    labOrders: [
+      {id:'LAB-1001', patientId:'PT-1001', patientName:'Amina Wanjiku', test:'Full blood count (FBC)', department:'Laboratory', specimen:'SP-1001', barcode:'SP1001', status:'Awaiting collection', result:'', priority:'Routine', createdAt:nowISO(), sample:true},
+      {id:'LAB-1002', patientId:'PT-1002', patientName:'Brian Otieno', test:'Chest X-ray', department:'Radiology', specimen:'SP-1002', barcode:'SP1002', status:'Processing', result:'', priority:'Urgent', createdAt:nowISO(), sample:true}
+    ],
+    medicines: [
+      {id:'MED-001', name:'Paracetamol 500 mg', category:'Analgesic', sku:'PARA500', barcode:'616000001001', batch:'B-PARA-01', expiry:'2027-06-30', qty:120, reorder:30, cost:1800, price:3000, vat:16, active:true},
+      {id:'MED-002', name:'Amoxicillin 500 mg', category:'Antibiotic', sku:'AMOX500', barcode:'616000001002', batch:'B-AMOX-04', expiry:'2026-11-15', qty:24, reorder:25, cost:5000, price:7500, vat:16, active:true},
+      {id:'MED-003', name:'Oral rehydration salts', category:'Rehydration', sku:'ORS-01', barcode:'616000001003', batch:'B-ORS-09', expiry:'2026-10-28', qty:45, reorder:15, cost:800, price:1500, vat:16, active:true}
+    ],
+    invoices: [
+      {id:'INV-1001', patientId:'PT-1002', patientName:'Brian Otieno', lines:[{name:'Consultation', qty:1, unit:150000, vat:16}], subtotal:150000, vat:20690, total:150000, paid:50000, balance:100000, payments:[{method:'Cash', amount:50000, ref:'', at:nowISO()}], etims:'ETIMS-2026-1001', createdAt:nowISO(), sample:true}
+    ],
+    payments: [],
+    suppliers: [
+      {id:'SUP-001', name:'Afya Medical Supplies Ltd', phone:'+254 711 222333', balance:0}
+    ],
+    stockMoves: [],
+    attendance: [],
+    patientArrivals: [],
+    shifts: [],
+    expenses: [
+      {id:'EXP-001', date:'2026-10-01', category:'Chemicals', vendor:'MedSupply Kenya', amount:2450000, method:'M-Pesa', notes:'Monthly medical supplies'}
+    ],
+    clinicalRecords: [
+      {id:'CR-1001', patientId:'PT-1001', patientName:'Amina Wanjiku', type:'consultation', chiefComplaint:'Headache and fatigue', history:'No chronic conditions. No current medications.', exam:'Alert, oriented. Neuro exam normal.', diagnosis:'Tension headache', plan:'Paracetamol PRN. Rest. Review in 3 days if persists.', vitals:{temp:'36.8',bp:'120/80',pulse:'72',weight:'62',spo2:'98'}, clinician:'Dr. Njeri Kamau', createdAt:nowISO(), sample:true}
+    ],
+    triageQueue: [
+      {id:'TR-1001', patientId:'PT-1001', patientName:'Amina Wanjiku', complaint:'Headache', level:'P3', vitals:{temp:'36.8',bp:'120/80',pulse:'72',spo2:'98'}, nurse:'Nurse Mary Wanjiku', status:'Triaged', arrivedAt:nowISO(), sample:true},
+      {id:'TR-1002', patientId:'PT-1002', patientName:'Brian Otieno', complaint:'Chest pain', level:'P2', vitals:{temp:'37.2',bp:'135/88',pulse:'88',spo2:'96'}, nurse:'Nurse Mary Wanjiku', status:'Waiting', arrivedAt:nowISO(), sample:true}
+    ],
+    diagnoses: [],
+    allergies: [
+      {patientId:'PT-1001', allergen:'Penicillin', reaction:'Rash', severity:'Moderate'},
+      {patientId:'PT-1003', allergen:'Sulfa drugs', reaction:'Hives', severity:'Moderate'}
+    ],
+    labCatalog: [
+      {code:'FBC', name:'Full blood count', dept:'Laboratory', price:1800, turnaround:'2 hours'},
+      {code:'MAL', name:'Malaria rapid test', dept:'Laboratory', price:800, turnaround:'30 min'},
+      {code:'GLU', name:'Blood glucose', dept:'Laboratory', price:500, turnaround:'15 min'},
+      {code:'URIN', name:'Urinalysis', dept:'Laboratory', price:600, turnaround:'1 hour'},
+      {code:'CXR', name:'Chest X-ray', dept:'Radiology', price:3500, turnaround:'24 hours'},
+      {code:'ABD-US', name:'Abdominal ultrasound', dept:'Radiology', price:5000, turnaround:'24 hours'},
+      {code:'ECG', name:'Electrocardiogram', dept:'Diagnostics', price:2500, turnaround:'1 hour'}
+    ],
+    automations: {dismissed:{}, snoozed:{}, history:[]},
+    settings: {theme:'light', mode:'Local', vat:16},
+    logs: [],
+    featureFlags: {pos:false, restock:false, readAudit:false, verbose:false}
+  };
+}
+
+function loadDB(){
+  try {
+    var raw = safeStore.get(APP);
+    if(raw){
+      var d = JSON.parse(raw);
+      var base = seed();
+      return {
+        patients: d.patients || base.patients,
+        staff: d.staff || base.staff,
+        encounters: d.encounters || base.encounters,
+        labOrders: d.labOrders || base.labOrders,
+        medicines: d.medicines || base.medicines,
+        invoices: d.invoices || base.invoices,
+        payments: d.payments || [],
+        suppliers: d.suppliers || base.suppliers,
+        stockMoves: d.stockMoves || [],
+        attendance: d.attendance || [],
+        patientArrivals: d.patientArrivals || [],
+        shifts: d.shifts || [],
+        expenses: d.expenses || base.expenses,
+        clinicalRecords: d.clinicalRecords || base.clinicalRecords,
+        triageQueue: d.triageQueue || base.triageQueue,
+        diagnoses: d.diagnoses || [],
+        allergies: d.allergies || base.allergies,
+        labCatalog: d.labCatalog || base.labCatalog,
+        automations: d.automations || {dismissed:{}, snoozed:{}, history:[]},
+        settings: d.settings || {theme:'light', mode:'Local', vat:16},
+        logs: d.logs || [],
+        featureFlags: d.featureFlags || {pos:false, restock:false, readAudit:false, verbose:false}
+      };
+    }
+  } catch(e){ console.warn('loadDB failed', e); }
+  return seed();
+}
+
+function saveDB(){
+  try {
+    var ok = safeStore.set(APP, JSON.stringify(db));
+    var b = $id('storageBadge');
+    if(b){
+      b.textContent = ok ? 'Saved on device' : 'Session only';
+      b.className = 'badge ' + (ok ? 'good' : 'warn');
+    }
+    return ok;
+  } catch(e){ return false; }
+}
+
+function log(type, message){
+  try {
+    db.logs.unshift({at: nowISO(), type: type, message: message});
+    db.logs = db.logs.slice(0, 200);
+    saveDB();
+  } catch(e){}
+}
+
+function toast(msg){
+  try {
+    var root = $id('toastRoot');
+    if(!root) return;
+    var n = document.createElement('div');
+    n.className = 'toast';
+    n.textContent = msg;
+    root.appendChild(n);
+    setTimeout(function(){ n.remove(); }, 3400);
+  } catch(e){}
+}
+
+var navItems = [
+  ['dashboard','⌂','Home',['owner','manager','receptionist','clinician','nurse','lab','dispenser','cashier','developer']],
+  ['triage','🚨','Triage & Queue',['owner','manager','receptionist','clinician','nurse','developer']],
+  ['patients','♙','Patients',['owner','manager','receptionist','clinician','nurse','lab','dispenser','cashier','developer']],
+  ['consultation','⚕','Consultation',['owner','manager','clinician','nurse','developer']],
+  ['clinical','📋','Clinical Records',['owner','manager','clinician','nurse','developer']],
+  ['lab','⚗','Lab & Diagnostics',['owner','manager','clinician','nurse','lab','developer']],
+  ['dispensing','▤','Dispensing',['owner','manager','clinician','dispenser','developer']],
+  ['medicines','▦','Medicine Stock',['owner','manager','dispenser','developer']],
+  ['billing','▣','Billing & Finance',['owner','manager','receptionist','cashier','developer']],
+  ['staff','♧','Administration',['owner','manager','developer']],
+  ['intelligence','📊','Intelligence',['owner','manager','cashier','developer']],
+  ['settings','⚙','Settings',['owner','manager','developer']],
+  ['developer','⌘','Developer',['developer']]
+];
+
+var titles = {};
+navItems.forEach(function(n){ titles[n[0]] = n[2]; });
+
+function visibleNav(){
+  if(!session) return [];
+  return navItems.filter(function(n){ return n[3].indexOf(session.role) !== -1; });
+}
+
+function renderNav(){
+  try {
+    var visible = visibleNav();
+    var html = visible.map(function(item){
+      var id = item[0], icon = item[1], label = item[2];
+      return '<button class="' + (id === current ? 'active' : '') + '" onclick="navigate(\'' + id + '\')">' +
+        '<span class="nav-icon">' + icon + '</span><span>' + label + '</span></button>';
+    }).join('');
+    $id('sideNav').innerHTML = html;
+
+    var bottomItems = [
+      ['dashboard','⌂','Home'],
+      ['triage','🚨','Triage'],
+      ['consultation','⚕','Consult'],
+      ['billing','▣','Billing'],
+      ['intelligence','📊','Insights']
+    ];
+    $id('bottomNav').innerHTML = bottomItems.map(function(item){
+      return '<button class="' + (current === item[0] ? 'active' : '') + '" onclick="navigate(\'' + item[0] + '\')">' +
+        '<span>' + item[1] + '</span>' + item[2] + '</button>';
+    }).join('');
+
+    $id('sideMode').textContent = db.settings.mode;
+    $id('modeBadge').textContent = db.settings.mode;
+  } catch(e){ console.warn('renderNav', e); }
+}
+
+function navigate(id){
+  if(id === 'developer' && (!session || session.role !== 'developer')){
+    toast('Developer access is restricted.');
+    return;
+  }
+  var allowed = navItems.find(function(n){ return n[0] === id; });
+  if(allowed && session && allowed[3].indexOf(session.role) === -1){
+    toast('Your role does not have access to this module.');
+    return;
+  }
+  current = id;
+  document.body.classList.remove('drawer-open');
+  $id('pageTitle').textContent = titles[id] || id;
+  renderNav();
+  var renderers = {
+    dashboard: renderDashboard,
+    triage: renderTriage,
+    patients: renderPatients,
+    consultation: renderConsultation,
+    clinical: renderClinical,
+    lab: renderLab,
+    dispensing: renderDispensing,
+    medicines: renderMedicines,
+    billing: renderBilling,
+    staff: renderStaff,
+    intelligence: renderIntelligence,
+    settings: renderSettings,
+    developer: renderDeveloper
+  };
+  var fn = renderers[id] || renderDashboard;
+  $id('view').innerHTML = '';
+  try {
+    fn();
+  } catch(e){
+    console.error('render error', e);
+    $id('view').innerHTML = '<div class="card"><h2>Unable to render ' + esc(id) + '</h2><p class="muted">' + esc(e.message) + '</p><button class="primary" onclick="navigate(\'dashboard\')">Back to dashboard</button></div>';
+  }
+  stampTableLabels();
+  log('navigation', 'Opened ' + id);
+}
+
+function toggleDrawer(){ document.body.classList.toggle('drawer-open'); }
+function closeDrawer(){ document.body.classList.remove('drawer-open'); }
+
+function stat(label, value, meta){
+  return '<div class="card"><div class="stat-label">' + label + '</div><div class="stat-value">' + value + '</div><div class="stat-label">' + (meta || '') + '</div></div>';
+}
+
+function pageIntro(title, desc, actions){
+  return '<div class="section-head"><div><h1>' + title + '</h1><div class="muted">' + desc + '</div></div>' + (actions || '') + '</div>';
+}
+
+function sampleNotice(){
+  return '<div class="data-notice">ⓘ <b>Offline demo:</b> records marked Sample are fictional examples. Data is saved in this browser where supported.</div>';
+}
+
+function table(headers, rows){
+  return '<div class="table-wrap"><table><thead><tr>' +
+    headers.map(function(h){ return '<th>' + h + '</th>'; }).join('') +
+    '</tr></thead><tbody>' +
+    (rows.length ? rows.join('') : '<tr><td colspan="' + headers.length + '" class="empty">No records to show.</td></tr>') +
+    '</tbody></table></div>';
+}
+
+function row(cells){
+  return '<tr>' + cells.map(function(c){ return '<td>' + c + '</td>'; }).join('') + '</tr>';
+}
+
+function filterRows(q){
+  q = q.toLowerCase();
+  var rows = document.querySelectorAll('#view tbody tr');
+  for(var i = 0; i < rows.length; i++){
+    rows[i].style.display = rows[i].textContent.toLowerCase().indexOf(q) !== -1 ? '' : 'none';
+  }
+}
+
+function stampTableLabels(){
+  var tables = document.querySelectorAll('#view table');
+  for(var t = 0; t < tables.length; t++){
+    var ths = tables[t].querySelectorAll('thead th');
+    var headers = [];
+    for(var h = 0; h < ths.length; h++) headers.push(ths[h].textContent.trim());
+    var trs = tables[t].querySelectorAll('tbody tr');
+    for(var r = 0; r < trs.length; r++){
+      var tds = trs[r].children;
+      for(var c = 0; c < tds.length; c++){
+        if(tds[c].tagName === 'TD' && headers[c]) tds[c].setAttribute('data-label', headers[c]);
+      }
+    }
+  }
+}
+
+function shortMoney(v){
+  v = Number(v) || 0;
+  if(v >= 1000000) return (v/1000000).toFixed(1) + 'm';
+  if(v >= 1000) return (v/1000).toFixed(1) + 'k';
+  return Math.round(v).toString();
+}
+
+function chartEmpty(label){
+  return '<div class="chart-empty"><b>No ' + esc(label) + ' data</b><small>Records will appear here as activity is saved.</small></div>';
+}
+
+function chartLine(title, labels, series, opts){
+  opts = opts || {};
+  var allValues = [];
+  series.forEach(function(s){ allValues = allValues.concat(s.values); });
+  var vals = allValues.filter(Number.isFinite);
+  if(!vals.length || vals.every(function(v){ return v === 0; })) return '<div class="chart-card"><div class="chart-title"><h3>' + title + '</h3></div>' + chartEmpty(title.toLowerCase()) + '</div>';
+  var max = Math.max.apply(null, [1].concat(vals));
+  var W = 620, H = 220, L = 42, R = 16, T = 18, B = 34;
+  var iw = W - L - R, ih = H - T - B;
+  var grid = '';
+  for(var i = 0; i < 5; i++){
+    var y = T + ih * i / 4;
+    var label = opts.money ? shortMoney(max*(4-i)/4) : Math.round(max*(4-i)/4);
+    grid += '<line x1="' + L + '" y1="' + y + '" x2="' + (W-R) + '" y2="' + y + '" stroke="currentColor" stroke-opacity=".10"/>';
+    grid += '<text x="' + (L-8) + '" y="' + (y+4) + '" text-anchor="end" font-size="10" fill="currentColor" opacity=".65">' + label + '</text>';
+  }
+  var lines = series.map(function(s){
+    var pts = s.values.map(function(v, idx){
+      var x = L + (labels.length < 2 ? iw/2 : idx * iw / (labels.length - 1));
+      var y = T + ih - (v / max) * ih;
+      return x + ',' + y;
+    }).join(' ');
+    var dots = s.values.map(function(v, idx){
+      var x = L + (labels.length < 2 ? iw/2 : idx * iw / (labels.length - 1));
+      var y = T + ih - (v / max) * ih;
+      return '<circle cx="' + x + '" cy="' + y + '" r="3" fill="' + s.color + '"/>';
+    }).join('');
+    return '<polyline points="' + pts + '" fill="none" stroke="' + s.color + '" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>' + dots;
+  }).join('');
+  var labs = labels.map(function(l, idx){
+    if(labels.length > 8 && idx % Math.ceil(labels.length/7) !== 0 && idx !== labels.length - 1) return '';
+    var x = L + (labels.length < 2 ? iw/2 : idx * iw / (labels.length - 1));
+    return '<text x="' + x + '" y="' + (H-10) + '" text-anchor="middle" font-size="10" fill="currentColor" opacity=".7">' + esc(l) + '</text>';
+  }).join('');
+  var legend = series.map(function(s){ return '<span><i style="background:' + s.color + '"></i>' + esc(s.name) + '</span>'; }).join('');
+  return '<div class="chart-card"><div class="chart-title"><h3>' + title + '</h3><div class="chart-legend">' + legend + '</div></div><div class="chart-scroll"><svg class="analytics-svg" viewBox="0 0 ' + W + ' ' + H + '">' + grid + lines + labs + '</svg></div></div>';
+}
+
+function chartBars(title, items, opts){
+  opts = opts || {};
+  if(!items.length) return '<div class="chart-card"><div class="chart-title"><h3>' + title + '</h3></div>' + chartEmpty(title.toLowerCase()) + '</div>';
+  var vals = items.map(function(x){ return Number(x.value) || 0; });
+  var max = Math.max.apply(null, [1].concat(vals));
+  if(vals.every(function(v){ return v === 0; })) return '<div class="chart-card"><div class="chart-title"><h3>' + title + '</h3></div>' + chartEmpty(title.toLowerCase()) + '</div>';
+  var rows = items.map(function(x){
+    var pct = Math.max(0, Math.min(100, (Number(x.value) || 0) / max * 100));
+    var val = opts.money ? money(x.value) : (Number(x.value) || 0);
+    return '<div class="bar-row"><span title="' + esc(x.label) + '">' + esc(x.label) + '</span>' +
+      '<div class="bar-track"><i style="width:' + pct + '%"></i></div><b>' + val + '</b></div>';
+  }).join('');
+  return '<div class="chart-card"><div class="chart-title"><h3>' + title + '</h3></div><div class="bar-chart">' + rows + '</div></div>';
+}
+
+function firingRules(){
+  var today = dayKey();
+  var rules = [];
+  var low = db.medicines.filter(function(m){ return m.active && m.qty <= m.reorder; });
+  if(low.length) rules.push({id:'low-stock', name:'Low medicine stock', desc:'Medicine batches at or below reorder threshold.', records: low.map(function(x){ return x.name + ' (' + x.qty + ' left)'; }), action:'medicines', severity:'warning'});
+  var soon = new Date(); soon.setDate(soon.getDate() + 30);
+  var exp = db.medicines.filter(function(m){ return m.active && m.expiry && new Date(m.expiry + 'T23:59:59') <= soon; });
+  if(exp.length) rules.push({id:'expiry', name:'Expiring / expired batches', desc:'Review batches expiring within 30 days or already expired.', records: exp.map(function(x){ return x.name + ' · ' + x.batch + ' · ' + x.expiry; }), action:'medicines', severity:'warning'});
+  var pendingLab = db.labOrders.filter(function(x){ return ['Authorised','Collected by patient','Cancelled'].indexOf(x.status) === -1; });
+  if(pendingLab.length) rules.push({id:'lab-pending', name:'Pending laboratory work', desc:'Orders still awaiting collection, processing, or authorisation.', records: pendingLab.map(function(x){ return x.id + ' · ' + x.test + ' · ' + x.status; }), action:'lab', severity:'warning'});
+  var debt = db.invoices.filter(function(x){ return x.balance > 0 && x.status !== 'Cancelled'; });
+  if(debt.length) rules.push({id:'credit', name:'Outstanding patient balances', desc:'Invoices with an unpaid balance require cashier follow-up.', records: debt.map(function(x){ return x.id + ' · ' + x.patientName + ' · ' + money(x.balance); }), action:'billing', severity:'warning'});
+  var p1 = db.triageQueue.filter(function(t){ return t.level === 'P1' && t.status !== 'Seen'; });
+  if(p1.length) rules.push({id:'p1-triaged', name:'P1 emergency waiting', desc:'Immediate attention patients still in queue.', records: p1.map(function(x){ return x.patientName + ' · ' + x.complaint; }), action:'triage', severity:'danger'});
+  rules.push({id:'daily-summary', name:'Daily financial summary', desc:'Review receipts, payment mix and cashier reconciliation.', records: [db.invoices.filter(function(i){ return dayKeyFor(i.createdAt) === today; }).length + ' invoice(s) today'], action:'intelligence', severity:'info'});
+  rules.push({id:'backup', name:'Backup reminder', desc:'Export a JSON backup to keep a copy outside this browser.', records:['Last 200 local audit events kept on this device.'], action:'settings', severity:'info'});
+  return rules.filter(function(r){ return db.automations.dismissed[r.id] !== today && db.automations.snoozed[r.id] !== today; });
+}
+
+// ============ DASHBOARD ============
+function renderDashboard(){
+  var today = dayKey();
+  var pToday = db.encounters.filter(function(e){ return dayKeyFor(e.createdAt) === today; }).length;
+  var pending = db.labOrders.filter(function(l){ return ['Authorised','Collected by patient','Cancelled'].indexOf(l.status) === -1; }).length;
+  var low = db.medicines.filter(function(m){ return m.active !== false && m.qty <= m.reorder; }).length;
+  var nonCancel = db.invoices.filter(function(i){ return i.status !== 'Cancelled'; });
+  var paid = nonCancel.reduce(function(s,i){ return s + (Number(i.paid) || 0); }, 0);
+  var due = nonCancel.reduce(function(s,i){ return s + (Number(i.balance) || 0); }, 0);
+  var rules = firingRules();
+  var todayInv = db.invoices.filter(function(i){ return dayKeyFor(i.createdAt) === today; });
+  var waiting = db.triageQueue.filter(function(t){ return t.status !== 'Seen'; }).length;
+
+  var html = '';
+  html += '<div class="exec-header"><div><div class="eyebrow">CLINIC OPERATIONS / OVERVIEW</div><h1>Good ' +
+    (new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening') +
+    ', ' + esc((session && session.name || 'Team').split(' ')[0]) + '</h1>' +
+    '<p class="muted">' + new Date().toLocaleDateString('en-KE', {weekday:'long',day:'numeric',month:'long',year:'numeric'}) + ' · Live summary from this device\'s records</p></div></div>';
+
+  html += '<div class="exec-banner"><div><span class="eyebrow">PAYMENTS RECORDED</span><div class="exec-value">' + money(paid) + '</div>' +
+    '<div class="exec-sub">Across ' + nonCancel.length + ' non-cancelled invoices</div></div>' +
+    '<div class="banner-metrics"><div><span>Patient visits today</span><b>' + pToday + '</b></div>' +
+    '<div><span>Outstanding balance</span><b>' + money(due) + '</b></div>' +
+    '<div><span>Waiting triage</span><b>' + waiting + '</b></div></div></div>';
+
+  html += '<div class="grid stats">' + stat('Registered patients', db.patients.length, 'Total saved patient records') +
+    stat('Encounters today', pToday, 'Visits created today') +
+    stat('Pending lab work', pending, 'Not yet authorised or closed') +
+    stat('Low-stock medicines', low, 'At or below reorder level') + '</div>';
+
+  var dayLabels = [], dayRevenue = [], dayVisits = [];
+  for(var k = 13; k >= 0; k--){
+    var dt = new Date(); dt.setDate(dt.getDate() - k);
+    var key = dayKeyFor(dt.toISOString());
+    dayLabels.push(dt.getDate() + '/' + (dt.getMonth()+1));
+    dayRevenue.push(db.invoices.filter(function(i){ return i.status !== 'Cancelled' && dayKeyFor(i.createdAt) === key; }).reduce(function(s,i){ return s + (Number(i.paid) || 0); }, 0));
+    dayVisits.push(db.encounters.filter(function(e){ return dayKeyFor(e.createdAt) === key; }).length);
+  }
+
+  html += '<div class="analytics-grid">' +
+    chartLine('14-day collections (KES)', dayLabels, [{name:'Collections', values:dayRevenue, color:'#168b82'}], {money:true}) +
+    chartLine('14-day patient visits', dayLabels, [{name:'Visits', values:dayVisits, color:'#6477c8'}]) +
+    '</div>';
+
+  html += '<div class="section-head"><h2>Priority alerts</h2><button onclick="navigate(\'intelligence\')">Review all ' + rules.length + ' →</button></div>';
+  if(rules.length){
+    html += '<div class="grid two">' + rules.slice(0,4).map(function(r){
+      return '<div class="card alert-card ' + (r.severity === 'danger' ? 'danger' : r.severity === 'info' ? 'info' : '') + '">' +
+        '<div class="split"><strong>' + esc(r.name) + '</strong><span class="status ' + (r.severity === 'danger' ? 'danger' : r.severity === 'info' ? 'info' : 'pending') + '">' + (r.severity === 'danger' ? 'Attention' : r.severity === 'info' ? 'Info' : 'Review') + '</span></div>' +
+        '<p class="muted" style="margin:7px 0">' + esc(r.records[0] || r.desc) + '</p>' +
+        '<button onclick="navigate(\'' + r.action + '\')">Open workspace →</button></div>';
+    }).join('') + '</div>';
+  } else {
+    html += '<div class="card"><b>No active alerts</b><p class="muted">No current rules require attention.</p></div>';
+  }
+
+  html += '<div class="section-head"><h2>Quick actions</h2></div><div class="tiles">' +
+    visibleNav().filter(function(n){ return n[0] !== 'dashboard' && n[0] !== 'developer'; }).map(function(item){
+      return '<button class="tile" onclick="navigate(\'' + item[0] + '\')"><span class="tile-icon">' + item[1] + '</span><strong>' + esc(item[2]) + '</strong></button>';
+    }).join('') + '</div>';
+
+  $id('view').innerHTML = html;
+}
+
+// ============ TRIAGE & QUEUE ============
+var triageFilter = 'all';
+
+function renderTriage(){
+  var queue = db.triageQueue.slice().sort(function(a,b){
+    var levels = {P1:0, P2:1, P3:2, P4:3};
+    return (levels[a.level] || 9) - (levels[b.level] || 9);
+  });
+  var filtered = triageFilter === 'all' ? queue : queue.filter(function(q){ return q.status === triageFilter; });
+  var p1 = queue.filter(function(q){ return q.level === 'P1' && q.status !== 'Seen'; }).length;
+  var waiting = queue.filter(function(q){ return q.status === 'Waiting'; }).length;
+  var triaged = queue.filter(function(q){ return q.status === 'Triaged'; }).length;
+  var seen = queue.filter(function(q){ return q.status === 'Seen'; }).length;
+
+  var rows = filtered.map(function(q){
+    return row([
+      '<span class="triage-chip triage-' + esc(q.level) + '">' + esc(q.level) + '</span>',
+      '<b>' + esc(q.patientName) + '</b><br><small>' + esc(q.patientId || '') + '</small>',
+      esc(q.complaint),
+      '<div>' + (q.vitals ? '<span class="vital-chip">🌡 ' + esc(q.vitals.temp || '—') + '</span><span class="vital-chip">❤ ' + esc(q.vitals.pulse || '—') + '</span><span class="vital-chip">BP ' + esc(q.vitals.bp || '—') + '</span><span class="vital-chip">O₂ ' + esc(q.vitals.spo2 || '—') + '</span>' : '—') + '</div>',
+      '<span class="status ' + (q.status === 'Seen' ? 'done' : q.status === 'Triaged' ? 'info' : 'pending') + '">' + esc(q.status) + '</span>',
+      '<div class="table-actions"><button onclick="editTriage(\'' + q.id + '\')">Edit</button><button onclick="startConsultation(\'' + q.id + '\')">Consult</button></div>'
+    ]);
+  });
+
+  $id('view').innerHTML = sampleNotice() +
+    pageIntro('Triage & Queue', 'Prioritize patients by acuity using the triage scale.', '<button class="primary" onclick="editTriage()">＋ New arrival</button>') +
+    '<div class="grid stats">' +
+    stat('P1 immediate', p1, 'Critical') +
+    stat('Waiting', waiting, 'Not yet triaged') +
+    stat('Triaged', triaged, 'Ready for clinician') +
+    stat('Seen today', seen, 'Completed in queue') +
+    '</div>' +
+    '<div class="queue-tabs">' +
+    ['all','Waiting','Triaged','Seen'].map(function(f){
+      return '<button class="' + (triageFilter === f ? 'active' : '') + '" onclick="setTriageFilter(\'' + f + '\')">' + f + '</button>';
+    }).join('') +
+    '</div>' +
+    '<div class="toolbar"><input class="search" placeholder="Search…" oninput="filterRows(this.value)"></div>' +
+    table(['Level','Patient','Complaint','Vitals','Status','Actions'], rows);
+}
+
+function setTriageFilter(f){ triageFilter = f; renderTriage(); stampTableLabels(); }
+
+function editTriage(id){
+  var t = id ? db.triageQueue.find(function(x){ return x.id === id; }) : {level:'P3', status:'Waiting', vitals:{}};
+  var patientOpts = db.patients.map(function(p){
+    return '<option value="' + p.id + '" ' + (t.patientId === p.id ? 'selected' : '') + '>' + esc(p.name) + ' · ' + esc(p.id) + '</option>';
+  }).join('');
+  var form = '<form id="triageForm" onsubmit="saveTriage(event,\'' + (id || '') + '\')"><div class="form-grid">' +
+    '<div class="field"><label>Patient *</label><select name="patientId" required>' + patientOpts + '</select></div>' +
+    '<div class="field"><label>Triage level *</label><select name="level" required>' +
+    ['P1','P2','P3','P4'].map(function(l){
+      var labels = {P1:'P1 — Immediate / life-threatening', P2:'P2 — Emergency', P3:'P3 — Urgent', P4:'P4 — Non-urgent'};
+      return '<option value="' + l + '" ' + (t.level === l ? 'selected' : '') + '>' + labels[l] + '</option>';
+    }).join('') + '</select></div>' +
+    '<div class="field full"><label>Presenting complaint *</label><input name="complaint" value="' + esc(t.complaint || '') + '" required></div>' +
+    '<div class="field"><label>Status</label><select name="status">' +
+    ['Waiting','Triaged','Seen'].map(function(s){
+      return '<option ' + (t.status === s ? 'selected' : '') + '>' + s + '</option>';
+    }).join('') + '</select></div>' +
+    '<div class="field"><label>Nurse</label><input name="nurse" value="' + esc(t.nurse || (session ? session.name : '')) + '"></div>' +
+    '<div class="field"><label>Temperature (°C)</label><input name="temp" type="number" step=".1" value="' + esc((t.vitals && t.vitals.temp) || '') + '"></div>' +
+    '<div class="field"><label>Blood pressure</label><input name="bp" value="' + esc((t.vitals && t.vitals.bp) || '') + '" placeholder="120/80"></div>' +
+    '<div class="field"><label>Pulse (bpm)</label><input name="pulse" type="number" value="' + esc((t.vitals && t.vitals.pulse) || '') + '"></div>' +
+    '<div class="field"><label>SpO₂ (%)</label><input name="spo2" type="number" value="' + esc((t.vitals && t.vitals.spo2) || '') + '"></div>' +
+    '</div><div class="form-actions"><button type="button" onclick="closeModal()">Cancel</button><button class="primary">Save</button></div></form>';
+  modal(id ? 'Edit triage' : 'New arrival', form);
+}
+
+function saveTriage(e, id){
+  e.preventDefault();
+  var d = Object.fromEntries(new FormData(e.target).entries());
+  var p = db.patients.find(function(x){ return x.id === d.patientId; });
+  d.patientName = p ? p.name : 'Unknown';
+  d.vitals = {temp:d.temp, bp:d.bp, pulse:d.pulse, spo2:d.spo2};
+  delete d.temp; delete d.bp; delete d.pulse; delete d.spo2;
+  if(id){
+    Object.assign(db.triageQueue.find(function(x){ return x.id === id; }), d);
+  } else {
+    d.id = uid('TR');
+    d.arrivedAt = nowISO();
+    db.triageQueue.unshift(d);
+  }
+  saveDB();
+  closeModal();
+  navigate('triage');
+  toast('Triage record saved.');
+}
+
+// ============ CONSULTATION ============
+function renderConsultation(){
+  var waiting = db.triageQueue.filter(function(t){ return t.status === 'Triaged'; });
+  var drafts = db.clinicalRecords.filter(function(r){ return r.status === 'Draft'; });
+
+  var queueHtml = waiting.length ? waiting.map(function(t){
+    return '<div class="patient-card" style="margin-bottom:10px">' +
+      '<div class="split"><div><h4>' + esc(t.patientName) + '</h4><div class="meta">' + esc(t.patientId) + ' · ' + esc(t.complaint) + '</div></div>' +
+      '<span class="triage-chip triage-' + esc(t.level) + '">' + esc(t.level) + '</span></div>' +
+      (t.vitals ? '<div style="margin:8px 0"><span class="vital-chip">🌡 ' + esc(t.vitals.temp || '—') + '</span><span class="vital-chip">❤ ' + esc(t.vitals.pulse || '—') + '</span><span class="vital-chip">BP ' + esc(t.vitals.bp || '—') + '</span><span class="vital-chip">O₂ ' + esc(t.vitals.spo2 || '—') + '</span></div>' : '') +
+      '<button class="primary" onclick="startConsultation(\'' + t.id + '\')">Start consultation</button>' +
+      '</div>';
+  }).join('') : '<div class="empty">No triaged patients waiting. Register a new arrival in Triage.</div>';
+
+  var allergyAlerts = '';
+  if(waiting.length){
+    waiting.forEach(function(t){
+      var allergies = db.allergies.filter(function(a){ return a.patientId === t.patientId; });
+      allergies.forEach(function(a){
+        allergyAlerts += '<div class="cds-alert red">⚠ <b>Allergy alert:</b> ' + esc(t.patientName) + ' is allergic to ' + esc(a.allergen) + ' (' + esc(a.reaction) + ').</div>';
+      });
+    });
+  }
+
+  $id('view').innerHTML = sampleNotice() +
+    pageIntro('Consultation', 'Document the clinical encounter for triaged patients.', '<button class="primary" onclick="newConsultation()">＋ New consultation</button>') +
+    '<div class="grid two">' +
+    '<div class="card"><h2>Ready for consultation</h2>' + allergyAlerts + queueHtml + '</div>' +
+    '<div class="card"><h2>Draft notes</h2>' + (drafts.length ? drafts.map(function(r){
+      return '<div style="padding:10px 0;border-bottom:1px solid var(--border)"><b>' + esc(r.patientName) + '</b> · ' + esc(r.chiefComplaint || '') + '<div><button onclick="editClinicalRecord(\'' + r.id + '\')">Resume</button></div></div>';
+    }).join('') : '<div class="muted">No draft notes.</div>') + '</div>' +
+    '</div>';
+}
+
+function startConsultation(triageId){
+  var t = db.triageQueue.find(function(x){ return x.id === triageId; });
+  if(!t){ toast('Triage record not found.'); return; }
+  var record = {
+    id: uid('CR'),
+    patientId: t.patientId,
+    patientName: t.patientName,
+    triageId: triageId,
+    type: 'consultation',
+    chiefComplaint: t.complaint,
+    vitals: t.vitals || {},
+    clinician: session.name,
+    status: 'Draft',
+    createdAt: nowISO()
+  };
+  db.clinicalRecords.unshift(record);
+  t.status = 'Seen';
+  saveDB();
+  editClinicalRecord(record.id);
+}
+
+function newConsultation(){
+  var patientOpts = db.patients.map(function(p){
+    return '<option value="' + p.id + '">' + esc(p.name) + ' · ' + esc(p.id) + '</option>';
+  }).join('');
+  var form = '<form onsubmit="createConsultation(event)"><div class="field"><label>Patient *</label><select name="patientId" required>' + patientOpts + '</select></div>' +
+    '<div class="field" style="margin-top:12px"><label>Chief complaint *</label><input name="chiefComplaint" required></div>' +
+    '<div class="form-actions"><button type="button" onclick="closeModal()">Cancel</button><button class="primary">Create draft</button></div></form>';
+  modal('New consultation', form);
+}
+
+function createConsultation(e){
+  e.preventDefault();
+  var d = Object.fromEntries(new FormData(e.target).entries());
+  var p = db.patients.find(function(x){ return x.id === d.patientId; });
+  var record = {
+    id: uid('CR'), patientId:p.id, patientName:p.name,
+    type:'consultation', chiefComplaint:d.chiefComplaint,
+    clinician: session.name, status: 'Draft', createdAt: nowISO(), vitals: {}
+  };
+  db.clinicalRecords.unshift(record);
+  saveDB();
+  closeModal();
+  editClinicalRecord(record.id);
+}
+
+function editClinicalRecord(id){
+  var r = db.clinicalRecords.find(function(x){ return x.id === id; });
+  if(!r) return;
+  var allergies = db.allergies.filter(function(a){ return a.patientId === r.patientId; });
+  var alertHtml = allergies.length ? allergies.map(function(a){
+    return '<div class="cds-alert red">⚠ <b>Allergy:</b> ' + esc(a.allergen) + ' — ' + esc(a.reaction) + ' (' + esc(a.severity) + ')</div>';
+  }).join('') : '<div class="cds-alert green">✓ No known allergies on file.</div>';
+
+  var form = alertHtml +
+    '<form id="clinicalForm" onsubmit="saveClinicalRecord(event,\'' + id + '\')"><div class="form-grid">' +
+    '<div class="field full"><label>Chief complaint</label><input name="chiefComplaint" value="' + esc(r.chiefComplaint || '') + '"></div>' +
+    '<div class="field full"><label>History of present illness</label><textarea name="history">' + esc(r.history || '') + '</textarea></div>' +
+    '<div class="field full"><label>Physical examination</label><textarea name="exam">' + esc(r.exam || '') + '</textarea></div>' +
+    '<div class="field"><label>Temperature (°C)</label><input name="temp" type="number" step=".1" value="' + esc((r.vitals && r.vitals.temp) || '') + '"></div>' +
+    '<div class="field"><label>Blood pressure</label><input name="bp" value="' + esc((r.vitals && r.vitals.bp) || '') + '"></div>' +
+    '<div class="field"><label>Pulse (bpm)</label><input name="pulse" type="number" value="' + esc((r.vitals && r.vitals.pulse) || '') + '"></div>' +
+    '<div class="field"><label>SpO₂ (%)</label><input name="spo2" type="number" value="' + esc((r.vitals && r.vitals.spo2) || '') + '"></div>' +
+    '<div class="field"><label>Weight (kg)</label><input name="weight" type="number" step=".1" value="' + esc((r.vitals && r.vitals.weight) || '') + '"></div>' +
+    '<div class="field"><label>Clinician</label><input name="clinician" value="' + esc(r.clinician || '') + '"></div>' +
+    '<div class="field full"><label>Diagnosis / assessment *</label><textarea name="diagnosis" required>' + esc(r.diagnosis || '') + '</textarea></div>' +
+    '<div class="field full"><label>Plan / prescription</label><textarea name="plan">' + esc(r.plan || '') + '</textarea></div>' +
+    '<div class="field full"><label>Notes</label><textarea name="notes">' + esc(r.notes || '') + '</textarea></div>' +
+    '</div><div class="form-actions">' +
+    '<button type="button" onclick="closeModal()">Cancel</button>' +
+    '<button type="button" onclick="finalizeClinicalRecord(\'' + id + '\')">Finalize & lock</button>' +
+    '<button class="primary">Save draft</button>' +
+    '</div></form>';
+  modal('Consultation · ' + esc(r.patientName), form);
+}
+
+function saveClinicalRecord(e, id){
+  e.preventDefault();
+  var d = Object.fromEntries(new FormData(e.target).entries());
+  var r = db.clinicalRecords.find(function(x){ return x.id === id; });
+  r.chiefComplaint = d.chiefComplaint;
+  r.history = d.history;
+  r.exam = d.exam;
+  r.diagnosis = d.diagnosis;
+  r.plan = d.plan;
+  r.notes = d.notes;
+  r.clinician = d.clinician;
+  r.vitals = {temp:d.temp, bp:d.bp, pulse:d.pulse, spo2:d.spo2, weight:d.weight};
+  r.updatedAt = nowISO();
+  saveDB();
+  closeModal();
+  navigate('clinical');
+  toast('Consultation saved.');
+}
+
+function finalizeClinicalRecord(id){
+  var r = db.clinicalRecords.find(function(x){ return x.id === id; });
+  if(!r || !r.diagnosis){ toast('Diagnosis is required before finalizing.'); return; }
+  r.status = 'Final';
+  r.finalizedAt = nowISO();
+  saveDB();
+  closeModal();
+  navigate('clinical');
+  toast('Record finalized and locked.');
+}
+
+// ============ CLINICAL RECORDS ============
+function renderClinical(){
+  var records = db.clinicalRecords.slice();
+  var rows = records.map(function(r){
+    return row([
+      '<b>' + esc(r.patientName) + '</b>',
+      esc(r.type),
+      dateText(r.createdAt),
+      esc(r.diagnosis || '—'),
+      '<span class="status ' + (r.status === 'Final' ? 'done' : 'pending') + '">' + esc(r.status || 'Draft') + '</span>',
+      '<div class="table-actions"><button onclick="editClinicalRecord(\'' + r.id + '\')">Open</button><button onclick="viewTimeline(\'' + r.patientId + '\')">Timeline</button></div>'
+    ]);
+  });
+  $id('view').innerHTML = sampleNotice() +
+    pageIntro('Clinical Records', 'Complete patient history and encounter documentation.', '<button class="primary" onclick="newConsultation()">＋ New consultation</button>') +
+    '<div class="toolbar"><input class="search" placeholder="Filter records…" oninput="filterRows(this.value)"><div class="actions"><button onclick="exportCSV(\'clinicalRecords\')">Export CSV</button></div></div>' +
+    table(['Patient','Type','Date','Diagnosis','Status','Actions'], rows);
+}
+
+function viewTimeline(patientId){
+  var p = db.patients.find(function(x){ return x.id === patientId; });
+  if(!p){ toast('Patient not found.'); return; }
+  var records = db.clinicalRecords.filter(function(r){ return r.patientId === patientId; }).sort(function(a,b){ return new Date(b.createdAt) - new Date(a.createdAt); });
+  var encounters = db.encounters.filter(function(e){ return e.patientId === patientId; });
+  var labs = db.labOrders.filter(function(l){ return l.patientId === patientId; });
+  var invoices = db.invoices.filter(function(i){ return i.patientId === patientId; });
+
+  var timeline = '';
+  records.forEach(function(r){
+    timeline += '<div class="timeline-item"><div class="when">' + esc(dateText(r.createdAt)) + ' · ' + esc(r.type) + '</div><b>' + esc(r.diagnosis || r.chiefComplaint) + '</b><br><small>' + esc(r.clinician || '') + '</small></div>';
+  });
+  encounters.forEach(function(e){
+    timeline += '<div class="timeline-item"><div class="when">' + esc(dateText(e.createdAt)) + ' · encounter</div><b>' + esc(e.complaint) + '</b></div>';
+  });
+  labs.forEach(function(l){
+    timeline += '<div class="timeline-item"><div class="when">' + esc(dateText(l.createdAt)) + ' · ' + esc(l.department) + '</div><b>' + esc(l.test) + '</b> — ' + esc(l.status) + '</div>';
+  });
+  invoices.forEach(function(i){
+    timeline += '<div class="timeline-item"><div class="when">' + esc(dateText(i.createdAt)) + ' · billing</div><b>' + esc(i.id) + '</b> — ' + money(i.total) + '</div>';
+  });
+  if(!timeline) timeline = '<div class="empty">No timeline events yet.</div>';
+
+  var html = '<div class="grid stats">' +
+    stat('Records', records.length, 'Consultations') +
+    stat('Encounters', encounters.length, 'Visits') +
+    stat('Lab orders', labs.length, 'Tests') +
+    stat('Invoices', invoices.length, 'Billed') +
+    '</div>' +
+    '<div class="card"><h2>Clinical timeline</h2><div class="timeline">' + timeline + '</div></div>';
+
+  modal('Patient timeline · ' + p.name, html);
+}
+
+// ============ LAB & DIAGNOSTICS ============
+var labFilter = 'all';
+
+function renderLab(){
+  var orders = db.labOrders.slice();
+  var filtered = labFilter === 'all' ? orders : orders.filter(function(o){ return o.status === labFilter; });
+  var pending = orders.filter(function(o){ return ['Authorised','Collected by patient','Cancelled'].indexOf(o.status) === -1; }).length;
+  var processing = orders.filter(function(o){ return o.status === 'Processing'; }).length;
+  var ready = orders.filter(function(o){ return o.status === 'Result entered'; }).length;
+  var authorised = orders.filter(function(o){ return o.status === 'Authorised'; }).length;
+
+  var rows = filtered.map(function(l){
+    return row([
+      esc(l.id),
+      '<b>' + esc(l.patientName) + '</b>',
+      esc(l.test) + '<br><small class="muted">' + esc(l.department || 'Laboratory') + '</small>',
+      '<span class="mono">' + esc(l.specimen || '—') + '</span>',
+      '<span class="status ' + (l.priority === 'STAT' ? 'danger' : l.priority === 'Urgent' ? 'pending' : '') + '">' + esc(l.priority || 'Routine') + '</span>',
+      '<span class="status ' + (l.status === 'Authorised' ? 'done' : 'pending') + '">' + esc(l.status) + '</span>',
+      '<div class="table-actions"><button onclick="editLab(\'' + l.id + '\')">Update</button><button onclick="viewResult(\'' + l.id + '\')">Result</button></div>'
+    ]);
+  });
+
+  $id('view').innerHTML = sampleNotice() +
+    pageIntro('Lab & Diagnostics', 'Track laboratory and radiology orders from request to authorisation.', '<button class="primary" onclick="editLab()">＋ New order</button>') +
+    '<div class="grid stats">' +
+    stat('Pending', pending, 'Awaiting result') +
+    stat('Processing', processing, 'In laboratory') +
+    stat('Ready for review', ready, 'Results entered') +
+    stat('Authorised', authorised, 'Released to clinician') +
+    '</div>' +
+    '<div class="queue-tabs">' +
+    ['all','Awaiting collection','Collected','Processing','Result entered','Authorised'].map(function(f){
+      return '<button class="' + (labFilter === f ? 'active' : '') + '" onclick="setLabFilter(\'' + f + '\')">' + f + '</button>';
+    }).join('') +
+    '</div>' +
+    '<div class="toolbar"><input class="search" placeholder="Filter…" oninput="filterRows(this.value)"></div>' +
+    table(['Order','Patient','Test','Specimen','Priority','Status','Actions'], rows);
+}
+
+function setLabFilter(f){ labFilter = f; renderLab(); stampTableLabels(); }
+
+function editLab(id){
+  var l = id ? db.labOrders.find(function(x){ return x.id === id; }) : {status:'Awaiting collection', priority:'Routine', department:'Laboratory'};
+  var patientOpts = db.patients.map(function(p){
+    return '<option value="' + p.id + '" ' + (l.patientId === p.id ? 'selected' : '') + '>' + esc(p.name) + '</option>';
+  }).join('');
+  var catalogOpts = db.labCatalog.map(function(c){
+    return '<option value="' + esc(c.name) + '" data-dept="' + esc(c.dept) + '" ' + (l.test === c.name ? 'selected' : '') + '>' + esc(c.name) + ' · ' + esc(c.dept) + ' · ' + money(c.price) + '</option>';
+  }).join('');
+  var form = '<form id="labForm" onsubmit="saveLab(event,\'' + (id || '') + '\')"><div class="form-grid">' +
+    '<div class="field"><label>Patient *</label><select name="patientId" required>' + patientOpts + '</select></div>' +
+    '<div class="field"><label>Test *</label><select name="test" id="labTestSelect" required>' + catalogOpts + '</select></div>' +
+    '<div class="field"><label>Department</label><select name="department">' +
+    ['Laboratory','Radiology','Diagnostics'].map(function(d){
+      return '<option ' + (l.department === d ? 'selected' : '') + '>' + d + '</option>';
+    }).join('') + '</select></div>' +
+    '<div class="field"><label>Priority</label><select name="priority">' +
+    ['Routine','Urgent','STAT'].map(function(p){
+      return '<option ' + (l.priority === p ? 'selected' : '') + '>' + p + '</option>';
+    }).join('') + '</select></div>' +
+    '<div class="field"><label>Specimen ID</label><input name="specimen" value="' + esc(l.specimen || '') + '"></div>' +
+    '<div class="field"><label>Status</label><select name="status">' +
+    ['Awaiting collection','Collected','Processing','Result entered','Authorised','Collected by patient','Cancelled'].map(function(s){
+      return '<option ' + (l.status === s ? 'selected' : '') + '>' + s + '</option>';
+    }).join('') + '</select></div>' +
+    '<div class="field full"><label>Result / report</label><textarea name="result" rows="4">' + esc(l.result || '') + '</textarea></div>' +
+    '</div><div class="form-actions"><button type="button" onclick="closeModal()">Cancel</button><button class="primary">Save order</button></div></form>';
+  modal(id ? 'Update order' : 'New order', form);
+}
+
+function saveLab(e, id){
+  e.preventDefault();
+  var d = Object.fromEntries(new FormData(e.target).entries());
+  var p = db.patients.find(function(x){ return x.id === d.patientId; });
+  d.patientName = p ? p.name : 'Unknown';
+  if(!d.specimen) d.specimen = uid('SP');
+  d.barcode = d.specimen.replace(/-/g, '');
+  if(id){
+    Object.assign(db.labOrders.find(function(x){ return x.id === id; }), d);
+  } else {
+    d.id = uid('LAB');
+    d.createdAt = nowISO();
+    db.labOrders.unshift(d);
+  }
+  saveDB();
+  closeModal();
+  navigate('lab');
+  toast('Lab order saved.');
+}
+
+function viewResult(id){
+  var l = db.labOrders.find(function(x){ return x.id === id; });
+  if(!l) return;
+  var html = '<div class="grid two"><div><h3>' + esc(l.test) + '</h3>' +
+    '<p><b>Patient:</b> ' + esc(l.patientName) + '</p>' +
+    '<p><b>Status:</b> <span class="status ' + (l.status === 'Authorised' ? 'done' : 'pending') + '">' + esc(l.status) + '</span></p>' +
+    '<p><b>Priority:</b> ' + esc(l.priority || 'Routine') + '</p>' +
+    '<p><b>Specimen:</b> <span class="mono">' + esc(l.specimen || '—') + '</span></p>' +
+    '<p><b>Ordered:</b> ' + esc(dateText(l.createdAt)) + '</p></div>' +
+    '<div><h3>Result</h3><div style="background:var(--bg);padding:12px;border-radius:8px;min-height:80px;white-space:pre-wrap;font-family:monospace;font-size:13px">' + esc(l.result || '(No result entered yet)') + '</div></div></div>';
+  modal('Result · ' + l.id, html);
+}
+
+// ============ DISPENSING ============
+function renderDispensing(){
+  var rows = [];
+  db.invoices.forEach(function(i){
+    (i.lines || []).forEach(function(l){
+      if(l.medicineId){
+        rows.push(row([esc(i.id), esc(i.patientName), esc(l.name), esc(l.qty), money(l.unit), dateText(i.createdAt)]));
+      }
+    });
+  });
+  $id('view').innerHTML = sampleNotice() +
+    pageIntro('Dispensing', 'Record medicine dispensing and deduct stock.', '<button class="primary" onclick="newDispense()">＋ New dispense</button>') +
+    table(['Invoice','Patient','Medicine','Qty','Unit price','Date'], rows);
+}
+
+function newDispense(){
+  var available = db.medicines.filter(function(m){ return m.active && m.qty > 0; });
+  if(!db.patients.length || !available.length){ toast('Add a patient and available medicine first.'); return; }
+  var patientOpts = db.patients.map(function(p){ return '<option value="' + p.id + '">' + esc(p.name) + '</option>'; }).join('');
+  var medOpts = available.map(function(m){ return '<option value="' + m.id + '">' + esc(m.name) + ' · ' + m.qty + ' available · ' + money(m.price) + '</option>'; }).join('');
+  var form = '<form id="dispenseForm" onsubmit="saveDispense(event)"><div class="form-grid">' +
+    '<div class="field"><label>Patient *</label><select name="patientId">' + patientOpts + '</select></div>' +
+    '<div class="field"><label>Medicine *</label><select name="medicineId">' + medOpts + '</select></div>' +
+    '<div class="field"><label>Quantity *</label><input type="number" name="qty" min="1" value="1" required></div>' +
+    '</div><div class="form-actions"><button type="button" onclick="closeModal()">Cancel</button><button class="primary">Confirm</button></div></form>';
+  modal('New dispensing record', form);
+}
+
+function saveDispense(e){
+  e.preventDefault();
+  var d = Object.fromEntries(new FormData(e.target).entries());
+  var m = db.medicines.find(function(x){ return x.id === d.medicineId; });
+  var p = db.patients.find(function(x){ return x.id === d.patientId; });
+  var q = Number(d.qty);
+  if(!m || q < 1 || !Number.isInteger(q) || m.qty < q){ toast('Insufficient stock.'); return; }
+  m.qty -= q;
+  var amount = m.price * q;
+  var inv = {
+    id: uid('INV'),
+    patientId: p.id,
+    patientName: p.name,
+    lines: [{name:m.name, medicineId:m.id, qty:q, unit:m.price, vat:m.vat}],
+    subtotal: amount,
+    vat: Math.round(amount * m.vat / (100 + m.vat)),
+    total: amount,
+    paid: 0,
+    balance: amount,
+    payments: [],
+    etims: 'ETIMS-' + new Date().getFullYear() + '-' + String(db.invoices.length + 1).padStart(4, '0'),
+    createdAt: nowISO()
+  };
+  db.invoices.unshift(inv);
+  saveDB();
+  closeModal();
+  navigate('dispensing');
+  toast('Dispense recorded. Invoice created.');
+}
+
+// ============ MEDICINES ============
+function renderMedicines(){
+  var rows = db.medicines.map(function(m){
+    return row([
+      '<b>' + esc(m.name) + '</b>',
+      esc(m.sku),
+      '<span class="mono">' + esc(m.barcode) + '</span>',
+      esc(m.batch),
+      esc(m.qty),
+      money(m.price),
+      esc(m.expiry),
+      '<div class="table-actions"><button onclick="editMedicine(\'' + m.id + '\')">Edit</button></div>'
+    ]);
+  });
+  $id('view').innerHTML = sampleNotice() +
+    pageIntro('Medicine Stock', 'Batch-level stock control and pricing.', '<button class="primary" onclick="editMedicine()">＋ Add medicine</button>') +
+    table(['Medicine','SKU','Barcode','Batch','Qty','Price','Expiry','Actions'], rows);
+}
+
+function editMedicine(id){
+  var m = id ? db.medicines.find(function(x){ return x.id === id; }) : {qty:0, reorder:10, cost:0, price:0, vat:16, active:true};
+  var form = '<form id="medicineForm" onsubmit="saveMedicine(event,\'' + (id || '') + '\')"><div class="form-grid">' +
+    '<div class="field"><label>Name *</label><input name="name" value="' + esc(m.name || '') + '" required></div>' +
+    '<div class="field"><label>Category</label><input name="category" value="' + esc(m.category || '') + '"></div>' +
+    '<div class="field"><label>SKU *</label><input name="sku" value="' + esc(m.sku || '') + '" required></div>' +
+    '<div class="field"><label>Barcode</label><input name="barcode" value="' + esc(m.barcode || '') + '"></div>' +
+    '<div class="field"><label>Batch *</label><input name="batch" value="' + esc(m.batch || '') + '" required></div>' +
+    '<div class="field"><label>Expiry</label><input type="date" name="expiry" value="' + esc(m.expiry || '') + '"></div>' +
+    '<div class="field"><label>Quantity</label><input type="number" min="0" name="qty" value="' + m.qty + '" required></div>' +
+    '<div class="field"><label>Reorder at</label><input type="number" min="0" name="reorder" value="' + m.reorder + '" required></div>' +
+    '<div class="field"><label>Cost (Ksh)</label><input type="number" min="0" step="0.01" name="cost" value="' + (m.cost/100).toFixed(2) + '" required></div>' +
+    '<div class="field"><label>Price (Ksh)</label><input type="number" min="0" step="0.01" name="price" value="' + (m.price/100).toFixed(2) + '" required></div>' +
+    '<div class="field"><label>VAT %</label><input type="number" min="0" max="100" name="vat" value="' + (m.vat || 16) + '"></div>' +
+    '</div><div class="form-actions"><button type="button" onclick="closeModal()">Cancel</button><button class="primary">Save</button></div></form>';
+  modal(id ? 'Edit medicine' : 'Add medicine', form);
+}
+
+function saveMedicine(e, id){
+  e.preventDefault();
+  var x = Object.fromEntries(new FormData(e.target).entries());
+  x.qty = Number(x.qty);
+  x.reorder = Number(x.reorder);
+  x.cost = Math.round(Number(x.cost) * 100);
+  x.price = Math.round(Number(x.price) * 100);
+  x.vat = Number(x.vat);
+  x.active = true;
+  if(id){
+    Object.assign(db.medicines.find(function(m){ return m.id === id; }), x);
+  } else {
+    x.id = uid('MED');
+    db.medicines.unshift(x);
+  }
+  saveDB();
+  closeModal();
+  navigate('medicines');
+  toast('Medicine saved.');
+}
+
+// ============ BILLING & FINANCE ============
+function renderBilling(){
+  var rows = db.invoices.map(function(i){
+    return row([
+      esc(i.id),
+      esc(i.patientName),
+      dateText(i.createdAt),
+      money(i.total),
+      money(i.paid),
+      '<span class="status ' + (i.balance > 0 ? 'pending' : 'done') + '">' + money(i.balance) + '</span>',
+      '<div class="table-actions">' +
+      '<button onclick="addPayment(\'' + i.id + '\')">Pay</button>' +
+      '<button onclick="showReceipt(\'' + i.id + '\')">Receipt</button>' +
+      '</div>'
+    ]);
+  });
+  var totalPaid = db.invoices.reduce(function(s,i){ return s + (i.paid || 0); }, 0);
+  var totalDue = db.invoices.filter(function(i){ return i.status !== 'Cancelled'; }).reduce(function(s,i){ return s + (i.balance || 0); }, 0);
+  var totalExp = db.expenses.reduce(function(s,e){ return s + (Number(e.amount) || 0); }, 0);
+  $id('view').innerHTML = sampleNotice() +
+    pageIntro('Billing & Finance', 'Invoices, payments, expenses and cashier reconciliation.', '<button class="primary" onclick="newInvoice()">＋ New invoice</button>') +
+    '<div class="grid stats">' +
+    stat('Collected', money(totalPaid), 'All invoices') +
+    stat('Outstanding', money(totalDue), 'Non-cancelled balances') +
+    stat('Expenses', money(totalExp), 'Operating costs') +
+    stat('Net', money(totalPaid - totalExp), 'Collected − expenses') +
+    '</div>' +
+    '<div class="section-head"><h2>Invoices</h2><button onclick="showExpenseForm()">＋ Add expense</button></div>' +
+    '<div class="toolbar"><input class="search" placeholder="Search invoices…" oninput="filterRows(this.value)"></div>' +
+    table(['Invoice','Patient','Created','Total','Paid','Balance','Actions'], rows) +
+    '<div class="section-head"><h2>Expenses</h2></div>' +
+    table(['Date','Category','Vendor','Amount','Method','Actions'], db.expenses.map(function(e){
+      return row([esc(e.date), esc(e.category), esc(e.vendor || '—'), money(e.amount), esc(e.method || '—'),
+        '<button onclick="showExpenseForm(\'' + e.id + '\')">Edit</button>']);
+    }));
+}
+
+function showExpenseForm(id){
+  var e = id ? db.expenses.find(function(x){ return x.id === id; }) : {date: dayKey(), method: 'M-Pesa'};
+  var form = '<form onsubmit="saveExpense(event,\'' + (id || '') + '\')"><div class="form-grid">' +
+    '<div class="field"><label>Date</label><input type="date" name="date" value="' + esc(e.date || dayKey()) + '"></div>' +
+    '<div class="field"><label>Category</label><input name="category" value="' + esc(e.category || '') + '"></div>' +
+    '<div class="field"><label>Vendor</label><input name="vendor" value="' + esc(e.vendor || '') + '"></div>' +
+    '<div class="field"><label>Amount (Ksh)</label><input type="number" name="amount" step="0.01" value="' + ((e.amount || 0)/100).toFixed(2) + '"></div>' +
+    '<div class="field"><label>Method</label><input name="method" value="' + esc(e.method || '') + '"></div>' +
+    '</div><div class="form-actions"><button type="button" onclick="closeModal()">Cancel</button><button class="primary">Save</button></div></form>';
+  modal(id ? 'Edit expense' : 'New expense', form);
+}
+
+function saveExpense(e, id){
+  e.preventDefault();
+  var d = Object.fromEntries(new FormData(e.target).entries());
+  d.amount = Math.round(Number(d.amount) * 100);
+  if(id){
+    Object.assign(db.expenses.find(function(x){ return x.id === id; }), d);
+  } else {
+    d.id = uid('EXP');
+    db.expenses.unshift(d);
+  }
+  saveDB();
+  closeModal();
+  navigate('billing');
+  toast('Expense saved.');
+}
+
+function newInvoice(){
+  if(!db.patients.length){ toast('Register a patient first.'); return; }
+  var patientOpts = db.patients.map(function(p){ return '<option value="' + p.id + '">' + esc(p.name) + '</option>'; }).join('');
+  var form = '<form onsubmit="createInvoice(event)">' +
+    '<div class="field"><label>Patient *</label><select name="patientId">' + patientOpts + '</select></div>' +
+    '<div class="field" style="margin-top:12px"><label>Description *</label><input name="desc" required></div>' +
+    '<div class="form-grid" style="margin-top:12px">' +
+    '<div class="field"><label>Qty</label><input type="number" name="qty" min="1" value="1"></div>' +
+    '<div class="field"><label>Price (Ksh)</label><input type="number" name="price" min="0" step="0.01" required></div>' +
+    '<div class="field"><label>VAT %</label><input type="number" name="vat" min="0" max="100" value="16"></div>' +
+    '</div><div class="form-actions"><button type="button" onclick="closeModal()">Cancel</button><button class="primary">Create</button></div></form>';
+  modal('New invoice', form);
+}
+
+function createInvoice(e){
+  e.preventDefault();
+  var d = Object.fromEntries(new FormData(e.target).entries());
+  var p = db.patients.find(function(x){ return x.id === d.patientId; });
+  var q = Number(d.qty);
+  var unit = Math.round(Number(d.price) * 100);
+  var total = unit * q;
+  var vat = Math.round(total * Number(d.vat) / (100 + Number(d.vat)));
+  var i = {
+    id: uid('INV'),
+    patientId: p.id,
+    patientName: p.name,
+    lines: [{name:d.desc, qty:q, unit:unit, vat:Number(d.vat)}],
+    subtotal: total,
+    vat: vat,
+    total: total,
+    paid: 0,
+    balance: total,
+    payments: [],
+    etims: 'ETIMS-' + new Date().getFullYear() + '-' + String(db.invoices.length + 1).padStart(4, '0'),
+    createdAt: nowISO()
+  };
+  db.invoices.unshift(i);
+  saveDB();
+  closeModal();
+  navigate('billing');
+  toast('Invoice created.');
+  setTimeout(function(){ addPayment(i.id); }, 120);
+}
+
+function addPayment(id){
+  var i = db.invoices.find(function(x){ return x.id === id; });
+  if(!i || i.status === 'Cancelled'){ toast('Cannot accept payment.'); return; }
+  var form = '<p><b>' + esc(i.patientName) + '</b> · Balance: <b>' + money(i.balance) + '</b></p>' +
+    '<div class="pay-tabs" style="margin:12px 0">' +
+    '<button class="active" id="tabCash" onclick="pickPayMethod(\'Cash\')">💵 Cash</button>' +
+    '<button id="tabMpesa" onclick="pickPayMethod(\'M-Pesa (simulated)\')">📱 M-Pesa</button>' +
+    '<button id="tabCard" onclick="pickPayMethod(\'Card (demo)\')">💳 Card</button>' +
+    '</div>' +
+    '<form id="paymentForm" onsubmit="savePayment(event,\'' + id + '\')">' +
+    '<div class="form-grid">' +
+    '<div class="field"><label>Method</label><input name="method" id="payMethod" value="Cash" readonly></div>' +
+    '<div class="field"><label>Amount (Ksh) *</label><input name="amount" id="payAmount" type="number" min="0.01" step="0.01" value="' + (i.balance/100).toFixed(2) + '" required></div>' +
+    '<div class="field full" id="mpesaRefField" style="display:none"><label>M-Pesa reference</label><input name="ref" id="mpesaRef" placeholder="e.g. QAB12XYZ"></div>' +
+    '</div>' +
+    '<div class="mp-stk" id="stkPanel" style="display:none"><strong>Simulate M-Pesa STK push</strong>' +
+    '<div style="font-size:12px;margin-top:6px">Demo only — not wired to Safaricom.</div>' +
+    '<button type="button" class="green" style="margin-top:10px" onclick="simulateStk()">Send STK push</button></div>' +
+    '<div class="form-actions"><button type="button" onclick="closeModal()">Cancel</button><button class="primary">Record payment</button></div></form>';
+  modal('Record payment · ' + i.id, form);
+}
+
+function pickPayMethod(m){
+  var pm = $id('payMethod');
+  if(pm) pm.value = m;
+  var rf = $id('mpesaRefField');
+  if(rf) rf.style.display = m === 'M-Pesa (simulated)' ? 'grid' : 'none';
+  var sp = $id('stkPanel');
+  if(sp) sp.style.display = m === 'M-Pesa (simulated)' ? 'block' : 'none';
+}
+
+function simulateStk(){
+  toast('STK push sent — waiting for confirmation…');
+  setTimeout(function(){
+    var code = 'MP' + Math.random().toString(36).slice(2,8).toUpperCase();
+    var ref = $id('mpesaRef');
+    if(ref) ref.value = code;
+    toast('M-Pesa confirmed: ' + code);
+  }, 1400);
+}
+
+function savePayment(e, id){
+  e.preventDefault();
+  var form = $id('paymentForm');
+  if(!form) return;
+  var d = Object.fromEntries(new FormData(form).entries());
+  var i = db.invoices.find(function(x){ return x.id === id; });
+  var amt = Math.round(Number(d.amount) * 100);
+  if(!Number.isSafeInteger(amt) || amt <= 0 || amt > i.balance){ toast('Payment must be positive and cannot exceed balance.'); return; }
+  if(d.method === 'M-Pesa (simulated)' && !(d.ref || '').trim()){ toast('Enter M-Pesa reference.'); return; }
+  var pay = {method:d.method, amount:amt, ref:(d.ref || '').trim(), at:nowISO()};
+  i.payments = i.payments || [];
+  i.payments.push(pay);
+  i.paid += amt;
+  i.balance -= amt;
+  db.payments.unshift({id:uid('PAY'), invoiceId:id, method:d.method, amount:amt, ref:pay.ref, at:pay.at});
+  saveDB();
+  closeModal();
+  navigate('billing');
+  toast('Payment recorded: ' + money(amt));
+  setTimeout(function(){ showReceipt(id); }, 150);
+}
+
+// ============ RECEIPTS ============
+function receiptHTML(i){
+  var p = db.patients.find(function(x){ return x.id === i.patientId; }) || {};
+  var paymentRows = (i.payments || []).map(function(p){
+    return '<tr><td>' + esc(p.method) + (p.ref ? '<br><small>' + esc(p.ref) + '</small>' : '') + '</td><td>' + money(p.amount) + '</td></tr>';
+  }).join('') || '<tr><td colspan="2">No payment recorded</td></tr>';
+  return '<div class="receipt">' +
+    '<h2 style="text-align:center">✦ ' + esc(BUSINESS.name) + '</h2>' +
+    '<p style="text-align:center;font-size:11px">Nairobi, Kenya · KRA PIN ' + esc(BUSINESS.pin) + '<br>eTIMS: ' + esc(i.etims || '—') + '</p><hr>' +
+    '<p><b>Receipt:</b> ' + esc(i.id) + '<br><b>Date:</b> ' + esc(dateText(i.createdAt)) + '<br><b>Patient:</b> ' + esc(i.patientName) + '<br><b>Phone:</b> ' + esc(p.phone || '—') + '</p><hr>' +
+    '<table><thead><tr><th>Item</th><th>Qty</th><th>Amount</th></tr></thead><tbody>' +
+    i.lines.map(function(l){ return '<tr><td>' + esc(l.name) + '</td><td>' + l.qty + '</td><td>' + money(l.unit * l.qty) + '</td></tr>'; }).join('') +
+    '</tbody></table><hr>' +
+    '<p>VAT: ' + money(i.vat) + '<br><b>Total: ' + money(i.total) + '</b><br>Paid: ' + money(i.paid) + '<br>Balance: ' + money(i.balance) + '</p><hr>' +
+    '<p><b>Payments</b></p><table>' + paymentRows + '</table><hr>' +
+    '<p style="text-align:center;font-size:11px">Asante! Karibu tena.</p></div>';
+}
+
+function showReceipt(id){
+  var i = db.invoices.find(function(x){ return x.id === id; });
+  if(!i) return;
+  currentReceipt = i;
+  $id('receiptRoot').innerHTML = '<div class="modal" role="dialog"><div class="modal-head"><h2>Receipt · ' + esc(i.id) + '</h2><button onclick="closeReceipt()">✕</button></div>' +
+    receiptHTML(i) +
+    '<div class="form-actions no-print">' +
+    '<button onclick="closeReceipt()">Close</button>' +
+    '<button onclick="downloadReceipt()">↓ Download</button>' +
+    '<button onclick="shareWhatsApp()">✆ WhatsApp</button>' +
+    '<button class="primary" onclick="printReceipt()">⎙ Print</button>' +
+    '</div></div>';
+}
+
+function closeReceipt(){ $id('receiptRoot').innerHTML = ''; }
+
+function printReceipt(){
+  if(!currentReceipt){ toast('No receipt'); return; }
+  var cleanup = function(){
+    document.body.classList.remove('printing-modal');
+    window.removeEventListener('afterprint', cleanup);
+  };
+  document.body.classList.add('printing-modal');
+  window.addEventListener('afterprint', cleanup);
+  setTimeout(function(){
+    try { window.print(); }
+    catch(e){ toast('Print blocked'); cleanup(); }
+    setTimeout(cleanup, 4000);
+  }, 80);
+}
+
+function downloadReceipt(){
+  if(!currentReceipt){ toast('No receipt'); return; }
+  var html = '<!doctype html><html><head><meta charset="utf-8"><title>Receipt</title><style>body{font:13px monospace;padding:20px;max-width:440px;margin:auto;color:#111}.receipt table{width:100%;border-collapse:collapse}h2{text-align:center}</style></head><body>' + receiptHTML(currentReceipt) + '</body></html>';
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([html], {type:'text/html'}));
+  a.download = 'receipt-' + currentReceipt.id + '.html';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  toast('Downloaded.');
+}
+
+function shareWhatsApp(){
+  if(!currentReceipt){ toast('No receipt'); return; }
+  var i = currentReceipt;
+  var text = '*' + BUSINESS.name + '* — RECEIPT\n' +
+    'Receipt: ' + i.id + '\nDate: ' + dateText(i.createdAt) + '\nPatient: ' + i.patientName + '\n\n' +
+    'Items:\n' + i.lines.map(function(l){ return '• ' + l.name + ' × ' + l.qty + ' = ' + money(l.unit * l.qty); }).join('\n') +
+    '\nVAT: ' + money(i.vat) + '\n*TOTAL: ' + money(i.total) + '*\nPaid: ' + money(i.paid) + '\nBalance: ' + money(i.balance) +
+    '\nKRA PIN: ' + BUSINESS.pin;
+  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+}
+
+// ============ ADMINISTRATION ============
+function renderStaff(){
+  var staffRows = db.staff.map(function(s){
+    return row([
+      esc(s.name),
+      esc(roleLabel(s.role)),
+      '<span class="mono">' + esc(s.barcode || '—') + '</span>',
+      s.active ? 'Active' : 'Inactive',
+      '<div class="table-actions"><button onclick="editStaff(\'' + s.id + '\')">Edit</button></div>'
+    ]);
+  });
+  var supplierRows = db.suppliers.map(function(s){
+    return row([
+      esc(s.name),
+      esc(s.phone || '—'),
+      money(s.balance || 0),
+      '<div class="table-actions"><button onclick="editSupplier(\'' + s.id + '\')">Edit</button></div>'
+    ]);
+  });
+  $id('view').innerHTML = sampleNotice() +
+    pageIntro('Administration', 'Staff, attendance, suppliers and operational records.', '') +
+    '<div class="section-head"><h2>Staff</h2><button onclick="editStaff()">＋ Add staff</button></div>' +
+    table(['Staff','Role','Badge','Status','Actions'], staffRows) +
+    '<div class="section-head"><h2>Suppliers</h2><button onclick="editSupplier()">＋ Add supplier</button></div>' +
+    table(['Supplier','Phone','Balance','Actions'], supplierRows) +
+    '<div class="section-head"><h2>Shift & Attendance</h2><button onclick="startShift()">＋ Start shift</button></div>' +
+    '<div class="card"><p class="muted">Attendance records and shift management track staff check-in/out.</p></div>';
+}
+
+function editStaff(id){
+  var s = id ? db.staff.find(function(x){ return x.id === id; }) : {};
+  var form = '<form onsubmit="saveStaff(event,\'' + (id || '') + '\')"><div class="form-grid">' +
+    '<div class="field"><label>Name *</label><input name="name" value="' + esc(s.name || '') + '" required></div>' +
+    '<div class="field"><label>Role *</label><select name="role">' +
+    ['manager','receptionist','clinician','nurse','lab','dispenser','cashier'].map(function(r){
+      return '<option value="' + r + '" ' + (s.role === r ? 'selected' : '') + '>' + roleLabel(r) + '</option>';
+    }).join('') + '</select></div>' +
+    '<div class="field"><label>Barcode</label><input name="barcode" value="' + esc(s.barcode || '') + '"></div>' +
+    '</div><div class="form-actions"><button type="button" onclick="closeModal()">Cancel</button><button class="primary">Save</button></div></form>';
+  modal(id ? 'Edit staff' : 'Add staff', form);
+}
+
+function saveStaff(e, id){
+  e.preventDefault();
+  var d = Object.fromEntries(new FormData(e.target).entries());
+  d.active = true;
+  if(id){
+    Object.assign(db.staff.find(function(x){ return x.id === id; }), d);
+  } else {
+    d.id = uid('ST');
+    db.staff.push(d);
+  }
+  saveDB();
+  closeModal();
+  navigate('staff');
+  toast('Staff saved.');
+}
+
+function editSupplier(id){
+  var s = id ? db.suppliers.find(function(x){ return x.id === id; }) : {};
+  var form = '<form onsubmit="saveSupplier(event,\'' + (id || '') + '\')"><div class="form-grid">' +
+    '<div class="field"><label>Name *</label><input name="name" value="' + esc(s.name || '') + '" required></div>' +
+    '<div class="field"><label>Phone</label><input name="phone" value="' + esc(s.phone || '') + '"></div>' +
+    '<div class="field"><label>Balance (Ksh)</label><input type="number" min="0" step="0.01" name="balance" value="' + ((s.balance || 0)/100).toFixed(2) + '"></div>' +
+    '</div><div class="form-actions"><button type="button" onclick="closeModal()">Cancel</button><button class="primary">Save</button></div></form>';
+  modal(id ? 'Edit supplier' : 'Add supplier', form);
+}
+
+function saveSupplier(e, id){
+  e.preventDefault();
+  var d = Object.fromEntries(new FormData(e.target).entries());
+  d.balance = Math.round(Number(d.balance) * 100);
+  if(id){
+    Object.assign(db.suppliers.find(function(x){ return x.id === id; }), d);
+  } else {
+    d.id = uid('SUP');
+    db.suppliers.push(d);
+  }
+  saveDB();
+  closeModal();
+  navigate('staff');
+  toast('Supplier saved.');
+}
+
+function startShift(){
+  var s = {id: uid('SHIFT'), staffId: session.name, startedAt: nowISO(), endedAt: null};
+  db.shifts.unshift(s);
+  saveDB();
+  toast('Shift started.');
+  navigate('staff');
+}
+
+// ============ INTELLIGENCE ============
+function renderIntelligence(){
+  var nonCancel = db.invoices.filter(function(i){ return i.status !== 'Cancelled'; });
+  var paid = nonCancel.reduce(function(s,i){ return s + (Number(i.paid) || 0); }, 0);
+  var balance = nonCancel.reduce(function(s,i){ return s + (Number(i.balance) || 0); }, 0);
+  var revenue = nonCancel.reduce(function(s,i){ return s + (Number(i.total) || 0); }, 0);
+  var totalExp = db.expenses.reduce(function(s,e){ return s + (Number(e.amount) || 0); }, 0);
+  var netProfit = revenue - totalExp;
+  var vat = nonCancel.reduce(function(s,i){ return s + (Number(i.vat) || 0); }, 0);
+  var rules = firingRules();
+
+  var dayLabels = [], dayRevenue = [], dayVisits = [];
+  for(var k = 13; k >= 0; k--){
+    var dt = new Date(); dt.setDate(dt.getDate() - k);
+    var key = dayKeyFor(dt.toISOString());
+    dayLabels.push(dt.getDate() + '/' + (dt.getMonth()+1));
+    dayRevenue.push(db.invoices.filter(function(i){ return i.status !== 'Cancelled' && dayKeyFor(i.createdAt) === key; }).reduce(function(s,i){ return s + (Number(i.paid) || 0); }, 0));
+    dayVisits.push(db.encounters.filter(function(e){ return dayKeyFor(e.createdAt) === key; }).length);
+  }
+
+  var paymentMethods = ['Cash','M-Pesa (simulated)','Card (demo)'].map(function(method){
+    return {label:method, value:db.payments.filter(function(p){ return p.method === method; }).reduce(function(s,p){ return s + (Number(p.amount) || 0); }, 0)};
+  });
+
+  var triageDist = ['P1','P2','P3','P4'].map(function(level){
+    return {label:level, value: db.triageQueue.filter(function(t){ return t.level === level; }).length};
+  });
+
+  var topDiagnoses = {};
+  db.clinicalRecords.forEach(function(r){
+    if(r.diagnosis) topDiagnoses[r.diagnosis] = (topDiagnoses[r.diagnosis] || 0) + 1;
+  });
+  var topDiagArr = Object.keys(topDiagnoses).map(function(k){ return {label:k, value:topDiagnoses[k]}; }).sort(function(a,b){ return b.value - a.value; }).slice(0, 6);
+
+  var html = sampleNotice() +
+    pageIntro('Intelligence & Analytics', 'Operational, clinical and financial intelligence for decision-making.', '<button class="primary" onclick="printReport()">⎙ Print report</button>') +
+    '<div class="grid stats">' +
+    stat('Revenue', money(revenue), 'Invoiced value') +
+    stat('Collected', money(paid), 'Payments received') +
+    stat('Outstanding', money(balance), 'Unpaid balances') +
+    stat('Net profit', money(netProfit), 'Revenue − expenses') +
+    '</div>' +
+    '<div class="grid stats">' +
+    stat('Patients', db.patients.length, 'Registered') +
+    stat('Encounters', db.encounters.length, 'Total visits') +
+    stat('Lab orders', db.labOrders.length, 'Tests ordered') +
+    stat('Clinical notes', db.clinicalRecords.length, 'Consultations') +
+    '</div>' +
+    '<div class="analytics-grid">' +
+    chartLine('14-day collections', dayLabels, [{name:'Collections', values:dayRevenue, color:'#168b82'}], {money:true}) +
+    chartLine('14-day visits', dayLabels, [{name:'Visits', values:dayVisits, color:'#6477c8'}]) +
+    '</div>' +
+    '<div class="analytics-grid secondary-analytics">' +
+    chartBars('Payment methods', paymentMethods, {money:true}) +
+    chartBars('Triage distribution', triageDist) +
+    '</div>' +
+    '<div class="analytics-grid secondary-analytics">' +
+    chartBars('Top diagnoses', topDiagArr) +
+    chartBars('Priority alerts', rules.slice(0,6).map(function(r){ return {label:r.name, value:r.records.length}; })) +
+    '</div>' +
+    '<div class="section-head"><h2>Profit & Loss</h2></div>' +
+    '<div class="card"><table><tbody>' +
+    '<tr><td>Revenue</td><td><b>' + money(revenue) + '</b></td></tr>' +
+    '<tr><td>COGS / expenses</td><td>' + money(totalExp) + '</td></tr>' +
+    '<tr><td>Net profit</td><td><b style="color:' + (netProfit >= 0 ? 'var(--success)' : 'var(--danger)') + '">' + money(netProfit) + '</b></td></tr>' +
+    '<tr><td>VAT collected</td><td>' + money(vat) + '</td></tr>' +
+    '</tbody></table></div>' +
+    '<div class="section-head"><h2>Inventory valuation</h2></div>' +
+    table(['Medicine','Qty','Unit cost','Value'], db.medicines.map(function(m){
+      return row([esc(m.name), m.qty, money(m.cost), money(m.qty * m.cost)]);
+    }));
+}
+
+function printReport(){
+  var nonCancel = db.invoices.filter(function(i){ return i.status !== 'Cancelled'; });
+  var revenue = nonCancel.reduce(function(s,i){ return s + (Number(i.total) || 0); }, 0);
+  var totalExp = db.expenses.reduce(function(s,e){ return s + (Number(e.amount) || 0); }, 0);
+  var originalTitle = document.title;
+  document.title = 'Clinic Report · ' + new Date().toLocaleDateString('en-KE');
+  var cleanup = function(){
+    document.title = originalTitle;
+    window.removeEventListener('afterprint', cleanup);
+  };
+  window.addEventListener('afterprint', cleanup);
+  setTimeout(function(){
+    try { window.print(); }
+    catch(e){ toast('Print blocked'); cleanup(); }
+    setTimeout(cleanup, 4000);
+  }, 80);
+}
+
+// ============ PATIENTS ============
+function renderPatients(){
+  var rows = db.patients.map(function(p){
+    var allergies = db.allergies.filter(function(a){ return a.patientId === p.id; });
+    return row([
+      '<b>' + esc(p.name) + '</b>' + (p.sample ? '<br><small>Sample</small>' : ''),
+      esc(p.id),
+      esc(p.phone),
+      esc(p.pin || '—'),
+      esc(p.dob || '—'),
+      allergies.length ? '<span class="status danger">' + allergies.length + ' allergy</span>' : '<span class="status done">None</span>',
+      '<div class="table-actions"><button onclick="patientDetail(\'' + p.id + '\')">Open</button><button onclick="editPatient(\'' + p.id + '\')">Edit</button></div>'
+    ]);
+  });
+  $id('view').innerHTML = sampleNotice() +
+    pageIntro('Patient Register', 'Register, search and manage patient demographics.', '<button class="primary" onclick="editPatient()">＋ Register patient</button>') +
+    '<div class="toolbar"><input class="search" placeholder="Search…" oninput="filterRows(this.value)"><div class="actions"><button onclick="exportCSV(\'patients\')">Export CSV</button></div></div>' +
+    table(['Patient','Patient No.','Phone','KRA PIN','Date of birth','Allergies','Actions'], rows);
+}
+
+function patientDetail(id){
+  var p = db.patients.find(function(x){ return x.id === id; });
+  if(!p) return;
+  var visits = db.encounters.filter(function(e){ return e.patientId === id; });
+  var labs = db.labOrders.filter(function(e){ return e.patientId === id; });
+  var inv = db.invoices.filter(function(e){ return e.patientId === id; });
+  var records = db.clinicalRecords.filter(function(r){ return r.patientId === id; });
+  var allergies = db.allergies.filter(function(a){ return a.patientId === id; });
+  var html = '<div class="grid two"><div>' +
+    '<div class="muted">Patient number</div><h3>' + esc(p.id) + '</h3>' +
+    '<div class="muted">Phone</div><p>' + esc(p.phone || '—') + '</p>' +
+    '<div class="muted">KRA PIN</div><p>' + esc(p.pin || '—') + '</p>' +
+    '<div class="muted">Date of birth / Sex</div><p>' + esc(p.dob || '—') + ' · ' + esc(p.sex || '—') + '</p>' +
+    '<div class="muted">Blood group</div><p>' + esc(p.blood || '—') + '</p>' +
+    '<div class="muted">Allergies</div><p>' + (allergies.length ? allergies.map(function(a){ return esc(a.allergen) + ' (' + esc(a.reaction) + ')'; }).join(', ') : 'None on file') + '</p>' +
+    '</div><div><h3>Clinical activity</h3>' +
+    '<p>' + visits.length + ' encounter(s) · ' + records.length + ' clinical note(s)</p>' +
+    '<p>' + labs.length + ' lab order(s) · ' + inv.length + ' invoice(s)</p>' +
+    '<button class="primary" onclick="closeModal();editTriage()">＋ New arrival</button> ' +
+    '<button onclick="closeModal();viewTimeline(\'' + id + '\')">View timeline</button>' +
+    '</div></div>';
+  modal('Patient record', html);
+}
+
+function editPatient(id){
+  var p = id ? db.patients.find(function(x){ return x.id === id; }) : {};
+  var form = '<form onsubmit="savePatient(event,\'' + (id || '') + '\')"><div class="form-grid">' +
+    '<div class="field"><label>Full name *</label><input name="name" value="' + esc(p.name || '') + '" required></div>' +
+    '<div class="field"><label>Phone</label><input name="phone" value="' + esc(p.phone || '') + '"></div>' +
+    '<div class="field"><label>KRA PIN</label><input name="pin" value="' + esc(p.pin || '') + '"></div>' +
+    '<div class="field"><label>Date of birth</label><input type="date" name="dob" value="' + esc(p.dob || '') + '"></div>' +
+    '<div class="field"><label>Sex</label><select name="sex">' +
+    '<option ' + (p.sex === 'Female' ? 'selected' : '') + '>Female</option>' +
+    '<option ' + (p.sex === 'Male' ? 'selected' : '') + '>Male</option>' +
+    '<option ' + (p.sex === 'Other' ? 'selected' : '') + '>Other</option>' +
+    '</select></div>' +
+    '<div class="field"><label>Blood group</label><input name="blood" value="' + esc(p.blood || '') + '"></div>' +
+    '<div class="field full"><label>Notes</label><textarea name="notes">' + esc(p.notes || '') + '</textarea></div>' +
+    '</div><div class="form-actions"><button type="button" onclick="closeModal()">Cancel</button><button class="primary">Save patient</button></div></form>';
+  modal(id ? 'Edit patient' : 'Register patient', form);
+}
+
+function savePatient(e, id){
+  e.preventDefault();
+  var data = Object.fromEntries(new FormData(e.target).entries());
+  if(id){
+    Object.assign(db.patients.find(function(x){ return x.id === id; }), data);
+  } else {
+    data.id = uid('PT');
+    data.barcode = data.id.replace(/-/g, '');
+    data.createdAt = nowISO();
+    data.sample = false;
+    db.patients.unshift(data);
+  }
+  saveDB();
+  closeModal();
+  navigate('patients');
+  toast('Patient saved.');
+}
+
+// ============ SETTINGS ============
+function renderSettings(){
+  var html = sampleNotice() +
+    pageIntro('Settings', 'Personalise and manage local data.') +
+    '<div class="grid two"><div class="card"><h2>Appearance</h2>' +
+    '<label>Theme</label><select onchange="setTheme(this.value)">' +
+    '<option value="light" ' + (db.settings.theme === 'light' ? 'selected' : '') + '>Light</option>' +
+    '<option value="dark" ' + (db.settings.theme === 'dark' ? 'selected' : '') + '>Dark</option>' +
+    '</select></div>' +
+    '<div class="card"><h2>Data</h2>' +
+    '<button onclick="downloadBackup()">Download JSON backup</button> ' +
+    '<button class="danger" onclick="resetDemo()">Reset demo</button>' +
+    '<button class="danger" onclick="logout()">Log out</button>' +
+    '</div></div>';
+  $id('view').innerHTML = html;
+}
+
+function setTheme(t){
+  db.settings.theme = t;
+  document.documentElement.dataset.theme = t;
+  saveDB();
+}
+
+function downloadBackup(){
+  var data = JSON.stringify({version:1, exportedAt:nowISO(), data:db}, null, 2);
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([data], {type:'application/json'}));
+  a.download = 'clinic-backup-' + dayKey() + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  toast('Backup downloaded.');
+}
+
+function resetDemo(){
+  if(!confirm('Reset all demo data?')) return;
+  db = seed();
+  saveDB();
+  navigate('dashboard');
+  toast('Reset.');
+}
+
+function logout(){
+  if(!confirm('Log out?')) return;
+  session = null;
+  safeSession.remove('clinic-session');
+  $id('app').style.display = 'none';
+  $id('loginScreen').style.display = 'grid';
+  toast('Logged out.');
+}
+
+// ============ DEVELOPER ============
+function renderDeveloper(){
+  var html = sampleNotice() + pageIntro('Developer Panel', 'Integration stubs (not wired).') +
+    '<div class="card"><h2>Log console</h2>' +
+    '<p>' + db.logs.length + ' events</p>' +
+    '<button onclick="db.logs=[];saveDB();navigate(\'developer\')">Clear logs</button>' +
+    '</div>';
+  $id('view').innerHTML = html;
+}
+
+// ============ MODAL ============
+function modal(title, body){
+  $id('modalRoot').innerHTML = '<div class="modal" role="dialog">' +
+    '<div class="modal-head"><h2>' + title + '</h2><button onclick="closeModal()">✕</button></div>' +
+    body + '</div>';
+  var first = $id('modalRoot').querySelector('input, select, button');
+  if(first) first.focus();
+  $id('modalRoot').onclick = function(e){
+    if(e.target.id === 'modalRoot') closeModal();
+  };
+}
+
+function closeModal(){ $id('modalRoot').innerHTML = ''; }
+
+// ============ CSV ============
+function exportCSV(kind){
+  var map = {
+    patients: ['patients', db.patients],
+    encounters: ['encounters', db.encounters],
+    labOrders: ['labOrders', db.labOrders],
+    medicines: ['medicines', db.medicines],
+    invoices: ['invoices', db.invoices],
+    staff: ['staff', db.staff],
+    suppliers: ['suppliers', db.suppliers],
+    expenses: ['expenses', db.expenses],
+    clinicalRecords: ['clinicalRecords', db.clinicalRecords],
+    triageQueue: ['triageQueue', db.triageQueue]
+  };
+  var entry = map[kind] || map.patients;
+  var name = entry[0];
+  var items = entry[1];
+  if(!items.length){ toast('Nothing to export.'); return; }
+  var keys = [];
+  items.forEach(function(o){
+    Object.keys(o).forEach(function(k){ if(keys.indexOf(k) === -1) keys.push(k); });
+  });
+  var csv = [keys.join(',')];
+  items.forEach(function(o){
+    csv.push(keys.map(function(k){
+      var v = o[k];
+      if(v && typeof v === 'object') v = JSON.stringify(v);
+      return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    }).join(','));
+  });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv.join('\r\n')], {type:'text/csv;charset=utf-8'}));
+  a.download = name + '-' + dayKey() + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  toast('CSV exported.');
+}
+
+// ============ LOGIN ============
+function doLogin(){
+  try {
+    var roleEl = $id('loginRole');
+    var nameEl = $id('loginName');
+    var role = roleEl ? roleEl.value : 'owner';
+    var name = (nameEl && nameEl.value.trim()) || 'Demo User';
+    session = {role:role, name:name};
+    safeSession.set('clinic-session', JSON.stringify(session));
+    $id('loginScreen').style.display = 'none';
+    $id('app').style.display = 'block';
+    renderNav();
+    navigate('dashboard');
+    log('session', 'Sign-in as ' + role);
+    toast('Signed in as ' + roleLabel(role));
+  } catch(e){
+    console.error('Login error:', e);
+    alert('Login failed: ' + e.message);
+  }
+}
+
+// ============ BOOT ============
+function boot(){
+  db = loadDB();
+  document.documentElement.dataset.theme = db.settings.theme || 'light';
+
+  var btn = $id('loginBtn');
+  if(btn){
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      doLogin();
+    });
+  }
+
+  var form = $id('loginForm');
+  if(form){
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      doLogin();
+    });
+  }
+
+  var restored = false;
+  try {
+    var saved = safeSession.get('clinic-session');
+    if(saved){
+      var parsed = JSON.parse(saved);
+      if(parsed && parsed.role){
+        session = parsed;
+        $id('loginScreen').style.display = 'none';
+        $id('app').style.display = 'block';
+        renderNav();
+        navigate('dashboard');
+        restored = true;
+      }
+    }
+  } catch(e){ console.warn('Session restore failed', e); }
+
+  if(!restored){
+    $id('loginScreen').style.display = 'grid';
+    $id('app').style.display = 'none';
+  }
+
+  var storageOK = (function(){
+    try { localStorage.setItem('__t', '1'); localStorage.removeItem('__t'); return true; }
+    catch(e){ return false; }
+  })();
+  var badge = $id('storageBadge');
+  if(badge){
+    badge.textContent = storageOK ? 'Local storage' : 'Session only';
+    badge.className = 'badge ' + (storageOK ? 'good' : 'warn');
+  }
+
+  log('system', 'App booted');
+}
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
+
+window.navigate = navigate;
+window.toggleDrawer = toggleDrawer;
+window.closeDrawer = closeDrawer;
+window.editPatient = editPatient;
+window.savePatient = savePatient;
+window.patientDetail = patientDetail;
+window.editTriage = editTriage;
+window.saveTriage = saveTriage;
+window.setTriageFilter = setTriageFilter;
+window.startConsultation = startConsultation;
+window.newConsultation = newConsultation;
+window.createConsultation = createConsultation;
+window.editClinicalRecord = editClinicalRecord;
+window.saveClinicalRecord = saveClinicalRecord;
+window.finalizeClinicalRecord = finalizeClinicalRecord;
+window.viewTimeline = viewTimeline;
+window.editLab = editLab;
+window.saveLab = saveLab;
+window.setLabFilter = setLabFilter;
+window.viewResult = viewResult;
+window.editMedicine = editMedicine;
+window.saveMedicine = saveMedicine;
+window.newDispense = newDispense;
+window.saveDispense = saveDispense;
+window.newInvoice = newInvoice;
+window.createInvoice = createInvoice;
+window.addPayment = addPayment;
+window.pickPayMethod = pickPayMethod;
+window.simulateStk = simulateStk;
+window.savePayment = savePayment;
+window.showReceipt = showReceipt;
+window.closeReceipt = closeReceipt;
+window.printReceipt = printReceipt;
+window.downloadReceipt = downloadReceipt;
+window.shareWhatsApp = shareWhatsApp;
+window.editStaff = editStaff;
+window.saveStaff = saveStaff;
+window.startShift = startShift;
+window.editSupplier = editSupplier;
+window.saveSupplier = saveSupplier;
+window.showExpenseForm = showExpenseForm;
+window.saveExpense = saveExpense;
+window.printReport = printReport;
+window.setTheme = setTheme;
+window.downloadBackup = downloadBackup;
+window.resetDemo = resetDemo;
+window.logout = logout;
+window.closeModal = closeModal;
+window.filterRows = filterRows;
+window.exportCSV = exportCSV;
+</script>
+</body>
+</html>

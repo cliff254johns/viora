@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#070a13" />
+    <title>ApexEdge Ultra · Global Sportsbook</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            background: #070a13;
+            color: #f1f5f9;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            overflow-x: hidden;
+            touch-action: manipulation;
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #0b0f19; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 8px; }
+
+        .odds-flash-up   { animation: flashUpGreen 0.8s ease-out; }
+        .odds-flash-down { animation: flashDownRed   0.8s ease-out; }
+        @keyframes flashUpGreen {
+            0%   { border-color: #10b981; background-color: rgba(16,185,129,0.25); }
+            100% { border-color: #1e293b; background-color: #0d1321; }
+        }
+        @keyframes flashDownRed {
+            0%   { border-color: #ef4444; background-color: rgba(239,68,68,0.25); }
+            100% { border-color: #1e293b; background-color: #0d1321; }
+        }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+        .animate-fadeIn { animation: fadeIn 0.25s ease; }
+
+        .tilt-card { transition: transform 0.15s ease, box-shadow 0.15s ease; transform-style: preserve-3d; will-change: transform; }
+        .tilt-card:active { transform: perspective(600px) rotateX(2deg) rotateY(2deg) scale(0.98); }
+
+        .bottom-nav {
+            display: flex;
+            background: rgba(13,19,34,0.94);
+            border-top: 1px solid #1e293b;
+            padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+            justify-content: space-around;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            z-index: 60;
+            backdrop-filter: blur(14px);
+        }
+        .bottom-nav button {
+            background: none; border: none; color: #64748b;
+            font-size: 9px; font-weight: 700; padding: 4px 8px;
+            display: flex; flex-direction: column; align-items: center; gap: 2px;
+            transition: color 0.2s; cursor: pointer; border-radius: 8px;
+            min-width: 52px;
+        }
+        .bottom-nav button.active { color: #34d399; }
+        .bottom-nav button .nav-icon { font-size: 16px; }
+
+        .slide-panel {
+            position: fixed; top: 0; bottom: 0; width: 90%; max-width: 360px;
+            background: #0d1322; z-index: 100;
+            transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+            overflow-y: auto; box-shadow: 0 0 60px rgba(0,0,0,0.7);
+            border-right: 1px solid #1e293b;
+            padding: 0.75rem;
+        }
+        .slide-panel.left { left: 0; transform: translateX(-100%); }
+        .slide-panel.right { right: 0; transform: translateX(100%); border-left: 1px solid #1e293b; border-right: none; }
+        .slide-panel.open { transform: translateX(0); }
+
+        @media (max-width: 768px) { .desktop-only { display: none !important; } }
+        @media (min-width: 769px) {
+            .mobile-only { display: none !important; }
+            .bottom-nav { display: none !important; }
+            .slide-panel { position: static; transform: none !important; width: auto; max-width: none; box-shadow: none; border: none; padding: 0; }
+        }
+
+        .league-header {
+            background: linear-gradient(90deg, rgba(37,99,235,0.08), transparent);
+            border-left: 3px solid #3b82f6;
+        }
+        .sport-icon { width: 28px; text-align: center; }
+        .market-tab-active {
+            background: #0f172a !important;
+            color: #34d399 !important;
+            border-color: #1e293b !important;
+        }
+        .scroll-x { overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+        .scroll-x::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+    <!-- Toast container -->
+    <div id="toastSystemAnchor" class="fixed bottom-20 right-3 z-[70] space-y-2 pointer-events-none max-w-xs w-full"></div>
+
+    <!-- ===== HEADER ===== -->
+    <header class="bg-[#0d1322] border-b border-slate-800/80 sticky top-0 z-40 px-2.5 py-2 shadow-2xl backdrop-blur-md bg-opacity-95">
+        <div class="max-w-[1650px] mx-auto flex items-center justify-between gap-2">
+            <div class="flex items-center gap-1.5">
+                <button id="mobileMenuBtn" class="mobile-only text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800/60">
+                    <i class="fa-solid fa-bars text-xs"></i>
+                </button>
+                <div class="bg-gradient-to-tr from-emerald-400 to-teal-500 text-slate-950 px-2 py-1 rounded-lg font-black tracking-wider text-sm shadow-lg shadow-emerald-500/20">APEX</div>
+                <div class="hidden sm:block">
+                    <h1 class="text-[11px] font-black tracking-tight leading-none text-slate-100">EDGE <span class="text-emerald-400 font-mono text-[7px] uppercase tracking-widest px-1 py-0.5 bg-slate-800 rounded border border-slate-700 ml-0.5">KE</span></h1>
+                    <p class="text-[8px] text-slate-400 mt-0.5 font-mono">Global Sportsbook</p>
+                </div>
+            </div>
+
+            <div class="flex flex-1 max-w-md mx-1 items-center bg-[#05070e] p-1 rounded-xl border border-slate-800/90 shadow-inner">
+                <div class="pl-2 text-slate-500 text-[10px]"><i class="fa-solid fa-magnifying-glass"></i></div>
+                <input type="text" id="globalOmniSearchInput" oninput="executeDataFiltersAndRedraw()" placeholder="Search teams, leagues, countries..." class="bg-transparent text-[11px] text-slate-200 px-1.5 py-1 focus:outline-none w-full">
+                <button onclick="toggleRightPanel('slip')" class="mobile-only bg-emerald-500/10 text-emerald-400 text-[9px] font-bold px-1.5 py-1 rounded-lg border border-emerald-500/20">
+                    <i class="fa-solid fa-ticket"></i>
+                </button>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+                <div class="bg-slate-950 border border-slate-800 p-0.5 rounded-lg flex text-[8px] font-mono font-black shadow-md">
+                    <button onclick="modifySystemCurrency('KES')" id="currencyTab-KES" class="px-1.5 py-1 rounded-md text-emerald-400 bg-slate-800 border border-slate-700 transition-all">KES</button>
+                    <button onclick="modifySystemCurrency('USD')" id="currencyTab-USD" class="px-1.5 py-1 rounded-md text-slate-400 transition-all">USD</button>
+                </div>
+                <div class="flex items-center gap-1 bg-gradient-to-r from-slate-900 to-slate-850 px-2 py-1 rounded-xl border border-slate-800 shadow-xl">
+                    <div class="text-right">
+                        <p class="text-[7px] text-slate-500 uppercase tracking-widest font-black">Bal</p>
+                        <p id="walletBalanceDisplay" class="text-emerald-400 font-mono font-black text-[10px]">KSh 1,000</p>
+                    </div>
+                    <div class="bg-slate-800 text-slate-400 p-1 rounded-lg text-[9px] shadow-inner"><i class="fa-solid fa-wallet"></i></div>
+                </div>
+                <button onclick="toggleRightPanel('history')" class="mobile-only text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800/60">
+                    <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== MAIN ===== -->
+    <main class="flex-1 max-w-[1650px] w-full mx-auto p-2.5 grid grid-cols-1 md:grid-cols-4 lg:grid-cols-12 gap-3 pb-24 md:pb-3">
+
+        <!-- LEFT SIDEBAR -->
+        <aside id="leftSidebarPanel" class="slide-panel left md:col-span-1 lg:col-span-2 space-y-2.5 pb-24 md:pb-0">
+            <div class="bg-[#0d1322] rounded-2xl border border-slate-800/80 p-2.5 shadow-xl">
+                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest px-2 mb-1.5 font-mono">Sports Catalog</p>
+                <nav class="space-y-0.5 max-h-[40vh] overflow-y-auto" id="sportsCatalogNavContainer"></nav>
+            </div>
+            <div class="bg-[#0d1322] rounded-2xl border border-slate-800/80 p-3 shadow-xl space-y-2">
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono flex items-center justify-between">
+                    <span>Simulation</span>
+                    <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                </h3>
+                <div class="grid grid-cols-2 gap-1.5">
+                    <button onclick="toggleSimulationLoop(true)"  id="simPlayBtn"  class="bg-emerald-500/10 text-emerald-400 text-[9px] font-bold py-1 rounded-lg border border-emerald-500/20">Active</button>
+                    <button onclick="toggleSimulationLoop(false)" id="simPauseBtn" class="bg-slate-800 text-slate-400 text-[9px] font-bold py-1 rounded-lg">Pause</button>
+                </div>
+            </div>
+            <div class="bg-[#0d1322] rounded-2xl border border-slate-800/80 p-3 shadow-xl space-y-1.5">
+                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest font-mono">Filters</p>
+                <label class="flex items-center gap-1.5 text-[10px] text-slate-400 cursor-pointer">
+                    <input type="checkbox" id="liveOnlyFilter" onchange="executeDataFiltersAndRedraw()" class="accent-emerald-500 w-3 h-3">
+                    <span>Live matches only</span>
+                </label>
+                <label class="flex items-center gap-1.5 text-[10px] text-slate-400 cursor-pointer">
+                    <input type="checkbox" id="topOddsFilter" onchange="executeDataFiltersAndRedraw()" class="accent-emerald-500 w-3 h-3">
+                    <span>Top odds (2.0+)</span>
+                </label>
+                <div class="pt-1">
+                    <p class="text-[8px] text-slate-500 font-bold uppercase mb-1">Sort by</p>
+                    <select id="sortBySelect" onchange="executeDataFiltersAndRedraw()" class="w-full bg-slate-950 text-[10px] text-slate-300 border border-slate-800 rounded-lg px-2 py-1 focus:outline-none">
+                        <option value="default">Default</option>
+                        <option value="live">Live first</option>
+                        <option value="odds">Odds (high)</option>
+                        <option value="time">Kick-off time</option>
+                    </select>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CENTER -->
+        <section class="md:col-span-3 lg:col-span-7 space-y-2.5">
+
+            <div id="systemTelemetryRibbon" class="bg-gradient-to-r from-blue-500/10 via-indigo-500/5 to-transparent border border-blue-500/20 text-blue-400 p-2 rounded-2xl flex items-center justify-between text-[9px] shadow-lg">
+                <div class="flex items-center space-x-1.5">
+                    <div class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-ping"></div>
+                    <p id="telemetryStatusMsg" class="leading-tight">Global sportsbook active. <strong id="totalMatchCount">0</strong> matches across <strong id="totalLeagueCount">0</strong> leagues.</p>
+                </div>
+                <span id="telemetryBadge" class="text-[7px] font-mono bg-blue-500/20 px-1.5 py-0.5 rounded-md uppercase font-black tracking-wider">Global</span>
+            </div>
+
+            <!-- Market tabs -->
+            <div class="bg-[#0d1322] rounded-2xl border border-slate-800/80 p-2">
+                <div class="flex items-center justify-between mb-1.5">
+                    <h2 class="text-[10px] font-black uppercase tracking-wider text-slate-200 px-1">Markets</h2>
+                    <div class="scroll-x flex bg-[#05070e] p-0.5 rounded-lg border border-slate-850 text-[9px] font-bold gap-0.5 max-w-[70%]">
+                        <button onclick="shiftActiveDisplayMarketType('1X2')" id="marketTab-1X2" class="px-2 py-1 rounded-md transition-all text-emerald-400 bg-slate-900 border border-slate-800 whitespace-nowrap">1X2</button>
+                        <button onclick="shiftActiveDisplayMarketType('OU')"  id="marketTab-OU"  class="px-2 py-1 rounded-md transition-all text-slate-400 whitespace-nowrap">O/U</button>
+                        <button onclick="shiftActiveDisplayMarketType('GG')"  id="marketTab-GG"  class="px-2 py-1 rounded-md transition-all text-slate-400 whitespace-nowrap">GG</button>
+                        <button onclick="shiftActiveDisplayMarketType('DC')"  id="marketTab-DC"  class="px-2 py-1 rounded-md transition-all text-slate-400 whitespace-nowrap">DC</button>
+                        <button onclick="shiftActiveDisplayMarketType('HT')"  id="marketTab-HT"  class="px-2 py-1 rounded-md transition-all text-slate-400 whitespace-nowrap">HT</button>
+                        <button onclick="shiftActiveDisplayMarketType('CS')"  id="marketTab-CS"  class="px-2 py-1 rounded-md transition-all text-slate-400 whitespace-nowrap">CS</button>
+                    </div>
+                </div>
+                <div id="centralLiveFeedContainer" class="divide-y divide-slate-800/40 max-h-[65vh] overflow-y-auto rounded-xl"></div>
+            </div>
+        </section>
+
+        <!-- RIGHT SIDEBAR -->
+        <aside id="rightSidebarPanel" class="slide-panel right md:col-span-4 lg:col-span-3 h-fit md:h-auto space-y-2.5 pb-24 md:pb-0">
+            <div class="bg-[#0d1322] rounded-2xl border border-slate-800/80 overflow-hidden shadow-2xl flex flex-col">
+                <div class="bg-slate-900/60 border-b border-slate-800 p-0.5 flex shadow-md">
+                    <button onclick="toggleRightPaneViewTab('slip')" id="paneTabCtrl-slip" class="flex-1 text-center py-2 font-black text-[10px] border-b-2 border-emerald-400 text-emerald-400 transition-all uppercase tracking-wider">
+                        <i class="fa-solid fa-file-invoice mr-1"></i> Slip <span id="slipCounterBadge" class="ml-0.5 bg-slate-850 px-1 py-0.5 rounded text-[7px] font-mono text-slate-400 border border-slate-750">0</span>
+                    </button>
+                    <button onclick="toggleRightPaneViewTab('history')" id="paneTabCtrl-history" class="flex-1 text-center py-2 font-bold text-[10px] border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-all uppercase tracking-wider">
+                        <i class="fa-solid fa-clock-rotate-left mr-1"></i> History
+                    </button>
+                </div>
+
+                <!-- SLIP -->
+                <div id="viewModuleWrapper-slip" class="block">
+                    <div id="slipCardsDynamicWrapper" class="p-2 space-y-1.5 min-h-[120px] max-h-[260px] overflow-y-auto bg-[#070a13]">
+                        <div id="slipEmptyUIMessage" class="text-center py-8 text-slate-500 text-[10px]">
+                            <i class="fa-solid fa-folder-plus block text-xl mb-1.5 opacity-30"></i>
+                            Your slip is empty.<br>Tap any odds outcome.
+                        </div>
+                    </div>
+                    <div class="p-2.5 bg-slate-900/30 border-t border-slate-800 space-y-2">
+                        <div class="space-y-1.5 text-[10px]">
+                            <div class="flex justify-between items-center text-slate-400 font-mono text-[8px]">
+                                <span>Ticket:</span>
+                                <span id="slipConfigurationLabel" class="bg-slate-800 text-slate-300 border border-slate-700 px-1.5 py-0.5 rounded font-black uppercase">Single</span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-400 font-mono text-[8px]">
+                                <span>Combined Odds:</span>
+                                <span id="slipCombinedOddsDisplay" class="text-emerald-400 font-black text-xs">1.00</span>
+                            </div>
+                            <div class="space-y-1 pt-1 border-t border-slate-800/40">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-bold text-slate-300 text-[9px]">Risk Stake:</span>
+                                    <div class="relative rounded-xl border border-slate-700 bg-slate-950 overflow-hidden w-24 shadow-inner">
+                                        <span id="stakeCurrencySymbol" class="absolute inset-y-0 left-0 pl-1.5 flex items-center font-mono text-slate-500 text-[9px] font-black">KSh</span>
+                                        <input type="number" id="financialStakeInput" value="100" min="1" oninput="calculateFinancialSlipProjections()" class="bg-transparent text-right font-mono text-[10px] font-black text-emerald-400 w-full focus:outline-none py-1 pr-1.5">
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-4 gap-1 pt-0.5">
+                                    <button onclick="injectQuickStakeAmount(50)"  class="bg-slate-800 hover:bg-slate-750 text-slate-300 text-[8px] font-mono font-bold py-0.5 rounded border border-slate-700/60">+50</button>
+                                    <button onclick="injectQuickStakeAmount(100)" class="bg-slate-800 hover:bg-slate-750 text-slate-300 text-[8px] font-mono font-bold py-0.5 rounded border border-slate-700/60">+100</button>
+                                    <button onclick="injectQuickStakeAmount(500)" class="bg-slate-800 hover:bg-slate-750 text-slate-300 text-[8px] font-mono font-bold py-0.5 rounded border border-slate-700/60">+500</button>
+                                    <button onclick="injectQuickStakeAmount('MAX')" class="bg-slate-900 hover:bg-slate-850 text-emerald-400 text-[7px] font-mono font-black py-0.5 rounded border border-emerald-500/20">MAX</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-[#04060b] p-2 rounded-xl border border-slate-850 space-y-0.5 shadow-inner">
+                            <div class="flex justify-between items-center text-[9px]">
+                                <span class="text-slate-400">Net Profit:</span>
+                                <span id="projectedNetProfitDisplay" class="font-mono text-slate-300 font-bold">KSh 0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center border-t border-slate-800/60 pt-1 mt-1">
+                                <span class="text-[9px] font-black text-slate-200 uppercase tracking-wider">Est. Payout:</span>
+                                <span id="projectedTotalReturnDisplay" class="font-mono text-xs font-black text-emerald-400">KSh 0.00</span>
+                            </div>
+                        </div>
+                        <button onclick="processBetSlipSubmissionPipeline()" id="submitWagerBtn" disabled class="w-full bg-slate-800 text-slate-500 font-black py-2 px-2 rounded-xl cursor-not-allowed transition-all uppercase tracking-widest text-[9px] flex items-center justify-center space-x-1">
+                            <i class="fa-solid fa-circle-check"></i> <span>Submit Bet</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- HISTORY -->
+                <div id="viewModuleWrapper-history" class="hidden p-2 bg-[#070a13] min-h-[260px] max-h-[500px] overflow-y-auto space-y-1.5"></div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- ===== MOBILE NAV ===== -->
+    <nav class="bottom-nav mobile-only">
+        <button class="active" data-tab="game" onclick="mobileNavAction('game')"><span class="nav-icon">🏠</span> Home</button>
+        <button data-tab="sports" onclick="mobileNavAction('sports')"><span class="nav-icon">⚽</span> Sports</button>
+        <button data-tab="slip"   onclick="mobileNavAction('slip')"><span class="nav-icon">🎫</span> Slip</button>
+        <button data-tab="history" onclick="mobileNavAction('history')"><span class="nav-icon">📊</span> History</button>
+        <button data-tab="live" onclick="mobileNavAction('live')"><span class="nav-icon">🔴</span> Live</button>
+    </nav>
+
+    <div id="mobileOverlay" class="fixed inset-0 bg-black/60 z-[90] hidden md:hidden" onclick="closeAllSlidePanels()"></div>
+
+    <script>
+        // ============================================================
+        // GLOBAL STATE
+        // ============================================================
+        let appGlobalCurrencyUnit = 'KES';
+        const globalFxExchangeRate = 129.50;
+        let activeMarketViewType = '1X2';
+        let currentSportFilterCategory = 'all';
+        let searchStringQueryCache = '';
+
+        let localUserWalletLedgerFunds = 1000000; // KSh 1,000,000
+        let internalSimulationLoopTimerId = null;
+        let activeSimulationProcessingState = true;
+
+        let selectedWagerSelectionsCollection = [];
+        let historicalTransactionsLedgerArchive = [];
+        let globalLiveSchedulesDatabaseArray = [];
+
+        // ============================================================
+        // EXPANDED GLOBAL DATA GENERATOR
+        // ============================================================
+        const SPORTS_CONFIG = {
+            'Football': {
+                icon: 'fa-futbol',
+                leagues: [
+                    { name:'English Premier League', country:'England', teams:['Man United','Man City','Liverpool','Arsenal','Chelsea','Tottenham','Newcastle','Brighton','Aston Villa','West Ham','Crystal Palace','Everton','Fulham','Brentford','Wolves','Leicester','Bournemouth','Nottingham Forest','Ipswich','Southampton'] },
+                    { name:'Spanish La Liga', country:'Spain', teams:['Real Madrid','Barcelona','Atletico Madrid','Sevilla','Real Sociedad','Athletic Bilbao','Villarreal','Real Betis','Valencia','Girona','Osasuna','Celta Vigo','Rayo Vallecano','Mallorca','Getafe','Almeria','Cadiz','Granada','Las Palmas','Alaves'] },
+                    { name:'Italian Serie A', country:'Italy', teams:['Inter Milan','AC Milan','Juventus','Napoli','Roma','Lazio','Atalanta','Fiorentina','Bologna','Torino','Udinese','Sassuolo','Empoli','Salernitana','Lecce','Cagliari','Verona','Frosinone','Monza','Genoa'] },
+                    { name:'German Bundesliga', country:'Germany', teams:['Bayern Munich','Borussia Dortmund','RB Leipzig','Bayer Leverkusen','Eintracht Frankfurt','VfB Stuttgart','Borussia Monchengladbach','Union Berlin','Freiburg','Wolfsburg','Mainz','Augsburg','Hoffenheim','Werder Bremen','Bochum','Heidenheim','FC Koln','Darmstadt'] },
+                    { name:'French Ligue 1', country:'France', teams:['Paris Saint-Germain','Marseille','Monaco','Lyon','Lille','Nice','Rennes','Lens','Nantes','Toulouse','Montpellier','Strasbourg','Brest','Reims','Le Havre','Metz','Lorient','Clermont'] },
+                    { name:'Kenyan Premier League', country:'Kenya', teams:['Gor Mahia','AFC Leopards','Tusker FC','Bandari FC','Kariobangi Sharks','KCB','Ulinzi Stars','Sofapaka','Wazito FC','Posta Rangers','Nairobi City Stars','Kakamega Homeboyz','Mathare United','Vihiga Bullets','Bidco United','Talanta FC','Kibera Black Stars','Nzoia Sugar'] },
+                    { name:'Ugandan Premier League', country:'Uganda', teams:['Vipers SC','KCCA FC','Express FC','SC Villa','URA FC','BUL FC','Onduparaka','Bright Stars','Mbarara City','Arua Hill'] },
+                    { name:'Tanzanian Premier League', country:'Tanzania', teams:['Simba SC','Young Africans','Azam FC','Namungo FC','Coastal Union','Tanzania Prisons','Mbeya City','Kagera Sugar'] },
+                    { name:'South African PSL', country:'South Africa', teams:['Kaizer Chiefs','Orlando Pirates','Mamelodi Sundowns','SuperSport United','Cape Town City','Wits','AmaZulu','Golden Arrows','Maritzburg United','Bloemfontein Celtic'] },
+                    { name:'Nigerian NPFL', country:'Nigeria', teams:['Enyimba','Rangers International','Rivers United','Kano Pillars','Lobi Stars','MFM FC','Shooting Stars','Wikki Tourists'] },
+                    { name:'Ghana Premier League', country:'Ghana', teams:['Hearts of Oak','Asante Kotoko','Aduana Stars','Ashanti Gold','Medeama SC','Karela United','Dreams FC','Great Olympics'] },
+                    { name:'Brazilian Serie A', country:'Brazil', teams:['Flamengo','Palmeiras','Corinthians','Sao Paulo','Fluminense','Atletico Mineiro','Botafogo','Vasco da Gama','Santos','Gremio','Internacional','Cruzeiro'] },
+                    { name:'Argentine Primera', country:'Argentina', teams:['Boca Juniors','River Plate','Racing Club','Independiente','San Lorenzo','Velez Sarsfield','Estudiantes','Talleres','Newells Old Boys','Rosario Central'] },
+                    { name:'MLS', country:'USA', teams:['LA Galaxy','LAFC','Inter Miami','NY Red Bulls','NYCFC','Atlanta United','Seattle Sounders','Portland Timbers','Toronto FC','DC United','Chicago Fire','Columbus Crew'] },
+                    { name:'Saudi Pro League', country:'Saudi Arabia', teams:['Al Nassr','Al Hilal','Al Ittihad','Al Ahli','Al Shabab','Al Ettifaq','Al Taawoun','Al Fateh'] },
+                    { name:'Turkish Super Lig', country:'Turkey', teams:['Galatasaray','Fenerbahce','Besiktas','Trabzonspor','Basaksehir','Adana Demirspor','Antalyaspor','Konyaspor'] },
+                    { name:'Dutch Eredivisie', country:'Netherlands', teams:['Ajax','PSV','Feyenoord','AZ Alkmaar','Twente','Utrecht','Vitesse','Heerenveen','Sparta Rotterdam'] },
+                    { name:'Portuguese Primeira', country:'Portugal', teams:['Benfica','Porto','Sporting CP','Braga','Vitoria Guimaraes','Boavista','Gil Vicente','Rio Ave'] },
+                    { name:'Belgian Pro League', country:'Belgium', teams:['Club Brugge','Anderlecht','Genk','Standard Liege','Gent','Antwerp','Charleroi','Cercle Brugge'] },
+                    { name:'Scottish Premiership', country:'Scotland', teams:['Celtic','Rangers','Aberdeen','Hearts','Hibernian','Dundee United','Motherwell','St Mirren'] },
+                ]
+            },
+            'Basketball': {
+                icon: 'fa-basketball',
+                leagues: [
+                    { name:'NBA', country:'USA', teams:['LA Lakers','Boston Celtics','Golden State Warriors','Brooklyn Nets','Milwaukee Bucks','Miami Heat','Phoenix Suns','Dallas Mavericks','Denver Nuggets','Philadelphia 76ers','Chicago Bulls','New York Knicks','Toronto Raptors','Houston Rockets','Portland Trail Blazers','Utah Jazz','San Antonio Spurs','Indiana Pacers','Orlando Magic','Cleveland Cavaliers','Atlanta Hawks','Charlotte Hornets','Detroit Pistons','Oklahoma City Thunder','Memphis Grizzlies','New Orleans Pelicans','Minnesota Timberwolves','Sacramento Kings','LA Clippers','Washington Wizards'] },
+                    { name:'EuroLeague', country:'Europe', teams:['Real Madrid','Barcelona','Olympiacos','Panathinaikos','Fenerbahce','Anadolu Efes','CSKA Moscow','Zalgiris','Maccabi Tel Aviv','Baskonia','Olimpia Milano','Bayern Munich','ASVEL','Monaco','Partizan','Red Star'] },
+                    { name:'Spanish ACB', country:'Spain', teams:['Real Madrid','Barcelona','Baskonia','Valencia','Unicaja','Gran Canaria','Joventut','Tenerife','Bilbao','Zaragoza'] },
+                    { name:'Italian Serie A', country:'Italy', teams:['Olimpia Milano','Virtus Bologna','Venezia','Brescia','Trento','Trieste','Dinamo Sassari','Brindisi'] },
+                    { name:'Greek Basket League', country:'Greece', teams:['Olympiacos','Panathinaikos','AEK Athens','Aris','PAOK','Peristeri'] },
+                    { name:'Turkish BSL', country:'Turkey', teams:['Fenerbahce','Anadolu Efes','Galatasaray','Besiktas','Trabzonspor','Darussafaka'] },
+                    { name:'Basketball Africa League', country:'Africa', teams:['Al Ahly','Zamalek','Petro de Luanda','FAP','US Monastir','REG','SLAC','Kwara Falcons'] },
+                ]
+            },
+            'Tennis': {
+                icon: 'fa-baseball-bat-ball',
+                leagues: [
+                    { name:'ATP Tour', country:'Global', teams:['Novak Djokovic','Carlos Alcaraz','Jannik Sinner','Daniil Medvedev','Alexander Zverev','Stefanos Tsitsipas','Andrey Rublev','Taylor Fritz','Casper Ruud','Holger Rune','Hubert Hurkacz','Grigor Dimitrov','Frances Tiafoe','Tommy Paul','Ben Shelton','Felix Auger-Aliassime'] },
+                    { name:'WTA Tour', country:'Global', teams:['Iga Swiatek','Aryna Sabalenka','Coco Gauff','Elena Rybakina','Jessica Pegula','Ons Jabeur','Marketa Vondrousova','Maria Sakkari','Caroline Garcia','Barbora Krejcikova','Jelena Ostapenko','Daria Kasatkina','Petra Kvitova','Madison Keys'] },
+                    { name:'Wimbledon', country:'UK', teams:['Djokovic','Alcaraz','Sinner','Medvedev','Swiatek','Sabalenka','Gauff','Rybakina'] },
+                    { name:'French Open', country:'France', teams:['Alcaraz','Djokovic','Zverev','Ruud','Swiatek','Sabalenka','Gauff','Jabeur'] },
+                    { name:'US Open', country:'USA', teams:['Djokovic','Alcaraz','Medvedev','Sinner','Swiatek','Gauff','Sabalenka','Pegula'] },
+                    { name:'Australian Open', country:'Australia', teams:['Djokovic','Sinner','Medvedev','Zverev','Sabalenka','Swiatek','Gauff','Rybakina'] },
+                ]
+            },
+            'Cricket': {
+                icon: 'fa-baseball',
+                leagues: [
+                    { name:'IPL', country:'India', teams:['Mumbai Indians','Chennai Super Kings','Royal Challengers Bangalore','Kolkata Knight Riders','Delhi Capitals','Rajasthan Royals','Sunrisers Hyderabad','Punjab Kings','Gujarat Titans','Lucknow Super Giants'] },
+                    { name:'Big Bash League', country:'Australia', teams:['Sydney Sixers','Perth Scorchers','Melbourne Stars','Sydney Thunder','Brisbane Heat','Adelaide Strikers','Hobart Hurricanes','Melbourne Renegades'] },
+                    { name:'International Test', country:'Global', teams:['India','Australia','England','South Africa','New Zealand','Pakistan','Sri Lanka','West Indies','Bangladesh','Afghanistan','Zimbabwe','Ireland'] },
+                    { name:'T20 World Cup', country:'Global', teams:['India','Australia','England','Pakistan','South Africa','New Zealand','Sri Lanka','West Indies','Bangladesh','Afghanistan'] },
+                    { name:'Caribbean Premier League', country:'Caribbean', teams:['Trinbago Knight Riders','St Lucia Kings','Guyana Amazon Warriors','Jamaica Tallawahs','Barbados Royals','St Kitts Patriots'] },
+                ]
+            },
+            'Rugby': {
+                icon: 'fa-football',
+                leagues: [
+                    { name:'Six Nations', country:'Europe', teams:['England','France','Ireland','Wales','Scotland','Italy'] },
+                    { name:'Rugby Championship', country:'Global', teams:['New Zealand','South Africa','Australia','Argentina'] },
+                    { name:'Super Rugby', country:'Pacific', teams:['Crusaders','Blues','Chiefs','Hurricanes','Highlanders','Brumbies','Reds','Waratahs','Western Force','Moana Pasifika'] },
+                    { name:'Premiership Rugby', country:'England', teams:['Saracens','Leicester Tigers','Bath','Harlequins','Northampton Saints','Exeter Chiefs','Sale Sharks','Gloucester'] },
+                    { name:'Top 14', country:'France', teams:['Toulouse','La Rochelle','Bordeaux','Racing 92','Stade Francais','Toulon','Clermont','Montpellier'] },
+                ]
+            },
+            'Formula 1': {
+                icon: 'fa-car',
+                leagues: [
+                    { name:'F1 World Championship', country:'Global', teams:['Max Verstappen','Lewis Hamilton','Charles Leclerc','Lando Norris','Carlos Sainz','George Russell','Fernando Alonso','Oscar Piastri','Sergio Perez','Esteban Ocon','Pierre Gasly','Valtteri Bottas','Yuki Tsunoda','Daniel Ricciardo','Lance Stroll','Kevin Magnussen','Nico Hulkenberg','Alex Albon','Logan Sargeant','Zhou Guanyu'] },
+                    { name:'F1 Constructors', country:'Global', teams:['Red Bull Racing','Mercedes','Ferrari','McLaren','Aston Martin','Alpine','Williams','RB','Sauber','Haas'] },
+                ]
+            },
+            'Boxing': {
+                icon: 'fa-hand-fist',
+                leagues: [
+                    { name:'Heavyweight', country:'Global', teams:['Tyson Fury','Oleksandr Usyk','Anthony Joshua','Deontay Wilder','Daniel Dubois','Joseph Parker','Filip Hrgovic','Frank Sanchez'] },
+                    { name:'Middleweight', country:'Global', teams:['Canelo Alvarez','Gennady Golovkin','Jermall Charlo','Erislandy Lara','Danny Jacobs','Demetrius Andrade'] },
+                    { name:'Lightweight', country:'Global', teams:['Gervonta Davis','Vasyl Lomachenko','Devin Haney','Ryan Garcia','Shakur Stevenson','Isaac Cruz'] },
+                    { name:'Welterweight', country:'Global', teams:['Terence Crawford','Errol Spence','Manny Pacquiao','Keith Thurman','Shawn Porter','Yordenis Ugas'] },
+                ]
+            },
+            'MMA': {
+                icon: 'fa-shield-halved',
+                leagues: [
+                    { name:'UFC', country:'Global', teams:['Jon Jones','Francis Ngannou','Israel Adesanya','Alex Pereira','Charles Oliveira','Islam Makhachev','Alexander Volkanovski','Max Holloway','Kamaru Usman','Colby Covington','Sean O\'Malley','Aljamain Sterling'] },
+                    { name:'Bellator', country:'Global', teams:['Ryan Bader','Patricio Pitbull','Cris Cyborg','Douglas Lima','Gegard Mousasi','Sergio Pettis'] },
+                    { name:'ONE Championship', country:'Asia', teams:['Demetrious Johnson','Rodtang Jitmuangnon','Christian Lee','Angela Lee','Aung La N Sang','Adriano Moraes'] },
+                ]
+            },
+            'Athletics': {
+                icon: 'fa-person-running',
+                leagues: [
+                    { name:'Diamond League', country:'Global', teams:['Noah Lyles','Eliud Kipchoge','Faith Kipyegon','Shelly-Ann Fraser-Pryce','Sha\'Carri Richardson','Jakob Ingebrigtsen','Mondo Duplantis','Sydney McLaughlin'] },
+                    { name:'Olympic Games', country:'Global', teams:['USA','Jamaica','Kenya','Great Britain','Ethiopia','China','Australia','France','Germany','Japan'] },
+                    { name:'World Championships', country:'Global', teams:['USA','Kenya','Jamaica','Ethiopia','Great Britain','Canada','Netherlands','Italy'] },
+                ]
+            },
+            'Volleyball': {
+                icon: 'fa-volleyball',
+                leagues: [
+                    { name:'Italian SuperLega', country:'Italy', teams:['Perugia','Trentino','Civitanova','Modena','Piacenza','Milano','Verona','Padova'] },
+                    { name:'Polish PlusLiga', country:'Poland', teams:['Zaksa Kedzierzyn','Jastrzebski Wegiel','Resovia Rzeszow','Skra Belchatow','Projekt Warszawa','Trefl Gdansk'] },
+                    { name:'Brazilian Superliga', country:'Brazil', teams:['Sada Cruzeiro','Minas Tenis','SESI Bauru','Praia Clube','Osasco','Fluminense'] },
+                ]
+            },
+            'Handball': {
+                icon: 'fa-hand',
+                leagues: [
+                    { name:'EHF Champions League', country:'Europe', teams:['Barcelona','Veszprem','Kielce','PSG','Flensburg','Kiel','Aalborg','Zagreb'] },
+                    { name:'German Bundesliga', country:'Germany', teams:['THW Kiel','Flensburg','Rhein-Neckar Lowen','Magdeburg','Fuchse Berlin','Melsungen','Gummersbach','Hannover'] },
+                ]
+            },
+            'Ice Hockey': {
+                icon: 'fa-hockey-puck',
+                leagues: [
+                    { name:'NHL', country:'USA/Canada', teams:['Toronto Maple Leafs','Montreal Canadiens','Boston Bruins','New York Rangers','Tampa Bay Lightning','Colorado Avalanche','Vegas Golden Knights','Edmonton Oilers','Pittsburgh Penguins','Chicago Blackhawks','Detroit Red Wings','Los Angeles Kings','San Jose Sharks','Anaheim Ducks','Vancouver Canucks','Calgary Flames','Winnipeg Jets','Ottawa Senators','Buffalo Sabres','Philadelphia Flyers'] },
+                    { name:'KHL', country:'Russia', teams:['CSKA Moscow','SKA St Petersburg','Ak Bars Kazan','Metallurg Magnitogorsk','Dynamo Moscow','Avangard Omsk','Salavat Yulaev','Lokomotiv Yaroslavl'] },
+                    { name:'SHL', country:'Sweden', teams:['Frolunda','Skelleftea','Lulea','Rogle','Vaxjo','Farjestad','Orebro','Djurgarden'] },
+                ]
+            },
+            'Table Tennis': {
+                icon: 'fa-table-tennis-paddle-ball',
+                leagues: [
+                    { name:'ITTF World Tour', country:'Global', teams:['Ma Long','Fan Zhendong','Xu Xin','Tomokazu Harimoto','Hugo Calderano','Dimitrij Ovtcharov','Timo Boll','Lin Gaoyuan','Liang Jingkun','Wang Chuqin'] },
+                    { name:'Chinese Super League', country:'China', teams:['Ma Long','Fan Zhendong','Xu Xin','Lin Gaoyuan','Liang Jingkun','Wang Chuqin'] },
+                ]
+            },
+            'Badminton': {
+                icon: 'fa-shuttlecock',
+                leagues: [
+                    { name:'BWF World Tour', country:'Global', teams:['Viktor Axelsen','Kento Momota','Anders Antonsen','Chou Tien-chen','Anthony Ginting','Jonatan Christie','Lee Zii Jia','Loh Kean Yew','Tai Tzu-ying','Carolina Marin','Akane Yamaguchi','Chen Yufei'] },
+                ]
+            },
+            'Snooker': {
+                icon: 'fa-circle',
+                leagues: [
+                    { name:'World Snooker Tour', country:'Global', teams:['Ronnie O\'Sullivan','Judd Trump','Mark Selby','Neil Robertson','John Higgins','Mark Williams','Kyren Wilson','Shaun Murphy','Ding Junhui','Stephen Maguire'] },
+                ]
+            },
+            'Darts': {
+                icon: 'fa-crosshairs',
+                leagues: [
+                    { name:'PDC World Championship', country:'Global', teams:['Michael van Gerwen','Gerwyn Price','Peter Wright','Michael Smith','Rob Cross','Luke Humphries','Nathan Aspinall','Danny Noppert','Jonny Clayton','Dimitri Van den Bergh'] },
+                ]
+            },
+            'Cycling': {
+                icon: 'fa-bicycle',
+                leagues: [
+                    { name:'Tour de France', country:'France', teams:['Tadej Pogacar','Jonas Vingegaard','Primoz Roglic','Remco Evenepoel','Egan Bernal','Geraint Thomas','Richard Carapaz','Enric Mas'] },
+                    { name:'Giro d\'Italia', country:'Italy', teams:['Tadej Pogacar','Primoz Roglic','Remco Evenepoel','Geraint Thomas','Joao Almeida','Damiano Caruso'] },
+                    { name:'Vuelta a Espana', country:'Spain', teams:['Primoz Roglic','Tadej Pogacar','Enric Mas','Miguel Angel Lopez','Sepp Kuss','Jonas Vingegaard'] },
+                ]
+            },
+            'Esports': {
+                icon: 'fa-gamepad',
+                leagues: [
+                    { name:'League of Legends', country:'Global', teams:['T1','Gen.G','JDG','BLG','G2 Esports','Fnatic','Cloud9','Team Liquid','DRX','KT Rolster'] },
+                    { name:'Dota 2', country:'Global', teams:['Team Spirit','PSG.LGD','OG','Team Secret','Evil Geniuses','Virtus.pro','Tundra Esports','Entity'] },
+                    { name:'CS:GO / CS2', country:'Global', teams:['Natus Vincere','FaZe Clan','G2 Esports','Astralis','Vitality','Heroic','Cloud9','Team Liquid','MOUZ','Gambit'] },
+                    { name:'Valorant', country:'Global', teams:['Sentinels','Fnatic','Paper Rex','DRX','Team Liquid','NAVI','FPX','EDG'] },
+                ]
+            },
+            'Golf': {
+                icon: 'fa-golf-ball-tee',
+                leagues: [
+                    { name:'PGA Tour', country:'USA', teams:['Tiger Woods','Rory McIlroy','Scottie Scheffler','Jon Rahm','Jordan Spieth','Justin Thomas','Dustin Johnson','Brooks Koepka','Collin Morikawa','Viktor Hovland','Xander Schauffele','Patrick Cantlay'] },
+                    { name:'DP World Tour', country:'Europe', teams:['Rory McIlroy','Jon Rahm','Tommy Fleetwood','Tyrrell Hatton','Matt Fitzpatrick','Shane Lowry','Viktor Hovland'] },
+                    { name:'LIV Golf', country:'Global', teams:['Phil Mickelson','Dustin Johnson','Brooks Koepka','Bryson DeChambeau','Cameron Smith','Joaquin Niemann'] },
+                ]
+            },
+            'Swimming': {
+                icon: 'fa-water',
+                leagues: [
+                    { name:'World Aquatics', country:'Global', teams:['Michael Phelps','Caeleb Dressel','Katie Ledecky','Adam Peaty','Emma McKeon','Sun Yang','Chad le Clos','Florent Manaudou'] },
+                ]
+            },
+            'Gymnastics': {
+                icon: 'fa-person',
+                leagues: [
+                    { name:'World Championships', country:'Global', teams:['Simone Biles','Sunisa Lee','Jordan Chiles','Rebeca Andrade','Daiki Hashimoto','Artur Dalaloyan','Nikita Nagornyy','Angelina Melnikova'] },
+                ]
+            },
+            'Water Polo': {
+                icon: 'fa-droplet',
+                leagues: [
+                    { name:'World League', country:'Global', teams:['Hungary','Serbia','Croatia','Italy','Spain','Greece','Montenegro','USA','Australia','Japan'] },
+                ]
+            },
+            'Baseball': {
+                icon: 'fa-baseball-bat-ball',
+                leagues: [
+                    { name:'MLB', country:'USA', teams:['New York Yankees','Boston Red Sox','LA Dodgers','San Francisco Giants','Chicago Cubs','Chicago White Sox','Houston Astros','Atlanta Braves','New York Mets','Philadelphia Phillies','St Louis Cardinals','Toronto Blue Jays'] },
+                    { name:'NPB', country:'Japan', teams:['Yomiuri Giants','Hanshin Tigers','SoftBank Hawks','Orix Buffaloes','Yokohama DeNA BayStars','Hiroshima Carp','Chunichi Dragons','Yakult Swallows'] },
+                    { name:'KBO League', country:'South Korea', teams:['Doosan Bears','LG Twins','Kia Tigers','Samsung Lions','Lotte Giants','Hanwha Eagles','SSG Landers','KT Wiz'] },
+                ]
+            },
+            'American Football': {
+                icon: 'fa-football',
+                leagues: [
+                    { name:'NFL', country:'USA', teams:['Kansas City Chiefs','San Francisco 49ers','Philadelphia Eagles','Dallas Cowboys','Buffalo Bills','Detroit Lions','Baltimore Ravens','Miami Dolphins','Cincinnati Bengals','Jacksonville Jaguars','Green Bay Packers','Los Angeles Rams','Seattle Seahawks','Minnesota Vikings','Houston Texans','Cleveland Browns'] },
+                    { name:'NCAA Football', country:'USA', teams:['Alabama','Georgia','Ohio State','Michigan','Texas','Oklahoma','USC','LSU','Clemson','Penn State','Notre Dame','Oregon'] },
+                ]
+            },
+        };
+
+        // Build the full database
+        function buildGlobalDatabase() {
+            const db = [];
+            let matchId = 1;
+            for (const [sport, config] of Object.entries(SPORTS_CONFIG)) {
+                for (const league of config.leagues) {
+                    const teamCount = league.teams.length;
+                    const numMatches = Math.min(Math.max(2, Math.floor(teamCount / 2)), 5);
+                    for (let i = 0; i < numMatches; i++) {
+                        const homeIdx = Math.floor(Math.random() * teamCount);
+                        let awayIdx = Math.floor(Math.random() * teamCount);
+                        if (awayIdx === homeIdx) awayIdx = (awayIdx + 1) % teamCount;
+                        const home = league.teams[homeIdx];
+                        const away = league.teams[awayIdx];
+                        const isLive = Math.random() > 0.35;
+                        const baseOdds = 1.2 + Math.random() * 3.5;
+
+                        // Build markets
+                        const markets = {
+                            '1X2': [
+                                { name: home, price: +(1.3 + Math.random() * 2.5).toFixed(2), type: 'Home' },
+                                { name: 'Draw', price: +(2.8 + Math.random() * 2.0).toFixed(2), type: 'Draw' },
+                                { name: away, price: +(1.5 + Math.random() * 3.5).toFixed(2), type: 'Away' }
+                            ],
+                            'OU': [
+                                { name: 'Over 2.5', price: +(1.5 + Math.random() * 1.2).toFixed(2), type: 'Over' },
+                                { name: 'Under 2.5', price: +(1.5 + Math.random() * 1.2).toFixed(2), type: 'Under' }
+                            ],
+                            'GG': [
+                                { name: 'GG (Yes)', price: +(1.4 + Math.random() * 1.0).toFixed(2), type: 'GG' },
+                                { name: 'NG (No)', price: +(1.7 + Math.random() * 1.5).toFixed(2), type: 'NG' }
+                            ],
+                            'DC': [
+                                { name: 'Home or Draw', price: +(1.1 + Math.random() * 0.8).toFixed(2), type: '1X' },
+                                { name: 'Home or Away', price: +(1.1 + Math.random() * 0.8).toFixed(2), type: '12' },
+                                { name: 'Draw or Away', price: +(1.1 + Math.random() * 0.8).toFixed(2), type: 'X2' }
+                            ],
+                            'HT': [
+                                { name: 'Home HT', price: +(1.8 + Math.random() * 2.0).toFixed(2), type: 'HomeHT' },
+                                { name: 'Draw HT', price: +(2.0 + Math.random() * 1.5).toFixed(2), type: 'DrawHT' },
+                                { name: 'Away HT', price: +(2.2 + Math.random() * 2.5).toFixed(2), type: 'AwayHT' }
+                            ],
+                            'CS': [
+                                { name: '1-0', price: +(6.0 + Math.random() * 4).toFixed(2), type: '1-0' },
+                                { name: '2-1', price: +(7.0 + Math.random() * 5).toFixed(2), type: '2-1' },
+                                { name: '0-0', price: +(8.0 + Math.random() * 6).toFixed(2), type: '0-0' },
+                                { name: '1-1', price: +(6.5 + Math.random() * 4).toFixed(2), type: '1-1' }
+                            ]
+                        };
+
+                        db.push({
+                            id: `m_${matchId++}`,
+                            sport_title: sport,
+                            league: league.name,
+                            country: league.country,
+                            home_team: home,
+                            away_team: away,
+                            live_minute: Math.floor(Math.random() * 85) + 1,
+                            live_score: { home: Math.floor(Math.random() * 3), away: Math.floor(Math.random() * 3) },
+                            is_live: isLive,
+                            commence_time: new Date(Date.now() + Math.random() * 172800000).toISOString(),
+                            markets
+                        });
+                    }
+                }
+            }
+            return db;
+        }
+
+        // ============================================================
+        // BOOT
+        // ============================================================
+        window.addEventListener('DOMContentLoaded', () => {
+            globalLiveSchedulesDatabaseArray = buildGlobalDatabase();
+            generateLeftSportSidebarNavigation();
+            initializeSimulationEngineThread();
+            redrawUserWalletLedgerHeader();
+            updateTelemetry();
+            executeDataFiltersAndRedraw();
+            document.getElementById('mobileMenuBtn')?.addEventListener('click', () => openSlidePanel('left'));
+            window.addEventListener('resize', () => { if (window.innerWidth >= 769) closeAllSlidePanels(); });
+        });
+
+        function updateTelemetry() {
+            const totalMatches = globalLiveSchedulesDatabaseArray.length;
+            const totalLeagues = new Set(globalLiveSchedulesDatabaseArray.map(m => m.league)).size;
+            document.getElementById('totalMatchCount').textContent = totalMatches;
+            document.getElementById('totalLeagueCount').textContent = totalLeagues;
+        }
+
+        // ============================================================
+        // TOAST
+        // ============================================================
+        function dispatchSystemNotificationToast(messageText, severityCode = 'info') {
+            const anchor = document.getElementById('toastSystemAnchor');
+            const toast = document.createElement('div');
+            let cls = "bg-slate-900 border-l-4 border-blue-500 text-blue-400";
+            if (severityCode === 'success') cls = "bg-[#0b1619] border-l-4 border-emerald-500 text-emerald-400";
+            if (severityCode === 'error')   cls = "bg-[#1c0f13] border-l-4 border-rose-500 text-rose-400";
+            toast.className = `p-2 rounded-xl shadow-2xl border border-slate-800/80 flex items-start space-x-1.5 pointer-events-auto transition-all duration-300 transform translate-y-3 opacity-0 text-[10px] font-semibold ${cls}`;
+            toast.innerHTML = `<div class="mt-0.5"><i class="fa-solid ${severityCode==='success'?'fa-circle-check':severityCode==='error'?'fa-triangle-exclamation':'fa-circle-info'}"></i></div><div class="flex-1 leading-relaxed">${messageText}</div>`;
+            anchor.appendChild(toast);
+            setTimeout(()=>toast.classList.remove('translate-y-3','opacity-0'), 50);
+            setTimeout(()=>{ toast.classList.add('opacity-0','scale-95'); setTimeout(()=>toast.remove(),300); }, 3600);
+        }
+
+        // ============================================================
+        // SIDEBAR NAV
+        // ============================================================
+        function generateLeftSportSidebarNavigation() {
+            const wrapper = document.getElementById('sportsCatalogNavContainer');
+            wrapper.innerHTML = '';
+            const catalogDef = [
+                { key: 'all', label: 'All Sports', icon: 'fa-globe' },
+                ...Object.entries(SPORTS_CONFIG).map(([name, cfg]) => ({ key: name, label: name, icon: cfg.icon }))
+            ];
+            catalogDef.forEach(sport => {
+                const btn = document.createElement('button');
+                btn.onclick = () => filterMainFeedsBySportCategory(sport.key);
+                const sel = currentSportFilterCategory === sport.key;
+                btn.className = sel
+                    ? "w-full text-left px-2.5 py-1.5 rounded-lg text-[10px] font-black flex items-center space-x-1.5 transition-all bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-md"
+                    : "w-full text-left px-2.5 py-1.5 rounded-lg text-[10px] font-bold text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 flex items-center space-x-1.5 transition-all border border-transparent";
+                btn.innerHTML = `<i class="fa-solid ${sport.icon} text-[10px] w-3.5 text-center"></i> <span class="truncate">${sport.label}</span>`;
+                wrapper.appendChild(btn);
+            });
+        }
+
+        function filterMainFeedsBySportCategory(key) {
+            currentSportFilterCategory = key;
+            generateLeftSportSidebarNavigation();
+            executeDataFiltersAndRedraw();
+            closeAllSlidePanels();
+        }
+
+        function shiftActiveDisplayMarketType(key) {
+            activeMarketViewType = key;
+            ['1X2','OU','GG','DC','HT','CS'].forEach(m => {
+                const node = document.getElementById(`marketTab-${m}`);
+                if (!node) return;
+                node.className = m===key
+                    ? "px-2 py-1 rounded-md transition-all text-emerald-400 bg-slate-900 border border-slate-800 font-black whitespace-nowrap"
+                    : "px-2 py-1 rounded-md transition-all text-slate-400 hover:text-slate-200 whitespace-nowrap";
+            });
+            executeDataFiltersAndRedraw();
+        }
+
+        // ============================================================
+        // CURRENCY
+        // ============================================================
+        function modifySystemCurrency(unitCode) {
+            if (appGlobalCurrencyUnit === unitCode) return;
+            const past = appGlobalCurrencyUnit;
+            appGlobalCurrencyUnit = unitCode;
+            if (unitCode==='KES' && past==='USD') localUserWalletLedgerFunds *= globalFxExchangeRate;
+            if (unitCode==='USD' && past==='KES') localUserWalletLedgerFunds /= globalFxExchangeRate;
+            document.getElementById('currencyTab-USD').className = unitCode==='USD' ? "px-1.5 py-1 rounded-md text-emerald-400 bg-slate-800 border border-slate-700 transition-all" : "px-1.5 py-1 rounded-md text-slate-400 transition-all";
+            document.getElementById('currencyTab-KES').className = unitCode==='KES' ? "px-1.5 py-1 rounded-md text-emerald-400 bg-slate-800 border border-slate-700 transition-all" : "px-1.5 py-1 rounded-md text-slate-400 transition-all";
+            document.getElementById('stakeCurrencySymbol').innerText = unitCode==='USD' ? '$' : 'KSh';
+            const stakeInput = document.getElementById('financialStakeInput');
+            let v = parseFloat(stakeInput.value)||0;
+            stakeInput.value = unitCode==='KES' ? Math.round(v*globalFxExchangeRate) : Math.round(v/globalFxExchangeRate);
+            redrawUserWalletLedgerHeader();
+            calculateFinancialSlipProjections();
+            redrawHistoricalTransactionArchivePanel();
+        }
+        function redrawUserWalletLedgerHeader() {
+            const sym = appGlobalCurrencyUnit==='USD' ? '$' : 'KSh ';
+            document.getElementById('walletBalanceDisplay').innerText = `${sym}${localUserWalletLedgerFunds.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}`;
+        }
+        function injectQuickStakeAmount(mod) {
+            const f = document.getElementById('financialStakeInput');
+            if (mod==='MAX') f.value = Math.floor(localUserWalletLedgerFunds);
+            else { let c = parseFloat(f.value)||0; f.value = c + mod; }
+            calculateFinancialSlipProjections();
+        }
+
+        // ============================================================
+        // SIMULATION
+        // ============================================================
+        function initializeSimulationEngineThread() {
+            if (internalSimulationLoopTimerId) clearInterval(internalSimulationLoopTimerId);
+            internalSimulationLoopTimerId = setInterval(() => {
+                if (!activeSimulationProcessingState) return;
+                globalLiveSchedulesDatabaseArray.forEach(m => {
+                    if (!m.is_live) return;
+                    m.live_minute = (m.live_minute+1) % 90 || 1;
+                    if (Math.random() > 0.95) {
+                        if (Math.random()>0.5) m.live_score.home++; else m.live_score.away++;
+                    }
+                    Object.keys(m.markets).forEach(mk => {
+                        m.markets[mk].forEach(o => {
+                            const dir = Math.random()>0.5?1:-1;
+                            const delta = (Math.random()*0.08)*dir;
+                            o.price = Math.max(1.05, Math.min(95, o.price + delta));
+                            o.flashState = dir>0?'up':'down';
+                        });
+                    });
+                });
+                executeDataFiltersAndRedraw(false);
+                synchronizeActiveSlipCardPricesWithLiveFeeds();
+                calculateFinancialSlipProjections();
+                refreshLiveHistoricalTransactionsCashoutValuationMatrix();
+            }, 4000);
+        }
+        function toggleSimulationLoop(active) {
+            activeSimulationProcessingState = active;
+            document.getElementById('simPlayBtn').className = active ? "bg-emerald-500/10 text-emerald-400 text-[9px] font-bold py-1 rounded-lg border border-emerald-500/20" : "bg-slate-800 text-slate-400 text-[9px] font-bold py-1 rounded-lg";
+            document.getElementById('simPauseBtn').className = !active ? "bg-rose-500/10 text-rose-400 text-[9px] font-bold py-1 rounded-lg border border-rose-500/20" : "bg-slate-800 text-slate-400 text-[9px] font-bold py-1 rounded-lg";
+            dispatchSystemNotificationToast(`Simulation ${active?'resumed':'paused'}.`, 'info');
+        }
+
+        // ============================================================
+        // RENDER MATCH FEED (grouped by league)
+        // ============================================================
+        function executeDataFiltersAndRedraw(hard=true) {
+            searchStringQueryCache = document.getElementById('globalOmniSearchInput').value.trim().toLowerCase();
+            const container = document.getElementById('centralLiveFeedContainer');
+            const liveOnly = document.getElementById('liveOnlyFilter').checked;
+            const topOdds = document.getElementById('topOddsFilter').checked;
+            const sortBy = document.getElementById('sortBySelect').value;
+
+            let filtered = globalLiveSchedulesDatabaseArray.filter(g => {
+                const catOk = currentSportFilterCategory==='all' || g.sport_title===currentSportFilterCategory;
+                const qOk = !searchStringQueryCache || g.home_team.toLowerCase().includes(searchStringQueryCache) || g.away_team.toLowerCase().includes(searchStringQueryCache) || g.league.toLowerCase().includes(searchStringQueryCache) || g.country.toLowerCase().includes(searchStringQueryCache);
+                const liveOk = !liveOnly || g.is_live;
+                const oddsOk = !topOdds || (g.markets[activeMarketViewType]||[]).some(o => o.price >= 2.0);
+                return catOk && qOk && liveOk && oddsOk;
+            });
+
+            if (sortBy === 'live') filtered.sort((a,b) => (b.is_live?1:0) - (a.is_live?1:0));
+            if (sortBy === 'odds') filtered.sort((a,b) => {
+                const ao = Math.max(...(a.markets[activeMarketViewType]||[{price:0}]).map(o=>o.price));
+                const bo = Math.max(...(b.markets[activeMarketViewType]||[{price:0}]).map(o=>o.price));
+                return bo - ao;
+            });
+            if (sortBy === 'time') filtered.sort((a,b) => new Date(a.commence_time) - new Date(b.commence_time));
+
+            if (hard) container.innerHTML = '';
+            if (!filtered.length) {
+                container.innerHTML = `<div class="text-center py-12 text-slate-500 text-[10px] font-semibold"><i class="fa-solid fa-folder-closed block text-2xl mb-2 opacity-30"></i>No matching entries.</div>`;
+                return;
+            }
+
+            // Group by league
+            const groups = {};
+            filtered.forEach(g => {
+                const key = `${g.sport_title} · ${g.league}`;
+                if (!groups[key]) groups[key] = { sport: g.sport_title, league: g.league, country: g.country, matches: [] };
+                groups[key].matches.push(g);
+            });
+
+            if (hard) {
+                Object.values(groups).forEach(group => {
+                    const header = document.createElement('div');
+                    header.className = "league-header flex items-center justify-between px-3 py-1.5 bg-slate-900/30";
+                    const sportCfg = SPORTS_CONFIG[group.sport];
+                    header.innerHTML = `
+                        <div class="flex items-center gap-1.5">
+                            <i class="fa-solid ${sportCfg?.icon||'fa-trophy'} text-[10px] text-blue-400"></i>
+                            <span class="text-[9px] font-black text-slate-300 uppercase tracking-wider">${group.league}</span>
+                            <span class="text-[8px] text-slate-500">· ${group.country}</span>
+                        </div>
+                        <span class="text-[8px] font-mono text-slate-500">${group.matches.length} matches</span>
+                    `;
+                    container.appendChild(header);
+
+                    group.matches.forEach(game => {
+                        const markets = game.markets[activeMarketViewType] || [];
+                        let buttonsHtml = '';
+                        markets.forEach((o, idx) => {
+                            const flash = o.flashState || '';
+                            buttonsHtml += compileBtn(game.id, o.type, o.name, o.price, o.name.substring(0,6), flash);
+                        });
+
+                        const row = document.createElement('div');
+                        row.id = `matchRowDom-${game.id}`;
+                        row.className = "p-2.5 bg-[#0d1322] hover:bg-[#131b2f] transition-all flex flex-col gap-1.5 border-b border-slate-800/40 tilt-card";
+                        row.innerHTML = compileRowTemplate(game, buttonsHtml);
+                        container.appendChild(row);
+                    });
+                });
+            }
+            syncInteractiveOddsButtonsActiveVisualStates();
+        }
+
+        function compileRowTemplate(game, buttonsHtml) {
+            return `
+                <div class="flex flex-wrap items-center gap-1.5 text-[8px] font-mono tracking-wider font-bold uppercase">
+                    <span class="text-slate-400 font-medium">${game.league}</span>
+                    <span class="text-slate-600">•</span>
+                    ${game.is_live
+                        ? `<span class="text-emerald-400 font-black flex items-center bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20"><span class="w-1 h-1 bg-emerald-400 rounded-full animate-pulse mr-1"></span>LIVE ${game.live_minute}'</span>`
+                        : `<span class="text-slate-500 font-bold"><i class="fa-regular fa-clock mr-1"></i>${new Date(game.commence_time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>`}
+                </div>
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex-1 min-w-0 space-y-0.5 text-[11px] font-bold">
+                        <div class="flex items-center justify-between">
+                            <p class="text-slate-200 truncate"><i class="fa-solid fa-circle text-[4px] text-blue-500 mr-1.5"></i>${game.home_team}</p>
+                            ${game.is_live ? `<span class="font-mono font-black text-emerald-400 text-[10px]">${game.live_score.home}</span>` : ''}
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <p class="text-slate-200 truncate"><i class="fa-solid fa-circle text-[4px] text-rose-500 mr-1.5"></i>${game.away_team}</p>
+                            ${game.is_live ? `<span class="font-mono font-black text-emerald-400 text-[10px]">${game.live_score.away}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+                <div class="grid gap-1 w-full" style="grid-template-columns: repeat(${Math.min(buttonsHtml.split('odds-btn').length-1, 4)}, minmax(0,1fr));">${buttonsHtml}</div>
+            `;
+        }
+
+        function compileBtn(matchId, marketKey, label, price, badge, flash) {
+            let flashCls = '';
+            if (flash==='up') flashCls = 'odds-flash-up';
+            if (flash==='down') flashCls = 'odds-flash-down';
+            return `<button onclick="commitMarketLineToSlip('${matchId}','${marketKey}','${escapeStr(label)}',${price})"
+                        id="oddsBtnNode-${matchId}-${marketKey}"
+                        class="odds-btn bg-[#070b14] hover:bg-[#151d30] border border-slate-800 px-1 py-1.5 rounded-lg transition-all text-center flex flex-col justify-center items-center group relative overflow-hidden ${flashCls}">
+                        <span class="text-[7px] text-slate-500 font-bold font-mono tracking-wider group-hover:text-slate-400 uppercase truncate w-full">${badge}</span>
+                        <span class="font-mono text-[10px] font-black text-emerald-400 mt-0.5">${price.toFixed(2)}</span>
+                    </button>`;
+        }
+
+        // ============================================================
+        // SLIP
+        // ============================================================
+        function synchronizeActiveSlipCardPricesWithLiveFeeds() {
+            if (!selectedWagerSelectionsCollection.length) return;
+            selectedWagerSelectionsCollection.forEach(sel => {
+                const m = globalLiveSchedulesDatabaseArray.find(g=>g.id===sel.gameId);
+                if (m) {
+                    const sub = m.markets[sel.marketCategory]||[];
+                    const line = sub.find(o=>o.type===sel.marketKey);
+                    if (line) sel.oddsPrice = line.price;
+                }
+            });
+            redrawActiveBetSlipViewStack(false);
+        }
+
+        function commitMarketLineToSlip(gameId, marketKey, label, odds) {
+            const match = globalLiveSchedulesDatabaseArray.find(g=>g.id===gameId);
+            if (!match) return;
+            const exactIdx = selectedWagerSelectionsCollection.findIndex(i=>i.gameId===gameId && i.marketKey===marketKey);
+            const genericIdx = selectedWagerSelectionsCollection.findIndex(i=>i.gameId===gameId);
+            if (exactIdx !== -1) selectedWagerSelectionsCollection.splice(exactIdx,1);
+            else {
+                if (genericIdx !== -1) selectedWagerSelectionsCollection.splice(genericIdx,1);
+                selectedWagerSelectionsCollection.push({
+                    gameId, marketKey, marketCategory: activeMarketViewType,
+                    fixtureLabel: `${match.home_team} vs ${match.away_team}`,
+                    leagueLabel: match.league,
+                    selection: label, oddsPrice: parseFloat(odds)
+                });
+            }
+            redrawActiveBetSlipViewStack();
+            syncInteractiveOddsButtonsActiveVisualStates();
+        }
+
+        function redrawActiveBetSlipViewStack(flush=true) {
+            const wrapper = document.getElementById('slipCardsDynamicWrapper');
+            const placeholder = document.getElementById('slipEmptyUIMessage');
+            const badge = document.getElementById('slipCounterBadge');
+            const label = document.getElementById('slipConfigurationLabel');
+            const submit = document.getElementById('submitWagerBtn');
+            badge.innerText = selectedWagerSelectionsCollection.length;
+
+            if (!selectedWagerSelectionsCollection.length) {
+                wrapper.innerHTML = '';
+                wrapper.appendChild(placeholder);
+                label.innerText = 'Single';
+                submit.disabled = true;
+                submit.className = "w-full bg-slate-800 text-slate-500 font-black py-2 px-2 rounded-xl cursor-not-allowed transition-all uppercase tracking-widest text-[9px] flex items-center justify-center space-x-1";
+                calculateFinancialSlipProjections();
+                return;
+            }
+            label.innerText = selectedWagerSelectionsCollection.length>1 ? `Parlay (${selectedWagerSelectionsCollection.length})` : 'Single';
+
+            if (flush) {
+                wrapper.innerHTML = '';
+                selectedWagerSelectionsCollection.forEach((item,idx) => {
+                    const card = document.createElement('div');
+                    card.className = "bg-[#111726] border border-slate-800 p-2 rounded-xl relative shadow-md flex flex-col space-y-0.5 animate-fadeIn tilt-card";
+                    card.innerHTML = `
+                        <button onclick="ejectSelectionFromSlipIndex(${idx})" class="absolute top-1 right-1 text-slate-500 hover:text-rose-400 text-[10px]"><i class="fa-solid fa-circle-xmark"></i></button>
+                        <p class="text-[7px] text-emerald-400 font-mono font-black uppercase tracking-wider">${item.marketCategory}</p>
+                        <p class="text-[10px] font-black text-slate-200 pr-3 truncate">${item.selection}</p>
+                        <p class="text-[8px] text-slate-500 font-semibold truncate">${item.fixtureLabel}</p>
+                        <p class="text-[7px] text-slate-600 truncate">${item.leagueLabel||''}</p>
+                        <div class="flex items-center justify-between border-t border-slate-800/60 pt-1 mt-0.5">
+                            <span class="text-[7px] text-slate-500 font-mono font-bold uppercase">Odds</span>
+                            <span id="slipLivePriceNode-${item.gameId}-${item.marketKey}" class="font-mono text-[9px] font-black text-emerald-400 bg-slate-950 px-1 py-0.5 rounded border border-slate-850">${item.oddsPrice.toFixed(2)}</span>
+                        </div>`;
+                    wrapper.appendChild(card);
+                });
+            } else {
+                selectedWagerSelectionsCollection.forEach(item => {
+                    const node = document.getElementById(`slipLivePriceNode-${item.gameId}-${item.marketKey}`);
+                    if (node) node.innerText = item.oddsPrice.toFixed(2);
+                });
+            }
+            submit.disabled = false;
+            submit.className = "w-full bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-slate-950 font-black py-2 px-2 rounded-xl cursor-pointer transition-all uppercase tracking-widest text-[9px] flex items-center justify-center space-x-1 shadow-lg shadow-emerald-500/10 active:scale-[0.99]";
+            calculateFinancialSlipProjections();
+        }
+
+        function ejectSelectionFromSlipIndex(idx) {
+            selectedWagerSelectionsCollection.splice(idx,1);
+            redrawActiveBetSlipViewStack();
+            syncInteractiveOddsButtonsActiveVisualStates();
+        }
+
+        function calculateFinancialSlipProjections() {
+            const oddsOut = document.getElementById('slipCombinedOddsDisplay');
+            const netOut  = document.getElementById('projectedNetProfitDisplay');
+            const totalOut= document.getElementById('projectedTotalReturnDisplay');
+            const stakeIn = document.getElementById('financialStakeInput');
+            const stake = parseFloat(stakeIn.value)||0;
+            const sym = appGlobalCurrencyUnit==='USD'?'$':'KSh ';
+
+            if (!selectedWagerSelectionsCollection.length || stake<=0) {
+                oddsOut.innerText='0.00'; netOut.innerText=`${sym}0.00`; totalOut.innerText=`${sym}0.00`; return;
+            }
+            let combined = selectedWagerSelectionsCollection.reduce((a,c)=>a*c.oddsPrice,1);
+            if (combined>5000) combined=5000;
+            const payout = stake*combined;
+            oddsOut.innerText = combined.toFixed(2);
+            totalOut.innerText = `${sym}${payout.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}`;
+            netOut.innerText = `${sym}${(payout-stake).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}`;
+        }
+
+        // ============================================================
+        // SUBMIT
+        // ============================================================
+        function processBetSlipSubmissionPipeline() {
+            if (!selectedWagerSelectionsCollection.length) return;
+            const stake = parseFloat(document.getElementById('financialStakeInput').value)||0;
+            if (stake<=0) { dispatchSystemNotificationToast("Stake missing.", "error"); return; }
+            if (stake>localUserWalletLedgerFunds) { dispatchSystemNotificationToast("Insufficient funds.", "error"); return; }
+
+            localUserWalletLedgerFunds -= stake;
+            redrawUserWalletLedgerHeader();
+
+            let combined = selectedWagerSelectionsCollection.reduce((a,c)=>a*c.oddsPrice,1);
+            if (combined>5000) combined=5000;
+
+            historicalTransactionsLedgerArchive.unshift({
+                ticketId: `TX_${Math.floor(Math.random()*899999)+100000}`,
+                timestamp: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}),
+                stakeValue: stake, oddsMultiplierValue: combined,
+                baseCurrencyCode: appGlobalCurrencyUnit, status: 'OPEN',
+                legsArraySnapshot: selectedWagerSelectionsCollection.map(i=>({lineLabel:i.selection,matchLabel:i.fixtureLabel,leagueLabel:i.leagueLabel})),
+                liveCashoutEvaluationPrice: stake*0.92
+            });
+
+            dispatchSystemNotificationToast("Bet placed! Check History.", "success");
+            selectedWagerSelectionsCollection = [];
+            redrawActiveBetSlipViewStack();
+            syncInteractiveOddsButtonsActiveVisualStates();
+            redrawHistoricalTransactionArchivePanel();
+            toggleRightPaneViewTab('history');
+        }
+
+        // ============================================================
+        // HISTORY
+        // ============================================================
+        function refreshLiveHistoricalTransactionsCashoutValuationMatrix() {
+            if (!historicalTransactionsLedgerArchive.length) return;
+            historicalTransactionsLedgerArchive.forEach(t => {
+                if (t.status!=='OPEN') return;
+                const drift = 0.82 + Math.random()*0.35;
+                t.liveCashoutEvaluationPrice = t.stakeValue * (t.oddsMultiplierValue*0.45) * drift;
+                if (t.liveCashoutEvaluationPrice > t.stakeValue*t.oddsMultiplierValue) t.liveCashoutEvaluationPrice = t.stakeValue*t.oddsMultiplierValue*0.95;
+                const node = document.getElementById(`cashoutBtnVal-${t.ticketId}`);
+                if (node) {
+                    const sym = t.baseCurrencyCode==='USD'?'$':'KSh ';
+                    let val = t.liveCashoutEvaluationPrice;
+                    if (t.baseCurrencyCode==='USD' && appGlobalCurrencyUnit==='KES') val*=globalFxExchangeRate;
+                    if (t.baseCurrencyCode==='KES' && appGlobalCurrencyUnit==='USD') val/=globalFxExchangeRate;
+                    node.innerText = `${sym}${val.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}`;
+                }
+            });
+        }
+
+        function executeCashoutLiquidationPipeline(ticketId) {
+            const idx = historicalTransactionsLedgerArchive.findIndex(t=>t.ticketId===ticketId);
+            if (idx===-1) return;
+            const t = historicalTransactionsLedgerArchive[idx];
+            if (t.status!=='OPEN') return;
+            let val = t.liveCashoutEvaluationPrice;
+            if (t.baseCurrencyCode==='USD' && appGlobalCurrencyUnit==='KES') localUserWalletLedgerFunds += val*globalFxExchangeRate;
+            else if (t.baseCurrencyCode==='KES' && appGlobalCurrencyUnit==='USD') localUserWalletLedgerFunds += val/globalFxExchangeRate;
+            else localUserWalletLedgerFunds += val;
+            t.status='CASHED_OUT';
+            redrawUserWalletLedgerHeader();
+            redrawHistoricalTransactionArchivePanel();
+            dispatchSystemNotificationToast("Cashed out! Funds added.", "success");
+        }
+
+        function redrawHistoricalTransactionArchivePanel() {
+            const wrap = document.getElementById('viewModuleWrapper-history');
+            wrap.querySelectorAll('.transaction-ledger-card').forEach(c=>c.remove());
+            if (!historicalTransactionsLedgerArchive.length) {
+                wrap.innerHTML = `<div id="historyEmptyPlaceholder" class="text-center py-10 text-slate-600 text-[10px] flex flex-col items-center"><i class="fa-solid fa-box-open block text-xl mb-1.5 opacity-30"></i>No transactions yet.</div>`;
+                return;
+            }
+            const ph = document.getElementById('historyEmptyPlaceholder'); if (ph) ph.remove();
+            historicalTransactionsLedgerArchive.forEach(t => {
+                const card = document.createElement('div');
+                card.className = "transaction-ledger-card bg-[#111726] p-2.5 rounded-xl border border-slate-800 text-[10px] space-y-1.5 shadow-xl animate-fadeIn tilt-card";
+                const sym = t.baseCurrencyCode==='USD'?'$':'KSh ';
+                const dispSym = appGlobalCurrencyUnit==='USD'?'$':'KSh ';
+                let ls=t.stakeValue, lp=t.stakeValue*t.oddsMultiplierValue, lc=t.liveCashoutEvaluationPrice;
+                if (t.baseCurrencyCode==='USD' && appGlobalCurrencyUnit==='KES') { ls*=globalFxExchangeRate; lp*=globalFxExchangeRate; lc*=globalFxExchangeRate; }
+                if (t.baseCurrencyCode==='KES' && appGlobalCurrencyUnit==='USD') { ls/=globalFxExchangeRate; lp/=globalFxExchangeRate; lc/=globalFxExchangeRate; }
+                let legs = '';
+                t.legsArraySnapshot.forEach(l => { legs += `<div class="border-l-2 border-slate-700 pl-1.5 py-0.5 my-0.5 text-[9px]"><p class="font-black text-slate-200 truncate">${l.lineLabel}</p><p class="text-slate-500 font-bold truncate">${l.matchLabel}</p></div>`; });
+                const closed = t.status==='CASHED_OUT';
+                card.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-slate-800/80 pb-1">
+                        <span class="text-[7px] font-mono font-black tracking-widest bg-slate-950 text-slate-400 px-1 py-0.5 rounded border border-slate-800 uppercase">${t.legsArraySnapshot.length}-Fold</span>
+                        <span class="text-[8px] font-mono text-slate-500 font-bold">${t.timestamp}</span>
+                    </div>
+                    <div class="py-0.5">${legs}</div>
+                    <div class="grid grid-cols-2 gap-1 text-[8px] bg-slate-950/60 p-1.5 rounded-lg border border-slate-850 font-mono">
+                        <div><p class="text-slate-500 font-black uppercase text-[6px]">Stake</p><p class="text-slate-300 font-black mt-0.5">${dispSym}${ls.toLocaleString(undefined,{maximumFractionDigits:0})}</p></div>
+                        <div class="text-right"><p class="text-slate-500 font-black uppercase text-[6px]">Return</p><p class="text-emerald-400 font-black mt-0.5">${dispSym}${lp.toLocaleString(undefined,{maximumFractionDigits:0})}</p></div>
+                    </div>
+                    <div class="pt-0.5">${closed
+                        ? `<div class="w-full bg-slate-900 text-slate-500 text-center py-1 rounded-lg text-[8px] font-mono font-black uppercase tracking-widest border border-slate-850"><i class="fa-solid fa-circle-dollar-to-slot mr-1"></i> Cashed Out</div>`
+                        : `<button onclick="executeCashoutLiquidationPipeline('${t.ticketId}')" class="w-full bg-gradient-to-r from-amber-500/10 to-orange-500/10 hover:from-amber-500 hover:to-orange-500 hover:text-slate-950 text-amber-400 font-black py-1 px-2 rounded-lg border border-amber-500/20 hover:border-transparent transition-all flex items-center justify-between font-mono text-[9px] shadow-sm active:scale-[0.98]"><span class="uppercase tracking-wider font-sans text-[8px]"><i class="fa-solid fa-coins mr-1"></i> Cash Out</span><span id="cashoutBtnVal-${t.ticketId}" class="font-black text-[9px]">${dispSym}${lc.toLocaleString(undefined,{maximumFractionDigits:0})}</span></button>`}
+                    </div>`;
+                wrap.appendChild(card);
+            });
+        }
+
+        // ============================================================
+        // PANEL TABS
+        // ============================================================
+        function toggleRightPaneViewTab(key) {
+            const slip = document.getElementById('viewModuleWrapper-slip');
+            const hist = document.getElementById('viewModuleWrapper-history');
+            const btnSlip = document.getElementById('paneTabCtrl-slip');
+            const btnHist = document.getElementById('paneTabCtrl-history');
+            if (key==='slip') {
+                slip.className='block'; hist.className='hidden';
+                btnSlip.className="flex-1 text-center py-2 font-black text-[10px] border-b-2 border-emerald-400 text-emerald-400 transition-all uppercase tracking-wider bg-slate-900/10";
+                btnHist.className="flex-1 text-center py-2 font-bold text-[10px] border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-all uppercase tracking-wider";
+            } else {
+                slip.className='hidden'; hist.className='block';
+                btnSlip.className="flex-1 text-center py-2 font-bold text-[10px] border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-all uppercase tracking-wider";
+                btnHist.className="flex-1 text-center py-2 font-black text-[10px] border-b-2 border-emerald-400 text-emerald-400 transition-all uppercase tracking-wider bg-slate-900/10";
+                redrawHistoricalTransactionArchivePanel();
+            }
+        }
+
+        function syncInteractiveOddsButtonsActiveVisualStates() {
+            document.querySelectorAll('.odds-btn').forEach(btn => {
+                if (!btn.classList.contains('odds-flash-up') && !btn.classList.contains('odds-flash-down'))
+                    btn.className = "odds-btn bg-[#070b14] hover:bg-[#151d30] border border-slate-800 px-1 py-1.5 rounded-lg transition-all text-center flex flex-col justify-center items-center group relative overflow-hidden";
+            });
+            selectedWagerSelectionsCollection.forEach(item => {
+                const node = document.getElementById(`oddsBtnNode-${item.gameId}-${item.marketKey}`);
+                if (node) node.className = "odds-btn bg-emerald-500/10 border-2 border-emerald-500 px-1 py-1.5 rounded-lg transition-all text-center flex flex-col justify-center items-center relative overflow-hidden shadow-md shadow-emerald-500/5 ring-1 ring-emerald-500/10";
+            });
+        }
+
+        function escapeStr(s) {
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'\\\'');
+        }
+
+        // ============================================================
+        // MOBILE PANELS
+        // ============================================================
+        function openSlidePanel(side) {
+            const ov = document.getElementById('mobileOverlay');
+            ov.classList.remove('hidden');
+            if (side==='left') document.getElementById('leftSidebarPanel').classList.add('open');
+            if (side==='right') document.getElementById('rightSidebarPanel').classList.add('open');
+        }
+        function closeAllSlidePanels() {
+            document.getElementById('leftSidebarPanel').classList.remove('open');
+            document.getElementById('rightSidebarPanel').classList.remove('open');
+            document.getElementById('mobileOverlay').classList.add('hidden');
+        }
+        function toggleRightPanel(which) {
+            if (window.innerWidth>=769) return;
+            const panel = document.getElementById('rightSidebarPanel');
+            if (panel.classList.contains('open')) { closeAllSlidePanels(); return; }
+            openSlidePanel('right');
+            if (which==='history') toggleRightPaneViewTab('history');
+            else toggleRightPaneViewTab('slip');
+        }
+        function mobileNavAction(tab) {
+            document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.remove('active'));
+            document.querySelector(`.bottom-nav button[data-tab="${tab}"]`).classList.add('active');
+            if (tab==='game') { closeAllSlidePanels(); window.scrollTo({top:0,behavior:'smooth'}); }
+            if (tab==='sports') { openSlidePanel('left'); }
+            if (tab==='slip') { openSlidePanel('right'); toggleRightPaneViewTab('slip'); }
+            if (tab==='history') { openSlidePanel('right'); toggleRightPaneViewTab('history'); }
+            if (tab==='live') { currentSportFilterCategory='all'; document.getElementById('liveOnlyFilter').checked=true; executeDataFiltersAndRedraw(); closeAllSlidePanels(); document.getElementById('globalOmniSearchInput').value=''; }
+        }
+    </script>
+</body>
+</html>

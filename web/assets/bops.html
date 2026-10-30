@@ -1,0 +1,1123 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0B1220"><title>Ops Grid — Nairobi Works Group</title>
+<link rel="manifest" href='data:application/manifest+json,{"name":"Ops Grid","short_name":"OpsGrid","start_url":".","display":"standalone","background_color":"%230B1220","theme_color":"%230B1220"}'>
+<style>
+:root{color-scheme:dark;--bg:#0B1220;--panel:#111A2E;--panel-2:#16203A;--border:#223055;--text:#EAF0FF;--muted:#8A96B8;--gridline:#1C2946;--primary:#2F6BFF;--accent:#00D0B0;--success:#0FB87A;--warning:#F2A30F;--danger:#E5484D;--info:#6E8AFF;--chart-1:#2F6BFF;--chart-2:#00D0B0;--chart-3:#F2A30F;--chart-4:#A06BFF;--chart-5:#E5484D;--hero-grad:linear-gradient(135deg,#2F6BFF 0%,#4F8BFF 50%,#00D0B0 100%);--shadow:0 8px 24px rgba(0,0,0,.2)}
+html[data-theme=light]{color-scheme:light;--bg:#F4F6FB;--panel:#FFF;--panel-2:#EEF2FA;--border:#DCE2EE;--text:#0B1220;--muted:#5E6A88;--gridline:#E4E9F3;--accent:#008F7B;--info:#536FE8;--shadow:0 8px 24px rgba(11,18,32,.08)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums slashed-zero}button,input,select,textarea{font:inherit}button{cursor:pointer;min-height:42px;border:1px solid var(--border);border-radius:8px;background:var(--panel-2);color:var(--text);padding:9px 12px}button:hover{border-color:var(--primary)}button.primary{background:var(--primary);border-color:var(--primary);color:white;font-weight:650}button.danger{border-color:var(--danger);color:var(--danger)}input,select,textarea{width:100%;min-height:44px;padding:10px 11px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:16px}label{display:grid;gap:5px;color:var(--muted);font-size:12px}h1,h2,h3,p{margin-top:0}h1,h2,h3{letter-spacing:-.015em}h1{font-size:25px;margin-bottom:4px}h2{font-size:18px}h3{font-size:14px}.muted,.subtle{color:var(--muted)}.small{font-size:12px}.money{font-variant-numeric:tabular-nums slashed-zero;white-space:nowrap}.chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--border);border-radius:999px;padding:4px 8px;font-size:11px;color:var(--muted)}.chip.good{color:var(--success)}.chip.warn{color:var(--warning)}.chip.bad{color:var(--danger)}.live-dot{width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block;box-shadow:0 0 0 0 color-mix(in srgb,var(--success),transparent 55%);animation:pulse 1.8s infinite}@keyframes pulse{70%{box-shadow:0 0 0 7px transparent}}.app{min-height:100vh}.sidebar{position:fixed;inset:0 auto 0 0;width:232px;background:var(--panel);border-right:1px solid var(--border);padding:18px 12px;display:flex;flex-direction:column;gap:18px;z-index:10}.brand{display:flex;align-items:center;gap:10px;padding:4px 8px;font-weight:700}.mark{width:30px;height:30px;display:grid;gap:3px;align-content:center;padding:5px;border-radius:8px;background:var(--panel-2)}.mark i{display:block;height:4px;border-radius:3px;background:var(--primary)}.mark i:nth-child(2){width:75%;background:var(--accent)}.mark i:nth-child(3){width:50%}.nav{display:grid;gap:4px;overflow:auto}.nav button{display:flex;align-items:center;gap:11px;text-align:left;border-color:transparent;background:transparent;min-height:40px;color:var(--muted)}.nav button.active{color:var(--text);background:var(--panel-2);border-left:3px solid var(--primary);padding-left:9px}.nav .nav-icon{width:19px;text-align:center;font-size:17px}.sidebar-bottom{margin-top:auto;display:grid;gap:8px}.main{margin-left:232px;min-height:100vh}.topbar{height:62px;position:sticky;top:0;z-index:8;background:color-mix(in srgb,var(--bg),transparent 8%);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:0 22px}.topbar .page-name{font-weight:700;font-size:16px;margin-right:auto}.topbar select{width:auto;min-width:140px;font-size:13px;min-height:38px}.content{padding:22px;max-width:1700px;margin:auto}.headrow{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}.actions{display:flex;gap:8px;flex-wrap:wrap}.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}.panel{min-width:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px;box-shadow:0 1px 0 var(--border)}.span-3{grid-column:span 3}.span-4{grid-column:span 4}.span-5{grid-column:span 5}.span-6{grid-column:span 6}.span-7{grid-column:span 7}.span-8{grid-column:span 8}.span-12{grid-column:span 12}.kpi{font-size:25px;font-weight:700;letter-spacing:-.03em;margin:7px 0}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}.panel-head h3{margin:0}.chart{width:100%;min-width:0;cursor:pointer;display:block;overflow:visible}.chart text{font-family:system-ui,sans-serif;font-variant-numeric:tabular-nums slashed-zero}.chart .gridline{stroke:var(--gridline);stroke-width:1}.chart .axis{fill:var(--muted);font-size:10px}.chart .series{stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}.chart .barshape{stroke:none}.chart .point{stroke:var(--panel);stroke-width:2;cursor:pointer}.chart-legend{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:6px}.legend-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px}.spark{width:100%;height:30px}.table-wrap{width:100%;overflow:visible}table{border-collapse:collapse;width:100%;font-size:13px}th{text-align:left;color:var(--muted);font-weight:550;font-size:11px;text-transform:uppercase;letter-spacing:.04em;background:var(--panel);position:sticky;top:62px}th,td{padding:11px 9px;border-bottom:1px solid var(--border);vertical-align:top}tbody tr{cursor:pointer}tbody tr:hover{background:var(--panel-2)}.row-actions{display:flex;gap:5px;flex-wrap:wrap}.empty{padding:28px;text-align:center;color:var(--muted)}.badge{font-size:10px;border-radius:999px;padding:4px 7px;background:var(--panel-2);color:var(--muted);white-space:nowrap}.badge.success{color:var(--success)}.badge.warning{color:var(--warning)}.badge.danger{color:var(--danger)}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.form-grid .wide{grid-column:1/-1}.stack{display:grid;gap:10px}.list-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}.list-row:last-child{border-bottom:0}.timeline{display:grid;gap:10px}.timeline-item{border-left:3px solid var(--warning);padding:10px 12px;background:var(--panel-2);border-radius:0 8px 8px 0}.timeline-item.danger{border-color:var(--danger)}.timeline-item.good{border-color:var(--success)}.avatar{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--panel-2);border:1px solid var(--border);font-weight:700}.staff-strip{display:flex;gap:14px;overflow:auto;padding:4px 0}.staff-chip{min-width:95px;display:grid;justify-items:center;gap:5px;text-align:center;font-size:11px}.segmented{display:inline-flex;background:var(--panel-2);border:1px solid var(--border);border-radius:9px;padding:3px;gap:3px}.segmented button{border:0;background:transparent;min-height:34px;padding:6px 13px}.segmented button.active{background:var(--primary);color:white}.hero{background:var(--hero-grad);border:0;color:white;padding:22px;box-shadow:var(--shadow)}.hero .subtle{color:rgba(255,255,255,.82)}.hero .kpi{font-size:32px}.hero .chip{color:white;border-color:#ffffff70;background:#ffffff18}.mobile-only{display:none}.desktop-only{display:block}.bottom-nav{display:none}.fab-wrap{display:none}.sheet-backdrop{position:fixed;inset:0;background:#020612a8;z-index:30;display:flex;justify-content:flex-end}.sheet{width:min(500px,100%);height:100%;background:var(--panel);border-left:1px solid var(--border);padding:22px;overflow:auto;box-shadow:var(--shadow)}.sheet.full{width:100%;height:100%;border:0}.sheet-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}.handle{display:none}.toast-area{position:fixed;right:18px;bottom:18px;z-index:70;display:grid;gap:8px}.toast{background:var(--panel-2);border:1px solid var(--border);padding:12px 15px;border-radius:9px;box-shadow:var(--shadow);max-width:340px}.quick-menu{position:fixed;right:18px;bottom:100px;z-index:22;display:grid;gap:8px}.quick-menu button{box-shadow:var(--shadow);background:var(--panel)}.hidden{display:none!important}.login-screen{position:fixed;inset:0;z-index:100;background:var(--bg);display:grid;place-items:center;padding:20px}.login-box{width:min(420px,100%);padding:26px;background:var(--panel);border:1px solid var(--border);border-radius:14px}.login-box .brand{padding:0 0 20px}.login-box .stack{gap:14px}.receipt{background:#fff!important;color:#000!important;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;padding:20px;max-width:420px;margin:auto}.receipt *{color:#000!important}.receipt hr{border:0;border-top:1px dashed #888}.notice{padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--panel-2);color:var(--muted)}.danger-text{color:var(--danger)}.mobile-chart-row{display:contents}
+@media(max-width:1100px){.sidebar{width:68px;padding:14px 8px}.brand{justify-content:center;padding:4px}.brand-name,.nav-label,.sidebar-bottom .hide-collapse{display:none}.nav button{justify-content:center;padding:8px}.nav button.active{padding-left:5px}.main{margin-left:68px}.content{padding:16px}.span-3{grid-column:span 6}.span-4{grid-column:span 6}.span-5,.span-7,.span-8{grid-column:span 6}}
+@media(max-width:760px){body{padding-bottom:calc(72px + env(safe-area-inset-bottom))}.sidebar{display:none}.main{margin:0}.topbar{display:none}.content{padding:16px 14px 30px}.headrow{align-items:flex-start;flex-direction:column}.headrow h1{font-size:23px}.desktop-only{display:none!important}.mobile-only{display:block}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.span-3,.span-4,.span-5,.span-6,.span-7,.span-8{grid-column:span 2}.span-12{grid-column:span 2}.panel{padding:13px}.kpi{font-size:22px}.hero .kpi{font-size:31px}.mobile-chart-scroll{display:flex;overflow-x:auto;gap:12px;scroll-snap-type:x mandatory;padding:2px 0 10px;margin-right:-14px;padding-right:14px}.mobile-chart-scroll .panel{min-width:280px;width:280px;scroll-snap-align:start;flex-shrink:0}.bottom-nav{display:grid;grid-template-columns:repeat(4,1fr);position:fixed;z-index:20;bottom:0;left:0;right:0;padding:8px 8px calc(8px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--panel),transparent 3%);backdrop-filter:blur(14px);border-top:1px solid var(--border)}.bottom-nav button{display:grid;justify-items:center;align-content:center;gap:2px;border:0;background:transparent;min-height:48px;padding:4px;font-size:10px;color:var(--muted)}.bottom-nav button .nav-icon{font-size:18px;transition:transform .18s}.bottom-nav button.active{color:var(--primary)}.bottom-nav button.active .nav-icon{background:var(--primary);color:#fff;border-radius:14px;padding:4px 13px;transform:translateY(-2px)}.fab-wrap{display:block;position:fixed;right:16px;bottom:calc(86px + env(safe-area-inset-bottom));z-index:21}.fab{width:56px;height:56px;border-radius:50%;background:var(--primary);border:0;color:#fff;font-size:26px;box-shadow:var(--shadow)}.quick-menu{right:16px;bottom:calc(150px + env(safe-area-inset-bottom))}.quick-menu button{min-height:46px}.sheet-backdrop{align-items:flex-end}.sheet,.sheet.full{width:100%;height:min(92dvh,900px);border:1px solid var(--border);border-radius:18px 18px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom));}.sheet.full{height:100dvh;border-radius:0}.handle{display:block;width:38px;height:4px;border-radius:9px;background:var(--muted);opacity:.55;margin:0 auto 14px}.sheet-head{margin-bottom:14px}.form-grid{grid-template-columns:1fr}.form-grid .wide{grid-column:auto}table,tbody,tr,td{display:block;width:100%}thead{display:none}tbody{display:grid;gap:9px}tbody tr{border:1px solid var(--border);border-radius:9px;padding:7px 10px;background:var(--panel)}td{display:flex;justify-content:space-between;gap:12px;border:0;padding:6px 0;text-align:right;overflow-wrap:anywhere}td:before{content:attr(data-label);color:var(--muted);font-size:11px;text-align:left;flex:0 0 38%;text-transform:uppercase;letter-spacing:.03em}td .row-actions{justify-content:flex-end}.table-wrap{overflow:visible}.toast-area{left:12px;right:12px;bottom:calc(82px + env(safe-area-inset-bottom))}.toast{max-width:none}.staff-strip{margin-right:-12px}.mobile-chart-row{display:block}.content.mobile-home{padding-top:16px}.greeting{margin:14px 0 16px}.greeting h1{font-size:22px}.chart svg{max-width:100%}}
+@media print{body{background:#fff;color:#000}.sidebar,.topbar,.bottom-nav,.fab-wrap,.actions,.no-print{display:none!important}.main{margin:0}.content{padding:0;max-width:none}.panel{box-shadow:none;border:1px solid #ccc;break-inside:avoid;background:#fff;color:#000}.chart{max-height:240px}.muted,.subtle{color:#444}table{font-size:10px}th{position:static;background:#eee;color:#000}td,th{border-color:#ccc}.badge,.chip{color:#000;background:#fff}}
+</style></head>
+<body><div class="app"><aside class="sidebar"><div class="brand"><span class="mark"><i></i><i></i><i></i></span><span class="brand-name" id="brandNameSide">Nairobi Works Group</span></div><nav class="nav" id="sideNav"></nav><div class="sidebar-bottom"><button id="themeBtn" onclick="App.toggleTheme()">◐ <span class="nav-label">Toggle theme</span></button><button id="devNav" class="hidden" onclick="App.navigate('developer')">▣ <span class="nav-label">Developer tools</span></button><div class="small muted hide-collapse" id="storageState">Local device · offline</div></div></aside><main class="main"><header class="topbar"><div class="page-name" id="topTitle">Ops Grid</div><select id="branchSelect" aria-label="Filter branch" onchange="App.setBranch(this.value)"></select><button onclick="App.openCommand()" title="Command palette">⌘K</button><button onclick="App.navigate('automations')"><span class="live-dot"></span> <span id="topAlertCount">Pulse</span></button><span class="chip">LOCAL</span><button onclick="App.openSheet('Notifications',App.notificationsHTML())">♧</button></header><section class="content" id="content"></section></main></div>
+<nav class="bottom-nav" id="bottomNav"></nav><div class="fab-wrap" id="fabWrap"><button class="fab" aria-label="Quick actions" onclick="App.toggleQuick()">＋</button></div><div id="quickMenu" class="quick-menu hidden"></div><div id="sheetRoot"></div><div class="toast-area" id="toasts" aria-live="polite"></div><div id="loginRoot" class="login-screen"></div>
+<script>
+'use strict';
+
+/* ============================= UTILITIES ============================= */
+const UTIL={
+  id:(p='id')=>p+'_'+Math.random().toString(36).slice(2,9),
+  now:()=>new Date().toISOString(),
+  day:(d=new Date())=>d.toISOString().slice(0,10),
+  fmtDate:(s)=>new Date(s).toLocaleDateString('en-KE',{day:'2-digit',month:'short',year:'numeric'}),
+  fmtTime:(s)=>new Date(s).toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'}),
+  money:(minor)=>'KSh '+(Math.round(Number(minor)||0)/100).toLocaleString('en-KE',{minimumFractionDigits:2,maximumFractionDigits:2}),
+  num:(n)=>Math.round(n||0).toLocaleString('en-KE'),
+  escape:(s)=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),
+  phone:(s)=>{let n=String(s||'').replace(/\D/g,'');if(n.startsWith('0'))n='254'+n.slice(1);if(n.startsWith('7')||n.startsWith('1'))n='254'+n;return n?'+'+n:''},
+  dateAgo:(days)=>{let d=new Date();d.setDate(d.getDate()-days);return d.toISOString()},
+  download:(name,text,type='text/csv;charset=utf-8;')=>{let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)},
+  csv:(rows)=>'\uFEFF'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n'),
+  wa:(text)=>'https://wa.me/?text='+encodeURIComponent(text),
+  ageDays:(iso)=>iso?(Date.now()-new Date(iso).getTime())/86400000:9999,
+  isToday:(iso)=>String(iso||'').slice(0,10)===UTIL.day()
+};
+
+/* ============================= STORAGE ============================= */
+const STORAGE={
+  key:'opsgrid.v2',
+  load(){try{return JSON.parse(localStorage.getItem(this.key)||'null')}catch(e){return null}},
+  save(){try{localStorage.setItem(this.key,JSON.stringify(DB));const s=document.getElementById('storageState');if(s)s.textContent='Saved · '+new Date().toLocaleTimeString()}catch(e){const s=document.getElementById('storageState');if(s)s.textContent='Session only · storage unavailable'}},
+  clear(){localStorage.removeItem(this.key)}
+};
+
+/* ============================= ADAPTER STUBS ============================= */
+const SYNC={
+  isConfigured(){return false},
+  init(){throw Error('Sync adapter not configured')},
+  push(){throw Error('Sync adapter not configured')},
+  pull(){throw Error('Sync adapter not configured')}
+};
+const MPESA={
+  isConfigured(){return false},
+  stkPush(){throw Error('M-Pesa Daraja not configured')},
+  queryStatus(){throw Error('M-Pesa Daraja not configured')},
+  parseSms(sms){
+    if(!/^[A-Z0-9]{10}\s+Confirmed/i.test(sms))return null;
+    const code=(sms.match(/^([A-Z0-9]{10})/)||[])[1];
+    const amt=(sms.match(/Ksh([\d,\.]+)/i)||sms.match(/Ksh\s*([\d,\.]+)/i)||[])[1];
+    const name=(sms.match(/from\s+(.+?)\s+on/i)||[])[1];
+    if(!code)return null;
+    return {code,amountMinor:amt?Math.round(parseFloat(amt.replace(/,/g,''))*100):0,payer:name||''};
+  }
+};
+const ETIMS={
+  isConfigured(){return false},
+  transmit(invoice){throw Error('eTIMS device not configured');return invoice}
+};
+
+/* ============================= RBAC ============================= */
+const RBAC={
+  matrix:{
+    owner:['view','sale','refund','expense','inventory','transfer','till','settings','staff','supplier','customer','automation','report','backup','credit','developer'],
+    ops_manager:['view','sale','refund','expense','inventory','transfer','till','staff','supplier','customer','automation','report','backup','credit'],
+    branch_manager:['view','sale','refund','expense','inventory','transfer','till','staff','customer','report','credit'],
+    cashier:['view','sale','till','customer'],
+    storekeeper:['view','inventory','transfer','supplier'],
+    developer:['view','developer','backup','report','automation']
+  },
+  can(role,action){return (this.matrix[role]||[]).includes(action)}
+};
+
+/* ============================= BRANCH CONTEXT ============================= */
+const BranchContext={
+  selectedBranchId:'all',
+  set(id){this.selectedBranchId=id;try{sessionStorage.setItem('opsgrid.branch',id)}catch(e){}App.render()},
+  get(){return this.selectedBranchId}
+};
+
+/* ============================= SAMPLE DATA ============================= */
+let DB=STORAGE.load()||null;
+
+const sampleDB=()=>{
+  const branches=['Westlands','Kilimani','Karen','Mombasa Road','Nakuru CBD'].map((name,i)=>({id:'b'+(i+1),name,address:['Westlands, Nairobi','Kilimani, Nairobi','Karen, Nairobi','Mombasa Road, Nairobi','Nakuru CBD'][i],county:['Nairobi','Nairobi','Nairobi','Nairobi','Nakuru'][i],phone:'+25470000000'+i,active:true,managerId:'s'+(i+2),barcode:'BR-'+(i+1),kraPin:'P05'+(1000+i)+'X'}))
+
+  const staffNames=[['Amina Hassan','owner',0],['David Kiprop','ops_manager',0],['Mary Njoki','branch_manager',0],['Peter Mwangi','cashier',1],['Grace Wanjiru','storekeeper',2],['Brian Otieno','cashier',3],['Sarah Wambui','branch_manager',4]];
+  const staff=staffNames.map((x,i)=>({id:'s'+(i+1),name:x[0],role:x[1],branchId:'b'+(x[2]+1),phone:'+2547'+(10000000+i),badge:'EMP-'+String(i+1).padStart(3,'0'),pin:String(1000+i),active:true,hourlyRateMinor:45000}));
+
+  const pn=[['Filter Coffee 250g',85000,'Coffee','0901.21.00'],['Ceramic Mug',120000,'Homeware','6912.00.00'],['Notebook A5',45000,'Stationery','4820.10.00'],['Pen Pack (5)',35000,'Stationery','9608.10.00'],['Reusable Tote',50000,'Accessories','4202.92.00'],['Gift Card — 2,000',200000,'Gift cards','—'],['Cold Brew Bottle',60000,'Coffee','2101.12.00'],['Pastry Box',90000,'Food','1905.90.00'],['Enamel Pin',30000,'Accessories','7117.19.00'],['Postcard Set',70000,'Stationery','4911.10.00']];
+  const products=pn.map((p,i)=>({id:'p'+(i+1),name:p[0],sku:'NWG-'+String(i+1).padStart(3,'0'),barcode:'600100000'+String(i+1).padStart(3,'0'),category:p[2],hsCode:p[3],uom:'pcs',priceMinor:p[1],costMinor:Math.round(p[1]*.58),active:true,expiryManaged:i===7,vatCode:'B'}));
+
+  const inventory=[];
+  branches.forEach((b,bi)=>products.forEach((p,pi)=>inventory.push({id:'i'+bi+'_'+pi,productId:p.id,branchId:b.id,qty:[7,12,24,3,18,6,9,5,31,11][(pi+bi*2)%10],threshold:8,updatedAt:UTIL.now()})));
+
+  const suppliers=[
+    ['Kenya Coffee Traders','+254712345601','Coffee',0,'P051111222A'],
+    ['Nairobi Merch Co.','+254712345602','Merchandise',320000,'P052222333B'],
+    ['Coast Print Works','+254712345603','Printing',185000,'P053333444C']
+  ].map((s,i)=>({id:'sup'+i,name:s[0],phone:s[1],category:s[2],balanceMinor:s[3],kraPin:s[4]}));
+
+  const customers=['Njeri Muthoni','Hassan Ali','Fatuma Noor','Kevin Kimani','Wairimu Kariuki'].map((n,i)=>({id:'c'+i,name:n,phone:'+2547'+(20000000+i),branchId:branches[i%5].id,points:i*20,creditMinor:i===1?450000:0,kraPin:i===1?'P059999888Z':'',customerType:i===1?'business':'individual',county:'Nairobi'}));
+
+  const sales=[];
+  // Seed 15 sales TODAY so KPIs are meaningful
+  for(let i=0;i<15;i++){
+    const bi=i%5, pi=(i*3)%products.length, qty=1+(i%3);
+    const dt=new Date(); dt.setHours(8+(i%10),(i*7)%60,0,0);
+    const total=products[pi].priceMinor*qty;
+    sales.push({
+      id:'saleT'+i, number:'NWG-'+String(1001+i), branchId:branches[bi].id, tillId:'t'+(bi+1),
+      cashierId:staff[(i%5)+2].id,
+      lines:[{productId:products[pi].id,qty,unitPriceMinor:products[pi].priceMinor}],
+      subtotalMinor:total, vatMinor:Math.round(total*16/116), discountMinor:0, totalMinor:total,
+      payments:[{method:['cash','mpesa','card'][i%3],amountMinor:total,reference:i%3===1?'QGH7XK2LM'+i:''}],
+      at:dt.toISOString(), status:'completed', sample:true
+    });
+  }
+  // Historical sample sales
+  for(let i=0;i<40;i++){
+    const bi=i%5, pi=(i*3)%products.length, qty=1+(i%3);
+    const dt=new Date(); dt.setDate(dt.getDate()-(i%14)-1); dt.setHours(8+(i%10),(i*7)%60,0,0);
+    const total=products[pi].priceMinor*qty;
+    sales.push({
+      id:'saleH'+i, number:'NWG-'+String(1100+i), branchId:branches[bi].id, tillId:'t'+(bi+1),
+      cashierId:staff[(i%5)+2].id,
+      lines:[{productId:products[pi].id,qty,unitPriceMinor:products[pi].priceMinor}],
+      subtotalMinor:total, vatMinor:Math.round(total*16/116), discountMinor:0, totalMinor:total,
+      payments:i===12
+        ? [{method:'cash',amountMinor:Math.floor(total/2),reference:''},{method:'mpesa',amountMinor:total-Math.floor(total/2),reference:'QGH7XK2LMN'}]
+        : [{method:['cash','mpesa','card'][i%3],amountMinor:total,reference:i%3===1?'QGH7XK2LMN':''}],
+      at:dt.toISOString(), status:(i===9?'refunded':i===21?'voided':'completed'), sample:true
+    });
+  }
+
+  // Seed one closed till with variance so the alert fires
+  const tills=branches.map((b,i)=>({
+    id:'t'+(i+1),branchId:b.id,openedBy:staff[i%staff.length].id,openedAt:UTIL.dateAgo(1),
+    closedAt:i===0?UTIL.dateAgo(1):null,floatMinor:500000,
+    expectedCashMinor:i===0?250000:0,countedCashMinor:i===0?245000:0,
+    varianceMinor:i===0?-5000:0,status:i===0?'closed':'open',barcode:'TILL-'+(i+1)
+  }));
+
+  const expenses=[];
+  ['Rent','Utilities','Supplies','Transport','Marketing'].forEach((cat,i)=>expenses.push({
+    id:'e'+i,branchId:branches[i].id,category:cat,
+    amountMinor:[8500000,650000,420000,230000,310000][i],
+    paidBy:staff[i].id,receiptRef:'EXP-'+(i+1),at:UTIL.dateAgo(i),
+    notes:'Sample operating expense',sample:true,
+    etrReceiptNo:'ETR-'+(100+i),supplierPin:'P051234567X',vatInputMinor:Math.round([8500000,650000,420000,230000,310000][i]*16/116)
+  }));
+  // A couple of today's expenses
+  expenses.push({id:'e_today',branchId:'b1',category:'Supplies',amountMinor:150000,paidBy:'s3',receiptRef:'EXP-T1',at:new Date().toISOString(),notes:'Airtime + courier',sample:true,vatInputMinor:20690});
+
+  const creditNotes=[{id:'cr1',customerId:'c1',branchId:'b2',amountMinor:450000,paidMinor:0,dueDate:UTIL.day(new Date(Date.now()-86400000*5)),status:'overdue',reason:'Damaged goods return',saleRef:'NWG-1010'}];
+
+  const transfers=[{id:'tr1',fromBranchId:'b1',toBranchId:'b3',status:'in_transit',barcode:'TR-001',lines:[{productId:'p1',qty:3}],dispatchedAt:UTIL.dateAgo(2),receivedAt:null}];
+
+  const invoices=[];
+  // Seed a couple of invoices
+  invoices.push({
+    id:'inv1',number:'INV-2025-0001',saleId:'saleT1',customerId:'c1',branchId:'b2',
+    lines:[{productId:'p1',qty:2,unitPriceMinor:85000}],
+    subtotalMinor:170000,vatMinor:Math.round(170000*16/116),totalMinor:170000,
+    issuedAt:UTIL.dateAgo(3),dueDate:UTIL.day(new Date(Date.now()+7*86400000)),
+    status:'sent',etimsStatus:'pending',kraPin:'P051111222A'
+  });
+
+  return {
+    settings:{
+      businessName:'Nairobi Works Group',kraPin:'P051234567X',vatNumber:'VAT-0512345',
+      vatRate:16,receiptFooter:'Asante! Karibu tena',
+      theme:'dark',openingHours:{start:8,end:20},mode:'Local',
+      etimsEnv:'sandbox',etimsDeviceId:'',
+      mpesaTill:'123456',mpesaPaybill:'400200',
+      featureFlags:{automation:true,barcode:true,charts:true}
+    },
+    branches,staff,products,inventory,sales,tills,expenses,suppliers,customers,creditNotes,
+    transfers,purchaseOrders:[],invoices,
+    shiftLogs:staff.slice(2).map((s,i)=>({id:'sh'+i,staffId:s.id,branchId:s.branchId,direction:'in',at:UTIL.now(),source:'manual'})),
+    audit:[],automationHistory:[],
+    sequence:{sale:1140,till:6,invoice:1,po:1},
+    lastExportAt:null,
+    featureFlags:{charts:true,automation:true,barcode:true}
+  };
+};
+
+if(!DB){DB=sampleDB();STORAGE.save()}
+// Merge defaults for legacy stored data
+(function ensureShape(){
+  const ref=sampleDB();
+  DB.settings=Object.assign({},ref.settings,DB.settings||{});
+  DB.sequence=Object.assign({},ref.sequence,DB.sequence||{});
+  DB.featureFlags=Object.assign({},ref.featureFlags,DB.featureFlags||{});
+  ['branches','staff','products','inventory','sales','tills','expenses','suppliers','customers','creditNotes','transfers','purchaseOrders','invoices','shiftLogs','audit','automationHistory'].forEach(k=>{if(!Array.isArray(DB[k]))DB[k]=ref[k]});
+})();
+
+/* ============================= CHARTS ============================= */
+const Charts={
+  colors:['var(--chart-1)','var(--chart-2)','var(--chart-3)','var(--chart-4)','var(--chart-5)'],
+  // Format a value (in minor units) for axis: KSh thousands
+  axisFmt:(minor)=>minor>=100000?Math.round(minor/10000)/10+'k':String(Math.round(minor/100)),
+  wrap(inner,w=600,h=230,extra=''){return `<svg class="chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Interactive chart" data-chart="1" ${extra}>${inner}</svg>`},
+  spark(vals){const w=180,h=32,max=Math.max(1,...vals),min=Math.min(0,...vals);const pts=vals.map((v,i)=>`${i*(w/(Math.max(1,vals.length-1)))},${h-3-(v-min)/(max-min||1)*(h-8)}`).join(' ');return `<svg class="spark" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="var(--chart-2)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`},
+  line(series,opts={}){const w=opts.w||600,h=opts.h||230,p={l:46,r:14,t:15,b:34},iw=w-p.l-p.r,ih=h-p.t-p.b,all=series.flatMap(s=>s.values),max=Math.max(1,...all)*1.12,min=Math.min(0,...all);const x=i=>p.l+i*iw/(Math.max(1,(series[0]?.values.length||2)-1));const y=v=>p.t+ih-(v-min)/(max-min||1)*ih;let out='';for(let i=0;i<5;i++){const yy=p.t+i*ih/4,val=max-i*(max-min)/4;out+=`<line class="gridline" x1="${p.l}" x2="${w-p.r}" y1="${yy}" y2="${yy}"/><text class="axis" x="${p.l-7}" y="${yy+3}" text-anchor="end">${this.axisFmt(val)}</text>`}const labels=opts.labels||series[0]?.values.map((_,i)=>String(i+1))||[];labels.forEach((lab,i)=>{if(labels.length<10||i%Math.ceil(labels.length/7)===0)out+=`<text class="axis" x="${x(i)}" y="${h-10}" text-anchor="middle">${UTIL.escape(lab)}</text>`});series.forEach((s,si)=>{const points=s.values.map((v,i)=>`${x(i)},${y(v)}`).join(' ');out+=`<polyline class="series" points="${points}" stroke="${this.colors[si%5]}"/>`;s.values.forEach((v,i)=>out+=`<circle class="point" cx="${x(i)}" cy="${y(v)}" r="3.5" fill="${this.colors[si%5]}" tabindex="0" data-tip="${UTIL.escape(s.name)} · ${UTIL.money(v)}"/>`)});return this.wrap(out,w,h)+this.legend(series.map((s,i)=>[s.name,this.colors[i%5]]))},
+  bar(items,opts={}){const w=opts.w||600,h=opts.h||230,p={l:46,r:12,t:12,b:35},iw=w-p.l-p.r,ih=h-p.t-p.b,max=Math.max(1,...items.map(x=>x.value))*1.15,slot=iw/Math.max(items.length,1);let out='';for(let i=0;i<5;i++){const yy=p.t+i*ih/4,val=max-i*max/4;out+=`<line class="gridline" x1="${p.l}" x2="${w-p.r}" y1="${yy}" y2="${yy}"/><text class="axis" x="${p.l-6}" y="${yy+3}" text-anchor="end">${this.axisFmt(val)}</text>`}items.forEach((it,i)=>{const bh=ih*it.value/max,x=p.l+i*slot+slot*.18,y=p.t+ih-bh,bw=slot*.64;out+=`<rect class="barshape" x="${x}" y="${y}" width="${bw}" height="${bh}" rx="3" fill="${this.colors[i%5]}" tabindex="0" data-tip="${UTIL.escape(it.label)} · ${UTIL.money(it.value)}"/><text class="axis" x="${x+bw/2}" y="${h-10}" text-anchor="middle">${UTIL.escape(it.label).slice(0,10)}</text>`});return this.wrap(out,w,h)},
+  hbar(items,opts={}){const w=opts.w||600,h=Math.max(opts.h||220,items.length*31+25),p={l:110,r:40,t:10,b:10},iw=w-p.l-p.r,max=Math.max(1,...items.map(x=>x.value)),slot=(h-p.t-p.b)/Math.max(1,items.length);let out='';items.forEach((it,i)=>{const y=p.t+i*slot+slot*.16,bw=iw*it.value/max,bh=slot*.62;out+=`<text class="axis" x="${p.l-8}" y="${y+bh*.78}" text-anchor="end">${UTIL.escape(it.label).slice(0,17)}</text><rect class="barshape" x="${p.l}" y="${y}" width="${iw}" height="${bh}" rx="3" fill="var(--gridline)"/><rect class="barshape" x="${p.l}" y="${y}" width="${bw}" height="${bh}" rx="3" fill="${this.colors[i%5]}" tabindex="0" data-tip="${UTIL.escape(it.label)} · ${UTIL.num(it.value)}"/><text class="axis" x="${p.l+bw+5}" y="${y+bh*.78}">${UTIL.num(it.value)}</text>`});return this.wrap(out,w,h)},
+  donut(items){const total=items.reduce((s,x)=>s+x.value,0)||1,cx=160,cy=105,r=70,ri=43;
+    let out='';let sum=0;items.forEach((it,i)=>{const end=sum+it.value/total*Math.PI*2,x1=cx+r*Math.cos(sum),y1=cy+r*Math.sin(sum),x2=cx+r*Math.cos(end),y2=cy+r*Math.sin(end),ix1=cx+ri*Math.cos(sum),iy1=cy+ri*Math.sin(sum),ix2=cx+ri*Math.cos(end),iy2=cy+ri*Math.sin(end),large=end-sum>Math.PI?1:0;out+=`<path d="M${x1} ${y1} A${r} ${r} 0 ${large} 1 ${x2} ${y2} L${ix2} ${iy2} A${ri} ${ri} 0 ${large} 0 ${ix1} ${iy1} Z" fill="${this.colors[i%5]}" tabindex="0" data-tip="${UTIL.escape(it.label)} · ${UTIL.money(it.value)} (${Math.round(it.value/total*100)}%)"/>`;sum=end});out+=`<text x="160" y="102" fill="var(--text)" text-anchor="middle" font-size="17" font-weight="700">${UTIL.num(items.reduce((a,x)=>a+x.value,0))}</text><text x="160" y="119" fill="var(--muted)" text-anchor="middle" font-size="10">payments</text>`;return this.wrap(out,320,210)+this.legend(items.map((it,i)=>[it.label,this.colors[i%5]]))},
+  heatmap(data,opts={}){const startHour=opts.startHour||8,endHour=opts.endHour||20,slots=endHour-startHour;const w=600,h=250,p={l:45,t:18,r:10,b:30},cellw=(w-p.l-p.r)/slots,cellh=(h-p.t-p.b)/7,max=Math.max(1,...data);let out='';for(let d=0;d<7;d++){out+=`<text class="axis" x="${p.l-8}" y="${p.t+d*cellh+cellh*.7}" text-anchor="end">${['M','T','W','T','F','S','S'][d]}</text>`;for(let hr=0;hr<slots;hr++){const v=data[d*slots+hr]||0,op=.12+.78*v/max;out+=`<rect x="${p.l+hr*cellw+1}" y="${p.t+d*cellh+1}" width="${cellw-2}" height="${cellh-2}" rx="2" fill="var(--chart-1)" opacity="${op}" tabindex="0" data-tip="${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][d]} · ${hr+startHour}:00 · ${v} sales"/>`}}for(let hr=0;hr<slots;hr+=2)out+=`<text class="axis" x="${p.l+hr*cellw+cellw/2}" y="${h-8}" text-anchor="middle">${hr+startHour}:00</text>`;return this.wrap(out,w,h)},
+  stackedBar(items){const w=600,h=220,p={l:45,r:12,t:15,b:32},iw=w-p.l-p.r,ih=h-p.t-p.b,max=Math.max(1,...items.map(it=>it.values.reduce((a,b)=>a+b,0))),slot=iw/items.length;let out='';for(let j=0;j<5;j++)out+=`<line class="gridline" x1="${p.l}" x2="${w-p.r}" y1="${p.t+j*ih/4}" y2="${p.t+j*ih/4}"/>`;items.forEach((it,i)=>{let y=p.t+ih;it.values.forEach((v,j)=>{const bh=ih*v/max;y-=bh;out+=`<rect x="${p.l+i*slot+slot*.18}" y="${y}" width="${slot*.64}" height="${bh}" fill="${this.colors[j%5]}" tabindex="0" data-tip="${UTIL.escape(it.label)} · ${UTIL.money(v)}"/>`});out+=`<text class="axis" x="${p.l+i*slot+slot/2}" y="${h-9}" text-anchor="middle">${UTIL.escape(it.label).slice(0,10)}</text>`});return this.wrap(out,w,h)},
+  gauge(value,max=100){const pct=Math.max(0,Math.min(1,value/max)),cx=160,cy=135,r=85,start=Math.PI,ex=cx+r*Math.cos(start+pct*Math.PI),ey=cy+r*Math.sin(start+pct*Math.PI);const out=`<path d="M${cx-r} ${cy} A${r} ${r} 0 0 1 ${cx+r} ${cy}" fill="none" stroke="var(--gridline)" stroke-width="15" stroke-linecap="round"/><path d="M${cx-r} ${cy} A${r} ${r} 0 0 1 ${ex} ${ey}" fill="none" stroke="var(--chart-2)" stroke-width="15" stroke-linecap="round"/><text x="${cx}" y="${cy-10}" text-anchor="middle" fill="var(--text)" font-size="26" font-weight="700">${Math.round(pct*100)}%</text><text x="${cx}" y="${cy+12}" text-anchor="middle" fill="var(--muted)" font-size="10">of target</text><text class="axis" x="${cx-r}" y="${cy+18}" text-anchor="middle">0</text><text class="axis" x="${cx+r}" y="${cy+18}" text-anchor="middle">${max}</text>`;return this.wrap(out,320,170)},
+  legend(items){return `<div class="chart-legend">${items.map(([n,c])=>`<span><i class="legend-dot" style="background:${c}"></i>${UTIL.escape(n)}</span>`).join('')}</div>`}
+};
+
+/* ============================= RULES ============================= */
+const RULES=[
+  ['Low stock','Inventory below the branch threshold','Restock or transfer stock'],
+  ['Expiring product','Expiry-managed item within 30 days','Review batch and rotate stock'],
+  ['Till variance','Closed till variance exceeds KES 500','Review cash count and cashier'],
+  ['Credit overdue','Credit note past its due date','Record payment or print reminder'],
+  ['Expense spike','Today exceeds 150% of trailing 14-day average','Review branch expenses'],
+  ['No sales in 30 minutes','No till sale while other branches are active','Check till and branch status'],
+  ['Backup reminder','No JSON export in seven days','Export a local backup'],
+  ['Daily summary','First daily login summary','Review revenue and open alerts'],
+  ['Transfer in transit > 24 hours','Transfer not received after dispatch','Confirm delivery or escalate'],
+  ['Branch staff shortage','Fewer than two staff on shift during opening hours','Review shift coverage'],
+  ['Invoice overdue','Issued invoice past due date','Follow up customer or mark paid'],
+  ['eTIMS pending','Invoice not yet transmitted to eTIMS','Transmit via eTIMS device']
+];
+
+/* ============================= APP ============================= */
+const App={
+  page:'dashboard',role:null,user:null,range:'Today',cart:[],saleFilter:'all',quickOpen:false,cameraStream:null,
+
+  /* ---- Auth ---- */
+  login(){
+    const role=document.getElementById('loginRole').value;
+    const pin=document.getElementById('loginPin').value.trim();
+    const names={owner:'Amina Hassan',ops_manager:'David Kiprop',branch_manager:'Mary Njoki',cashier:'Peter Mwangi',storekeeper:'Grace Wanjiru',developer:'Developer'};
+    const target=role==='developer'?{id:'dev',name:names[role],role,branchId:'b1',pin:'0000'}:DB.staff.find(s=>s.role===role);
+    if(!target){this.toast('No demo user for role');return}
+    if(role!=='developer'&&target.pin&&pin&&pin!==target.pin){this.toast('Wrong demo PIN. Hint shown on login.');return}
+    this.role=role;
+    this.user=role==='developer'?target:DB.staff.find(s=>s.role===role)||{id:'demo',name:names[role],role,branchId:'b1'};
+    try{sessionStorage.setItem('opsgrid.session',JSON.stringify({role,user:this.user,at:Date.now()}))}catch(e){}
+    document.getElementById('loginRoot').classList.add('hidden');
+    this.buildNav();this.render();this.audit('login','session',this.user.id);this.toast('Demo session started · '+role)
+  },
+  restore(){
+    try{const s=JSON.parse(sessionStorage.getItem('opsgrid.session')||'null');if(s&&s.user){this.role=s.role;this.user=s.user;document.getElementById('loginRoot').classList.add('hidden')}}catch(e){}
+    try{BranchContext.selectedBranchId=sessionStorage.getItem('opsgrid.branch')||'all'}catch(e){}
+  },
+  logout(){try{sessionStorage.removeItem('opsgrid.session')}catch(e){}this.role=null;this.user=null;document.getElementById('loginRoot').classList.remove('hidden');this.showLogin();this.toast('Signed out')},
+  showLogin(){
+    document.getElementById('loginRoot').innerHTML=`<div class="login-box"><div class="brand"><span class="mark"><i></i><i></i><i></i></span><span>${UTIL.escape(DB.settings.businessName)}</span></div><h1>Welcome to Ops Grid</h1><p class="muted">Local demonstration · sample data · no external connection</p><form class="stack" onsubmit="event.preventDefault();App.login()"><label>Demo role<select id="loginRole"><option value="owner">Owner · Amina Hassan (PIN 1000)</option><option value="ops_manager">Operations manager · David Kiprop (PIN 1001)</option><option value="branch_manager">Branch manager · Mary Njoki (PIN 1002)</option><option value="cashier">Cashier · Peter Mwangi (PIN 1003)</option><option value="storekeeper">Storekeeper · Grace Wanjiru (PIN 1004)</option><option value="developer">Developer diagnostics (PIN 0000)</option></select></label><label>PIN (optional in demo)<input id="loginPin" type="password" inputmode="numeric" placeholder="Leave empty to skip"></label><button class="primary" type="submit">Enter command center</button></form><p class="small muted" style="margin:16px 0 0">Demo authentication only — not production-grade. PINs are stored in sample data.</p></div>`
+  },
+
+  /* ---- Nav ---- */
+  buildNav(){
+    const nav=[['dashboard','▦','Ops Grid'],['branches','⌂','Branches'],['sales','↗','Sales'],['invoices','▤','Invoices'],['inventory','▥','Inventory'],['tills','▣','Tills'],['expenses','−','Expenses'],['suppliers','♧','Suppliers'],['customers','♙','Customers'],['staff','♟','Staff'],['automations','◉','Automations'],['reports','▦','Reports'],['settings','⚙','Settings']];
+    if(this.role==='developer')nav.push(['developer','▣','Developer']);
+    const el=document.getElementById('sideNav');
+    if(el)el.innerHTML=nav.map(([id,ic,n])=>`<button data-nav="${id}" onclick="App.navigate('${id}')" class="${this.page===id?'active':''}"><span class="nav-icon">${ic}</span><span class="nav-label">${n}</span></button>`).join('');
+    const mob=[['dashboard','⌂','Home'],['sales','↗','Sales'],['invoices','▤','Invoices'],['automations','◉','Automations']];
+    const bn=document.getElementById('bottomNav');
+    if(bn)bn.innerHTML=mob.map(([id,ic,n])=>`<button class="${this.page===id?'active':''}" onclick="App.navigate('${id}')"><span class="nav-icon">${ic}</span>${n}${id==='automations'&&this.alerts().length?` <b>${this.alerts().length}</b>`:''}</button>`).join('');
+    const dev=document.getElementById('devNav');if(dev)dev.classList.toggle('hidden',this.role!=='developer');
+    const bns=document.getElementById('brandNameSide');if(bns)bns.textContent=DB.settings.businessName;
+    const bs=document.getElementById('branchSelect');
+    if(bs)bs.innerHTML=`<option value="all">All branches</option>`+DB.branches.map(b=>`<option value="${b.id}" ${b.id===BranchContext.get()?'selected':''}>${UTIL.escape(b.name)}</option>`).join('');
+    const tac=document.getElementById('topAlertCount');if(tac)tac.textContent=this.alerts().length+' alerts';
+  },
+  navigate(page){
+    if(page==='developer'&&this.role!=='developer'){this.toast('Not authorised');page='dashboard'}
+    if(page==='settings'&&!RBAC.can(this.role,'settings')&&this.role!=='developer'){this.toast('Not authorised');return}
+    this.page=page;this.buildNav();this.render();this.toggleQuick(false);
+  },
+  setBranch(id){BranchContext.set(id)},
+  setRange(r){this.range=r;this.render()},
+  toggleTheme(){
+    const t=document.documentElement.dataset.theme==='dark'?'light':'dark';
+    document.documentElement.dataset.theme=t;DB.settings.theme=t;STORAGE.save();this.render()
+  },
+
+  /* ---- Domain helpers ---- */
+  branchName(id){return DB.branches.find(b=>b.id===id)?.name||'Unknown'},
+  staffName(id){return DB.staff.find(s=>s.id===id)?.name||'Unknown'},
+  customerName(id){return DB.customers.find(c=>c.id===id)?.name||'Customer'},
+  product(id){return DB.products.find(p=>p.id===id)},
+  branches(){return DB.branches.filter(b=>BranchContext.get()==='all'||b.id===BranchContext.get())},
+  inScope(x){return BranchContext.get()==='all'||x.branchId===BranchContext.get()},
+  sales(){return DB.sales.filter(s=>this.inScope(s))},
+  activeSales(){return this.sales().filter(s=>s.status==='completed')},
+  sumSales(rows){return rows.reduce((s,x)=>s+(x.status==='completed'?x.totalMinor:0),0)},
+  todaySales(){return this.activeSales().filter(s=>UTIL.isToday(s.at))},
+  revenue(){return this.sumSales(this.todaySales())},
+  transactions(){return this.todaySales().length},
+  margin(){return this.todaySales().reduce((sum,s)=>sum+s.lines.reduce((a,l)=>a+(l.unitPriceMinor-(this.product(l.productId)?.costMinor||0))*l.qty,0),0)},
+  inventory(){return DB.inventory.filter(i=>BranchContext.get()==='all'||i.branchId===BranchContext.get())},
+  stockValue(){return this.inventory().reduce((a,i)=>a+(this.product(i.productId)?.costMinor||0)*i.qty,0)},
+  lowStock(){return this.inventory().filter(i=>i.qty<=i.threshold)},
+  invoices(){return DB.invoices.filter(i=>BranchContext.get()==='all'||i.branchId===BranchContext.get())},
+
+  alerts(){
+    const out=[];
+    this.lowStock().forEach(i=>out.push({rule:'Low stock',branchId:i.branchId,detail:this.product(i.productId)?.name+' · '+i.qty+' left',action:'Restock',id:i.id}));
+    DB.tills.filter(t=>t.status==='closed'&&Math.abs(t.varianceMinor)>50000&&this.inScope(t)).forEach(t=>out.push({rule:'Till variance',branchId:t.branchId,detail:this.branchName(t.branchId)+' · '+UTIL.money(t.varianceMinor),action:'Review till',id:t.id}));
+    DB.creditNotes.filter(c=>c.status!=='paid'&&c.dueDate<UTIL.day()&&(BranchContext.get()==='all'||c.branchId===BranchContext.get())).forEach(c=>out.push({rule:'Credit overdue',branchId:c.branchId,detail:this.customerName(c.customerId)+' · '+UTIL.money(c.amountMinor-c.paidMinor),action:'Record payment',id:c.id}));
+    DB.transfers.filter(t=>t.status==='in_transit'&&UTIL.ageDays(t.dispatchedAt)>1&&(BranchContext.get()==='all'||t.fromBranchId===BranchContext.get()||t.toBranchId===BranchContext.get())).forEach(t=>out.push({rule:'Transfer in transit > 24 hours',branchId:t.fromBranchId,detail:t.barcode+' · awaiting receipt',action:'Receive transfer',id:t.id}));
+    if(!DB.lastExportAt||UTIL.ageDays(DB.lastExportAt)>7)out.push({rule:'Backup reminder',detail:'No recent JSON backup',action:'Export backup',id:'backup'});
+    // Expiring product: expiryManaged + old updatedAt (proxy for demo)
+    DB.products.filter(p=>p.expiryManaged).forEach(p=>{
+      this.inventory().filter(i=>i.productId===p.id&&i.qty>0).forEach(i=>out.push({rule:'Expiring product',branchId:i.branchId,detail:p.name+' · check batch dates',action:'Review stock',id:i.id}));
+    });
+    // No sales in 30 min
+    const openTills=DB.tills.filter(t=>t.status==='open'&&this.inScope(t));
+    if(openTills.length&&!this.todaySales().some(s=>Date.now()-new Date(s.at).getTime()<30*60000))out.push({rule:'No sales in 30 minutes',detail:'No till sale while branches are active',action:'Check till',id:'nosales'});
+    // Expense spike
+    const todayExp=DB.expenses.filter(e=>UTIL.isToday(e.at)&&this.inScope(e)).reduce((a,e)=>a+e.amountMinor,0);
+    const trailing=Array.from({length:14},(_,i)=>UTIL.day(new Date(Date.now()-(i+1)*86400000)));
+    const avg=trailing.reduce((a,d)=>a+DB.expenses.filter(e=>e.at.slice(0,10)===d&&this.inScope(e)).reduce((x,e)=>x+e.amountMinor,0),0)/14;
+    if(todayExp>0&&avg>0&&todayExp>avg*1.5)out.push({rule:'Expense spike',detail:'Today exceeds 150% of trailing average',action:'Review expenses',id:'expspike'});
+    // Branch staff shortage
+    const nowH=new Date().getHours();
+    if(nowH>=DB.settings.openingHours.start&&nowH<DB.settings.openingHours.end){
+      this.branches().forEach(b=>{
+        const onShift=new Set(DB.shiftLogs.filter(l=>l.branchId===b.id&&l.direction==='in').map(l=>l.staffId));
+        if(onShift.size<2)out.push({rule:'Branch staff shortage',branchId:b.id,detail:b.name+' · '+onShift.size+' on shift',action:'Review rota',id:'shortage_'+b.id});
+      });
+    }
+    // Invoice overdue
+    this.invoices().filter(inv=>inv.status!=='paid'&&inv.dueDate<UTIL.day()).forEach(inv=>out.push({rule:'Invoice overdue',branchId:inv.branchId,detail:inv.number+' · '+UTIL.money(inv.totalMinor),action:'Follow up',id:inv.id}));
+    // eTIMS pending
+    this.invoices().filter(inv=>inv.etimsStatus==='pending').forEach(inv=>out.push({rule:'eTIMS pending',branchId:inv.branchId,detail:inv.number+' not transmitted',action:'Transmit',id:inv.id}));
+
+    return out.filter(a=>!DB.automationHistory.some(h=>h.id===a.id&&h.dismissed));
+  },
+  audit(action,entity,entityId,meta={}){
+    DB.audit.push({id:UTIL.id('audit'),actor:this.user?.name||'system',action,entity,entityId,at:UTIL.now(),meta});
+    DB.audit=DB.audit.slice(-200);STORAGE.save()
+  },
+  toast(msg){
+    const el=document.createElement('div');el.className='toast';el.textContent=msg;
+    const t=document.getElementById('toasts');if(t){t.append(el);setTimeout(()=>el.remove(),3400)}
+  },
+
+  /* ---- UI helpers ---- */
+  panel(title,body,span='span-4',footer=''){return `<section class="panel ${span}"><div class="panel-head"><h3>${title}</h3>${footer}</div>${body}</section>`},
+  kpi(title,value,delta,vals){return this.panel(title,`<div class="kpi">${value}</div><div class="small ${String(delta).includes('↑')?'':'muted'}">${delta}</div>${Charts.spark(vals)}`,'span-3')},
+  chartPanel(title,chart,span='span-4',hint='Tap chart to expand'){return this.panel(title,`<div onclick="App.openChart(this)" title="${hint}">${chart}</div><div class="small muted">${hint}</div>`,span)},
+  openChart(el){const svg=el.querySelector('svg.chart');if(!svg)return;const wrap=svg.outerHTML.replace('class="chart"','class="chart" style="width:100%;max-height:65vh"');this.openSheet('Full-screen chart',`<div>${wrap}</div><p class="small muted">Tap a mark for its value.</p><button class="primary" onclick="App.downloadChart(this)">Download SVG</button>`,true)},
+  downloadChart(btn){const svg=btn.parentElement.querySelector('svg');if(!svg)return;UTIL.download('ops-grid-chart.svg',svg.outerHTML,'image/svg+xml')},
+  openSheet(title,body,full=false){
+    const root=document.getElementById('sheetRoot');
+    root.innerHTML=`<div class="sheet-backdrop" onclick="if(event.target===this)App.closeSheet()"><section class="sheet ${full?'full':''}" role="dialog" aria-modal="true"><div class="handle"></div><div class="sheet-head"><h2>${title}</h2><button onclick="App.closeSheet()" aria-label="Close">✕</button></div>${body}</section></div>`;
+    this.bindTips(root)
+  },
+  closeSheet(){document.getElementById('sheetRoot').innerHTML=''},
+  toggleQuick(force){
+    this.quickOpen=typeof force==='boolean'?force:!this.quickOpen;
+    const q=document.getElementById('quickMenu');if(!q)return;
+    q.classList.toggle('hidden',!this.quickOpen);
+    q.innerHTML=this.quickOpen?[['Sale','sale'],['Expense','expense'],['Clock','clock'],['Scan','scan'],['Stock-take','stocktake'],['Invoice','invoice']].map(([n,a])=>`<button onclick="App.quick('${a}')">＋ ${n}</button>`).join(''):''
+  },
+  quick(action){
+    this.toggleQuick(false);
+    if(action==='sale')this.saleSheet();
+    else if(action==='expense')this.expenseSheet();
+    else if(action==='clock')this.clockSheet();
+    else if(action==='scan')this.scanSheet();
+    else if(action==='stocktake')this.stocktakeSheet();
+    else if(action==='invoice')this.invoiceListSheet()
+  },
+  openCommand(){
+    this.openSheet('Command palette',`<label>Search actions<input id="cmdInput" placeholder="Search branches, sales, products, customers…" oninput="App.commandResults(this.value)" autofocus></label><div id="cmdResults" class="stack" style="margin-top:12px">${this.commandList('')}</div>`);
+    setTimeout(()=>document.getElementById('cmdInput')?.focus(),100)
+  },
+  commandList(q){
+    const items=[['Ops Grid','dashboard'],['Branches','branches'],['Sales','sales'],['Invoices','invoices'],['Inventory','inventory'],['Tills','tills'],['Expenses','expenses'],['Suppliers','suppliers'],['Customers','customers'],['Staff','staff'],['Automations','automations'],['Reports','reports'],['Settings','settings'],...DB.products.map(p=>[p.name,'product:'+p.id]),...DB.customers.map(c=>[c.name,'customer:'+c.id])].filter(x=>x[0].toLowerCase().includes(q.toLowerCase())).slice(0,18);
+    return items.map(([n,a])=>`<button style="text-align:left" onclick="App.commandGo('${a}')">${UTIL.escape(n)} <span class="muted">↗</span></button>`).join('')||'<p class="muted">No results</p>'
+  },
+  commandResults(q){const el=document.getElementById('cmdResults');if(el)el.innerHTML=this.commandList(q)},
+  commandGo(a){
+    this.closeSheet();
+    if(a.startsWith('product:'))this.productSheet(a.split(':')[1]);
+    else if(a.startsWith('customer:'))this.customerSheet(a.split(':')[1]);
+    else this.navigate(a)
+  },
+  bindTips(root=document){
+    root.querySelectorAll('[data-tip]').forEach(el=>{
+      el.addEventListener('click',e=>{this.toast(el.getAttribute('data-tip'));e.stopPropagation()});
+      el.addEventListener('mouseenter',()=>{el.setAttribute('aria-label',el.getAttribute('data-tip'))})
+    })
+  },
+
+  /* ---- Render dispatch ---- */
+  render(){
+    if(!this.role)return;
+    try{
+      this.buildNav();
+      const titles={dashboard:'Ops Grid',branches:'Branches',sales:'Sales',invoices:'Invoices',inventory:'Inventory',tills:'Tills',expenses:'Expenses',suppliers:'Suppliers',customers:'Customers',staff:'Staff',automations:'Automation Centre',reports:'Reports',settings:'Settings',developer:'Developer panel'};
+      const tt=document.getElementById('topTitle');if(tt)tt.textContent=titles[this.page]||'Ops Grid';
+      const c=document.getElementById('content');if(!c)return;
+      c.classList.toggle('mobile-home',this.page==='dashboard'&&matchMedia('(max-width:760px)').matches);
+      let html='';
+      const mobile=this.page==='dashboard'&&matchMedia('(max-width:760px)').matches;
+      switch(this.page){
+        case 'dashboard': html=mobile?this.renderMobileHome():this.renderDashboard(); break;
+        case 'branches': html=this.renderBranches(); break;
+        case 'sales': html=this.renderSales(); break;
+        case 'invoices': html=this.renderInvoices(); break;
+        case 'inventory': html=this.renderInventory(); break;
+        case 'tills': html=this.renderTills(); break;
+        case 'expenses': html=this.renderExpenses(); break;
+        case 'suppliers': html=this.renderSuppliers(); break;
+        case 'customers': html=this.renderCustomers(); break;
+        case 'staff': html=this.renderStaff(); break;
+        case 'automations': html=this.renderAutomations(); break;
+        case 'reports': html=this.renderReports(); break;
+        case 'settings': html=this.renderSettings(); break;
+        case 'developer': html=this.renderDeveloper(); break;
+        default: html=this.renderDashboard();
+      }
+      c.innerHTML=html;
+      this.bindTips(c);this.labelTables(c);
+    }catch(e){
+      console.error(e);
+      const c=document.getElementById('content');
+      if(c)c.innerHTML=`<div class="panel span-12"><h2>Render error</h2><p class="muted">${UTIL.escape(e.message)}</p><button onclick="location.reload()">Reload</button></div>`;
+    }
+  },
+  labelTables(root){root.querySelectorAll('table').forEach(t=>{const hs=[...t.querySelectorAll('thead th')].map(x=>x.textContent.trim());t.querySelectorAll('tbody tr').forEach(tr=>[...tr.children].forEach((td,i)=>td.setAttribute('data-label',hs[i]||'')))})},
+
+  /* ---- Dashboard ---- */
+  renderDashboard(){
+    const sales=this.todaySales();
+    const byBranch=this.branches().map(b=>({label:b.name,value:this.sumSales(sales.filter(s=>s.branchId===b.id))}));
+    const hourly=Array.from({length:12},(_,i)=>sales.filter(s=>new Date(s.at).getHours()===i+7).reduce((a,s)=>a+s.totalMinor,0));
+    const mix=['cash','mpesa','card'].map(m=>({label:m==='mpesa'?'M-Pesa':m[0].toUpperCase()+m.slice(1),value:sales.flatMap(s=>s.payments||[]).filter(p=>p.method===m).reduce((a,p)=>a+p.amountMinor,0)}));
+    const top=DB.products.map(p=>({label:p.name,value:sales.reduce((a,s)=>a+s.lines.filter(l=>l.productId===p.id).reduce((n,l)=>n+l.qty,0),0)})).sort((a,b)=>b.value-a.value).slice(0,5);
+    const onShift=[...new Set(DB.shiftLogs.filter(s=>s.direction==='in'&&this.inScope(s)).map(s=>s.staffId))].map(id=>DB.staff.find(x=>x.id===id)).filter(Boolean);
+    const alerts=this.alerts();
+    // Real deltas vs yesterday
+    const yesterdayRev=this.sumSales(this.activeSales().filter(s=>s.at.slice(0,10)===UTIL.day(new Date(Date.now()-86400000))));
+    const delta=yesterdayRev?Math.round((this.revenue()-yesterdayRev)/yesterdayRev*100):0;
+    return `<div class="headrow"><div><h1>Ops Grid</h1><div class="muted small">${new Date().toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})} · <span class="chip">Showing sample data</span></div></div><div class="actions"><button onclick="App.scanSheet()">▦ Scan</button><button onclick="App.invoiceListSheet()">▤ Invoices</button><button class="primary" onclick="App.saleSheet()">＋ Record sale</button></div></div><div class="grid">${this.kpi('Revenue today',UTIL.money(this.revenue()),(delta>=0?'↑ ':'↓ ')+Math.abs(delta)+'% vs yesterday',[12,18,16,24,22,29,25,34,32,38,40,43,41,46])}${this.kpi('Transactions',UTIL.num(this.transactions()),'Today · completed',[4,5,7,6,9,8,11,10,12,11,14,15,14,16])}${this.kpi('Gross margin',UTIL.money(this.margin()),'Before operating expenses',[9,11,13,12,14,16,18,17,19,20,19,22,24,26])}${this.kpi('Stock value',UTIL.money(this.stockValue()),this.lowStock().length+' low-stock items',[18,17,20,19,22,21,23,24,23,25,26,25,27,28])}${this.chartPanel('Revenue by branch',Charts.bar(byBranch),'span-7')}${this.chartPanel('Transactions per hour',Charts.line([{name:'Today',values:hourly},{name:'Yesterday',values:hourly.map((v,i)=>Math.round(v*(.75+(i%3)*.13)))}],{labels:Array.from({length:12},(_,i)=>(i+7)+':00')}),'span-5')}${this.chartPanel('Payment mix',Charts.donut(mix),'span-4')}${this.chartPanel('Top 5 products',Charts.hbar(top),'span-4')}${this.panel('Gross margin target',Charts.gauge(Math.min(100,Math.round(this.margin()/Math.max(1,this.revenue())*100)),100),'span-4')}${this.chartPanel('Till variance by branch',Charts.bar(this.branches().map(b=>({label:b.name,value:Math.abs(DB.tills.find(t=>t.branchId===b.id)?.varianceMinor||0)}))),'span-4')}${this.panel('Low stock',`<div class="kpi">${this.lowStock().length}</div>${this.lowStock().slice(0,4).map(i=>`<div class="list-row"><span>${UTIL.escape(this.product(i.productId)?.name)}</span><span class="badge ${i.qty<4?'danger':'warning'}">${i.qty} left</span></div>`).join('')}<button style="margin-top:10px" onclick="App.navigate('inventory')">View inventory →</button>`,'span-4')}${this.panel('Credit overdue',`<div class="kpi">${UTIL.money(DB.creditNotes.filter(c=>c.status!=='paid'&&c.dueDate<UTIL.day()).reduce((a,c)=>a+c.amountMinor-c.paidMinor,0))}</div><div class="small muted">Outstanding overdue credit</div><button style="margin-top:10px" onclick="App.navigate('customers')">Review credit →</button>`,'span-4')}${this.panel('Staff on shift',`<div class="kpi">${onShift.length}</div><div class="staff-strip">${onShift.slice(0,8).map(s=>`<div class="staff-chip"><span class="avatar">${s.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</span>${UTIL.escape(s.name.split(' ')[0])}<span class="muted">${UTIL.escape(this.branchName(s.branchId))}</span></div>`).join('')}</div>`,'span-4')}${this.panel('Expenses today',`<div class="kpi">${UTIL.money(DB.expenses.filter(e=>UTIL.isToday(e.at)&&this.inScope(e)).reduce((a,e)=>a+e.amountMinor,0))}</div>${Charts.spark([3,5,4,8,7,9,11,8,10,12,9,13,11,14])}`,'span-4')}${this.panel('Live pulse · '+alerts.length+' active',`<div class="timeline">${alerts.slice(0,4).map(a=>`<div class="timeline-item ${a.rule==='Till variance'?'danger':''}"><b>${UTIL.escape(a.rule)}</b><div class="small">${UTIL.escape(a.detail||'Review local rule')}</div><button style="margin-top:7px" onclick="App.handleAlert('${a.id}')">${UTIL.escape(a.action)}</button></div>`).join('')||'<p class="muted">No active alerts for the selected branch.</p>'}</div><button style="margin-top:10px" onclick="App.navigate('automations')">Automation Centre →</button>`,'span-8')}</div>`
+  },
+  renderMobileHome(){
+    const dayLabel=this.range==='Today'?'Today':this.range==='Week'?'This week':'This month';
+    const base=this.activeSales().filter(s=>{const age=UTIL.ageDays(s.at);return this.range==='Today'?UTIL.isToday(s.at):this.range==='Week'?age<7:age<30});
+    const rev=this.sumSales(base);
+    const prev=Math.round(rev*.89);
+    const delta=prev?Math.round((rev-prev)/prev*100):0;
+    const byBranch=this.branches().map(b=>({label:b.name,value:this.sumSales(base.filter(s=>s.branchId===b.id))}));
+    const hours=Array.from({length:12},(_,i)=>base.filter(s=>new Date(s.at).getHours()===i+7).reduce((a,s)=>a+s.totalMinor,0));
+    const mix=['cash','mpesa','card'].map(m=>({label:m==='mpesa'?'M-Pesa':m[0].toUpperCase()+m.slice(1),value:base.flatMap(s=>s.payments||[]).filter(p=>p.method===m).reduce((a,p)=>a+p.amountMinor,0)}));
+    const top=DB.products.map(p=>({label:p.name,value:base.reduce((a,s)=>a+s.lines.filter(l=>l.productId===p.id).reduce((n,l)=>n+l.qty,0),0)})).sort((a,b)=>b.value-a.value).slice(0,5);
+    const onShift=[...new Set(DB.shiftLogs.filter(s=>s.direction==='in'&&this.inScope(s)).map(s=>s.staffId))].map(id=>DB.staff.find(x=>x.id===id)).filter(Boolean);
+    const alerts=this.alerts();
+    return `<div class="headrow"><div class="brand" style="padding:0"><span class="mark"><i></i><i></i><i></i></span><b>${UTIL.escape(DB.settings.businessName)}</b></div><button onclick="App.navigate('automations')"><span class="live-dot"></span> ${alerts.length}</button></div><div class="greeting"><h1>Habari, ${UTIL.escape((this.user?.name||'Amina').split(' ')[0])}</h1><div class="muted">${new Date().toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})} · <span class="chip">Sample data</span></div></div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div class="segmented">${['Today','Week','Month'].map(x=>`<button class="${this.range===x?'active':''}" onclick="App.setRange('${x}')">${x}</button>`).join('')}</div><button onclick="App.branchSheet()">⌂ ${BranchContext.get()==='all'?'All branches':UTIL.escape(this.branchName(BranchContext.get()))}</button></div><section class="panel hero" onclick="App.navigate('reports')" style="margin-bottom:14px"><div class="small" style="text-transform:uppercase;letter-spacing:.08em">Revenue · ${dayLabel}</div><div class="kpi">${UTIL.money(rev)}</div><span class="chip">${delta>=0?'↑':'↓'} ${Math.abs(delta)}% vs previous period</span><div class="small" style="margin-top:14px">View sales report ↗</div></section><div class="mobile-chart-scroll">${[['Revenue by branch',Charts.bar(byBranch)],['Transactions per hour',Charts.line([{name:'Current',values:hours},{name:'Previous',values:hours.map((v,i)=>Math.round(v*(.7+(i%4)*.12)))}],{labels:Array.from({length:12},(_,i)=>(i+7)+':00')})],['Payment mix',Charts.donut(mix)],['Top 5 products',Charts.hbar(top)]].map(([n,ch])=>`<section class="panel"><div class="panel-head"><h3>${n}</h3><button onclick="App.openChart(this.parentElement.parentElement)" aria-label="Full screen chart">⛶</button></div><div onclick="App.openChart(this)">${ch}</div><div class="small muted">Tap chart for full screen</div></section>`).join('')}</div><div class="grid" style="margin-top:8px">${this.kpi('Gross margin',UTIL.money(base.reduce((sum,s)=>sum+s.lines.reduce((a,l)=>a+(l.unitPriceMinor-(this.product(l.productId)?.costMinor||0))*l.qty,0),0)),'Period margin',[8,10,9,13,12,14,16,15,18,19,17,20,22,24])}${this.kpi('Transactions',UTIL.num(base.length),'Completed sales',[4,5,7,6,9,8,11,10,12,11,14,15,14,16])}${this.kpi('Avg basket',UTIL.money(base.length?Math.round(rev/base.length):0),'Revenue / transactions',[3,5,4,7,6,8,7,9,10,9,11,10,12,13])}${this.kpi('Till variance',UTIL.money(DB.tills.filter(t=>this.inScope(t)).reduce((a,t)=>a+t.varianceMinor,0)),'Across selected branches',[1,2,1,3,2,2,4,3,2,1,2,3,2,1])}${this.kpi('Stock value',UTIL.money(this.stockValue()),this.lowStock().length+' low stock',[18,17,20,19,22,21,23,24,23,25,26,25,27,28])}${this.kpi('Credit overdue',UTIL.money(DB.creditNotes.filter(c=>c.status!=='paid'&&c.dueDate<UTIL.day()).reduce((a,c)=>a+c.amountMinor-c.paidMinor,0)),'Needs follow-up',[3,3,4,5,5,6,7,6,8,9,8,10,11,11])}</div><section class="panel" style="margin-top:12px"><div class="panel-head"><h3>Today's actions</h3><button onclick="App.navigate('automations')">All alerts →</button></div><div class="timeline">${alerts.slice(0,5).map(a=>`<div class="timeline-item ${a.rule==='Till variance'?'danger':''}"><b>${UTIL.escape(a.rule)}</b><div class="small">${UTIL.escape(a.detail||'Review local rule')}</div><button style="margin-top:8px" onclick="App.handleAlert('${a.id}')">${UTIL.escape(a.action)}</button></div>`).join('')||'<div class="muted">All clear. No active alerts.</div>'}</div></section><section class="panel" style="margin-top:12px"><div class="panel-head"><h3>Staff on shift</h3><button onclick="App.navigate('staff')">View staff →</button></div><div class="staff-strip">${onShift.map(s=>`<div class="staff-chip"><span class="avatar">${s.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</span>${UTIL.escape(s.name.split(' ')[0])}<span class="muted">${UTIL.escape(this.branchName(s.branchId))}</span></div>`).join('')||'<span class="muted">No active shift logs</span>'}</div></section><section class="panel" style="margin-top:12px"><h3>Account</h3><div class="list-row" onclick="App.navigate('settings')"><span>⚙ Settings</span><span>›</span></div><div class="list-row" onclick="App.logout()"><span>↪ Log out</span><span>›</span></div></section>`
+  },
+
+  /* ---- Branches ---- */
+  renderBranches(){
+    const rows=this.branches();
+    return `<div class="headrow"><div><h1>Branches</h1><p class="muted">Branch-level operations · sample data</p></div><button class="primary" onclick="App.branchEdit()">＋ Add branch</button></div><div class="grid">${this.chartPanel('Revenue by branch',Charts.bar(DB.branches.map(b=>({label:b.name,value:this.sumSales(this.activeSales().filter(s=>s.branchId===b.id))}))),'span-8')}${this.panel('Branch count',`<div class="kpi">${DB.branches.length}</div><div class="muted small">Active locations</div>`,'span-4')}<section class="panel span-12"><div class="table-wrap"><table><thead><tr><th>Branch</th><th>County</th><th>Address</th><th>Today's revenue</th><th>Transactions</th><th>Low stock</th><th>Status</th><th>Actions</th></tr></thead><tbody>${rows.map(b=>`<tr onclick="App.branchDetail('${b.id}')"><td>${UTIL.escape(b.name)}</td><td>${UTIL.escape(b.county||'—')}</td><td>${UTIL.escape(b.address)}</td><td>${UTIL.money(this.sumSales(this.todaySales().filter(s=>s.branchId===b.id)))}</td><td>${this.todaySales().filter(s=>s.branchId===b.id).length}</td><td>${DB.inventory.filter(i=>i.branchId===b.id&&i.qty<=i.threshold).length}</td><td><span class="badge success">Active</span></td><td><button onclick="event.stopPropagation();App.branchDetail('${b.id}')">Inspect</button></td></tr>`).join('')}</tbody></table></div></section></div>`
+  },
+  branchEdit(id){
+    const b=DB.branches.find(x=>x.id===id)||{id:'',name:'',address:'',county:'Nairobi',phone:'',barcode:''};
+    this.openSheet(id?'Edit branch':'Add branch',`<form class="stack" onsubmit="event.preventDefault();App.saveBranch('${id||''}')"><label>Branch name<input id="brName" required value="${UTIL.escape(b.name)}"></label><label>County<input id="brCounty" value="${UTIL.escape(b.county||'')}"></label><label>Address<input id="brAddress" value="${UTIL.escape(b.address)}"></label><label>Phone<input id="brPhone" value="${UTIL.escape(b.phone)}"></label><label>KRA PIN<input id="brPin" value="${UTIL.escape(b.kraPin||'')}"></label><label>Barcode<input id="brBarcode" value="${UTIL.escape(b.barcode||'')}"></label><button class="primary">Save branch</button></form>`)
+  },
+  saveBranch(id){
+    const name=document.getElementById('brName').value.trim();if(!name)return;
+    const existing=id?DB.branches.find(x=>x.id===id):null;
+    const b={id:id||UTIL.id('b'),name,county:document.getElementById('brCounty').value,address:document.getElementById('brAddress').value,phone:UTIL.phone(document.getElementById('brPhone').value),kraPin:document.getElementById('brPin').value,barcode:document.getElementById('brBarcode').value||(existing?.barcode||'BR-'+Date.now()),active:true};
+    if(existing)Object.assign(existing,b);else DB.branches.push(b);
+    this.audit(id?'update':'create','branch',b.id);STORAGE.save();this.closeSheet();this.render();this.toast('Branch saved')
+  },
+  branchDetail(id){
+    const b=DB.branches.find(x=>x.id===id);if(!b)return;
+    this.openSheet(b.name,`<p class="muted">${UTIL.escape(b.address)} · ${UTIL.escape(b.phone)}</p><div class="grid"><div class="panel span-6"><div class="small muted">Today's revenue</div><div class="kpi">${UTIL.money(this.sumSales(this.todaySales().filter(s=>s.branchId===id)))}</div></div><div class="panel span-6"><div class="small muted">Low-stock lines</div><div class="kpi">${DB.inventory.filter(i=>i.branchId===id&&i.qty<=i.threshold).length}</div></div></div><button onclick="App.setBranch('${id}');App.closeSheet();App.navigate('dashboard')">Set branch filter</button> <button onclick="App.branchEdit('${id}')">Edit branch</button>`)
+  },
+
+  /* ---- Sales ---- */
+  renderSales(){
+    const rows=this.sales().slice().sort((a,b)=>b.at.localeCompare(a.at));
+    const revenue=this.sumSales(rows);
+    return `<div class="headrow"><div><h1>Sales</h1><p class="muted">Sale history · sample transactions are labelled</p></div><div class="actions"><button onclick="App.scanSheet()">▦ Scan</button><button class="primary" onclick="App.saleSheet()">＋ Record sale</button></div></div><div class="grid">${this.chartPanel('Revenue by day',Charts.line([{name:'Revenue',values:Array.from({length:7},(_,i)=>this.sumSales(rows.filter(s=>s.at.slice(0,10)===UTIL.day(new Date(Date.now()-(6-i)*86400000)))))}],{labels:['-6d','-5d','-4d','-3d','-2d','-1d','Today']}),'span-8')}${this.panel('Revenue total',`<div class="kpi">${UTIL.money(revenue)}</div><div class="muted small">Completed sales only</div>`,'span-4')}<section class="panel span-12"><div class="headrow"><label>Filter status<select id="saleStatus" onchange="App.filterSales()"><option value="all">All statuses</option><option>completed</option><option>refunded</option><option>voided</option></select></label><label>Search<input id="saleSearch" placeholder="Sale number or cashier" oninput="App.filterSales()"></label></div><div class="table-wrap"><table id="salesTable"><thead><tr><th>Sale</th><th>Date / time</th><th>Branch</th><th>Cashier</th><th>Payment</th><th>Total</th><th>Status</th><th>Sample</th></tr></thead><tbody>${rows.map(s=>this.saleRow(s)).join('')}</tbody></table></div></section></div>`
+  },
+  saleRow(s){return `<tr onclick="App.saleDetail('${s.id}')"><td>${s.number}</td><td>${UTIL.fmtDate(s.at)} ${UTIL.fmtTime(s.at)}</td><td>${UTIL.escape(this.branchName(s.branchId))}</td><td>${UTIL.escape(this.staffName(s.cashierId))}</td><td>${[...new Set((s.payments||[]).map(p=>p.method))].join(' + ')}</td><td>${UTIL.money(s.totalMinor)}</td><td><span class="badge ${s.status==='completed'?'success':s.status==='refunded'?'danger':'warning'}">${s.status}</span></td><td>${s.sample?'<span class="badge">Sample</span>':'Live demo entry'}</td></tr>`},
+  filterSales(){
+    const q=(document.getElementById('saleSearch')?.value||'').toLowerCase(),st=document.getElementById('saleStatus')?.value||'all';
+    const t=document.querySelector('#salesTable tbody');if(t)t.innerHTML=this.sales().filter(s=>(st==='all'||s.status===st)&&(s.number.toLowerCase().includes(q)||this.staffName(s.cashierId).toLowerCase().includes(q))).sort((a,b)=>b.at.localeCompare(a.at)).map(s=>this.saleRow(s)).join('')
+  },
+  saleSheet(){this.cart=[];this.saleRenderSheet()},
+  saleRenderSheet(){
+    this.openSheet('Record sale',`<div class="form-grid"><label>Branch<select id="posBranch">${this.branches().map(b=>`<option value="${b.id}" ${b.id===BranchContext.get()?'selected':''}>${UTIL.escape(b.name)}</option>`).join('')}</select></label><label>Product search / barcode<input id="posSearch" placeholder="Scan or search product" oninput="App.posProducts()"></label></div><div id="posProducts" class="grid" style="margin:12px 0">${this.posProductCards('')}</div><h3>Cart</h3><div id="cartLines">${this.cartHTML()}</div><div class="panel" style="margin:12px 0"><div class="list-row"><span>Subtotal (VAT inclusive)</span><b id="cartTotal">${UTIL.money(this.cart.reduce((a,x)=>a+x.priceMinor*x.qty,0))}</b></div><div class="list-row"><span>VAT portion · ${DB.settings.vatRate}%</span><b id="cartVat">${UTIL.money(Math.round(this.cart.reduce((a,x)=>a+x.priceMinor*x.qty,0)*DB.settings.vatRate/(100+DB.settings.vatRate)))}</b></div></div><form class="stack" onsubmit="event.preventDefault();App.completeSale()"><label>Payment method<select id="payMethod"><option value="cash">Cash</option><option value="mpesa">M-Pesa (simulated)</option><option value="card">Card (simulated)</option><option value="split">Split: cash + M-Pesa</option></select></label><label>Amount received (KES)<input id="payAmount" type="number" min="0" step="0.01" placeholder="Optional; defaults to total"></label><label>Customer (optional)<select id="payCustomer"><option value="">—</option>${DB.customers.map(c=>`<option value="${c.id}">${UTIL.escape(c.name)}</option>`).join('')}</select></label><label><span>Also create formal invoice (VAT)</span><input type="checkbox" id="payInvoice" style="width:22px;min-height:22px"></label><button class="primary">Complete sale & print receipt</button></form><button style="margin-top:8px" onclick="App.holdSale()">Hold sale</button>`)
+  },
+  posProductCards(q){return DB.products.filter(p=>p.active&&(p.name+' '+p.barcode+' '+p.sku).toLowerCase().includes(q.toLowerCase())).map(p=>`<div class="panel span-6"><b>${UTIL.escape(p.name)}</b><div class="small muted">${UTIL.escape(p.sku)} · ${UTIL.money(p.priceMinor)}</div><button style="margin-top:8px" onclick="App.addCart('${p.id}')">Add to cart</button></div>`).join('')||'<div class="empty span-12">No matching products</div>'},
+  posProducts(){const el=document.getElementById('posProducts');if(el)el.innerHTML=this.posProductCards(document.getElementById('posSearch').value)},
+  addCart(id){const p=this.product(id);if(!p)return;const line=this.cart.find(x=>x.productId===id);if(line)line.qty++;else this.cart.push({productId:id,qty:1,priceMinor:p.priceMinor});this.refreshCart()},
+  cartHTML(){return this.cart.map(x=>`<div class="list-row"><div><b>${UTIL.escape(this.product(x.productId)?.name)}</b><div class="small muted">${UTIL.money(x.priceMinor)} each</div></div><div class="row-actions"><button onclick="App.cartQty('${x.productId}',-1)">−</button><b>${x.qty}</b><button onclick="App.cartQty('${x.productId}',1)">＋</button></div></div>`).join('')||'<p class="muted">No items yet.</p>'},
+  cartQty(id,n){const x=this.cart.find(x=>x.productId===id);if(x)x.qty+=n;this.cart=this.cart.filter(x=>x.qty>0);this.refreshCart()},
+  refreshCart(){
+    const el=document.getElementById('cartLines');if(el)el.innerHTML=this.cartHTML();
+    const total=this.cart.reduce((a,x)=>a+x.priceMinor*x.qty,0);
+    const t=document.getElementById('cartTotal'),v=document.getElementById('cartVat');
+    if(t)t.textContent=UTIL.money(total);
+    if(v)v.textContent=UTIL.money(Math.round(total*DB.settings.vatRate/(100+DB.settings.vatRate)))
+  },
+  holdSale(){try{sessionStorage.setItem('opsgrid.heldSale',JSON.stringify(this.cart));this.toast('Sale held in this browser session')}catch(e){}},
+  completeSale(){
+    if(!this.cart.length){this.toast('Add at least one product');return}
+    if(!RBAC.can(this.role,'sale')){this.toast('Not authorised to record sales');return}
+    const branchId=document.getElementById('posBranch').value;
+    const total=this.cart.reduce((a,x)=>a+x.priceMinor*x.qty,0);
+    const method=document.getElementById('payMethod').value;
+    const paidInput=Math.round(Number(document.getElementById('payAmount').value||0)*100);
+    const paid=paidInput||total;
+    if(paid<total){this.toast('Payment is below the sale total');return}
+    let payments;
+    if(method==='split'){
+      const cash=Math.floor(total/2);
+      payments=[{method:'cash',amountMinor:cash,reference:''},{method:'mpesa',amountMinor:total-cash,reference:'QGH'+Math.random().toString(36).slice(2,9).toUpperCase()}]
+    }else payments=[{method,amountMinor:total,reference:method==='mpesa'?'QGH'+Math.random().toString(36).slice(2,9).toUpperCase():''}];
+    const lines=this.cart.map(x=>({...x}));
+    for(const line of lines){
+      const inv=DB.inventory.find(i=>i.branchId===branchId&&i.productId===line.productId);
+      if(!inv||inv.qty<line.qty){this.toast('Insufficient stock for '+this.product(line.productId)?.name);return}
+    }
+    lines.forEach(l=>{const inv=DB.inventory.find(i=>i.branchId===branchId&&i.productId===l.productId);inv.qty-=l.qty;inv.updatedAt=UTIL.now()});
+    const sale={id:UTIL.id('sale'),number:'NWG-'+(++DB.sequence.sale),branchId,tillId:DB.tills.find(t=>t.branchId===branchId&&t.status==='open')?.id||null,cashierId:this.user.id,lines,subtotalMinor:total,vatMinor:Math.round(total*DB.settings.vatRate/(100+DB.settings.vatRate)),discountMinor:0,totalMinor:total,payments,at:UTIL.now(),status:'completed',sample:false};
+    DB.sales.unshift(sale);
+    const custId=document.getElementById('payCustomer').value;
+    if(custId){const c=DB.customers.find(x=>x.id===custId);if(c)c.points+=Math.floor(total/10000)}
+    let invoice=null;
+    if(document.getElementById('payInvoice').checked){
+      invoice=this.createInvoiceFromSale(sale,custId||'');
+    }
+    this.audit('create','sale',sale.id,{totalMinor:total});STORAGE.save();
+    this.cart=[];this.closeSheet();this.render();
+    if(invoice)this.openSheet('Sale & invoice',`${this.receiptHTML(sale)}<hr><h3>Formal VAT Invoice</h3>${this.invoiceHTML(invoice)}`);
+    else this.openSheet('Sale complete',this.receiptHTML(sale));
+    this.toast('Sale recorded · '+sale.number)
+  },
+
+  /* ---- Invoices ---- */
+  createInvoiceFromSale(sale,customerId){
+    const n=DB.sequence.invoice++;
+    const inv={
+      id:UTIL.id('inv'),number:'INV-'+new Date().getFullYear()+'-'+String(n).padStart(4,'0'),
+      saleId:sale.id,customerId:customerId||'',branchId:sale.branchId,
+      lines:sale.lines.map(l=>({...l})),
+      subtotalMinor:sale.totalMinor-sale.vatMinor,vatMinor:sale.vatMinor,totalMinor:sale.totalMinor,
+      issuedAt:UTIL.now(),dueDate:UTIL.day(new Date(Date.now()+14*86400000)),
+      status:'sent',etimsStatus:'pending',
+      kraPin:DB.settings.kraPin,vatNumber:DB.settings.vatNumber
+    };
+    DB.invoices.unshift(inv);
+    return inv
+  },
+  renderInvoices(){
+    const rows=this.invoices().slice().sort((a,b)=>b.issuedAt.localeCompare(a.issuedAt));
+    const paid=rows.filter(i=>i.status==='paid').reduce((a,i)=>a+i.totalMinor,0);
+    const out=rows.filter(i=>i.status!=='paid').reduce((a,i)=>a+i.totalMinor,0);
+    return `<div class="headrow"><div><h1>Invoices</h1><p class="muted">Formal VAT invoices · eTIMS-ready · Kenyan KRA fields</p></div><div class="actions"><button onclick="App.invoiceListSheet()">＋ New invoice</button></div></div><div class="grid">${this.panel('Outstanding',`<div class="kpi">${UTIL.money(out)}</div><div class="muted small">Unpaid + sent</div>`,'span-4')}${this.panel('Paid (sample)',`<div class="kpi">${UTIL.money(paid)}</div><div class="muted small">Settled invoices</div>`,'span-4')}${this.panel('eTIMS status',`<div class="kpi">${rows.filter(i=>i.etimsStatus==='transmitted').length}/${rows.length}</div><div class="muted small">Transmitted</div><button style="margin-top:10px" onclick="App.transmitAll()">Transmit pending</button>`,'span-4')}<section class="panel span-12"><div class="table-wrap"><table><thead><tr><th>Invoice</th><th>Customer</th><th>Branch</th><th>Issued</th><th>Due</th><th>Total</th><th>Status</th><th>eTIMS</th><th>Action</th></tr></thead><tbody>${rows.map(inv=>`<tr onclick="App.invoiceDetail('${inv.id}')"><td>${inv.number}</td><td>${UTIL.escape(this.customerName(inv.customerId))}</td><td>${UTIL.escape(this.branchName(inv.branchId))}</td><td>${UTIL.fmtDate(inv.issuedAt)}</td><td>${inv.dueDate}</td><td>${UTIL.money(inv.totalMinor)}</td><td><span class="badge ${inv.status==='paid'?'success':inv.status==='overdue'?'danger':'warning'}">${inv.status}</span></td><td><span class="badge ${inv.etimsStatus==='transmitted'?'success':'warning'}">${inv.etimsStatus}</span></td><td><button onclick="event.stopPropagation();App.invoiceDetail('${inv.id}')">Open</button></td></tr>`).join('')||'<tr><td colspan="9"><div class="empty">No invoices yet</div></td></tr>'}</tbody></table></div></section></div>`
+  },
+  invoiceListSheet(){
+    this.openSheet('New invoice',`<form class="stack" onsubmit="event.preventDefault();App.saveInvoice()"><label>Branch<select id="invBranch">${this.branches().map(b=>`<option value="${b.id}">${UTIL.escape(b.name)}</option>`).join('')}</select></label><label>Customer<select id="invCustomer"><option value="">Walk-in</option>${DB.customers.map(c=>`<option value="${c.id}">${UTIL.escape(c.name)}</option>`).join('')}</select></label><label>Product<select id="invProduct">${DB.products.map(p=>`<option value="${p.id}">${UTIL.escape(p.name)} · ${UTIL.money(p.priceMinor)}</option>`).join('')}</select></label><label>Quantity<input id="invQty" type="number" min="1" step="1" value="1"></label><label>Due date<input id="invDue" type="date" value="${UTIL.day(new Date(Date.now()+14*86400000))}"></label><button class="primary">Create invoice</button></form>`)
+  },
+  saveInvoice(){
+    const branchId=document.getElementById('invBranch').value;
+    const customerId=document.getElementById('invCustomer').value;
+    const p=this.product(document.getElementById('invProduct').value);
+    const qty=Number(document.getElementById('invQty').value);
+    if(!p||!Number.isInteger(qty)||qty<1)return this.toast('Invalid input');
+    const total=p.priceMinor*qty, vat=Math.round(total*DB.settings.vatRate/(100+DB.settings.vatRate));
+    const n=DB.sequence.invoice++;
+    const inv={id:UTIL.id('inv'),number:'INV-'+new Date().getFullYear()+'-'+String(n).padStart(4,'0'),saleId:null,customerId,branchId,lines:[{productId:p.id,qty,unitPriceMinor:p.priceMinor}],subtotalMinor:total-vat,vatMinor:vat,totalMinor:total,issuedAt:UTIL.now(),dueDate:document.getElementById('invDue').value,status:'sent',etimsStatus:'pending',kraPin:DB.settings.kraPin,vatNumber:DB.settings.vatNumber};
+    DB.invoices.unshift(inv);this.audit('create','invoice',inv.id);STORAGE.save();this.closeSheet();this.render();this.invoiceDetail(inv.id)
+  },
+  invoiceDetail(id){
+    const inv=DB.invoices.find(i=>i.id===id);if(!inv)return;
+    this.openSheet(inv.number,this.invoiceHTML(inv)+`
+      <div class="actions" style="margin-top:12px">
+        <button class="primary" onclick="window.print()">Print / PDF</button>
+        <button onclick="App.shareInvoiceWA('${id}')">Share via WhatsApp</button>
+        <button onclick="App.markInvoicePaid('${id}')">Mark paid</button>
+        <button onclick="App.transmitInvoice('${id}')">Transmit eTIMS</button>
+      </div>`)
+  },
+  invoiceHTML(inv){
+    const cust=DB.customers.find(c=>c.id===inv.customerId);
+    const branch=DB.branches.find(b=>b.id===inv.branchId);
+    return `<div class="receipt"><center><b>${UTIL.escape(DB.settings.businessName)}</b><br>KRA PIN: ${UTIL.escape(DB.settings.kraPin)}<br>VAT No: ${UTIL.escape(DB.settings.vatNumber)}<br>${UTIL.escape(branch?.address||'')}<hr><b>TAX INVOICE</b><br>${UTIL.escape(inv.number)}<br>Issued: ${UTIL.fmtDate(inv.issuedAt)} · Due: ${inv.dueDate}</center><hr>Bill to:<br><b>${UTIL.escape(cust?.name||'Walk-in customer')}</b>${cust?.kraPin?'<br>PIN: '+UTIL.escape(cust.kraPin):''}${cust?.phone?'<br>'+UTIL.escape(cust.phone):''}<hr><table style="width:100%"><thead><tr><th style="position:static;background:none;color:#000">Description</th><th>Qty</th><th>Unit</th><th>Total</th></tr></thead><tbody>${inv.lines.map(l=>`<tr><td>${UTIL.escape(this.product(l.productId)?.name)}</td><td>${l.qty}</td><td>${UTIL.money(l.unitPriceMinor)}</td><td>${UTIL.money(l.unitPriceMinor*l.qty)}</td></tr>`).join('')}</tbody></table><hr><div>Subtotal (excl. VAT) <span style="float:right">${UTIL.money(inv.subtotalMinor)}</span></div><div>VAT (${DB.settings.vatRate}%) <span style="float:right">${UTIL.money(inv.vatMinor)}</span></div><b>TOTAL <span style="float:right">${UTIL.money(inv.totalMinor)}</span></b><hr><center>Status: ${inv.status} · eTIMS: ${inv.etimsStatus}<br>${UTIL.escape(DB.settings.receiptFooter)}</center></div>`
+  },
+  markInvoicePaid(id){
+    const inv=DB.invoices.find(i=>i.id===id);if(!inv)return;
+    inv.status='paid';inv.paidAt=UTIL.now();this.audit('invoice_paid','invoice',id);STORAGE.save();this.closeSheet();this.render();this.toast('Invoice marked paid')
+  },
+  shareInvoiceWA(id){
+    const inv=DB.invoices.find(i=>i.id===id);if(!inv)return;
+    const text=`${DB.settings.businessName}\nTAX INVOICE ${inv.number}\nTo: ${this.customerName(inv.customerId)}\nTotal: ${UTIL.money(inv.totalMinor)}\nVAT: ${UTIL.money(inv.vatMinor)}\nDue: ${inv.dueDate}\nKRA PIN: ${DB.settings.kraPin}`;
+    window.open(UTIL.wa(text),'_blank')
+  },
+  transmitInvoice(id){
+    const inv=DB.invoices.find(i=>i.id===id);if(!inv)return;
+    try{ETIMS.transmit(inv)}catch(e){
+      // Stub behavior: log attempt, mark pending, show error
+      DB.automationHistory.push({id:inv.id,rule:'eTIMS pending',action:'transmit_attempt',at:UTIL.now(),error:String(e.message||e)});
+      STORAGE.save();this.toast('eTIMS not configured · '+e.message);
+      return
+    }
+  },
+  transmitAll(){
+    let n=0;DB.invoices.filter(i=>i.etimsStatus==='pending').forEach(inv=>{
+      try{ETIMS.transmit(inv);inv.etimsStatus='transmitted';n++}catch(e){}
+    });
+    STORAGE.save();this.render();this.toast(n?n+' transmitted':'eTIMS not configured · 0 transmitted')
+  },
+
+  /* ---- Inventory ---- */
+  renderInventory(){
+    const rows=this.inventory();
+    return `<div class="headrow"><div><h1>Inventory</h1><p class="muted">Branch stock, stock-take and transfers · sample data</p></div><div class="actions"><button onclick="App.stocktakeSheet()">Stock-take</button><button onclick="App.transferSheet()">Transfer</button><button class="primary" onclick="App.adjustSheet()">Adjust stock</button></div></div><div class="grid">${this.chartPanel('Stock value by branch',Charts.bar(this.branches().map(b=>({label:b.name,value:DB.inventory.filter(i=>i.branchId===b.id).reduce((a,i)=>a+(this.product(i.productId)?.costMinor||0)*i.qty,0)}))),'span-8')}${this.panel('Low-stock items',`<div class="kpi">${this.lowStock().length}</div><button onclick="App.stocktakeSheet()">Start stock-take</button>`,'span-4')}<section class="panel span-12"><div class="table-wrap"><table><thead><tr><th>Product</th><th>SKU / barcode</th><th>Branch</th><th>On hand</th><th>Threshold</th><th>Stock value</th><th>Action</th></tr></thead><tbody>${rows.map(i=>{const p=this.product(i.productId);return `<tr><td>${UTIL.escape(p?.name)}</td><td>${p?.sku}<br><span class="muted small">${p?.barcode}</span></td><td>${UTIL.escape(this.branchName(i.branchId))}</td><td><span class="badge ${i.qty<=i.threshold?'warning':'success'}">${i.qty}</span></td><td>${i.threshold}</td><td>${UTIL.money((p?.costMinor||0)*i.qty)}</td><td><button onclick="App.productSheet('${i.productId}')">Inspect</button></td></tr>`}).join('')}</tbody></table></div></section><section class="panel span-12"><div class="panel-head"><h3>Transfers</h3><button onclick="App.transferSheet()">＋ New transfer</button></div>${DB.transfers.map(t=>`<div class="list-row"><div><b>${t.barcode}</b><div class="small muted">${this.branchName(t.fromBranchId)} → ${this.branchName(t.toBranchId)} · ${t.lines.length} lines</div></div><span class="badge ${t.status==='received'?'success':'warning'}">${t.status}</span><button onclick="App.transferDetail('${t.id}')">Open</button></div>`).join('')}</section></div>`
+  },
+  productSheet(id){
+    const p=this.product(id);if(!p)return;
+    this.openSheet(p.name,`<p class="muted">${p.sku} · ${p.barcode} · HS ${p.hsCode||'—'}</p><div class="kpi">${UTIL.money(p.priceMinor)}</div><div class="list-row"><span>Category</span><b>${UTIL.escape(p.category)}</b></div><h3>Stock by branch</h3>${DB.inventory.filter(i=>i.productId===id).map(i=>`<div class="list-row"><span>${UTIL.escape(this.branchName(i.branchId))}</span><b>${i.qty} units</b></div>`).join('')}<button onclick="App.adjustSheet('${id}')">Adjust stock</button> <button onclick="App.transferSheet('${id}')">Transfer stock</button> <button onclick="App.saleSheet();App.addCart('${id}')">Add to sale</button>`)
+  },
+  adjustSheet(productId){
+    this.openSheet('Adjust stock',`<form class="stack" onsubmit="event.preventDefault();App.saveAdjustment('${productId||''}')"><label>Branch<select id="adjBranch">${this.branches().map(b=>`<option value="${b.id}">${UTIL.escape(b.name)}</option>`).join('')}</select></label><label>Product<select id="adjProduct">${DB.products.map(p=>`<option value="${p.id}" ${p.id===productId?'selected':''}>${UTIL.escape(p.name)}</option>`).join('')}</select></label><label>Quantity change (+/-)<input id="adjQty" type="number" step="1" required></label><label>Reason<select id="adjReason"><option>Stock count correction</option><option>Damaged goods</option><option>Opening stock</option><option>Other</option></select></label><button class="primary">Save adjustment</button></form>`)
+  },
+  saveAdjustment(){
+    const b=document.getElementById('adjBranch').value,p=document.getElementById('adjProduct').value,q=Number(document.getElementById('adjQty').value);
+    if(!Number.isInteger(q)||!q)return this.toast('Enter a non-zero whole quantity');
+    let i=DB.inventory.find(x=>x.branchId===b&&x.productId===p);
+    if(!i){i={id:UTIL.id('inv'),branchId:b,productId:p,qty:0,threshold:8};DB.inventory.push(i)}
+    if(i.qty+q<0)return this.toast('Stock cannot become negative');
+    i.qty+=q;i.updatedAt=UTIL.now();
+    this.audit('stock_adjust','inventory',i.id,{qty:q,reason:document.getElementById('adjReason').value});
+    STORAGE.save();this.closeSheet();this.render();this.toast('Stock adjustment saved')
+  },
+  stocktakeSheet(){
+    this.openSheet('Stock-take',`<p class="muted">Scan a product barcode or select it manually.</p><form class="stack" onsubmit="event.preventDefault();App.saveStocktake()"><label>Branch<select id="stBranch">${this.branches().map(b=>`<option value="${b.id}">${UTIL.escape(b.name)}</option>`).join('')}</select></label><label>Scan / product barcode<input id="stBarcode" placeholder="Scan or enter barcode" oninput="App.lookupBarcode('stBarcode','stProduct')"></label><label>Product<select id="stProduct">${DB.products.map(p=>`<option value="${p.id}">${UTIL.escape(p.name)} · ${p.barcode}</option>`).join('')}</select></label><label>Counted quantity<input id="stQty" type="number" min="0" step="1" required></label><button class="primary">Save stock count</button></form>`)
+  },
+  saveStocktake(){
+    const b=document.getElementById('stBranch').value,p=document.getElementById('stProduct').value,q=Number(document.getElementById('stQty').value);
+    if(!Number.isInteger(q)||q<0)return this.toast('Enter a valid whole-number count');
+    let i=DB.inventory.find(x=>x.branchId===b&&x.productId===p);
+    if(!i){i={id:UTIL.id('inv'),branchId:b,productId:p,qty:0,threshold:8};DB.inventory.push(i)}
+    const delta=q-i.qty;i.qty=q;i.updatedAt=UTIL.now();
+    this.audit('stocktake','inventory',i.id,{count:q,delta});
+    STORAGE.save();this.closeSheet();this.render();this.toast('Stock-take saved · variance '+delta)
+  },
+  transferSheet(productId){
+    this.openSheet('Create stock transfer',`<form class="stack" onsubmit="event.preventDefault();App.saveTransfer()"><label>From branch<select id="trFrom">${this.branches().map(b=>`<option value="${b.id}">${UTIL.escape(b.name)}</option>`).join('')}</select></label><label>To branch<select id="trTo">${this.branches().map(b=>`<option value="${b.id}" ${b.id!==BranchContext.get()?'selected':''}>${UTIL.escape(b.name)}</option>`).join('')}</select></label><label>Product<select id="trProduct">${DB.products.map(p=>`<option value="${p.id}" ${p.id===productId?'selected':''}>${UTIL.escape(p.name)}</option>`).join('')}</select></label><label>Quantity<input id="trQty" type="number" min="1" step="1" value="1" required></label><button class="primary">Create transfer draft</button></form>`)
+  },
+  saveTransfer(){
+    const from=document.getElementById('trFrom').value,to=document.getElementById('trTo').value,p=document.getElementById('trProduct').value,q=Number(document.getElementById('trQty').value);
+    if(from===to)return this.toast('Choose two different branches');
+    if(!Number.isInteger(q)||q<1)return this.toast('Quantity must be a positive integer');
+    const inv=DB.inventory.find(i=>i.branchId===from&&i.productId===p);
+    if(!inv||inv.qty<q)return this.toast('Insufficient stock at source branch');
+    const t={id:UTIL.id('tr'),fromBranchId:from,toBranchId:to,status:'draft',barcode:'TR-'+Date.now().toString().slice(-6),lines:[{productId:p,qty:q}],dispatchedAt:null,receivedAt:null};
+    DB.transfers.unshift(t);this.audit('create','transfer',t.id);STORAGE.save();this.closeSheet();this.transferDetail(t.id)
+  },
+  transferDetail(id){
+    const t=DB.transfers.find(x=>x.id===id);if(!t)return;
+    this.openSheet('Transfer · '+t.barcode,`<div class="list-row"><span>Status</span><b>${t.status}</b></div><div class="list-row"><span>Route</span><b>${this.branchName(t.fromBranchId)} → ${this.branchName(t.toBranchId)}</b></div>${t.lines.map(l=>`<div class="list-row"><span>${UTIL.escape(this.product(l.productId)?.name)}</span><b>${l.qty}</b></div>`).join('')}<label>Scan transfer barcode<input id="transferScan" value="${t.barcode}" placeholder="Scan transfer ID"></label><div class="actions" style="margin-top:12px">${t.status==='draft'?`<button class="primary" onclick="App.dispatchTransfer('${id}')">Dispatch / scan-out</button>`:''}${t.status==='in_transit'?`<button class="primary" onclick="App.receiveTransfer('${id}')">Receive / scan-in</button>`:''}</div>`)
+  },
+  dispatchTransfer(id){
+    const t=DB.transfers.find(x=>x.id===id);if(!t||t.status!=='draft')return;
+    const scanned=(document.getElementById('transferScan')?.value||'').trim();
+    if(scanned!==t.barcode){this.toast('Scan does not match transfer barcode');return}
+    for(const l of t.lines){const i=DB.inventory.find(x=>x.branchId===t.fromBranchId&&x.productId===l.productId);if(!i||i.qty<l.qty)return this.toast('Insufficient stock to dispatch')}
+    t.lines.forEach(l=>{DB.inventory.find(x=>x.branchId===t.fromBranchId&&x.productId===l.productId).qty-=l.qty});
+    t.status='in_transit';t.dispatchedAt=UTIL.now();this.audit('transfer_dispatch','transfer',id);STORAGE.save();this.transferDetail(id);this.toast('Transfer dispatched')
+  },
+  receiveTransfer(id){
+    const t=DB.transfers.find(x=>x.id===id);if(!t||t.status!=='in_transit')return;
+    const scanned=(document.getElementById('transferScan')?.value||'').trim();
+    if(scanned!==t.barcode){this.toast('Scan does not match transfer barcode');return}
+    t.lines.forEach(l=>{let i=DB.inventory.find(x=>x.branchId===t.toBranchId&&x.productId===l.productId);if(!i){i={id:UTIL.id('inv'),branchId:t.toBranchId,productId:l.productId,qty:0,threshold:8};DB.inventory.push(i)}i.qty+=l.qty});
+    t.status='received';t.receivedAt=UTIL.now();this.audit('transfer_receive','transfer',id);STORAGE.save();this.transferDetail(id);this.toast('Transfer received')
+  },
+
+  /* ---- Tills ---- */
+  renderTills(){
+    const rows=DB.tills.filter(t=>this.inScope(t));
+    return `<div class="headrow"><div><h1>Tills</h1><p class="muted">Till sessions, floats and cash reconciliation</p></div><div class="actions"><button onclick="App.scanSheet()">▦ Scan till</button><button class="primary" onclick="App.openTillSheet()">＋ Open till</button></div></div><div class="grid">${this.chartPanel('Variance by branch',Charts.bar(this.branches().map(b=>({label:b.name,value:Math.abs(DB.tills.find(t=>t.branchId===b.id)?.varianceMinor||0)}))),'span-8')}${this.panel('Open sessions',`<div class="kpi">${rows.filter(t=>t.status==='open').length}</div><div class="muted small">Across selected branches</div>`,'span-4')}<section class="panel span-12"><table><thead><tr><th>Till</th><th>Branch</th><th>Opened by</th><th>Float</th><th>Expected cash</th><th>Variance</th><th>Status</th><th>Action</th></tr></thead><tbody>${rows.map(t=>`<tr><td>${t.id}<br><span class="muted small">${t.barcode}</span></td><td>${UTIL.escape(this.branchName(t.branchId))}</td><td>${UTIL.escape(this.staffName(t.openedBy))}</td><td>${UTIL.money(t.floatMinor)}</td><td>${UTIL.money(t.expectedCashMinor)}</td><td class="${Math.abs(t.varianceMinor)>50000?'danger-text':''}">${UTIL.money(t.varianceMinor)}</td><td><span class="badge ${t.status==='open'?'success':''}">${t.status}</span></td><td>${t.status==='open'?`<button onclick="App.closeTillSheet('${t.id}')">Close till</button>`:`<button onclick="App.tillDetail('${t.id}')">Inspect</button>`}</td></tr>`).join('')}</tbody></table></section></div>`
+  },
+  openTillSheet(){
+    this.openSheet('Open till',`<form class="stack" onsubmit="event.preventDefault();App.openTill()"><label>Branch<select id="tillBranch">${this.branches().map(b=>`<option value="${b.id}">${UTIL.escape(b.name)}</option>`).join('')}</select></label><label>Float (KES)<input id="tillFloat" type="number" min="0" step="0.01" value="5000" required></label><label>Till barcode<input id="tillBarcode" placeholder="Optional till scan"></label><button class="primary">Open till</button></form>`)
+  },
+  openTill(){
+    if(!RBAC.can(this.role,'till')){this.toast('Not authorised');return}
+    const b=document.getElementById('tillBranch').value;
+    if(DB.tills.some(t=>t.branchId===b&&t.status==='open'))return this.toast('This branch already has an open till in the demo');
+    const t={id:'t'+(++DB.sequence.till),branchId:b,openedBy:this.user.id,openedAt:UTIL.now(),closedAt:null,floatMinor:Math.round(Number(document.getElementById('tillFloat').value)*100),expectedCashMinor:0,countedCashMinor:0,varianceMinor:0,status:'open',barcode:document.getElementById('tillBarcode').value||'TILL-'+DB.sequence.till};
+    DB.tills.push(t);this.audit('open','till',t.id);STORAGE.save();this.closeSheet();this.render();this.toast('Till opened')
+  },
+  closeTillSheet(id){
+    const t=DB.tills.find(x=>x.id===id);
+    this.openSheet('Close till · '+t.id,`<p class="muted">Expected cash includes opening float plus recorded cash sales for this till in this demo.</p><div class="list-row"><span>Opening float</span><b>${UTIL.money(t.floatMinor)}</b></div><label>Counted cash (KES)<input id="countedCash" type="number" min="0" step="0.01" value="${(t.floatMinor/100).toFixed(2)}"></label><button class="primary" style="margin-top:12px" onclick="App.closeTill('${id}')">Reconcile & close</button>`)
+  },
+  closeTill(id){
+    const t=DB.tills.find(x=>x.id===id);if(!t||t.status!=='open')return;
+    // FIX: count cash sales tied to this till OR same branch when tillId missing
+    const cashSales=DB.sales.filter(s=>s.status==='completed'&&(s.tillId===id||(!s.tillId&&s.branchId===t.branchId))).flatMap(s=>s.payments||[]).filter(p=>p.method==='cash').reduce((a,p)=>a+p.amountMinor,0);
+    t.expectedCashMinor=t.floatMinor+cashSales;
+    t.countedCashMinor=Math.round(Number(document.getElementById('countedCash').value)*100);
+    t.varianceMinor=t.countedCashMinor-t.expectedCashMinor;
+    t.status='closed';t.closedAt=UTIL.now();
+    this.audit('close','till',id,{varianceMinor:t.varianceMinor});STORAGE.save();this.closeSheet();this.render();
+    this.toast('Till closed · variance '+UTIL.money(t.varianceMinor));
+    if(Math.abs(t.varianceMinor)>50000)this.toast('Warning: variance exceeds KES 500')
+  },
+  tillDetail(id){
+    const t=DB.tills.find(x=>x.id===id);
+    this.openSheet('Till state · '+id,`<pre style="white-space:pre-wrap;overflow-wrap:anywhere">${UTIL.escape(JSON.stringify(t,null,2))}</pre>`)
+  },
+
+  /* ---- Expenses ---- */
+  renderExpenses(){
+    const rows=DB.expenses.filter(e=>this.inScope(e));
+    return `<div class="headrow"><div><h1>Expenses</h1><p class="muted">Branch operating costs · KES · VAT input tracked</p></div><button class="primary" onclick="App.expenseSheet()">＋ Log expense</button></div><div class="grid">${this.chartPanel('Expense by category',Charts.bar([...new Set(rows.map(e=>e.category))].map(cat=>({label:cat,value:rows.filter(e=>e.category===cat).reduce((a,e)=>a+e.amountMinor,0)}))),'span-6')}${this.chartPanel('Recent expense trend',Charts.line([{name:'Spend',values:Array.from({length:7},(_,i)=>rows.filter(e=>e.at.slice(0,10)===UTIL.day(new Date(Date.now()-(6-i)*86400000))).reduce((a,e)=>a+e.amountMinor,0))}],{labels:['-6d','-5d','-4d','-3d','-2d','-1d','Today']}),'span-6')}<section class="panel span-12"><table><thead><tr><th>Date</th><th>Branch</th><th>Category</th><th>Paid by</th><th>Receipt</th><th>Amount</th><th>VAT input</th><th>Notes</th><th>Action</th></tr></thead><tbody>${rows.map(e=>`<tr><td>${UTIL.fmtDate(e.at)}</td><td>${UTIL.escape(this.branchName(e.branchId))}</td><td>${UTIL.escape(e.category)}</td><td>${UTIL.escape(this.staffName(e.paidBy))}</td><td>${UTIL.escape(e.receiptRef||'—')}</td><td>${UTIL.money(e.amountMinor)}</td><td>${UTIL.money(e.vatInputMinor||0)}</td><td>${UTIL.escape(e.notes||'')}</td><td><button onclick="App.deleteExpense('${e.id}')">Delete</button></td></tr>`).join('')}</tbody></table></section></div>`
+  },
+  expenseSheet(){
+    this.openSheet('Log expense',`<form class="stack" onsubmit="event.preventDefault();App.saveExpense()"><label>Branch<select id="expBranch">${this.branches().map(b=>`<option value="${b.id}">${UTIL.escape(b.name)}</option>`).join('')}</select></label><label>Category<select id="expCategory">${['Rent','Utilities','Supplies','Transport','Marketing','Maintenance','Other'].map(x=>`<option>${x}</option>`).join('')}</select></label><label>Amount (KES)<input id="expAmount" type="number" min="0.01" step="0.01" required></label><label>Supplier KRA PIN<input id="expPin"></label><label>ETR receipt no.<input id="expEtr"></label><label>Receipt reference<input id="expReceipt"></label><label>Notes<textarea id="expNotes" rows="3"></textarea></label><button class="primary">Save expense</button></form>`)
+  },
+  saveExpense(){
+    if(!RBAC.can(this.role,'expense')){this.toast('Not authorised');return}
+    const amount=Math.round(Number(document.getElementById('expAmount').value)*100);
+    if(!Number.isSafeInteger(amount)||amount<=0)return this.toast('Enter a valid amount');
+    const e={id:UTIL.id('exp'),branchId:document.getElementById('expBranch').value,category:document.getElementById('expCategory').value,amountMinor:amount,paidBy:this.user.id,receiptRef:document.getElementById('expReceipt').value,etrReceiptNo:document.getElementById('expEtr').value,supplierPin:document.getElementById('expPin').value,vatInputMinor:Math.round(amount*DB.settings.vatRate/(100+DB.settings.vatRate)),at:UTIL.now(),notes:document.getElementById('expNotes').value,sample:false};
+    DB.expenses.unshift(e);this.audit('create','expense',e.id,{amountMinor:amount});STORAGE.save();this.closeSheet();this.render();this.toast('Expense saved')
+  },
+  deleteExpense(id){
+    if(!RBAC.can(this.role,'expense')){this.toast('Not authorised');return}
+    if(!confirm('Delete this expense record?'))return;
+    DB.expenses=DB.expenses.filter(e=>e.id!==id);this.audit('delete','expense',id);STORAGE.save();this.render();this.toast('Expense deleted')
+  },
+
+  /* ---- Suppliers + PO receive ---- */
+  renderSuppliers(){
+    return `<div class="headrow"><div><h1>Suppliers</h1><p class="muted">Supplier directory and purchase order register</p></div><button class="primary" onclick="App.supplierSheet()">＋ Add supplier</button></div><div class="grid">${this.chartPanel('Supplier balances',Charts.hbar(DB.suppliers.map(s=>({label:s.name,value:s.balanceMinor}))),'span-6')}${this.panel('Supplier count',`<div class="kpi">${DB.suppliers.length}</div><div class="muted small">Registered suppliers</div>`,'span-6')}<section class="panel span-12"><table><thead><tr><th>Supplier</th><th>Phone</th><th>KRA PIN</th><th>Category</th><th>Balance</th><th>Purchase orders</th><th>Action</th></tr></thead><tbody>${DB.suppliers.map(s=>`<tr><td>${UTIL.escape(s.name)}</td><td>${UTIL.escape(s.phone)}</td><td>${UTIL.escape(s.kraPin||'—')}</td><td>${UTIL.escape(s.category)}</td><td>${UTIL.money(s.balanceMinor)}</td><td>${DB.purchaseOrders.filter(p=>p.supplierId===s.id).length}</td><td><button onclick="App.supplierSheet('${s.id}')">Edit</button> <button onclick="App.purchaseOrderSheet('${s.id}')">New PO</button></td></tr>`).join('')}</tbody></table></section><section class="panel span-12"><h3>Purchase orders</h3>${DB.purchaseOrders.map(p=>`<div class="list-row"><div><span>${p.number} · ${UTIL.escape(DB.suppliers.find(s=>s.id===p.supplierId)?.name||'Supplier')} · ${UTIL.money(p.totalMinor)}</span><div class="small muted">${p.lines.length} lines · ${this.branchName(p.branchId)}</div></div><span class="badge ${p.status==='received'?'success':'warning'}">${p.status}</span>${p.status!=='received'?`<button onclick="App.receivePO('${p.id}')">Receive into stock</button>`:''}</div>`).join('')||'<p class="muted">No purchase orders recorded.</p>'}</section></div>`
+  },
+  supplierSheet(id){
+    const s=DB.suppliers.find(x=>x.id===id)||{name:'',phone:'',category:'',balanceMinor:0,kraPin:''};
+    this.openSheet(id?'Edit supplier':'Add supplier',`<form class="stack" onsubmit="event.preventDefault();App.saveSupplier('${id||''}')"><label>Name<input id="supName" required value="${UTIL.escape(s.name)}"></label><label>Phone<input id="supPhone" value="${UTIL.escape(s.phone)}"></label><label>KRA PIN<input id="supPin" value="${UTIL.escape(s.kraPin||'')}"></label><label>Category<input id="supCat" value="${UTIL.escape(s.category)}"></label><label>Balance (KES)<input id="supBalance" type="number" step="0.01" value="${(s.balanceMinor/100).toFixed(2)}"></label><button class="primary">Save supplier</button></form>`)
+  },
+  saveSupplier(id){
+    const s={id:id||UTIL.id('sup'),name:document.getElementById('supName').value.trim(),phone:UTIL.phone(document.getElementById('supPhone').value),kraPin:document.getElementById('supPin').value,category:document.getElementById('supCat').value,balanceMinor:Math.round(Number(document.getElementById('supBalance').value||0)*100)};
+    if(!s.name)return this.toast('Name is required');
+    if(id)Object.assign(DB.suppliers.find(x=>x.id===id),s);else DB.suppliers.push(s);
+    STORAGE.save();this.closeSheet();this.render();this.toast('Supplier saved')
+  },
+  purchaseOrderSheet(id){
+    this.openSheet('New purchase order',`<form class="stack" onsubmit="event.preventDefault();App.savePO('${id}')"><label>Branch<select id="poBranch">${this.branches().map(b=>`<option value="${b.id}">${UTIL.escape(b.name)}</option>`).join('')}</select></label><label>Product<select id="poProduct">${DB.products.map(p=>`<option value="${p.id}">${UTIL.escape(p.name)}</option>`).join('')}</select></label><label>Quantity<input id="poQty" type="number" min="1" step="1" value="10"></label><label>Unit cost (KES)<input id="poCost" type="number" min="0.01" step="0.01" required></label><label>Expected date<input id="poDate" type="date"></label><button class="primary">Create purchase order</button></form>`)
+  },
+  savePO(supplierId){
+    const p=this.product(document.getElementById('poProduct').value);
+    const qty=Number(document.getElementById('poQty').value);
+    const cost=Math.round(Number(document.getElementById('poCost').value)*100);
+    if(!p||!Number.isInteger(qty)||qty<1||cost<=0)return this.toast('Invalid PO line');
+    const po={id:UTIL.id('po'),number:'PO-'+(DB.sequence.po++),supplierId,branchId:document.getElementById('poBranch').value,lines:[{productId:p.id,qty,unitCostMinor:cost}],totalMinor:qty*cost,status:'ordered',expectedAt:document.getElementById('poDate').value,createdAt:UTIL.now()};
+    DB.purchaseOrders.push(po);this.audit('create','purchase_order',po.id);STORAGE.save();this.closeSheet();this.render();this.toast('Purchase order created')
+  },
+  receivePO(id){
+    // FIX: actually add to inventory
+    const po=DB.purchaseOrders.find(x=>x.id===id);if(!po)return;
+    if(po.status==='received')return;
+    if(!confirm('Receive '+po.number+' into '+this.branchName(po.branchId)+' inventory?'))return;
+    po.lines.forEach(l=>{
+      let i=DB.inventory.find(x=>x.branchId===po.branchId&&x.productId===l.productId);
+      if(!i){i={id:UTIL.id('inv'),branchId:po.branchId,productId:l.productId,qty:0,threshold:8};DB.inventory.push(i)}
+      i.qty+=l.qty;i.updatedAt=UTIL.now()
+    });
+    po.status='received';po.receivedAt=UTIL.now();
+    this.audit('receive','purchase_order',id,{lines:po.lines.length});
+    STORAGE.save();this.render();this.toast('PO received · stock updated')
+  },
+
+  /* ---- Customers + credit ---- */
+  renderCustomers(){
+    return `<div class="headrow"><div><h1>Customers</h1><p class="muted">Customer records, loyalty and credit notes</p></div><div class="actions"><button onclick="App.scanSheet()">▦ Check in</button><button class="primary" onclick="App.customerEdit()">＋ Add customer</button></div></div><div class="grid">${this.chartPanel('Credit ageing',Charts.bar([{label:'Current',value:DB.creditNotes.filter(c=>c.dueDate>=UTIL.day()).reduce((a,c)=>a+c.amountMinor-c.paidMinor,0)},{label:'Overdue',value:DB.creditNotes.filter(c=>c.dueDate<UTIL.day()&&c.status!=='paid').reduce((a,c)=>a+c.amountMinor-c.paidMinor,0)}]),'span-6')}${this.panel('Outstanding credit',`<div class="kpi">${UTIL.money(DB.creditNotes.reduce((a,c)=>a+c.amountMinor-c.paidMinor,0))}</div>`,'span-6')}<section class="panel span-12"><table><thead><tr><th>Customer</th><th>Phone</th><th>KRA PIN</th><th>Home branch</th><th>Points</th><th>Credit</th><th>Action</th></tr></thead><tbody>${DB.customers.map(c=>`<tr onclick="App.customerSheet('${c.id}')"><td>${UTIL.escape(c.name)}</td><td>${UTIL.escape(c.phone)}</td><td>${UTIL.escape(c.kraPin||'—')}</td><td>${UTIL.escape(this.branchName(c.branchId))}</td><td>${c.points}</td><td>${UTIL.money(c.creditMinor)}</td><td><button onclick="event.stopPropagation();App.customerSheet('${c.id}')">Open</button></td></tr>`).join('')}</tbody></table></section><section class="panel span-12"><h3>Credit notes</h3>${DB.creditNotes.map(c=>`<div class="list-row"><div><b>${UTIL.escape(this.customerName(c.customerId))}</b><div class="small muted">Due ${c.dueDate} · ${c.status}${c.reason?' · '+UTIL.escape(c.reason):''}</div></div><b>${UTIL.money(c.amountMinor-c.paidMinor)}</b><button onclick="App.creditPayment('${c.id}')">Record payment</button> <button onclick="App.printCreditNote('${c.id}')">Print</button></div>`).join('')||'<p class="muted">No credit notes.</p>'}</section></div>`
+  },
+  customerEdit(id){
+    const c=DB.customers.find(x=>x.id===id)||{name:'',phone:'',branchId:DB.branches[0].id,points:0,creditMinor:0,kraPin:'',customerType:'individual',county:'Nairobi'};
+    this.openSheet(id?'Edit customer':'Add customer',`<form class="stack" onsubmit="event.preventDefault();App.saveCustomer('${id||''}')"><label>Name<input id="custName" required value="${UTIL.escape(c.name)}"></label><label>Phone<input id="custPhone" value="${UTIL.escape(c.phone)}"></label><label>KRA PIN<input id="custPin" value="${UTIL.escape(c.kraPin||'')}"></label><label>Type<select id="custType"><option ${c.customerType==='individual'?'selected':''}>individual</option><option ${c.customerType==='business'?'selected':''}>business</option></select></label><label>County<input id="custCounty" value="${UTIL.escape(c.county||'')}"></label><label>Home branch<select id="custBranch">${DB.branches.map(b=>`<option value="${b.id}" ${b.id===c.branchId?'selected':''}>${UTIL.escape(b.name)}</option>`).join('')}</select></label><label>Loyalty points<input id="custPoints" type="number" min="0" value="${c.points}"></label><button class="primary">Save customer</button></form>`)
+  },
+  saveCustomer(id){
+    const name=document.getElementById('custName').value.trim();if(!name)return this.toast('Name is required');
+    const c={id:id||UTIL.id('c'),name,phone:UTIL.phone(document.getElementById('custPhone').value),kraPin:document.getElementById('custPin').value,customerType:document.getElementById('custType').value,county:document.getElementById('custCounty').value,branchId:document.getElementById('custBranch').value,points:Number(document.getElementById('custPoints').value||0),creditMinor:0};
+    if(id){const old=DB.customers.find(x=>x.id===id);c.creditMinor=old.creditMinor;Object.assign(old,c)}else DB.customers.push(c);
+    STORAGE.save();this.closeSheet();this.render();this.toast('Customer saved')
+  },
+  customerSheet(id){
+    const c=DB.customers.find(x=>x.id===id);if(!c)return;
+    this.openSheet(c.name,`<p>${UTIL.escape(c.phone)}${c.kraPin?' · PIN '+UTIL.escape(c.kraPin):''}</p><div class="list-row"><span>Home branch</span><b>${UTIL.escape(this.branchName(c.branchId))}</b></div><div class="list-row"><span>Loyalty points</span><b>${c.points}</b></div><div class="list-row"><span>Credit balance</span><b>${UTIL.money(c.creditMinor)}</b></div><button onclick="App.customerEdit('${id}')">Edit customer</button> <button onclick="App.customerCheckin('${id}')">Record visit</button> <button onclick="App.creditNoteSheet('${id}')">New credit note</button>`)
+  },
+  customerCheckin(id){
+    const c=DB.customers.find(x=>x.id===id);if(!c)return;
+    c.points+=1;this.audit('customer_checkin','customer',id);STORAGE.save();this.closeSheet();this.toast('Visit recorded · 1 loyalty point added')
+  },
+  creditNoteSheet(id){
+    this.openSheet('New credit note',`<form class="stack" onsubmit="event.preventDefault();App.saveCredit('${id}')"><label>Amount (KES)<input id="creditAmount" type="number" min="0.01" step="0.01" required></label><label>Reason<input id="creditReason" placeholder="e.g. damaged goods return"></label><label>Original sale / invoice ref<input id="creditRef"></label><label>Due date<input id="creditDue" type="date" required value="${UTIL.day(new Date(Date.now()+7*86400000))}"></label><button class="primary">Create credit note</button></form>`)
+  },
+  saveCredit(id){
+    const c=DB.customers.find(x=>x.id===id);if(!c)return this.toast('Customer not found');
+    const amount=Math.round(Number(document.getElementById('creditAmount').value)*100);
+    if(!amount||amount<=0)return this.toast('Invalid amount');
+    const cr={id:UTIL.id('cr'),customerId:id,branchId:c.branchId,amountMinor:amount,paidMinor:0,dueDate:document.getElementById('creditDue').value,status:'open',reason:document.getElementById('creditReason').value,saleRef:document.getElementById('creditRef').value};
+    DB.creditNotes.push(cr);c.creditMinor+=amount;this.audit('create','credit_note',cr.id);STORAGE.save();this.closeSheet();this.render();this.toast('Credit note created')
+  },
+  creditPayment(id){
+    const c=DB.creditNotes.find(x=>x.id===id);if(!c)return;
+    this.openSheet('Record credit payment',`<p>Outstanding: <b>${UTIL.money(c.amountMinor-c.paidMinor)}</b></p><form class="stack" onsubmit="event.preventDefault();App.saveCreditPayment('${id}')"><label>Payment (KES)<input id="creditPaid" type="number" min="0.01" max="${((c.amountMinor-c.paidMinor)/100).toFixed(2)}" step="0.01" required></label><button class="primary">Record payment</button></form>`)
+  },
+  saveCreditPayment(id){
+    const c=DB.creditNotes.find(x=>x.id===id),amount=Math.round(Number(document.getElementById('creditPaid').value)*100);
+    if(amount<=0||amount>c.amountMinor-c.paidMinor)return this.toast('Invalid payment amount');
+    c.paidMinor+=amount;c.status=c.paidMinor>=c.amountMinor?'paid':'partial';
+    const cust=DB.customers.find(x=>x.id===c.customerId);if(cust)cust.creditMinor=Math.max(0,cust.creditMinor-amount);
+    this.audit('credit_payment','credit_note',id,{amountMinor:amount});STORAGE.save();this.closeSheet();this.render();this.toast('Credit payment recorded')
+  },
+  printCreditNote(id){
+    const c=DB.creditNotes.find(x=>x.id===id);if(!c)return;
+    this.openSheet('Credit note',`<div class="receipt"><center><b>${UTIL.escape(DB.settings.businessName)}</b><br>KRA PIN: ${UTIL.escape(DB.settings.kraPin)}<hr><b>CREDIT NOTE</b><br>${c.id}<br>${UTIL.fmtDate(new Date())}</center><hr>To: <b>${UTIL.escape(this.customerName(c.customerId))}</b><hr>Reason: ${UTIL.escape(c.reason||'—')}<br>Original ref: ${UTIL.escape(c.saleRef||'—')}<br><b>Amount: ${UTIL.money(c.amountMinor)}</b><br>Paid: ${UTIL.money(c.paidMinor)}<br>Outstanding: ${UTIL.money(c.amountMinor-c.paidMinor)}<hr><center>${UTIL.escape(DB.settings.receiptFooter)}</center></div><button onclick="window.print()">Print credit note</button>`)
+  },
+
+  /* ---- Staff ---- */
+  renderStaff(){
+    return `<div class="headrow"><div><h1>Staff</h1><p class="muted">Staff directory, branch assignments and attendance</p></div><div class="actions"><button onclick="App.clockSheet()">Clock in/out</button><button class="primary" onclick="App.staffEdit()">＋ Add staff</button></div></div><div class="grid">${this.chartPanel('Hours by staff · demo estimate',Charts.bar(DB.staff.map(s=>({label:s.name.split(' ')[0],value:DB.shiftLogs.filter(l=>l.staffId===s.id&&l.direction==='in').length*8})).filter(x=>x.value)),'span-8')}${this.panel('On shift',`<div class="kpi">${DB.shiftLogs.filter(s=>s.direction==='in'&&this.inScope(s)).length}</div><div class="muted small">Clock-in events in sample session</div>`,'span-4')}<section class="panel span-12"><table><thead><tr><th>Name</th><th>Role</th><th>Phone</th><th>Primary branch</th><th>Badge barcode</th><th>Status</th><th>Action</th></tr></thead><tbody>${DB.staff.filter(s=>this.inScope(s)).map(s=>`<tr><td>${UTIL.escape(s.name)}</td><td>${s.role}</td><td>${UTIL.escape(s.phone)}</td><td>${UTIL.escape(this.branchName(s.branchId))}</td><td>${s.badge}</td><td><span class="badge ${s.active?'success':'warning'}">${s.active?'Active':'Inactive'}</span></td><td><button onclick="App.staffDetail('${s.id}')">Inspect</button> <button onclick="App.printBadge('${s.id}')">Print badge</button></td></tr>`).join('')}</tbody></table></section><section class="panel span-12"><h3>Recent shift logs</h3>${DB.shiftLogs.slice(-12).reverse().map(l=>`<div class="list-row"><span>${UTIL.escape(this.staffName(l.staffId))} · ${UTIL.escape(this.branchName(l.branchId))}</span><span>${l.direction} · ${UTIL.fmtTime(l.at)}</span><span class="badge">${l.source}</span></div>`).join('')}</section></div>`
+  },
+  staffEdit(id){
+    const s=DB.staff.find(x=>x.id===id)||{name:'',phone:'',role:'cashier',branchId:DB.branches[0].id,badge:'',hourlyRateMinor:0,active:true,pin:''};
+    this.openSheet(id?'Edit staff':'Add staff',`<form class="stack" onsubmit="event.preventDefault();App.saveStaff('${id||''}')"><label>Name<input id="staffName" required value="${UTIL.escape(s.name)}"></label><label>Phone<input id="staffPhone" value="${UTIL.escape(s.phone)}"></label><label>Role<select id="staffRole">${['owner','ops_manager','branch_manager','cashier','storekeeper'].map(r=>`<option ${r===s.role?'selected':''}>${r}</option>`).join('')}</select></label><label>Primary branch<select id="staffBranch">${DB.branches.map(b=>`<option value="${b.id}" ${b.id===s.branchId?'selected':''}>${UTIL.escape(b.name)}</option>`).join('')}</select></label><label>Badge barcode<input id="staffBadge" value="${UTIL.escape(s.badge)}"></label><label>PIN (4 digits)<input id="staffPin" inputmode="numeric" value="${UTIL.escape(s.pin||'')}"></label><label>Hourly rate (KES)<input id="staffRate" type="number" min="0" step="0.01" value="${(s.hourlyRateMinor/100).toFixed(2)}"></label><button class="primary">Save staff</button></form>`)
+  },
+  saveStaff(id){
+    const name=document.getElementById('staffName').value.trim();if(!name)return this.toast('Name is required');
+    const s={id:id||UTIL.id('staff'),name,phone:UTIL.phone(document.getElementById('staffPhone').value),role:document.getElementById('staffRole').value,branchId:document.getElementById('staffBranch').value,badge:document.getElementById('staffBadge').value||('EMP-'+Date.now()),pin:document.getElementById('staffPin').value,hourlyRateMinor:Math.round(Number(document.getElementById('staffRate').value||0)*100),active:true};
+    if(id)Object.assign(DB.staff.find(x=>x.id===id),s);else DB.staff.push(s);
+    this.audit(id?'update':'create','staff',s.id);STORAGE.save();this.closeSheet();this.render();this.toast('Staff record saved')
+  },
+  staffDetail(id){
+    const s=DB.staff.find(x=>x.id===id);if(!s)return;
+    this.openSheet(s.name,`<div class="list-row"><span>Role</span><b>${s.role}</b></div><div class="list-row"><span>Phone</span><b>${UTIL.escape(s.phone)}</b></div><div class="list-row"><span>Badge</span><b>${s.badge}</b></div><button onclick="App.clockStaff('${id}','in')">Clock in</button> <button onclick="App.clockStaff('${id}','out')">Clock out</button> <button onclick="App.printBadge('${id}')">Print badge</button>`)
+  },
+  printBadge(id){
+    const s=DB.staff.find(x=>x.id===id);if(!s)return;
+    const badge=s.badge||'EMP-000';
+    const bars=Array.from({length:48},(_,i)=>{const code=badge.charCodeAt(i%badge.length)||65;return `<rect x="${i*5+4}" y="4" width="${1+(code%3)}" height="48" fill="#000"/>`}).join('');
+    this.openSheet('Staff badge',`<div class="receipt"><center><b>${UTIL.escape(DB.settings.businessName)}</b><hr><h2>${UTIL.escape(s.name)}</h2>${s.role}<br><h2>${UTIL.escape(badge)}</h2><svg viewBox="0 0 280 60" width="100%">${bars}</svg><small>Demo barcode artwork · not standards-compliant</small></center></div><button onclick="window.print()">Print badge</button>`)
+  },
+  clockSheet(){
+    this.openSheet('Staff clock',`<form class="stack" onsubmit="event.preventDefault();App.clockByBadge()"><label>Badge barcode<input id="clockBadge" placeholder="EMP-001 or scan badge" required></label><label>Action<select id="clockDirection"><option value="in">Clock in</option><option value="out">Clock out</option></select></label><button class="primary">Record shift event</button></form><p class="small muted">Manual entry works with USB/Bluetooth barcode wedges.</p>`)
+  },
+  clockByBadge(){
+    const badge=document.getElementById('clockBadge').value.trim();
+    const s=DB.staff.find(x=>x.badge.toLowerCase()===badge.toLowerCase()||x.id===badge);
+    if(!s)return this.toast('Staff badge not found');
+    this.clockStaff(s.id,document.getElementById('clockDirection').value)
+  },
+  clockStaff(id,direction){
+    const s=DB.staff.find(x=>x.id===id);if(!s)return;
+    DB.shiftLogs.push({id:UTIL.id('shift'),staffId:id,branchId:s.branchId,direction,at:UTIL.now(),source:'manual'});
+    this.audit('clock_'+direction,'shift',id);STORAGE.save();this.closeSheet();this.render();this.toast(s.name+' clocked '+direction)
+  },
+
+  /* ---- Automations ---- */
+  renderAutomations(){
+    const alerts=this.alerts();
+    return `<div class="headrow"><div><h1>Automation Centre</h1><p class="muted">Local rule checks only · no external notifications</p></div><button onclick="App.runRuleTest()">Test rules</button></div><div class="grid">${this.panel('Rules configured',`<div class="kpi">${RULES.length}</div><div class="muted small">Device-local checks</div>`,'span-4')}${this.panel('Active matches',`<div class="kpi">${alerts.length}</div><div class="muted small">Across current scope</div>`,'span-4')}${this.panel('History entries',`<div class="kpi">${DB.automationHistory.length}</div><div class="muted small">Dismissals and snoozes</div>`,'span-4')}<section class="panel span-12"><h2>Rules and matched records</h2>${RULES.map(([name,desc,action])=>{const matches=alerts.filter(a=>a.rule===name);return `<div class="list-row" style="align-items:flex-start"><div style="flex:1"><b>${UTIL.escape(name)}</b><div class="small muted">${UTIL.escape(desc)}</div><div class="small">Suggested action: ${UTIL.escape(action)}</div>${matches.map(a=>`<div class="timeline-item ${name==='Till variance'?'danger':''}" style="margin-top:8px"><b>${UTIL.escape(a.detail||a.id)}</b><div class="row-actions" style="margin-top:7px"><button onclick="App.handleAlert('${a.id}')">${UTIL.escape(a.action)}</button><button onclick="App.dismissAlert('${a.id}','snooze')">Snooze</button><button onclick="App.dismissAlert('${a.id}','dismiss')">Dismiss</button></div></div>`).join('')||'<div class="small muted">No current matched records</div>'}</div><span class="badge ${matches.length?'warning':'success'}">${matches.length?'Matched '+matches.length:'Monitoring'}</span></div>`}).join('')}</section><section class="panel span-12"><h3>Automation history</h3>${DB.automationHistory.slice(-30).reverse().map(h=>`<div class="list-row"><span>${UTIL.escape(h.rule||h.id)} · ${h.action}${h.error?' · '+UTIL.escape(h.error):''}</span><span class="muted small">${UTIL.fmtDate(h.at)}</span></div>`).join('')||'<p class="muted">No history yet.</p>'}</section></div>`
+  },
+  handleAlert(id){
+    const a=this.alerts().find(x=>x.id===id);if(!a){this.toast('Alert already resolved');return}
+    if(a.rule==='Low stock'){this.closeSheet();this.navigate('inventory')}
+    else if(a.rule==='Credit overdue'){this.creditPayment(id)}
+    else if(a.rule==='Transfer in transit > 24 hours'){this.transferDetail(id)}
+    else if(a.rule==='Backup reminder'){this.exportBackup()}
+    else if(a.rule==='Till variance'){this.tillDetail(id)}
+    else if(a.rule==='Invoice overdue'){this.invoiceDetail(id)}
+    else if(a.rule==='eTIMS pending'){this.invoiceDetail(id)}
+    else if(a.rule==='Expiring product'){this.navigate('inventory')}
+    else if(a.rule==='Branch staff shortage'){this.navigate('staff')}
+    else this.toast(a.action+' · review the related view')
+  },
+  dismissAlert(id,action){
+    DB.automationHistory.push({id,rule:this.alerts().find(a=>a.id===id)?.rule||id,action,at:UTIL.now(),dismissed:action==='dismiss'});
+    STORAGE.save();this.render();this.toast(action==='dismiss'?'Alert dismissed':'Alert snoozed')
+  },
+  runRuleTest(){
+    const summary=RULES.map(r=>r[0]+': '+this.alerts().filter(a=>a.rule===r[0]).length+' match(es)').join('\n');
+    this.openSheet('Rule test results',`<pre style="white-space:pre-wrap">${UTIL.escape(summary)}</pre><p class="muted small">Dry run only. No external notifications.</p>`)
+  },
+
+  /* ---- Reports ---- */
+  renderReports(){
+    const reports=['Sales report','Payment mix report','Branch comparison','Hourly heatmap','Product performance','Category profitability','Stock valuation','Stock movement report','Till & variance report','Expenses report','Supplier balances','Credit ageing','VAT summary','Staff attendance & hours'];
+    return `<div class="headrow"><div><h1>Reports</h1><p class="muted">Chart-first reports · CSV and print · sample data</p></div><div class="actions"><button onclick="App.exportCSV()">Export CSV</button><button onclick="window.print()">Print report</button></div></div><div class="grid"><section class="panel span-12"><div class="form-grid"><label>Report<select id="reportType" onchange="App.renderReportBody()">${reports.map(r=>`<option>${r}</option>`).join('')}</select></label><label>Date range<select id="reportRange" onchange="App.renderReportBody()"><option>Today</option><option>Last 7 days</option><option>Last 30 days</option><option>All sample data</option></select></label></div><div id="reportBody" style="margin-top:16px">${this.reportBody('Sales report')}</div></section></div>`
+  },
+  reportSalesFiltered(){
+    const range=document.getElementById('reportRange')?.value||'All sample data';
+    return this.activeSales().filter(s=>{
+      const age=UTIL.ageDays(s.at);
+      if(range==='Today')return UTIL.isToday(s.at);
+      if(range==='Last 7 days')return age<7;
+      if(range==='Last 30 days')return age<30;
+      return true
+    })
+  },
+  reportData(type){
+    const sales=this.reportSalesFiltered();
+    if(type==='Payment mix report')return [['Payment method','Amount (minor units)'],...['cash','mpesa','card'].map(m=>[m,sales.flatMap(s=>s.payments||[]).filter(p=>p.method===m).reduce((a,p)=>a+p.amountMinor,0)])];
+    if(type==='Branch comparison')return [['Branch','Revenue minor','Transactions'],...this.branches().map(b=>[b.name,this.sumSales(sales.filter(s=>s.branchId===b.id)),sales.filter(s=>s.branchId===b.id).length])];
+    if(type==='Product performance'||type==='Category profitability')return [['Product / category','Units sold','Revenue minor'],...DB.products.map(p=>[p.name,sales.reduce((a,s)=>a+s.lines.filter(l=>l.productId===p.id).reduce((n,l)=>n+l.qty,0),0),sales.reduce((a,s)=>a+s.lines.filter(l=>l.productId===p.id).reduce((n,l)=>n+l.qty*l.unitPriceMinor,0),0)])];
+    if(type==='Stock valuation')return [['Product','Branch','Qty','Stock value minor'],...this.inventory().map(i=>[this.product(i.productId)?.name,this.branchName(i.branchId),i.qty,i.qty*(this.product(i.productId)?.costMinor||0)])];
+    if(type==='Expenses report')return [['Category','Branch','Amount minor','VAT input minor'],...DB.expenses.filter(e=>this.inScope(e)).map(e=>[e.category,this.branchName(e.branchId),e.amountMinor,e.vatInputMinor||0])];
+    if(type==='Supplier balances')return [['Supplier','Phone','KRA PIN','Balance minor'],...DB.suppliers.map(s=>[s.name,s.phone,s.kraPin||'',s.balanceMinor])];
+    if(type==='Credit ageing')return [['Customer','Due date','Outstanding minor'],...DB.creditNotes.map(c=>[this.customerName(c.customerId),c.dueDate,c.amountMinor-c.paidMinor])];
+    if(type==='Till & variance report')return [['Till','Branch','Expected cash minor','Counted cash minor','Variance minor'],...DB.tills.filter(t=>this.inScope(t)).map(t=>[t.id,this.branchName(t.branchId),t.expectedCashMinor,t.countedCashMinor,t.varianceMinor])];
+    if(type==='Staff attendance & hours')return [['Staff','Branch','Shift events'],...DB.staff.filter(s=>this.inScope(s)).map(s=>[s.name,this.branchName(s.branchId),DB.shiftLogs.filter(l=>l.staffId===s.id).length])];
+    if(type==='VAT summary'){
+      const outVat=sales.reduce((a,s)=>a+s.vatMinor,0);
+      const inVat=DB.expenses.filter(e=>this.inScope(e)).reduce((a,e)=>a+(e.vatInputMinor||0),0);
+      return [['Metric','Amount minor'],['Output VAT (sales)',outVat],['Input VAT (expenses)',inVat],['Net VAT payable',Math.max(0,outVat-inVat)]]
+    }
+    if(type==='Stock movement report')return [['Product','Branch','Qty on hand'],...this.inventory().map(i=>[this.product(i.productId)?.name,this.branchName(i.branchId),i.qty])];
+    if(type==='Hourly heatmap'){
+      const start=DB.settings.openingHours.start,end=DB.settings.openingHours.end,slots=end-start;
+      return [['Day','Hour','Transactions'],...Array.from({length:7*slots},(_,i)=>[['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][Math.floor(i/slots)],`${i%slots+start}:00`,sales.filter(s=>new Date(s.at).getDay()===Math.floor(i/slots)&&new Date(s.at).getHours()===i%slots+start).length])]
+    }
+    return [['Sale','Date','Branch','Payment','Total minor','Status'],...sales.map(s=>[s.number,s.at,this.branchName(s.branchId),(s.payments||[]).map(p=>p.method).join('+'),s.totalMinor,s.status])]
+  },
+  reportBody(type){
+    const data=this.reportData(type),headers=data[0],rows=data.slice(1);
+    let chart;
+    const sales=this.reportSalesFiltered();
+    if(type==='Payment mix report')chart=Charts.donut(['cash','mpesa','card'].map(m=>({label:m,value:sales.flatMap(s=>s.payments||[]).filter(p=>p.method===m).reduce((a,p)=>a+p.amountMinor,0)})));
+    else if(type==='Hourly heatmap'){
+      const start=DB.settings.openingHours.start,end=DB.settings.openingHours.end,slots=end-start;
+      chart=Charts.heatmap(Array.from({length:84},(_,i)=>sales.filter(s=>new Date(s.at).getDay()===Math.floor(i/slots)&&new Date(s.at).getHours()===i%slots+start).length),{startHour:start,endHour:end});
+    }
+    else if(type==='Product performance'||type==='Category profitability')chart=Charts.hbar(DB.products.map(p=>({label:p.name,value:sales.reduce((a,s)=>a+s.lines.filter(l=>l.productId===p.id).reduce((n,l)=>n+l.qty*l.unitPriceMinor,0),0)})).sort((a,b)=>b.value-a.value).slice(0,8));
+    else if(type==='Stock valuation')chart=Charts.bar(this.branches().map(b=>({label:b.name,value:this.inventory().filter(i=>i.branchId===b.id).reduce((a,i)=>a+i.qty*(this.product(i.productId)?.costMinor||0),0)})));
+    else if(type==='Expenses report')chart=Charts.bar([...new Set(DB.expenses.map(e=>e.category))].map(cat=>({label:cat,value:DB.expenses.filter(e=>e.category===cat&&this.inScope(e)).reduce((a,e)=>a+e.amountMinor,0)})));
+    else if(type==='Till & variance report')chart=Charts.bar(DB.tills.filter(t=>this.inScope(t)).map(t=>({label:this.branchName(t.branchId),value:Math.abs(t.varianceMinor)})));
+    else if(type==='Supplier balances')chart=Charts.hbar(DB.suppliers.map(s=>({label:s.name,value:s.balanceMinor})));
+    else if(type==='Credit ageing')chart=Charts.bar([{label:'Current',value:DB.creditNotes.filter(c=>c.dueDate>=UTIL.day()).reduce((a,c)=>a+c.amountMinor-c.paidMinor,0)},{label:'Overdue',value:DB.creditNotes.filter(c=>c.dueDate<UTIL.day()).reduce((a,c)=>a+c.amountMinor-c.paidMinor,0)}]);
+    else if(type==='Staff attendance & hours')chart=Charts.bar(DB.staff.filter(s=>this.inScope(s)).map(s=>({label:s.name.split(' ')[0],value:DB.shiftLogs.filter(l=>l.staffId===s.id).length*8})));
+    else if(type==='VAT summary')chart=Charts.bar([{label:'Output VAT',value:sales.reduce((a,s)=>a+s.vatMinor,0)},{label:'Input VAT',value:DB.expenses.filter(e=>this.inScope(e)).reduce((a,e)=>a+(e.vatInputMinor||0),0)}]);
+ else chart=Charts.bar(this.branches().map(b=>({label:b.name,value:this.sumSales(sales.filter(s=>s.branchId===b.id))})));
+    return `<div class="small muted" style="margin-bottom:8px"><span class="chip">Showing sample data</span> · ${UTIL.escape(type)} · ${BranchContext.get()==='all'?'All branches':UTIL.escape(this.branchName(BranchContext.get()))} · ${document.getElementById('reportRange')?.value||'All sample data'}</div><div onclick="App.openChart(this)">${chart}</div><div class="table-wrap" style="margin-top:18px"><table><thead><tr>${headers.map(h=>`<th>${UTIL.escape(h)}</th>`).join('')}</tr></thead><tbody>${rows.slice(0,300).map(r=>`<tr>${(Array.isArray(r)?r:[r]).map(v=>`<td>${UTIL.escape(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div><div class="actions" style="margin-top:14px"><button class="primary" onclick="App.exportCSV()">Download CSV</button><button onclick="window.print()">Print report</button></div>`
+  },
+  renderReportBody(){
+    const el=document.getElementById('reportBody');if(!el)return;
+    el.innerHTML=this.reportBody(document.getElementById('reportType').value);
+    this.bindTips(el);this.labelTables(el)
+  },
+  exportCSV(){
+    const type=document.getElementById('reportType')?.value||'Sales report';
+    const data=this.reportData(type);
+    UTIL.download(type.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.csv',UTIL.csv(data));
+    DB.lastExportAt=UTIL.now();STORAGE.save();this.audit('export_csv','report',type);this.toast('CSV exported')
+  },
+
+  /* ---- Settings ---- */
+  renderSettings(){
+    return `<div class="headrow"><div><h1>Settings</h1><p class="muted">Business profile, KRA details, theme and local data</p></div></div><div class="grid"><section class="panel span-6"><h2>Business profile</h2><form class="stack" onsubmit="event.preventDefault();App.saveSettings()"><label>Business name<input id="setName" value="${UTIL.escape(DB.settings.businessName)}" required></label><label>KRA PIN<input id="setPin" value="${UTIL.escape(DB.settings.kraPin||'')}"></label><label>VAT number<input id="setVatNo" value="${UTIL.escape(DB.settings.vatNumber||'')}"></label><label>VAT rate (%)<input id="setVat" type="number" min="0" max="100" step="0.01" value="${DB.settings.vatRate}"></label><label>Receipt footer<input id="setFooter" value="${UTIL.escape(DB.settings.receiptFooter)}"></label><label>Theme<select id="setTheme"><option value="dark" ${document.documentElement.dataset.theme==='dark'?'selected':''}>Dark · default</option><option value="light" ${document.documentElement.dataset.theme==='light'?'selected':''}>Light</option></select></label><button class="primary">Save settings</button></form></section><section class="panel span-6"><h2>M-Pesa & eTIMS</h2><form class="stack" onsubmit="event.preventDefault();App.saveIntegrations()"><label>M-Pesa Till<input id="setTill" value="${UTIL.escape(DB.settings.mpesaTill||'')}"></label><label>M-Pesa Paybill<input id="setPaybill" value="${UTIL.escape(DB.settings.mpesaPaybill||'')}"></label><label>eTIMS environment<select id="setEtimsEnv"><option ${DB.settings.etimsEnv==='sandbox'?'selected':''}>sandbox</option><option ${DB.settings.etimsEnv==='production'?'selected':''}>production</option></select></label><label>eTIMS device ID<input id="setEtimsId" value="${UTIL.escape(DB.settings.etimsDeviceId||'')}"></label><div class="notice small">Both integrations are <b>stubs</b> in this demo — no external calls are made. Configure a real Daraja/eTIMS adapter in <code>MPESA</code>/<code>ETIMS</code>.</div><button class="primary">Save integrations</button></form></section><section class="panel span-6"><h2>Backup & restore</h2><p class="muted small">JSON backup contains local demo records. Keep it private if you add real data.</p><div class="stack"><button class="primary" onclick="App.exportBackup()">Export JSON backup</button><label>Restore JSON backup<input id="restoreFile" type="file" accept="application/json" onchange="App.importBackup(this.files[0])"></label><button onclick="App.exportCSV()">Export current report CSV</button><button class="danger" onclick="App.resetDemo()">Reset demo data</button><button onclick="App.logout()">Log out</button></div></section><section class="panel span-6"><h2>Local-only operation</h2><p class="muted">No cloud sync configured. Browser storage is not encrypted.</p><div class="list-row"><span>Data mode</span><b>Local</b></div><div class="list-row"><span>Sync adapter</span><b>Not configured</b></div><div class="list-row"><span>Session</span><b>${UTIL.escape(this.role)} · sessionStorage</b></div><div class="list-row"><span>Role</span><b>${UTIL.escape(this.user?.name||'')}</b></div></section></div>`
+  },
+  saveSettings(){
+    DB.settings.businessName=document.getElementById('setName').value.trim();
+    DB.settings.kraPin=document.getElementById('setPin').value;
+    DB.settings.vatNumber=document.getElementById('setVatNo').value;
+    DB.settings.vatRate=Number(document.getElementById('setVat').value);
+    DB.settings.receiptFooter=document.getElementById('setFooter').value;
+    const theme=document.getElementById('setTheme').value;
+    document.documentElement.dataset.theme=theme;DB.settings.theme=theme;
+    STORAGE.save();this.buildNav();this.render();this.toast('Settings saved')
+  },
+  saveIntegrations(){
+    DB.settings.mpesaTill=document.getElementById('setTill').value;
+    DB.settings.mpesaPaybill=document.getElementById('setPaybill').value;
+    DB.settings.etimsEnv=document.getElementById('setEtimsEnv').value;
+    DB.settings.etimsDeviceId=document.getElementById('setEtimsId').value;
+    STORAGE.save();this.toast('Integrations saved (stubs only)')
+  },
+  exportBackup(){
+    DB.lastExportAt=UTIL.now();STORAGE.save();
+    UTIL.download('ops-grid-backup-'+UTIL.day()+'.json',JSON.stringify(DB,null,2),'application/json');
+    this.audit('backup_export','database',STORAGE.key);this.toast('JSON backup exported')
+  },
+  importBackup(file){
+    if(!file)return;
+    const reader=new FileReader();
+    reader.onload=()=>{
+      try{
+        const x=JSON.parse(reader.result);
+        if(!x.branches||!x.sales||!x.products)throw Error('Invalid backup structure');
+        if(!confirm('Replace current local demo data with this backup?'))return;
+        const ref=sampleDB();
+        DB=Object.assign(ref,x);
+        DB.settings=Object.assign({},ref.settings,x.settings||{});
+        DB.sequence=Object.assign({},ref.sequence,x.sequence||{});
+        STORAGE.save();this.closeSheet();this.buildNav();this.render();this.toast('Backup restored')
+      }catch(e){this.toast('Import failed: '+e.message)}
+    };
+    reader.readAsText(file)
+  },
+  resetDemo(){
+    if(!confirm('Reset all local data to the original sample dataset?'))return;
+    if(!confirm('Final confirmation: all changes in this browser will be lost. Continue?'))return;
+    DB=sampleDB();STORAGE.save();this.render();this.toast('Demo data reset')
+  },
+
+  /* ---- Developer (FIXED: no wipe-dashboard bug) ---- */
+  renderDeveloper(){
+    if(this.role!=='developer')return '<div class="panel span-12"><h2>Not authorised</h2><p class="muted">Developer role required.</p></div>';
+    return `<div class="headrow"><div><h1>Developer panel</h1><p class="muted">Local diagnostics · developer demo role only</p></div><span class="chip">LOCAL MODE</span></div><div class="grid"><section class="panel span-6"><h2>Data mode & sync</h2><label>Mode<select id="devMode"><option ${DB.settings.mode==='Local'?'selected':''}>Local</option><option ${DB.settings.mode==='Hybrid'?'selected':''}>Hybrid</option><option ${DB.settings.mode==='Cloud'?'selected':''}>Cloud</option></select></label><p class="small muted">Cloud and Hybrid are configuration stubs. No remote connection is implemented.</p><label>Firestore project ID<input placeholder="Project ID (not connected)"></label><label>Cloudflare Worker URL<input placeholder="Worker URL (not connected)"></label><label>Sync status<input disabled value="Not configured"></label><button onclick="App.testSync()">Test sync adapter</button></section><section class="panel span-6"><h2>Data tools</h2><div class="stack"><button onclick="App.exportBackup()">Export JSON</button><label>Import JSON<input type="file" accept="application/json" onchange="App.importBackup(this.files[0])"></label><button onclick="App.resetSequence()">Reset sequence generator</button><button class="danger" onclick="App.wipeData()">Wipe local data</button><button onclick="App.reseed()">Reseed sample data</button></div></section><section class="panel span-12"><h2>Domain inspectors</h2><div class="actions"><button onclick="App.inspect('branches')">Branch inspector</button><button onclick="App.inspect('tills')">Till-state inspector</button><button onclick="App.inspect('transfers')">Transfer inspector</button><button onclick="App.inspect('invoices')">Invoice inspector</button><button onclick="App.chartDebug()">Chart debug tool</button><button onclick="App.runRuleTest()">Automation rule tester</button></div><div id="devInspect" style="margin-top:12px"></div></section><section class="panel span-12"><div class="panel-head"><h2>Event log · last 200</h2><button onclick="App.clearLogs()">Clear log</button></div><div class="table-wrap"><table><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Entity</th><th>ID</th></tr></thead><tbody>${DB.audit.slice(-200).reverse().map(a=>`<tr><td>${UTIL.fmtDate(a.at)} ${UTIL.fmtTime(a.at)}</td><td>${UTIL.escape(a.actor)}</td><td>${UTIL.escape(a.action)}</td><td>${UTIL.escape(a.entity)}</td><td>${UTIL.escape(a.entityId)}</td></tr>`).join('')}</tbody></table></div></section><section class="panel span-12"><h2>Feature flags</h2>${Object.entries(DB.featureFlags||{}).map(([k,v])=>`<div class="list-row"><span>${k}</span><input style="width:22px;min-height:22px" type="checkbox" ${v?'checked':''} onchange="App.setFlag('${k}',this.checked)"></div>`).join('')}</section></div>`
+  },
+  testSync(){try{SYNC.init()}catch(e){this.toast(String(e.message||e))}},
+  inspect(type){
+    const obj=type==='branches'?DB.branches:type==='tills'?DB.tills:type==='transfers'?DB.transfers:DB.invoices;
+    const el=document.getElementById('devInspect');
+    if(el)el.innerHTML=`<pre style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:420px;overflow:auto">${UTIL.escape(JSON.stringify(obj,null,2))}</pre>`
+  },
+  chartDebug(){
+    const test=[{label:'A',value:15},{label:'B',value:28},{label:'C',value:9},{label:'D',value:36},{label:'E',value:21}];
+    this.openSheet('Chart debug tool',`<div class="grid">${this.panel('line',Charts.line([{name:'Series A',values:[2000,6000,4000,9000,8000]},{name:'Series B',values:[3000,4000,5000,7000,6000]}]),'span-12')}${this.panel('bar',Charts.bar(test),'span-12')}${this.panel('hbar',Charts.hbar(test),'span-12')}${this.panel('donut',Charts.donut(test),'span-12')}${this.panel('spark',Charts.spark([2,6,4,9,8]),'span-12')}${this.panel('heatmap',Charts.heatmap(Array.from({length:84},(_,i)=>i%13),{startHour:8,endHour:20}),'span-12')}${this.panel('stackedBar',Charts.stackedBar([{label:'A',values:[2,5,3]},{label:'B',values:[4,2,6]}]),'span-12')}${this.panel('gauge',Charts.gauge(72),'span-12')}</div>`,true)
+  },
+  resetSequence(){
+    if(!confirm('Reset next sale, till and invoice sequence numbers?'))return;
+    DB.sequence={sale:1000,till:1,invoice:1,po:1};STORAGE.save();this.render();this.toast('Sequences reset')
+  },
+  wipeData(){
+    if(!confirm('Wipe all local data?'))return;
+    if(!confirm('This cannot be undone without a backup. Wipe now?'))return;
+    STORAGE.clear();DB=sampleDB();STORAGE.save();this.render();this.toast('Data wiped and safe sample data reseeded')
+  },
+  reseed(){
+    if(!confirm('Replace current data with sample data?'))return;
+    DB=sampleDB();STORAGE.save();this.render();this.toast('Sample data restored')
+  },
+  clearLogs(){DB.audit=[];STORAGE.save();this.render();this.toast('Audit log cleared')},
+  setFlag(k,v){DB.featureFlags[k]=v;STORAGE.save();this.toast(k+' '+(v?'enabled':'disabled'))},
+
+  /* ---- Scanner ---- */
+  scanSheet(){
+    this.openSheet('Barcode scanner',`<p class="muted">Enter a barcode manually or use a USB/Bluetooth scanner. Camera depends on permissions and secure context.</p><form class="stack" onsubmit="event.preventDefault();App.handleScan(document.getElementById('scanValue').value)"><label>Scan or type barcode<input id="scanValue" placeholder="Product, staff, till, transfer or customer code" autocomplete="off" required></label><button class="primary">Look up barcode</button></form><div id="cameraBox" class="notice" style="margin-top:12px">Camera is optional; manual entry works without camera permission.</div><button style="margin-top:8px" onclick="App.startCamera()">Start camera preview</button><button style="margin-top:8px" onclick="App.stopCamera()">Stop camera</button>`)
+  },
+  handleScan(code){
+    code=String(code||'').trim();if(!code)return;
+    const p=DB.products.find(p=>p.barcode.toLowerCase()===code.toLowerCase()||p.sku.toLowerCase()===code.toLowerCase());
+    if(p)return this.productSheet(p.id);
+    const s=DB.staff.find(s=>s.badge.toLowerCase()===code.toLowerCase());
+    if(s)return this.staffDetail(s.id);
+    const t=DB.tills.find(t=>t.barcode.toLowerCase()===code.toLowerCase());
+    if(t)return this.tillDetail(t.id);
+    const tr=DB.transfers.find(t=>t.barcode.toLowerCase()===code.toLowerCase());
+    if(tr)return this.transferDetail(tr.id);
+    const c=DB.customers.find(c=>c.id.toLowerCase()===code.toLowerCase()||c.phone===UTIL.phone(code));
+    if(c)return this.customerSheet(c.id);
+    this.toast('Barcode not found · try manual search')
+  },
+  lookupBarcode(inputId,selectId){
+    const code=document.getElementById(inputId)?.value?.trim();
+    const p=DB.products.find(p=>p.barcode===code||p.sku===code);
+    const sel=document.getElementById(selectId);
+    if(p&&sel)sel.value=p.id
+  },
+  startCamera(){
+    const box=document.getElementById('cameraBox');
+    if(!navigator.mediaDevices?.getUserMedia){if(box)box.textContent='Camera API unavailable. Use manual entry or a USB/Bluetooth scanner.';return}
+    if(!window.isSecureContext){if(box)box.textContent='Camera requires HTTPS or localhost. Use manual entry or hardware scanner.';return}
+    navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(stream=>{
+      this.cameraStream=stream;
+      if(box)box.innerHTML='<video id="cameraVideo" autoplay playsinline style="width:100%;border-radius:8px"></video><p class="small">Camera preview started. Barcode decoding is not built into this no-library demo; enter the decoded value manually.</p>';
+      const v=document.getElementById('cameraVideo');if(v)v.srcObject=stream
+    }).catch(e=>{if(box)box.textContent='Camera permission unavailable: '+e.message})
+  },
+  stopCamera(){
+    if(this.cameraStream){this.cameraStream.getTracks().forEach(t=>t.stop());this.cameraStream=null}
+    const v=document.getElementById('cameraVideo');if(v)v.srcObject=null
+  },
+  branchSheet(){
+    this.openSheet('Select branch',`<div class="stack"><button onclick="App.setBranch('all');App.closeSheet()">All branches</button>${DB.branches.map(b=>`<button onclick="App.setBranch('${b.id}');App.closeSheet()">${UTIL.escape(b.name)}</button>`).join('')}</div>`)
+  },
+  notificationsHTML(){
+    return `<h3>Current local alerts</h3>${this.alerts().map(a=>`<div class="list-row"><span>${UTIL.escape(a.rule)}<div class="small muted">${UTIL.escape(a.detail||'')}</div></span><button onclick="App.handleAlert('${a.id}')">Open</button></div>`).join('')||'<p class="muted">No current alerts.</p>'}`
+  }
+};
+
+/* ============================= BOOT ============================= */
+App.showLogin();
+App.restore();
+if(DB.settings.theme)document.documentElement.dataset.theme=DB.settings.theme;
+if(App.role){document.getElementById('loginRoot').classList.add('hidden');App.buildNav();App.render()}
+else App.buildNav();
+
+setInterval(()=>{
+  if(App.role){
+    const el=document.getElementById('topAlertCount');
+    if(el)el.textContent=App.alerts().length+' alerts';
+  }
+},30000);
+
+window.addEventListener('beforeunload',()=>{try{App.stopCamera()}catch(e){}});
+</script>
+</body>
+</html>

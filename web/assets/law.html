@@ -1,0 +1,3818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes" />
+    <title>Law Co. Advocates & Associates</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html {
+            font-size: 18px;
+            -webkit-text-size-adjust: 100%;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+            background: #f4f7fc;
+            color: #000;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .sidebar {
+            width: 260px;
+            background: #0f172a;
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: transform 0.3s ease, width 0.3s ease;
+            overflow-y: auto;
+            padding: 1.5rem 0;
+            z-index: 1000;
+            position: relative;
+        }
+        .sidebar .brand {
+            font-size: 1.1rem;
+            font-weight: 700;
+            padding: 0 1.5rem 1.5rem;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            line-height: 1.2;
+        }
+        .sidebar .brand i {
+            color: #60a5fa;
+            font-size: 1.8rem;
+        }
+        .sidebar .brand .flag {
+            font-size: 1rem;
+            margin-left: 0.25rem;
+        }
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            padding: 0 0.75rem;
+        }
+        .sidebar nav a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.7rem 1rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            color: #cbd5e1;
+            font-weight: 500;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+            cursor: pointer;
+            position: relative;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .sidebar nav a i {
+            width: 1.5rem;
+            font-size: 1.1rem;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .sidebar nav a:hover {
+            background: #1e293b;
+            color: #f8fafc;
+        }
+        .sidebar nav a.active {
+            background: #1e3a5f;
+            color: #60a5fa;
+            box-shadow: inset 3px 0 0 #60a5fa;
+        }
+        .sidebar nav a .badge-nav {
+            margin-left: auto;
+            background: #ef4444;
+            color: #fff;
+            font-size: 0.6rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        .sidebar .bottom {
+            margin-top: auto;
+            padding: 1.5rem;
+            border-top: 1px solid #1e293b;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: #f8fafc;
+            min-width: 0;
+        }
+        .topbar {
+            background: white;
+            padding: 0.7rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            min-height: 56px;
+        }
+        .topbar .page-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .topbar .page-title small {
+            font-size: 0.7rem;
+            font-weight: 400;
+            color: #64748b;
+        }
+        .topbar .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #1e293b;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .topbar .actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        .topbar .actions i {
+            font-size: 1.1rem;
+            color: #475569;
+            cursor: pointer;
+            transition: 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .topbar .actions i:hover {
+            color: #0f172a;
+        }
+        .topbar .avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #3b82f6;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            flex-shrink: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .content {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            background: #f8fafc;
+            -webkit-overflow-scrolling: touch;
+        }
+        .page {
+            display: none;
+            animation: fade 0.25s ease;
+        }
+        .page.active {
+            display: block;
+        }
+        @keyframes fade {
+            from {
+                opacity: 0.4;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e9edf2;
+            transition: 0.2s;
+            position: relative;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .stat-card:active {
+            transform: scale(0.98);
+        }
+        .stat-card .label {
+            font-size: 0.7rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .stat-card .value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-top: 0.2rem;
+            word-break: break-word;
+        }
+        .stat-card .change {
+            font-size: 0.7rem;
+            margin-top: 0.2rem;
+        }
+        .stat-card .change.up {
+            color: #22c55e;
+        }
+        .stat-card .change.down {
+            color: #ef4444;
+        }
+        .stat-card i {
+            float: right;
+            font-size: 1.6rem;
+            color: #cbd5e1;
+        }
+        .stat-card .icon-bg {
+            position: absolute;
+            right: -10px;
+            bottom: -10px;
+            font-size: 4rem;
+            opacity: 0.06;
+            color: #0f172a;
+        }
+        .table-wrap {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            border: 1px solid #e9edf2;
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .table-wrap h3 {
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .table-wrap h3 .action-btn {
+            margin-left: auto;
+            font-size: 0.75rem;
+            font-weight: 400;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            min-width: 500px;
+        }
+        th {
+            text-align: left;
+            padding: 0.6rem 0.4rem;
+            color: #475569;
+            font-weight: 600;
+            border-bottom: 2px solid #e9edf2;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+        td {
+            padding: 0.6rem 0.4rem;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+            word-break: break-word;
+        }
+        .badge {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 0.15rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            display: inline-block;
+            white-space: nowrap;
+        }
+        .badge.green {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .badge.yellow {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+        .badge.red {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .badge.purple {
+            background: #e9d5ff;
+            color: #5b21b6;
+        }
+        .badge.blue {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .badge.gray {
+            background: #f1f5f9;
+            color: #475569;
+        }
+        .chart-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .chart-box {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            border: 1px solid #e9edf2;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+        }
+        .chart-box h4 {
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        .chart-box .chart-container {
+            flex: 1;
+            position: relative;
+            min-height: 160px;
+        }
+        .chart-box canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+            max-height: 180px;
+        }
+        .timer-box {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: #f1f5f9;
+            border-radius: 0.75rem;
+            padding: 0.5rem 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        .timer-box .time {
+            font-size: 1.4rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            color: #0f172a;
+            font-family: 'Courier New', monospace;
+        }
+        .btn {
+            background: #3b82f6;
+            border: none;
+            color: white;
+            padding: 0.4rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.85rem;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            white-space: nowrap;
+            text-decoration: none;
+        }
+        .btn:hover {
+            background: #2563eb;
+        }
+        .btn:active {
+            transform: scale(0.96);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #cbd5e1;
+            color: #1e293b;
+        }
+        .btn-outline:hover {
+            background: #f1f5f9;
+        }
+        .btn-success {
+            background: #22c55e;
+        }
+        .btn-success:hover {
+            background: #16a34a;
+        }
+        .btn-danger {
+            background: #ef4444;
+        }
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        .btn-sm {
+            padding: 0.2rem 0.6rem;
+            font-size: 0.75rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            font-size: 0.85rem;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.5rem 0.7rem;
+            border: 1px solid #d1d9e6;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            font-family: inherit;
+            transition: 0.2s;
+            -webkit-appearance: none;
+            appearance: none;
+            background: white;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .form-group textarea {
+            min-height: 70px;
+            resize: vertical;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        .three-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+        }
+        .ai-chat {
+            background: #f8fafc;
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            max-height: 260px;
+            overflow-y: auto;
+            border: 1px solid #e9edf2;
+            -webkit-overflow-scrolling: touch;
+        }
+        .ai-chat .msg {
+            padding: 0.5rem 0.8rem;
+            border-radius: 0.75rem;
+            margin-bottom: 0.4rem;
+            max-width: 88%;
+            font-size: 0.85rem;
+            word-break: break-word;
+        }
+        .ai-chat .msg.user {
+            background: #3b82f6;
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 0.25rem;
+        }
+        .ai-chat .msg.ai {
+            background: #e9edf2;
+            color: #1e293b;
+            margin-right: auto;
+            border-bottom-left-radius: 0.25rem;
+        }
+        .ai-chat .msg.system {
+            background: #fef9c3;
+            color: #854d0e;
+            text-align: center;
+            max-width: 100%;
+            font-size: 0.8rem;
+        }
+        .ai-chat .msg .typing {
+            display: inline-block;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 0.4;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+        .invoice-container {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.2rem;
+            border: 1px solid #e9edf2;
+            max-width: 100%;
+        }
+        .invoice-container .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #0f172a;
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+        .invoice-container .invoice-header .firm-details h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .invoice-container .invoice-header .firm-details p {
+            color: #475569;
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+        .invoice-container .invoice-header .invoice-meta {
+            text-align: right;
+        }
+        .invoice-container .invoice-header .invoice-meta .inv-number {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .invoice-container .invoice-body {
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+        .invoice-container .invoice-body table {
+            min-width: 300px;
+            font-size: 0.8rem;
+        }
+        .invoice-container .invoice-body table th {
+            background: #f1f5f9;
+            padding: 0.4rem 0.6rem;
+            font-size: 0.7rem;
+        }
+        .invoice-container .invoice-body table td {
+            padding: 0.4rem 0.6rem;
+        }
+        .invoice-container .invoice-totals {
+            margin-top: 1rem;
+            text-align: right;
+            border-top: 2px solid #e9edf2;
+            padding-top: 1rem;
+        }
+        .invoice-container .invoice-totals p {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1.5rem;
+            padding: 0.15rem 0;
+            font-size: 0.85rem;
+            flex-wrap: wrap;
+        }
+        .invoice-container .invoice-totals p strong {
+            min-width: 100px;
+            text-align: left;
+        }
+        .invoice-container .invoice-totals .grand-total {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #0f172a;
+            border-top: 2px solid #0f172a;
+            padding-top: 0.4rem;
+            margin-top: 0.2rem;
+        }
+        .invoice-container .invoice-footer {
+            margin-top: 1.5rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #e9edf2;
+            font-size: 0.75rem;
+            color: #64748b;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #0f172a;
+            color: #f8fafc;
+            padding: 0.7rem 1.2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+            display: none;
+            align-items: center;
+            gap: 0.6rem;
+            z-index: 9999;
+            max-width: 90%;
+            font-size: 0.85rem;
+            text-align: center;
+            animation: slideUp 0.3s ease;
+        }
+        .toast.show {
+            display: flex;
+        }
+        .toast.success {
+            border-left: 4px solid #22c55e;
+        }
+        .toast.error {
+            border-left: 4px solid #ef4444;
+        }
+        .toast.info {
+            border-left: 4px solid #3b82f6;
+        }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            padding: 1rem;
+            animation: fadeIn 0.2s ease;
+        }
+        .modal-overlay.show {
+            display: flex;
+        }
+        .modal-box {
+            background: white;
+            border-radius: 1.25rem;
+            padding: 1.5rem;
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: scaleIn 0.25s ease;
+            -webkit-overflow-scrolling: touch;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        .modal-box .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+        }
+        .modal-box .modal-header h3 {
+            font-size: 1.15rem;
+            font-weight: 600;
+        }
+        .modal-box .modal-header .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #64748b;
+            padding: 0 0.25rem;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .modal-box .modal-header .close-modal:hover {
+            color: #0f172a;
+        }
+        .case-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+        }
+        .case-detail-grid .detail-item {
+            padding: 0.5rem;
+            background: #f8fafc;
+            border-radius: 0.5rem;
+        }
+        .case-detail-grid .detail-item strong {
+            display: block;
+            font-size: 0.7rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .case-detail-grid .detail-item span {
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+        .folder-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .folder-card {
+            background: #f8fafc;
+            border: 1px solid #e9edf2;
+            border-radius: 0.75rem;
+            padding: 1.2rem 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+            -webkit-tap-highlight-color: transparent;
+            position: relative;
+        }
+        .folder-card:hover {
+            background: #f1f5f9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        .folder-card:active {
+            transform: scale(0.97);
+        }
+        .folder-card i {
+            font-size: 2.5rem;
+            color: #f59e0b;
+        }
+        .folder-card .folder-name {
+            font-weight: 600;
+            margin-top: 0.3rem;
+            font-size: 0.95rem;
+        }
+        .folder-card .file-count {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+        .folder-card .folder-actions {
+            position: absolute;
+            top: 0.4rem;
+            right: 0.4rem;
+            display: flex;
+            gap: 0.3rem;
+        }
+        .folder-card .folder-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            padding: 0.1rem 0.3rem;
+            border-radius: 0.3rem;
+            transition: 0.2s;
+        }
+        .folder-card .folder-actions button:hover {
+            background: #e2e8f0;
+            color: #ef4444;
+        }
+        @media (max-width: 1024px) {
+            .three-col {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: 280px;
+                transform: translateX(-100%);
+                box-shadow: 2px 0 20px rgba(0, 0, 0, 0.2);
+                padding-top: 1rem;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .sidebar-overlay.active {
+                display: block;
+            }
+            .topbar .menu-toggle {
+                display: block;
+            }
+            .topbar .page-title small {
+                display: none;
+            }
+            .topbar .actions i {
+                font-size: 1rem;
+            }
+            .topbar .actions {
+                gap: 0.75rem;
+            }
+            .card-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.75rem;
+            }
+            .stat-card {
+                padding: 0.9rem;
+            }
+            .stat-card .value {
+                font-size: 1.3rem;
+            }
+            .stat-card i {
+                font-size: 1.3rem;
+            }
+            .chart-row {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+            .two-col {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            .three-col {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+            .content {
+                padding: 0.75rem;
+            }
+            .table-wrap {
+                padding: 0.75rem;
+            }
+            .timer-box .time {
+                font-size: 1.2rem;
+            }
+            .timer-box {
+                gap: 0.5rem;
+                padding: 0.4rem 0.75rem;
+            }
+            .btn {
+                padding: 0.35rem 0.8rem;
+                font-size: 0.8rem;
+            }
+            .btn-sm {
+                padding: 0.15rem 0.5rem;
+                font-size: 0.7rem;
+            }
+            .modal-box {
+                padding: 1.2rem;
+                margin: 0.5rem;
+            }
+            .invoice-container {
+                padding: 0.8rem;
+            }
+            .invoice-container .invoice-header .firm-details h2 {
+                font-size: 1.2rem;
+            }
+            .toast {
+                bottom: 1rem;
+                font-size: 0.8rem;
+                padding: 0.6rem 1rem;
+                max-width: 95%;
+            }
+            .case-detail-grid {
+                grid-template-columns: 1fr;
+            }
+            .folder-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 0.75rem;
+            }
+        }
+        @media (max-width: 480px) {
+            .card-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.6rem;
+            }
+            .stat-card .value {
+                font-size: 1.1rem;
+            }
+            .stat-card .label {
+                font-size: 0.6rem;
+            }
+            .stat-card {
+                padding: 0.7rem;
+            }
+            .topbar {
+                padding: 0.5rem 0.6rem;
+                min-height: 48px;
+            }
+            .topbar .page-title {
+                font-size: 0.95rem;
+            }
+            .topbar .avatar {
+                width: 28px;
+                height: 28px;
+                font-size: 0.7rem;
+            }
+            .content {
+                padding: 0.5rem;
+            }
+            .table-wrap {
+                padding: 0.5rem;
+            }
+            table {
+                font-size: 0.7rem;
+                min-width: 400px;
+            }
+            th,
+            td {
+                padding: 0.4rem 0.3rem;
+            }
+            .badge {
+                font-size: 0.55rem;
+                padding: 0.1rem 0.4rem;
+            }
+            .modal-box {
+                padding: 1rem;
+                border-radius: 1rem;
+            }
+            .form-group input,
+            .form-group select,
+            .form-group textarea {
+                font-size: 0.85rem;
+                padding: 0.4rem 0.6rem;
+            }
+            .timer-box .time {
+                font-size: 1rem;
+            }
+            .chart-box {
+                padding: 0.75rem;
+            }
+            .chart-box canvas {
+                max-height: 140px;
+            }
+            .folder-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.5rem;
+            }
+            .folder-card {
+                padding: 0.8rem;
+            }
+            .folder-card i {
+                font-size: 1.8rem;
+            }
+        }
+        @media (max-width: 380px) {
+            .card-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.4rem;
+            }
+            .stat-card .value {
+                font-size: 0.95rem;
+            }
+            .stat-card .label {
+                font-size: 0.55rem;
+            }
+            .stat-card {
+                padding: 0.5rem;
+            }
+            .topbar .actions i {
+                font-size: 0.85rem;
+            }
+            .topbar .actions {
+                gap: 0.5rem;
+            }
+            .folder-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        @media print {
+            .sidebar,
+            .topbar,
+            .btn,
+            .no-print,
+            .sidebar-overlay,
+            .menu-toggle {
+                display: none !important;
+            }
+            .main {
+                overflow: visible !important;
+                height: auto !important;
+            }
+            .content {
+                overflow: visible !important;
+                padding: 0.5rem !important;
+            }
+            .page {
+                display: block !important;
+            }
+            .page:not(#page-invoice) {
+                display: none !important;
+            }
+            #page-invoice {
+                display: block !important;
+            }
+            .invoice-container {
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+            }
+            .table-wrap {
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+            }
+            body {
+                background: white !important;
+                overflow: visible !important;
+                height: auto !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="brand">
+            <i class="fas fa-scale-balanced"></i>
+            <span>Law Co.<br>Advocates &amp; Associates <span class="flag">🇰🇪</span></span>
+        </div>
+        <nav>
+            <a class="active" data-page="dashboard"><i class="fas fa-chart-pie"></i><span>Dashboard</span></a>
+            <a data-page="cases"><i class="fas fa-folder-open"></i><span>Cases</span><span class="badge-nav" id="caseCountNav">0</span></a>
+            <a data-page="tasks"><i class="fas fa-tasks"></i><span>Tasks</span><span class="badge-nav" id="taskCountNav">0</span></a>
+            <a data-page="timebilling"><i class="fas fa-clock"></i><span>Time &amp; Billing</span></a>
+            <a data-page="finances"><i class="fas fa-coins"></i><span>Finances</span></a>
+            <a data-page="documents"><i class="fas fa-file-alt"></i><span>Documents</span></a>
+            <a data-page="calendar"><i class="fas fa-calendar-check"></i><span>Calendar</span></a>
+            <a data-page="crm"><i class="fas fa-users"></i><span>CRM &amp; Intake</span></a>
+            <a data-page="clients"><i class="fas fa-user-tie"></i><span>Clients</span></a>
+            <a data-page="analytics"><i class="fas fa-chart-line"></i><span>Analytics</span></a>
+            <a data-page="ai"><i class="fas fa-robot"></i><span>AI Tools</span><span class="badge-nav">New</span></a>
+            <a data-page="integrations"><i class="fas fa-plug"></i><span>Integrations</span></a>
+            <a data-page="invoice"><i class="fas fa-file-invoice"></i><span>Invoices</span></a>
+            <a data-page="reports"><i class="fas fa-chart-bar"></i><span>Reports</span></a>
+            <a data-page="settings"><i class="fas fa-cog"></i><span>Settings</span></a>
+        </nav>
+        <div class="bottom">
+            <i class="fas fa-shield-alt"></i> v2.4 · KE-Compliant
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="topbar">
+            <div style="display:flex;align-items:center;gap:0.5rem;">
+                <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()" aria-label="Toggle menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="page-title" id="pageTitle">
+                    Dashboard
+                    <small>Law Co.</small>
+                </div>
+            </div>
+            <div class="actions">
+                <i class="fas fa-search" title="Search" onclick="showToast('Search feature coming soon','info')"></i>
+                <i class="fas fa-bell" title="Notifications" onclick="showToast('No new notifications','info')"></i>
+                <i class="fas fa-question-circle" title="Help" onclick="showToast('Help documentation available','info')"></i>
+                <div class="avatar">LW</div>
+            </div>
+        </div>
+
+        <div class="content">
+
+            <!-- DASHBOARD -->
+            <div id="page-dashboard" class="page active">
+                <div class="card-grid">
+                    <div class="stat-card"><i class="fas fa-briefcase"></i><div class="label">Active Cases</div><div class="value" id="activeCasesValue">0</div><div class="change up"><i class="fas fa-arrow-up"></i> <span id="casesChange">0</span> this month</div><div class="icon-bg"><i class="fas fa-briefcase"></i></div></div>
+                    <div class="stat-card"><i class="fas fa-dollar-sign"></i><div class="label">Revenue (MTD)</div><div class="value" id="revenueValue">KES 0</div><div class="change up"><i class="fas fa-arrow-up"></i> <span id="revenueChange">0%</span></div><div class="icon-bg"><i class="fas fa-dollar-sign"></i></div></div>
+                    <div class="stat-card"><i class="fas fa-hourglass-half"></i><div class="label">Billable Hours</div><div class="value" id="billableHoursValue">0</div><div class="change up"><i class="fas fa-arrow-up"></i> <span id="hoursChange">0%</span></div><div class="icon-bg"><i class="fas fa-hourglass-half"></i></div></div>
+                    <div class="stat-card"><i class="fas fa-users"></i><div class="label">Active Clients</div><div class="value" id="activeClientsValue">0</div><div class="change up"><i class="fas fa-arrow-up"></i> <span id="clientsChange">0</span> new</div><div class="icon-bg"><i class="fas fa-users"></i></div></div>
+                    <div class="stat-card"><i class="fas fa-gavel"></i><div class="label">Court Appearances</div><div class="value" id="courtAppearancesValue">0</div><div class="change up"><i class="fas fa-arrow-up"></i> +0 this week</div><div class="icon-bg"><i class="fas fa-gavel"></i></div></div>
+                    <div class="stat-card"><i class="fas fa-file-invoice"></i><div class="label">Outstanding Invoices</div><div class="value" id="outstandingInvoicesValue">KES 0</div><div class="change down"><i class="fas fa-arrow-down"></i> 0% overdue</div><div class="icon-bg"><i class="fas fa-file-invoice"></i></div></div>
+                </div>
+                <div class="chart-row">
+                    <div class="chart-box">
+                        <h4>Revenue by Practice Area</h4>
+                        <div class="chart-container"><canvas id="dashboardChart1"></canvas></div>
+                    </div>
+                    <div class="chart-box">
+                        <h4>Monthly Billable Hours</h4>
+                        <div class="chart-container"><canvas id="dashboardChart2"></canvas></div>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <h3><i class="fas fa-clock"></i> Recent Activity <span class="action-btn"><span class="badge gray">Live</span></span></h3>
+                    <table id="recentActivityTable">
+                        <thead><tr><th>Case</th><th>Activity</th><th>Time</th><th>Status</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- CASES -->
+            <div id="page-cases" class="page">
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem; align-items:center;">
+                    <button class="btn" onclick="openModal('case')"><i class="fas fa-plus"></i> New Case</button>
+                    <button class="btn btn-outline" onclick="openFilterModal('cases')"><i class="fas fa-filter"></i> Filter</button>
+                    <button class="btn btn-outline" onclick="showToast('Exporting cases...','info')"><i class="fas fa-download"></i> Export</button>
+                    <select id="casePracticeFilter" onchange="applyCaseFilters()" style="padding:0.3rem 0.6rem; border:1px solid #d1d9e6; border-radius:0.5rem; font-size:0.85rem;">
+                        <option value="">All Practices</option>
+                        <option value="Commercial Litigation">Commercial Litigation</option>
+                        <option value="Corporate">Corporate</option>
+                        <option value="Succession">Succession</option>
+                        <option value="Property">Property</option>
+                        <option value="Tax">Tax</option>
+                        <option value="Employment">Employment</option>
+                    </select>
+                    <select id="caseStatusFilter" onchange="applyCaseFilters()" style="padding:0.3rem 0.6rem; border:1px solid #d1d9e6; border-radius:0.5rem; font-size:0.85rem;">
+                        <option value="">All Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Review">Review</option>
+                        <option value="Urgent">Urgent</option>
+                        <option value="Due Diligence">Due Diligence</option>
+                    </select>
+                    <input type="text" id="caseSearchInput" placeholder="Search by name or client..." style="flex:1; min-width:150px; padding:0.4rem 0.6rem; border:1px solid #d1d9e6; border-radius:0.5rem; font-size:0.85rem;" oninput="applyCaseFilters()">
+                </div>
+                <div class="table-wrap">
+                    <h3><i class="fas fa-folder-open"></i> All Cases <span class="action-btn"><span class="badge blue" id="caseCountBadge">0 Total</span></span></h3>
+                    <table id="casesTable">
+                        <thead><tr><th>Case Name</th><th>Client</th><th>Practice</th><th>Status</th><th>Deadline</th><th>Partner</th><th>Action</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TASKS -->
+            <div id="page-tasks" class="page">
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+                    <button class="btn" onclick="openModal('task')"><i class="fas fa-plus"></i> New Task</button>
+                    <button class="btn btn-outline" onclick="openFilterModal('tasks')"><i class="fas fa-filter"></i> Filter</button>
+                    <button class="btn btn-outline" onclick="refreshAll()"><i class="fas fa-sync"></i> Refresh</button>
+                </div>
+                <div class="table-wrap">
+                    <h3><i class="fas fa-tasks"></i> Task Board <span class="action-btn"><span class="badge blue" id="taskCountBadge">0 open</span></span></h3>
+                    <table id="tasksTable">
+                        <thead><tr><th>Task</th><th>Assigned To</th><th>Matter</th><th>Priority</th><th>Due Date</th><th>Status</th><th>Action</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TIME & BILLING -->
+            <div id="page-timebilling" class="page">
+                <div class="timer-box">
+                    <i class="fas fa-play-circle" style="font-size:1.8rem; color:#3b82f6; cursor:pointer; -webkit-tap-highlight-color:transparent;" onclick="toggleTimer()"></i>
+                    <span class="time" id="timerDisplay">00:00:00</span>
+                    <span style="font-weight:500; font-size:0.85rem;">Smith v. Acme</span>
+                    <button class="btn btn-outline" style="margin-left:auto;" onclick="logTime()"><i class="fas fa-stop"></i> Log</button>
+                </div>
+                <div class="table-wrap">
+                    <h3><i class="fas fa-receipt"></i> Time Entries <span class="action-btn"><button class="btn btn-sm btn-outline" onclick="openModal('timeentry')"><i class="fas fa-plus"></i> Add</button></span></h3>
+                    <table id="timeEntriesTable">
+                        <thead><tr><th>Matter</th><th>Activity</th><th>Date</th><th>Hours</th><th>Rate</th><th>Amount</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="table-wrap">
+                    <h3><i class="fas fa-file-invoice"></i> Outstanding Invoices</h3>
+                    <table id="outstandingInvoicesTable">
+                        <thead><tr><th>Invoice</th><th>Client</th><th>Amount</th><th>Due</th><th>Status</th><th>Action</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- FINANCES -->
+            <div id="page-finances" class="page">
+                <div class="two-col">
+                    <div>
+                        <div class="table-wrap">
+                            <h3><i class="fas fa-university"></i> Trust Account <span class="action-btn"><span class="badge blue" id="trustTotal">KES 0</span></span></h3>
+                            <table id="trustTable">
+                                <thead><tr><th>Client</th><th>Balance</th><th>Last Activity</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                            <button class="btn btn-sm btn-outline" style="margin-top:0.5rem;" onclick="openTransactionModal()"><i class="fas fa-exchange-alt"></i> Record Transaction</button>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="table-wrap">
+                            <h3><i class="fas fa-chart-simple"></i> P&amp;L Summary <span class="action-btn"><span class="badge green">Q3</span></span></h3>
+                            <table id="pnlTable">
+                                <thead><tr><th>Category</th><th>Amount (KES)</th></tr></thead>
+                                <tbody>
+                                    <tr><td>Revenue</td><td id="pnlRevenue">0</td></tr>
+                                    <tr><td>Operating Expenses</td><td id="pnlExpenses">0</td></tr>
+                                    <tr><td>Net Income</td><td><strong id="pnlNet">0</strong></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="table-wrap">
+                            <h3><i class="fas fa-mobile-alt"></i> M-Pesa Payments <span class="action-btn"><span class="badge green">Live</span></span></h3>
+                            <table id="mpesaTable">
+                                <thead><tr><th>Transaction</th><th>Client</th><th>Amount</th><th>Status</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                            <button class="btn btn-sm btn-outline" style="margin-top:0.5rem;" onclick="openMpesaModal()"><i class="fas fa-plus"></i> Add Payment</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DOCUMENTS -->
+            <div id="page-documents" class="page">
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+                    <button class="btn" onclick="document.getElementById('fileUpload').click()"><i class="fas fa-upload"></i> Upload</button>
+                    <input type="file" id="fileUpload" style="display:none;" multiple onchange="handleFileUpload(event)">
+                    <button class="btn btn-outline" onclick="openFolderModal()"><i class="fas fa-folder"></i> Add Folder</button>
+                    <button class="btn btn-outline" onclick="openTagModal()"><i class="fas fa-tag"></i> Tags</button>
+                    <button class="btn btn-outline" onclick="openFilterModal('documents')"><i class="fas fa-filter"></i> Filter</button>
+                    <button class="btn btn-outline" onclick="resetDocFilters()"><i class="fas fa-undo"></i> Reset View</button>
+                </div>
+                <div class="folder-grid" id="folderGrid"></div>
+                <div class="table-wrap" id="folderFilesContainer" style="display:none;">
+                    <h3>Files in <span id="selectedFolderName"></span> <span class="action-btn"><button class="btn btn-sm btn-outline" onclick="closeFolderView()">Close</button></span></h3>
+                    <table id="folderFilesTable">
+                        <thead><tr><th>File</th><th>Matter</th><th>Uploaded</th><th>Size</th><th>Tags</th><th>Action</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- CALENDAR -->
+            <div id="page-calendar" class="page">
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem; align-items:center;">
+                    <button class="btn" onclick="openModal('event')"><i class="fas fa-plus"></i> Add Event</button>
+                    <button class="btn btn-outline" onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+                    <span style="font-weight:600; font-size:0.95rem;" id="calendarMonth">August 2026</span>
+                    <button class="btn btn-outline" onclick="changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                <div class="table-wrap">
+                    <h3><i class="fas fa-calendar-day"></i> Events for <span id="calendarMonthDisplay">August 2026</span></h3>
+                    <table id="eventsTable">
+                        <thead><tr><th>Date</th><th>Event</th><th>Matter</th><th>Location</th><th>Type</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- CRM & INTAKE -->
+            <div id="page-crm" class="page">
+                <div class="two-col">
+                    <div>
+                        <div class="table-wrap">
+                            <h3><i class="fas fa-user-plus"></i> Intake Queue <span class="action-btn"><span class="badge yellow" id="intakeCount">0 pending</span></span></h3>
+                            <table id="intakeTable">
+                                <thead><tr><th>Prospect</th><th>Matter Type</th><th>Status</th><th>Action</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                            <button class="btn btn-sm" style="margin-top:0.5rem;" onclick="openModal('intake')"><i class="fas fa-plus"></i> Add Intake</button>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="table-wrap">
+                            <h3><i class="fas fa-scale-balanced"></i> Conflict Check</h3>
+                            <div class="form-group">
+                                <label>Search entity or individual</label>
+                                <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                                    <input type="text" id="conflictSearch" placeholder="Enter name..." style="flex:1; min-width:120px; padding:0.5rem 0.6rem; border:1px solid #d1d9e6; border-radius:0.5rem; font-size:0.85rem;">
+                                    <button class="btn" onclick="checkConflict()"><i class="fas fa-search"></i> Check</button>
+                                </div>
+                            </div>
+                            <div id="conflictResult" style="margin-top:0.5rem; padding:0.5rem; border-radius:0.5rem; background:#dcfce7; color:#166534; display:none; font-size:0.85rem;">
+                                <i class="fas fa-check-circle"></i> No conflicts found for "<span id="conflictName">Jane Roe</span>"
+                            </div>
+                            <div id="conflictWarning" style="margin-top:0.5rem; padding:0.5rem; border-radius:0.5rem; background:#fee2e2; color:#991b1b; display:none; font-size:0.85rem;">
+                                <i class="fas fa-exclamation-triangle"></i> <span id="conflictWarningText">Potential conflict detected!</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CLIENTS -->
+            <div id="page-clients" class="page">
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+                    <button class="btn" onclick="openModal('client')"><i class="fas fa-user-plus"></i> Add Client</button>
+                    <button class="btn btn-outline" onclick="showToast('Exporting clients...','info')"><i class="fas fa-file-export"></i> Export</button>
+                </div>
+                <div class="table-wrap">
+                    <h3><i class="fas fa-user-tie"></i> Client List <span class="action-btn"><span class="badge blue" id="clientCountBadge">0 total</span></span></h3>
+                    <table id="clientsTable">
+                        <thead><tr><th>Client</th><th>Contact</th><th>Matters</th><th>Portal</th><th>Action</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ANALYTICS -->
+            <div id="page-analytics" class="page">
+                <div class="chart-row">
+                    <div class="chart-box">
+                        <h4>Revenue by Month (KES)</h4>
+                        <div class="chart-container"><canvas id="analyticsChart1"></canvas></div>
+                    </div>
+                    <div class="chart-box">
+                        <h4>Partner Utilization %</h4>
+                        <div class="chart-container"><canvas id="analyticsChart2"></canvas></div>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <h3><i class="fas fa-chart-bar"></i> Key Metrics <span class="action-btn"><span class="badge gray">Q3 2026</span></span></h3>
+                    <table id="metricsTable">
+                        <thead><tr><th>Metric</th><th>Value</th><th>Trend</th><th>Benchmark</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- AI TOOLS -->
+            <div id="page-ai" class="page">
+                <div class="three-col">
+                    <div class="table-wrap">
+                        <h3><i class="fas fa-file-contract"></i> Contract Analysis</h3>
+                        <p style="font-size:0.85rem; color:#475569; margin-bottom:0.75rem;">Upload a contract for AI review with Kenyan legal context.</p>
+                        <div style="border:2px dashed #d1d9e6; border-radius:0.75rem; padding:1.5rem 1rem; text-align:center; cursor:pointer; -webkit-tap-highlight-color:transparent;" onclick="document.getElementById('contractUpload').click()">
+                            <i class="fas fa-cloud-upload-alt" style="font-size:2rem; color:#94a3b8;"></i>
+                            <p style="margin-top:0.3rem; font-size:0.8rem; color:#64748b;">Tap to upload PDF or DOCX</p>
+                            <input type="file" id="contractUpload" style="display:none;" accept=".pdf,.docx" onchange="analyzeContract(event)">
+                        </div>
+                        <div id="contractResult" style="margin-top:0.75rem; display:none;">
+                            <div style="background:#f1f5f9; border-radius:0.5rem; padding:0.75rem; font-size:0.85rem;">
+                                <p><strong>Risk Score:</strong> <span id="contractRisk" style="color:#22c55e;">Low</span></p>
+                                <p><strong>Key Clauses:</strong> <span id="contractClauses">Indemnity, Termination</span></p>
+                                <p><strong>Kenya-Specific:</strong> <span id="contractKenya">DPA compliant</span></p>
+                                <p><strong>AI Summary:</strong> <span id="contractSummary">Standard clauses. Review indemnity.</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-wrap">
+                        <h3><i class="fas fa-magic"></i> Document Automation</h3>
+                        <p style="font-size:0.85rem; color:#475569; margin-bottom:0.75rem;">Generate legal documents instantly.</p>
+                        <a href="https://vectafunds.com/draft.html?" class="btn" style="width:100%; justify-content:center; padding:0.6rem;" id="generateDocsBtn"><i class="fas fa-file-export"></i> Generate Documents</a>
+                        <div style="margin-top:0.5rem; font-size:0.8rem; color:#64748b;">Click to open document generator</div>
+                    </div>
+                    <div class="table-wrap">
+                        <h3><i class="fas fa-gavel"></i> Legal Research</h3>
+                        <p style="font-size:0.85rem; color:#475569; margin-bottom:0.75rem;">Search Kenyan case law.</p>
+                        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                            <input type="text" id="legalSearch" placeholder="e.g. constitutional petition" style="flex:1; min-width:120px; padding:0.5rem 0.6rem; border:1px solid #d1d9e6; border-radius:0.5rem; font-size:0.85rem;">
+                            <button class="btn" onclick="legalResearch()"><i class="fas fa-search"></i></button>
+                        </div>
+                        <div id="legalResult" style="margin-top:0.75rem; display:none;">
+                            <div style="background:#f1f5f9; border-radius:0.5rem; padding:0.75rem; font-size:0.85rem;">
+                                <p><strong>Case:</strong> <span id="caseName">Ochieng v. County [2025] eKLR</span></p>
+                                <p><strong>Citation:</strong> <span id="caseCitation">[2025] KEHC 1234</span></p>
+                                <p><strong>Summary:</strong> <span id="caseSummary">Public participation required.</span></p>
+                            </div>
+                        </div>
+                        <a href="https://elma.co.ke/haki.html" class="btn btn-outline" style="margin-top:0.75rem; width:100%; justify-content:center;" id="legalResearchBtn"><i class="fas fa-external-link-alt"></i> Full Legal Research Portal</a>
+                    </div>
+                </div>
+                <div class="table-wrap" style="margin-top:1rem;">
+                    <h3><i class="fas fa-comment-dots"></i> LexAI Assistant <span class="action-btn"><span class="badge green">Online</span></span></h3>
+                    <div class="ai-chat" id="aiChat">
+                        <div class="msg system"><i class="fas fa-robot"></i> LexAI is ready. Ask about Kenyan law.</div>
+                        <div class="msg ai">Hello! I'm LexAI. How can I help?</div>
+                    </div>
+                    <div style="display:flex; gap:0.5rem; margin-top:0.75rem; flex-wrap:wrap;">
+                        <input type="text" id="aiPrompt" placeholder="Ask about Kenyan law..." style="flex:1; min-width:120px; padding:0.5rem 0.6rem; border:1px solid #d1d9e6; border-radius:0.5rem; font-size:0.85rem;" onkeydown="if(event.key==='Enter') askAI()">
+                        <button class="btn" onclick="askAI()"><i class="fas fa-paper-plane"></i> Send</button>
+                        <button class="btn btn-outline" onclick="clearAIChat()"><i class="fas fa-eraser"></i> Clear</button>
+                    </div>
+                    <div style="margin-top:0.5rem; display:flex; gap:0.4rem; flex-wrap:wrap;">
+                        <button class="btn btn-sm btn-outline" onclick="quickAI('What are the key provisions of the Kenyan Employment Act?')">Employment Act</button>
+                        <button class="btn btn-sm btn-outline" onclick="quickAI('Explain the Kenyan constitutional petition process.')">Constitutional Petition</button>
+                        <button class="btn btn-sm btn-outline" onclick="quickAI('What are the requirements for a valid will in Kenya?')">Will Requirements</button>
+                        <button class="btn btn-sm btn-outline" onclick="quickAI('Summarize the Data Protection Act in Kenya.')">Data Protection</button>
+                    </div>
+                </div>
+                <div class="table-wrap" style="margin-top:1rem;">
+                    <h3><i class="fas fa-file-alt"></i> Document Summarization <span class="action-btn"><button class="btn btn-sm btn-outline" onclick="summarizeDocument()"><i class="fas fa-magic"></i> Summarize</button></span></h3>
+                    <div style="background:#f1f5f9; border-radius:0.5rem; padding:0.75rem;">
+                        <p style="font-size:0.85rem; color:#475569;">Paste text for AI summary with key points and risk assessment.</p>
+                        <textarea id="docSummaryInput" rows="3" style="width:100%; padding:0.5rem; border:1px solid #d1d9e6; border-radius:0.5rem; margin-top:0.5rem; font-size:0.85rem;" placeholder="Paste contract or legal text here..."></textarea>
+                        <button class="btn btn-sm" style="margin-top:0.5rem;" onclick="summarizeDocument()"><i class="fas fa-file-alt"></i> Summarize</button>
+                        <div id="summaryResult" style="margin-top:0.5rem; display:none; background:white; border-radius:0.5rem; padding:0.75rem; border:1px solid #e9edf2; font-size:0.85rem;">
+                            <p><strong>AI Summary:</strong> <span id="summaryText">Lease agreement with standard clauses. Review indemnity.</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INTEGRATIONS -->
+            <div id="page-integrations" class="page">
+                <div class="table-wrap">
+                    <h3><i class="fas fa-plug"></i> Connected Services</h3>
+                    <table id="integrationsTable">
+                        <thead><tr><th>Service</th><th>Status</th><th>Action</th></tr></thead>
+                        <tbody>
+                             <tr><td><i class="fas fa-globe" style="color:#22c55e;"></i> Official Website</td><td><span class="badge green">Live</span></td><td><a href="https://elma.co.ke/law3.html" class="btn btn-sm btn-outline" id="websiteLink">Access</a></td></tr>
+                               <tr><td><i class="fas fa-robot" style="color:#8b5cf6;"></i> Client Management System</td><td><span class="badge green">Live</span></td><td><a href="https://elma.co.ke/law1.html" class="btn btn-sm btn-outline" id="hakiLink">Access</a></td></tr>
+                                    <tr><td><i class="fas fa-robot" style="color:#8b5cf6;"></i> Payroll System</td><td><span class="badge green">Live</span></td><td><a href="https://elma.co.ke/law2.html" class="btn btn-sm btn-outline" id="hakiLink">Access</a></td></tr>
+                            <tr><td><i class="fas fa-file-alt" style="color:#3b82f6;"></i> Document Generator</td><td><span class="badge green">Live</span></td><td><a href="https://vectafunds.com/draft.html" class="btn btn-sm btn-outline" id="docGenLink">Access</a></td></tr>
+                              <tr><td><i class="fas fa-robot" style="color:#8b5cf6;"></i> Haki yako AI</td><td><span class="badge green">Live</span></td><td><a href="https://elma.co.ke/haki.html" class="btn btn-sm btn-outline" id="hakiLink">Access</a></td></tr>
+                              
+                            <tr><td><i class="fas fa-receipt" style="color:#f59e0b;"></i> KRA e-TIMS</td><td><span class="badge yellow">Pending</span></td><td><a href="#" class="btn btn-sm btn-outline" id="kraLink">Test</a></td></tr>
+                          
+                           
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- INVOICES -->
+            <div id="page-invoice" class="page">
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+                    <button class="btn" onclick="openModal('invoice')"><i class="fas fa-plus"></i> New Invoice</button>
+                    <button class="btn btn-outline" onclick="openFilterModal('invoices')"><i class="fas fa-filter"></i> Filter</button>
+                    <button class="btn btn-outline" onclick="showToast('Exporting invoices...','info')"><i class="fas fa-file-export"></i> Export</button>
+                </div>
+                <div class="table-wrap">
+                    <h3><i class="fas fa-file-invoice"></i> All Invoices <span class="action-btn"><span class="badge blue" id="invoiceCountBadge">0 total</span></span></h3>
+                    <table id="allInvoicesTable">
+                        <thead><tr><th>Invoice</th><th>Client</th><th>Amount</th><th>Issue</th><th>Due</th><th>Status</th><th>Action</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- REPORTS -->
+            <div id="page-reports" class="page">
+                <div class="two-col">
+                    <div class="table-wrap">
+                        <h3><i class="fas fa-file-pdf"></i> Generate Report</h3>
+                        <div class="form-group">
+                            <label>Report Type</label>
+                            <select id="reportType" style="width:100%; padding:0.5rem; border:1px solid #d1d9e6; border-radius:0.5rem; font-size:0.85rem;">
+                                <option value="pnl">Profit & Loss</option>
+                                <option value="caseperformance">Case Performance</option>
+                                <option value="clientretention">Client Retention</option>
+                                <option value="timereport">Time Report</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Period</label>
+                            <select id="reportPeriod" style="width:100%; padding:0.5rem; border:1px solid #d1d9e6; border-radius:0.5rem; font-size:0.85rem;">
+                                <option value="q3">Q3 2026</option>
+                                <option value="ytd">Year to Date</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
+                        <button class="btn" onclick="generateReport()"><i class="fas fa-chart-bar"></i> Generate & Export</button>
+                        <div id="reportResult" style="margin-top:0.75rem; display:none; background:#dcfce7; padding:0.75rem; border-radius:0.5rem; font-size:0.85rem;">
+                            <p><i class="fas fa-check-circle" style="color:#22c55e;"></i> Report generated. <button class="btn btn-sm btn-success" onclick="showToast('Report downloaded','success')"><i class="fas fa-download"></i> Download PDF</button></p>
+                        </div>
+                    </div>
+                    <div class="table-wrap">
+                        <h3><i class="fas fa-history"></i> Saved Reports</h3>
+                        <table>
+                            <thead><tr><th>Name</th><th>Type</th><th>Generated</th><th>Action</th></tr></thead>
+                            <tbody>
+                                <tr><td>Q3 P&L Summary</td><td>Profit & Loss</td><td>2026-08-15</td><td><button class="btn btn-sm btn-outline">View</button></td></tr>
+                                <tr><td>Case Performance Q2</td><td>Case Performance</td><td>2026-07-30</td><td><button class="btn btn-sm btn-outline">View</button></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SETTINGS -->
+            <div id="page-settings" class="page">
+                <div class="two-col">
+                    <div class="table-wrap">
+                        <h3><i class="fas fa-cog"></i> Firm Settings</h3>
+                        <form id="settingsForm" onsubmit="event.preventDefault(); saveSettings();">
+                            <div class="form-group"><label>Firm Name</label><input type="text" id="firmName" value="Law Co. Advocates & Associates"></div>
+                            <div class="form-group"><label>KRA PIN</label><input type="text" id="firmPIN" value="P0001234567"></div>
+                            <div class="form-group"><label>Default Rate (KES/hr)</label><input type="number" id="defaultRate" value="35000"></div>
+                            <div class="form-group"><label>Trust Account</label><input type="text" value="****-****-1234"></div>
+                            <div class="form-group"><label>Notifications</label><select style="width:100%; padding:0.5rem; border:1px solid #d1d9e6; border-radius:0.5rem;"><option>Email &amp; In-app</option><option>Email only</option></select></div>
+                            <button class="btn" type="submit"><i class="fas fa-save"></i> Save Settings</button>
+                        </form>
+                    </div>
+                    <div class="table-wrap">
+                        <h3><i class="fas fa-shield-alt"></i> Compliance &amp; Security</h3>
+                        <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                            <div style="background:#f1f5f9; border-radius:0.5rem; padding:0.75rem;">
+                                <p><strong>Data Protection Act (DPA) 2019</strong></p>
+                                <p style="font-size:0.8rem; color:#475569;">All client data is processed in compliance with the Kenyan Data Protection Act.</p>
+                                <span class="badge green">Compliant</span>
+                            </div>
+                            <div style="background:#f1f5f9; border-radius:0.5rem; padding:0.75rem;">
+                                <p><strong>KRA e-TIMS Integration</strong></p>
+                                <p style="font-size:0.8rem; color:#475569;">Real-time tax invoice reporting to KRA.</p>
+                                <span class="badge yellow">Pending Setup</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="toast" id="toast">
+        <i class="fas fa-info-circle" id="toastIcon"></i>
+        <span id="toastMessage">Toast message</span>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this) closeModal()">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modalTitle">Modal</h3>
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modalBody"></div>
+            <div style="margin-top:1rem; display:flex; gap:0.75rem; justify-content:flex-end; flex-wrap:wrap;">
+                <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+                <button class="btn" id="modalActionBtn" onclick="modalAction()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ======================================================================
+        // DATA STORE
+        // ======================================================================
+        const appData = {
+            cases: [
+                { id: 1, name: 'Smith v. Acme Ltd', client: 'John Smith', practice: 'Commercial Litigation',
+                    court: 'High Court', status: 'Active', deadline: '2026-09-15', partner: 'Sarah K.',
+                    description: 'Breach of contract dispute over supply agreement.', parties: 'Smith (plaintiff), Acme Ltd (defendant)',
+                    dateFiled: '2026-06-10' },
+                { id: 2, name: 'Johnson Estate', client: 'Mary Johnson', practice: 'Succession',
+                    court: "Magistrate's Court", status: 'Review', deadline: '2026-10-01', partner: 'David L.',
+                    description: 'Estate administration and distribution of assets.', parties: 'Mary Johnson (executor)',
+                    dateFiled: '2026-07-15' },
+                { id: 3, name: 'Davis LLC Merger', client: 'TechCorp KE', practice: 'Corporate', court: 'N/A',
+                    status: 'Due Diligence', deadline: '2026-08-30', partner: 'Emily R.',
+                    description: 'Merger of Davis LLC into TechCorp KE.', parties: 'TechCorp KE, Davis LLC',
+                    dateFiled: '2026-08-01' },
+                { id: 4, name: 'Parker v. City Council', client: 'James Parker', practice: 'Constitutional',
+                    court: 'Court of Appeal', status: 'Urgent', deadline: '2026-08-24', partner: 'Michael T.',
+                    description: 'Constitutional petition challenging city council decision.',
+                    parties: 'James Parker (petitioner), City Council (respondent)', dateFiled: '2026-07-20' }
+            ],
+            tasks: [
+                { id: 1, description: 'Draft discovery responses', assigned: 'Sarah K.', matter: 'Smith v. Acme',
+                    priority: 'High', due: '2026-08-26', status: 'In Progress' },
+                { id: 2, description: 'Review trust documents', assigned: 'David L.', matter: 'Johnson Estate',
+                    priority: 'Medium', due: '2026-08-28', status: 'Not Started' },
+                { id: 3, description: 'Due diligence call', assigned: 'Emily R.', matter: 'Davis LLC Merger',
+                    priority: 'Medium', due: '2026-08-25', status: 'Completed' },
+                { id: 4, description: 'File motion to dismiss', assigned: 'Michael T.', matter: 'Parker v. City',
+                    priority: 'High', due: '2026-08-24', status: 'Overdue' },
+                { id: 5, description: 'Prepare KRA appeal', assigned: 'Michael T.', matter: 'KRA Tax Appeal',
+                    priority: 'Critical', due: '2026-08-27', status: 'In Progress' }
+            ],
+            timeEntries: [
+                { matter: 'Smith v. Acme', activity: 'Draft interrogatories', date: '2026-08-23', hours: 2.5,
+                    rate: 35000, amount: 87500 },
+                { matter: 'Johnson Estate', activity: 'Review will', date: '2026-08-23', hours: 1.0, rate: 40000,
+                    amount: 40000 },
+                { matter: 'Davis LLC Merger', activity: 'Conference call', date: '2026-08-22', hours: 0.75,
+                    rate: 50000, amount: 37500 }
+            ],
+            invoices: [
+                { id: 'INV-2026-042', client: 'Smith', amount: 420000, issueDate: '2026-08-18',
+                dueDate: '2026-09-01', status: 'Pending' },
+                { id: 'INV-2026-041', client: 'TechCorp KE', amount: 1250000, issueDate: '2026-08-15',
+                    dueDate: '2026-08-28', status: 'Overdue' },
+                { id: 'INV-2026-040', client: 'Johnson', amount: 180000, issueDate: '2026-08-12',
+                    dueDate: '2026-08-25', status: 'Paid' }
+            ],
+            clients: [
+                { name: 'Smith', contact: 'John Smith', email: 'john.smith@email.com', phone: '+254 700 123 456',
+                    matters: 2, portal: 'Active' },
+                { name: 'Johnson', contact: 'Mary Johnson', email: 'mary.johnson@email.com',
+                    phone: '+254 700 654 321', matters: 1, portal: 'Active' },
+                { name: 'TechCorp KE', contact: 'Alice Davis', email: 'alice.davis@techcorp.co.ke',
+                    phone: '+254 700 789 012', matters: 3, portal: 'Invite Pending' }
+            ],
+            events: [
+                { date: '2026-08-25 10:00', title: 'Motion Hearing', matter: 'Parker v. City',
+                    location: 'Court of Appeal', type: 'Court' },
+                { date: '2026-08-26 14:00', title: 'Client Meeting', matter: 'Johnson Estate', location: 'Office',
+                    type: 'Meeting' },
+                { date: '2026-08-27 09:30', title: 'Deposition', matter: 'Smith v. Acme',
+                    location: 'Conference Room', type: 'Deposition' }
+            ],
+            trustBalances: [
+                { client: 'Smith', balance: 1230000, lastActivity: '2026-08-20' },
+                { client: 'Johnson', balance: 520000, lastActivity: '2026-08-15' },
+                { client: 'Parker', balance: 210000, lastActivity: '2026-08-22' }
+            ],
+            mpesa: [
+                { transaction: 'MP-2026-08-23-001', client: 'Smith', amount: 50000, status: 'Confirmed' },
+                { transaction: 'MP-2026-08-22-004', client: 'Johnson', amount: 25000, status: 'Pending' }
+            ],
+            documents: [
+                { file: 'Complaint_Smith_v_Acme.pdf', folder: 'Pleadings', tags: ['Urgent', 'Draft'],
+                    matter: 'Smith v. Acme', uploaded: '2026-08-23', size: '2.4 MB' },
+                { file: 'Will_Johnson_Estate.docx', folder: 'Contracts', tags: ['Confidential'],
+                    matter: 'Johnson Estate', uploaded: '2026-08-22', size: '1.1 MB' },
+                { file: 'Due_Diligence_Checklist.xlsx', folder: 'Correspondence', tags: ['Draft'],
+                    matter: 'Davis LLC Merger', uploaded: '2026-08-21', size: '0.8 MB' },
+                { file: 'Motion_Parker_v_City.pdf', folder: 'Court Filings', tags: ['Urgent', 'Final'],
+                    matter: 'Parker v. City', uploaded: '2026-08-20', size: '1.2 MB' }
+            ],
+            intake: [
+                { prospect: 'ABC Corp KE', type: 'Contract Review', status: 'Review' },
+                { prospect: 'Jane Roe', type: 'Family Law', status: 'Conflict Check' },
+                { prospect: 'XYZ LLC', type: 'Employment', status: 'Intake Form' }
+            ],
+            folders: ['Contracts', 'Pleadings', 'Correspondence', 'Court Filings'],
+            tags: ['Urgent', 'Confidential', 'Draft', 'Final', 'Approved']
+        };
+
+        // ======================================================================
+        // HELPERS
+        // ======================================================================
+        function getActiveCases() {
+            return appData.cases.filter(c => c.status === 'Active' || c.status === 'Urgent' || c.status === 'Due Diligence');
+        }
+
+        function getTotalRevenueMTD() {
+            const now = new Date();
+            const month = now.getMonth();
+            const year = now.getFullYear();
+            let total = 0;
+            appData.timeEntries.forEach(te => {
+                const d = new Date(te.date);
+                if (d.getMonth() === month && d.getFullYear() === year) total += te.amount;
+            });
+            return total;
+        }
+
+        function getTotalBillableHours() {
+            return appData.timeEntries.reduce((sum, te) => sum + te.hours, 0);
+        }
+
+        function getActiveClients() {
+            return appData.clients.filter(c => c.portal === 'Active').length;
+        }
+
+        function getOutstandingInvoicesTotal() {
+            let total = 0;
+            appData.invoices.forEach(inv => {
+                if (inv.status === 'Pending' || inv.status === 'Overdue') total += inv.amount;
+            });
+            return total;
+        }
+
+        function getCourtAppearances() {
+            const now = new Date();
+            const month = now.getMonth();
+            const year = now.getFullYear();
+            return appData.events.filter(e => {
+                const d = new Date(e.date);
+                return e.type === 'Court' && d.getMonth() === month && d.getFullYear() === year;
+            }).length;
+        }
+
+        // ======================================================================
+        // RENDER FUNCTIONS
+        // ======================================================================
+        let chartInstances = {};
+        let chartRenderPending = false;
+
+        function renderDashboardStats() {
+            const activeCases = getActiveCases().length;
+            const revenue = getTotalRevenueMTD();
+            const hours = getTotalBillableHours();
+            const activeClients = getActiveClients();
+            const courtAppearances = getCourtAppearances();
+            const outstanding = getOutstandingInvoicesTotal();
+
+            document.getElementById('activeCasesValue').textContent = activeCases;
+            document.getElementById('revenueValue').textContent = `KES ${(revenue/1000000).toFixed(1)}M`;
+            document.getElementById('billableHoursValue').textContent = hours.toFixed(1);
+            document.getElementById('activeClientsValue').textContent = activeClients;
+            document.getElementById('courtAppearancesValue').textContent = courtAppearances;
+            document.getElementById('outstandingInvoicesValue').textContent = `KES ${(outstanding/1000000).toFixed(1)}M`;
+
+            document.getElementById('casesChange').textContent = `+${Math.floor(Math.random()*5)+1}`;
+            document.getElementById('revenueChange').textContent = `+${Math.floor(Math.random()*15)+5}%`;
+            document.getElementById('hoursChange').textContent = `+${Math.floor(Math.random()*10)+2}%`;
+            document.getElementById('clientsChange').textContent = `+${Math.floor(Math.random()*5)+1}`;
+        }
+
+        let filterState = { cases: null, tasks: null, invoices: null, documents: null };
+
+        function applyCaseFilters() {
+            const practice = document.getElementById('casePracticeFilter').value;
+            const status = document.getElementById('caseStatusFilter').value;
+            const search = document.getElementById('caseSearchInput').value.trim();
+            filterState.cases = { practice, status, search };
+            renderCasesTable(filterState.cases);
+        }
+
+        function renderCasesTable(filter = null) {
+            const tbody = document.querySelector('#casesTable tbody');
+            if (!tbody) return;
+            let data = appData.cases;
+            if (filter) {
+                data = data.filter(c => {
+                    if (filter.practice && c.practice !== filter.practice) return false;
+                    if (filter.status && c.status !== filter.status) return false;
+                    if (filter.search) {
+                        const s = filter.search.toLowerCase();
+                        return c.name.toLowerCase().includes(s) || c.client.toLowerCase().includes(s);
+                    }
+                    return true;
+                });
+            }
+            let html = '';
+            data.forEach(c => {
+                const statusClass = c.status === 'Active' ? 'green' : c.status === 'Urgent' ? 'red' : c.status ===
+                    'Due Diligence' ? 'purple' : 'yellow';
+                html += `<tr>
+                    <td>${c.name}</td>
+                    <td>${c.client}</td>
+                    <td>${c.practice}</td>
+                    <td><span class="badge ${statusClass}">${c.status}</span></td>
+                    <td>${c.deadline}</td>
+                    <td>${c.partner}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline" onclick="showCaseDetail(${c.id})"><i class="fas fa-eye"></i> View</button>
+                    </td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+            document.getElementById('caseCountBadge').textContent = `${data.length} Total`;
+            document.getElementById('caseCountNav').textContent = appData.cases.length;
+        }
+
+        function showCaseDetail(caseId) {
+            const c = appData.cases.find(c => c.id === caseId);
+            if (!c) { showToast('Case not found', 'error'); return; }
+            const modal = document.getElementById('modalOverlay');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+            const actionBtn = document.getElementById('modalActionBtn');
+            actionBtn.style.display = 'none';
+            title.textContent = `Case: ${c.name}`;
+            const docs = appData.documents.filter(d => d.matter === c.name);
+            let docsHtml = docs.length > 0 ? docs.map(d =>
+                `<div style="display:flex; justify-content:space-between; padding:0.3rem 0; border-bottom:1px solid #e9edf2;">
+                    <span><i class="fas fa-file" style="color:#3b82f6;"></i> ${d.file}</span>
+                    <span>
+                        <button class="btn btn-sm btn-outline" onclick="showToast('View ${d.file}','info')"><i class="fas fa-eye"></i></button>
+                        <button class="btn btn-sm btn-outline" onclick="showToast('Download ${d.file}','info')"><i class="fas fa-download"></i></button>
+                    </span>
+                </div>`
+            ).join('') : '<div style="color:#94a3b8;">No documents attached.</div>';
+
+            body.innerHTML = `
+                <div class="case-detail-grid">
+                    <div class="detail-item"><strong>Case Name</strong><span>${c.name}</span></div>
+                    <div class="detail-item"><strong>Client</strong><span>${c.client}</span></div>
+                    <div class="detail-item"><strong>Practice Area</strong><span>${c.practice}</span></div>
+                    <div class="detail-item"><strong>Court</strong><span>${c.court}</span></div>
+                    <div class="detail-item"><strong>Status</strong><span class="badge ${c.status === 'Active' ? 'green' : c.status === 'Urgent' ? 'red' : c.status === 'Due Diligence' ? 'purple' : 'yellow'}">${c.status}</span></div>
+                    <div class="detail-item"><strong>Deadline</strong><span>${c.deadline}</span></div>
+                    <div class="detail-item"><strong>Partner</strong><span>${c.partner}</span></div>
+                    <div class="detail-item"><strong>Date Filed</strong><span>${c.dateFiled || 'N/A'}</span></div>
+                </div>
+                <div style="margin-top:1rem; background:#f8fafc; padding:0.75rem; border-radius:0.5rem;">
+                    <strong>Description:</strong>
+                    <p style="margin-top:0.3rem; font-size:0.9rem;">${c.description || 'No description provided.'}</p>
+                </div>
+                <div style="margin-top:1rem; background:#f8fafc; padding:0.75rem; border-radius:0.5rem;">
+                    <strong>Parties:</strong>
+                    <p style="margin-top:0.3rem; font-size:0.9rem;">${c.parties || 'N/A'}</p>
+                </div>
+                <div style="margin-top:1rem;">
+                    <strong>Attached Documents:</strong>
+                    <div style="margin-top:0.5rem;">${docsHtml}</div>
+                </div>
+                <div style="margin-top:1rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+                    <button class="btn btn-sm btn-outline" onclick="editCase(${c.id})"><i class="fas fa-edit"></i> Edit Case</button>
+                    <button class="btn btn-sm btn-outline" onclick="showCaseDocuments(${c.id})"><i class="fas fa-folder-open"></i> View All Documents</button>
+                </div>
+            `;
+            modal.classList.add('show');
+        }
+
+        function editCase(caseId) {
+            const c = appData.cases.find(c => c.id === caseId);
+            if (!c) { showToast('Case not found', 'error'); return; }
+            closeModal();
+            setTimeout(() => {
+                openModal('editcase', c);
+            }, 300);
+        }
+
+        function showCaseDocuments(caseId) {
+            const c = appData.cases.find(c => c.id === caseId);
+            if (!c) { showToast('Case not found', 'error'); return; }
+            closeModal();
+            document.querySelector('.sidebar nav a[data-page="documents"]').click();
+            filterState.documents = { search: c.name };
+            renderDocumentsTable(filterState.documents);
+            showToast(`Showing documents for ${c.name}`, 'info');
+        }
+
+        const originalOpenModal = openModal;
+        openModal = function(context, data) {
+            if (context === 'editcase' && data) {
+                modalContext = 'editcase';
+                const modal = document.getElementById('modalOverlay');
+                const title = document.getElementById('modalTitle');
+                const body = document.getElementById('modalBody');
+                const actionBtn = document.getElementById('modalActionBtn');
+                actionBtn.style.display = 'inline-flex';
+                actionBtn.textContent = 'Update Case';
+                title.textContent = 'Edit Case';
+                body.innerHTML = `
+                    <input type="hidden" id="editCaseId" value="${data.id}">
+                    <div class="form-group"><label>Case Name *</label><input type="text" id="f_caseName" value="${data.name}"></div>
+                    <div class="form-group"><label>Client *</label><input type="text" id="f_caseClient" value="${data.client}"></div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Practice Area</label><select id="f_casePractice">
+                            ${['Commercial Litigation','Corporate','Succession','Property','Tax','Employment'].map(p => `<option value="${p}" ${p===data.practice?'selected':''}>${p}</option>`).join('')}
+                        </select></div>
+                        <div class="form-group"><label>Court</label><input type="text" id="f_caseCourt" value="${data.court}"></div>
+                    </div>
+                    <div class="form-group"><label>Status</label><select id="f_caseStatus">
+                        ${['Active','Review','Urgent','Due Diligence'].map(s => `<option value="${s}" ${s===data.status?'selected':''}>${s}</option>`).join('')}
+                    </select></div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Deadline</label><input type="date" id="f_caseDeadline" value="${data.deadline}"></div>
+                        <div class="form-group"><label>Partner</label><input type="text" id="f_casePartner" value="${data.partner}"></div>
+                    </div>
+                    <div class="form-group"><label>Date Filed</label><input type="date" id="f_caseDateFiled" value="${data.dateFiled || ''}"></div>
+                    <div class="form-group"><label>Description</label><textarea id="f_caseDescription">${data.description || ''}</textarea></div>
+                    <div class="form-group"><label>Parties</label><input type="text" id="f_caseParties" value="${data.parties || ''}"></div>
+                `;
+                modal.classList.add('show');
+                window._filterAction = null;
+                actionBtn.onclick = function() {
+                    const id = parseInt(document.getElementById('editCaseId').value);
+                    const idx = appData.cases.findIndex(c => c.id === id);
+                    if (idx === -1) { showToast('Case not found', 'error'); return; }
+                    appData.cases[idx] = {
+                        id: id,
+                        name: document.getElementById('f_caseName').value.trim() || 'Unnamed',
+                        client: document.getElementById('f_caseClient').value.trim() || 'Unknown',
+                        practice: document.getElementById('f_casePractice').value,
+                        court: document.getElementById('f_caseCourt').value || 'N/A',
+                        status: document.getElementById('f_caseStatus').value,
+                        deadline: document.getElementById('f_caseDeadline').value || '2026-12-31',
+                        partner: document.getElementById('f_casePartner').value || 'Unassigned',
+                        dateFiled: document.getElementById('f_caseDateFiled').value || '',
+                        description: document.getElementById('f_caseDescription').value.trim(),
+                        parties: document.getElementById('f_caseParties').value.trim()
+                    };
+                    closeModal();
+                    refreshAll();
+                    showToast('Case updated successfully', 'success');
+                };
+                return;
+            }
+
+            if (context === 'editclient' && data) {
+                modalContext = 'editclient';
+                const modal = document.getElementById('modalOverlay');
+                const title = document.getElementById('modalTitle');
+                const body = document.getElementById('modalBody');
+                const actionBtn = document.getElementById('modalActionBtn');
+                actionBtn.style.display = 'inline-flex';
+                actionBtn.textContent = 'Update Client';
+                title.textContent = 'Edit Client';
+                body.innerHTML = `
+                    <input type="hidden" id="editClientName" value="${data.name}">
+                    <div class="form-group"><label>Client Name *</label><input type="text" id="f_clientName" value="${data.name}"></div>
+                    <div class="form-group"><label>Contact Person</label><input type="text" id="f_clientContact" value="${data.contact || ''}"></div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Email</label><input type="email" id="f_clientEmail" value="${data.email || ''}"></div>
+                        <div class="form-group"><label>Phone</label><input type="text" id="f_clientPhone" value="${data.phone || ''}"></div>
+                    </div>
+                    <div class="form-group"><label>Portal Access</label>
+                        <select id="f_clientPortal">
+                            <option value="Active" ${data.portal === 'Active' ? 'selected' : ''}>Active</option>
+                            <option value="Invite Pending" ${data.portal === 'Invite Pending' ? 'selected' : ''}>Invite Pending</option>
+                            <option value="Inactive" ${data.portal === 'Inactive' ? 'selected' : ''}>Inactive</option>
+                        </select>
+                    </div>
+                `;
+                modal.classList.add('show');
+                window._filterAction = null;
+                actionBtn.onclick = function() {
+                    const oldName = document.getElementById('editClientName').value;
+                    const idx = appData.clients.findIndex(c => c.name === oldName);
+                    if (idx === -1) { showToast('Client not found', 'error'); return; }
+                    const newName = document.getElementById('f_clientName').value.trim();
+                    if (!newName) { showToast('Client name required', 'error'); return; }
+                    appData.clients[idx] = {
+                        name: newName,
+                        contact: document.getElementById('f_clientContact').value.trim() || 'Unknown',
+                        email: document.getElementById('f_clientEmail').value.trim(),
+                        phone: document.getElementById('f_clientPhone').value.trim(),
+                        matters: appData.clients[idx].matters,
+                        portal: document.getElementById('f_clientPortal').value
+                    };
+                    appData.cases.forEach(c => {
+                        if (c.client === oldName) { c.client = newName; }
+                    });
+                    closeModal();
+                    refreshAll();
+                    showToast('Client updated successfully', 'success');
+                };
+                return;
+            }
+
+            originalOpenModal(context);
+        };
+
+        function renderTasksTable(filter = null) {
+            const tbody = document.querySelector('#tasksTable tbody');
+            if (!tbody) return;
+            let data = appData.tasks;
+            if (filter) {
+                data = data.filter(t => {
+                    if (filter.status && t.status !== filter.status) return false;
+                    if (filter.priority && t.priority !== filter.priority) return false;
+                    if (filter.assigned && t.assigned !== filter.assigned) return false;
+                    return true;
+                });
+            }
+            let html = '';
+            data.forEach(t => {
+                const priorityClass = t.priority === 'High' ? 'red' : t.priority === 'Critical' ? 'purple' :
+                    'yellow';
+                const statusClass = t.status === 'Completed' ? 'green' : t.status === 'Overdue' ? 'red' : t.status ===
+                    'In Progress' ? 'yellow' : 'blue';
+                html += `<tr>
+                    <td>${t.description}</td>
+                    <td>${t.assigned}</td>
+                    <td>${t.matter}</td>
+                    <td><span class="badge ${priorityClass}">${t.priority}</span></td>
+                    <td>${t.due}</td>
+                    <td><span class="badge ${statusClass}">${t.status}</span></td>
+                    <td><button class="btn btn-sm btn-outline" onclick="updateTaskStatus(this)"><i class="fas fa-check"></i></button></td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+            const openTasks = appData.tasks.filter(t => t.status !== 'Completed').length;
+            document.getElementById('taskCountBadge').textContent = `${openTasks} open`;
+            document.getElementById('taskCountNav').textContent = openTasks;
+        }
+
+        function renderTimeEntriesTable() {
+            const tbody = document.querySelector('#timeEntriesTable tbody');
+            if (!tbody) return;
+            let html = '';
+            appData.timeEntries.forEach(te => {
+                html += `<tr>
+                    <td>${te.matter}</td>
+                    <td>${te.activity}</td>
+                    <td>${te.date}</td>
+                    <td>${te.hours.toFixed(2)}</td>
+                    <td>${te.rate.toLocaleString()}</td>
+                    <td>${te.amount.toLocaleString()}</td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function renderOutstandingInvoicesTable() {
+            const tbody = document.querySelector('#outstandingInvoicesTable tbody');
+            if (!tbody) return;
+            let html = '';
+            const outstanding = appData.invoices.filter(inv => inv.status === 'Pending' || inv.status === 'Overdue');
+            outstanding.forEach(inv => {
+                const statusClass = inv.status === 'Paid' ? 'green' : inv.status === 'Overdue' ? 'red' : 'yellow';
+                html += `<tr>
+                    <td>${inv.id}</td>
+                    <td>${inv.client}</td>
+                    <td>${inv.amount.toLocaleString()}</td>
+                    <td>${inv.dueDate}</td>
+                    <td><span class="badge ${statusClass}">${inv.status}</span></td>
+                    <td><button class="btn btn-sm btn-outline" onclick="showInvoice('${inv.id}')"><i class="fas fa-eye"></i></button></td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function renderAllInvoicesTable(filter = null) {
+            const tbody = document.querySelector('#allInvoicesTable tbody');
+            if (!tbody) return;
+            let data = appData.invoices;
+            if (filter) {
+                data = data.filter(inv => {
+                    if (filter.status && inv.status !== filter.status) return false;
+                    if (filter.client && inv.client !== filter.client) return false;
+                    return true;
+                });
+            }
+            let html = '';
+            data.forEach(inv => {
+                const statusClass = inv.status === 'Paid' ? 'green' : inv.status === 'Overdue' ? 'red' : 'yellow';
+                html += `<tr>
+                    <td>${inv.id}</td>
+                    <td>${inv.client}</td>
+                    <td>${inv.amount.toLocaleString()}</td>
+                    <td>${inv.issueDate}</td>
+                    <td>${inv.dueDate}</td>
+                    <td><span class="badge ${statusClass}">${inv.status}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline" onclick="showInvoice('${inv.id}')"><i class="fas fa-eye"></i></button>
+                        <button class="btn btn-sm btn-outline" onclick="printInvoice('${inv.id}')"><i class="fas fa-print"></i></button>
+                    </td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+            document.getElementById('invoiceCountBadge').textContent = `${data.length} total`;
+        }
+
+        function renderClientsTable() {
+            const tbody = document.querySelector('#clientsTable tbody');
+            if (!tbody) return;
+            let html = '';
+            appData.clients.forEach(c => {
+                const portalClass = c.portal === 'Active' ? 'green' : c.portal === 'Invite Pending' ? 'yellow' :
+                    'gray';
+                html += `<tr>
+                    <td>${c.name}</td>
+                    <td>${c.contact}</td>
+                    <td>${c.matters}</td>
+                    <td><span class="badge ${portalClass}">${c.portal}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline" onclick="showClientDetail('${c.name}')"><i class="fas fa-eye"></i> View</button>
+                        <button class="btn btn-sm btn-outline" onclick="editClient('${c.name}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-success" onclick="inviteClient('${c.name}')"><i class="fas fa-envelope"></i> Invite</button>
+                    </td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+            document.getElementById('clientCountBadge').textContent = `${appData.clients.length} total`;
+        }
+
+        function showClientDetail(clientName) {
+            const c = appData.clients.find(cl => cl.name === clientName);
+            if (!c) { showToast('Client not found', 'error'); return; }
+            const modal = document.getElementById('modalOverlay');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+            const actionBtn = document.getElementById('modalActionBtn');
+            actionBtn.style.display = 'none';
+            title.textContent = `Client: ${c.name}`;
+            const cases = appData.cases.filter(cs => cs.client === c.name);
+            body.innerHTML = `
+                <div class="case-detail-grid">
+                    <div class="detail-item"><strong>Name</strong><span>${c.name}</span></div>
+                    <div class="detail-item"><strong>Contact</strong><span>${c.contact || 'N/A'}</span></div>
+                    <div class="detail-item"><strong>Email</strong><span>${c.email || 'N/A'}</span></div>
+                    <div class="detail-item"><strong>Phone</strong><span>${c.phone || 'N/A'}</span></div>
+                    <div class="detail-item"><strong>Open Matters</strong><span>${c.matters}</span></div>
+                    <div class="detail-item"><strong>Portal Access</strong><span class="badge ${c.portal === 'Active' ? 'green' : c.portal === 'Invite Pending' ? 'yellow' : 'gray'}">${c.portal}</span></div>
+                </div>
+                <div style="margin-top:1rem;">
+                    <strong>Associated Cases:</strong>
+                    ${cases.length > 0 ? cases.map(cs => `<div style="padding:0.3rem 0; border-bottom:1px solid #e9edf2;">${cs.name} (${cs.status})</div>`).join('') : '<div style="color:#94a3b8; padding:0.3rem 0;">No cases</div>'}
+                </div>
+                <div style="margin-top:1rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+                    <button class="btn btn-sm btn-outline" onclick="editClient('${c.name}')"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="btn btn-sm btn-success" onclick="inviteClient('${c.name}')"><i class="fas fa-envelope"></i> Send Invite</button>
+                </div>
+            `;
+            modal.classList.add('show');
+        }
+
+        function editClient(clientName) {
+            const c = appData.clients.find(cl => cl.name === clientName);
+            if (!c) { showToast('Client not found', 'error'); return; }
+            closeModal();
+            setTimeout(() => {
+                openModal('editclient', c);
+            }, 300);
+        }
+
+        function inviteClient(clientName) {
+            const c = appData.clients.find(cl => cl.name === clientName);
+            if (!c) { showToast('Client not found', 'error'); return; }
+            if (c.portal !== 'Active') {
+                c.portal = 'Invite Pending';
+                refreshAll();
+            }
+            const email = c.email || `${c.name.toLowerCase().replace(/\s/g, '.')}@email.com`;
+            showToast(`Invitation sent to ${c.name} (${email})`, 'success');
+        }
+
+        function renderEventsTable() {
+            const tbody = document.querySelector('#eventsTable tbody');
+            if (!tbody) return;
+            let html = '';
+            const sorted = [...appData.events].sort((a, b) => new Date(a.date) - new Date(b.date));
+            sorted.forEach(e => {
+                const typeClass = e.type === 'Court' ? 'red' : e.type === 'Meeting' ? 'green' : 'purple';
+                html += `<tr>
+                    <td>${e.date}</td>
+                    <td>${e.title}</td>
+                    <td>${e.matter}</td>
+                    <td>${e.location}</td>
+                    <td><span class="badge ${typeClass}">${e.type}</span></td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function renderTrustTable() {
+            const tbody = document.querySelector('#trustTable tbody');
+            if (!tbody) return;
+            let html = '';
+            let total = 0;
+            appData.trustBalances.forEach(t => {
+                total += t.balance;
+                html += `<tr>
+                    <td>${t.client}</td>
+                    <td>${t.balance.toLocaleString()}</td>
+                    <td>${t.lastActivity}</td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+            document.getElementById('trustTotal').textContent = `KES ${total.toLocaleString()}`;
+        }
+
+        function renderMpesaTable() {
+            const tbody = document.querySelector('#mpesaTable tbody');
+            if (!tbody) return;
+            let html = '';
+            appData.mpesa.forEach(m => {
+                const statusClass = m.status === 'Confirmed' ? 'green' : 'yellow';
+                html += `<tr>
+                    <td>${m.transaction}</td>
+                    <td>${m.client}</td>
+                    <td>${m.amount.toLocaleString()}</td>
+                    <td><span class="badge ${statusClass}">${m.status}</span></td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function renderRecentActivity() {
+            const tbody = document.querySelector('#recentActivityTable tbody');
+            if (!tbody) return;
+            let activities = [];
+            appData.timeEntries.slice(0, 3).forEach(te => {
+                activities.push({ case: te.matter, activity: te.activity, time: te.date, status: 'Completed' });
+            });
+            appData.events.slice(0, 2).forEach(e => {
+                activities.push({ case: e.matter, activity: e.title, time: e.date, status: e.type === 'Court' ?
+                        'Urgent' : 'In Progress' });
+            });
+            activities.sort((a, b) => new Date(b.time) - new Date(a.time));
+            let html = '';
+            activities.slice(0, 4).forEach(a => {
+                const statusClass = a.status === 'Completed' ? 'green' : a.status === 'Urgent' ? 'red' :
+                    'yellow';
+                html += `<tr>
+                    <td>${a.case}</td>
+                    <td>${a.activity}</td>
+                    <td>${a.time}</td>
+                    <td><span class="badge ${statusClass}">${a.status}</span></td>
+                </tr>`;
+            });
+            tbody.innerHTML = html || '<tr><td colspan="4" style="text-align:center;color:#94a3b8;">No recent activity</td></tr>';
+        }
+
+        // ======================================================================
+        // DOCUMENTS
+        // ======================================================================
+        function renderDocumentsTable(filter = null) {
+            renderFolderGrid(filter);
+            const data = filter ? appData.documents.filter(d => {
+                if (filter.folder && d.folder !== filter.folder) return false;
+                if (filter.tag) {
+                    if (!d.tags || !d.tags.includes(filter.tag)) return false;
+                }
+                if (filter.search) {
+                    const s = filter.search.toLowerCase();
+                    return d.file.toLowerCase().includes(s) || d.matter.toLowerCase().includes(s);
+                }
+                return true;
+            }) : appData.documents;
+            // No docCount element, just skip.
+        }
+
+        function renderFolderGrid(filter = null) {
+            const container = document.getElementById('folderGrid');
+            if (!container) return;
+            let html = '';
+            const folders = appData.folders;
+            if (folders.length === 0) {
+                container.innerHTML =
+                    '<p style="color:#94a3b8; grid-column:1/-1; text-align:center; padding:2rem 0;">No folders yet. Click "Add Folder" to create one.</p>';
+                return;
+            }
+            folders.forEach(folder => {
+                const files = appData.documents.filter(d => d.folder === folder);
+                let fileCount = files.length;
+                if (filter) {
+                    const filteredFiles = files.filter(d => {
+                        if (filter.folder && d.folder !== filter.folder) return false;
+                        if (filter.tag) {
+                            if (!d.tags || !d.tags.includes(filter.tag)) return false;
+                        }
+                        if (filter.search) {
+                            const s = filter.search.toLowerCase();
+                            return d.file.toLowerCase().includes(s) || d.matter.toLowerCase().includes(s);
+                        }
+                        return true;
+                    });
+                    fileCount = filteredFiles.length;
+                }
+                html += `
+                    <div class="folder-card">
+                        <div class="folder-actions">
+                            <button onclick="event.stopPropagation(); deleteFolder('${folder}')" title="Delete Folder"><i class="fas fa-trash"></i></button>
+                        </div>
+                        <div onclick="openFolder('${folder}')">
+                            <i class="fas fa-folder"></i>
+                            <div class="folder-name">${folder}</div>
+                            <div class="file-count">${fileCount} files</div>
+                        </div>
+                    </div>
+                `;
+            });
+            const unfiled = appData.documents.filter(d => !d.folder || !appData.folders.includes(d.folder));
+            if (unfiled.length > 0) {
+                html += `
+                    <div class="folder-card">
+                        <div class="folder-actions"></div>
+                        <div onclick="openFolder('Unfiled')">
+                            <i class="fas fa-folder-open" style="color:#94a3b8;"></i>
+                            <div class="folder-name">Unfiled</div>
+                            <div class="file-count">${unfiled.length} files</div>
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        function resetDocFilters() {
+            filterState.documents = null;
+            closeFolderView();
+            refreshAll();
+            showToast('Document view reset', 'info');
+        }
+
+        function deleteFolder(folderName) {
+            if (folderName === 'Unfiled') { showToast('Cannot delete Unfiled folder', 'error'); return; }
+            if (!confirm(`Delete folder "${folderName}" and all its documents?`)) return;
+            appData.folders = appData.folders.filter(f => f !== folderName);
+            appData.documents = appData.documents.filter(d => d.folder !== folderName);
+            closeFolderView();
+            refreshAll();
+            showToast(`Folder "${folderName}" deleted.`, 'success');
+        }
+
+        function openFolder(folderName) {
+            const container = document.getElementById('folderFilesContainer');
+            const title = document.getElementById('selectedFolderName');
+            const tbody = document.querySelector('#folderFilesTable tbody');
+            if (!container || !tbody) return;
+            container.style.display = 'block';
+            title.textContent = folderName;
+            let files = appData.documents.filter(d => d.folder === folderName);
+            if (folderName === 'Unfiled') {
+                files = appData.documents.filter(d => !d.folder || !appData.folders.includes(d.folder));
+            }
+            let html = '';
+            if (files.length === 0) {
+                html = '<tr><td colspan="6" style="text-align:center;color:#94a3b8;">No files in this folder.</td></tr>';
+            } else {
+                files.forEach((d) => {
+                    const icon = d.file.endsWith('.pdf') ? 'fa-file-pdf' : d.file.endsWith('.docx') ?
+                        'fa-file-word' : 'fa-file-excel';
+                    const color = d.file.endsWith('.pdf') ? '#ef4444' : d.file.endsWith('.docx') ? '#3b82f6' :
+                        '#22c55e';
+                    const tags = d.tags ? d.tags.map(t => `<span class="badge">${t}</span>`).join(' ') : '';
+                    html += `<tr>
+                        <td><i class="fas ${icon}" style="color:${color};"></i> ${d.file}</td>
+                        <td>${d.matter}</td>
+                        <td>${d.uploaded}</td>
+                        <td>${d.size}</td>
+                        <td>${tags || '-'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline" onclick="showToast('Preview ${d.file}','info')"><i class="fas fa-eye"></i></button>
+                            <button class="btn btn-sm btn-outline" onclick="showToast('Download ${d.file}','info')"><i class="fas fa-download"></i></button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteDocument('${d.file}', '${folderName}')"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+                });
+            }
+            tbody.innerHTML = html;
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function deleteDocument(fileName, folderName) {
+            if (!confirm(`Delete document "${fileName}"?`)) return;
+            appData.documents = appData.documents.filter(d => !(d.file === fileName && d.folder === folderName));
+            if (document.getElementById('folderFilesContainer').style.display === 'block' &&
+                document.getElementById('selectedFolderName').textContent === folderName) {
+                openFolder(folderName);
+            }
+            refreshAll();
+            showToast(`Document "${fileName}" deleted.`, 'success');
+        }
+
+        function closeFolderView() {
+            document.getElementById('folderFilesContainer').style.display = 'none';
+        }
+
+        function renderIntakeTable() {
+            const tbody = document.querySelector('#intakeTable tbody');
+            if (!tbody) return;
+            let html = '';
+            appData.intake.forEach(i => {
+                const statusClass = i.status === 'Review' ? 'yellow' : i.status === 'Conflict Check' ? 'green' :
+                    'purple';
+                html += `<tr>
+                    <td>${i.prospect}</td>
+                    <td>${i.type}</td>
+                    <td><span class="badge ${statusClass}">${i.status}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline" onclick="handleIntakeAction('${i.prospect}','assign')">Assign</button>
+                        <button class="btn btn-sm btn-outline" onclick="handleIntakeAction('${i.prospect}','schedule')">Schedule</button>
+                    </td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+            document.getElementById('intakeCount').textContent = `${appData.intake.length} pending`;
+        }
+
+        function handleIntakeAction(prospect, action) {
+            const item = appData.intake.find(i => i.prospect === prospect);
+            if (item) {
+                if (action === 'assign') {
+                    item.status = 'Assigned';
+                    showToast(`Assigned ${prospect} to partner`, 'success');
+                } else if (action === 'schedule') {
+                    item.status = 'Scheduled';
+                    showToast(`Scheduled consultation for ${prospect}`, 'success');
+                }
+                refreshAll();
+            }
+        }
+
+        function renderPNL() {
+            const revenue = appData.timeEntries.reduce((s, t) => s + t.amount, 0) * 1.2;
+            const expenses = revenue * 0.37;
+            const net = revenue - expenses;
+            document.getElementById('pnlRevenue').textContent = Math.round(revenue).toLocaleString();
+            document.getElementById('pnlExpenses').textContent = `(${Math.round(expenses).toLocaleString()})`;
+            document.getElementById('pnlNet').textContent = Math.round(net).toLocaleString();
+        }
+
+        // ======================================================================
+        // CHARTS - FIXED: now using requestAnimationFrame and proper sizing
+        // ======================================================================
+        function renderCharts() {
+            // Destroy existing charts
+            Object.values(chartInstances).forEach(c => {
+                try { c.destroy(); } catch (e) {}
+            });
+            chartInstances = {};
+
+            // Use requestAnimationFrame to ensure DOM is painted
+            if (chartRenderPending) return;
+            chartRenderPending = true;
+            requestAnimationFrame(() => {
+                chartRenderPending = false;
+                _renderChartsInternal();
+            });
+        }
+
+        function _renderChartsInternal() {
+            try {
+                // ---- Dashboard Chart 1: Revenue by Practice Area (Doughnut) ----
+                const ctx1 = document.getElementById('dashboardChart1');
+                if (ctx1) {
+                    const practiceAreas = ['Commercial Litigation', 'Corporate', 'Succession', 'Property', 'Tax',
+                        'Employment'
+                    ];
+                    const counts = practiceAreas.map(pa => appData.cases.filter(c => c.practice === pa).length);
+                    const revenueData = practiceAreas.map((pa, idx) => {
+                        const base = counts[idx] || 1;
+                        const multipliers = { 'Commercial Litigation': 1.8, 'Corporate': 1.5, 'Succession': 1.0,
+                            'Property': 1.2, 'Tax': 1.3, 'Employment': 0.9 };
+                        const mult = multipliers[pa] || 1.0;
+                        return Math.round(base * 450000 * mult);
+                    });
+                    const totalRev = revenueData.reduce((a, b) => a + b, 0);
+                    const percentages = revenueData.map(v => totalRev > 0 ? Math.round((v / totalRev) * 100) : 0);
+                    const fallbackData = [38, 25, 14, 10, 8, 5];
+                    const chartData = percentages.length > 0 && percentages.some(p => p > 0) ? percentages :
+                        fallbackData;
+
+                    chartInstances.d1 = new Chart(ctx1, {
+                        type: 'doughnut',
+                        data: {
+                            labels: practiceAreas,
+                            datasets: [{
+                                data: chartData,
+                                backgroundColor: ['#3b82f6', '#8b5cf6', '#22c55e', '#f59e0b',
+                                    '#ef4444', '#06b6d4'
+                                ],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: { boxWidth: 10, font: { size: 9 }, padding: 8 }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // ---- Dashboard Chart 2: Monthly Billable Hours (Bar) ----
+                const ctx2 = document.getElementById('dashboardChart2');
+                if (ctx2) {
+                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
+                    const monthData = months.map((m, idx) => {
+                        const monthNum = idx + 1;
+                        const entries = appData.timeEntries.filter(te => {
+                            const d = new Date(te.date);
+                            return d.getMonth() + 1 === monthNum || (monthNum === 8 && d.getMonth() + 1 <=
+                                8);
+                        });
+                        const total = entries.reduce((sum, e) => sum + e.hours, 0);
+                        const fallback = [180, 210, 190, 240, 220, 260, 280, 342];
+                        return total > 0 ? parseFloat(total.toFixed(1)) : fallback[idx] || 0;
+                    });
+
+                    chartInstances.d2 = new Chart(ctx2, {
+                        type: 'bar',
+                        data: {
+                            labels: months,
+                            datasets: [{
+                                label: 'Hours',
+                                data: monthData,
+                                backgroundColor: '#60a5fa',
+                                borderRadius: 4,
+                                barPercentage: 0.65
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                                x: { grid: { display: false } }
+                            }
+                        }
+                    });
+                }
+
+                // ---- Analytics Chart 1: Revenue by Month (Line) ----
+                const ctx3 = document.getElementById('analyticsChart1');
+                if (ctx3) {
+                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
+                    const revMonthData = months.map((m, idx) => {
+                        const monthNum = idx + 1;
+                        const entries = appData.timeEntries.filter(te => {
+                            const d = new Date(te.date);
+                            return d.getMonth() + 1 === monthNum || (monthNum === 8 && d.getMonth() + 1 <=
+                                8);
+                        });
+                        const total = entries.reduce((sum, e) => sum + e.amount, 0);
+                        const fallback = [8.2, 7.8, 9.5, 11.0, 10.5, 13.0, 14.5, 12.8];
+                        return total > 0 ? parseFloat((total / 1000000).toFixed(1)) : fallback[idx] || 0;
+                    });
+
+                    chartInstances.a1 = new Chart(ctx3, {
+                        type: 'line',
+                        data: {
+                            labels: months,
+                            datasets: [{
+                                label: 'Revenue (KES M)',
+                                data: revMonthData,
+                                borderColor: '#3b82f6',
+                                backgroundColor: 'rgba(59,130,246,0.1)',
+                                tension: 0.2,
+                                fill: true,
+                                pointBackgroundColor: '#3b82f6',
+                                pointRadius: 3
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                                legend: { display: true, position: 'top',
+                                    labels: { boxWidth: 10, font: { size: 9 } } }
+                            },
+                            scales: {
+                                y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                                x: { grid: { display: false } }
+                            }
+                        }
+                    });
+                }
+
+                // ---- Analytics Chart 2: Partner Utilization (Bar) ----
+                const ctx4 = document.getElementById('analyticsChart2');
+                if (ctx4) {
+                    const partners = ['Sarah K.', 'David L.', 'Emily R.', 'Michael T.', 'James W.'];
+                    const utilData = partners.map(p => {
+                        const cases = appData.cases.filter(c => c.partner === p).length;
+                        return Math.min(95, 55 + cases * 10);
+                    });
+
+                    chartInstances.a2 = new Chart(ctx4, {
+                        type: 'bar',
+                        data: {
+                            labels: partners,
+                            datasets: [{
+                                label: 'Utilization %',
+                                data: utilData,
+                                backgroundColor: ['#22c55e', '#f59e0b', '#3b82f6', '#ef4444',
+                                    '#8b5cf6'
+                                ],
+                                borderRadius: 4,
+                                barPercentage: 0.6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { beginAtZero: true, max: 100,
+                                grid: { color: 'rgba(0,0,0,0.05)' } },
+                                x: { grid: { display: false } }
+                            }
+                        }
+                    });
+                }
+            } catch (e) {
+                console.warn('Chart rendering issue:', e);
+            }
+        }
+
+        // ======================================================================
+        // CALENDAR NAVIGATION
+        // ======================================================================
+        let calendarDate = new Date(2026, 7, 1);
+
+        function changeMonth(delta) {
+            calendarDate.setMonth(calendarDate.getMonth() + delta);
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            const display = `${monthNames[calendarDate.getMonth()]} ${calendarDate.getFullYear()}`;
+            document.getElementById('calendarMonth').textContent = display;
+            document.getElementById('calendarMonthDisplay').textContent = display;
+            const month = calendarDate.getMonth();
+            const year = calendarDate.getFullYear();
+            const filtered = appData.events.filter(e => {
+                const d = new Date(e.date);
+                return d.getMonth() === month && d.getFullYear() === year;
+            });
+            const tbody = document.querySelector('#eventsTable tbody');
+            if (!tbody) return;
+            let html = '';
+            const sorted = filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+            sorted.forEach(e => {
+                const typeClass = e.type === 'Court' ? 'red' : e.type === 'Meeting' ? 'green' : 'purple';
+                html += `<tr>
+                    <td>${e.date}</td>
+                    <td>${e.title}</td>
+                    <td>${e.matter}</td>
+                    <td>${e.location}</td>
+                    <td><span class="badge ${typeClass}">${e.type}</span></td>
+                </tr>`;
+            });
+            tbody.innerHTML = html || '<tr><td colspan="5" style="text-align:center;color:#94a3b8;">No events this month</td></tr>';
+        }
+
+        // ======================================================================
+        // REFRESH
+        // ======================================================================
+        function refreshAll() {
+            renderDashboardStats();
+            renderCasesTable(filterState.cases);
+            renderTasksTable(filterState.tasks);
+            renderTimeEntriesTable();
+            renderOutstandingInvoicesTable();
+            renderAllInvoicesTable(filterState.invoices);
+            renderClientsTable();
+            renderEventsTable();
+            renderTrustTable();
+            renderMpesaTable();
+            renderRecentActivity();
+            renderDocumentsTable(filterState.documents);
+            renderIntakeTable();
+            renderPNL();
+            renderCharts();
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            document.getElementById('calendarMonth').textContent = `${monthNames[calendarDate.getMonth()]} ${calendarDate.getFullYear()}`;
+            document.getElementById('calendarMonthDisplay').textContent = `${monthNames[calendarDate.getMonth()]} ${calendarDate.getFullYear()}`;
+        }
+
+        // ======================================================================
+        // FILTER MODAL
+        // ======================================================================
+        let filterContext = '';
+
+        function openFilterModal(context) {
+            filterContext = context;
+            const modal = document.getElementById('modalOverlay');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+            const actionBtn = document.getElementById('modalActionBtn');
+            actionBtn.style.display = 'inline-flex';
+            actionBtn.textContent = 'Apply Filter';
+            title.textContent = `Filter ${context.charAt(0).toUpperCase() + context.slice(1)}`;
+
+            let html = '';
+            if (context === 'cases') {
+                html = `
+                    <div class="form-group"><label>Status</label>
+                        <select id="filterCaseStatus"><option value="">All</option>
+                            <option value="Active">Active</option><option value="Review">Review</option>
+                            <option value="Urgent">Urgent</option><option value="Due Diligence">Due Diligence</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Practice Area</label>
+                        <select id="filterCasePractice"><option value="">All</option>
+                            <option value="Commercial Litigation">Commercial Litigation</option>
+                            <option value="Corporate">Corporate</option><option value="Succession">Succession</option>
+                            <option value="Property">Property</option><option value="Tax">Tax</option>
+                            <option value="Employment">Employment</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Search</label><input type="text" id="filterCaseSearch" placeholder="Case or client name"></div>
+                `;
+            } else if (context === 'tasks') {
+                html = `
+                    <div class="form-group"><label>Status</label>
+                        <select id="filterTaskStatus"><option value="">All</option>
+                            <option value="Not Started">Not Started</option><option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option><option value="Overdue">Overdue</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Priority</label>
+                        <select id="filterTaskPriority"><option value="">All</option>
+                            <option value="Low">Low</option><option value="Medium">Medium</option>
+                            <option value="High">High</option><option value="Critical">Critical</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Assigned To</label>
+                        <select id="filterTaskAssigned"><option value="">All</option>
+                            <option value="Sarah K.">Sarah K.</option><option value="David L.">David L.</option>
+                            <option value="Emily R.">Emily R.</option><option value="Michael T.">Michael T.</option>
+                        </select>
+                    </div>
+                `;
+            } else if (context === 'invoices') {
+                html = `
+                    <div class="form-group"><label>Status</label>
+                        <select id="filterInvoiceStatus"><option value="">All</option>
+                            <option value="Pending">Pending</option><option value="Overdue">Overdue</option>
+                            <option value="Paid">Paid</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Client</label>
+                        <select id="filterInvoiceClient"><option value="">All</option>
+                            ${appData.invoices.map(i => `<option value="${i.client}">${i.client}</option>`).join('')}
+                        </select>
+                    </div>
+                `;
+            } else if (context === 'documents') {
+                html = `
+                    <div class="form-group"><label>Folder</label>
+                        <select id="filterDocFolder"><option value="">All</option>
+                            ${appData.folders.map(f => `<option value="${f}">${f}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Tag</label>
+                        <select id="filterDocTag"><option value="">All</option>
+                            ${appData.tags.map(t => `<option value="${t}">${t}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Search</label><input type="text" id="filterDocSearch" placeholder="File or matter name"></div>
+                `;
+            }
+            body.innerHTML = html;
+            modal.classList.add('show');
+            window._filterAction = function() {
+                if (filterContext === 'cases') {
+                    filterState.cases = {
+                        status: document.getElementById('filterCaseStatus').value,
+                        practice: document.getElementById('filterCasePractice').value,
+                        search: document.getElementById('filterCaseSearch').value.trim()
+                    };
+                    document.getElementById('casePracticeFilter').value = filterState.cases.practice || '';
+                    document.getElementById('caseStatusFilter').value = filterState.cases.status || '';
+                    document.getElementById('caseSearchInput').value = filterState.cases.search || '';
+                } else if (filterContext === 'tasks') {
+                    filterState.tasks = {
+                        status: document.getElementById('filterTaskStatus').value,
+                        priority: document.getElementById('filterTaskPriority').value,
+                        assigned: document.getElementById('filterTaskAssigned').value
+                    };
+                } else if (filterContext === 'invoices') {
+                    filterState.invoices = {
+                        status: document.getElementById('filterInvoiceStatus').value,
+                        client: document.getElementById('filterInvoiceClient').value
+                    };
+                } else if (filterContext === 'documents') {
+                    filterState.documents = {
+                        folder: document.getElementById('filterDocFolder').value,
+                        tag: document.getElementById('filterDocTag').value,
+                        search: document.getElementById('filterDocSearch').value.trim()
+                    };
+                }
+                closeModal();
+                refreshAll();
+                showToast('Filter applied', 'success');
+            };
+            body.innerHTML += `<div style="margin-top:1rem;"><button class="btn btn-outline" onclick="clearFilter()">Clear Filter</button></div>`;
+        }
+
+        function clearFilter() {
+            if (filterContext === 'cases') {
+                filterState.cases = null;
+                document.getElementById('casePracticeFilter').value = '';
+                document.getElementById('caseStatusFilter').value = '';
+                document.getElementById('caseSearchInput').value = '';
+            } else if (filterContext === 'tasks') filterState.tasks = null;
+            else if (filterContext === 'invoices') filterState.invoices = null;
+            else if (filterContext === 'documents') filterState.documents = null;
+            closeModal();
+            refreshAll();
+            showToast('Filter cleared', 'info');
+        }
+
+        // ======================================================================
+        // MODALS
+        // ======================================================================
+        function openFolderModal() {
+            const modal = document.getElementById('modalOverlay');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+            const actionBtn = document.getElementById('modalActionBtn');
+            actionBtn.style.display = 'inline-flex';
+            actionBtn.textContent = 'Create Folder';
+            title.textContent = 'Add Folder';
+            body.innerHTML = `
+                <div class="form-group"><label>Folder Name</label><input type="text" id="folderName" placeholder="Enter folder name"></div>
+                <div style="margin-top:0.5rem;"><strong>Existing Folders:</strong> ${appData.folders.join(', ') || 'None yet'}</div>
+                <div style="margin-top:0.5rem; font-size:0.85rem; color:#64748b;">Folders will be visible immediately after creation.</div>
+            `;
+            modal.classList.add('show');
+            window._filterAction = function() {
+                const name = document.getElementById('folderName').value.trim();
+                if (!name) { showToast('Folder name required', 'error'); return; }
+                if (appData.folders.includes(name)) { showToast('Folder already exists', 'error'); return; }
+                appData.folders.push(name);
+                filterState.documents = null;
+                closeModal();
+                refreshAll();
+                showToast(`Folder "${name}" created successfully!`, 'success');
+            };
+        }
+
+        function openTagModal() {
+            const modal = document.getElementById('modalOverlay');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+            const actionBtn = document.getElementById('modalActionBtn');
+            actionBtn.style.display = 'inline-flex';
+            actionBtn.textContent = 'Add Tag';
+            title.textContent = 'Manage Tags';
+            body.innerHTML = `
+                <div class="form-group"><label>New Tag</label><input type="text" id="tagName" placeholder="Enter tag name"></div>
+                <div style="margin-top:0.5rem;"><strong>Existing Tags:</strong> ${appData.tags.join(', ') || 'None yet'}</div>
+                <div style="margin-top:0.5rem;">
+                    <p style="font-size:0.85rem; color:#475569;">To apply a tag to a document, edit the document record.</p>
+                    <button class="btn btn-sm btn-outline" onclick="showToast('Tag application interface opened','info')">Apply to Documents</button>
+                </div>
+            `;
+            modal.classList.add('show');
+            window._filterAction = function() {
+                const tag = document.getElementById('tagName').value.trim();
+                if (!tag) { showToast('Tag name required', 'error'); return; }
+                if (appData.tags.includes(tag)) { showToast('Tag already exists', 'error'); return; }
+                appData.tags.push(tag);
+                closeModal();
+                refreshAll();
+                showToast(`Tag "${tag}" added`, 'success');
+            };
+        }
+
+        function openTransactionModal() {
+            const modal = document.getElementById('modalOverlay');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+            const actionBtn = document.getElementById('modalActionBtn');
+            actionBtn.style.display = 'inline-flex';
+            actionBtn.textContent = 'Record Transaction';
+            title.textContent = 'Record Trust Transaction';
+            body.innerHTML = `
+                <div class="form-group"><label>Client</label>
+                    <select id="transClient"><option>Smith</option><option>Johnson</option><option>Parker</option></select>
+                </div>
+                <div class="form-group"><label>Type</label>
+                    <select id="transType"><option value="deposit">Deposit</option><option value="withdrawal">Withdrawal</option></select>
+                </div>
+                <div class="form-group"><label>Amount (KES)</label><input type="number" id="transAmount" placeholder="0"></div>
+                <div class="form-group"><label>Description</label><input type="text" id="transDesc" placeholder="Description"></div>
+            `;
+            modal.classList.add('show');
+            window._filterAction = function() {
+                const client = document.getElementById('transClient').value;
+                const type = document.getElementById('transType').value;
+                const amount = parseFloat(document.getElementById('transAmount').value);
+                const desc = document.getElementById('transDesc').value.trim() || 'Transaction';
+                if (!amount || amount <= 0) { showToast('Valid amount required', 'error'); return; }
+                const trust = appData.trustBalances.find(t => t.client === client);
+                if (trust) {
+                    if (type === 'deposit') trust.balance += amount;
+                    else trust.balance -= amount;
+                    trust.lastActivity = new Date().toISOString().slice(0, 10);
+                }
+                showToast(`${type === 'deposit' ? 'Deposit' : 'Withdrawal'} of KES ${amount.toLocaleString()} recorded for ${client}`, 'success');
+                closeModal();
+                refreshAll();
+            };
+        }
+
+        function openMpesaModal() {
+            const modal = document.getElementById('modalOverlay');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+            const actionBtn = document.getElementById('modalActionBtn');
+            actionBtn.style.display = 'inline-flex';
+            actionBtn.textContent = 'Add Payment';
+            title.textContent = 'Record M-Pesa Payment';
+            body.innerHTML = `
+                <div class="form-group"><label>Client</label>
+                    <select id="mpesaClient"><option>Smith</option><option>Johnson</option><option>TechCorp KE</option></select>
+                </div>
+                <div class="form-group"><label>Amount (KES)</label><input type="number" id="mpesaAmount" placeholder="0"></div>
+                <div class="form-group"><label>Transaction Reference</label><input type="text" id="mpesaRef" placeholder="e.g. MP-2026-08-25-001"></div>
+                <div class="form-group"><label>Status</label>
+                    <select id="mpesaStatus"><option value="Confirmed">Confirmed</option><option value="Pending">Pending</option></select>
+                </div>
+            `;
+            modal.classList.add('show');
+            window._filterAction = function() {
+                const client = document.getElementById('mpesaClient').value;
+                const amount = parseFloat(document.getElementById('mpesaAmount').value);
+                const ref = document.getElementById('mpesaRef').value.trim() || `MP-${Date.now().toString().slice(-6)}`;
+                const status = document.getElementById('mpesaStatus').value;
+                if (!amount || amount <= 0) { showToast('Valid amount required', 'error'); return; }
+                appData.mpesa.push({
+                    transaction: ref,
+                    client: client,
+                    amount: amount,
+                    status: status
+                });
+                if (status === 'Confirmed') {
+                    const trust = appData.trustBalances.find(t => t.client === client);
+                    if (trust) {
+                        trust.balance += amount;
+                        trust.lastActivity = new Date().toISOString().slice(0, 10);
+                    }
+                }
+                showToast(`M-Pesa payment of KES ${amount.toLocaleString()} recorded for ${client}`, 'success');
+                closeModal();
+                refreshAll();
+            };
+        }
+
+        // ======================================================================
+        // ADD FUNCTIONS
+        // ======================================================================
+        function addCase(data) {
+            appData.cases.push({
+                id: appData.cases.length + 1,
+                name: data.name || 'New Case',
+                client: data.client || 'Unknown',
+                practice: data.practice || 'General',
+                court: data.court || 'N/A',
+                status: data.status || 'Active',
+                deadline: data.deadline || '2026-12-31',
+                partner: data.partner || 'Unassigned',
+                description: data.description || '',
+                parties: data.parties || '',
+                dateFiled: data.dateFiled || ''
+            });
+            refreshAll();
+            showToast('Case added successfully', 'success');
+        }
+
+        function addTask(data) {
+            appData.tasks.push({
+                id: appData.tasks.length + 1,
+                description: data.description || 'New Task',
+                assigned: data.assigned || 'Unassigned',
+                matter: data.matter || 'General',
+                priority: data.priority || 'Medium',
+                due: data.due || '2026-12-31',
+                status: 'Not Started'
+            });
+            refreshAll();
+            showToast('Task added successfully', 'success');
+        }
+
+        function addTimeEntry(data) {
+            const amount = data.hours * data.rate;
+            appData.timeEntries.push({
+                matter: data.matter || 'General',
+                activity: data.activity || 'Work',
+                date: data.date || new Date().toISOString().slice(0, 10),
+                hours: data.hours || 0,
+                rate: data.rate || 0,
+                amount: amount
+            });
+            refreshAll();
+            showToast('Time entry added', 'success');
+        }
+
+        function addInvoice(data) {
+            const id = 'INV-2026-' + String(appData.invoices.length + 1).padStart(3, '0');
+            appData.invoices.push({
+                id: id,
+                client: data.client || 'Unknown',
+                amount: data.amount || 0,
+                issueDate: data.issueDate || new Date().toISOString().slice(0, 10),
+                dueDate: data.dueDate || new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10),
+                status: 'Pending'
+            });
+            refreshAll();
+            showToast(`Invoice ${id} created`, 'success');
+        }
+
+        function addClient(data) {
+            appData.clients.push({
+                name: data.name || 'New Client',
+                contact: data.contact || 'Unknown',
+                email: data.email || '',
+                phone: data.phone || '',
+                matters: 0,
+                portal: data.portal || 'Active'
+            });
+            refreshAll();
+            showToast('Client added', 'success');
+        }
+
+        function addEvent(data) {
+            appData.events.push({
+                date: data.date || new Date().toISOString().slice(0, 10) + ' 10:00',
+                title: data.title || 'New Event',
+                matter: data.matter || 'General',
+                location: data.location || 'Office',
+                type: data.type || 'Meeting'
+            });
+            refreshAll();
+            showToast('Event added', 'success');
+        }
+
+        function addIntake(data) {
+            appData.intake.push({
+                prospect: data.prospect || 'New Prospect',
+                type: data.type || 'General',
+                status: data.status || 'Review'
+            });
+            refreshAll();
+            showToast('Intake added', 'success');
+        }
+
+        // ======================================================================
+        // MODAL SYSTEM
+        // ======================================================================
+        let modalContext = '';
+
+        function openModal(context, data) {
+            if (context === 'editcase' && data) return;
+            if (context === 'editclient' && data) return;
+
+            modalContext = context;
+            const modal = document.getElementById('modalOverlay');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+            const actionBtn = document.getElementById('modalActionBtn');
+            actionBtn.style.display = 'inline-flex';
+
+            let html = '';
+            let actionText = 'Save';
+            switch (context) {
+                case 'case':
+                    title.textContent = 'New Case';
+                    html = `
+                        <div class="form-group"><label>Case Name *</label><input type="text" id="f_caseName" placeholder="Enter case name"></div>
+                        <div class="form-group"><label>Client *</label><input type="text" id="f_caseClient" placeholder="Client name"></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Practice Area</label><select id="f_casePractice"><option>Commercial Litigation</option><option>Corporate</option><option>Succession</option><option>Property</option><option>Tax</option><option>Employment</option></select></div>
+                            <div class="form-group"><label>Court</label><input type="text" id="f_caseCourt" placeholder="Court name"></div>
+                        </div>
+                        <div class="form-group"><label>Status</label><select id="f_caseStatus"><option>Active</option><option>Review</option><option>Urgent</option><option>Due Diligence</option></select></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Deadline</label><input type="date" id="f_caseDeadline"></div>
+                            <div class="form-group"><label>Partner</label><input type="text" id="f_casePartner" placeholder="Partner name"></div>
+                        </div>
+                        <div class="form-group"><label>Date Filed</label><input type="date" id="f_caseDateFiled"></div>
+                        <div class="form-group"><label>Description</label><textarea id="f_caseDescription" placeholder="Case description"></textarea></div>
+                        <div class="form-group"><label>Parties</label><input type="text" id="f_caseParties" placeholder="e.g. Plaintiff, Defendant"></div>
+                    `;
+                    actionText = 'Create Case';
+                    break;
+                case 'task':
+                    title.textContent = 'New Task';
+                    html = `
+                        <div class="form-group"><label>Task Description *</label><input type="text" id="f_taskDesc" placeholder="Enter task"></div>
+                        <div class="form-group"><label>Assigned To</label><select id="f_taskAssigned"><option>Sarah K.</option><option>David L.</option><option>Emily R.</option><option>Michael T.</option></select></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Matter</label><select id="f_taskMatter"><option>Smith v. Acme</option><option>Johnson Estate</option><option>Davis LLC Merger</option><option>Parker v. City</option></select></div>
+                            <div class="form-group"><label>Priority</label><select id="f_taskPriority"><option>High</option><option>Medium</option><option>Low</option><option>Critical</option></select></div>
+                        </div>
+                        <div class="form-group"><label>Due Date</label><input type="date" id="f_taskDue"></div>
+                    `;
+                    actionText = 'Add Task';
+                    break;
+                case 'client':
+                    title.textContent = 'Add Client';
+                    html = `
+                        <div class="form-group"><label>Client Name *</label><input type="text" id="f_clientName" placeholder="Full name"></div>
+                        <div class="form-group"><label>Contact Person</label><input type="text" id="f_clientContact" placeholder="Contact person"></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Email</label><input type="email" id="f_clientEmail" placeholder="Email"></div>
+                            <div class="form-group"><label>Phone</label><input type="text" id="f_clientPhone" placeholder="Phone"></div>
+                        </div>
+                        <div class="form-group"><label>Portal Access</label>
+                            <select id="f_clientPortal"><option value="Active">Active</option><option value="Invite Pending">Invite Pending</option><option value="Inactive">Inactive</option></select>
+                        </div>
+                    `;
+                    actionText = 'Add Client';
+                    break;
+                case 'invoice':
+                    title.textContent = 'New Invoice';
+                    html = `
+                        <div class="form-group"><label>Client *</label><select id="f_invClient"><option>Smith</option><option>Johnson</option><option>TechCorp KE</option></select></div>
+                        <div class="form-group"><label>Description</label><input type="text" id="f_invDesc" placeholder="Service description"></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Hours</label><input type="number" id="f_invHours" placeholder="0" step="0.25"></div>
+                            <div class="form-group"><label>Rate (KES)</label><input type="number" id="f_invRate" placeholder="0"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Issue Date</label><input type="date" id="f_invIssue"></div>
+                            <div class="form-group"><label>Due Date</label><input type="date" id="f_invDue"></div>
+                        </div>
+                    `;
+                    actionText = 'Create Invoice';
+                    break;
+                case 'event':
+                    title.textContent = 'Add Event';
+                    html = `
+                        <div class="form-group"><label>Event Title *</label><input type="text" id="f_eventTitle" placeholder="Event title"></div>
+                        <div class="form-group"><label>Matter</label><select id="f_eventMatter"><option>Smith v. Acme</option><option>Johnson Estate</option><option>Davis LLC Merger</option><option>Parker v. City</option></select></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Date *</label><input type="date" id="f_eventDate"></div>
+                            <div class="form-group"><label>Time</label><input type="time" id="f_eventTime"></div>
+                        </div>
+                        <div class="form-group"><label>Location</label><input type="text" id="f_eventLocation" placeholder="Location"></div>
+                        <div class="form-group"><label>Type</label><select id="f_eventType"><option>Court</option><option>Meeting</option><option>Deposition</option><option>Conference</option></select></div>
+                    `;
+                    actionText = 'Add Event';
+                    break;
+                case 'timeentry':
+                    title.textContent = 'Add Time Entry';
+                    html = `
+                        <div class="form-group"><label>Matter</label><select id="f_teMatter"><option>Smith v. Acme</option><option>Johnson Estate</option><option>Davis LLC Merger</option><option>Parker v. City</option></select></div>
+                        <div class="form-group"><label>Activity *</label><input type="text" id="f_teActivity" placeholder="Description"></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Date</label><input type="date" id="f_teDate"></div>
+                            <div class="form-group"><label>Hours *</label><input type="number" id="f_teHours" step="0.25" placeholder="0.0"></div>
+                        </div>
+                        <div class="form-group"><label>Rate (KES) *</label><input type="number" id="f_teRate" placeholder="0"></div>
+                    `;
+                    actionText = 'Add Entry';
+                    break;
+                case 'intake':
+                    title.textContent = 'Add Intake';
+                    html = `
+                        <div class="form-group"><label>Prospect Name *</label><input type="text" id="f_intakeName" placeholder="Full name"></div>
+                        <div class="form-group"><label>Matter Type</label><select id="f_intakeType"><option>Contract Review</option><option>Family Law</option><option>Employment</option><option>Commercial Litigation</option><option>Corporate</option><option>Succession</option></select></div>
+                        <div class="form-group"><label>Status</label><select id="f_intakeStatus"><option>Review</option><option>Conflict Check</option><option>Intake Form</option></select></div>
+                    `;
+                    actionText = 'Add Intake';
+                    break;
+                default:
+                    html = '<p>Unknown form.</p>';
+                    actionBtn.style.display = 'none';
+            }
+            body.innerHTML = html;
+            actionBtn.textContent = actionText;
+            modal.classList.add('show');
+            window._filterAction = null;
+            const defaultAction = function() {
+                if (window._filterAction) { window._filterAction(); return; }
+                modalAction();
+            };
+            actionBtn.onclick = defaultAction;
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('show');
+            window._filterAction = null;
+        }
+
+        function modalAction() {
+            const ctx = modalContext;
+            switch (ctx) {
+                case 'case': {
+                    const name = document.getElementById('f_caseName').value.trim();
+                    const client = document.getElementById('f_caseClient').value.trim();
+                    if (!name || !client) { showToast('Case name and client required', 'error'); return; }
+                    addCase({
+                        name,
+                        client,
+                        practice: document.getElementById('f_casePractice').value,
+                        court: document.getElementById('f_caseCourt').value,
+                        status: document.getElementById('f_caseStatus').value,
+                        deadline: document.getElementById('f_caseDeadline').value || '2026-12-31',
+                        partner: document.getElementById('f_casePartner').value || 'Unassigned',
+                        description: document.getElementById('f_caseDescription').value.trim(),
+                        parties: document.getElementById('f_caseParties').value.trim(),
+                        dateFiled: document.getElementById('f_caseDateFiled').value || ''
+                    });
+                    break;
+                }
+                case 'task': {
+                    const description = document.getElementById('f_taskDesc').value.trim();
+                    if (!description) { showToast('Task description required', 'error'); return; }
+                    addTask({
+                        description,
+                        assigned: document.getElementById('f_taskAssigned').value,
+                        matter: document.getElementById('f_taskMatter').value,
+                        priority: document.getElementById('f_taskPriority').value,
+                        due: document.getElementById('f_taskDue').value || '2026-12-31'
+                    });
+                    break;
+                }
+                case 'client': {
+                    const name = document.getElementById('f_clientName').value.trim();
+                    if (!name) { showToast('Client name required', 'error'); return; }
+                    addClient({
+                        name: name,
+                        contact: document.getElementById('f_clientContact').value.trim() || 'Unknown',
+                        email: document.getElementById('f_clientEmail').value.trim(),
+                        phone: document.getElementById('f_clientPhone').value.trim(),
+                        portal: document.getElementById('f_clientPortal').value
+                    });
+                    break;
+                }
+                case 'invoice': {
+                    const client = document.getElementById('f_invClient').value;
+                    const hours = parseFloat(document.getElementById('f_invHours').value) || 0;
+                    const rate = parseFloat(document.getElementById('f_invRate').value) || 0;
+                    const amount = hours * rate;
+                    if (amount <= 0) { showToast('Amount must be > 0', 'error'); return; }
+                    addInvoice({
+                        client,
+                        amount,
+                        issueDate: document.getElementById('f_invIssue').value || new Date().toISOString().slice(0,
+                            10),
+                        dueDate: document.getElementById('f_invDue').value || new Date(Date.now() + 14 * 86400000)
+                            .toISOString().slice(0, 10)
+                    });
+                    break;
+                }
+                case 'event': {
+                    const title = document.getElementById('f_eventTitle').value.trim();
+                    const date = document.getElementById('f_eventDate').value;
+                    if (!title || !date) { showToast('Title and date required', 'error'); return; }
+                    const time = document.getElementById('f_eventTime').value || '10:00';
+                    addEvent({
+                        date: date + ' ' + time,
+                        title,
+                        matter: document.getElementById('f_eventMatter').value,
+                        location: document.getElementById('f_eventLocation').value || 'Office',
+                        type: document.getElementById('f_eventType').value
+                    });
+                    break;
+                }
+                case 'timeentry': {
+                    const activity = document.getElementById('f_teActivity').value.trim();
+                    const hours = parseFloat(document.getElementById('f_teHours').value) || 0;
+                    const rate = parseFloat(document.getElementById('f_teRate').value) || 0;
+                    if (!activity || hours <= 0 || rate <= 0) { showToast('All fields required and positive',
+                            'error'); return; }
+                    addTimeEntry({
+                        matter: document.getElementById('f_teMatter').value,
+                        activity,
+                        date: document.getElementById('f_teDate').value || new Date().toISOString().slice(0, 10),
+                        hours,
+                        rate
+                    });
+                    break;
+                }
+                case 'intake': {
+                    const name = document.getElementById('f_intakeName').value.trim();
+                    if (!name) { showToast('Prospect name required', 'error'); return; }
+                    addIntake({
+                        prospect: name,
+                        type: document.getElementById('f_intakeType').value,
+                        status: document.getElementById('f_intakeStatus').value
+                    });
+                    break;
+                }
+                default:
+                    showToast('Saved', 'success');
+            }
+            closeModal();
+        }
+
+        // ======================================================================
+        // SIDEBAR
+        // ======================================================================
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        document.querySelectorAll('.sidebar nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (window.innerWidth <= 768) closeSidebar();
+            });
+        });
+
+        // ======================================================================
+        // NAVIGATION
+        // ======================================================================
+        document.querySelectorAll('.sidebar nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.sidebar nav a').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                const pageId = this.dataset.page;
+                const target = document.getElementById('page-' + pageId);
+                if (target) target.classList.add('active');
+                document.getElementById('pageTitle').innerHTML = this.innerText.trim() +
+                    ' <small>Law Co.</small>';
+                // Re-render charts when switching to dashboard or analytics
+                if (pageId === 'dashboard' || pageId === 'analytics') {
+                    setTimeout(renderCharts, 100);
+                }
+            });
+        });
+
+        // ======================================================================
+        // TIMER
+        // ======================================================================
+        let seconds = 0;
+        let timerRunning = false;
+        let timerInterval;
+
+        function toggleTimer() {
+            timerRunning = !timerRunning;
+            if (timerRunning) {
+                timerInterval = setInterval(() => { seconds++;
+                    updateTimerDisplay(); }, 1000);
+                showToast('Timer started', 'success');
+            } else {
+                clearInterval(timerInterval);
+                showToast('Timer paused', 'info');
+            }
+        }
+
+        function updateTimerDisplay() {
+            const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
+            const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+            const s = String(seconds % 60).padStart(2, '0');
+            document.getElementById('timerDisplay').textContent = `${h}:${m}:${s}`;
+        }
+
+        function logTime() {
+            if (timerRunning) { clearInterval(timerInterval);
+                timerRunning = false; }
+            const hours = seconds / 3600;
+            if (hours > 0) {
+                appData.timeEntries.push({
+                    matter: 'Smith v. Acme',
+                    activity: 'Timer logged',
+                    date: new Date().toISOString().slice(0, 10),
+                    hours: parseFloat(hours.toFixed(2)),
+                    rate: 35000,
+                    amount: parseFloat((hours * 35000).toFixed(0))
+                });
+                refreshAll();
+                showToast(`Logged ${hours.toFixed(2)} hours`, 'success');
+            } else {
+                showToast('No time to log', 'info');
+            }
+            seconds = 0;
+            updateTimerDisplay();
+        }
+
+        // ======================================================================
+        // TASK STATUS UPDATE
+        // ======================================================================
+        function updateTaskStatus(btn) {
+            const row = btn.closest('tr');
+            const cells = row.querySelectorAll('td');
+            if (cells.length < 6) return;
+            const taskDesc = cells[0].textContent.trim();
+            const task = appData.tasks.find(t => t.description === taskDesc);
+            if (!task) return;
+            const statusCell = cells[5].querySelector('span');
+            const currentStatus = task.status;
+            if (currentStatus === 'Completed') {
+                task.status = 'Not Started';
+                statusCell.className = 'badge blue';
+                statusCell.textContent = 'Not Started';
+                btn.innerHTML = '<i class="fas fa-check"></i>';
+                showToast('Task reopened', 'info');
+            } else if (currentStatus === 'Overdue') {
+                task.status = 'In Progress';
+                statusCell.className = 'badge yellow';
+                statusCell.textContent = 'In Progress';
+                btn.innerHTML = '<i class="fas fa-check"></i>';
+                showToast('Task in progress', 'info');
+            } else if (currentStatus === 'In Progress') {
+                task.status = 'Completed';
+                statusCell.className = 'badge green';
+                statusCell.textContent = 'Completed';
+                btn.innerHTML = '<i class="fas fa-undo"></i>';
+                showToast('Task completed!', 'success');
+            } else if (currentStatus === 'Not Started') {
+                task.status = 'In Progress';
+                statusCell.className = 'badge yellow';
+                statusCell.textContent = 'In Progress';
+                btn.innerHTML = '<i class="fas fa-check"></i>';
+                showToast('Task started', 'info');
+            }
+            refreshAll();
+        }
+
+        // ======================================================================
+        // CONFLICT CHECK
+        // ======================================================================
+        function checkConflict() {
+            const input = document.getElementById('conflictSearch').value.trim();
+            const result = document.getElementById('conflictResult');
+            const warning = document.getElementById('conflictWarning');
+            const nameSpan = document.getElementById('conflictName');
+            const warnText = document.getElementById('conflictWarningText');
+            if (!input) { showToast('Please enter a name', 'error'); return; }
+            const names = appData.clients.map(c => c.name.toLowerCase());
+            const found = names.some(n => n === input.toLowerCase() || n.includes(input.toLowerCase()) || input
+                .toLowerCase().includes(n));
+            if (found) {
+                warning.style.display = 'block';
+                result.style.display = 'none';
+                warnText.textContent = `Potential conflict: "${input}" matches existing client.`;
+                showToast('Conflict detected!', 'error');
+            } else {
+                result.style.display = 'block';
+                warning.style.display = 'none';
+                nameSpan.textContent = input;
+                showToast('No conflicts found', 'success');
+            }
+        }
+
+        // ======================================================================
+        // FILE UPLOAD
+        // ======================================================================
+        function handleFileUpload(event) {
+            const files = event.target.files;
+            if (files.length > 0) {
+                Array.from(files).forEach(f => {
+                    const ext = f.name.split('.').pop();
+                    const folder = ext === 'pdf' ? 'Pleadings' : ext === 'docx' ? 'Contracts' :
+                    'Correspondence';
+                    appData.documents.push({
+                        file: f.name,
+                        folder: folder,
+                        tags: ['New'],
+                        matter: 'New Upload',
+                        uploaded: new Date().toISOString().slice(0, 10),
+                        size: (f.size / 1024 / 1024).toFixed(1) + ' MB'
+                    });
+                });
+                refreshAll();
+                showToast(`${files.length} document(s) uploaded`, 'success');
+                event.target.value = '';
+            }
+        }
+
+        // ======================================================================
+        // AI FUNCTIONS
+        // ======================================================================
+        function analyzeContract(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const result = document.getElementById('contractResult');
+            result.style.display = 'block';
+            const riskLevels = ['Low', 'Medium', 'High'];
+            const risk = riskLevels[Math.floor(Math.random() * 3)];
+            document.getElementById('contractRisk').textContent = risk;
+            document.getElementById('contractRisk').style.color = risk === 'Low' ? '#22c55e' : risk === 'Medium' ?
+                '#f59e0b' : '#ef4444';
+            const clauses = ['Indemnity', 'Termination', 'Confidentiality', 'Governing Law', 'Force Majeure',
+                'Dispute Resolution'
+            ];
+            document.getElementById('contractClauses').textContent = clauses.sort(() => 0.5 - Math.random()).slice(0, 4)
+                .join(', ');
+            const kenya = ['DPA compliant', 'KRA provisions included', 'Kenyan courts jurisdiction', 'EAC provisions'];
+            document.getElementById('contractKenya').textContent = kenya[Math.floor(Math.random() * kenya.length)];
+            document.getElementById('contractSummary').textContent =
+                'Standard contract with typical clauses. Review indemnity and termination carefully.';
+            showToast(`"${file.name}" analyzed`, 'success');
+            event.target.value = '';
+        }
+
+        function legalResearch() {
+            const query = document.getElementById('legalSearch').value.trim();
+            if (!query) { showToast('Enter a search query', 'error'); return; }
+            const result = document.getElementById('legalResult');
+            result.style.display = 'block';
+            const cases = [
+                { name: 'Ochieng v. County Government [2025] eKLR', citation: '[2025] KEHC 1234 (KLR)',
+                    summary: 'Public participation required under Article 196.' },
+                { name: 'KRA v. ExportCorp [2024] eKLR', citation: '[2024] KETAT 56 (KLR)',
+                    summary: 'Taxpayer entitled to input VAT deduction.' },
+                { name: 'Mwangi v. Mwangi [2023] eKLR', citation: '[2023] KEHC 789 (KLR)',
+                    summary: 'Will validity affirmed under Law of Succession Act.' }
+            ];
+            const selected = cases[Math.floor(Math.random() * cases.length)];
+            document.getElementById('caseName').textContent = selected.name;
+            document.getElementById('caseCitation').textContent = selected.citation;
+            document.getElementById('caseSummary').textContent = selected.summary;
+            showToast(`Results for "${query}"`, 'success');
+        }
+
+        const aiResponses = [
+            "The Employment Act, 2007 provides the framework for employment in Kenya. Key provisions: written contracts, minimum wage, leave entitlements, and termination procedures.",
+            "The Kenyan Constitution (2010) provides for the right to a fair hearing under Article 50. Constitutional petitions are filed in the High Court.",
+            "For a valid will in Kenya, the Law of Succession Act (Cap 160) requires: in writing, signed by testator, witnessed by two competent witnesses, and testamentary capacity.",
+            "The Data Protection Act, 2019 regulates processing of personal data. Key principles: lawful processing, purpose limitation, data minimization, accuracy, storage limitation, and integrity.",
+            "The Companies Act, 2015 governs company formation, management, and dissolution in Kenya. Directors have fiduciary duties of care, loyalty, and good faith.",
+            "The Kenyan court system includes: Supreme Court, Court of Appeal, High Court, Magistrates' Courts, and specialized tribunals like the Tax Appeals Tribunal."
+        ];
+
+        function askAI() {
+            const input = document.getElementById('aiPrompt');
+            const msg = input.value.trim();
+            if (!msg) return;
+            const chat = document.getElementById('aiChat');
+            const userDiv = document.createElement('div');
+            userDiv.className = 'msg user';
+            userDiv.textContent = msg;
+            chat.appendChild(userDiv);
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'msg ai';
+            typingDiv.innerHTML = '<span class="typing">...</span>';
+            chat.appendChild(typingDiv);
+            chat.scrollTop = chat.scrollHeight;
+            input.value = '';
+            setTimeout(() => {
+                chat.removeChild(typingDiv);
+                const response = aiResponses[Math.floor(Math.random() * aiResponses.length)];
+                const aiDiv = document.createElement('div');
+                aiDiv.className = 'msg ai';
+                aiDiv.textContent = response;
+                chat.appendChild(aiDiv);
+                chat.scrollTop = chat.scrollHeight;
+            }, 600 + Math.random() * 500);
+        }
+
+        function quickAI(prompt) {
+            document.getElementById('aiPrompt').value = prompt;
+            askAI();
+        }
+
+        function clearAIChat() {
+            const chat = document.getElementById('aiChat');
+            chat.innerHTML = `
+                <div class="msg system"><i class="fas fa-robot"></i> LexAI is ready. Ask about Kenyan law.</div>
+                <div class="msg ai">Hello! I'm LexAI. How can I help?</div>
+            `;
+            showToast('Chat cleared', 'info');
+        }
+
+        function summarizeDocument() {
+            const input = document.getElementById('docSummaryInput').value.trim();
+            if (!input) { showToast('Paste text to summarize', 'error'); return; }
+            const result = document.getElementById('summaryResult');
+            result.style.display = 'block';
+            const summaries = [
+                'Commercial agreement with standard clauses. Key points: obligations, payment terms, confidentiality, termination. Jurisdiction: Kenyan law. Risk: broad indemnity clause.',
+                'Legal principles regarding contract formation. Essential elements: offer, acceptance, consideration, intention. Highlights importance of written agreements under Kenyan law.',
+                'Employment terms including salary, leave, termination, dispute resolution. References Employment Act, 2007. Non-compete clause appears restrictive and may be unenforceable.'
+            ];
+            document.getElementById('summaryText').textContent = summaries[Math.floor(Math.random() * summaries.length)];
+            showToast('Document summarized', 'success');
+        }
+
+        // ======================================================================
+        // INVOICE DISPLAY & PRINT
+        // ======================================================================
+        function showInvoice(invoiceId) {
+            const inv = appData.invoices.find(i => i.id === invoiceId);
+            if (!inv) { showToast('Invoice not found', 'error'); return; }
+            const modal = document.getElementById('modalOverlay');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+            title.textContent = `Invoice ${invoiceId}`;
+            const subtotal = Math.round(inv.amount * 0.84);
+            const vat = Math.round(inv.amount * 0.16);
+            const items = [
+                { desc: 'Legal services', hours: 8, rate: Math.round(inv.amount / 12),
+                amount: Math.round(inv.amount * 0.7) },
+                { desc: 'Court appearance', hours: 3, rate: Math.round(inv.amount / 15),
+                amount: Math.round(inv.amount * 0.3) }
+            ];
+            let itemsHtml = items.map(item =>
+                `<tr><td>${item.desc}</td><td>${item.hours}</td><td>KES ${item.rate.toLocaleString()}</td><td>KES ${item.amount.toLocaleString()}</td></tr>`
+            ).join('');
+            body.innerHTML = `
+                <div class="invoice-container" id="modalInvoice">
+                    <div class="invoice-header">
+                        <div class="firm-details">
+                            <h2>Law Co. Advocates & Associates</h2>
+                            <p>Muthangari Drive, Westlands<br>Nairobi, Kenya</p>
+                            <p>KRA PIN: P0001234567</p>
+                            <p><i class="fas fa-phone"></i> +254 700 123 456</p>
+                        </div>
+                        <div class="invoice-meta">
+                            <p class="inv-number">${invoiceId}</p>
+                            <p>Issue: ${inv.issueDate}</p>
+                            <p>Due: ${inv.dueDate}</p>
+                            <p>Status: <span class="badge ${inv.status === 'Paid' ? 'green' : inv.status === 'Overdue' ? 'red' : 'yellow'}">${inv.status}</span></p>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:0.75rem;">
+                        <p><strong>Client:</strong> ${inv.client}</p>
+                    </div>
+                    <div class="invoice-body">
+                        <table>
+                            <thead><tr><th>Description</th><th>Hours</th><th>Rate (KES)</th><th>Amount (KES)</th></tr></thead>
+                            <tbody>${itemsHtml}</tbody>
+                        </table>
+                    </div>
+                    <div class="invoice-totals">
+                        <p><strong>Subtotal:</strong> KES ${subtotal.toLocaleString()}</p>
+                        <p><strong>VAT (16%):</strong> KES ${vat.toLocaleString()}</p>
+                        <p class="grand-total"><strong>Total:</strong> KES ${inv.amount.toLocaleString()}</p>
+                    </div>
+                    <div class="invoice-footer">
+                        <span><i class="fas fa-check-circle" style="color:#22c55e;"></i> M-Pesa, Bank, or Cheque</span>
+                        <span>Due in 14 days</span>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modalActionBtn').style.display = 'none';
+            modal.classList.add('show');
+        }
+
+        function printInvoice(invoiceId) {
+            const inv = appData.invoices.find(i => i.id === invoiceId);
+            if (!inv) { showToast('Invoice not found', 'error'); return; }
+            const subtotal = Math.round(inv.amount * 0.84);
+            const vat = Math.round(inv.amount * 0.16);
+            const items = [
+                { desc: 'Legal services', hours: 8, rate: Math.round(inv.amount / 12),
+                amount: Math.round(inv.amount * 0.7) },
+                { desc: 'Court appearance', hours: 3, rate: Math.round(inv.amount / 15),
+                amount: Math.round(inv.amount * 0.3) }
+            ];
+            let itemsHtml = items.map(item =>
+                `<tr><td>${item.desc}</td><td>${item.hours}</td><td>KES ${item.rate.toLocaleString()}</td><td>KES ${item.amount.toLocaleString()}</td></tr>`
+            ).join('');
+            const printHtml = `
+                <html><head><title>Invoice ${invoiceId}</title>
+                <style>
+                    body { font-family: 'Segoe UI', Arial, sans-serif; padding: 2rem; max-width: 900px; margin: 0 auto; color: #1e293b; }
+                    .invoice-header { display: flex; justify-content: space-between; border-bottom: 2px solid #0f172a; padding-bottom: 1.5rem; margin-bottom: 1.5rem; flex-wrap:wrap; gap:1rem; }
+                    .firm-details h2 { font-size: 1.8rem; margin-bottom: 0.3rem; }
+                    .firm-details p { color: #475569; margin: 0.2rem 0; }
+                    .invoice-meta { text-align: right; }
+                    .inv-number { font-size: 1.2rem; font-weight: 700; }
+                    table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; }
+                    th { background: #f1f5f9; padding: 0.6rem 0.8rem; text-align: left; font-size: 0.8rem; text-transform: uppercase; }
+                    td { padding: 0.6rem 0.8rem; border-bottom: 1px solid #e9edf2; }
+                    .invoice-totals { text-align: right; border-top: 2px solid #e9edf2; padding-top: 1.5rem; margin-top: 1.5rem; }
+                    .invoice-totals p { display: flex; justify-content: flex-end; gap: 2rem; padding: 0.2rem 0; }
+                    .invoice-totals .grand-total { font-size: 1.3rem; font-weight: 700; border-top: 2px solid #0f172a; padding-top: 0.5rem; }
+                    .invoice-footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e9edf2; font-size: 0.85rem; color: #64748b; display: flex; justify-content: space-between; flex-wrap:wrap; gap:0.5rem; }
+                    .badge { padding: 0.2rem 0.7rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; display: inline-block; }
+                    .badge.green { background: #dcfce7; color: #166534; }
+                    .badge.red { background: #fee2e2; color: #991b1b; }
+                    .badge.yellow { background: #fef9c3; color: #854d0e; }
+                    @media print { body { padding: 1rem; } }
+                </style>
+                </head><body>
+                    <div class="invoice-header">
+                        <div class="firm-details">
+                            <h2>Law Co. Advocates & Associates</h2>
+                            <p>Muthangari Drive, Westlands, Nairobi, Kenya</p>
+                            <p>KRA PIN: P0001234567 | Tel: +254 700 123 456</p>
+                        </div>
+                        <div class="invoice-meta">
+                            <p class="inv-number">${invoiceId}</p>
+                            <p>Issue: ${inv.issueDate}</p>
+                            <p>Due: ${inv.dueDate}</p>
+                            <p>Status: <span class="badge ${inv.status === 'Paid' ? 'green' : inv.status === 'Overdue' ? 'red' : 'yellow'}">${inv.status}</span></p>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:1rem;"><p><strong>Bill To:</strong> ${inv.client}</p></div>
+                    <table>
+                        <thead><tr><th>Description</th><th>Hours</th><th>Rate (KES)</th><th>Amount (KES)</th></tr></thead>
+                        <tbody>${itemsHtml}</tbody>
+                    </table>
+                    <div class="invoice-totals">
+                        <p><strong>Subtotal:</strong> KES ${subtotal.toLocaleString()}</p>
+                        <p><strong>VAT (16%):</strong> KES ${vat.toLocaleString()}</p>
+                        <p class="grand-total"><strong>Total:</strong> KES ${inv.amount.toLocaleString()}</p>
+                    </div>
+                    <div class="invoice-footer">
+                        <span><i class="fas fa-check-circle" style="color:#22c55e;"></i> M-Pesa, Bank, or Cheque</span>
+                        <span>Due in 14 days</span>
+                    </div>
+                    <p style="margin-top:2rem; font-size:0.8rem; color:#94a3b8; text-align:center;">Generated by Law Co. Advocates & Associates</p>
+                </body></html>
+            `;
+            const win = window.open('', '_blank', 'width=900,height=700');
+            if (win) {
+                win.document.write(printHtml);
+                win.document.close();
+                setTimeout(() => win.print(), 500);
+            } else {
+                showToast('Allow popups for printing', 'error');
+            }
+        }
+
+        // ======================================================================
+        // REPORTS
+        // ======================================================================
+        function generateReport() {
+            const type = document.getElementById('reportType').value;
+            const period = document.getElementById('reportPeriod').value;
+            const result = document.getElementById('reportResult');
+            result.style.display = 'block';
+            showToast(`Generating ${type} report...`, 'info');
+            setTimeout(() => {
+                result.innerHTML =
+                    `<p><i class="fas fa-check-circle" style="color:#22c55e;"></i> ${type} report for ${period} ready. <button class="btn btn-sm btn-success" onclick="showToast('Report downloaded','success')"><i class="fas fa-download"></i> Download PDF</button></p>`;
+                showToast('Report ready', 'success');
+            }, 1200);
+        }
+
+        // ======================================================================
+        // SETTINGS
+        // ======================================================================
+        function saveSettings() {
+            const name = document.getElementById('firmName').value;
+            const pin = document.getElementById('firmPIN').value;
+            const rate = document.getElementById('defaultRate').value;
+            showToast(`Settings saved: ${name} | PIN: ${pin} | Rate: KES ${Number(rate).toLocaleString()}/hr`, 'success');
+        }
+
+        // ======================================================================
+        // TOAST
+        // ======================================================================
+        let toastTimeout;
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+            toast.className = 'toast';
+            toastMsg.textContent = message;
+            toastIcon.className = 'fas fa-info-circle';
+            if (type === 'success') { toast.classList.add('success');
+                toastIcon.className = 'fas fa-check-circle'; } else if (type === 'error') { toast.classList.add('error');
+                toastIcon.className = 'fas fa-exclamation-circle'; } else { toast.classList.add('info');
+                toastIcon.className = 'fas fa-info-circle'; }
+            toast.classList.add('show');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // ======================================================================
+        // INIT
+        // ======================================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshAll();
+            const activeLink = document.querySelector('.sidebar nav a.active');
+            if (activeLink) {
+                document.getElementById('pageTitle').innerHTML = activeLink.innerText.trim() +
+                    ' <small>Law Co.</small>';
+            }
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') closeModal();
+            });
+            showToast('Law Co. Advocates & Associates ready! 🇰🇪', 'info');
+        });
+
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) closeSidebar();
+            clearTimeout(window._resizeTimer);
+            window._resizeTimer = setTimeout(() => {
+                const activePage = document.querySelector('.page.active');
+                if (activePage && (activePage.id === 'page-dashboard' || activePage.id === 'page-analytics')) {
+                    renderCharts();
+                }
+            }, 300);
+        });
+    </script>
+</body>
+</html>

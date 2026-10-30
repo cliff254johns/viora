@@ -1,0 +1,2079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0d0e12" />
+    <title>Aviator X — 3D Mobile</title>
+    <style>
+        /* ── Reset & Variables ── */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        :root {
+            --bg-deep: #0d0e12;
+            --bg-surface: #16171e;
+            --bg-interactive: #22242d;
+            --accent-primary: #e9114d;
+            --accent-success: #22c55e;
+            --accent-system: #6366f1;
+            --accent-gold: #fbbf24;
+            --text-white: #ffffff;
+            --text-dim: #94a3b8;
+            --borders: #2a2c38;
+            --radius: 16px;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        body {
+            background: var(--bg-deep);
+            color: var(--text-white);
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            touch-action: manipulation;
+        }
+
+        /* ── Login Overlay ── */
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background: var(--bg-deep);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+            transition: opacity 0.4s;
+        }
+        .login-overlay.hidden { opacity: 0; pointer-events: none; }
+        .login-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--borders);
+            border-radius: var(--radius);
+            padding: 32px 24px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+            animation: cardFloat 4s ease-in-out infinite;
+        }
+        @keyframes cardFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+        .login-card h1 {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--accent-primary);
+            margin-bottom: 4px;
+            letter-spacing: -1px;
+        }
+        .login-card h1 span { color: var(--accent-gold); }
+        .login-card p {
+            color: var(--text-dim);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        .login-card .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .login-card input {
+            background: var(--bg-deep);
+            border: 1px solid var(--borders);
+            border-radius: 10px;
+            padding: 14px 16px;
+            color: white;
+            font-size: 16px;
+            outline: none;
+            width: 100%;
+            transition: border-color 0.2s;
+        }
+        .login-card input:focus { border-color: var(--accent-system); }
+        .login-card button {
+            background: linear-gradient(135deg, var(--accent-system), #4f46e5);
+            border: none;
+            border-radius: 10px;
+            padding: 14px;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: filter 0.2s, transform 0.1s;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+        }
+        .login-card button:active { transform: scale(0.97); }
+        .login-card button:hover { filter: brightness(1.1); }
+        .login-card button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .login-card .otp-row { display: flex; gap: 10px; align-items: center; }
+        .login-card .otp-row input { flex: 1; }
+        .login-card .otp-row button {
+            flex: 0 0 auto;
+            width: auto;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, var(--accent-success), #16a34a);
+            box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);
+        }
+        .login-card .error-msg { color: var(--accent-primary); font-size: 13px; margin-top: 8px; min-height: 20px; }
+        .login-card .success-msg { color: var(--accent-success); font-size: 13px; margin-top: 8px; min-height: 20px; }
+
+        /* ── Header ── */
+        header {
+            background: var(--bg-surface);
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--borders);
+            flex-shrink: 0;
+            gap: 6px;
+        }
+        .brand {
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--accent-primary);
+            cursor: default;
+            letter-spacing: -0.5px;
+            white-space: nowrap;
+        }
+        .brand span { color: var(--accent-gold); }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .balance-pill {
+            background: var(--bg-interactive);
+            padding: 6px 12px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 13px;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: var(--accent-success);
+            white-space: nowrap;
+        }
+        .user-phone { color: var(--text-dim); font-size: 11px; font-weight: 600; display: none; }
+        @media (min-width: 420px) { .user-phone { display: inline; } }
+        .header-btn {
+            background: var(--bg-interactive);
+            border: 1px solid var(--borders);
+            color: var(--text-dim);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .header-btn:active { transform: scale(0.95); }
+        .header-btn.deposit { color: var(--accent-success); border-color: rgba(34, 197, 94, 0.3); }
+        .header-btn.withdraw { color: var(--accent-primary); border-color: rgba(233, 17, 77, 0.3); }
+        .logout-btn {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 2px 6px;
+        }
+
+        /* ── App Layout ── */
+        .app-workspace {
+            display: grid;
+            grid-template-columns: 1fr;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+        .analytics-sidebar {
+            background: var(--bg-surface);
+            border-right: 1px solid var(--borders);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: absolute;
+            inset: 0;
+            z-index: 50;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .analytics-sidebar.open { transform: translateX(0); }
+        @media (min-width: 768px) {
+            .app-workspace { grid-template-columns: 280px 1fr; }
+            .analytics-sidebar { position: static; transform: none; }
+            .mobile-nav { display: none !important; }
+        }
+
+        .tab-bar {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            border-bottom: 1px solid var(--borders);
+            background: var(--bg-deep);
+            flex-shrink: 0;
+        }
+        .tab-trigger {
+            padding: 12px 4px;
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+        }
+        .tab-trigger.active {
+            color: white;
+            border-bottom: 2px solid var(--accent-primary);
+            background: var(--bg-surface);
+        }
+        .list-viewport {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .transaction-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-deep);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            border: 1px solid var(--borders);
+            animation: fadeSlideIn 0.3s ease;
+        }
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .win-badge {
+            background: rgba(34, 197, 94, 0.12);
+            color: var(--accent-success);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 12px;
+        }
+        .loss-badge {
+            background: rgba(233, 17, 77, 0.12);
+            color: var(--accent-primary);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 12px;
+        }
+        .stake-meta { color: var(--text-dim); font-size: 12px; }
+        .leaderboard-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: var(--bg-deep);
+            border-radius: 8px;
+            border: 1px solid var(--borders);
+        }
+        .leaderboard-entry .rank { color: var(--text-dim); font-weight: 700; margin-right: 12px; }
+        .leaderboard-entry .phone { flex: 1; }
+        .leaderboard-entry .balance { color: var(--accent-success); font-weight: 700; }
+
+        /* ── Flight Theater ── */
+        .flight-theater {
+            display: flex;
+            flex-direction: column;
+            padding: 10px 12px;
+            gap: 10px;
+            overflow: hidden;
+            flex: 1;
+        }
+        .history-ticker {
+            background: var(--bg-surface);
+            padding: 6px 10px;
+            border-radius: 10px;
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            border: 1px solid var(--borders);
+            flex-shrink: 0;
+            min-height: 36px;
+            scrollbar-width: none;
+        }
+        .history-ticker::-webkit-scrollbar { display: none; }
+        .history-pill {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            background: var(--bg-interactive);
+            border: 1px solid var(--borders);
+            flex-shrink: 0;
+            animation: pillPop 0.3s ease;
+        }
+        @keyframes pillPop {
+            0% { transform: scale(0.6); opacity: 0; }
+            70% { transform: scale(1.08); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .p-cold { color: var(--text-dim); }
+        .p-mid { color: var(--accent-system); border-color: rgba(99, 102, 241, 0.3); }
+        .p-hot { color: var(--accent-primary); border-color: rgba(233, 17, 77, 0.3); }
+
+        .canvas-container {
+            position: relative;
+            background: radial-gradient(circle at bottom left, #12131a 0%, #06070a 100%);
+            border-radius: var(--radius);
+            flex: 1;
+            min-height: 200px;
+            overflow: hidden;
+            border: 1px solid var(--borders);
+            box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.9);
+        }
+        canvas { width: 100%; height: 100%; display: block; }
+        .telemetry-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+            width: 100%;
+            padding: 0 16px;
+        }
+        .live-multiplier {
+            font-size: 64px;
+            font-weight: 900;
+            letter-spacing: -3px;
+            line-height: 1;
+            text-shadow: 0 4px 30px rgba(0, 0, 0, 0.8);
+            transition: color 0.2s;
+        }
+        @media (max-width: 480px) { .live-multiplier { font-size: 48px; } }
+        .state-label {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--text-dim);
+            margin-top: 6px;
+            font-weight: 700;
+        }
+        .state-label.crashed {
+            color: var(--accent-primary);
+            animation: pulse 0.25s ease infinite alternate;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.06); }
+        }
+
+        /* ── Control Room ── */
+        .control-room {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        @media (max-width: 380px) { .control-room { grid-template-columns: 1fr; } }
+        .deck-panel {
+            background: var(--bg-surface);
+            border-radius: var(--radius);
+            padding: 12px;
+            display: flex;
+            gap: 10px;
+            border: 1px solid var(--borders);
+            align-items: center;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .deck-panel.active-deck {
+            border-color: var(--accent-system);
+            box-shadow: 0 0 24px rgba(99, 102, 241, 0.12);
+        }
+        .modifier-group { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 0; }
+        .numeric-stepper {
+            display: flex;
+            background: var(--bg-deep);
+            border-radius: 10px;
+            padding: 3px;
+            border: 1px solid var(--borders);
+        }
+        .numeric-stepper input {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 16px;
+            font-weight: 800;
+            width: 100%;
+            text-align: center;
+            outline: none;
+            min-width: 0;
+        }
+        .numeric-stepper input[type="number"] { -moz-appearance: textfield; }
+        .numeric-stepper input::-webkit-inner-spin-button,
+        .numeric-stepper input::-webkit-outer-spin-button { -webkit-appearance: none; }
+        .numeric-stepper button {
+            background: var(--bg-interactive);
+            border: 1px solid var(--borders);
+            color: white;
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 700;
+            flex-shrink: 0;
+            transition: background 0.15s, transform 0.1s;
+        }
+        .numeric-stepper button:active { transform: scale(0.9); background: var(--borders); }
+        .automation-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-deep);
+            padding: 6px 10px;
+            border-radius: 10px;
+            border: 1px solid var(--borders);
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-dim);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .toggle-switch input { display: none; }
+        .switch-rail {
+            width: 30px;
+            height: 17px;
+            background: var(--bg-interactive);
+            border-radius: 20px;
+            position: relative;
+            border: 1px solid var(--borders);
+            transition: 0.25s;
+            flex-shrink: 0;
+        }
+        .switch-rail::before {
+            content: '';
+            position: absolute;
+            width: 11px;
+            height: 11px;
+            background: var(--text-dim);
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: 0.25s;
+        }
+        .toggle-switch input:checked+.switch-rail {
+            background: var(--accent-system);
+            border-color: var(--accent-system);
+        }
+        .toggle-switch input:checked+.switch-rail::before { left: 15px; background: white; }
+        .auto-input-val {
+            background: var(--bg-interactive);
+            border: 1px solid var(--borders);
+            color: white;
+            border-radius: 6px;
+            width: 58px;
+            padding: 4px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 12px;
+            outline: none;
+        }
+        .auto-input-val:focus { border-color: var(--accent-system); }
+
+        .trigger-master {
+            min-width: 72px;
+            border-radius: 12px;
+            border: none;
+            color: white;
+            font-weight: 900;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 2px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            padding: 10px 6px;
+            flex-shrink: 0;
+            height: 100%;
+            min-height: 68px;
+            line-height: 1.2;
+            font-size: 13px;
+        }
+        .trigger-master span { font-size: 10px; font-weight: 500; opacity: 0.7; text-transform: none; }
+        .tm-bet { background: linear-gradient(135deg, var(--accent-success) 0%, #16a34a 100%); }
+        .tm-bet:active { transform: scale(0.95); }
+        .tm-cancel { background: #334155; }
+        .tm-cancel:active { transform: scale(0.95); }
+        .tm-cashout { background: linear-gradient(135deg, #8b5cf6 0%, var(--accent-system) 100%); }
+        .tm-cashout:active { transform: scale(0.95); }
+        .tm-locked {
+            background: #1e293b !important;
+            color: #475569 !important;
+            cursor: not-allowed !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+        .tm-locked span { opacity: 0.3; }
+
+        /* ── Footer Hash ── */
+        .provably-fair-drawer {
+            background: var(--bg-surface);
+            border-top: 1px solid var(--borders);
+            padding: 6px 14px;
+            font-size: 10px;
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-dim);
+            align-items: center;
+            flex-shrink: 0;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .hash-string {
+            font-family: monospace;
+            color: var(--accent-system);
+            font-size: 10px;
+            word-break: break-all;
+        }
+
+        /* ── Mobile Nav ── */
+        .mobile-nav {
+            display: flex;
+            background: var(--bg-surface);
+            border-top: 1px solid var(--borders);
+            padding: 6px 12px calc(6px + var(--safe-bottom));
+            justify-content: space-around;
+            flex-shrink: 0;
+        }
+        .mobile-nav button {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 6px 10px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            transition: color 0.2s;
+        }
+        .mobile-nav button.active { color: var(--accent-primary); }
+        .mobile-nav .nav-icon { font-size: 18px; }
+
+        /* ── Modals ── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            background: rgba(0, 0, 0, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(6px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .modal-overlay.show { opacity: 1; pointer-events: auto; }
+        .modal-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--borders);
+            border-radius: var(--radius);
+            padding: 28px 24px;
+            max-width: 380px;
+            width: 100%;
+            text-align: center;
+            animation: cardPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes cardPop {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .modal-card h2 { margin-bottom: 12px; font-size: 22px; }
+        .modal-card input {
+            background: var(--bg-deep);
+            border: 1px solid var(--borders);
+            border-radius: 10px;
+            padding: 14px;
+            color: white;
+            font-size: 18px;
+            width: 100%;
+            text-align: center;
+            outline: none;
+            margin-bottom: 16px;
+        }
+        .modal-card input:focus { border-color: var(--accent-system); }
+        .modal-card .btn-group { display: flex; gap: 12px; }
+        .modal-card .btn-group button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: filter 0.2s, transform 0.1s;
+        }
+        .modal-card .btn-group button:active { transform: scale(0.96); }
+        .modal-card .btn-group .btn-confirm {
+            background: linear-gradient(135deg, var(--accent-success), #16a34a);
+            color: white;
+        }
+        .modal-card .btn-group .btn-cancel { background: var(--bg-interactive); color: var(--text-dim); }
+        .modal-card .status-msg { margin-top: 12px; font-size: 14px; min-height: 24px; color: var(--text-dim); }
+
+        /* ── Admin Panel ── */
+        .admin-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 3000;
+            background: rgba(0, 0, 0, 0.88);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            backdrop-filter: blur(8px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .admin-overlay.show { opacity: 1; pointer-events: auto; }
+        .admin-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--borders);
+            border-radius: var(--radius);
+            padding: 20px;
+            max-width: 95vw;
+            width: 820px;
+            max-height: 90vh;
+            overflow-y: auto;
+            color: var(--text-white);
+        }
+        .admin-card h2 {
+            color: var(--accent-primary);
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .admin-card h2 button {
+            background: var(--bg-interactive);
+            border: none;
+            color: var(--text-dim);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px 12px;
+            border-radius: 8px;
+        }
+        .admin-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .admin-table th {
+            background: var(--bg-deep);
+            padding: 10px 8px;
+            text-align: left;
+            border-bottom: 2px solid var(--borders);
+            color: var(--text-dim);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.5px;
+        }
+        .admin-table td { padding: 8px; border-bottom: 1px solid var(--borders); }
+        .admin-table tr:hover td { background: var(--bg-interactive); }
+        .admin-table .positive { color: var(--accent-success); }
+        .admin-table .negative { color: var(--accent-primary); }
+        .admin-password-input { margin-bottom: 16px; }
+        .admin-password-input input {
+            background: var(--bg-deep);
+            border: 1px solid var(--borders);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: white;
+            font-size: 16px;
+            width: 100%;
+            outline: none;
+        }
+        .admin-password-input input:focus { border-color: var(--accent-system); }
+        .admin-password-input button {
+            margin-top: 8px;
+            background: linear-gradient(135deg, var(--accent-system), #4f46e5);
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+        }
+        .admin-error { color: var(--accent-primary); margin-top: 8px; font-size: 14px; }
+        .admin-game-state {
+            background: var(--bg-deep);
+            border: 1px solid var(--borders);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 24px;
+            font-size: 13px;
+        }
+        .admin-game-state .label { color: var(--text-dim); font-weight: 600; }
+        .admin-game-state .value { font-weight: 700; color: var(--text-white); }
+        .admin-game-state .crash-value { color: var(--accent-primary); }
+        .admin-game-state .waiting-crash { color: #fbbf24; }
+        .admin-game-state .countdown { color: var(--accent-system); }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-track { background: var(--bg-deep); }
+        ::-webkit-scrollbar-thumb { background: var(--borders); border-radius: 4px; }
+
+        /* ── 3D Canvas Badge ── */
+        .three-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: var(--accent-system);
+            font-size: 9px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 20px;
+            letter-spacing: 1px;
+            pointer-events: none;
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-card">
+            <h1>✈ Aviator <span>X</span></h1>
+            <p>Enter your Safaricom number to play</p>
+            <div class="input-group">
+                <input type="tel" id="phoneInput" placeholder="2547XXXXXXXX" value="254712345678" />
+                <div class="otp-row">
+                    <input type="text" id="otpInput" placeholder="6-digit OTP" maxlength="6" inputmode="numeric" />
+                    <button id="requestOtpBtn">Request OTP</button>
+                </div>
+                <button id="verifyOtpBtn">Login / Register</button>
+                <div id="loginError" class="error-msg"></div>
+                <div id="loginSuccess" class="success-msg"></div>
+                <div style="margin-top:12px;font-size:12px;color:var(--text-dim);">Demo: use OTP <strong>123456</strong></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app" style="display:none;flex-direction:column;height:100vh;height:100dvh;">
+
+        <!-- Header -->
+        <header>
+            <div class="brand" id="brandLogo">✈ Aviator <span>X</span></div>
+            <div class="header-right">
+                <span class="user-phone" id="userPhoneDisplay"></span>
+                <button class="header-btn deposit" id="depositBtn">💰</button>
+                <button class="header-btn withdraw" id="withdrawBtn">💳</button>
+                <span class="balance-pill">KES <span id="wallet-balance">0.00</span></span>
+                <button class="logout-btn" id="logoutBtn" title="Logout">⏻</button>
+            </div>
+        </header>
+
+        <div class="app-workspace">
+            <!-- Sidebar -->
+            <aside class="analytics-sidebar" id="sidebarEl">
+                <div class="tab-bar">
+                    <button class="tab-trigger active" data-tab="live" id="tab-live">Live</button>
+                    <button class="tab-trigger" data-tab="history" id="tab-history">Ledger</button>
+                    <button class="tab-trigger" data-tab="leaderboard" id="tab-leaderboard">🏆 Top</button>
+                </div>
+                <div class="list-viewport" id="sidebar-feed"></div>
+            </aside>
+
+            <!-- Main -->
+            <main class="flight-theater">
+                <div class="history-ticker" id="history-tape"></div>
+
+                <div class="canvas-container">
+                    <canvas id="stageCanvas"></canvas>
+                    <div class="three-badge">✦ 3D</div>
+                    <div class="telemetry-overlay">
+                        <div class="live-multiplier" id="display-mult">1.00x</div>
+                        <div class="state-label" id="display-state">Waiting...</div>
+                    </div>
+                </div>
+
+                <div class="control-room">
+                    <div class="deck-panel" id="console-1">
+                        <div class="modifier-group">
+                            <div class="numeric-stepper">
+                                <button data-deck="1" data-delta="-100">−</button>
+                                <input type="number" id="stake-val-1" value="500" min="50" step="50" />
+                                <button data-deck="1" data-delta="100">+</button>
+                            </div>
+                            <div class="automation-row">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="auto-check-1" />
+                                    <div class="switch-rail"></div>
+                                    Auto
+                                </label>
+                                <input type="number" id="auto-mult-1" class="auto-input-val" value="2.00" step="0.1" min="1.01" />
+                            </div>
+                        </div>
+                        <button class="trigger-master tm-bet" id="action-btn-1" data-deck="1">BET</button>
+                    </div>
+                    <div class="deck-panel" id="console-2">
+                        <div class="modifier-group">
+                            <div class="numeric-stepper">
+                                <button data-deck="2" data-delta="-100">−</button>
+                                <input type="number" id="stake-val-2" value="1000" min="50" step="50" />
+                                <button data-deck="2" data-delta="100">+</button>
+                            </div>
+                            <div class="automation-row">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="auto-check-2" />
+                                    <div class="switch-rail"></div>
+                                    Auto
+                                </label>
+                                <input type="number" id="auto-mult-2" class="auto-input-val" value="3.50" step="0.1" min="1.01" />
+                            </div>
+                        </div>
+                        <button class="trigger-master tm-bet" id="action-btn-2" data-deck="2">BET</button>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Footer Hash -->
+        <footer class="provably-fair-drawer">
+            <div>SHA-256:</div>
+            <div class="hash-string" id="hash-display">— waiting —</div>
+        </footer>
+
+        <!-- Mobile Navigation -->
+        <nav class="mobile-nav" id="mobileNav">
+            <button class="active" data-tab="game"><span class="nav-icon">✈</span> Game</button>
+            <button data-tab="deposit"><span class="nav-icon">💰</span> Deposit</button>
+            <button data-tab="history"><span class="nav-icon">📊</span> History</button>
+            <button data-tab="leaderboard"><span class="nav-icon">🏆</span> Top</button>
+        </nav>
+    </div>
+
+    <!-- Deposit Modal -->
+    <div class="modal-overlay" id="depositModal">
+        <div class="modal-card">
+            <h2>💰 M‑Pesa Deposit</h2>
+            <p style="color:var(--text-dim);font-size:14px;">Enter amount to deposit via STK Push</p>
+            <input type="number" id="depositAmount" placeholder="Amount (KES)" min="10" step="10" value="100" />
+            <div class="btn-group">
+                <button class="btn-confirm" id="depositConfirm">Request STK</button>
+                <button class="btn-cancel" id="depositCancel">Cancel</button>
+            </div>
+            <div class="status-msg" id="depositStatus"></div>
+        </div>
+    </div>
+
+    <!-- Withdraw Modal -->
+    <div class="modal-overlay" id="withdrawModal">
+        <div class="modal-card">
+            <h2>💳 Withdraw</h2>
+            <p style="color:var(--text-dim);font-size:14px;">Enter amount to withdraw (auto‑processed)</p>
+            <input type="number" id="withdrawAmount" placeholder="Amount (KES)" min="10" step="10" value="100" />
+            <div class="btn-group">
+                <button class="btn-confirm" id="withdrawConfirm">Withdraw</button>
+                <button class="btn-cancel" id="withdrawCancel">Cancel</button>
+            </div>
+            <div class="status-msg" id="withdrawStatus"></div>
+        </div>
+    </div>
+
+    <!-- Admin Panel Overlay -->
+    <div class="admin-overlay" id="adminOverlay">
+        <div class="admin-card">
+            <h2>👑 Admin Dashboard <button id="adminCloseBtn">✕</button></h2>
+            <div id="adminContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // ──────────────────────────────────────────────────────────────
+        // LOCAL STORAGE MANAGER
+        // ──────────────────────────────────────────────────────────────
+        const Storage = {
+            get(key, def) {
+                try {
+                    const val = localStorage.getItem('aviator_' + key);
+                    return val ? JSON.parse(val) : def;
+                } catch { return def; }
+            },
+            set(key, val) {
+                localStorage.setItem('aviator_' + key, JSON.stringify(val));
+            },
+            remove(key) {
+                localStorage.removeItem('aviator_' + key);
+            }
+        };
+
+        // ──────────────────────────────────────────────────────────────
+        // USER STATE
+        // ──────────────────────────────────────────────────────────────
+        let currentUser = null;
+
+        function loadUser() {
+            const data = Storage.get('user', null);
+            if (data) { currentUser = data; return true; }
+            return false;
+        }
+
+        function saveUser() {
+            if (currentUser) {
+                Storage.set('user', currentUser);
+                let users = Storage.get('users', []);
+                if (!users.includes(currentUser.phone)) {
+                    users.push(currentUser.phone);
+                    Storage.set('users', users);
+                }
+                Storage.set('user_' + currentUser.phone, currentUser);
+            }
+        }
+
+        // ──────────────────────────────────────────────────────────────
+        // DOM REFS
+        // ──────────────────────────────────────────────────────────────
+        const loginOverlay = document.getElementById('loginOverlay');
+        const appEl = document.getElementById('app');
+        const phoneInput = document.getElementById('phoneInput');
+        const otpInput = document.getElementById('otpInput');
+        const requestOtpBtn = document.getElementById('requestOtpBtn');
+        const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+        const loginError = document.getElementById('loginError');
+        const loginSuccess = document.getElementById('loginSuccess');
+
+        const walletDisplay = document.getElementById('wallet-balance');
+        const userPhoneDisplay = document.getElementById('userPhoneDisplay');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const depositBtn = document.getElementById('depositBtn');
+        const withdrawBtn = document.getElementById('withdrawBtn');
+        const sidebarEl = document.getElementById('sidebarEl');
+
+        const sidebarFeed = document.getElementById('sidebar-feed');
+        const historyTape = document.getElementById('history-tape');
+        const hashDisplay = document.getElementById('hash-display');
+        const multDisplay = document.getElementById('display-mult');
+        const stateDisplay = document.getElementById('display-state');
+
+        const depositModal = document.getElementById('depositModal');
+        const depositAmount = document.getElementById('depositAmount');
+        const depositConfirm = document.getElementById('depositConfirm');
+        const depositCancel = document.getElementById('depositCancel');
+        const depositStatus = document.getElementById('depositStatus');
+
+        const withdrawModal = document.getElementById('withdrawModal');
+        const withdrawAmount = document.getElementById('withdrawAmount');
+        const withdrawConfirm = document.getElementById('withdrawConfirm');
+        const withdrawCancel = document.getElementById('withdrawCancel');
+        const withdrawStatus = document.getElementById('withdrawStatus');
+
+        const adminOverlay = document.getElementById('adminOverlay');
+        const adminContent = document.getElementById('adminContent');
+        const adminCloseBtn = document.getElementById('adminCloseBtn');
+        const brandLogo = document.getElementById('brandLogo');
+
+        const canvas = document.getElementById('stageCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // ──────────────────────────────────────────────────────────────
+        // AUTH FLOW
+        // ──────────────────────────────────────────────────────────────
+        requestOtpBtn.addEventListener('click', () => {
+            const phone = phoneInput.value.trim();
+            if (!phone.match(/^254[0-9]{9}$/)) {
+                loginError.textContent = 'Enter valid Safaricom number (2547XXXXXXXX)';
+                return;
+            }
+            loginError.textContent = '';
+            loginSuccess.textContent = 'OTP sent to ' + phone + ' (demo: 123456)';
+        });
+
+        verifyOtpBtn.addEventListener('click', () => {
+            const phone = phoneInput.value.trim();
+            const otp = otpInput.value.trim();
+            if (!phone.match(/^254[0-9]{9}$/)) {
+                loginError.textContent = 'Invalid phone number';
+                return;
+            }
+            if (otp !== '123456') {
+                loginError.textContent = 'Invalid OTP. Use 123456';
+                return;
+            }
+            loginError.textContent = '';
+
+            let users = Storage.get('users', []);
+            let userData = null;
+            if (users.includes(phone)) {
+                userData = Storage.get('user_' + phone, null);
+            }
+            if (!userData) {
+                userData = { phone, balance: 0, ledger: [], rounds: [] };
+                if (!users.includes(phone)) {
+                    users.push(phone);
+                    Storage.set('users', users);
+                }
+                Storage.set('user_' + phone, userData);
+            }
+            currentUser = userData;
+            saveUser();
+            loginOverlay.classList.add('hidden');
+            appEl.style.display = 'flex';
+            initApp();
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            Storage.remove('user');
+            currentUser = null;
+            location.reload();
+        });
+
+        // ──────────────────────────────────────────────────────────────
+        // APP INIT
+        // ──────────────────────────────────────────────────────────────
+        function initApp() {
+            if (!currentUser) return;
+            userPhoneDisplay.textContent = currentUser.phone;
+            refreshWallet();
+
+            if (!currentUser.ledger) currentUser.ledger = [];
+            if (!currentUser.rounds) currentUser.rounds = [];
+
+            // Tabs
+            document.querySelectorAll('.tab-trigger').forEach(el => {
+                el.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-trigger').forEach(t => t.classList.remove('active'));
+                    el.classList.add('active');
+                    renderSidebar(el.dataset.tab);
+                });
+            });
+
+            // Mobile nav
+            document.querySelectorAll('#mobileNav button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#mobileNav button').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const tab = btn.dataset.tab;
+                    if (tab === 'game') {
+                        sidebarEl.classList.remove('open');
+                    } else if (tab === 'deposit') {
+                        openDepositModal();
+                    } else if (tab === 'history') {
+                        sidebarEl.classList.add('open');
+                        document.querySelectorAll('.tab-trigger').forEach(t => t.classList.remove('active'));
+                        document.getElementById('tab-history').classList.add('active');
+                        renderSidebar('history');
+                    } else if (tab === 'leaderboard') {
+                        sidebarEl.classList.add('open');
+                        document.querySelectorAll('.tab-trigger').forEach(t => t.classList.remove('active'));
+                        document.getElementById('tab-leaderboard').classList.add('active');
+                        renderSidebar('leaderboard');
+                    }
+                });
+            });
+
+            // Stepper buttons
+            document.querySelectorAll('.numeric-stepper button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const deck = parseInt(btn.dataset.deck);
+                    const delta = parseInt(btn.dataset.delta);
+                    modifyStake(deck, delta);
+                });
+            });
+
+            // Action buttons
+            document.querySelectorAll('.trigger-master').forEach(btn => {
+                const deck = parseInt(btn.dataset.deck);
+                if (deck) btn.addEventListener('click', () => submitConsoleAction(deck));
+            });
+
+            // Auto-input validation
+            document.querySelectorAll('.auto-input-val').forEach(inp => {
+                inp.addEventListener('change', () => {
+                    let v = parseFloat(inp.value) || 1.01;
+                    if (v < 1.01) v = 1.01;
+                    inp.value = v.toFixed(2);
+                });
+            });
+
+            // Deposit & Withdraw
+            depositCancel.addEventListener('click', closeDepositModal);
+            depositConfirm.addEventListener('click', handleDeposit);
+            withdrawCancel.addEventListener('click', closeWithdrawModal);
+            withdrawConfirm.addEventListener('click', handleWithdraw);
+            depositBtn.addEventListener('click', openDepositModal);
+            withdrawBtn.addEventListener('click', openWithdrawModal);
+
+            // Admin: double-click logo
+            brandLogo.addEventListener('dblclick', openAdminPanel);
+            adminCloseBtn.addEventListener('click', closeAdminPanel);
+
+            // Close sidebar on outside tap (mobile)
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth < 768 && sidebarEl.classList.contains('open')) {
+                    if (!sidebarEl.contains(e.target) && !e.target.closest('#mobileNav')) {
+                        sidebarEl.classList.remove('open');
+                    }
+                }
+            });
+
+            // Canvas
+            adaptCanvasGeometry();
+            window.addEventListener('resize', adaptCanvasGeometry);
+            window.addEventListener('orientationchange', () => setTimeout(adaptCanvasGeometry, 200));
+
+            // Game engine
+            gameInit();
+            renderSidebar('live');
+            updateHash();
+        }
+
+        function refreshWallet() {
+            if (currentUser) walletDisplay.textContent = currentUser.balance.toFixed(2);
+        }
+
+        // ──────────────────────────────────────────────────────────────
+        // DEPOSIT & WITHDRAW
+        // ──────────────────────────────────────────────────────────────
+        function openDepositModal() {
+            depositModal.classList.add('show');
+            depositStatus.textContent = '';
+            depositAmount.value = '100';
+        }
+        function closeDepositModal() { depositModal.classList.remove('show'); }
+
+        function handleDeposit() {
+            const amount = parseFloat(depositAmount.value);
+            if (!amount || amount < 10) {
+                depositStatus.textContent = 'Enter a valid amount (min 10 KES)';
+                return;
+            }
+            depositStatus.textContent = '⏳ Sending STK Push...';
+            depositConfirm.disabled = true;
+
+            setTimeout(() => {
+                currentUser.balance += amount;
+                if (!currentUser.ledger) currentUser.ledger = [];
+                currentUser.ledger.unshift({
+                    type: 'deposit', amount: amount,
+                    date: new Date().toISOString(), id: 'MP' + Date.now()
+                });
+                saveUser();
+                refreshWallet();
+                depositStatus.textContent = '✅ KES ' + amount.toFixed(2) + ' deposited!';
+                depositConfirm.disabled = false;
+                renderSidebar('history');
+                setTimeout(closeDepositModal, 1500);
+            }, 2000);
+        }
+
+        function openWithdrawModal() {
+            withdrawModal.classList.add('show');
+            withdrawStatus.textContent = '';
+            withdrawAmount.value = '100';
+        }
+        function closeWithdrawModal() { withdrawModal.classList.remove('show'); }
+
+        function handleWithdraw() {
+            const amount = parseFloat(withdrawAmount.value);
+            if (!amount || amount < 10) {
+                withdrawStatus.textContent = 'Enter a valid amount (min 10 KES)';
+                return;
+            }
+            if (amount > currentUser.balance) {
+                withdrawStatus.textContent = 'Insufficient balance';
+                return;
+            }
+            withdrawStatus.textContent = '⏳ Processing withdrawal...';
+            withdrawConfirm.disabled = true;
+
+            setTimeout(() => {
+                currentUser.balance -= amount;
+                if (!currentUser.ledger) currentUser.ledger = [];
+                currentUser.ledger.unshift({
+                    type: 'withdrawal', amount: amount,
+                    date: new Date().toISOString(), id: 'WD' + Date.now()
+                });
+                saveUser();
+                refreshWallet();
+                withdrawStatus.textContent = '✅ KES ' + amount.toFixed(2) + ' withdrawn!';
+                withdrawConfirm.disabled = false;
+                renderSidebar('history');
+                setTimeout(closeWithdrawModal, 1500);
+            }, 1500);
+        }
+
+        // ──────────────────────────────────────────────────────────────
+        // ADMIN PANEL (accurate projections)
+        // ──────────────────────────────────────────────────────────────
+        let adminRefreshInterval = null;
+
+        function openAdminPanel() {
+            adminOverlay.classList.add('show');
+            adminContent.innerHTML = `
+                <div class="admin-password-input">
+                    <input type="password" id="adminPassword" placeholder="Enter admin password" />
+                    <button id="adminLoginBtn">Unlock Dashboard</button>
+                    <div class="admin-error" id="adminError"></div>
+                </div>
+            `;
+            document.getElementById('adminLoginBtn').addEventListener('click', () => {
+                const pwd = document.getElementById('adminPassword').value;
+                if (pwd === 'admin123') {
+                    renderAdminDashboard();
+                    if (adminRefreshInterval) clearInterval(adminRefreshInterval);
+                    adminRefreshInterval = setInterval(renderAdminDashboard, 800);
+                } else {
+                    document.getElementById('adminError').textContent = 'Wrong password. Try again.';
+                }
+            });
+            document.getElementById('adminPassword').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') document.getElementById('adminLoginBtn').click();
+            });
+        }
+
+        function closeAdminPanel() {
+            adminOverlay.classList.remove('show');
+            if (adminRefreshInterval) {
+                clearInterval(adminRefreshInterval);
+                adminRefreshInterval = null;
+            }
+        }
+
+        function renderAdminDashboard() {
+            const users = Storage.get('users', []);
+            const status = gameState.status || 'unknown';
+            const crash = gameState.crashPoint || 1.00;
+            const mult = gameState.multiplier || 1.00;
+            const roundId = gameState.roundId || 0;
+            const isWaiting = status === 'waiting';
+            const crashDisplay = isWaiting
+                ? `<span class="waiting-crash">${crash.toFixed(2)}x</span>`
+                : `<span class="crash-value">${crash.toFixed(2)}x</span>`;
+
+            let countdownText = '';
+            if (isWaiting && typeof waitRemaining !== 'undefined' && waitRemaining > 0) {
+                countdownText = `⏱️ ${Math.ceil(waitRemaining)}s`;
+            } else if (status === 'flying') {
+                countdownText = '✈️ Flying';
+            } else if (status === 'crashed') {
+                countdownText = '💥 Crashed';
+            } else {
+                countdownText = '—';
+            }
+
+            let html = `
+                <div class="admin-game-state">
+                    <span><span class="label">Round:</span> <span class="value">#${roundId}</span></span>
+                    <span><span class="label">Status:</span> <span class="value">${status.toUpperCase()}</span></span>
+                    <span><span class="label">Next Crash:</span> <span class="value">${crashDisplay}</span></span>
+                    <span><span class="label">Multiplier:</span> <span class="value">${mult.toFixed(2)}x</span></span>
+                    <span><span class="label">Countdown:</span> <span class="countdown">${countdownText}</span></span>
+                    <span style="color:var(--text-dim);font-size:11px;">${isWaiting ? '🔮 Admin sees next crash point' : '⏳ Round in progress'}</span>
+                </div>
+                <p style="color:var(--text-dim);margin-bottom:10px;font-size:13px;">Registered users: ${users.length}</p>
+                <div style="overflow-x:auto;">
+                <table class="admin-table">
+                    <thead><tr>
+                        <th>Phone</th><th>Balance</th><th>Deposits</th><th>Withdrawals</th><th>Net Profit</th><th>Rounds</th>
+                    </tr></thead><tbody>
+            `;
+            let totalBalance = 0, totalDeposits = 0, totalWithdrawals = 0, totalProfit = 0;
+            for (const phone of users) {
+                const data = Storage.get('user_' + phone, null);
+                if (!data) continue;
+                const ledger = data.ledger || [];
+                let deposits = 0, withdrawals = 0, wins = 0, losses = 0;
+                for (const tx of ledger) {
+                    if (tx.type === 'deposit') deposits += tx.amount;
+                    else if (tx.type === 'withdrawal') withdrawals += tx.amount;
+                    else if (tx.won === true) wins += tx.wager * tx.multiplier;
+                    else if (tx.won === false) losses += tx.wager;
+                }
+                const profit = wins - losses;
+                totalBalance += data.balance;
+                totalDeposits += deposits;
+                totalWithdrawals += withdrawals;
+                totalProfit += profit;
+                html += `<tr>
+                    <td>${data.phone}</td>
+                    <td>${data.balance.toFixed(2)}</td>
+                    <td>${deposits.toFixed(2)}</td>
+                    <td>${withdrawals.toFixed(2)}</td>
+                    <td class="${profit >= 0 ? 'positive' : 'negative'}">${profit.toFixed(2)}</td>
+                    <td>${(data.rounds || []).length}</td>
+                </tr>`;
+            }
+            html += `</tbody>
+                <tfoot style="font-weight:700;border-top:2px solid var(--borders);">
+                    <tr>
+                        <td>Totals</td>
+                        <td>${totalBalance.toFixed(2)}</td>
+                        <td>${totalDeposits.toFixed(2)}</td>
+                        <td>${totalWithdrawals.toFixed(2)}</td>
+                        <td class="${totalProfit >= 0 ? 'positive' : 'negative'}">${totalProfit.toFixed(2)}</td>
+                        <td>—</td>
+                    </tr>
+                </tfoot></table></div>`;
+            adminContent.innerHTML = html;
+        }
+
+        // ──────────────────────────────────────────────────────────────
+        // SIDEBAR RENDER
+        // ──────────────────────────────────────────────────────────────
+        function renderSidebar(tab) {
+            sidebarFeed.innerHTML = '';
+            if (tab === 'history') {
+                const ledger = currentUser.ledger || [];
+                if (!ledger.length) {
+                    sidebarFeed.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">No transactions yet.</div>';
+                    return;
+                }
+                ledger.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'transaction-card';
+                    const isWin = item.won === true;
+                    const isDeposit = item.type === 'deposit';
+                    const isWithdraw = item.type === 'withdrawal';
+                    if (isDeposit) {
+                        card.style.borderLeft = '3px solid var(--accent-system)';
+                        card.innerHTML = `<div><div>💰 Deposit</div><div class="stake-meta">+KES ${item.amount}</div></div><span class="win-badge">+${item.amount}</span>`;
+                    } else if (isWithdraw) {
+                        card.style.borderLeft = '3px solid var(--accent-primary)';
+                        card.innerHTML = `<div><div>💳 Withdraw</div><div class="stake-meta">-KES ${item.amount}</div></div><span class="loss-badge">-${item.amount}</span>`;
+                    } else if (isWin) {
+                        card.style.borderLeft = '3px solid var(--accent-success)';
+                        card.innerHTML = `<div><div>#${item.id || 'win'}</div><div class="stake-meta">KES ${item.wager}</div></div><span class="win-badge">+${(item.wager * item.multiplier).toFixed(2)}</span>`;
+                    } else {
+                        card.style.borderLeft = '3px solid var(--accent-primary)';
+                        card.innerHTML = `<div><div>#${item.id || 'loss'}</div><div class="stake-meta">KES ${item.wager}</div></div><span class="loss-badge">-${item.wager}</span>`;
+                    }
+                    sidebarFeed.appendChild(card);
+                });
+            } else if (tab === 'leaderboard') {
+                const users = Storage.get('users', []);
+                const allUsers = [];
+                for (const phone of users) {
+                    const data = Storage.get('user_' + phone, null);
+                    if (data) allUsers.push(data);
+                }
+                allUsers.sort((a, b) => b.balance - a.balance);
+                const top = allUsers.slice(0, 10);
+                if (!top.length) {
+                    sidebarFeed.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">No users yet.</div>';
+                    return;
+                }
+                top.forEach((user, idx) => {
+                    const div = document.createElement('div');
+                    div.className = 'leaderboard-entry';
+                    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx+1}`;
+                    div.innerHTML = `<span class="rank">${medal}</span><span class="phone">${user.phone}</span><span class="balance">KES ${user.balance.toFixed(2)}</span>`;
+                    sidebarFeed.appendChild(div);
+                });
+            } else {
+                generateBotActivity();
+            }
+        }
+
+        // ──────────────────────────────────────────────────────────────
+        // BOT SIMULATION (more engaging)
+        // ──────────────────────────────────────────────────────────────
+        let botTimeouts = [];
+
+        function generateBotActivity() {
+            botTimeouts.forEach(t => clearTimeout(t));
+            botTimeouts = [];
+            sidebarFeed.innerHTML = '';
+
+            const botNames = ['Kamau_FX', 'Aisha_Nrb', 'Osh_K', 'Wanjiku_Dev', 'CryptoKing', 'M_Pesa_Whale', 'Pilot_X', 'Nai_Rob', 'Mombasa_1', 'Kisumu_Ace'];
+            const activeBots = botNames.slice(0, Math.floor(Math.random() * 4) + 4);
+
+            for (const bot of activeBots) {
+                const wager = Math.floor(Math.random() * 8 + 2) * 500;
+                const exitTarget = Math.max(1.15, Math.random() * 4.5 + 1.0);
+
+                const card = document.createElement('div');
+                card.className = 'transaction-card';
+                card.dataset.bot = bot;
+                card.innerHTML = `<div><div>👤 ${bot}</div><div class="stake-meta">KES ${wager}</div></div><span class="stake-meta" id="bot-${bot}">⏳</span>`;
+                sidebarFeed.appendChild(card);
+
+                const delay = 500 + Math.random() * 1500;
+                const t = setTimeout(() => {
+                    const el = document.getElementById(`bot-${bot}`);
+                    if (!el) return;
+                    if (gameState.status === 'waiting') {
+                        el.className = 'win-badge';
+                        el.textContent = exitTarget.toFixed(2) + 'x';
+                        el.style.opacity = '0.6';
+                    } else if (gameState.status === 'flying') {
+                        const mult = gameState.multiplier;
+                        if (mult < exitTarget && exitTarget < gameState.crashPoint) {
+                            el.className = 'win-badge';
+                            el.textContent = exitTarget.toFixed(2) + 'x';
+                        } else {
+                            el.className = 'loss-badge';
+                            el.textContent = '💥';
+                        }
+                    }
+                }, delay);
+                botTimeouts.push(t);
+            }
+        }
+
+        // ──────────────────────────────────────────────────────────────
+        // GAME ENGINE (with house edge & 3D particles)
+        // ──────────────────────────────────────────────────────────────
+        const engineConfig = { houseEdge: 0.03, curveFactor: 0.00052, waitDuration: 5.5 };
+
+        let gameState = {
+            status: 'waiting', multiplier: 1.00, crashPoint: 1.00,
+            elapsed: 0, startStamp: null, roundId: 0,
+        };
+        let waitRemaining = engineConfig.waitDuration;
+        const decks = {
+            1: { status: 'none', wager: 0, requested: false },
+            2: { status: 'none', wager: 0, requested: false },
+        };
+
+        let particleSystem = [];
+        let animFrame = null;
+        let waitTimer = null;
+
+        function gameInit() {
+            if (!currentUser.rounds) currentUser.rounds = [];
+            gameState.roundId = currentUser.rounds.length + 1;
+            generateNextRound();
+            if (animFrame) cancelAnimationFrame(animFrame);
+            animFrame = requestAnimationFrame(renderLoop);
+        }
+
+        function generateNextRound() {
+            const R = Math.random();
+            const raw = (1 - engineConfig.houseEdge) / (1 - R);
+            gameState.crashPoint = Math.max(1.00, Math.min(100, Math.round(raw * 100) / 100));
+
+            const seed = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10);
+            const hash = 'sha256:' + btoa(seed).substring(0, 28) + '…';
+            hashDisplay.textContent = hash;
+
+            gameState.status = 'waiting';
+            gameState.multiplier = 1.00;
+            gameState.elapsed = 0;
+            gameState.startStamp = null;
+            multDisplay.textContent = '1.00x';
+            multDisplay.style.color = 'var(--text-white)';
+            stateDisplay.textContent = 'Place your bets';
+            stateDisplay.className = 'state-label';
+
+            syncControlModules();
+
+            let remaining = engineConfig.waitDuration;
+            waitRemaining = remaining;
+            stateDisplay.textContent = `Next flight in ${Math.ceil(remaining)}s`;
+
+            if (waitTimer) clearInterval(waitTimer);
+            waitTimer = setInterval(() => {
+                remaining -= 0.1;
+                waitRemaining = remaining;
+                if (remaining <= 0) {
+                    clearInterval(waitTimer);
+                    waitTimer = null;
+                    startFlight();
+                } else {
+                    stateDisplay.textContent = `Next flight in ${Math.ceil(remaining)}s`;
+                    multDisplay.textContent = remaining.toFixed(1) + 's';
+                }
+            }, 100);
+        }
+
+        function startFlight() {
+            gameState.status = 'flying';
+            gameState.startStamp = performance.now();
+            gameState.elapsed = 0;
+            waitRemaining = 0;
+            stateDisplay.textContent = '✈️ Flying!';
+            stateDisplay.className = 'state-label';
+
+            for (let id of [1, 2]) {
+                if (decks[id].requested) decks[id].status = 'flying';
+            }
+            syncControlModules();
+            sound.startEngineTone();
+        }
+
+        function renderLoop(timestamp) {
+            if (gameState.status === 'flying') {
+                if (!gameState.startStamp) gameState.startStamp = timestamp;
+                gameState.elapsed = timestamp - gameState.startStamp;
+                gameState.multiplier = 1.00 * Math.exp(engineConfig.curveFactor * gameState.elapsed);
+                gameState.multiplier = Math.round(gameState.multiplier * 100) / 100;
+
+                multDisplay.textContent = gameState.multiplier.toFixed(2) + 'x';
+                sound.updateEnginePitch(gameState.multiplier);
+
+                for (let id of [1, 2]) {
+                    if (decks[id].status === 'flying') {
+                        const autoEnabled = document.getElementById(`auto-check-${id}`).checked;
+                        if (autoEnabled) {
+                            const target = parseFloat(document.getElementById(`auto-mult-${id}`).value) || 2.0;
+                            if (gameState.multiplier >= target) executeCashout(id, target);
+                        }
+                    }
+                }
+                if (gameState.multiplier >= gameState.crashPoint) handleCrash();
+            }
+
+            paintGraphScene();
+
+            if (gameState.status === 'crashed') {
+                if (animFrame) cancelAnimationFrame(animFrame);
+                animFrame = requestAnimationFrame(renderLoop);
+                return;
+            }
+            animFrame = requestAnimationFrame(renderLoop);
+        }
+
+        function handleCrash() {
+            if (gameState.status === 'crashed') return;
+            gameState.status = 'crashed';
+            gameState.multiplier = gameState.crashPoint;
+            multDisplay.textContent = gameState.crashPoint.toFixed(2) + 'x';
+            multDisplay.style.color = 'var(--accent-primary)';
+            stateDisplay.textContent = '💥 CRASHED';
+            stateDisplay.className = 'state-label crashed';
+
+            sound.playCrashBoom();
+
+            for (let id of [1, 2]) {
+                const deck = decks[id];
+                if (deck.status === 'flying' || deck.status === 'booked') {
+                    deck.status = 'lost';
+                    if (deck.wager > 0) pushLedgerEntry(deck.wager, gameState.crashPoint, false);
+                    deck.requested = false;
+                    deck.wager = 0;
+                }
+            }
+
+            const w = canvas.width / (window.devicePixelRatio || 1);
+            const h = canvas.height / (window.devicePixelRatio || 1);
+            const margin = 60;
+            const progress = Math.min(1, gameState.elapsed / 9000);
+            const px = margin + (w - margin * 2) * progress;
+            const mult = gameState.crashPoint;
+            const normMult = Math.min((mult - 1) / 7, 1);
+            const py = (h - margin) - (h - margin * 2) * normMult;
+            spawnCrashExplosion(px, py);
+
+            appendHistoryPill(gameState.crashPoint);
+
+            if (!currentUser.rounds) currentUser.rounds = [];
+            currentUser.rounds.push({ round: gameState.roundId, crash: gameState.crashPoint, time: new Date().toISOString() });
+            saveUser();
+
+            setTimeout(() => {
+                for (let id of [1, 2]) {
+                    decks[id].status = 'none';
+                    decks[id].requested = false;
+                    decks[id].wager = 0;
+                }
+                syncControlModules();
+                gameState.roundId++;
+                generateNextRound();
+            }, 2800);
+        }
+
+        // ──────────────────────────────────────────────────────────────
+        // BETTING & CASHOUT
+        // ──────────────────────────────────────────────────────────────
+        function submitConsoleAction(id) {
+            const deck = decks[id];
+            const input = document.getElementById(`stake-val-${id}`);
+            let wager = parseFloat(input.value) || 0;
+            wager = Math.max(50, Math.round(wager / 50) * 50);
+            input.value = wager;
+
+            if (gameState.status === 'waiting') {
+                if (!deck.requested) {
+                    if (currentUser.balance < wager || wager <= 0) {
+                        input.style.borderColor = 'var(--accent-primary)';
+                        setTimeout(() => input.style.borderColor = '', 400);
+                        return;
+                    }
+                    currentUser.balance -= wager;
+                    deck.wager = wager;
+                    deck.requested = true;
+                    deck.status = 'booked';
+                    sound.playBetSound();
+                } else {
+                    currentUser.balance += deck.wager;
+                    deck.requested = false;
+                    deck.wager = 0;
+                    deck.status = 'none';
+                }
+                saveUser();
+                refreshWallet();
+                syncControlModules();
+            } else if (gameState.status === 'flying' && deck.status === 'flying') {
+                executeCashout(id, gameState.multiplier);
+            }
+        }
+
+        function executeCashout(id, multiplier) {
+            const deck = decks[id];
+            if (deck.status !== 'flying') return;
+            if (multiplier < 1.0) return;
+
+            deck.status = 'cashed';
+            deck.requested = false;
+            const payout = deck.wager * multiplier;
+            currentUser.balance += payout;
+            saveUser();
+            refreshWallet();
+            sound.playPayoutChime();
+            pushLedgerEntry(deck.wager, multiplier, true);
+
+            const btn = document.getElementById(`action-btn-${id}`);
+            btn.className = 'trigger-master tm-locked';
+            btn.innerHTML = `✅ WON KES ${payout.toFixed(0)}<span>at ${multiplier.toFixed(2)}x</span>`;
+
+            deck.wager = 0;
+            syncControlModules();
+        }
+
+        function pushLedgerEntry(wager, multiplier, won) {
+            if (!currentUser.ledger) currentUser.ledger = [];
+            const entry = {
+                wager, multiplier, won,
+                id: 'R' + Date.now(),
+                date: new Date().toISOString(),
+                payout: won ? (wager * multiplier) : 0,
+            };
+            currentUser.ledger.unshift(entry);
+            if (currentUser.ledger.length > 200) currentUser.ledger.pop();
+            saveUser();
+            const activeTab = document.querySelector('.tab-trigger.active');
+            if (activeTab && activeTab.dataset.tab === 'history') renderSidebar('history');
+        }
+
+        function appendHistoryPill(val) {
+            const pill = document.createElement('div');
+            const cls = val < 2.0 ? 'p-cold' : val < 8.0 ? 'p-mid' : 'p-hot';
+            pill.className = `history-pill ${cls}`;
+            pill.textContent = val.toFixed(2) + 'x';
+            historyTape.prepend(pill);
+            while (historyTape.children.length > 24) historyTape.removeChild(historyTape.lastChild);
+        }
+
+        function modifyStake(id, delta) {
+            const input = document.getElementById(`stake-val-${id}`);
+            let val = parseFloat(input.value) || 0;
+            val = Math.max(50, val + delta);
+            val = Math.round(val / 50) * 50;
+            input.value = val;
+        }
+
+        function syncControlModules() {
+            for (let id of [1, 2]) {
+                const deck = decks[id];
+                const btn = document.getElementById(`action-btn-${id}`);
+                const panel = document.getElementById(`console-${id}`);
+                panel.classList.toggle('active-deck', deck.status === 'flying' || deck.status === 'booked');
+
+                if (gameState.status === 'waiting') {
+                    if (deck.requested) {
+                        btn.className = 'trigger-master tm-cancel';
+                        btn.innerHTML = 'CANCEL';
+                    } else {
+                        btn.className = 'trigger-master tm-bet';
+                        btn.innerHTML = 'BET';
+                    }
+                } else if (gameState.status === 'flying') {
+                    if (deck.status === 'flying') {
+                        const potential = (deck.wager * gameState.multiplier).toFixed(2);
+                        btn.className = 'trigger-master tm-cashout';
+                        btn.innerHTML = `CASH OUT<span>KES ${potential}</span>`;
+                    } else if (deck.status === 'booked') {
+                        btn.className = 'trigger-master tm-locked';
+                        btn.innerHTML = 'ENTERING…';
+                    } else if (deck.status === 'cashed') {
+                        btn.className = 'trigger-master tm-locked';
+                        btn.innerHTML = '✅ CASHED';
+                    } else if (deck.status === 'lost') {
+                        btn.className = 'trigger-master tm-locked';
+                        btn.innerHTML = '💥 LOST';
+                    } else {
+                        btn.className = 'trigger-master tm-locked';
+                        btn.innerHTML = '—';
+                    }
+                } else if (gameState.status === 'crashed') {
+                    if (deck.status === 'cashed') {
+                        btn.className = 'trigger-master tm-locked';
+                        btn.innerHTML = '✅ CASHED';
+                    } else if (deck.status === 'lost') {
+                        btn.className = 'trigger-master tm-locked';
+                        btn.innerHTML = '💥 LOST';
+                    } else {
+                        btn.className = 'trigger-master tm-locked';
+                        btn.innerHTML = '⏳ WAIT';
+                    }
+                } else {
+                    btn.className = 'trigger-master tm-locked';
+                    btn.innerHTML = '—';
+                }
+            }
+        }
+
+        function updateHash() {
+            hashDisplay.textContent = '— generating —';
+            setTimeout(() => {
+                if (gameState.status === 'waiting') {
+                    hashDisplay.textContent = 'sha256:•••' + Math.random().toString(36).substring(2, 6);
+                }
+            }, 500);
+        }
+
+        // ──────────────────────────────────────────────────────────────
+        // AUDIO ENGINE
+        // ──────────────────────────────────────────────────────────────
+        const sound = {
+            ctx: null, osc: null, gain: null, filter: null,
+            init() { try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) {} },
+            ensure() {
+                if (!this.ctx) this.init();
+                if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+            },
+            startEngineTone() {
+                this.ensure();
+                if (!this.ctx) return;
+                this.killEngineTone();
+                this.osc = this.ctx.createOscillator();
+                this.gain = this.ctx.createGain();
+                this.filter = this.ctx.createBiquadFilter();
+                this.osc.type = 'sawtooth';
+                this.osc.frequency.setValueAtTime(55, this.ctx.currentTime);
+                this.filter.type = 'lowpass';
+                this.filter.frequency.setValueAtTime(180, this.ctx.currentTime);
+                this.gain.gain.setValueAtTime(0.008, this.ctx.currentTime);
+                this.osc.connect(this.filter);
+                this.filter.connect(this.gain);
+                this.gain.connect(this.ctx.destination);
+                this.osc.start();
+            },
+            updateEnginePitch(mult) {
+                if (!this.osc || !this.ctx) return;
+                const freq = 55 + Math.min(mult, 25) * 22;
+                this.osc.frequency.setTargetAtTime(freq, this.ctx.currentTime, 0.06);
+                const vol = Math.min(0.008 + mult * 0.0008, 0.045);
+                this.gain.gain.setTargetAtTime(vol, this.ctx.currentTime, 0.08);
+                if (this.filter) this.filter.frequency.setTargetAtTime(180 + Math.min(mult, 20) * 30, this.ctx.currentTime, 0.06);
+            },
+            killEngineTone() {
+                if (this.osc) { try { this.osc.stop(); this.osc.disconnect(); } catch (_) {} this.osc = null; }
+                this.filter = null; this.gain = null;
+            },
+            playCrashBoom() {
+                this.killEngineTone();
+                this.ensure();
+                if (!this.ctx) return;
+                try {
+                    const buf = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.4, this.ctx.sampleRate);
+                    const d = buf.getChannelData(0);
+                    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+                    const n = this.ctx.createBufferSource();
+                    n.buffer = buf;
+                    const f = this.ctx.createBiquadFilter();
+                    f.type = 'lowpass';
+                    f.frequency.setValueAtTime(120, this.ctx.currentTime);
+                    f.frequency.exponentialRampToValueAtTime(15, this.ctx.currentTime + 0.35);
+                    const g = this.ctx.createGain();
+                    g.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                    g.gain.exponentialRampToValueAtTime(0.005, this.ctx.currentTime + 0.4);
+                    n.connect(f); f.connect(g); g.connect(this.ctx.destination);
+                    n.start(); n.stop(this.ctx.currentTime + 0.45);
+                } catch (_) {}
+            },
+            playPayoutChime() {
+                this.ensure();
+                if (!this.ctx) return;
+                try {
+                    const o = this.ctx.createOscillator();
+                    const g = this.ctx.createGain();
+                    o.type = 'sine';
+                    o.frequency.setValueAtTime(587.33, this.ctx.currentTime);
+                    o.frequency.setValueAtTime(880, this.ctx.currentTime + 0.07);
+                    g.gain.setValueAtTime(0.13, this.ctx.currentTime);
+                    g.gain.exponentialRampToValueAtTime(0.008, this.ctx.currentTime + 0.28);
+                    o.connect(g); g.connect(this.ctx.destination);
+                    o.start(); o.stop(this.ctx.currentTime + 0.3);
+                } catch (_) {}
+            },
+            playBetSound() {
+                this.ensure();
+                if (!this.ctx) return;
+                try {
+                    const o = this.ctx.createOscillator();
+                    const g = this.ctx.createGain();
+                    o.type = 'sine';
+                    o.frequency.setValueAtTime(440, this.ctx.currentTime);
+                    o.frequency.exponentialRampToValueAtTime(660, this.ctx.currentTime + 0.08);
+                    g.gain.setValueAtTime(0.06, this.ctx.currentTime);
+                    g.gain.exponentialRampToValueAtTime(0.005, this.ctx.currentTime + 0.12);
+                    o.connect(g); g.connect(this.ctx.destination);
+                    o.start(); o.stop(this.ctx.currentTime + 0.12);
+                } catch (_) {}
+            }
+        };
+
+        // ──────────────────────────────────────────────────────────────
+        // CANVAS GRAPHICS — 3D-enhanced with depth, glow, particles
+        // ──────────────────────────────────────────────────────────────
+        function adaptCanvasGeometry() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = rect.height + 'px';
+            ctx.scale(dpr, dpr);
+        }
+
+        function spawnParticles(x, y, count = 4, color = null) {
+            const baseColor = color || (Math.random() > 0.5 ? 'rgba(233,17,77,0.5)' : 'rgba(249,115,22,0.35)');
+            for (let i = 0; i < count; i++) {
+                particleSystem.push({
+                    x: x + (Math.random() - 0.5) * 12,
+                    y: y + (Math.random() - 0.5) * 12,
+                    radius: Math.random() * 10 + 4,
+                    alpha: 0.5 + Math.random() * 0.3,
+                    vx: -(Math.random() * 2.5 + 0.8),
+                    vy: (Math.random() - 0.5) * 1.6,
+                    color: baseColor,
+                    decay: 0.012 + Math.random() * 0.015,
+                });
+            }
+        }
+
+        function spawnCrashExplosion(x, y) {
+            for (let i = 0; i < 50; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 7 + 2;
+                particleSystem.push({
+                    x: x + (Math.random() - 0.5) * 20,
+                    y: y + (Math.random() - 0.5) * 20,
+                    radius: Math.random() * 12 + 3,
+                    alpha: 0.9 + Math.random() * 0.1,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 0.5,
+                    color: Math.random() > 0.4 ? 'rgba(233,17,77,0.8)' : 'rgba(255,200,50,0.6)',
+                    decay: 0.008 + Math.random() * 0.012,
+                });
+            }
+        }
+
+        function updateParticles() {
+            for (let i = particleSystem.length - 1; i >= 0; i--) {
+                const p = particleSystem[i];
+                p.x += p.vx; p.y += p.vy;
+                p.vx *= 0.985; p.vy += 0.03;
+                p.alpha -= p.decay || 0.015;
+                p.radius *= 0.997;
+                if (p.alpha <= 0 || p.radius < 0.5) particleSystem.splice(i, 1);
+            }
+        }
+
+        function drawParticles() {
+            for (const p of particleSystem) {
+                ctx.globalAlpha = Math.min(p.alpha, 1);
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, Math.max(p.radius, 0.5), 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        function paintGraphScene() {
+            const w = canvas.width / (window.devicePixelRatio || 1);
+            const h = canvas.height / (window.devicePixelRatio || 1);
+            ctx.clearRect(0, 0, w, h);
+
+            // 3D-ish grid with perspective offset
+            const offset = (gameState.status === 'flying' || gameState.status === 'crashed') ? (gameState.elapsed * 0.08) % 40 : 0;
+            ctx.strokeStyle = '#1d1f2b';
+            ctx.lineWidth = 0.8;
+            const margin = 60;
+            const x1 = margin, y1 = h - margin;
+            const x2 = w - margin, y2 = margin;
+            for (let x = x1; x < x2; x += 40) {
+                const ax = x - offset;
+                if (ax >= x1 && ax <= x2) {
+                    ctx.beginPath(); ctx.moveTo(ax, y2); ctx.lineTo(ax, y1); ctx.stroke();
+                }
+            }
+            for (let y = y2; y < y1; y += 40) {
+                const ay = y + offset;
+                if (ay >= y2 && ay <= y1) {
+                    ctx.beginPath(); ctx.moveTo(x1, ay); ctx.lineTo(x2, ay); ctx.stroke();
+                }
+            }
+
+            // Depth vignette
+            const vg = ctx.createRadialGradient(w * 0.5, h * 0.5, h * 0.1, w * 0.5, h * 0.5, h * 0.8);
+            vg.addColorStop(0, 'rgba(0,0,0,0)');
+            vg.addColorStop(1, 'rgba(0,0,0,0.4)');
+            ctx.fillStyle = vg;
+            ctx.fillRect(0, 0, w, h);
+
+            if (gameState.status === 'waiting') {
+                const pulse = 0.5 + 0.5 * Math.sin(Date.now() * 0.003);
+                ctx.globalAlpha = 0.15 + 0.15 * pulse;
+                ctx.fillStyle = '#e9114d';
+                ctx.beginPath();
+                ctx.arc(w * 0.5, h * 0.5, 6 + pulse * 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+                return;
+            }
+
+            const progress = Math.min(1, gameState.elapsed / 9000);
+            const px = x1 + (x2 - x1) * progress;
+            const mult = gameState.multiplier;
+            const normMult = Math.min((mult - 1) / 7, 1);
+            const py = y1 - (y1 - y2) * normMult;
+
+            // 3D-like gradient fill under curve
+            const grad = ctx.createLinearGradient(x1, y1, px, py);
+            grad.addColorStop(0, 'rgba(233,17,77,0.0)');
+            grad.addColorStop(0.6, 'rgba(233,17,77,0.10)');
+            grad.addColorStop(1, 'rgba(233,17,77,0.35)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.quadraticCurveTo(x1 + (px - x1) * 0.6, y1, px, py);
+            ctx.lineTo(px, y1);
+            ctx.closePath();
+            ctx.fill();
+
+            // Trail with depth
+            if (gameState.status !== 'waiting') {
+                const trailLen = Math.min(70, 20 + (mult - 1) * 6);
+                for (let t = 0; t < trailLen; t += 2) {
+                    const frac = t / trailLen;
+                    const tx = px - frac * 20;
+                    const ty = py - frac * 7 + Math.sin(t * 0.3 + gameState.elapsed * 0.002) * 3;
+                    const alpha = 0.35 * (1 - frac);
+                    ctx.globalAlpha = alpha;
+                    ctx.fillStyle = '#e9114d';
+                    ctx.beginPath();
+                    ctx.arc(tx, ty, 5 * (1 - frac) + 1, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.globalAlpha = 1;
+            }
+
+            // Main curve with glow
+            ctx.shadowColor = '#e9114d';
+            ctx.shadowBlur = 18;
+            ctx.strokeStyle = gameState.status === 'crashed' ? '#e9114d' : '#e9114d';
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.quadraticCurveTo(x1 + (px - x1) * 0.6, y1, px, py);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // "3D" plane marker — layered circles for depth
+            const isCrashed = gameState.status === 'crashed';
+            ctx.shadowBlur = isCrashed ? 0 : 30;
+            ctx.shadowColor = '#e9114d';
+            ctx.fillStyle = isCrashed ? '#475569' : '#ffffff';
+            ctx.beginPath();
+            ctx.arc(px, py, 9, 0, Math.PI * 2);
+            ctx.fill();
+            if (!isCrashed && gameState.status !== 'waiting') {
+                // outer ring (3D depth)
+                ctx.shadowBlur = 50;
+                ctx.shadowColor = 'rgba(233,17,77,0.4)';
+                ctx.strokeStyle = 'rgba(233,17,77,0.25)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(px, py, 18 + Math.sin(gameState.elapsed * 0.003) * 4, 0, Math.PI * 2);
+                ctx.stroke();
+                // inner highlight
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                ctx.beginPath();
+                ctx.arc(px - 2, py - 2, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.shadowBlur = 0;
+
+            if (gameState.status === 'flying') spawnParticles(px, py, 2);
+            if (gameState.status === 'crashed' && Math.random() < 0.3) {
+                spawnParticles(px + (Math.random() - 0.5) * 30, py + (Math.random() - 0.5) * 20, 1, 'rgba(255,150,50,0.4)');
+            }
+
+            updateParticles();
+            drawParticles();
+
+            if (gameState.status === 'crashed') {
+                ctx.font = 'bold 18px system-ui';
+                ctx.fillStyle = 'rgba(233,17,77,0.25)';
+                ctx.textAlign = 'center';
+                ctx.fillText('💥 CRASH', px, py - 52);
+            }
+        }
+
+        // ──────────────────────────────────────────────────────────────
+        // BOOT
+        // ──────────────────────────────────────────────────────────────
+        if (loadUser()) {
+            loginOverlay.classList.add('hidden');
+            appEl.style.display = 'flex';
+            initApp();
+        } else {
+            loginOverlay.classList.remove('hidden');
+            appEl.style.display = 'none';
+        }
+        phoneInput.focus();
+    </script>
+</body>
+</html>

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#11130f">
+<meta name="description" content="A cinematic dining journey at Saffron House Hotel — seasonal Kenyan ingredients, thoughtful hospitality, and memorable tables for every generation.">
+<title>Saffron House — A Table Worth Gathering For</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+<script type="importmap">
+{"imports":{"three":"https://unpkg.com/three@0.162.0/build/three.module.js","gsap":"https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js","gsap/ScrollTrigger":"https://cdn.jsdelivr.net/npm/gsap@3.12.5/ScrollTrigger.js"}}
+</script>
+<style>
+:root{--ink:#11130f;--paper:#f5f0e6;--cream:#e9dfca;--gold:#c9a76a;--rust:#9d593c;--muted:#b8b3a8;--line:rgba(245,240,230,.18);--navH:78px}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:90px}body{margin:0;background:var(--ink);color:var(--paper);font-family:"DM Sans",sans-serif;font-size:1.08rem;line-height:1.8;overflow-x:hidden}body:after{content:"";position:fixed;inset:0;pointer-events:none;z-index:8;opacity:.075;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.28'/%3E%3C/svg%3E")}a{color:inherit;text-decoration:none}button,a{ -webkit-tap-highlight-color:transparent}button{font:inherit}::selection{background:var(--gold);color:var(--ink)}.progress{position:fixed;z-index:30;top:0;left:0;height:3px;width:0;background:var(--gold)}.topbar{height:var(--navH);position:fixed;z-index:20;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:0 5vw;border-bottom:1px solid transparent;transition:background .3s,border-color .3s,backdrop-filter .3s}.topbar.scrolled{background:rgba(17,19,15,.8);backdrop-filter:blur(18px);border-color:var(--line)}.brand{display:flex;align-items:center;gap:12px;font-size:.78rem;letter-spacing:.19em;font-weight:700}.brand-mark{width:34px;height:34px;border:1px solid var(--gold);border-radius:50%;display:grid;place-items:center;color:var(--gold);font-family:"Playfair Display",serif;font-size:1.1rem;letter-spacing:0}.desktop-links{display:flex;gap:32px;align-items:center;font-size:.83rem;color:rgba(245,240,230,.88)}.desktop-links a:not(.button):hover{color:var(--gold)}.button{display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:48px;padding:12px 21px;border:1px solid var(--gold);background:var(--gold);color:#15140f;font-size:.85rem;font-weight:700;letter-spacing:.01em;transition:transform .25s,background .25s,color .25s;cursor:pointer}.button:hover{transform:translateY(-2px);background:#e0c38c}.button.secondary{background:transparent;color:var(--paper);border-color:rgba(245,240,230,.45)}.button.secondary:hover{border-color:var(--gold);color:var(--gold)}.eyebrow{font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;color:#f0ce8c;font-weight:700;display:flex;gap:12px;align-items:center}.eyebrow:before{content:"";width:28px;height:1px;background:var(--gold)}h1,h2,h3,p{margin-top:0}h1,h2,h3{font-family:"Playfair Display",serif;font-weight:600;line-height:1.1;letter-spacing:-.025em}h1{font-size:clamp(3.2rem,7.2vw,7.3rem);max-width:850px;margin:25px 0 24px}h2{font-size:clamp(2.45rem,5vw,5rem);margin:18px 0 24px;max-width:760px}h3{font-size:1.55rem}p{color:rgba(255,255,255,.96);max-width:620px}.hero{min-height:100svh;display:flex;align-items:center;position:relative;padding:130px 8vw 95px;isolation:isolate}.scene-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:-1;display:block;pointer-events:auto}.hero-content{width:min(100%,1000px);position:relative;z-index:2}.hero h1 em{font-weight:500;color:var(--gold)}.hero-copy{font-size:clamp(1.08rem,1.35vw,1.25rem);max-width:550px;margin-bottom:32px}.hero-actions{display:flex;gap:13px;flex-wrap:wrap}.hero-note{display:flex;align-items:center;gap:13px;margin-top:54px;font-size:.75rem;letter-spacing:.08em;color:rgba(255,255,255,.92)}.hero-note span{height:1px;width:42px;background:var(--gold)}.scene-hint{position:absolute;right:5vw;bottom:90px;z-index:2;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.92);writing-mode:vertical-rl}.section{min-height:95svh;position:relative;display:flex;align-items:center;padding:130px 9vw;isolation:isolate}.section:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(90deg,rgba(10,12,9,.97) 0%,rgba(10,12,9,.90) 48%,rgba(10,12,9,.62) 100%)}.section:nth-of-type(even):before{background:linear-gradient(270deg,rgba(10,12,9,.97) 0%,rgba(10,12,9,.90) 48%,rgba(10,12,9,.62) 100%)}.section-inner{width:min(100%,680px);position:relative}.section.align-right{justify-content:flex-end}.section.align-right .section-inner{margin-left:auto}.section .body{max-width:570px}.section .bullets{list-style:none;padding:0;margin:27px 0 30px;display:grid;gap:10px}.bullets li{padding-left:24px;position:relative;color:rgba(255,255,255,.96);font-size:1rem;font-weight:500}.bullets li:before{content:"✦";position:absolute;left:0;color:var(--gold);font-size:.8rem;top:3px}.bullets strong{color:var(--paper)}.stats{display:flex;gap:clamp(18px,3vw,44px);flex-wrap:wrap;margin:30px 0}.stat strong{display:block;font-family:"Playfair Display",serif;font-size:1.8rem;color:var(--gold);line-height:1.2}.stat span{font-size:.76rem;text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:rgba(255,255,255,.9)}.section-actions{display:flex;gap:12px;flex-wrap:wrap}.pullquote{font-family:"Playfair Display",serif;font-size:clamp(1.9rem,3.7vw,3.6rem);line-height:1.25;max-width:720px;border-left:2px solid var(--gold);padding-left:28px;margin:35px 0;color:var(--paper)}.food-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:35px;max-width:670px}.food-card{border:1px solid var(--line);background:rgba(20,20,16,.65);backdrop-filter:blur(10px);padding:18px 16px}.food-card span{display:block;color:var(--gold);font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;margin-bottom:5px}.food-card strong{font-size:.93rem;line-height:1.4;display:block}.section-kicker{font-size:.8rem;color:var(--gold);letter-spacing:.14em;text-transform:uppercase}.menu-panel{display:grid;grid-template-columns:1fr 1fr;gap:0 26px;max-width:650px;margin:28px 0}.menu-item{padding:15px 0;border-bottom:1px solid var(--line)}.menu-item div{display:flex;justify-content:space-between;gap:12px;font-weight:700;font-size:.96rem}.menu-item small{display:block;color:rgba(255,255,255,.9);font-size:.82rem;line-height:1.55;margin-top:3px}.menu-item b{color:var(--gold);white-space:nowrap}.experience-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:700px;margin:32px 0}.experience{padding:20px;border:1px solid var(--line);background:rgba(12,14,11,.72);min-height:140px}.experience .number{font-family:"Playfair Display",serif;color:var(--gold);font-size:1.6rem}.experience p{font-size:.85rem;line-height:1.6;margin:8px 0 0}.climax{min-height:100svh;text-align:center;justify-content:center}.climax .section-inner{display:flex;align-items:center;flex-direction:column}.climax h2{max-width:900px}.climax p{max-width:600px}.climax .section-actions{justify-content:center}.footer{position:relative;padding:95px 8vw 120px;background:#0b0d0a;border-top:1px solid var(--line)}.footer-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:40px;max-width:1200px;margin:auto}.footer h3{font-size:1.25rem}.footer p,.footer a{font-size:.9rem;color:rgba(255,255,255,.95)}.footer a:hover{color:var(--gold)}.footer-links{display:grid;gap:8px}.copyright{border-top:1px solid var(--line);padding-top:22px;margin:38px auto 0;max-width:1200px;display:flex;justify-content:space-between;gap:20px;color:rgba(255,255,255,.88);font-size:.75rem}.side-dots{position:fixed;right:25px;top:50%;transform:translateY(-50%);z-index:15;display:grid;gap:13px}.side-dots a{width:8px;height:8px;border:1px solid rgba(245,240,230,.65);border-radius:50%;transition:all .25s}.side-dots a.active{background:var(--gold);border-color:var(--gold);transform:scale(1.35)}.active-badge{position:fixed;top:98px;left:5vw;z-index:15;font-size:.65rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);background:rgba(17,19,15,.7);padding:6px 10px;border:1px solid var(--line);backdrop-filter:blur(10px)}.whatsapp{position:fixed;z-index:18;bottom:25px;left:25px;border-radius:30px;background:#1e5e43;color:#fff;padding:10px 18px;font-size:.8rem;font-weight:700;box-shadow:0 8px 30px #0005}.top-button{position:fixed;z-index:18;bottom:25px;right:25px;width:44px;height:44px;border:1px solid var(--line);background:rgba(17,19,15,.8);color:var(--paper);display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(10px)}.hud{position:fixed;z-index:12;right:24px;bottom:24px;font-size:.65rem;color:rgba(255,255,255,.88);letter-spacing:.08em;background:rgba(17,19,15,.62);border:1px solid var(--line);padding:7px 11px;backdrop-filter:blur(10px)}.mobile-nav{display:none}.cursor-ring{position:fixed;z-index:40;top:0;left:0;width:24px;height:24px;border:1px solid var(--gold);border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);opacity:0;transition:width .2s,height .2s,opacity .2s;mix-blend-mode:difference}.cursor-ring.hot{width:54px;height:54px;background:rgba(201,167,106,.12)}.reveal{opacity:0;transform:translateY(25px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}.reveal.visible{opacity:1;transform:translateY(0)}.fallback-scene{position:fixed;inset:0;z-index:-2;background:radial-gradient(ellipse at 72% 42%,#7b5835 0,#30271d 22%,#11130f 58%);pointer-events:none}.fallback-scene:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#11130f 0%,rgba(17,19,15,.7) 42%,transparent 100%)}.error-note{display:none;position:fixed;left:12px;bottom:12px;z-index:50;color:#fff;background:#7d2e24;padding:8px 12px;font-size:12px}
+@media(max-width:1024px){.section{padding:110px 7vw}.hero{padding-left:7vw}.section-inner{max-width:620px}.hud{display:none}.side-dots{right:12px}}
+@media(max-width:768px){:root{--navH:65px}body{font-size:1rem;line-height:1.75}.topbar{display:none}.hero{min-height:100svh;padding:95px 7vw 120px;align-items:center}.hero h1{font-size:clamp(3rem,12vw,5rem)}.hero-copy{max-width:460px}.hero-note{margin-top:35px}.scene-hint,.side-dots,.active-badge,.whatsapp,.cursor-ring{display:none}.section{min-height:auto;padding:105px 7vw 110px}.section:before,.section:nth-of-type(even):before{background:linear-gradient(90deg,rgba(10,12,9,.97),rgba(10,12,9,.91))}.section-inner{width:100%}.section.align-right{justify-content:flex-start}.section.align-right .section-inner{margin:0}.section h2{font-size:clamp(2.6rem,10vw,4rem)}.food-strip{grid-template-columns:1fr;max-width:450px}.food-card{padding:14px 16px}.experience-grid{grid-template-columns:1fr;max-width:450px}.experience{min-height:auto}.menu-panel{grid-template-columns:1fr;max-width:500px}.stats{gap:24px}.stat{min-width:85px}.footer{padding:75px 7vw 115px}.footer-grid{grid-template-columns:1fr;gap:30px}.copyright{flex-direction:column;gap:4px}.mobile-nav{position:fixed;z-index:25;display:grid;grid-template-columns:repeat(4,1fr);left:0;right:0;bottom:0;padding:8px 12px calc(8px + env(safe-area-inset-bottom));background:rgba(15,17,13,.92);border-top:1px solid var(--line);backdrop-filter:blur(20px)}.mobile-nav a{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1px;color:rgba(255,255,255,.9);font-size:.66rem}.mobile-nav a span{font-size:1.2rem;line-height:1.4}.mobile-nav a.active{color:var(--gold)}.top-button{bottom:calc(82px + env(safe-area-inset-bottom));right:15px;width:40px;height:40px}.section-actions .button,.hero-actions .button{min-width:145px}.section-actions{gap:9px}.hero-actions{gap:10px}}
+@media(max-width:480px){.hero{padding-left:6vw;padding-right:6vw}.hero h1{font-size:3.05rem}.section{padding:90px 6vw}.button{padding:11px 14px;font-size:.82rem}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.stat strong{font-size:1.5rem}.stat span{font-size:.62rem}.footer{padding-left:6vw;padding-right:6vw}.hero-note{font-size:.66rem}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.reveal{opacity:1;transform:none}}
+
+/* Readability pass: stronger weights, higher contrast and clear text surfaces */
+body{font-weight:500;color:#fff}
+p,.hero-copy,.body,.menu-item small,.experience p,.footer p,.footer a,
+.bullets li,.copyright,.hero-note,.desktop-links,.section .body{
+  color:rgba(255,255,255,.96);font-weight:500;text-shadow:0 1px 12px rgba(0,0,0,.72)
+}
+h1,h2,h3{font-weight:700;text-shadow:0 2px 18px rgba(0,0,0,.55)}
+.eyebrow,.section-kicker{color:#f0ce8c;font-weight:700}
+.desktop-links{font-weight:600}
+.brand{font-weight:700;color:#fff}
+.stat span,.hero-note,.scene-hint,.active-badge,.hud{color:rgba(255,255,255,.92);font-weight:600}
+.food-card,.experience,.menu-item{background-color:rgba(8,10,7,.88)}
+.food-card strong,.menu-item div,.experience h3{font-weight:700;color:#fff}
+.section:before{background:linear-gradient(90deg,rgba(8,10,7,.98) 0%,rgba(8,10,7,.92) 52%,rgba(8,10,7,.68) 100%)}
+.section:nth-of-type(even):before{background:linear-gradient(270deg,rgba(8,10,7,.98) 0%,rgba(8,10,7,.92) 52%,rgba(8,10,7,.68) 100%)}
+.button{font-weight:700;text-shadow:none}
+.button.secondary{background:rgba(8,10,7,.75);color:#fff}
+.footer{background:#080a07}
+@media(max-width:768px){
+  body{font-size:1.02rem}
+  p,.hero-copy,.body,.menu-item small,.experience p,.footer p,.footer a,.bullets li{font-size:1rem}
+  .section:before,.section:nth-of-type(even):before{background:rgba(8,10,7,.91)}
+  .food-card,.experience{background:rgba(8,10,7,.94)}
+  .mobile-nav a{font-weight:700;color:rgba(255,255,255,.92)}
+}
+
+</style>
+</head>
+<body>
+<div class="progress" id="progress" aria-hidden="true"></div>
+<div class="fallback-scene" aria-hidden="true"></div>
+<canvas class="scene-canvas" id="scene" aria-label="Interactive three-dimensional dining installation"></canvas>
+<div class="error-note" id="errorNote">3D mode is unavailable in this browser. The page remains usable.</div>
+<header class="topbar" id="topbar">
+  <a class="brand" href="#home" aria-label="Saffron House home"><span class="brand-mark">S</span><span>SAFFRON HOUSE</span></a>
+  <nav class="desktop-links" aria-label="Main navigation">
+    <a href="#table">Our table</a><a href="#kitchen">The kitchen</a><a href="#gather">Gather here</a>
+    <a class="button" href="#reserve">Plan a visit <span aria-hidden="true">↗</span></a>
+  </nav>
+</header>
+<div class="active-badge" id="activeBadge">01 / Welcome</div>
+<nav class="side-dots" aria-label="Section progress">
+  <a href="#home" class="active" aria-label="Go to welcome"></a><a href="#table" aria-label="Go to the table"></a><a href="#kitchen" aria-label="Go to the kitchen"></a><a href="#menu" aria-label="Go to the menu"></a><a href="#gather" aria-label="Go to family dining"></a><a href="#reserve" aria-label="Go to reservations"></a>
+</nav>
+<main>
+<section class="hero" id="home" data-scene="0" data-label="Welcome">
+  <div class="hero-content">
+    <div class="eyebrow reveal">Hospitality, served with heart</div>
+    <h1 class="reveal">A table worth<br><em>gathering for.</em></h1>
+    <p class="hero-copy reveal">Come for honest, seasonal cooking. Stay for the conversations that stretch long after dessert. At Saffron House, every generation has a place at the table.</p>
+    <div class="hero-actions reveal"><a class="button" href="#menu">Explore the menu <span aria-hidden="true">↗</span></a><a class="button secondary" href="#reserve">Plan your visit</a></div>
+    <div class="hero-note reveal"><span></span> Seasonal plates · Thoughtful hosting · Room for everyone</div>
+  </div>
+  <div class="scene-hint">Scroll to explore the table ↓</div>
+</section>
+<section class="section" id="table" data-scene="1" data-label="The table">
+  <div class="section-inner">
+    <div class="eyebrow reveal">01 — The welcome</div>
+    <h2 class="reveal">The best meals bring us closer.</h2>
+    <p class="body reveal">A generous table can turn an ordinary afternoon into a family tradition. Our dining spaces pair warm materials, considered details and attentive service, so the people around you—not the logistics—stay at the centre.</p>
+    <blockquote class="pullquote reveal">“Make room for one more. There is always a place at our table.”</blockquote>
+    <ul class="bullets reveal"><li><strong>Room to settle in</strong> — relaxed seating for couples, families and bigger gatherings.</li><li><strong>Hospitality with care</strong> — a welcoming team ready to help with the little details.</li><li><strong>Time well spent</strong> — an atmosphere made for birthdays, reunions and unhurried lunches.</li></ul>
+    <div class="stats reveal"><div class="stat"><strong>All ages</strong><span>Family friendly</span></div><div class="stat"><strong>Seasonal</strong><span>Fresh approach</span></div><div class="stat"><strong>Every day</strong><span>Reasons to gather</span></div></div>
+    <div class="section-actions reveal"><a class="button" href="#gather">Find your occasion →</a><a class="button secondary" href="#reserve">Ask our team</a></div>
+  </div>
+</section>
+<section class="section align-right" id="kitchen" data-scene="2" data-label="The kitchen">
+  <div class="section-inner">
+    <div class="eyebrow reveal">02 — From the kitchen</div>
+    <h2 class="reveal">Good ingredients. No fuss.</h2>
+    <p class="body reveal">Our food philosophy starts with ingredients that deserve to be tasted. Familiar favourites meet seasonal produce, careful preparation and balanced flavours—comforting enough for a family lunch, thoughtful enough for a special evening.</p>
+    <div class="food-strip reveal"><div class="food-card"><span>01 / Source</span><strong>Seasonal produce</strong></div><div class="food-card"><span>02 / Prepare</span><strong>Made with care</strong></div><div class="food-card"><span>03 / Serve</span><strong>Best shared together</strong></div></div>
+    <ul class="bullets reveal"><li><strong>Freshness first</strong> — menus shaped around availability and quality.</li><li><strong>Comfort with character</strong> — satisfying plates with considered seasoning and texture.</li><li><strong>Options for the table</strong> — ask our team about dietary needs before you arrive.</li></ul>
+    <div class="stats reveal"><div class="stat"><strong>Fresh</strong><span>Daily focus</span></div><div class="stat"><strong>Balanced</strong><span>Flavour-led</span></div><div class="stat"><strong>Shared</strong><span>Food culture</span></div></div>
+    <div class="section-actions reveal"><a class="button" href="#menu">See menu highlights →</a><a class="button secondary" href="#reserve">Ask about dietary needs</a></div>
+  </div>
+</section>
+<section class="section" id="menu" data-scene="3" data-label="Menu highlights">
+  <div class="section-inner">
+    <div class="eyebrow reveal">03 — On the menu</div>
+    <h2 class="reveal">A little something for everyone.</h2>
+    <p class="body reveal">From a bright starter to a slow, satisfying main, the best menu makes choosing part of the pleasure. These are sample menu directions; our team can confirm today's dishes, availability and prices before your visit.</p>
+    <div class="menu-panel reveal">
+      <div class="menu-item"><div><span>Garden greens</span><b>Seasonal</b></div><small>Crisp leaves, fresh herbs and a bright house dressing.</small></div>
+      <div class="menu-item"><div><span>House soup</span><b>Daily</b></div><small>A warming bowl guided by the day's best produce.</small></div>
+      <div class="menu-item"><div><span>Grilled favourite</span><b>Chef's pick</b></div><small>Carefully grilled, simply seasoned and served generously.</small></div>
+      <div class="menu-item"><div><span>Family sharing plate</span><b>To share</b></div><small>A relaxed centrepiece for passing around the table.</small></div>
+      <div class="menu-item"><div><span>Something sweet</span><b>Seasonal</b></div><small>A lovely finish, whether you share or keep it all to yourself.</small></div>
+      <div class="menu-item"><div><span>Tea & coffee</span><b>Anytime</b></div><small>For the last conversation—or one more story.</small></div>
+    </div>
+    <ul class="bullets reveal"><li><strong>Made for sharing</strong> — choose a spread that suits your group.</li><li><strong>Ask before you order</strong> — our team will explain ingredients and available alternatives.</li><li><strong>Always check today's menu</strong> — dishes and prices may change with supply.</li></ul>
+    <div class="stats reveal"><div class="stat"><strong>6</strong><span>Menu directions</span></div><div class="stat"><strong>Season-led</strong><span>Changing selection</span></div><div class="stat"><strong>Made fresh</strong><span>Kitchen approach</span></div></div>
+    <div class="section-actions reveal"><a class="button" href="#reserve">Ask for today's menu →</a><a class="button secondary" href="#gather">Dining for a group</a></div>
+  </div>
+</section>
+<section class="section align-right" id="gather" data-scene="4" data-label="Family gatherings">
+  <div class="section-inner">
+    <div class="eyebrow reveal">04 — Gather here</div>
+    <h2 class="reveal">Little moments become traditions.</h2>
+    <p class="body reveal">Some visits are spontaneous; others deserve a little planning. Whether you're bringing the whole family, celebrating a milestone or simply escaping the kitchen for an afternoon, we help make the occasion feel considered.</p>
+    <div class="experience-grid reveal"><div class="experience"><div class="number">01</div><h3>Family lunch</h3><p>A relaxed meal with enough time to catch up properly.</p></div><div class="experience"><div class="number">02</div><h3>Special days</h3><p>Birthdays, anniversaries and the moments worth marking.</p></div><div class="experience"><div class="number">03</div><h3>Group tables</h3><p>Tell us your numbers and we'll discuss the best arrangement.</p></div></div>
+    <ul class="bullets reveal"><li><strong>Plan ahead</strong> — share your date, group size and any special requests.</li><li><strong>Keep everyone comfortable</strong> — tell us about accessibility or seating needs.</li><li><strong>Make it personal</strong> — let us know what you're celebrating.</li></ul>
+    <div class="stats reveal"><div class="stat"><strong>Small</strong><span>Intimate moments</span></div><div class="stat"><strong>Large</strong><span>Group enquiries</span></div><div class="stat"><strong>Your way</strong><span>Personal details</span></div></div>
+    <div class="section-actions reveal"><a class="button" href="#reserve">Plan a gathering →</a><a class="button secondary" href="#reserve">Discuss your needs</a></div>
+  </div>
+</section>
+<section class="section climax" id="reserve" data-scene="5" data-label="Your invitation">
+  <div class="section-inner">
+    <div class="eyebrow reveal">05 — Your invitation</div>
+    <h2 class="reveal">Come hungry. Leave connected.</h2>
+    <p class="reveal">Tell us when you'd like to visit, how many people are coming and anything that would make your meal easier. Our team can confirm availability, current menu details and the best way to arrange your table.</p>
+    <div class="stats reveal"><div class="stat"><strong>Food</strong><span>At the centre</span></div><div class="stat"><strong>People</strong><span>Always welcome</span></div><div class="stat"><strong>Memories</strong><span>Made together</span></div></div>
+    <div class="section-actions reveal"><a class="button" href="https://wa.me/254700000000?text=Hello%20Saffron%20House%2C%20I%27d%20like%20to%20ask%20about%20a%20table." target="_blank" rel="noopener noreferrer">Enquire on WhatsApp ↗</a><a class="button secondary" href="mailto:hello@saffronhouse.example?subject=Dining%20enquiry">Email the team</a></div>
+    <p class="reveal" style="font-size:.8rem;margin-top:24px">Please confirm your preferred date and time directly with our team. Contact details shown here are demo details and should be replaced before launch.</p>
+  </div>
+</section>
+</main>
+<footer class="footer">
+  <div class="footer-grid">
+    <div><a class="brand" href="#home"><span class="brand-mark">S</span><span>SAFFRON HOUSE</span></a><p style="margin-top:20px">A welcoming place for good food, long conversations and the people who matter most.</p></div>
+    <div><h3>Explore</h3><div class="footer-links"><a href="#table">Our table</a><a href="#kitchen">The kitchen</a><a href="#menu">Menu highlights</a><a href="#gather">Family gatherings</a></div></div>
+    <div><h3>Get in touch</h3><p>For today's menu, opening hours and table availability, contact our team before visiting.</p><div class="footer-links"><a href="https://wa.me/254700000000?text=Hello%20Saffron%20House" target="_blank" rel="noopener noreferrer">WhatsApp enquiry ↗</a><a href="mailto:hello@saffronhouse.example">hello@saffronhouse.example</a><a href="#reserve">Plan a visit ↑</a></div></div>
+  </div>
+  <div class="copyright"><span>© <span id="year"></span> Saffron House. Crafted around the table.</span><span>Sample hotel dining concept · Replace demo contact details before publishing.</span></div>
+</footer>
+<nav class="mobile-nav" aria-label="Quick navigation"><a href="#home" class="active"><span>⌂</span>Home</a><a href="#menu"><span>♧</span>Explore</a><a href="#gather"><span>◉</span>Tour</a><a href="#reserve"><span>✉</span>Chat</a></nav>
+<a class="whatsapp" href="https://wa.me/254700000000?text=Hello%20Saffron%20House%2C%20I%27d%20like%20to%20ask%20about%20a%20table." target="_blank" rel="noopener noreferrer" aria-label="Enquire with Saffron House on WhatsApp">◉ &nbsp; Chat with us</a>
+<button class="top-button" id="topButton" aria-label="Back to top">↑</button>
+<div class="hud" id="hud" aria-live="off">SCENE / INITIALISING</div>
+<div class="cursor-ring" id="cursorRing"></div>
+<script type="module">
+import * as THREE from 'three';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+gsap.registerPlugin(ScrollTrigger);
+
+const $ = (s, root=document) => root.querySelector(s);
+const $$ = (s, root=document) => [...root.querySelectorAll(s)];
+$('#year').textContent = new Date().getFullYear();
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const mobile = Math.min(window.innerWidth, 768) <= 768;
+const canvas = $('#scene'), errorNote = $('#errorNote'), hud = $('#hud');
+let renderer, scene, camera, clock, animationId, rafRunning = true;
+let heroGroup, plateGroup, foodGroup, orbitGroup, dust, particles, stream, raycaster, pointer;
+let hoverTarget = null, mouseX=0, mouseY=0, targetX=0, targetY=0, currentScene=0;
+const sceneStates = [
+ {x:0,y:0,z:0,rx:0,ry:0,scale:1, hue:0, cameraX:0,cameraY:0,cameraZ:9},
+ {x:-.45,y:.05,z:-.2,rx:.18,ry:.6,scale:1.08,hue:.06,cameraX:-.2,cameraY:.1,cameraZ:8.7},
+ {x:.45,y:-.1,z:-.3,rx:-.18,ry:1.5,scale:1.12,hue:.13,cameraX:.35,cameraY:-.08,cameraZ:8.3},
+ {x:0,y:.18,z:-.7,rx:.35,ry:2.45,scale:.85,hue:.02,cameraX:0,cameraY:.2,cameraZ:7.8},
+ {x:-.25,y:-.12,z:.1,rx:-.25,ry:3.4,scale:1.22,hue:.1,cameraX:-.3,cameraY:-.05,cameraZ:8.1},
+ {x:0,y:0,z:-.8,rx:0,ry:5.2,scale:1.5,hue:.18,cameraX:0,cameraY:0,cameraZ:7.2}
+];
+function init3D(){
+ try{
+  renderer = new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,powerPreference:'high-performance'});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  renderer.outputColorSpace=THREE.SRGBColorSpace;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.15;
+  renderer.shadowMap.enabled=!mobile;
+  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x11130f,.055);
+  camera = new THREE.PerspectiveCamera(38,window.innerWidth/window.innerHeight,.1,80);
+  camera.position.set(0,0,9);
+  clock = new THREE.Clock();
+  scene.add(new THREE.HemisphereLight(0xded5c2,0x21170e,2.0));
+  const key = new THREE.DirectionalLight(0xffdfad,4.2); key.position.set(-4,6,7); key.castShadow=!mobile; key.shadow.mapSize.set(mobile?512:1024,mobile?512:1024); scene.add(key);
+  const fill = new THREE.PointLight(0xb95e37,32,18,2); fill.position.set(5,1,4); scene.add(fill);
+  const rim = new THREE.PointLight(0xffd18a,45,20,2); rim.position.set(-2,3,-4); scene.add(rim);
+  heroGroup = new THREE.Group(); scene.add(heroGroup);
+  orbitGroup = new THREE.Group(); heroGroup.add(orbitGroup);
+  plateGroup = new THREE.Group(); heroGroup.add(plateGroup);
+  foodGroup = new THREE.Group(); heroGroup.add(foodGroup);
+  const gold = new THREE.MeshStandardMaterial({color:0xc9a76a,metalness:.78,roughness:.24,emissive:0x3c2108,emissiveIntensity:.35});
+  const ceramic = new THREE.MeshStandardMaterial({color:0xe7dfcf,metalness:.08,roughness:.22});
+  const darkCeramic = new THREE.MeshStandardMaterial({color:0x6d3827,metalness:.2,roughness:.32});
+  const leafMat = new THREE.MeshStandardMaterial({color:0x54744a,roughness:.46,side:THREE.DoubleSide});
+  const tomatoMat = new THREE.MeshPhysicalMaterial({color:0xb54d32,roughness:.24,clearcoat:.7});
+  // Layered hand-crafted plate and charger
+  const charger = new THREE.Mesh(new THREE.CylinderGeometry(2.05,2.12,.13,96),gold); charger.position.y=-.48; charger.receiveShadow=true; charger.castShadow=true; plateGroup.add(charger);
+  const plate = new THREE.Mesh(new THREE.CylinderGeometry(1.88,1.95,.16,96),ceramic); plate.position.y=-.37; plate.castShadow=true; plate.receiveShadow=true; plateGroup.add(plate);
+  const rimGeo = new THREE.TorusGeometry(1.65,.018,10,100); const rimMesh = new THREE.Mesh(rimGeo,gold); rimMesh.rotation.x=Math.PI/2; rimMesh.position.y=-.275; plateGroup.add(rimMesh);
+  const innerRim = new THREE.Mesh(new THREE.TorusGeometry(1.42,.012,8,100),darkCeramic); innerRim.rotation.x=Math.PI/2; innerRim.position.y=-.274; plateGroup.add(innerRim);
+  // A sculptural centrepiece, built from edible-looking geometry
+  const greens = new THREE.Group(); foodGroup.add(greens);
+  for(let i=0;i<11;i++){
+    const a=i*2.399, r=.35+(i%4)*.16;
+    const leaf = new THREE.Mesh(new THREE.SphereGeometry(1,18,12),leafMat);
+    leaf.position.set(Math.cos(a)*r,.02+(i%3)*.045,Math.sin(a)*r*.7);
+    leaf.scale.set(.35,.065,.15); leaf.rotation.y=-a; leaf.rotation.z=(i%2?-.38:.4); leaf.castShadow=true; greens.add(leaf);
+  }
+  for(let i=0;i<5;i++){
+    const a=i*2.4, r=.25+(i%2)*.28;
+    const tomato=new THREE.Mesh(new THREE.SphereGeometry(.22,28,20),tomatoMat);
+    tomato.position.set(Math.cos(a)*r,.17+(i%2)*.05,Math.sin(a)*r*.7); tomato.scale.set(1,.82,1); tomato.castShadow=true; tomato.userData.interactive=true; tomato.userData.baseScale=tomato.scale.clone(); foodGroup.add(tomato);
+  }
+  const garnish = new THREE.Mesh(new THREE.TorusKnotGeometry(.42,.045,120,12,2,5),gold); garnish.position.set(.05,.28,.05); garnish.rotation.set(.7,.3,.2); garnish.castShadow=true; garnish.userData.interactive=true; garnish.userData.baseScale=garnish.scale.clone(); orbitGroup.add(garnish);
+  // A warm glass orb suggests candlelight without overpowering the food.
+  const orbMat = new THREE.ShaderMaterial({
+   uniforms:{uTime:{value:0},uHover:{value:0},uTint:{value:new THREE.Color(0xc78b4e)}},
+   vertexShader:`varying vec3 vNormal; varying vec3 vPos; void main(){vNormal=normalize(normalMatrix*normal); vec3 p=position; p+=normal*(sin(position.y*8.0+position.x*5.0)*.012); vPos=(modelViewMatrix*vec4(p,1.0)).xyz; gl_Position=projectionMatrix*vec4(vPos,1.0);}`,
+   fragmentShader:`uniform float uTime; uniform float uHover; uniform vec3 uTint; varying vec3 vNormal; varying vec3 vPos; void main(){vec3 n=normalize(vNormal); vec3 v=normalize(-vPos); float fres=pow(1.0-max(dot(n,v),0.0),2.4); float pulse=.78+.22*sin(uTime*2.1); vec3 col=mix(uTint,vec3(1.0,.78,.42),fres); col+=vec3(.7,.22,.05)*uHover*.55; gl_FragColor=vec4(col*(.65+pulse*.3)+fres*.65,.86);\n#include <tonemapping_fragment>\n#include <colorspace_fragment>}`
+  });
+  orbMaterial=orbMat; const orb = new THREE.Mesh(new THREE.SphereGeometry(.48,48,32),orbMat); orb.position.set(-1.45,.05,.2); orb.userData.interactive=true; orb.userData.baseScale=orb.scale.clone(); orbitGroup.add(orb); orb.userData.shader=orbMat;
+  const candle = new THREE.Mesh(new CylinderSoftGeometry(.075,.11,.6,24),new THREE.MeshStandardMaterial({color:0xe4c78e,roughness:.55})); candle.position.set(-1.45,-.35,.2); orbitGroup.add(candle);
+  // Instanced drifting dust: one draw call, individually varied colours and positions.
+  const count=mobile?420:1100, dustGeo=new THREE.SphereGeometry(.012,5,5), dustMat=new THREE.MeshBasicMaterial({color:0xd8b47a});
+  dust=new THREE.InstancedMesh(dustGeo,dustMat,count); dust.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  const dummy=new THREE.Object3D(), color=new THREE.Color();
+  for(let i=0;i<count;i++){dummy.position.set((Math.random()-.5)*15,(Math.random()-.5)*10,(Math.random()-.5)*13-2);dummy.scale.setScalar(.35+Math.random()*1.5);dummy.updateMatrix();dust.setMatrixAt(i,dummy.matrix);color.setHSL(.08+Math.random()*.06,.25,.45+Math.random()*.35);dust.setColorAt(i,color);}
+  scene.add(dust);
+  // Curved stream of fine glowing beads, a subtle orbit around the plate.
+  const curve=new THREE.CatmullRomCurve3([new THREE.Vector3(-3,-.8,-1),new THREE.Vector3(-2,1.4,-1.8),new THREE.Vector3(.2,1.8,-2.2),new THREE.Vector3(2.6,.7,-1.2),new THREE.Vector3(2.4,-1.2,-1),new THREE.Vector3(.1,-1.6,-1.8)]);
+  const tube=new THREE.Mesh(new THREE.TubeGeometry(curve,180,.012,8,false),new THREE.MeshBasicMaterial({color:0xc9a76a,transparent:true,opacity:.45})); orbitGroup.add(tube);
+  const packetCount=mobile?32:70, packetGeo=new THREE.SphereGeometry(.025,8,8), packetMat=new THREE.MeshBasicMaterial({color:0xffd18a});
+  particles=new THREE.InstancedMesh(packetGeo,packetMat,packetCount); const positions=[];
+  for(let i=0;i<packetCount;i++)positions.push(i/packetCount);
+  particles.userData.curve=curve; particles.userData.positions=positions; scene.add(particles);
+  raycaster=new THREE.Raycaster(); pointer=new THREE.Vector2(-9,-9);
+  window.addEventListener('pointermove',onPointerMove,{passive:true});
+  canvas.addEventListener('pointerleave',()=>{pointer.set(-9,-9);hoverTarget=null;$('#cursorRing').classList.remove('hot')});
+  window.addEventListener('resize',onResize,{passive:true});
+  if(!reduced) animate();
+  else { renderer.render(scene,camera); hud.textContent='SCENE / STILL MODE';}
+  setupScrollScene();
+ }catch(err){console.error('3D scene initialisation failed:',err);errorNote.style.display='block';hud.textContent='SCENE / FALLBACK MODE';setupScrollScene();}
+}
+function CylinderSoftGeometry(top,bottom,height,radial){return new THREE.CylinderGeometry(top,bottom,height,radial);}
+function onPointerMove(e){
+ mouseX=(e.clientX/window.innerWidth-.5)*2; mouseY=(e.clientY/window.innerHeight-.5)*2;
+ pointer.set((e.clientX/window.innerWidth)*2-1,-(e.clientY/window.innerHeight)*2+1);
+ const ring=$('#cursorRing'); if(!mobile){ring.style.opacity='1';ring.style.left=e.clientX+'px';ring.style.top=e.clientY+'px';}
+}
+function animate(){
+ if(!renderer||!scene||!camera)return;
+ animationId=requestAnimationFrame(animate);
+ const t=clock.getElapsedTime();
+ targetX=mouseX;targetY=mouseY;
+ camera.position.x+=(sceneStates[currentScene].cameraX+targetX*.24-camera.position.x)*.025;
+ camera.position.y+=(sceneStates[currentScene].cameraY-targetY*.16-camera.position.y)*.025;
+ camera.position.z+=(sceneStates[currentScene].cameraZ-camera.position.z)*.025;
+ camera.lookAt(0,0,0);
+ if(heroGroup){
+  heroGroup.rotation.y+=(sceneStates[currentScene].ry+Math.sin(t*.2)*.06+targetX*.08-heroGroup.rotation.y)*.018;
+  heroGroup.rotation.x+=(sceneStates[currentScene].rx+Math.sin(t*.28)*.025-targetY*.04-heroGroup.rotation.x)*.018;
+  const s=sceneStates[currentScene].scale*(1+Math.sin(t*.7)*.012);heroGroup.scale.lerp(new THREE.Vector3(s,s,s),.025);
+  heroGroup.position.x+=(sceneStates[currentScene].x+targetX*.12-heroGroup.position.x)*.02;
+  heroGroup.position.y+=(sceneStates[currentScene].y+Math.sin(t*.5)*.035-heroGroup.position.y)*.02;
+  if(orbitGroup)orbitGroup.rotation.y=t*.12;
+ }
+ if(orbMaterial)orbMaterial.uniforms.uTime.value=t;
+ if(particles&&particles.userData.curve){const dummy=new THREE.Object3D(),curve=particles.userData.curve,arr=particles.userData.positions;for(let i=0;i<arr.length;i++){const u=(arr[i]+t*.045)%1;const p=curve.getPointAt(u);dummy.position.copy(p);dummy.scale.setScalar(.6+.4*Math.sin(t*3+i));dummy.updateMatrix();particles.setMatrixAt(i,dummy.matrix);}particles.instanceMatrix.needsUpdate=true;}
+ if(dust){const dummy=new THREE.Object3D();for(let i=0;i<dust.count;i++){dust.getMatrixAt(i,dummy.matrix);dummy.position.setFromMatrixPosition(dummy.matrix);dummy.position.y+=.0015+(i%5)*.0005;if(dummy.position.y>5)dummy.position.y=-5;dummy.updateMatrix();dust.setMatrixAt(i,dummy.matrix);}dust.instanceMatrix.needsUpdate=true;}
+ if(raycaster&&pointer.x>-2){raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObjects(heroGroup.children,true).filter(h=>h.object.userData.interactive);const next=hits.length?hits[0].object:null;if(next!==hoverTarget){if(hoverTarget&&hoverTarget.userData.baseScale)hoverTarget.scale.copy(hoverTarget.userData.baseScale);hoverTarget=next;if(hoverTarget){$('#cursorRing').classList.add('hot');}}if(hoverTarget){const base=hoverTarget.userData.baseScale||new THREE.Vector3(1,1,1);hoverTarget.scale.lerp(base.clone().multiplyScalar(1.13+Math.sin(t*5)*.025),.18);if(hoverTarget.userData.shader)hoverTarget.userData.shader.uniforms.uHover.value+=(1-hoverTarget.userData.shader.uniforms.uHover.value)*.12;}} 
+ renderer.render(scene,camera);
+}
+let orbMaterial=null;
+// Capture shader material from the scene after creation.
+function setupScrollScene(){
+ const sections=$$('main section');
+ const observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting)entry.target.classList.add('visible')})},{threshold:.13});
+ $$('.reveal').forEach(el=>observer.observe(el));
+ const sectionObserver=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){const idx=Number(entry.target.dataset.scene||0);currentScene=idx;$('#activeBadge').textContent=String(idx+1).padStart(2,'0')+' / '+entry.target.dataset.label;$$('.side-dots a').forEach((a,i)=>a.classList.toggle('active',i===idx));$$('.mobile-nav a').forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+entry.target.id));hud.textContent='SCENE / '+String(idx+1).padStart(2,'0')+' · '+entry.target.dataset.label.toUpperCase();}})},{threshold:.35});
+ sections.forEach(s=>sectionObserver.observe(s));
+ if(!reduced && window.gsap && window.ScrollTrigger){
+  sections.forEach((section,i)=>{
+   const state=sceneStates[i];
+   gsap.timeline({scrollTrigger:{trigger:section,start:'top 78%',end:'bottom 22%',scrub:1}})
+    .to({}, {duration:1,onUpdate:function(){currentScene=i;}},0)
+    .to(section.querySelector('.section-inner')||section,{y:0,ease:'none',duration:1},0);
+  });
+  ScrollTrigger.create({trigger:document.body,start:'top top',end:'bottom bottom',onUpdate:self=>$('#progress').style.width=(self.progress*100)+'%'});
+ }else{
+  window.addEventListener('scroll',()=>{const max=document.documentElement.scrollHeight-window.innerHeight;$('#progress').style.width=(max>0?window.scrollY/max*100:0)+'%'},{passive:true});
+ }
+}
+function onResize(){if(!renderer||!camera)return;camera.aspect=window.innerWidth/window.innerHeight;camera.fov=window.innerWidth<480?44:window.innerWidth<768?41:38;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight);renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));}
+$('#topButton').addEventListener('click',()=>window.scrollTo({top:0,behavior:reduced?'auto':'smooth'}));
+const topbar=$('#topbar');window.addEventListener('scroll',()=>topbar.classList.toggle('scrolled',window.scrollY>25),{passive:true});
+$$('a[href^="#"]').forEach(a=>a.addEventListener('click',e=>{const target=$(a.getAttribute('href'));if(target){e.preventDefault();target.scrollIntoView({behavior:reduced?'auto':'smooth',block:'start'});}}));
+$$('.button,.whatsapp,.top-button').forEach(el=>{el.addEventListener('mouseenter',()=>$('#cursorRing').classList.add('hot'));el.addEventListener('mouseleave',()=>$('#cursorRing').classList.remove('hot'));});
+init3D();
+</script>
+</body>
+</html>

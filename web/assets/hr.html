@@ -1,0 +1,1832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise HR & Workforce Intelligence Platform (KES)</title>
+    <!-- Chart.js for Interactive Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --sidebar-bg: #0f172a;
+            --sidebar-hover: #1e293b;
+            --sidebar-active: #2563eb;
+            --card-bg: #ffffff;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        /* Dark Theme Variables */
+        [data-theme="dark"] {
+            --bg-main: #0b0f19;
+            --sidebar-bg: #020617;
+            --sidebar-hover: #0f172a;
+            --card-bg: #1e293b;
+            --text-dark: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; transition: background-color 0.2s, color 0.2s; }
+        body { display: flex; background-color: var(--bg-main); color: var(--text-dark); min-height: 100vh; }
+
+        /* Login Overlay Styles */
+        #loginOverlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 420px;
+            padding: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        .login-header { margin-bottom: 24px; }
+        .login-header h2 { font-size: 1.5rem; color: var(--text-dark); margin-bottom: 6px; }
+        .login-header p { font-size: 0.85rem; color: var(--text-muted); }
+
+        .login-error {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .demo-credentials-box {
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 20px;
+            text-align: left;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .demo-credentials-box summary { cursor: pointer; font-weight: 600; color: var(--primary); outline: none; }
+        .demo-user-list { list-style: none; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); }
+        .demo-user-list li { margin-bottom: 6px; line-height: 1.3; }
+
+        /* Sidebar Styles */
+        .sidebar { width: 260px; background-color: var(--sidebar-bg); color: white; display: flex; flex-direction: column; shrink: 0; }
+        .brand { padding: 24px; font-size: 1.1rem; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.1); color: #38bdf8; display: flex; align-items: center; justify-content: space-between; }
+        .nav-links { list-style: none; padding: 16px 0; flex-grow: 1; overflow-y: auto; }
+        .nav-item { padding: 12px 24px; display: flex; align-items: center; gap: 12px; color: #94a3b8; cursor: pointer; transition: all 0.2s ease; font-size: 0.9rem; }
+        .nav-item:hover { background-color: var(--sidebar-hover); color: white; }
+        .nav-item.active { background-color: var(--sidebar-active); color: white; font-weight: 600; border-left: 4px solid #38bdf8; }
+
+        /* Main Layout */
+        .main-container { flex-grow: 1; display: flex; flex-direction: column; overflow-x: hidden; }
+        .topbar { background-color: var(--card-bg); height: 70px; padding: 0 32px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); gap: 20px; }
+        .page-title { font-size: 1.3rem; font-weight: 700; color: var(--text-dark); white-space: nowrap; }
+        .content-area { padding: 32px; overflow-y: auto; flex-grow: 1; }
+
+        /* Universal Search Input */
+        .universal-search-container { position: relative; width: 100%; max-width: 450px; }
+        .universal-search { width: 100%; padding: 10px 16px 10px 38px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 0.9rem; background: var(--bg-main); color: var(--text-dark); }
+        .universal-search:focus { background: var(--card-bg); border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.9rem; }
+
+        /* Tab Visibility Control */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* UI Components */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
+        .stat-card { background: var(--card-bg); padding: 18px; border-radius: 12px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+        .stat-title { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; }
+        .stat-value { font-size: 1.5rem; font-weight: 700; }
+
+        .action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; gap: 16px; flex-wrap: wrap; }
+        .select-input { padding: 10px 16px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 0.9rem; background: var(--card-bg); color: var(--text-dark); }
+
+        .btn { padding: 9px 16px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; transition: background-color 0.2s; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .btn-success { background-color: var(--success); color: white; }
+        .btn-danger { background-color: var(--danger); color: white; }
+        .btn-outline { background-color: transparent; border: 1px solid var(--border); color: var(--text-dark); }
+        .btn-outline:hover { background-color: var(--border); }
+
+        /* Tables */
+        .table-container { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: var(--shadow); margin-bottom: 32px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { background-color: var(--bg-main); padding: 14px 20px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        td { padding: 14px 20px; font-size: 0.9rem; border-bottom: 1px solid var(--border); color: var(--text-dark); }
+        tr:last-child td { border-bottom: none; }
+
+        /* Document Check Badges */
+        .check-pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; margin: 2px; }
+        .check-delivered { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+        .check-missing { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+
+        /* Document Manager UI */
+        .doc-layout { display: grid; grid-template-columns: 260px 1fr; gap: 24px; }
+        .doc-sidebar { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; height: fit-content; }
+        .folder-list { list-style: none; margin-top: 12px; }
+        .folder-item { padding: 10px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: var(--text-muted); font-weight: 500; margin-bottom: 4px; }
+        .folder-item:hover { background-color: var(--bg-main); color: var(--text-dark); }
+        .folder-item.active { background-color: rgba(37, 99, 235, 0.1); color: var(--primary); font-weight: 600; }
+        
+        .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+        .doc-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; transition: border-color 0.2s; }
+        .doc-card:hover { border-color: var(--primary); }
+        .doc-icon { font-size: 2rem; margin-bottom: 8px; color: var(--primary); }
+        .doc-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; word-break: break-all; }
+        .doc-meta { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px; }
+
+        /* Badges */
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; display: inline-block; }
+        .badge-active { background-color: #dcfce7; color: #15803d; }
+        .badge-pending { background-color: #fef3c7; color: #b45309; }
+        .badge-danger { background-color: #fee2e2; color: #b91c1c; }
+
+        /* Analytics Grid */
+        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 32px; }
+        .chart-card { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+
+        /* File Upload */
+        .file-drop-area { border: 2px dashed var(--border); border-radius: 8px; padding: 24px; text-align: center; background: var(--bg-main); cursor: pointer; transition: all 0.2s; }
+        .file-drop-area.dragover { background: rgba(37,99,235,0.1); border-color: var(--primary); }
+
+        /* Modals */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 1000; }
+        .modal.open { display: flex; }
+        .modal-body { background: var(--card-bg); color: var(--text-dark); width: 100%; max-width: 600px; border-radius: 12px; padding: 28px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; border: 1px solid var(--border); }
+        .modal-header { font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .form-group { margin-bottom: 16px; text-align: left; }
+        .form-group label { display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 6px; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; outline: none; font-size: 0.95rem; background: var(--bg-main); color: var(--text-dark); }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+
+        /* Toast */
+        #toastContainer { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: var(--sidebar-bg); color: white; padding: 12px 20px; border-radius: 8px; font-size: 0.9rem; box-shadow: 0 4px 12px rgba(0,0,0,0.2); border-left: 4px solid var(--primary); animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+        @media print {
+            body * { visibility: hidden; }
+            #printablePayslip, #printablePayslip * { visibility: visible; }
+            #printablePayslip { position: absolute; left: 0; top: 0; width: 100%; background: white; color: black; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- AUTHENTICATION OVERLAY / LOGIN SCREEN -->
+    <div id="loginOverlay">
+        <div class="login-card">
+            <div class="login-header">
+                <h2>💼 Enterprise HR Platform</h2>
+                <p>Please log in with password protection to proceed</p>
+            </div>
+            
+            <div class="login-error" id="loginErrorMsg">Invalid username or password!</div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginUsername">Select User / Username</label>
+                    <select id="loginUsername" class="form-control" required>
+                        <option value="admin">System Administrator (admin)</option>
+                        <option value="hr_manager">Sarah Connor (hr_manager)</option>
+                        <option value="developer">Alex Rivera (developer)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" class="form-control" placeholder="Enter password" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px; margin-top: 8px;">
+                    🔒 Authenticate & Log In
+                </button>
+            </form>
+
+            <details class="demo-credentials-box">
+                <summary>🔑 Configured Demo Users & Passwords</summary>
+                <ul class="demo-user-list">
+                    <li><strong>Admin:</strong> admin | <code>Admin@2026</code></li>
+                    <li><strong>HR Manager:</strong> hr_manager | <code>HR@pass2026</code></li>
+                    <li><strong>Employee:</strong> developer | <code>Dev@pass2026</code></li>
+                </ul>
+            </details>
+        </div>
+    </div>
+
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="sidebar">
+        <div class="brand">
+            <span>💼 Enterprise HR v4.0</span>
+            <button onclick="toggleTheme()" class="btn btn-outline" style="padding:2px 8px; font-size:0.75rem; color:#38bdf8; border-color:#38bdf8;">🌙/☀️</button>
+        </div>
+        <ul class="nav-links">
+            <li class="nav-item active" onclick="switchTab('dashboard', this)">📊 Dashboard</li>
+            <li class="nav-item" onclick="switchTab('analytics', this)">📈 HR Analytics</li>
+            <li class="nav-item" onclick="switchTab('employees', this)">👥 Staff Directory</li>
+            <li class="nav-item" onclick="switchTab('documents', this)">📁 Document Vault</li>
+            <li class="nav-item" onclick="switchTab('payroll', this)">💰 Payroll & Taxes</li>
+            <li class="nav-item" onclick="switchTab('leave', this)">📅 Leave Tracker</li>
+            <li class="nav-item" onclick="switchTab('shifts', this)">⏱️ Shift Scheduler</li>
+            <li class="nav-item" onclick="switchTab('assets', this)">💻 Asset Management</li>
+            <li class="nav-item" onclick="switchTab('performance', this)">⭐ Performance</li>
+            <li class="nav-item" onclick="switchTab('audit', this)">📜 Audit Trail</li>
+        </ul>
+        <div style="padding:16px; border-top:1px solid rgba(255,255,255,0.1); font-size:0.75rem; color:#64748b; text-align:center;">
+            System v4.0 • KRA Compliant
+        </div>
+    </aside>
+
+    <!-- MAIN APP CONTAINER -->
+    <div class="main-container">
+        
+        <!-- TOP NAVIGATION BAR -->
+        <header class="topbar">
+            <h1 class="page-title" id="tabTitle">Dashboard Overview</h1>
+            
+            <div class="universal-search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="universal-search" id="globalSearch" placeholder="Universal Search (Employees, Files, Assets, Shifts)..." onkeyup="executeUniversalSearch()">
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-muted);" id="currentUserLabel">Admin Portal</span>
+                <button class="btn btn-outline" style="padding:6px 12px; font-size:0.8rem; color:var(--danger); border-color:var(--danger);" onclick="handleLogout()">🚪 Logout</button>
+            </div>
+        </header>
+
+        <!-- CONTENT CONTAINER -->
+        <div class="content-area">
+            
+            <!-- DASHBOARD TAB -->
+            <div id="dashboard" class="tab-content active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-title">Total Staff</div>
+                        <div class="stat-value" id="dashTotalEmp">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Total Files Uploaded</div>
+                        <div class="stat-value" id="dashTotalDocs" style="color: var(--primary);">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Est. Monthly Payroll</div>
+                        <div class="stat-value" id="dashTotalPayroll" style="color: var(--success);">KSh 0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Pending Leave Requests</div>
+                        <div class="stat-value" id="dashPendingLeave" style="color: var(--warning);">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Active Assigned Assets</div>
+                        <div class="stat-value" id="dashTotalAssets" style="color: #8b5cf6;">0</div>
+                    </div>
+                </div>
+
+                <h2 style="font-size: 1.1rem; margin-bottom: 12px; display:flex; justify-content:space-between; align-items:center;">
+                    <span>Employee Document Compliance Matrix</span>
+                    <small style="font-size:0.8rem; font-weight:normal; color:var(--text-muted);">Real-time tracking of statutory compliance</small>
+                </h2>
+                <div class="table-container">
+                    <table id="dashComplianceTable">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Department</th>
+                                <th>Delivered Categories</th>
+                                <th>Compliance Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashComplianceBody"></tbody>
+                    </table>
+                </div>
+
+                <h2 style="font-size: 1.1rem; margin-bottom: 12px;">Recently Uploaded Files</h2>
+                <div class="table-container">
+                    <table id="dashDocsTable">
+                        <thead>
+                            <tr>
+                                <th>Recent File</th>
+                                <th>Employee</th>
+                                <th>Category</th>
+                                <th>Upload Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashDocsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ANALYTICS TAB -->
+            <div id="analytics" class="tab-content">
+                <div class="action-bar">
+                    <h3>Workforce & Financial Analytics Engine</h3>
+                    <button class="btn btn-outline" onclick="renderAnalyticsCharts()">🔄 Refresh Charts</button>
+                </div>
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h4 style="margin-bottom:12px; font-size:0.95rem; color:var(--text-muted);">Department Distribution</h4>
+                        <canvas id="deptChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h4 style="margin-bottom:12px; font-size:0.95rem; color:var(--text-muted);">Payroll Expense by Department (KSh)</h4>
+                        <canvas id="payrollChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EMPLOYEES TAB -->
+            <div id="employees" class="tab-content">
+                <div class="action-bar">
+                    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                        <h3>All Staff Directory</h3>
+                        <select id="empDeptFilter" class="select-input" onchange="renderEmployees()">
+                            <option value="All">All Departments</option>
+                            <option value="Engineering">Engineering</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Human Resources">Human Resources</option>
+                            <option value="Finance">Finance</option>
+                        </select>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-outline" onclick="exportDirectoryCSV()">📥 Export Directory CSV</button>
+                        <button class="btn btn-primary" onclick="openModal('employeeModal')">+ Add New Employee</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="employeeTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Full Name</th>
+                                <th>Role</th>
+                                <th>Department</th>
+                                <th>Annual Salary (KSh)</th>
+                                <th>Leave Balance</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeeTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- DOCUMENTS TAB -->
+            <div id="documents" class="tab-content">
+                <div class="action-bar">
+                    <div>
+                        <h3 style="font-size: 1.1rem; font-weight:700;">Employee Document Vault</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">Personnel records and compliance docs.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openModal('docModal')">📤 Upload Document</button>
+                </div>
+
+                <div class="doc-layout">
+                    <div class="doc-sidebar">
+                        <h4 style="font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Categories</h4>
+                        <ul class="folder-list">
+                            <li class="folder-item active" onclick="filterDocCategory('All', this)">📁 All Files</li>
+                            <li class="folder-item" onclick="filterDocCategory('Identification & Tax', this)">🆔 ID & Tax Forms</li>
+                            <li class="folder-item" onclick="filterDocCategory('Contracts & Offer Letters', this)">📝 Contracts</li>
+                            <li class="folder-item" onclick="filterDocCategory('Certifications & Degrees', this)">🎓 Certifications</li>
+                            <li class="folder-item" onclick="filterDocCategory('Performance Reviews', this)">📋 Reviews</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <div class="action-bar" style="margin-bottom: 16px;">
+                            <select id="docEmpFilter" class="select-input" onchange="renderDocuments()">
+                                <option value="All">All Employees</option>
+                            </select>
+                        </div>
+                        <div class="doc-grid" id="docGrid"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAYROLL TAB -->
+            <div id="payroll" class="tab-content">
+                <div class="action-bar">
+                    <div>
+                        <h3 style="font-size: 1rem; color: var(--text-muted);">Kenyan Statutory Payroll Engine</h3>
+                        <small style="color:var(--text-muted);">Includes PAYE, NSSF, SHIF (2.75%), Housing Levy (1.5%) Breakdown</small>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-outline" onclick="exportPayrollCSV()">📥 Export Payroll Run</button>
+                        <button class="btn btn-success" onclick="processPayroll()">⚡ Execute Monthly Payroll Run</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="payrollTable">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Base Monthly</th>
+                                <th>NSSF</th>
+                                <th>SHIF (2.75%)</th>
+                                <th>Housing Levy (1.5%)</th>
+                                <th>PAYE (Tax)</th>
+                                <th>Net Pay</th>
+                                <th>Status</th>
+                                <th>Payslip</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payrollTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- LEAVE TRACKER TAB -->
+            <div id="leave" class="tab-content">
+                <div class="action-bar">
+                    <h3 style="font-size: 1rem; color: var(--text-muted);">Time Off and Vacation Tracker</h3>
+                    <button class="btn btn-primary" onclick="openModal('leaveModal')">+ New Time Off Request</button>
+                </div>
+                <div class="table-container">
+                    <table id="leaveTable">
+                        <thead>
+                            <tr>
+                                <th>Employee Name</th>
+                                <th>Type</th>
+                                <th>Duration / Dates</th>
+                                <th>Days</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaveTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SHIFT SCHEDULER TAB -->
+            <div id="shifts" class="tab-content">
+                <div class="action-bar">
+                    <div>
+                        <h3>Shift & Attendance Roster</h3>
+                        <p style="font-size:0.85rem; color:var(--text-muted);">Schedule work hours, shifts, and monitor staff roster.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openModal('shiftModal')">+ Assign New Shift</button>
+                </div>
+                <div class="table-container">
+                    <table id="shiftTable">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Shift Date</th>
+                                <th>Shift Type</th>
+                                <th>Working Hours</th>
+                                <th>Location</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shiftTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ASSET MANAGEMENT TAB -->
+            <div id="assets" class="tab-content">
+                <div class="action-bar">
+                    <div>
+                        <h3>Company Asset Tracking</h3>
+                        <p style="font-size:0.85rem; color:var(--text-muted);">Track hardware, laptops, and equipment assigned to team members.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openModal('assetModal')">+ Register New Asset</button>
+                </div>
+                <div class="table-container">
+                    <table id="assetTable">
+                        <thead>
+                            <tr>
+                                <th>Asset Tag / ID</th>
+                                <th>Item Name</th>
+                                <th>Category</th>
+                                <th>Assigned To</th>
+                                <th>Issue Date</th>
+                                <th>Condition</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="assetTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PERFORMANCE TAB -->
+            <div id="performance" class="tab-content">
+                <div class="action-bar">
+                    <h3 style="font-size: 1rem; color: var(--text-muted);">Employee Evaluations</h3>
+                    <button class="btn btn-primary" onclick="openModal('reviewModal')">+ Add Review</button>
+                </div>
+                <div class="table-container">
+                    <table id="performanceTable">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Reviewer</th>
+                                <th>Rating</th>
+                                <th>Comments</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="performanceTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- AUDIT TRAIL TAB -->
+            <div id="audit" class="tab-content">
+                <div class="action-bar">
+                    <div>
+                        <h3>System Security & Audit Log</h3>
+                        <p style="font-size:0.85rem; color:var(--text-muted);">Real-time immutable activity record for HR compliance and actions.</p>
+                    </div>
+                    <button class="btn btn-outline" onclick="clearAuditLogs()">🗑️ Clear Audit Trail</button>
+                </div>
+                <div class="table-container">
+                    <table id="auditTable">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Action Performed</th>
+                                <th>Module Target</th>
+                                <th>User / Trigger</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <!-- Add Employee Modal -->
+    <div class="modal" id="employeeModal">
+        <div class="modal-body">
+            <div class="modal-header">
+                <span>Add New Employee</span>
+                <span style="cursor:pointer;" onclick="closeModal('employeeModal')">&times;</span>
+            </div>
+            <form id="addEmpForm" onsubmit="saveEmployee(event)">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="empName" class="form-control" required placeholder="e.g. Jane Doe">
+                </div>
+                <div class="form-group">
+                    <label>Job Title / Role</label>
+                    <input type="text" id="empRole" class="form-control" required placeholder="e.g. Software Engineer">
+                </div>
+                <div class="form-group">
+                    <label>Department</label>
+                    <select id="empDept" class="form-control" required>
+                        <option value="Engineering">Engineering</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Human Resources">Human Resources</option>
+                        <option value="Finance">Finance</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Base Annual Salary (KSh)</label>
+                    <input type="number" id="empSalary" class="form-control" min="10000" step="5000" required placeholder="e.g. 1800000">
+                </div>
+                <div class="form-group">
+                    <label>Annual Leave Allowance (Days)</label>
+                    <input type="number" id="empLeaveDays" class="form-control" value="21" min="0" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('employeeModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Employee</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Profile View Modal -->
+    <div class="modal" id="profileModal">
+        <div class="modal-body">
+            <div class="modal-header">
+                <span>Employee Profile Record</span>
+                <span style="cursor:pointer;" onclick="closeModal('profileModal')">&times;</span>
+            </div>
+            <div id="profileDetailsView"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('profileModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Document Modal -->
+    <div class="modal" id="docModal">
+        <div class="modal-body">
+            <div class="modal-header">
+                <span>Upload Employee Document</span>
+                <span style="cursor:pointer;" onclick="closeModal('docModal')">&times;</span>
+            </div>
+            <form id="uploadDocForm" onsubmit="saveDocument(event)">
+                <div class="form-group">
+                    <label>Select Employee</label>
+                    <select id="docEmpSelect" class="form-control" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Document Category</label>
+                    <select id="docCategory" class="form-control" required>
+                        <option value="Identification & Tax">Identification & Tax</option>
+                        <option value="Contracts & Offer Letters">Contracts & Offer Letters</option>
+                        <option value="Certifications & Degrees">Certifications & Degrees</option>
+                        <option value="Performance Reviews">Performance Reviews</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Document Title</label>
+                    <input type="text" id="docTitle" class="form-control" required placeholder="e.g. KRA PIN Certificate 2026">
+                </div>
+                <div class="form-group">
+                    <label>Document Expiry Date (Optional)</label>
+                    <input type="date" id="docExpiry" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Select File</label>
+                    <div class="file-drop-area" id="dropZone" onclick="document.getElementById('docFileInput').click()">
+                        <span id="dropZoneText">📁 Click or Drag & Drop File Here</span>
+                        <input type="file" id="docFileInput" style="display:none;" required onchange="handleFileSelect(this)">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('docModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Upload & Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Leave Request Modal -->
+    <div class="modal" id="leaveModal">
+        <div class="modal-body">
+            <div class="modal-header">
+                <span>Submit Time Off Request</span>
+                <span style="cursor:pointer;" onclick="closeModal('leaveModal')">&times;</span>
+            </div>
+            <form id="addLeaveForm" onsubmit="saveLeaveRequest(event)">
+                <div class="form-group">
+                    <label>Employee</label>
+                    <select id="leaveEmpSelect" class="form-control" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Leave Type</label>
+                    <select id="leaveType" class="form-control" required>
+                        <option value="Paid Vacation">Paid Vacation</option>
+                        <option value="Sick Leave">Sick Leave</option>
+                        <option value="Personal Leave">Personal Leave</option>
+                        <option value="Maternity/Paternity">Maternity/Paternity</option>
+                    </select>
+                </div>
+                <div style="display:flex; gap:12px;">
+                    <div class="form-group" style="flex:1;">
+                        <label>Start Date</label>
+                        <input type="date" id="leaveStart" class="form-control" required>
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>End Date</label>
+                        <input type="date" id="leaveEnd" class="form-control" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Number of Days</label>
+                    <input type="number" id="leaveDays" class="form-control" min="1" max="60" required placeholder="e.g. 3">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('leaveModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Assign Shift Modal -->
+    <div class="modal" id="shiftModal">
+        <div class="modal-body">
+            <div class="modal-header">
+                <span>Assign Shift Roster</span>
+                <span style="cursor:pointer;" onclick="closeModal('shiftModal')">&times;</span>
+            </div>
+            <form id="addShiftForm" onsubmit="saveShift(event)">
+                <div class="form-group">
+                    <label>Employee</label>
+                    <select id="shiftEmpSelect" class="form-control" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Shift Date</label>
+                    <input type="date" id="shiftDate" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Shift Type</label>
+                    <select id="shiftType" class="form-control" required>
+                        <option value="Morning Shift (08:00 - 16:00)">Morning Shift (08:00 - 16:00)</option>
+                        <option value="Evening Shift (16:00 - 00:00)">Evening Shift (16:00 - 00:00)</option>
+                        <option value="Night Shift (00:00 - 08:00)">Night Shift (00:00 - 08:00)</option>
+                        <option value="Flexible / Remote">Flexible / Remote</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Work Location</label>
+                    <input type="text" id="shiftLocation" class="form-control" required placeholder="e.g. HQ Office, Nairobi / Remote">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('shiftModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Assign Shift</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Register Asset Modal -->
+    <div class="modal" id="assetModal">
+        <div class="modal-body">
+            <div class="modal-header">
+                <span>Register & Assign Asset</span>
+                <span style="cursor:pointer;" onclick="closeModal('assetModal')">&times;</span>
+            </div>
+            <form id="addAssetForm" onsubmit="saveAsset(event)">
+                <div class="form-group">
+                    <label>Asset Name / Description</label>
+                    <input type="text" id="assetName" class="form-control" required placeholder="e.g. MacBook Pro M2 16-inch">
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="assetCategory" class="form-control" required>
+                        <option value="Laptop/Computer">Laptop/Computer</option>
+                        <option value="Mobile/Tablet">Mobile/Tablet</option>
+                        <option value="Monitor/Display">Monitor/Display</option>
+                        <option value="Access Peripheral">Access Peripheral / Accessories</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Assign to Employee</label>
+                    <select id="assetEmpSelect" class="form-control" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Condition</label>
+                    <select id="assetCondition" class="form-control" required>
+                        <option value="Brand New">Brand New</option>
+                        <option value="Excellent">Excellent</option>
+                        <option value="Good">Good</option>
+                        <option value="Needs Maintenance">Needs Maintenance</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('assetModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Asset</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div class="modal" id="reviewModal">
+        <div class="modal-body">
+            <div class="modal-header">
+                <span>Submit Performance Review</span>
+                <span style="cursor:pointer;" onclick="closeModal('reviewModal')">&times;</span>
+            </div>
+            <form id="addReviewForm" onsubmit="saveReview(event)">
+                <div class="form-group">
+                    <label>Employee</label>
+                    <select id="reviewEmpSelect" class="form-control" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Reviewer Name</label>
+                    <input type="text" id="reviewerName" class="form-control" required placeholder="e.g. Department Manager">
+                </div>
+                <div class="form-group">
+                    <label>Rating</label>
+                    <select id="reviewRating" class="form-control" required>
+                        <option value="5/5 - Exceeds Expectations">5/5 - Exceeds Expectations</option>
+                        <option value="4/5 - Meets Expectations">4/5 - Meets Expectations</option>
+                        <option value="3/5 - Needs Improvement">3/5 - Needs Improvement</option>
+                        <option value="2/5 - Unsatisfactory">2/5 - Unsatisfactory</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Feedback & Comments</label>
+                    <textarea id="reviewComments" class="form-control" rows="3" required></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('reviewModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Review</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Payslip View Modal -->
+    <div class="modal" id="payslipModal">
+        <div class="modal-body" style="max-width:650px;">
+            <div class="modal-header">
+                <span>Official KRA Compliant Payslip Preview</span>
+                <span style="cursor:pointer;" onclick="closeModal('payslipModal')">&times;</span>
+            </div>
+            <div id="printablePayslip"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('payslipModal')">Close</button>
+                <button type="button" class="btn btn-primary" onclick="window.print()">🖨️ Print Payslip</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toastContainer"></div>
+
+    <!-- APPLICATION LOGIC -->
+    <script>
+        const systemUsers = [
+            { username: "admin", name: "System Administrator", role: "Super Admin", password: "Admin@2026" },
+            { username: "hr_manager", name: "Sarah Connor", role: "HR Manager", password: "HR@pass2026" },
+            { username: "developer", name: "Alex Rivera", role: "Staff Engineer", password: "Dev@pass2026" }
+        ];
+
+        let currentUser = JSON.parse(sessionStorage.getItem('hr_current_user')) || null;
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const usernameInput = document.getElementById('loginUsername').value;
+            const passwordInput = document.getElementById('loginPassword').value;
+            const errorMsg = document.getElementById('loginErrorMsg');
+
+            const foundUser = systemUsers.find(u => u.username === usernameInput && u.password === passwordInput);
+
+            if (foundUser) {
+                currentUser = foundUser;
+                sessionStorage.setItem('hr_current_user', JSON.stringify(currentUser));
+                errorMsg.style.display = 'none';
+                document.getElementById('loginForm').reset();
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('currentUserLabel').innerText = `${currentUser.name} (${currentUser.role})`;
+                logAudit(`User Authentication Successful`, "Security", currentUser.username);
+                showToast(`Welcome back, ${currentUser.name}!`);
+            } else {
+                errorMsg.style.display = 'block';
+                logAudit(`Failed login attempt for username: ${usernameInput}`, "Security", "System");
+            }
+        }
+
+        function handleLogout() {
+            logAudit(`User Logged Out`, "Security", currentUser ? currentUser.username : "System");
+            currentUser = null;
+            sessionStorage.removeItem('hr_current_user');
+            document.getElementById('loginOverlay').style.display = 'flex';
+            showToast('You have been logged out.');
+        }
+
+        function checkAuth() {
+            if (currentUser) {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('currentUserLabel').innerText = `${currentUser.name} (${currentUser.role})`;
+            } else {
+                document.getElementById('loginOverlay').style.display = 'flex';
+            }
+        }
+
+        const REQUIRED_CATEGORIES = [
+            "Identification & Tax",
+            "Contracts & Offer Letters",
+            "Certifications & Degrees"
+        ];
+
+        function formatKES(amount) {
+            return "KSh " + Number(amount).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function showToast(message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerText = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3500);
+        }
+
+        function logAudit(action, module, user = (currentUser ? currentUser.username : "Admin")) {
+            const entry = {
+                timestamp: new Date().toLocaleString(),
+                action,
+                module,
+                user
+            };
+            auditLogs.unshift(entry);
+            saveToStorage();
+            renderAudit();
+        }
+
+        function toggleTheme() {
+            const current = document.body.getAttribute('data-theme');
+            const target = current === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', target);
+            localStorage.setItem('hr_theme', target);
+        }
+
+        if(localStorage.getItem('hr_theme') === 'dark') {
+            document.body.setAttribute('data-theme', 'dark');
+        }
+
+        // Default Datasets
+        const defaultEmployees = [
+            { id: "EMP-101", name: "Sarah Connor", role: "HR Manager", dept: "Human Resources", salary: 2160000, leaveBalance: 18, status: "Active" },
+            { id: "EMP-102", name: "Alex Rivera", role: "Frontend Developer", dept: "Engineering", salary: 2400000, leaveBalance: 15, status: "Active" },
+            { id: "EMP-103", name: "Marcus Vance", role: "Financial Analyst", dept: "Finance", salary: 1800000, leaveBalance: 21, status: "Active" }
+        ];
+
+        const defaultDocs = [
+            { id: 1, empName: "Alex Rivera", title: "KRA PIN Certificate", category: "Identification & Tax", date: "2026-01-15", expiry: "2027-01-15", fileName: "kra_pin.pdf", fileData: "#" },
+            { id: 2, empName: "Sarah Connor", title: "Employment Contract", category: "Contracts & Offer Letters", date: "2026-02-01", expiry: "N/A", fileName: "contract.pdf", fileData: "#" },
+            { id: 3, empName: "Sarah Connor", title: "National ID Copy", category: "Identification & Tax", date: "2026-02-02", expiry: "N/A", fileName: "national_id.pdf", fileData: "#" }
+        ];
+
+        const defaultLeave = [{ id: 1, empName: "Alex Rivera", type: "Paid Vacation", startDate: "2026-08-01", endDate: "2026-08-05", days: 4, status: "Pending" }];
+        const defaultReviews = [{ id: 1, empName: "Alex Rivera", reviewer: "Engineering Lead", rating: "5/5 - Exceeds Expectations", comments: "Outstanding work on UI implementation.", date: "2026-06-12" }];
+        const defaultShifts = [{ id: 1, empName: "Alex Rivera", date: "2026-08-01", type: "Morning Shift (08:00 - 16:00)", location: "HQ Office, Nairobi" }];
+        const defaultAssets = [{ id: "AST-901", name: "Dell XPS 15 Laptop", category: "Laptop/Computer", empName: "Alex Rivera", issueDate: "2026-01-10", condition: "Excellent" }];
+        const defaultAudit = [{ timestamp: new Date().toLocaleString(), action: "System Initialized", module: "Core Platform", user: "System" }];
+
+        // Application State Variables
+        let employees = JSON.parse(localStorage.getItem('hr_employees_kes')) || defaultEmployees;
+        let documents = JSON.parse(localStorage.getItem('hr_documents_kes')) || defaultDocs;
+        let leaveRequests = JSON.parse(localStorage.getItem('hr_leave_kes')) || defaultLeave;
+        let reviews = JSON.parse(localStorage.getItem('hr_reviews_kes')) || defaultReviews;
+        let shifts = JSON.parse(localStorage.getItem('hr_shifts_kes')) || defaultShifts;
+        let assets = JSON.parse(localStorage.getItem('hr_assets_kes')) || defaultAssets;
+        let auditLogs = JSON.parse(localStorage.getItem('hr_audit_kes')) || defaultAudit;
+        
+        let activeCategory = 'All';
+        let payrollProcessed = JSON.parse(localStorage.getItem('hr_payroll_processed')) || false;
+        let deptChartInstance = null;
+        let payrollChartInstance = null;
+
+        function saveToStorage() {
+            localStorage.setItem('hr_employees_kes', JSON.stringify(employees));
+            localStorage.setItem('hr_documents_kes', JSON.stringify(documents));
+            localStorage.setItem('hr_leave_kes', JSON.stringify(leaveRequests));
+            localStorage.setItem('hr_reviews_kes', JSON.stringify(reviews));
+            localStorage.setItem('hr_shifts_kes', JSON.stringify(shifts));
+            localStorage.setItem('hr_assets_kes', JSON.stringify(assets));
+            localStorage.setItem('hr_audit_kes', JSON.stringify(auditLogs));
+            localStorage.setItem('hr_payroll_processed', JSON.stringify(payrollProcessed));
+        }
+
+        // Statutory Tax Calculator
+        function calculateKenyanTax(grossMonthly) {
+            const nssf = Math.min(grossMonthly * 0.06, 2160);
+            const shif = grossMonthly * 0.0275;
+            const housingLevy = grossMonthly * 0.015;
+            const taxablePay = grossMonthly - nssf;
+            
+            let paye = 0;
+            if (taxablePay <= 24000) {
+                paye = taxablePay * 0.10;
+            } else if (taxablePay <= 32333) {
+                paye = (24000 * 0.10) + ((taxablePay - 24000) * 0.25);
+            } else if (taxablePay <= 500000) {
+                paye = (24000 * 0.10) + (8333 * 0.25) + ((taxablePay - 32333) * 0.30);
+            } else if (taxablePay <= 800000) {
+                paye = (24000 * 0.10) + (8333 * 0.25) + (467667 * 0.30) + ((taxablePay - 500000) * 0.325);
+            } else {
+                paye = (24000 * 0.10) + (8333 * 0.25) + (467667 * 0.30) + (300000 * 0.325) + ((taxablePay - 800000) * 0.35);
+            }
+
+            const personalRelief = 2400;
+            paye = Math.max(0, paye - personalRelief);
+
+            const totalDeductions = nssf + shif + housingLevy + paye;
+            const netPay = grossMonthly - totalDeductions;
+
+            return { nssf, shif, housingLevy, paye, totalDeductions, netPay };
+        }
+
+        // UNIVERSAL SEARCH
+        function executeUniversalSearch() {
+            const query = document.getElementById('globalSearch').value.toLowerCase();
+            const tableIds = ['dashComplianceBody', 'dashDocsBody', 'employeeTableBody', 'payrollTableBody', 'leaveTableBody', 'shiftTableBody', 'assetTableBody', 'performanceTableBody', 'auditTableBody'];
+            
+            tableIds.forEach(id => {
+                const tbody = document.getElementById(id);
+                if(tbody) {
+                    Array.from(tbody.getElementsByTagName('tr')).forEach(row => {
+                        row.style.display = row.innerText.toLowerCase().includes(query) ? '' : 'none';
+                    });
+                }
+            });
+
+            document.querySelectorAll('.doc-card').forEach(card => {
+                card.style.display = card.innerText.toLowerCase().includes(query) ? '' : 'none';
+            });
+        }
+
+        // Tab Controller
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+
+            document.getElementById(tabId).classList.add('active');
+            element.classList.add('active');
+
+            const titles = {
+                dashboard: 'Dashboard Overview',
+                analytics: 'Workforce Analytics Engine',
+                employees: 'Staff Directory',
+                documents: 'Employee Document Vault',
+                payroll: 'Kenyan Payroll & Tax Engine',
+                leave: 'Time Off Tracker',
+                shifts: 'Shift & Roster Scheduler',
+                assets: 'Company Asset Management',
+                performance: 'Performance Reviews',
+                audit: 'System Security Audit Log'
+            };
+            document.getElementById('tabTitle').innerText = titles[tabId];
+
+            renderApp();
+            if(tabId === 'analytics') renderAnalyticsCharts();
+            executeUniversalSearch();
+        }
+
+        function openModal(modalId) {
+            if(['docModal', 'leaveModal', 'reviewModal', 'shiftModal', 'assetModal'].includes(modalId)) {
+                populateEmployeeDropdowns();
+            }
+            document.getElementById(modalId).classList.add('open');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('open');
+        }
+
+        function populateEmployeeDropdowns() {
+            const dropdowns = ['docEmpSelect', 'leaveEmpSelect', 'reviewEmpSelect', 'docEmpFilter', 'shiftEmpSelect', 'assetEmpSelect'];
+            dropdowns.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const currentVal = el.value;
+                
+                if (id === 'docEmpFilter') {
+                    el.innerHTML = '<option value="All">All Employees</option>';
+                } else {
+                    el.innerHTML = '';
+                }
+
+                employees.forEach(emp => {
+                    el.innerHTML += `<option value="${emp.name}">${emp.name} (${emp.dept})</option>`;
+                });
+                
+                if (currentVal) el.value = currentVal;
+            });
+        }
+
+        // File Drag & Drop
+        const dropZone = document.getElementById('dropZone');
+        if(dropZone) {
+            ['dragenter', 'dragover'].forEach(eName => {
+                dropZone.addEventListener(eName, (e) => { e.preventDefault(); dropZone.classList.add('dragover'); }, false);
+            });
+            ['dragleave', 'drop'].forEach(eName => {
+                dropZone.addEventListener(eName, (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); }, false);
+            });
+            dropZone.addEventListener('drop', (e) => {
+                const files = e.dataTransfer.files;
+                document.getElementById('docFileInput').files = files;
+                handleFileSelect(document.getElementById('docFileInput'));
+            });
+        }
+
+        function handleFileSelect(input) {
+            if (input.files && input.files[0]) {
+                document.getElementById('dropZoneText').innerText = `📄 Ready: ${input.files[0].name}`;
+            }
+        }
+
+        // Master Render Function
+        function renderApp() {
+            renderDashboard();
+            renderEmployees();
+            renderDocuments();
+            renderPayroll();
+            renderLeave();
+            renderShifts();
+            renderAssets();
+            renderPerformance();
+            renderAudit();
+        }
+
+        function renderDashboard() {
+            document.getElementById('dashTotalEmp').innerText = employees.length;
+            document.getElementById('dashTotalDocs').innerText = documents.length;
+            
+            const totalAnnual = employees.reduce((sum, emp) => sum + Number(emp.salary), 0);
+            document.getElementById('dashTotalPayroll').innerText = formatKES(totalAnnual / 12);
+            document.getElementById('dashPendingLeave').innerText = leaveRequests.filter(r => r.status === 'Pending').length;
+            document.getElementById('dashTotalAssets').innerText = assets.length;
+
+            const complianceBody = document.getElementById('dashComplianceBody');
+            complianceBody.innerHTML = '';
+
+            employees.forEach(emp => {
+                const empUploadedDocs = documents.filter(d => d.empName === emp.name);
+                const deliveredCategories = [...new Set(empUploadedDocs.map(d => d.category))];
+
+                let deliveredHTML = '';
+                let missingCount = 0;
+
+                REQUIRED_CATEGORIES.forEach(cat => {
+                    if(deliveredCategories.includes(cat)) {
+                        deliveredHTML += `<span class="check-pill check-delivered">✓ ${cat}</span>`;
+                    } else {
+                        deliveredHTML += `<span class="check-pill check-missing">✗ ${cat}</span>`;
+                        missingCount++;
+                    }
+                });
+
+                const complianceBadge = missingCount === 0 
+                    ? `<span class="badge badge-active">Complete</span>` 
+                    : `<span class="badge badge-pending">${missingCount} Missing</span>`;
+
+                complianceBody.innerHTML += `
+                    <tr>
+                        <td><strong>${emp.name}</strong><br><small style="color:var(--text-muted);">${emp.role}</small></td>
+                        <td>${emp.dept}</td>
+                        <td>${deliveredHTML}</td>
+                        <td>${complianceBadge}</td>
+                        <td>
+                            <button class="btn btn-outline" style="padding:4px 8px; font-size:0.75rem;" onclick="jumpToUpload('${emp.name}')">+ Upload File</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            const docsBody = document.getElementById('dashDocsBody');
+            docsBody.innerHTML = '';
+            documents.slice(-3).reverse().forEach(doc => {
+                docsBody.innerHTML += `
+                    <tr>
+                        <td>📄 <strong>${doc.title}</strong></td>
+                        <td>${doc.empName}</td>
+                        <td>${doc.category}</td>
+                        <td>${doc.date}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function jumpToUpload(empName) {
+            switchTab('documents', document.querySelectorAll('.nav-item')[3]);
+            openModal('docModal');
+            document.getElementById('docEmpSelect').value = empName;
+        }
+
+        function renderEmployees() {
+            const tbody = document.getElementById('employeeTableBody');
+            const deptFilter = document.getElementById('empDeptFilter') ? document.getElementById('empDeptFilter').value : 'All';
+            tbody.innerHTML = '';
+
+            const list = deptFilter === 'All' ? employees : employees.filter(e => e.dept === deptFilter);
+
+            list.forEach(emp => {
+                const statusClass = emp.status === 'Inactive' ? 'badge-danger' : 'badge-active';
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${emp.id}</strong></td>
+                        <td>${emp.name}</td>
+                        <td>${emp.role}</td>
+                        <td>${emp.dept}</td>
+                        <td>${formatKES(emp.salary)}</td>
+                        <td><strong>${emp.leaveBalance || 21} Days</strong></td>
+                        <td><span class="badge ${statusClass}">${emp.status || 'Active'}</span></td>
+                        <td>
+                            <button class="btn btn-outline" style="padding:4px 8px; font-size:0.75rem;" onclick="viewEmployeeProfile('${emp.id}')">View</button>
+                            <button class="btn btn-outline" style="padding:4px 8px; font-size:0.75rem; color:var(--warning); border-color:var(--warning);" onclick="toggleEmployeeStatus('${emp.id}')">${emp.status === 'Inactive' ? 'Reactivate' : 'Deactivate'}</button>
+                            <button class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="deleteEmployee('${emp.id}')">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function viewEmployeeProfile(id) {
+            const emp = employees.find(e => e.id === id);
+            if(!emp) return;
+            const empDocs = documents.filter(d => d.empName === emp.name);
+            const empLeave = leaveRequests.filter(l => l.empName === emp.name);
+            const empAssets = assets.filter(a => a.empName === emp.name);
+
+            document.getElementById('profileDetailsView').innerHTML = `
+                <div style="line-height:1.6;">
+                    <h3 style="margin-bottom:4px;">${emp.name}</h3>
+                    <p style="color:var(--text-muted); margin-bottom:12px;">${emp.role} • ${emp.dept}</p>
+                    <hr style="border:0; border-top:1px solid var(--border); margin-bottom:12px;">
+                    <p><strong>Employee ID:</strong> ${emp.id}</p>
+                    <p><strong>Annual Salary:</strong> ${formatKES(emp.salary)}</p>
+                    <p><strong>Monthly Base:</strong> ${formatKES(emp.salary/12)}</p>
+                    <p><strong>Leave Days Balance:</strong> ${emp.leaveBalance || 21} Days</p>
+                    <p><strong>Account Status:</strong> ${emp.status || 'Active'}</p>
+                    <h4 style="margin-top:16px; font-size:0.95rem;">Assigned Assets & Vault:</h4>
+                    <ul style="padding-left:20px; font-size:0.9rem; color:var(--text-muted);">
+                        <li>${empDocs.length} Document(s) in Vault</li>
+                        <li>${empLeave.length} Leave Application(s) recorded</li>
+                        <li>${empAssets.length} Company Hardware Asset(s) assigned</li>
+                    </ul>
+                </div>
+            `;
+            openModal('profileModal');
+        }
+
+        function toggleEmployeeStatus(id) {
+            const emp = employees.find(e => e.id === id);
+            if(emp) {
+                emp.status = emp.status === 'Inactive' ? 'Active' : 'Inactive';
+                saveToStorage();
+                logAudit(`Updated Employee Status to ${emp.status} for ${emp.name}`, "Directory");
+                renderApp();
+                showToast(`Employee ${emp.name} marked as ${emp.status}`);
+            }
+        }
+
+        // DELETE EMPLOYEE ENTRY
+        function deleteEmployee(id) {
+            const emp = employees.find(e => e.id === id);
+            if(!emp) return;
+            if(confirm(`Are you sure you want to delete employee "${emp.name}" (${emp.id})? This action cannot be undone.`)) {
+                employees = employees.filter(e => e.id !== id);
+                saveToStorage();
+                logAudit(`Deleted Employee Entry: ${emp.name} (${emp.id})`, "Directory");
+                populateEmployeeDropdowns();
+                renderApp();
+                showToast(`Employee record for ${emp.name} deleted.`);
+            }
+        }
+
+        function saveEmployee(event) {
+            event.preventDefault();
+            const newEmp = {
+                id: 'EMP-' + Math.floor(100 + Math.random() * 900),
+                name: document.getElementById('empName').value,
+                role: document.getElementById('empRole').value,
+                dept: document.getElementById('empDept').value,
+                salary: parseFloat(document.getElementById('empSalary').value),
+                leaveBalance: parseInt(document.getElementById('empLeaveDays').value) || 21,
+                status: 'Active'
+            };
+            employees.push(newEmp);
+            saveToStorage();
+            logAudit(`Created New Staff Profile: ${newEmp.name} (${newEmp.id})`, "Directory");
+            closeModal('employeeModal');
+            document.getElementById('addEmpForm').reset();
+            populateEmployeeDropdowns();
+            renderApp();
+            showToast(`Employee ${newEmp.name} added!`);
+        }
+
+        function exportDirectoryCSV() {
+            let csv = 'Employee ID,Full Name,Role,Department,Annual Salary (KES),Leave Balance,Status\n';
+            employees.forEach(e => {
+                csv += `"${e.id}","${e.name}","${e.role}","${e.dept}",${e.salary},${e.leaveBalance || 21},"${e.status || 'Active'}"\n`;
+            });
+            downloadCSV(csv, 'Employee_Directory_Export.csv');
+            logAudit("Exported Staff Directory to CSV", "Directory");
+        }
+
+        // DOCUMENT VAULT LOGIC
+        function filterDocCategory(category, element) {
+            document.querySelectorAll('.folder-item').forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+            activeCategory = category;
+            renderDocuments();
+        }
+
+        function renderDocuments() {
+            const grid = document.getElementById('docGrid');
+            const empFilter = document.getElementById('docEmpFilter') ? document.getElementById('docEmpFilter').value : 'All';
+            grid.innerHTML = '';
+
+            let filtered = documents;
+            if (activeCategory !== 'All') filtered = filtered.filter(d => d.category === activeCategory);
+            if (empFilter !== 'All') filtered = filtered.filter(d => d.empName === empFilter);
+
+            if(filtered.length === 0) {
+                grid.innerHTML = `<div style="color:var(--text-muted); padding: 20px;">No documents found.</div>`;
+                return;
+            }
+
+            filtered.forEach(doc => {
+                grid.innerHTML += `
+                    <div class="doc-card">
+                        <div>
+                            <div class="doc-icon">📄</div>
+                            <div class="doc-title">${doc.title}</div>
+                            <div class="doc-meta"><strong>Employee:</strong> ${doc.empName}</div>
+                            <div class="doc-meta"><strong>Category:</strong> ${doc.category}</div>
+                            <div class="doc-meta"><strong>Uploaded:</strong> ${doc.date}</div>
+                            ${doc.expiry && doc.expiry !== 'N/A' ? `<div class="doc-meta" style="color:var(--warning);"><strong>Expires:</strong> ${doc.expiry}</div>` : ''}
+                        </div>
+                        <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+                            <a href="${doc.fileData}" download="${doc.fileName}" class="btn btn-outline" style="padding:4px 8px; font-size:0.75rem;">Download</a>
+                            <button onclick="deleteDoc(${doc.id})" class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem;">Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function saveDocument(event) {
+            event.preventDefault();
+            const fileInput = document.getElementById('docFileInput');
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const newDoc = {
+                    id: Date.now(),
+                    empName: document.getElementById('docEmpSelect').value,
+                    category: document.getElementById('docCategory').value,
+                    title: document.getElementById('docTitle').value,
+                    expiry: document.getElementById('docExpiry').value || 'N/A',
+                    date: new Date().toISOString().split('T')[0],
+                    fileName: file.name,
+                    fileData: e.target.result
+                };
+
+                documents.push(newDoc);
+                saveToStorage();
+                logAudit(`Uploaded File: ${newDoc.title} for ${newDoc.empName}`, "Vault");
+                closeModal('docModal');
+                document.getElementById('uploadDocForm').reset();
+                document.getElementById('dropZoneText').innerText = '📁 Click or Drag & Drop File Here';
+                renderApp();
+                showToast(`Document uploaded successfully!`);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // DELETE DOCUMENT ENTRY
+        function deleteDoc(id) {
+            const doc = documents.find(d => d.id === id);
+            if(confirm(`Are you sure you want to delete the document "${doc ? doc.title : 'Selected File'}"?`)) {
+                documents = documents.filter(d => d.id !== id);
+                saveToStorage();
+                if(doc) logAudit(`Deleted File: ${doc.title}`, "Vault");
+                renderApp();
+                showToast('Document deleted.');
+            }
+        }
+
+        // PAYROLL ENGINE LOGIC
+        function renderPayroll() {
+            const tbody = document.getElementById('payrollTableBody');
+            tbody.innerHTML = '';
+
+            employees.forEach(emp => {
+                const grossMonthly = emp.salary / 12;
+                const tax = calculateKenyanTax(grossMonthly);
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${emp.name}</strong><br><small style="color:var(--text-muted);">${emp.role}</small></td>
+                        <td>${formatKES(grossMonthly)}</td>
+                        <td>${formatKES(tax.nssf)}</td>
+                        <td>${formatKES(tax.shif)}</td>
+                        <td>${formatKES(tax.housingLevy)}</td>
+                        <td style="color:var(--danger);">${formatKES(tax.paye)}</td>
+                        <td><strong>${formatKES(tax.netPay)}</strong></td>
+                        <td><span class="badge ${payrollProcessed ? 'badge-active' : 'badge-pending'}">${payrollProcessed ? 'Processed' : 'Pending'}</span></td>
+                        <td>
+                            <button class="btn btn-outline" style="padding:4px 8px; font-size:0.75rem;" onclick="generatePayslip('${emp.id}')">View</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function processPayroll() {
+            payrollProcessed = true;
+            saveToStorage();
+            logAudit("Executed Statutory Monthly Payroll Run", "Payroll Engine");
+            renderPayroll();
+            showToast('Payroll processed under Statutory Tax Rules!');
+        }
+
+        function generatePayslip(empId) {
+            const emp = employees.find(e => e.id === empId);
+            if(!emp) return;
+            const grossMonthly = emp.salary / 12;
+            const tax = calculateKenyanTax(grossMonthly);
+
+            document.getElementById('printablePayslip').innerHTML = `
+                <div>
+                    <div style="display:flex; justify-content:space-between; border-bottom:2px solid var(--primary); padding-bottom:12px;">
+                        <div>
+                            <h2 style="color:var(--primary);">ENTERPRISE HR SYSTEM</h2>
+                            <p style="font-size:0.85rem;">Official KRA Statutory Payslip</p>
+                        </div>
+                        <div style="text-align:right; font-size:0.85rem;">
+                            <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+                            <p><strong>Status:</strong> ${payrollProcessed ? 'DISBURSED' : 'PENDING APPROVAL'}</p>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:20px 0; font-size:0.9rem;">
+                        <div>
+                            <p><strong>Employee:</strong> ${emp.name}</p>
+                            <p><strong>ID:</strong> ${emp.id}</p>
+                            <p><strong>Designation:</strong> ${emp.role}</p>
+                        </div>
+                        <div>
+                            <p><strong>Department:</strong> ${emp.dept}</p>
+                            <p><strong>Currency:</strong> KES</p>
+                        </div>
+                    </div>
+
+                    <table style="width:100%; border:1px solid var(--border); margin-bottom:20px;">
+                        <thead>
+                            <tr style="background:var(--bg-main);">
+                                <th style="padding:8px; border-bottom:1px solid var(--border);">Pay Item / Statutory Deduction</th>
+                                <th style="padding:8px; border-bottom:1px solid var(--border); text-align:right;">Amount (KSh)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td style="padding:8px;">Gross Monthly Salary</td><td style="padding:8px; text-align:right;">${formatKES(grossMonthly)}</td></tr>
+                            <tr><td style="padding:8px; color:var(--danger);">NSSF Contribution</td><td style="padding:8px; text-align:right; color:var(--danger);">- ${formatKES(tax.nssf)}</td></tr>
+                            <tr><td style="padding:8px; color:var(--danger);">SHIF Health Insurance (2.75%)</td><td style="padding:8px; text-align:right; color:var(--danger);">- ${formatKES(tax.shif)}</td></tr>
+                            <tr><td style="padding:8px; color:var(--danger);">Housing Levy Contribution (1.5%)</td><td style="padding:8px; text-align:right; color:var(--danger);">- ${formatKES(tax.housingLevy)}</td></tr>
+                            <tr><td style="padding:8px; color:var(--danger);">PAYE Income Tax (Less Relief)</td><td style="padding:8px; text-align:right; color:var(--danger);">- ${formatKES(tax.paye)}</td></tr>
+                            <tr style="font-weight:bold; background:var(--bg-main);">
+                                <td style="padding:10px;">NET MONTHLY PAYOUT</td>
+                                <td style="padding:10px; text-align:right; color:var(--primary);">${formatKES(tax.netPay)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            logAudit(`Generated Payslip Preview for ${emp.name}`, "Payroll Engine");
+            openModal('payslipModal');
+        }
+
+        function exportPayrollCSV() {
+            let csv = 'Employee Name,Role,Dept,Gross Monthly,NSSF,SHIF,Housing Levy,PAYE Tax,Net Pay,Status\n';
+            employees.forEach(e => {
+                const gross = e.salary / 12;
+                const tax = calculateKenyanTax(gross);
+                csv += `"${e.name}","${e.role}","${e.dept}",${gross.toFixed(2)},${tax.nssf.toFixed(2)},${tax.shif.toFixed(2)},${tax.housingLevy.toFixed(2)},${tax.paye.toFixed(2)},${tax.netPay.toFixed(2)},"${payrollProcessed ? 'Processed' : 'Pending'}"\n`;
+            });
+            downloadCSV(csv, 'Statutory_Payroll_Run_KES.csv');
+            logAudit("Exported Payroll Run to CSV", "Payroll Engine");
+        }
+
+        // LEAVE MANAGEMENT LOGIC
+        function renderLeave() {
+            const tbody = document.getElementById('leaveTableBody');
+            tbody.innerHTML = '';
+
+            leaveRequests.forEach(req => {
+                const dates = req.startDate ? `${req.startDate} to ${req.endDate}` : 'N/A';
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${req.empName}</strong></td>
+                        <td>${req.type}</td>
+                        <td><small style="color:var(--text-muted);">${dates}</small></td>
+                        <td>${req.days} Day(s)</td>
+                        <td><span class="badge ${req.status === 'Approved' ? 'badge-active' : (req.status === 'Rejected' ? 'badge-danger' : 'badge-pending')}">${req.status}</span></td>
+                        <td>
+                            ${req.status === 'Pending' ? `
+                                <button class="btn btn-success" style="padding:4px 8px; font-size:0.75rem;" onclick="updateLeaveStatus(${req.id}, 'Approved')">Approve</button>
+                                <button class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="updateLeaveStatus(${req.id}, 'Rejected')">Reject</button>
+                            ` : ''}
+                            <button class="btn btn-outline" style="padding:4px 8px; font-size:0.75rem; color:var(--danger); border-color:var(--danger);" onclick="deleteLeaveRequest(${req.id})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function saveLeaveRequest(event) {
+            event.preventDefault();
+            const empName = document.getElementById('leaveEmpSelect').value;
+            const daysRequested = parseInt(document.getElementById('leaveDays').value);
+            const emp = employees.find(e => e.name === empName);
+
+            if(emp && (emp.leaveBalance || 21) < daysRequested) {
+                showToast(`Insufficient leave balance! Available: ${emp.leaveBalance || 21} Days`);
+                return;
+            }
+
+            const req = {
+                id: Date.now(),
+                empName: empName,
+                type: document.getElementById('leaveType').value,
+                startDate: document.getElementById('leaveStart').value,
+                endDate: document.getElementById('leaveEnd').value,
+                days: daysRequested,
+                status: 'Pending'
+            };
+            leaveRequests.push(req);
+            saveToStorage();
+            logAudit(`Logged Leave Request (${req.type}) for ${empName}`, "Leave Tracker");
+            closeModal('leaveModal');
+            document.getElementById('addLeaveForm').reset();
+            renderApp();
+            showToast(`Leave application logged.`);
+        }
+
+        function updateLeaveStatus(reqId, status) {
+            const req = leaveRequests.find(r => r.id === reqId);
+            if(req) {
+                req.status = status;
+                if(status === 'Approved') {
+                    const emp = employees.find(e => e.name === req.empName);
+                    if(emp) {
+                        emp.leaveBalance = Math.max(0, (emp.leaveBalance || 21) - Number(req.days));
+                    }
+                }
+                saveToStorage();
+                logAudit(`Set Leave Request Status to ${status} for ${req.empName}`, "Leave Tracker");
+                renderApp();
+                showToast(`Leave status updated to ${status}`);
+            }
+        }
+
+        // DELETE LEAVE REQUEST ENTRY
+        function deleteLeaveRequest(id) {
+            const req = leaveRequests.find(r => r.id === id);
+            if(confirm(`Are you sure you want to delete this leave request entry for ${req ? req.empName : 'Selected Request'}?`)) {
+                leaveRequests = leaveRequests.filter(r => r.id !== id);
+                saveToStorage();
+                if(req) logAudit(`Deleted Leave Request ID ${id} for ${req.empName}`, "Leave Tracker");
+                renderApp();
+                showToast('Leave request entry deleted.');
+            }
+        }
+
+        // SHIFT SCHEDULER LOGIC
+        function renderShifts() {
+            const tbody = document.getElementById('shiftTableBody');
+            tbody.innerHTML = '';
+            shifts.forEach(s => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${s.empName}</strong></td>
+                        <td>${s.date}</td>
+                        <td><span class="badge badge-active">${s.type}</span></td>
+                        <td>8 Hours</td>
+                        <td>${s.location}</td>
+                        <td>
+                            <button class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="deleteShift(${s.id})">Delete Shift</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function saveShift(event) {
+            event.preventDefault();
+            const shift = {
+                id: Date.now(),
+                empName: document.getElementById('shiftEmpSelect').value,
+                date: document.getElementById('shiftDate').value,
+                type: document.getElementById('shiftType').value,
+                location: document.getElementById('shiftLocation').value
+            };
+            shifts.push(shift);
+            saveToStorage();
+            logAudit(`Assigned ${shift.type} on ${shift.date} to ${shift.empName}`, "Shift Roster");
+            closeModal('shiftModal');
+            document.getElementById('addShiftForm').reset();
+            renderApp();
+            showToast('Shift assigned!');
+        }
+
+        // DELETE SHIFT ENTRY
+        function deleteShift(id) {
+            const shift = shifts.find(s => s.id === id);
+            if(confirm(`Delete shift assignment for ${shift ? shift.empName : 'Selected Shift'} on ${shift ? shift.date : ''}?`)) {
+                shifts = shifts.filter(s => s.id !== id);
+                saveToStorage();
+                logAudit(`Deleted shift schedule ID ${id}`, "Shift Roster");
+                renderApp();
+                showToast('Shift entry deleted.');
+            }
+        }
+
+        // ASSET MANAGEMENT LOGIC
+        function renderAssets() {
+            const tbody = document.getElementById('assetTableBody');
+            tbody.innerHTML = '';
+            assets.forEach(a => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${a.id}</strong></td>
+                        <td>${a.name}</td>
+                        <td>${a.category}</td>
+                        <td>${a.empName}</td>
+                        <td>${a.issueDate}</td>
+                        <td><span class="badge badge-active">${a.condition}</span></td>
+                        <td>
+                            <button class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="deleteAsset('${a.id}')">Delete / Unassign</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function saveAsset(event) {
+            event.preventDefault();
+            const asset = {
+                id: 'AST-' + Math.floor(100 + Math.random() * 900),
+                name: document.getElementById('assetName').value,
+                category: document.getElementById('assetCategory').value,
+                empName: document.getElementById('assetEmpSelect').value,
+                issueDate: new Date().toISOString().split('T')[0],
+                condition: document.getElementById('assetCondition').value
+            };
+            assets.push(asset);
+            saveToStorage();
+            logAudit(`Assigned Asset ${asset.name} (${asset.id}) to ${asset.empName}`, "Asset Manager");
+            closeModal('assetModal');
+            document.getElementById('addAssetForm').reset();
+            renderApp();
+            showToast('Asset registered and assigned!');
+        }
+
+        // DELETE ASSET ENTRY
+        function deleteAsset(id) {
+            const asset = assets.find(a => a.id === id);
+            if(confirm(`Are you sure you want to delete and unassign asset "${asset ? asset.name : id}"?`)) {
+                assets = assets.filter(a => a.id !== id);
+                saveToStorage();
+                if(asset) logAudit(`Deleted Asset ${asset.name} (${asset.id})`, "Asset Manager");
+                renderApp();
+                showToast('Asset record deleted.');
+            }
+        }
+
+        // PERFORMANCE EVALUATIONS LOGIC
+        function renderPerformance() {
+            const tbody = document.getElementById('performanceTableBody');
+            tbody.innerHTML = '';
+            reviews.forEach(rev => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${rev.empName}</strong></td>
+                        <td>${rev.reviewer}</td>
+                        <td><span class="badge badge-active">${rev.rating}</span></td>
+                        <td>${rev.comments}</td>
+                        <td>${rev.date}</td>
+                        <td>
+                            <button class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="deleteReview(${rev.id})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function saveReview(event) {
+            event.preventDefault();
+            const rev = {
+                id: Date.now(),
+                empName: document.getElementById('reviewEmpSelect').value,
+                reviewer: document.getElementById('reviewerName').value,
+                rating: document.getElementById('reviewRating').value,
+                comments: document.getElementById('reviewComments').value,
+                date: new Date().toISOString().split('T')[0]
+            };
+            reviews.push(rev);
+            saveToStorage();
+            logAudit(`Recorded Performance Evaluation for ${rev.empName}`, "Performance");
+            closeModal('reviewModal');
+            document.getElementById('addReviewForm').reset();
+            renderApp();
+            showToast('Review logged successfully.');
+        }
+
+        // DELETE PERFORMANCE REVIEW ENTRY
+        function deleteReview(id) {
+            const rev = reviews.find(r => r.id === id);
+            if(confirm(`Delete performance review entry for ${rev ? rev.empName : 'Selected Record'}?`)) {
+                reviews = reviews.filter(r => r.id !== id);
+                saveToStorage();
+                if(rev) logAudit(`Deleted Performance Review for ${rev.empName}`, "Performance");
+                renderApp();
+                showToast('Performance review deleted.');
+            }
+        }
+
+        // AUDIT TRAIL LOGIC
+        function renderAudit() {
+            const tbody = document.getElementById('auditTableBody');
+            tbody.innerHTML = '';
+            auditLogs.forEach(log => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><small style="color:var(--text-muted);">${log.timestamp}</small></td>
+                        <td><strong>${log.action}</strong></td>
+                        <td><span class="badge badge-active">${log.module}</span></td>
+                        <td>${log.user}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function clearAuditLogs() {
+            if(confirm("Are you sure you want to clear all security audit records?")) {
+                auditLogs = [{ timestamp: new Date().toLocaleString(), action: "Audit Logs Cleared", module: "Security", user: currentUser ? currentUser.username : "Admin" }];
+                saveToStorage();
+                renderAudit();
+                showToast('Audit log history cleared.');
+            }
+        }
+
+        // CHARTS LOGIC
+        function renderAnalyticsCharts() {
+            const depts = {};
+            const deptPayroll = {};
+
+            employees.forEach(e => {
+                depts[e.dept] = (depts[e.dept] || 0) + 1;
+                deptPayroll[e.dept] = (deptPayroll[e.dept] || 0) + (e.salary / 12);
+            });
+
+            const labels = Object.keys(depts);
+            const deptCounts = Object.values(depts);
+            const payrollSums = Object.values(deptPayroll);
+
+            if(deptChartInstance) deptChartInstance.destroy();
+            if(payrollChartInstance) payrollChartInstance.destroy();
+
+            const ctx1 = document.getElementById('deptChart').getContext('2d');
+            deptChartInstance = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: deptCounts,
+                        backgroundColor: ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+                    }]
+                }
+            });
+
+            const ctx2 = document.getElementById('payrollChart').getContext('2d');
+            payrollChartInstance = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Monthly Expense (KSh)',
+                        data: payrollSums,
+                        backgroundColor: '#2563eb'
+                    }]
+                }
+            });
+        }
+
+        // CSV Helper
+        function downloadCSV(csvContent, filename) {
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // App Init
+        checkAuth();
+        renderApp();
+        populateEmployeeDropdowns();
+    </script>
+</body>
+</html>

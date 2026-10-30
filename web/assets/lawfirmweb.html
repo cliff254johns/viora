@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Law Firm</title>
+    <script src="https://cdn.tailwindcss.com">
+    </script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: '#0A192F',
+                        navyLight: '#112240',
+                        accentBlue: '#2563EB',
+                        skyBlue: '#3B82F6',
+                        softBackground: '#F8FAFC'
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        /* ----- smooth scroll & base ----- */
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        /* ----- scroll progress bar ----- */
+        #scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #2563EB, #3B82F6);
+            z-index: 9999;
+            width: 0%;
+            transition: width 0.1s ease-out;
+        }
+
+        /* ----- floating back-to-top ----- */
+        #back-to-top {
+            position: fixed;
+            bottom: 120px;
+            right: 24px;
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            background: #2563EB;
+            color: #fff;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        #back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        #back-to-top:hover {
+            background: #1D4ED8;
+            transform: scale(1.05);
+        }
+
+        /* ----- live chat floating button ----- */
+        #chat-widget {
+            position: fixed;
+            bottom: 28px;
+            right: 24px;
+            z-index: 998;
+            background: #2563EB;
+            color: #fff;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 8px 28px rgba(37, 99, 235, 0.45);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        #chat-widget:hover {
+            transform: scale(1.08);
+            background: #1D4ED8;
+        }
+        #chat-widget .pulse {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(37, 99, 235, 0.3);
+            animation: pulse-ring 2s ease-out infinite;
+        }
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(1);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(1.6);
+                opacity: 0;
+            }
+        }
+        /* chat popup */
+        #chat-popup {
+            position: fixed;
+            bottom: 100px;
+            right: 24px;
+            z-index: 997;
+            width: 340px;
+            max-width: calc(100vw - 48px);
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+            border: 1px solid #e2e8f0;
+            display: none;
+            overflow: hidden;
+            animation: slideUp 0.3s ease;
+        }
+        #chat-popup.open {
+            display: block;
+        }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        #chat-popup .chat-header {
+            background: #0A192F;
+            color: #fff;
+            padding: 16px 20px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #chat-popup .chat-header button {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        #chat-popup .chat-body {
+            padding: 20px;
+            font-size: 14px;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+        #chat-popup .chat-body input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 13px;
+            outline: none;
+        }
+        #chat-popup .chat-body input:focus {
+            border-color: #2563EB;
+        }
+        #chat-popup .chat-body .msg {
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+        }
+        #chat-popup .chat-body .msg.bot {
+            background: #dbeafe;
+            color: #1e3a8a;
+        }
+
+        /* ----- mobile hamburger menu ----- */
+        #mobile-menu {
+            display: none;
+            flex-direction: column;
+            background: #0A192F;
+            padding: 20px 24px 30px;
+            border-top: 1px solid #1e293b;
+        }
+        #mobile-menu.open {
+            display: flex;
+        }
+        #mobile-menu a {
+            color: #e2e8f0;
+            padding: 12px 0;
+            border-bottom: 1px solid #1e293b;
+            font-size: 15px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        #mobile-menu a:hover {
+            color: #3B82F6;
+        }
+        #mobile-menu a:last-child {
+            border-bottom: none;
+        }
+        .hamburger-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 26px;
+            cursor: pointer;
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .hamburger-btn {
+                display: block;
+            }
+            .nav-links,
+            .nav-cta {
+                display: none !important;
+            }
+        }
+
+        /* ----- fade-in on scroll (Intersection Observer) ----- */
+        .fade-section {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .fade-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ----- testimonial cards hover ----- */
+        .testimonial-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .testimonial-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        /* ----- team cards ----- */
+        .team-card .social-links a {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+        .team-card:hover .social-links a {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .team-card .social-links a:nth-child(2) {
+            transition-delay: 0.05s;
+        }
+        .team-card .social-links a:nth-child(3) {
+            transition-delay: 0.1s;
+        }
+
+        /* ----- blog card hover ----- */
+        .blog-card .blog-img {
+            transition: transform 0.5s ease;
+        }
+        .blog-card:hover .blog-img {
+            transform: scale(1.03);
+        }
+
+        /* ----- dark mode toggle (optional) ----- */
+        .dark-toggle {
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 18px;
+            transition: color 0.2s;
+        }
+        .dark-toggle:hover {
+            color: #fff;
+        }
+        /* dark mode overrides – we keep it minimal, but toggle body class */
+        body.dark-mode {
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+        body.dark-mode .bg-white {
+            background: #1e293b !important;
+            border-color: #334155 !important;
+        }
+        body.dark-mode .bg-softBackground {
+            background: #1e293b !important;
+        }
+        body.dark-mode .text-slate-600,
+        body.dark-mode .text-slate-700 {
+            color: #cbd5e1 !important;
+        }
+        body.dark-mode .text-slate-300 {
+            color: #94a3b8 !important;
+        }
+        body.dark-mode .border-slate-100,
+        body.dark-mode .border-slate-200 {
+            border-color: #334155 !important;
+        }
+        body.dark-mode .bg-navyLight {
+            background: #1e293b !important;
+        }
+        body.dark-mode .shadow-sm {
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
+        }
+        body.dark-mode #chat-popup {
+            background: #1e293b;
+            border-color: #334155;
+        }
+        body.dark-mode #chat-popup .chat-body {
+            color: #e2e8f0;
+        }
+        body.dark-mode #chat-popup .chat-body .msg {
+            background: #2d3748;
+            color: #e2e8f0;
+        }
+        body.dark-mode #chat-popup .chat-body .msg.bot {
+            background: #1e3a5f;
+            color: #bfdbfe;
+        }
+        body.dark-mode #chat-popup .chat-body input {
+            background: #0f172a;
+            border-color: #334155;
+            color: #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== SCROLL PROGRESS BAR ===== -->
+    <div id="scroll-progress"></div>
+
+    <!-- ===== BACK TO TOP BUTTON ===== -->
+    <button id="back-to-top" aria-label="Back to top">
+        <i class="fa-solid fa-arrow-up"></i>
+    </button>
+
+    <!-- ===== LIVE CHAT WIDGET ===== -->
+    <div id="chat-widget" aria-label="Live chat">
+        <span class="pulse"></span>
+        <i class="fa-regular fa-comment-dots"></i>
+    </div>
+
+    <!-- ===== CHAT POPUP ===== -->
+    <div id="chat-popup">
+        <div class="chat-header">
+            <span><i class="fa-regular fa-comment-dots mr-2"></i>Chat with us</span>
+            <button id="chat-close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="chat-body">
+            <div class="msg bot">👋 Hello! How can we assist you today?</div>
+            <div class="msg">I'd like to know more about your corporate advisory services.</div>
+            <div class="msg bot">Great! Our team specializes in mergers, compliance, and governance. Would you like to schedule a free consultation?</div>
+            <input type="text" placeholder="Type your message..." id="chat-input" />
+        </div>
+    </div>
+
+    <!-- ===== NAVIGATION ===== -->
+    <nav class="bg-navy text-white sticky top-0 z-50 border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <!-- logo -->
+            <div class="flex items-center space-x-3">
+                <div class="bg-accentBlue p-2.5 rounded-lg text-white">
+                    <i class="fa-solid fa-scale-balanced text-xl"></i>
+                </div>
+                <div>
+                    <span class="text-xl font-bold tracking-tight block text-white leading-none">Law</span>
+                    <span class="text-xs text-skyBlue tracking-widest uppercase font-medium">& Co. Advocates & Associates</span>
+                </div>
+            </div>
+
+            <!-- desktop nav links -->
+            <div class="nav-links hidden md:flex space-x-8 text-sm font-medium">
+                <a href="#about" class="hover:text-skyBlue transition">About Us</a>
+                <a href="#practice" class="hover:text-skyBlue transition">Practice Areas</a>
+                <a href="#team" class="hover:text-skyBlue transition">Our Team</a>
+                <a href="#testimonials" class="hover:text-skyBlue transition">Testimonials</a>
+                <a href="#blog" class="hover:text-skyBlue transition">Insights</a>
+                <a href="#faq" class="hover:text-skyBlue transition">FAQs</a>
+                <a href="#contact" class="hover:text-skyBlue transition">Contact</a>
+            </div>
+
+            <!-- right side: dark mode toggle + CTA -->
+            <div class="flex items-center space-x-4">
+                <button class="dark-toggle" id="darkToggle" aria-label="Toggle dark mode">
+                    <i class="fa-regular fa-moon"></i>
+                </button>
+                <a href="#contact" class="nav-cta hidden md:inline-block bg-accentBlue hover:bg-skyBlue text-white font-medium text-sm px-5 py-2.5 rounded-md transition shadow-sm">
+                    Book Consultation
+                </a>
+                <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- mobile menu -->
+        <div id="mobile-menu">
+            <a href="#about">About Us</a>
+            <a href="#practice">Practice Areas</a>
+            <a href="#team">Our Team</a>
+            <a href="#testimonials">Testimonials</a>
+            <a href="#blog">Insights</a>
+            <a href="#faq">FAQs</a>
+            <a href="#contact">Contact</a>
+            <a href="#contact" class="text-skyBlue font-semibold">Book Consultation →</a>
+        </div>
+    </nav>
+
+    <!-- ===== HERO ===== -->
+    <header class="relative bg-navy text-white py-24 md:py-32 px-6 overflow-hidden">
+        <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#3B82F6_1px,transparent_1px)] [background-size:16px_16px]"></div>
+        <div class="max-w-5xl mx-auto text-center relative z-10">
+            <span class="inline-block bg-navyLight text-skyBlue text-xs font-semibold uppercase tracking-wider px-4 py-1.5 rounded-full border border-skyBlue/20 mb-6">
+                Strategic Legal Representation
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight">
+                Excellence, Integrity, & <span class="text-skyBlue">Decisive Counsel</span>
+            </h1>
+            <p class="text-slate-300 text-lg md:text-xl max-w-2xl mx-auto mb-10 font-light leading-relaxed">
+                Providing specialized legal solutions to individuals, enterprises, and institutions with precise strategy and unwavering dedication.
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <a href="#contact" class="bg-accentBlue hover:bg-skyBlue text-white font-semibold px-8 py-3.5 rounded-md shadow-lg transition">
+                    Schedule a Meeting
+                </a>
+                <a href="#practice" class="bg-navyLight border border-slate-700 hover:border-skyBlue text-white font-semibold px-8 py-3.5 rounded-md transition">
+                    Explore Services
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== KEY METRICS (with animated counters) ===== -->
+    <section class="bg-navyLight text-white py-8 border-t border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            <div>
+                <p class="text-3xl font-bold text-skyBlue counter" data-target="15">0<span class="text-xl">+</span></p>
+                <p class="text-xs text-slate-400 uppercase tracking-wider mt-1">Years Experience</p>
+            </div>
+            <div>
+                <p class="text-3xl font-bold text-skyBlue counter" data-target="99">0<span class="text-xl">%</span></p>
+                <p class="text-xs text-slate-400 uppercase tracking-wider mt-1">Client Satisfaction</p>
+            </div>
+            <div>
+                <p class="text-3xl font-bold text-skyBlue counter" data-target="500">0<span class="text-xl">+</span></p>
+                <p class="text-xs text-slate-400 uppercase tracking-wider mt-1">Cases Resolved</p>
+            </div>
+            <div>
+                <p class="text-3xl font-bold text-skyBlue counter" data-target="100">0<span class="text-xl">%</span></p>
+                <p class="text-xs text-slate-400 uppercase tracking-wider mt-1">Confidentiality</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== PRACTICE AREAS ===== -->
+    <section id="practice" class="py-20 px-6 max-w-7xl mx-auto fade-section">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <h2 class="text-3xl font-bold text-navy mb-4">Our Practice Areas</h2>
+            <div class="w-16 h-1 bg-accentBlue mx-auto mb-4"></div>
+            <p class="text-slate-600">Tailored legal strategies designed to protect your interests and yield favorable outcomes.</p>
+        </div>
+
+        <div class="grid md:grid-cols-3 sm:grid-cols-2 gap-8">
+            <!-- 14 practice cards – using a loop pattern -->
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:border-accentBlue/30 hover:shadow-md transition">
+                <div class="w-12 h-12 bg-blue-50 text-accentBlue rounded-lg flex items-center justify-center text-xl mb-6"><i class="fa-solid fa-gavel"></i></div>
+                <h3 class="text-xl font-bold text-navy mb-3">Commercial Litigation</h3>
+                <p class="text-slate-600 text-sm leading-relaxed">Representing clients in complex corporate disputes, breach of contract claims, and dispute resolution mechanisms.</p>
+            </div>
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:border-accentBlue/30 hover:shadow-md transition">
+                <div class="w-12 h-12 bg-blue-50 text-accentBlue rounded-lg flex items-center justify-center text-xl mb-6"><i class="fa-solid fa-building"></i></div>
+                <h3 class="text-xl font-bold text-navy mb-3">Conveyance & Real Estate</h3>
+                <p class="text-slate-600 text-sm leading-relaxed">Guiding property acquisitions, land transactions, lease drafting, regulatory compliance, and title verifications.</p>
+            </div>
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:border-accentBlue/30 hover:shadow-md transition">
+                <div class="w-12 h-12 bg-blue-50 text-accentBlue rounded-lg flex items-center justify-center text-xl mb-6"><i class="fa-solid fa-handshake"></i></div>
+                <h3 class="text-xl font-bold text-navy mb-3">Corporate Advisory</h3>
+                <p class="text-slate-600 text-sm leading-relaxed">End-to-end guidance for business formation, joint ventures, governance policies, and statutory compliance.</p>
+            </div>
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:border-accentBlue/30 hover:shadow-md transition">
+                <div class="w-12 h-12 bg-blue-50 text-accentBlue rounded-lg flex items-center justify-center text-xl mb-6"><i class="fa-solid fa-users"></i></div>
+                <h3 class="text-xl font-bold text-navy mb-3">Family & Succession Law</h3>
+                <p class="text-slate-600 text-sm leading-relaxed">Handling delicate family matters, estate planning, wills, administration of estates, and custody disputes.</p>
+            </div>
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:border-accentBlue/30 hover:shadow-md transition">
+                <div class="w-12 h-12 bg-blue-50 text-accentBlue rounded-lg flex items-center justify-center text-xl mb-6"><i class="fa-solid fa-shield-halved"></i></div>
+                <h3 class="text-xl font-bold text-navy mb-3">Employment Law</h3>
+                <p class="text-slate-600 text-sm leading-relaxed">Advising employers and staff on labor laws, contract negotiations, workplace disputes, and termination procedures.</p>
+            </div>
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:border-accentBlue/30 hover:shadow-md transition">
+                <div class="w-12 h-12 bg-blue-50 text-accentBlue rounded-lg flex items-center justify-center text-xl mb-6"><i class="fa-solid fa-file-contract"></i></div>
+                <h3 class="text-xl font-bold text-navy mb-3">Arbitration & Mediation</h3>
+                <p class="text-slate-600 text-sm leading-relaxed">Facilitating out-of-court dispute resolutions to save clients time, costs, and maintain professional relationships.</p>
+            </div>
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:border-accentBlue/30 hover:shadow-md transition">
+                <div class="w-12 h-12 bg-blue-50 text-accentBlue rounded-lg flex items-center justify-center text-xl mb-6"><i class="fa-solid fa-lightbulb"></i></div>
+                <h3 class="text-xl font-bold text-navy mb-3">Intellectual Property</h3>
+                <p class="text-slate-600 text-sm leading-relaxed">Protecting trademarks, patents, copyrights, domain names, and trade secrets for businesses and creators.</p>
+            </div>
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:border-accentBlue/30 hover:shadow-md transition">
+                <div class="w-12 h-12 bg-blue-50 text-accentBlue rounded-lg flex items-center justify-center text-xl mb-6"><i class="fa-solid fa-user-shield"></i></div>
+                <h3 class="text-xl font-bold text-navy mb-3">Criminal Defense</h3>
+                <p class="text-slate-600 text-sm leading-relaxed">Offering resolute legal representation in white-collar crimes, fraud investigations, and penal defense matters.</p>
+            </div>
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:border-accentBlue/30 hover:shadow-md transition">
+                <div class="w-12 h-12 bg-blue-50 text-accentBlue rounded-lg flex items-center justify-center text-xl mb-6"><i class="fa-solid fa-coins"></i></div>
+                <h3 class="text-xl font-bold text-navy mb-3">Banking & Financial Law</h3>
+                <p class="text-slate-600 text-sm leading-relaxed">Structuring loan agreements, debt recovery strategies, financial compliance, and security documentation.</p>
+            </div>
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:border-accentBlue/30 hover:shadow-md transition">
+                <div class="w-12 h-12 bg-blue-50 text-accentBlue rounded-lg flex items-center justify-center text-xl mb-6"><i class="fa-solid fa-receipt"></i></div>
+                <h3 class="text-xl font-bold text-navy mb-3">Taxation Law & Advisory</h3>
+                <p class="text-slate-600 text-sm leading-relaxed">Assisting clients with statutory tax compliance, revenue dispute resolutions, and tax structuring advice.</p>
+            </div>
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:border-accentBlue/30 hover:shadow-md transition">
+                <div class="w-12 h-12 bg-blue-50 text-accentBlue rounded-lg flex items-center justify-center text-xl mb-6"><i class="fa-solid fa-lock"></i></div>
+                <h3 class="text-xl font-bold text-navy mb-3">Data Protection & Privacy</h3>
+                <p class="text-slate-600 text-sm leading-relaxed">Ensuring corporate compliance with Kenya's Data Protection Act, privacy policy creation, and audit execution.</p>
+            </div>
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:border-accentBlue/30 hover:shadow-md transition">
+                <div class="w-12 h-12 bg-blue-50 text-accentBlue rounded-lg flex items-center justify-center text-xl mb-6"><i class="fa-solid fa-stamp"></i></div>
+                <h3 class="text-xl font-bold text-navy mb-3">Notary Public & Oaths</h3>
+                <p class="text-slate-600 text-sm leading-relaxed">Administering oaths, attesting official documents, notarizing international papers, and witness certifications.</p>
+            </div>
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:border-accentBlue/30 hover:shadow-md transition">
+                <div class="w-12 h-12 bg-blue-50 text-accentBlue rounded-lg flex items-center justify-center text-xl mb-6"><i class="fa-solid fa-passport"></i></div>
+                <h3 class="text-xl font-bold text-navy mb-3">Immigration Law</h3>
+                <p class="text-slate-600 text-sm leading-relaxed">Advising on work permits, alien registration, citizenship applications, and expatriate residency processes.</p>
+            </div>
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:border-accentBlue/30 hover:shadow-md transition">
+                <div class="w-12 h-12 bg-blue-50 text-accentBlue rounded-lg flex items-center justify-center text-xl mb-6"><i class="fa-solid fa-industry"></i></div>
+                <h3 class="text-xl font-bold text-navy mb-3">Constitutional & Public Law</h3>
+                <p class="text-slate-600 text-sm leading-relaxed">Handling judicial reviews, constitutional petitions, public procurement challenges, and administrative rights.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== WHY CHOOSE US ===== -->
+    <section class="bg-white py-20 px-6 border-t border-b border-slate-100 fade-section">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center max-w-2xl mx-auto mb-16">
+                <h2 class="text-3xl font-bold text-navy mb-4">Why Partner With Us</h2>
+                <div class="w-16 h-1 bg-accentBlue mx-auto mb-4"></div>
+                <p class="text-slate-600">Core advantages that set our legal practice apart in quality and client satisfaction.</p>
+            </div>
+            <div class="grid md:grid-cols-4 sm:grid-cols-2 gap-8">
+                <div class="text-center p-6 rounded-xl bg-softBackground border border-slate-100">
+                    <div class="w-14 h-14 bg-navy text-skyBlue rounded-full flex items-center justify-center text-2xl mx-auto mb-4"><i class="fa-solid fa-chess-knight"></i></div>
+                    <h3 class="font-bold text-navy mb-2">Strategic Precision</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">Every case is analyzed through detailed research to build multi-layered strategies.</p>
+                </div>
+                <div class="text-center p-6 rounded-xl bg-softBackground border border-slate-100">
+                    <div class="w-14 h-14 bg-navy text-skyBlue rounded-full flex items-center justify-center text-2xl mx-auto mb-4"><i class="fa-solid fa-comments"></i></div>
+                    <h3 class="font-bold text-navy mb-2">Transparent Updates</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">Clients receive consistent progress reports and milestone notifications on demand.</p>
+                </div>
+                <div class="text-center p-6 rounded-xl bg-softBackground border border-slate-100">
+                    <div class="w-14 h-14 bg-navy text-skyBlue rounded-full flex items-center justify-center text-2xl mx-auto mb-4"><i class="fa-solid fa-vault"></i></div>
+                    <h3 class="font-bold text-navy mb-2">Complete Discretion</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">Strict data privacy protocols ensure your sensitive information remains secure.</p>
+                </div>
+                <div class="text-center p-6 rounded-xl bg-softBackground border border-slate-100">
+                    <div class="w-14 h-14 bg-navy text-skyBlue rounded-full flex items-center justify-center text-2xl mx-auto mb-4"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+                    <h3 class="font-bold text-navy mb-2">Predictable Legal Fees</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">Upfront cost estimations without hidden charges or unexpected retainer fees.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== ABOUT ===== -->
+    <section id="about" class="bg-white py-20 px-6 border-t border-slate-100 fade-section">
+        <div class="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+            <div>
+                <span class="text-accentBlue font-semibold text-sm uppercase tracking-wider">About Our Practice</span>
+                <h2 class="text-3xl font-bold text-navy mt-2 mb-6">Committed to Legal Precision & Integrity</h2>
+                <p class="text-slate-600 leading-relaxed mb-4">
+                    At <strong>Law & Co. Advocates & Associates</strong>, we prioritize our clients' peace of mind. We deliver thorough legal research, proactive communication, and robust courtroom representation.
+                </p>
+                <p class="text-slate-600 leading-relaxed mb-6">
+                    Our team brings deep industry insights across various sectors, ensuring tailored advice that aligns with your personal or commercial goals.
+                </p>
+                <div class="space-y-3">
+                    <div class="flex items-center space-x-3 text-slate-700"><i class="fa-solid fa-circle-check text-accentBlue"></i><span>Client-centric approach focused on actionable results</span></div>
+                    <div class="flex items-center space-x-3 text-slate-700"><i class="fa-solid fa-circle-check text-accentBlue"></i><span>Transparent legal guidance and clear communication</span></div>
+                    <div class="flex items-center space-x-3 text-slate-700"><i class="fa-solid fa-circle-check text-accentBlue"></i><span>Strict adherence to professional ethics and confidentiality</span></div>
+                </div>
+            </div>
+            <div class="bg-navy p-8 rounded-2xl text-white relative">
+                <h3 class="text-2xl font-bold mb-4">Need Immediate Assistance?</h3>
+                <p class="text-slate-300 mb-6 text-sm">Schedule a consultation with one of our advocates today to discuss your case.</p>
+                <div class="space-y-4">
+                    <div class="flex items-start space-x-4"><i class="fa-solid fa-phone text-skyBlue mt-1"></i><div><p class="text-xs text-slate-400">Phone</p><p class="font-medium">+254 700 000 000</p></div></div>
+                    <div class="flex items-start space-x-4"><i class="fa-solid fa-envelope text-skyBlue mt-1"></i><div><p class="text-xs text-slate-400">Email</p><p class="font-medium">info@igwetamurrithiadvocates.co.ke</p></div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== OUR TEAM (NEW) ===== -->
+    <section id="team" class="py-20 px-6 max-w-7xl mx-auto fade-section">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <span class="text-accentBlue font-semibold text-sm uppercase tracking-wider">Meet Our Team</span>
+            <h2 class="text-3xl font-bold text-navy mt-2 mb-4">Dedicated Legal Experts</h2>
+            <div class="w-16 h-1 bg-accentBlue mx-auto mb-4"></div>
+            <p class="text-slate-600">Our advocates combine deep legal knowledge with a passion for justice and client advocacy.</p>
+        </div>
+        <div class="grid md:grid-cols-4 sm:grid-cols-2 gap-8">
+            <div class="team-card bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden text-center transition hover:shadow-md">
+                <div class="bg-navy h-24 flex items-center justify-center"><i class="fa-solid fa-user-tie text-5xl text-skyBlue/40"></i></div>
+                <div class="p-6">
+                    <h4 class="font-bold text-navy">Lawyer</h4>
+                    <p class="text-xs text-skyBlue font-semibold uppercase tracking-wider">Managing Partner</p>
+                    <p class="text-xs text-slate-500 mt-2">Commercial & Corporate Law</p>
+                    <div class="social-links flex justify-center space-x-3 mt-4">
+                        <a href="#" class="text-slate-400 hover:text-accentBlue"><i class="fa-brands fa-linkedin-in"></i></a>
+                        <a href="#" class="text-slate-400 hover:text-accentBlue"><i class="fa-regular fa-envelope"></i></a>
+                        <a href="#" class="text-slate-400 hover:text-accentBlue"><i class="fa-regular fa-circle-check"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="team-card bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden text-center transition hover:shadow-md">
+                <div class="bg-navy h-24 flex items-center justify-center"><i class="fa-solid fa-user-tie text-5xl text-skyBlue/40"></i></div>
+                <div class="p-6">
+                    <h4 class="font-bold text-navy">Grace Wanjiru</h4>
+                    <p class="text-xs text-skyBlue font-semibold uppercase tracking-wider">Senior Advocate</p>
+                    <p class="text-xs text-slate-500 mt-2">Conveyance & Real Estate</p>
+                    <div class="social-links flex justify-center space-x-3 mt-4">
+                        <a href="#" class="text-slate-400 hover:text-accentBlue"><i class="fa-brands fa-linkedin-in"></i></a>
+                        <a href="#" class="text-slate-400 hover:text-accentBlue"><i class="fa-regular fa-envelope"></i></a>
+                        <a href="#" class="text-slate-400 hover:text-accentBlue"><i class="fa-regular fa-circle-check"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="team-card bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden text-center transition hover:shadow-md">
+                <div class="bg-navy h-24 flex items-center justify-center"><i class="fa-solid fa-user-tie text-5xl text-skyBlue/40"></i></div>
+                <div class="p-6">
+                    <h4 class="font-bold text-navy">Michael Odhiambo</h4>
+                    <p class="text-xs text-skyBlue font-semibold uppercase tracking-wider">Litigation Counsel</p>
+                    <p class="text-xs text-slate-500 mt-2">Commercial Disputes & Arbitration</p>
+                    <div class="social-links flex justify-center space-x-3 mt-4">
+                        <a href="#" class="text-slate-400 hover:text-accentBlue"><i class="fa-brands fa-linkedin-in"></i></a>
+                        <a href="#" class="text-slate-400 hover:text-accentBlue"><i class="fa-regular fa-envelope"></i></a>
+                        <a href="#" class="text-slate-400 hover:text-accentBlue"><i class="fa-regular fa-circle-check"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="team-card bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden text-center transition hover:shadow-md">
+                <div class="bg-navy h-24 flex items-center justify-center"><i class="fa-solid fa-user-tie text-5xl text-skyBlue/40"></i></div>
+                <div class="p-6">
+                    <h4 class="font-bold text-navy">Faith Akinyi</h4>
+                    <p class="text-xs text-skyBlue font-semibold uppercase tracking-wider">Associate Advocate</p>
+                    <p class="text-xs text-slate-500 mt-2">Family Law & Succession</p>
+                    <div class="social-links flex justify-center space-x-3 mt-4">
+                        <a href="#" class="text-slate-400 hover:text-accentBlue"><i class="fa-brands fa-linkedin-in"></i></a>
+                        <a href="#" class="text-slate-400 hover:text-accentBlue"><i class="fa-regular fa-envelope"></i></a>
+                        <a href="#" class="text-slate-400 hover:text-accentBlue"><i class="fa-regular fa-circle-check"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== TESTIMONIALS ===== -->
+    <section id="testimonials" class="bg-navy text-white py-20 px-6 fade-section">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center max-w-2xl mx-auto mb-16">
+                <span class="text-skyBlue font-semibold text-sm uppercase tracking-wider">Testimonials</span>
+                <h2 class="text-3xl font-bold mt-2 mb-4">What Our Clients Say</h2>
+                <div class="w-16 h-1 bg-accentBlue mx-auto"></div>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="testimonial-card bg-navyLight p-8 rounded-xl border border-slate-800">
+                    <div class="text-amber-400 mb-4 text-sm"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                    <p class="text-slate-300 text-sm leading-relaxed mb-6 italic">"Their corporate advisory team guided our merger effortlessly. Precise, professional, and always available when needed."</p>
+                    <div><p class="font-bold text-sm">David K.</p><p class="text-xs text-skyBlue">Managing Director, Enterprise Tech</p></div>
+                </div>
+                <div class="testimonial-card bg-navyLight p-8 rounded-xl border border-slate-800">
+                    <div class="text-amber-400 mb-4 text-sm"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                    <p class="text-slate-300 text-sm leading-relaxed mb-6 italic">"Handled a complex conveyancing transaction in record time with absolute transparency. Highly recommended for property matters."</p>
+                    <div><p class="font-bold text-sm">Scholastica M.</p><p class="text-xs text-skyBlue">Real Estate Developer</p></div>
+                </div>
+                <div class="testimonial-card bg-navyLight p-8 rounded-xl border border-slate-800">
+                    <div class="text-amber-400 mb-4 text-sm"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                    <p class="text-slate-300 text-sm leading-relaxed mb-6 italic">"The litigation strategy was exceptional. They protected our interests with calm, firm legal expertise throughout the trial."</p>
+                    <div><p class="font-bold text-sm">Francis N.</p><p class="text-xs text-skyBlue">Commercial Client</p></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== BLOG / INSIGHTS (NEW) ===== -->
+    <section id="blog" class="py-20 px-6 max-w-7xl mx-auto fade-section">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <span class="text-accentBlue font-semibold text-sm uppercase tracking-wider">Insights</span>
+            <h2 class="text-3xl font-bold text-navy mt-2 mb-4">Latest Legal Insights</h2>
+            <div class="w-16 h-1 bg-accentBlue mx-auto mb-4"></div>
+            <p class="text-slate-600">Stay informed with our latest articles, case commentaries, and legal updates.</p>
+        </div>
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="blog-card bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden transition hover:shadow-md">
+                <div class="h-48 bg-navy/10 flex items-center justify-center overflow-hidden"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='none' stroke='%232563EB' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5z'/%3E%3Cpath d='M2 17l10 5 10-5'/%3E%3Cpath d='M2 12l10 5 10-5'/%3E%3C/svg%3E" alt="article" class="blog-img w-20 opacity-30" /></div>
+                <div class="p-6">
+                    <p class="text-xs text-accentBlue font-semibold uppercase tracking-wider">March 2026</p>
+                    <h4 class="font-bold text-navy mt-1 mb-2">New Data Protection Compliance Requirements</h4>
+                    <p class="text-sm text-slate-600 leading-relaxed">Kenya's ODPC has issued fresh guidelines on data processing. Here's what your business needs to know.</p>
+                    <a href="#" class="text-accentBlue text-sm font-semibold inline-flex items-center mt-3 hover:underline">Read more <i class="fa-solid fa-arrow-right ml-1 text-xs"></i></a>
+                </div>
+            </div>
+            <div class="blog-card bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden transition hover:shadow-md">
+                <div class="h-48 bg-navy/10 flex items-center justify-center overflow-hidden"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='none' stroke='%232563EB' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='7' width='20' height='14' rx='2' ry='2'/%3E%3Cpath d='M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16'/%3E%3C/svg%3E" alt="article" class="blog-img w-20 opacity-30" /></div>
+                <div class="p-6">
+                    <p class="text-xs text-accentBlue font-semibold uppercase tracking-wider">February 2026</p>
+                    <h4 class="font-bold text-navy mt-1 mb-2">Land Title Fraud: How to Protect Your Investment</h4>
+                    <p class="text-sm text-slate-600 leading-relaxed">Learn about the latest title verification procedures and red flags to watch for in property transactions.</p>
+                    <a href="#" class="text-accentBlue text-sm font-semibold inline-flex items-center mt-3 hover:underline">Read more <i class="fa-solid fa-arrow-right ml-1 text-xs"></i></a>
+                </div>
+            </div>
+            <div class="blog-card bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden transition hover:shadow-md">
+                <div class="h-48 bg-navy/10 flex items-center justify-center overflow-hidden"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='none' stroke='%232563EB' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/%3E%3C/svg%3E" alt="article" class="blog-img w-20 opacity-30" /></div>
+                <div class="p-6">
+                    <p class="text-xs text-accentBlue font-semibold uppercase tracking-wider">January 2026</p>
+                    <h4 class="font-bold text-navy mt-1 mb-2">Employment Law Update: New Minimum Wage</h4>
+                    <p class="text-sm text-slate-600 leading-relaxed">The government has revised the minimum wage thresholds. Understand how this impacts your payroll and contracts.</p>
+                    <a href="#" class="text-accentBlue text-sm font-semibold inline-flex items-center mt-3 hover:underline">Read more <i class="fa-solid fa-arrow-right ml-1 text-xs"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== AWARDS & RECOGNITION (NEW) ===== -->
+    <section class="bg-navyLight text-white py-16 px-6 border-t border-slate-800 fade-section">
+        <div class="max-w-7xl mx-auto text-center">
+            <span class="text-skyBlue font-semibold text-sm uppercase tracking-wider">Awards & Recognition</span>
+            <h2 class="text-2xl md:text-3xl font-bold mt-2 mb-8">Accolades That Speak to Our Excellence</h2>
+            <div class="flex flex-wrap justify-center gap-8 md:gap-12">
+                <div class="text-center"><div class="w-16 h-16 bg-navy/50 rounded-full flex items-center justify-center mx-auto mb-2 border border-skyBlue/20"><i class="fa-solid fa-trophy text-2xl text-amber-400"></i></div><p class="font-semibold text-sm">Top Tier Firm 2025</p><p class="text-xs text-slate-400">Legal 500</p></div>
+                <div class="text-center"><div class="w-16 h-16 bg-navy/50 rounded-full flex items-center justify-center mx-auto mb-2 border border-skyBlue/20"><i class="fa-solid fa-award text-2xl text-amber-400"></i></div><p class="font-semibold text-sm">Excellence in Conveyance</p><p class="text-xs text-slate-400">Kenya Law Awards</p></div>
+                <div class="text-center"><div class="w-16 h-16 bg-navy/50 rounded-full flex items-center justify-center mx-auto mb-2 border border-skyBlue/20"><i class="fa-solid fa-medal text-2xl text-amber-400"></i></div><p class="font-semibold text-sm">Client Choice 2024</p><p class="text-xs text-slate-400">ILTA</p></div>
+                <div class="text-center"><div class="w-16 h-16 bg-navy/50 rounded-full flex items-center justify-center mx-auto mb-2 border border-skyBlue/20"><i class="fa-solid fa-scale-balanced text-2xl text-amber-400"></i></div><p class="font-semibold text-sm">Litigation Team of the Year</p><p class="text-xs text-slate-400">Kenya Legal Awards</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FAQ ===== -->
+    <section id="faq" class="py-20 px-6 max-w-5xl mx-auto fade-section">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <h2 class="text-3xl font-bold text-navy mb-4">Frequently Asked Questions</h2>
+            <div class="w-16 h-1 bg-accentBlue mx-auto mb-4"></div>
+            <p class="text-slate-600">Quick answers regarding consultations, retainers, and legal processes.</p>
+        </div>
+        <div class="space-y-4">
+            <details class="bg-white p-6 rounded-xl border border-slate-200 group">
+                <summary class="font-bold text-navy cursor-pointer flex justify-between items-center list-none"><span>How do I book an initial consultation?</span><i class="fa-solid fa-chevron-down text-accentBlue transition group-open:rotate-180"></i></summary>
+                <p class="text-slate-600 text-sm mt-4 leading-relaxed border-t border-slate-100 pt-4">You can fill out our online consultation booking form below, or call our office directly. Our team will verify availability and confirm an appointment slot within 24 hours.</p>
+            </details>
+            <details class="bg-white p-6 rounded-xl border border-slate-200 group">
+                <summary class="font-bold text-navy cursor-pointer flex justify-between items-center list-none"><span>What documents should I bring to my consultation?</span><i class="fa-solid fa-chevron-down text-accentBlue transition group-open:rotate-180"></i></summary>
+                <p class="text-slate-600 text-sm mt-4 leading-relaxed border-t border-slate-100 pt-4">Please bring a valid national ID or passport along with all relevant legal documents, contracts, correspondence, or official notices related to your legal inquiry.</p>
+            </details>
+            <details class="bg-white p-6 rounded-xl border border-slate-200 group">
+                <summary class="font-bold text-navy cursor-pointer flex justify-between items-center list-none"><span>Do you offer retainer services for ongoing business advice?</span><i class="fa-solid fa-chevron-down text-accentBlue transition group-open:rotate-180"></i></summary>
+                <p class="text-slate-600 text-sm mt-4 leading-relaxed border-t border-slate-100 pt-4">Yes, we offer tailored corporate retainer packages that provide continuous legal oversight, contract drafting, and statutory compliance assistance for businesses.</p>
+            </details>
+            <details class="bg-white p-6 rounded-xl border border-slate-200 group">
+                <summary class="font-bold text-navy cursor-pointer flex justify-between items-center list-none"><span>What are your consultation fees?</span><i class="fa-solid fa-chevron-down text-accentBlue transition group-open:rotate-180"></i></summary>
+                <p class="text-slate-600 text-sm mt-4 leading-relaxed border-t border-slate-100 pt-4">We offer a free initial 30-minute consultation for new clients. Subsequent consultations are billed at competitive hourly rates or fixed-fee packages depending on the complexity of the matter.</p>
+            </details>
+        </div>
+    </section>
+
+    <!-- ===== NEWSLETTER SIGNUP (NEW) ===== -->
+    <section class="bg-white py-16 px-6 border-t border-slate-100 fade-section">
+        <div class="max-w-3xl mx-auto text-center">
+            <span class="text-accentBlue font-semibold text-sm uppercase tracking-wider">Stay Connected</span>
+            <h2 class="text-2xl font-bold text-navy mt-2 mb-3">Subscribe to Our Legal Newsletter</h2>
+            <p class="text-slate-600 text-sm mb-6">Get monthly updates on legal developments, case law highlights, and firm news.</p>
+            <form class="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto" onsubmit="event.preventDefault(); alert('You have been subscribed!');">
+                <input type="email" placeholder="Enter your email" required class="flex-1 border border-slate-300 rounded-md px-4 py-2.5 text-sm focus:outline-none focus:border-accentBlue" />
+                <button type="submit" class="bg-accentBlue hover:bg-skyBlue text-white font-semibold px-6 py-2.5 rounded-md transition text-sm whitespace-nowrap">Subscribe</button>
+            </form>
+            <p class="text-xs text-slate-400 mt-3">We respect your privacy. Unsubscribe at any time.</p>
+        </div>
+    </section>
+
+    <!-- ===== CONTACT ===== -->
+    <section id="contact" class="py-20 px-6 max-w-7xl mx-auto fade-section">
+        <div class="grid md:grid-cols-2 gap-12 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-8 md:p-12">
+                <h2 class="text-2xl font-bold text-navy mb-2">Book a Legal Consultation</h2>
+                <p class="text-slate-600 text-sm mb-6">Fill in your details below and our legal team will reach out within 24 hours.</p>
+                <form class="space-y-4" onsubmit="event.preventDefault(); alert('Consultation Request Submitted!');">
+                    <div><label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Full Name</label><input type="text" placeholder="John Doe" class="w-full border border-slate-300 rounded-md px-4 py-2.5 text-sm focus:outline-none focus:border-accentBlue" /></div>
+                    <div><label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Email Address</label><input type="email" placeholder="john@example.com" class="w-full border border-slate-300 rounded-md px-4 py-2.5 text-sm focus:outline-none focus:border-accentBlue" /></div>
+                    <div><label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Practice Area</label>
+                        <select class="w-full border border-slate-300 rounded-md px-4 py-2.5 text-sm focus:outline-none focus:border-accentBlue bg-white">
+                            <option>Commercial Litigation</option><option>Conveyance & Real Estate</option><option>Corporate Advisory</option>
+                            <option>Family & Succession Law</option><option>Intellectual Property</option><option>Banking & Financial Law</option><option>Other Services</option>
+                        </select>
+                    </div>
+                    <div><label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Case Summary</label><textarea rows="4" placeholder="Briefly describe your situation..." class="w-full border border-slate-300 rounded-md px-4 py-2.5 text-sm focus:outline-none focus:border-accentBlue"></textarea></div>
+                    <button type="submit" class="w-full bg-accentBlue hover:bg-skyBlue text-white font-semibold py-3 rounded-md transition text-sm">Submit Request</button>
+                </form>
+            </div>
+            <div class="bg-navy p-8 md:p-12 text-white flex flex-col justify-between">
+                <div>
+                    <h3 class="text-xl font-bold mb-6">Office Location</h3>
+                    <div class="space-y-6 text-sm text-slate-300">
+                        <div class="flex items-start space-x-3"><i class="fa-solid fa-location-dot text-skyBlue mt-1"></i><p>Commercial Center, 4th Floor<br />Nairobi / Meru Office Location<br />Kenya</p></div>
+                        <div class="flex items-start space-x-3"><i class="fa-solid fa-clock text-skyBlue mt-1"></i><p>Monday – Friday: 8:00 AM – 5:00 PM<br />Saturday & Sunday: Closed</p></div>
+                    </div>
+                </div>
+                <div class="mt-8 border-t border-slate-800 pt-6"><p class="text-xs text-slate-400">Emergency / After-hours Consultations available for active litigation matters.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="bg-navy text-white border-t border-slate-800 py-8 px-6 text-center text-xs text-slate-400">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <p>&copy; 2026 Law & Co. Advocates & Associates. All rights reserved.</p>
+            <div class="flex flex-wrap justify-center gap-6">
+                <a href="#" class="hover:text-white transition">Privacy Policy</a>
+                <a href="#" class="hover:text-white transition">Terms of Service</a>
+                <a href="#" class="hover:text-white transition">Disclaimer</a>
+                <div class="flex space-x-4">
+                    <a href="#" class="hover:text-white transition"><i class="fa-brands fa-linkedin-in"></i></a>
+                    <a href="#" class="hover:text-white transition"><i class="fa-brands fa-x-twitter"></i></a>
+                    <a href="#" class="hover:text-white transition"><i class="fa-brands fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ===== JAVASCRIPT ===== -->
+    <script>
+        (function() {
+            'use strict';
+
+            // ---- SCROLL PROGRESS ----
+            const progress = document.getElementById('scroll-progress');
+            window.addEventListener('scroll', () => {
+                const scrollTop = window.scrollY;
+                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                const progressPercent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+                progress.style.width = progressPercent + '%';
+            });
+
+            // ---- BACK TO TOP ----
+            const backBtn = document.getElementById('back-to-top');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 400) {
+                    backBtn.classList.add('visible');
+                } else {
+                    backBtn.classList.remove('visible');
+                }
+            });
+            backBtn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            // ---- CHAT WIDGET ----
+            const chatWidget = document.getElementById('chat-widget');
+            const chatPopup = document.getElementById('chat-popup');
+            const chatClose = document.getElementById('chat-close');
+            const chatInput = document.getElementById('chat-input');
+
+            chatWidget.addEventListener('click', () => {
+                chatPopup.classList.toggle('open');
+            });
+            chatClose.addEventListener('click', () => {
+                chatPopup.classList.remove('open');
+            });
+            chatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && chatInput.value.trim()) {
+                    const msg = document.createElement('div');
+                    msg.className = 'msg';
+                    msg.textContent = chatInput.value.trim();
+                    const body = chatPopup.querySelector('.chat-body');
+                    body.insertBefore(msg, chatInput);
+                    chatInput.value = '';
+                    // auto-reply
+                    setTimeout(() => {
+                        const reply = document.createElement('div');
+                        reply.className = 'msg bot';
+                        reply.textContent = 'Thank you for your message. One of our advocates will respond shortly.';
+                        body.insertBefore(reply, chatInput);
+                        body.scrollTop = body.scrollHeight;
+                    }, 600);
+                    body.scrollTop = body.scrollHeight;
+                }
+            });
+
+            // ---- MOBILE HAMBURGER ----
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            hamburgerBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('open');
+                const icon = hamburgerBtn.querySelector('i');
+                if (mobileMenu.classList.contains('open')) {
+                    icon.className = 'fa-solid fa-xmark';
+                } else {
+                    icon.className = 'fa-solid fa-bars';
+                }
+            });
+            // close mobile menu on link click
+            mobileMenu.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.remove('open');
+                    hamburgerBtn.querySelector('i').className = 'fa-solid fa-bars';
+                });
+            });
+
+            // ---- DARK MODE TOGGLE ----
+            const darkToggle = document.getElementById('darkToggle');
+            let darkMode = localStorage.getItem('darkMode') === 'true';
+            if (darkMode) {
+                document.body.classList.add('dark-mode');
+                darkToggle.innerHTML = '<i class="fa-regular fa-sun"></i>';
+            }
+            darkToggle.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                const isDark = document.body.classList.contains('dark-mode');
+                localStorage.setItem('darkMode', isDark);
+                darkToggle.innerHTML = isDark ? '<i class="fa-regular fa-sun"></i>' : '<i class="fa-regular fa-moon"></i>';
+            });
+
+            // ---- COUNTER ANIMATION (Intersection Observer) ----
+            const counters = document.querySelectorAll('.counter');
+            const counterObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const el = entry.target;
+                        const target = parseInt(el.dataset.target, 10);
+                        const suffix = el.innerText.replace(/[0-9]/g, '');
+                        let current = 0;
+                        const increment = target / 40;
+                        const timer = setInterval(() => {
+                            current += increment;
+                            if (current >= target) {
+                                current = target;
+                                clearInterval(timer);
+                            }
+                            el.innerHTML = Math.floor(current) + suffix;
+                        }, 30);
+                        counterObserver.unobserve(el);
+                    }
+                });
+            }, { threshold: 0.5 });
+            counters.forEach(c => counterObserver.observe(c));
+
+            // ---- FADE-IN ON SCROLL (Intersection Observer) ----
+            const fadeEls = document.querySelectorAll('.fade-section');
+            const fadeObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        fadeObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: '0px 0px -30px 0px' });
+            fadeEls.forEach(el => fadeObserver.observe(el));
+
+        })();
+    </script>
+
+</body>
+</html>

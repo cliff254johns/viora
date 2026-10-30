@@ -1,0 +1,1919 @@
+<!DOCTYPE html>
+<html data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0E0F12">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#FAF7F0">
+<title>Your Agency Name — Deal Desk CRM</title>
+<style>
+/* ============ 1. DARK (DEFAULT) ============ */
+:root, [data-theme="dark"]{
+  --primary:#FF5C38; --primary-2:#FF8A5C; --primary-3:#FFC14A;
+  --accent:#C6FF4A;
+  --success:#3DDC97; --warning:#FFB020; --danger:#FF3B5C;
+  --bg:#0E0F12; --card:#17191F; --elevated:#1F2229; --border:#2A2E38; --hairline:#2A2E38;
+  --text:#F2F3F5; --muted:#8A8F9C;
+  --r-card:8px; --r-input:6px; --r-chip:4px; --r-pill:999px;
+  --shadow:0 1px 0 var(--hairline);
+  --shadow-modal:0 20px 60px rgba(0,0,0,.45);
+  --hero-grad:linear-gradient(135deg,#FF5C38 0%,#FF8A5C 55%,#FFC14A 100%);
+  --login-glow:radial-gradient(600px 400px at 0% 0%, rgba(255,92,56,.28), transparent 70%);
+  --spine-red:var(--danger); --spine-amber:var(--warning); --spine-orange:var(--primary); --spine-muted:var(--muted);
+}
+/* ============ 2. LIGHT OVERRIDE ============ */
+[data-theme="light"]{
+  --primary:#E8451F; --primary-2:#FF7A4D; --primary-3:#FFB020;
+  --accent:#4F7A00;
+  --success:#0E8A5F; --warning:#A66500; --danger:#C21F3A;
+  --bg:#FAF7F0; --card:#FFFFFF; --elevated:#F2ECDD; --border:#E6DFD1; --hairline:#E6DFD1;
+  --text:#141518; --muted:#6B6F7A;
+  --shadow:0 1px 0 var(--hairline);
+  --shadow-modal:0 20px 60px rgba(20,21,24,.18);
+  --hero-grad:linear-gradient(135deg,#E8451F 0%,#FF7A4D 55%,#FFB020 100%);
+  --login-glow:radial-gradient(600px 400px at 0% 0%, rgba(232,69,31,.18), transparent 70%);
+}
+/* ============ 3. RESET + TYPO ============ */
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:15px; line-height:1.45; -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-weight:800; letter-spacing:-0.03em; margin:0 0 .3em; color:var(--text)}
+h1{font-size:26px} h2{font-size:20px} h3{font-size:16px} h4{font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted)}
+p{margin:0 0 .6em}
+a{color:var(--primary); text-decoration:none}
+button,input,select,textarea{font:inherit; color:inherit}
+.num, .money{font-variant-numeric:tabular-nums}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.tiny{font-size:12px}
+.sm{font-size:13px}
+.hide{display:none !important}
+.row{display:flex; align-items:center; gap:8px}
+.between{display:flex; align-items:center; justify-content:space-between; gap:8px}
+.wrap{flex-wrap:wrap}
+.grow{flex:1}
+.stack{display:flex; flex-direction:column; gap:10px}
+/* ============ 4. SHELL ============ */
+#app{display:none; min-height:100dvh}
+#app.on{display:grid; grid-template-columns:260px 1fr; grid-template-rows:64px 1fr}
+#sidebar{
+  grid-row:1/3; background:var(--card); border-right:1px solid var(--hairline);
+  padding:18px 14px; display:flex; flex-direction:column; gap:4px;
+  overflow-y:auto; position:sticky; top:0; height:100dvh;
+}
+#sidebar .brand{display:flex; align-items:center; gap:10px; padding:6px 6px 18px; border-bottom:1px solid var(--hairline); margin-bottom:14px}
+#sidebar .brand .mark{width:30px; height:30px; flex:none}
+#sidebar .brand .name{font-weight:800; letter-spacing:-0.03em; font-size:15px}
+.nav-item{
+  display:flex; align-items:center; gap:10px; padding:10px 10px; border-radius:var(--r-input);
+  color:var(--muted); cursor:pointer; font-size:14px; font-weight:600; border:none; background:none;
+  width:100%; text-align:left; position:relative; min-height:38px;
+}
+.nav-item:hover{background:var(--elevated); color:var(--text)}
+.nav-item.active{background:var(--elevated); color:var(--text)}
+.nav-item.active::before{content:""; position:absolute; left:-14px; top:8px; bottom:8px; width:3px; background:var(--primary); border-radius:2px}
+.nav-item svg{width:18px; height:18px; flex:none}
+.nav-item .badge{margin-left:auto; background:var(--primary); color:#fff; border-radius:var(--r-pill); padding:1px 7px; font-size:11px; font-weight:700}
+.topbar{
+  grid-column:2; display:flex; align-items:center; gap:12px; padding:0 20px;
+  background:var(--bg); border-bottom:1px solid var(--hairline); position:sticky; top:0; z-index:20;
+}
+.topbar h2{margin:0; font-size:16px; font-weight:800}
+.searchbox{
+  flex:1; max-width:420px; display:flex; align-items:center; gap:8px;
+  background:var(--card); border:1px solid var(--border); border-radius:var(--r-input);
+  padding:0 12px; height:38px; color:var(--muted); cursor:pointer;
+}
+.searchbox:hover{border-color:var(--primary)}
+.searchbox .kbd{margin-left:auto; background:var(--elevated); padding:2px 6px; border-radius:4px; font-size:11px; color:var(--muted); font-family:ui-monospace,monospace}
+.badge-pill{
+  font-size:11px; padding:4px 8px; border-radius:var(--r-pill); background:var(--elevated);
+  color:var(--muted); border:1px solid var(--border); font-weight:700; text-transform:uppercase; letter-spacing:.06em;
+}
+.badge-pill.live{color:var(--accent); border-color:var(--accent)}
+.badge-pill.local{color:var(--muted)}
+.iconbtn{
+  width:36px; height:36px; border-radius:var(--r-input); background:var(--card);
+  border:1px solid var(--border); color:var(--text); display:inline-grid; place-items:center;
+  cursor:pointer; position:relative;
+}
+.iconbtn:hover{border-color:var(--primary)}
+.iconbtn .dot{position:absolute; top:6px; right:6px; width:7px; height:7px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 2px var(--card)}
+#view{grid-column:2; padding:20px; min-width:0}
+#bottomNav{display:none}
+#sidebarBackdrop{display:none}
+/* ============ 5. COMPONENTS ============ */
+.card{
+  background:var(--card); border:1px solid var(--border); border-radius:var(--r-card);
+  padding:16px; box-shadow:var(--shadow);
+}
+.card.flat{box-shadow:none}
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  height:44px; padding:0 16px; border-radius:var(--r-input); border:1px solid var(--border);
+  background:var(--card); color:var(--text); font-weight:700; font-size:14px; cursor:pointer;
+  min-width:44px; transition:transform .1s ease-out, border-color .1s;
+}
+.btn:hover{border-color:var(--primary)}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--primary); border-color:var(--primary); color:#fff}
+.btn.primary:hover{background:var(--primary-2); border-color:var(--primary-2)}
+.btn.accent{background:var(--accent); border-color:var(--accent); color:#0E0F12}
+.btn.ghost{background:transparent}
+.btn.danger{border-color:var(--danger); color:var(--danger)}
+.btn.sm{height:34px; padding:0 10px; font-size:13px}
+.btn.xs{height:28px; padding:0 8px; font-size:12px; border-radius:4px}
+.btn.block{width:100%}
+.input, .select, .textarea{
+  width:100%; height:44px; padding:0 12px; border-radius:var(--r-input);
+  background:var(--card); border:1px solid var(--border); color:var(--text);
+  font-size:16px; outline:none;
+}
+.textarea{height:auto; min-height:84px; padding:10px 12px; resize:vertical}
+.input:focus, .select:focus, .textarea:focus{border-color:var(--primary)}
+.label{display:block; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:6px}
+.chip{
+  display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:var(--r-chip);
+  background:var(--elevated); color:var(--muted); font-size:11px; font-weight:700;
+  text-transform:uppercase; letter-spacing:.06em; border:1px solid var(--border);
+}
+.chip.lime{color:#0E0F12; background:var(--accent); border-color:var(--accent)}
+.chip.orange{color:#fff; background:var(--primary); border-color:var(--primary)}
+.chip.red{color:var(--danger); border-color:var(--danger); background:transparent}
+.chip.amber{color:var(--warning); border-color:var(--warning); background:transparent}
+.stage{
+  display:inline-flex; padding:2px 8px; border-radius:var(--r-pill); font-size:11px; font-weight:800;
+  text-transform:uppercase; letter-spacing:.08em;
+}
+.stage.lead{background:rgba(138,143,156,.18); color:var(--muted)}
+.stage.qualified{background:rgba(255,92,56,.18); color:var(--primary)}
+.stage.proposal{background:rgba(255,176,32,.18); color:var(--warning)}
+.stage.negotiation{background:rgba(255,193,74,.2); color:var(--primary-3)}
+.stage.won{background:rgba(198,255,74,.2); color:var(--accent)}
+.stage.lost{background:rgba(255,59,92,.18); color:var(--danger)}
+table.tbl{width:100%; border-collapse:collapse; font-size:13px}
+table.tbl thead th{
+  text-align:left; padding:10px 12px; font-size:11px; font-weight:800; text-transform:uppercase;
+  letter-spacing:.08em; color:var(--muted); border-bottom:1px solid var(--hairline); background:var(--bg); position:sticky; top:0;
+}
+table.tbl tbody td{padding:12px; border-bottom:1px solid var(--hairline); vertical-align:top}
+table.tbl tbody tr:hover{background:var(--elevated)}
+table.tbl tbody tr{cursor:pointer}
+.empty{padding:32px; text-align:center; color:var(--muted)}
+.empty h3{color:var(--text); margin-bottom:6px}
+/* modal / sheet */
+#modalRoot{position:fixed; inset:0; z-index:200; display:none}
+#modalRoot.on{display:block}
+.modal-backdrop{position:absolute; inset:0; background:rgba(0,0,0,.55)}
+.modal{
+  position:relative; margin:auto; top:8vh; width:min(560px, 92vw); max-height:84vh; overflow:auto;
+  background:var(--card); border:1px solid var(--border); border-radius:var(--r-card);
+  padding:20px; box-shadow:var(--shadow-modal);
+}
+.sheet{
+  position:fixed; left:0; right:0; bottom:0; max-height:92vh; overflow:auto;
+  background:var(--card); border-radius:16px 16px 0 0; border-top:1px solid var(--border);
+  padding:18px 16px calc(18px + env(safe-area-inset-bottom)); box-shadow:var(--shadow-modal);
+}
+/* toasts */
+#toasts{position:fixed; right:16px; bottom:16px; z-index:300; display:flex; flex-direction:column; gap:8px; pointer-events:none}
+.toast{
+  background:var(--card); border:1px solid var(--border); border-left:3px solid var(--accent);
+  padding:10px 14px; border-radius:var(--r-input); font-size:13px; box-shadow:var(--shadow-modal);
+  max-width:340px; animation:slidein .18s ease-out;
+}
+.toast.err{border-left-color:var(--danger)}
+@keyframes slidein{from{transform:translateY(8px); opacity:0} to{transform:none; opacity:1}}
+/* ============ 6. LOGIN ============ */
+#loginScreen{
+  position:fixed; inset:0; display:grid; place-items:center; z-index:100;
+  background:var(--bg); background-image:var(--login-glow);
+  padding:20px;
+}
+.login-card{
+  background:var(--card); border:1px solid var(--border); border-radius:var(--r-card);
+  padding:28px; width:min(420px, 100%); box-shadow:var(--shadow-modal);
+}
+.login-card .brand{display:flex; align-items:center; gap:10px; margin-bottom:16px}
+.login-card h1{font-size:24px; letter-spacing:-0.03em; margin-bottom:4px}
+.login-card p.sub{color:var(--muted); font-size:13px; margin-bottom:20px}
+.role-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px}
+.role-btn{
+  padding:10px 12px; border-radius:var(--r-input); background:var(--elevated);
+  border:1px solid var(--border); color:var(--text); font-weight:700; font-size:13px;
+  cursor:pointer; text-align:left;
+}
+.role-btn:hover{border-color:var(--primary)}
+.role-btn .r-role{display:block; font-size:11px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.08em; margin-bottom:2px}
+.dev-note{margin-top:14px; padding:10px; border-radius:var(--r-input); background:var(--elevated); border:1px dashed var(--border); color:var(--muted); font-size:12px}
+/* ============ 7. PIPELINE / KANBAN ============ */
+.pipeline-board{display:grid; grid-template-columns:repeat(5, minmax(240px,1fr)); gap:12px; overflow-x:auto; padding-bottom:6px}
+.pcol{background:var(--card); border:1px solid var(--border); border-radius:var(--r-card); padding:10px; min-height:400px; display:flex; flex-direction:column; gap:8px}
+.pcol h4{margin:0 0 6px; display:flex; justify-content:space-between}
+.pcol .sum{color:var(--muted); font-size:12px; font-weight:600; text-transform:none; letter-spacing:0}
+.deal-card{
+  background:var(--elevated); border:1px solid var(--border); border-radius:var(--r-input);
+  padding:10px; cursor:grab; position:relative; transition:transform .12s ease-out, border-color .12s;
+}
+.deal-card:hover{border-color:var(--primary)}
+.deal-card.dragging{opacity:.5; transform:rotate(-1deg)}
+.deal-card .title{font-weight:700; font-size:13px; margin-bottom:2px}
+.deal-card .meta{font-size:11px; color:var(--muted)}
+.deal-card .val{font-weight:800; margin-top:4px; font-variant-numeric:tabular-nums}
+.deal-card .age{font-size:11px; color:var(--muted); position:absolute; top:8px; right:8px}
+.deal-card.stale{border-left:3px solid var(--warning)}
+.pcol.drop-hover{background:var(--elevated)}
+/* ============ 8. DESK (desktop dashboard) ============ */
+.desk-grid{display:grid; grid-template-columns:2fr 1fr; gap:16px}
+.desk-grid .activity{margin-top:16px}
+.kpi-strip{display:flex; flex-direction:column; gap:8px}
+.kpi{display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:var(--elevated); border-radius:var(--r-input); border:1px solid var(--border)}
+.kpi .lab{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; font-weight:700}
+.kpi .val{font-weight:800; font-size:16px; font-variant-numeric:tabular-nums}
+.kpi .delta{font-size:11px; font-weight:800; padding:2px 6px; border-radius:4px}
+.kpi .delta.up{color:#0E0F12; background:var(--accent)}
+.kpi .delta.down{color:#fff; background:var(--danger)}
+.feed-item{display:flex; gap:12px; padding:10px 0; border-bottom:1px solid var(--hairline); cursor:pointer}
+.feed-item:last-child{border-bottom:none}
+.feed-item .type{flex:none; width:28px; height:28px; display:grid; place-items:center; background:var(--elevated); border-radius:8px; color:var(--primary)}
+.feed-item .body{flex:1; min-width:0}
+.feed-item .body .t{font-weight:700; font-size:13px}
+.feed-item .body .m{font-size:12px; color:var(--muted)}
+/* ============ 9. MOBILE ============ */
+.mob-hero{
+  background:var(--hero-grad); color:#0E0F12; padding:18px; border-radius:var(--r-card);
+  margin-bottom:12px;
+}
+.mob-hero .lab{font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; opacity:.8}
+.mob-hero .amt{font-size:28px; font-weight:900; letter-spacing:-0.03em; margin:2px 0 8px; font-variant-numeric:tabular-nums}
+.mob-hero .chips{display:flex; gap:6px; flex-wrap:wrap}
+.mob-hero .chips .chip{background:rgba(0,0,0,.18); color:#0E0F12; border-color:transparent}
+.kpi-scroll{display:flex; gap:10px; overflow-x:auto; scroll-snap-type:x mandatory; padding-bottom:6px; margin-bottom:12px}
+.kpi-scroll::-webkit-scrollbar{display:none}
+.kpi-mini{flex:none; width:140px; padding:12px; background:var(--card); border:1px solid var(--border); border-radius:var(--r-card); scroll-snap-align:start}
+.kpi-mini .lab{font-size:10px; color:var(--muted); font-weight:800; text-transform:uppercase; letter-spacing:.08em}
+.kpi-mini .val{font-size:18px; font-weight:900; margin-top:2px; font-variant-numeric:tabular-nums}
+.kpi-mini .delta{font-size:10px; margin-top:4px; font-weight:800}
+.kpi-mini .delta.up{color:var(--accent)}
+.kpi-mini .delta.down{color:var(--danger)}
+.timeline{display:flex; flex-direction:column; gap:8px; margin-bottom:14px}
+.titem{
+  background:var(--card); border:1px solid var(--border); border-radius:var(--r-card);
+  padding:12px 12px 12px 16px; position:relative; cursor:pointer;
+}
+.titem::before{
+  content:""; position:absolute; left:0; top:10px; bottom:10px; width:3px; border-radius:0 2px 2px 0;
+  background:var(--spine-muted);
+}
+.titem.red::before{background:var(--spine-red)}
+.titem.amber::before{background:var(--spine-amber)}
+.titem.orange::before{background:var(--spine-orange)}
+.titem .t{font-weight:800; font-size:14px; margin-bottom:2px}
+.titem .m{font-size:12px; color:var(--muted); margin-bottom:8px}
+.titem .actions{display:flex; gap:6px; flex-wrap:wrap}
+.pill-actions{display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:14px}
+.pill-actions::-webkit-scrollbar{display:none}
+.pill-action{
+  flex:none; display:inline-flex; align-items:center; gap:6px; height:40px; padding:0 14px;
+  background:var(--card); border:1px solid var(--border); border-radius:var(--r-pill);
+  color:var(--text); font-weight:700; font-size:13px; cursor:pointer; white-space:nowrap;
+}
+.pill-action:hover{border-color:var(--primary)}
+.pill-action.primary{background:var(--primary); border-color:var(--primary); color:#fff}
+.alert-card{display:flex; gap:10px; padding:12px; background:var(--card); border:1px solid var(--border); border-radius:var(--r-card); margin-bottom:8px}
+.alert-card .dot{width:8px; height:8px; border-radius:50%; margin-top:6px; background:var(--warning); flex:none}
+.alert-card.red .dot{background:var(--danger)}
+.alert-card.lime .dot{background:var(--accent)}
+.alert-card .msg{font-size:13px; font-weight:600}
+.alert-card .meta{font-size:12px; color:var(--muted)}
+/* ============ 10. RESPONSIVE ============ */
+@media (max-width:1024px){
+  #app.on{grid-template-columns:220px 1fr}
+  .desk-grid{grid-template-columns:1fr}
+}
+@media (max-width:760px){
+  #app.on{display:block; padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+  #sidebar{position:fixed; left:0; top:0; bottom:0; width:280px; z-index:80; transform:translateX(-100%); transition:transform .18s ease-out; padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+  #sidebar.open{transform:none}
+  #sidebarBackdrop{display:block; position:fixed; inset:0; z-index:70; background:rgba(0,0,0,.5); opacity:0; pointer-events:none; transition:opacity .18s}
+  #sidebarBackdrop.open{opacity:1; pointer-events:auto}
+  .topbar{grid-column:auto; padding:10px 14px; height:auto; min-height:56px; gap:8px; flex-wrap:wrap; position:sticky; top:0}
+  .topbar h2{font-size:15px; flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .topbar .searchbox{order:10; flex-basis:100%; max-width:none}
+  #view{padding:14px; padding-bottom:calc(28px + env(safe-area-inset-bottom))}
+  #bottomNav{
+    display:flex; position:fixed; left:0; right:0; bottom:0; z-index:60;
+    background:var(--card); border-top:1px solid var(--hairline);
+    padding:6px 8px calc(6px + env(safe-area-inset-bottom));
+    gap:4px; justify-content:space-around;
+  }
+  #bottomNav .tab{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 4px;
+    background:none; border:none; color:var(--muted); font-size:10px; font-weight:700;
+    text-transform:uppercase; letter-spacing:.06em; cursor:pointer; position:relative; min-height:52px;
+    border-radius:12px;
+  }
+  #bottomNav .tab svg{width:22px; height:22px}
+  #bottomNav .tab.active{color:var(--text)}
+  #bottomNav .tab.active::before{
+    content:""; position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:36px; height:3px; background:var(--primary); border-radius:0 0 3px 3px;
+  }
+  #bottomNav .tab.active::after{
+    content:""; position:absolute; top:0; right:22%; width:6px; height:6px; border-radius:50%; background:var(--accent);
+  }
+  .modal{top:auto; bottom:0; width:100%; border-radius:16px 16px 0 0; max-height:92vh; margin:0}
+  .modal-backdrop{border-radius:0}
+  #toasts{left:12px; right:12px; bottom:calc(84px + env(safe-area-inset-bottom)); align-items:stretch}
+  .toast{max-width:none}
+  .pipeline-board{grid-template-columns:repeat(5, minmax(220px, 78vw)); scroll-snap-type:x mandatory}
+  .pcol{scroll-snap-align:start}
+  /* Mobile table stacking */
+  table.tbl thead{display:none}
+  table.tbl, table.tbl tbody, table.tbl tr, table.tbl td{display:block; width:100%}
+  table.tbl tr{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--r-card);
+    padding:10px 12px; margin-bottom:10px; box-shadow:var(--shadow);
+  }
+  table.tbl tr:hover{background:var(--card)}
+  table.tbl td{
+    display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
+    padding:6px 0; border:none; font-size:13px; text-align:right; min-width:0;
+  }
+  table.tbl td::before{
+    content:attr(data-label); color:var(--muted); font-size:11px; text-transform:uppercase;
+    letter-spacing:.06em; font-weight:800; text-align:left; flex:none; padding-right:8px;
+  }
+  table.tbl td > *{min-width:0; word-break:break-word; overflow-wrap:anywhere; text-align:right}
+  /* grid gaps */
+  .stack{gap:12px}
+}
+@media (max-width:420px){
+  .role-grid{grid-template-columns:1fr}
+}
+@media print{
+  body{background:#fff !important; color:#000 !important}
+  #sidebar, .topbar, #bottomNav, #toasts, #modalRoot, .btn, .iconbtn, .pill-actions{display:none !important}
+  #view{padding:0}
+  .card, table.tbl, .modal{border:1px solid #000 !important; box-shadow:none !important; background:#fff !important; color:#000 !important}
+  .money, .num{font-family:ui-monospace,monospace}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="brand">
+      <svg class="mark" width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+        <rect x="4" y="20" width="5" height="8" fill="var(--primary)"/>
+        <rect x="13" y="13" width="5" height="15" fill="var(--primary-2)"/>
+        <rect x="22" y="4" width="5" height="24" fill="var(--primary-3)"/>
+      </svg>
+      <div><div style="font-weight:800; letter-spacing:-.03em">Your Agency Name</div><div class="tiny muted">Deal Desk CRM</div></div>
+    </div>
+    <h1>Sign in</h1>
+    <p class="sub">Demonstration only — choose a role. Nothing leaves this device.</p>
+    <div class="role-grid" id="roleGrid"></div>
+    <div class="dev-note">Developer login is hidden. Try <b>dev</b> as the username in the Developer role card below if you are the system owner.</div>
+    <button class="btn primary block" id="devLoginBtn" style="margin-top:12px">Developer sign in</button>
+    <div class="dev-note">Local demo · no network · no real secrets.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <aside id="sidebar">
+    <div class="brand">
+      <svg class="mark" width="30" height="30" viewBox="0 0 32 32" aria-hidden="true">
+        <rect x="4" y="20" width="5" height="8" fill="var(--primary)"/>
+        <rect x="13" y="13" width="5" height="15" fill="var(--primary-2)"/>
+        <rect x="22" y="4" width="5" height="24" fill="var(--primary-3)"/>
+      </svg>
+      <div class="name" id="sideBrandName">Your Agency Name</div>
+    </div>
+    <nav id="sideNav"></nav>
+  </aside>
+  <div id="sidebarBackdrop"></div>
+  <main>
+    <header class="topbar">
+      <button class="iconbtn" id="mobileMenu" aria-label="Menu" style="display:none">☰</button>
+      <h2 id="pageTitle">Desk</h2>
+      <div class="searchbox" id="paletteTrigger" role="button" tabindex="0">
+        <span class="tiny">Search deals, contacts, quotes…</span>
+        <span class="kbd" id="kbdHint">Ctrl K</span>
+      </div>
+      <span class="badge-pill local" id="storageBadge">IDB</span>
+      <span class="badge-pill local" id="dataModeBadge">Local</span>
+      <button class="iconbtn" id="notifBtn" aria-label="Activity"><span>🔔</span><span class="dot" id="notifDot" style="display:none"></span></button>
+    </header>
+    <section id="view"></section>
+  </main>
+  <nav id="bottomNav"></nav>
+</div>
+
+<div id="modalRoot">
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <div id="modalBody"></div>
+</div>
+<div id="toasts"></div>
+
+<script>
+/* ============ 1. UTIL ============ */
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const esc = (s) => String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = (p='id') => p+'_'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
+const todayISO = () => new Date().toISOString().slice(0,10);
+const nowISO = () => new Date().toISOString();
+const KES = (minor) => {
+  const n = Math.round(Number(minor||0));
+  const sign = n<0?'-':''; const a = Math.abs(n);
+  const whole = Math.floor(a/100); const cents = String(a%100).padStart(2,'0');
+  const w = String(whole).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  return sign+'Ksh '+w+'.'+cents;
+};
+const parseKES = (s) => {
+  if(typeof s==='number') return Math.round(s);
+  const t = String(s||'').replace(/[^0-9.]/g,'');
+  if(!t) return 0;
+  const parts = t.split('.');
+  const whole = parseInt(parts[0]||'0',10);
+  let cents = (parts[1]||'').padEnd(2,'0').slice(0,2);
+  return Math.round(whole*100 + parseInt(cents||'0',10));
+};
+const fmtDate = (iso) => { if(!iso) return '—'; const d=new Date(iso); if(isNaN(d)) return '—'; return d.toLocaleDateString('en-KE',{day:'2-digit',month:'short',year:'numeric'}); };
+const fmtDateTime = (iso) => { if(!iso) return '—'; const d=new Date(iso); if(isNaN(d)) return '—'; return d.toLocaleString('en-KE',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}); };
+const daysBetween = (a,b) => Math.floor((new Date(b).getTime()-new Date(a).getTime())/86400000);
+const todayLong = () => new Date().toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+const normalisePhone = (p) => {
+  const d = String(p||'').replace(/\D/g,'');
+  if(d.startsWith('254')) return '+'+d;
+  if(d.startsWith('0') && d.length===10) return '+254'+d.slice(1);
+  if(d.startsWith('7') && d.length===9) return '+254'+d;
+  if(d.startsWith('1') && d.length===9) return '+254'+d;
+  if(d.startsWith('+')) return '+'+d;
+  return p||'';
+};
+const toast = (msg, kind='ok') => {
+  const el = document.createElement('div');
+  el.className='toast'+(kind==='err'?' err':'');
+  el.textContent = msg; $('#toasts').appendChild(el);
+  setTimeout(()=>{el.style.opacity='0'; setTimeout(()=>el.remove(),200);}, 3200);
+};
+const download = (filename, content, mime='text/plain') => {
+  const blob = new Blob([content], {type:mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url); a.remove();},100);
+};
+const toCSV = (rows, headers) => {
+  const esc = v => `"${String(v==null?'':v).replace(/"/g,'""')}"`;
+  return [headers.map(esc).join(','), ...rows.map(r=>headers.map(h=>esc(r[h])).join(','))].join('\n');
+};
+const barcodeEAN13 = (seed) => {
+  // deterministic 13-digit barcode from a seed string
+  let h=0; const s=String(seed); for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0;
+  let b = String(2000000000000 + (h%7999999999999)).padStart(13,'0').slice(0,13);
+  // fix checksum
+  let sum=0; for(let i=0;i<12;i++) sum += parseInt(b[i],10)*(i%2?3:1);
+  const chk = (10-(sum%10))%10; return b.slice(0,12)+chk;
+};
+
+/* ============ 2. STORAGE ============ */
+const Storage = {
+  db:null, mem:{}, useIDB:false, dbName:'dealdesk_v1',
+  async init(){
+    try{
+      if(!('indexedDB' in window)) throw new Error('no idb');
+      this.db = await new Promise((res,rej)=>{
+        const req = indexedDB.open(this.dbName,1);
+        req.onupgradeneeded = ()=>{ const db=req.result; if(!db.objectStoreNames.contains('kv')) db.createObjectStore('kv'); };
+        req.onsuccess = ()=>res(req.result);
+        req.onerror = ()=>rej(req.error);
+      });
+      this.useIDB = true;
+    }catch(e){ this.useIDB=false; }
+  },
+  get(key){ 
+    return new Promise((res,rej)=>{
+      if(this.useIDB){
+        const tx = this.db.transaction('kv','readonly'); const store = tx.objectStore('kv');
+        const r = store.get(key); r.onsuccess = ()=>res(r.result); r.onerror = ()=>rej(r.error);
+      } else { res(this.mem[key]); }
+    });
+  },
+  set(key,val){
+    return new Promise((res,rej)=>{
+      if(this.useIDB){
+        const tx = this.db.transaction('kv','readwrite'); const store = tx.objectStore('kv');
+        const r = store.put(val,key); r.onsuccess = ()=>res(true); r.onerror = ()=>rej(r.error);
+      } else { this.mem[key]=val; res(true); }
+    });
+  },
+  del(key){
+    return new Promise((res,rej)=>{
+      if(this.useIDB){
+        const tx = this.db.transaction('kv','readwrite'); const store = tx.objectStore('kv');
+        const r = store.delete(key); r.onsuccess=()=>res(true); r.onerror=()=>rej(r.error);
+      } else { delete this.mem[key]; res(true); }
+    });
+  }
+};
+
+/* ============ 3. SYNC ADAPTER (stub) ============ */
+const SyncAdapter = {
+  cfg: { projectId:'', region:'', apiKey:'', tenantId:'', workerUrl:'', workerToken:'', dataMode:'local', featureFlags:{aiPos:false, aiRestock:false, auditRead:false, verboseSync:false} },
+  isConfigured(){ return false; },
+  init(cfg){ throw new Error('not configured'); },
+  push(collection, doc){ throw new Error('not configured'); },
+  pull(collection, since){ throw new Error('not configured'); },
+  subscribe(collection, cb){ throw new Error('not configured'); },
+  aiCall(task, payload){ throw new Error('not configured'); }
+};
+
+/* ============ 4. SECURITY / ROLES / AUDIT ============ */
+const ROLES = {
+  owner:      {label:'Owner',        perms:['*']},
+  sales_manager:{label:'Sales Manager', perms:['deals','contacts','companies','quotes','invoices','catalogue','staff.read','reports','automations','settings']},
+  sales_rep:  {label:'Sales Rep',    perms:['deals.own','contacts','companies','quotes','activities','reports.own']},
+  finance:    {label:'Finance',      perms:['invoices','payments','reports','quotes.read','deals.read']},
+  developer:  {label:'Developer',    perms:['*','developer']}
+};
+const Session = { user:null, role:null,
+  async load(){ try{ const s = await Storage.get('session'); if(s){ this.user=s.user; this.role=s.role; return true; } }catch(e){} return false; },
+  async save(){ await Storage.set('session', {user:this.user, role:this.role}); },
+  async clear(){ await Storage.del('session'); this.user=null; this.role=null; },
+  can(perm){
+    if(!this.role) return false;
+    const p = ROLES[this.role]?.perms||[];
+    if(p.includes('*')) return true;
+    if(p.includes(perm)) return true;
+    const root = perm.split('.')[0];
+    if(p.includes(root)) return true;
+    return false;
+  }
+};
+const Audit = {
+  async log(action, entity, entity_id, meta){
+    const entry = { id:uid('aud'), at:nowISO(), actor:Session.user?.name||'system', role:Session.role||'anon', action, entity, entity_id, meta:meta||{} };
+    const arr = await AppState.get('audit') || [];
+    arr.unshift(entry);
+    if(arr.length>500) arr.length=500;
+    await AppState.set('audit', arr);
+    Log.event('audit', `${action} ${entity}/${entity_id}`);
+  }
+};
+const Log = {
+  buf: [],
+  event(type, msg){ this.buf.unshift({at:nowISO(), type, msg}); if(this.buf.length>200) this.buf.length=200; if(SyncAdapter.cfg.featureFlags.verboseSync) console.log('[log]', type, msg); }
+};
+
+/* ============ 5. INTEGRATIONS — barcode / print / payments ============ */
+const BarcodeScanner = {
+  active:false, stream:null, detector:null, lastScanAt:0, lastValue:'',
+  isSecure(){ return window.isSecureContext || location.protocol==='https:' || location.hostname==='localhost'; },
+  async start(onResult, opts={}){
+    if(!this.isSecure()){ throw new Error('Camera requires HTTPS or localhost. Use manual entry.'); }
+    if(!('BarcodeDetector' in window)) throw new Error('BarcodeDetector API not available. Use manual entry.');
+    this.detector = new BarcodeDetector({formats:['ean_13','ean_8','upc_a','code_128','code_39']});
+    const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:opts.facing||'environment'}});
+    this.stream = stream; this.active = true;
+    const video = document.createElement('video');
+    video.autoplay = true; video.playsInline = true; video.muted = true; video.srcObject = stream;
+    return video;
+  },
+  stop(){ if(this.stream){ this.stream.getTracks().forEach(t=>t.stop()); } this.stream=null; this.active=false; },
+  accept(value){
+    const now = Date.now();
+    if(value===this.lastValue && now-this.lastScanAt < 1500) return false;
+    this.lastScanAt = now; this.lastValue = value; return true;
+  }
+};
+async function scanModal(onResult){
+  openModal(`
+    <h3>Scan barcode</h3>
+    <p class="muted tiny">Camera requires HTTPS or localhost. On file:// use manual entry or USB/Bluetooth scanner.</p>
+    <div id="camBox" style="margin:10px 0; border-radius:8px; overflow:hidden; background:#000; min-height:200px; display:grid; place-items:center; color:#888">Camera off</div>
+    <div class="row" style="margin-bottom:10px">
+      <button class="btn sm" id="startCam">Start camera</button>
+      <button class="btn sm ghost" id="stopCam">Stop</button>
+    </div>
+    <label class="label">Manual / wedge entry</label>
+    <input class="input" id="scanInput" placeholder="Type barcode and press Enter" autocomplete="off">
+    <div class="row" style="margin-top:12px"><button class="btn ghost block" data-close>Cancel</button></div>
+  `, {onOpen:(root)=>{
+    let video=null;
+    $('#startCam').onclick = async ()=>{
+      try{
+        video = await BarcodeScanner.start((v)=>onResult(v));
+        const box = $('#camBox'); box.innerHTML=''; box.appendChild(video);
+        box.style.minHeight='auto';
+        const tick = async ()=>{
+          if(!BarcodeScanner.active || !video) return;
+          try{
+            const codes = await BarcodeScanner.detector.detect(video);
+            for(const c of codes){ if(BarcodeScanner.accept(c.rawValue)){ onResult(c.rawValue); closeModal(); BarcodeScanner.stop(); return; } }
+          }catch(e){}
+          requestAnimationFrame(tick);
+        };
+        tick();
+      }catch(e){ toast(e.message||'Camera error', 'err'); }
+    };
+    $('#stopCam').onclick = ()=>{ BarcodeScanner.stop(); $('#camBox').innerHTML='Camera off'; $('#camBox').style.minHeight='200px'; };
+    $('#scanInput').focus();
+    $('#scanInput').addEventListener('keydown', (e)=>{
+      if(e.key==='Enter'){ const v = e.target.value.trim(); if(v){ if(BarcodeScanner.accept(v)){ onResult(v); closeModal(); } else { toast('Duplicate scan','err'); } } }
+    });
+  }, onClose:()=>BarcodeScanner.stop()});
+}
+const Printer = {
+  printHTML(html){
+    const w = window.open('', '_blank');
+    if(!w){ toast('Popup blocked', 'err'); return; }
+    w.document.write(html); w.document.close(); w.focus();
+    setTimeout(()=>{ w.print(); }, 400);
+  },
+  receiptBody({title, lines, totals, footer, meta}){
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(title)}</title>
+    <style>body{font-family:ui-monospace,Menlo,monospace; font-size:12px; color:#000; background:#fff; padding:16px; max-width:420px; margin:auto}
+    h1{font-size:16px; margin:0 0 4px} h2{font-size:13px; margin:0 0 12px; font-weight:600}
+    hr{border:none; border-top:1px dashed #000; margin:8px 0}
+    .row{display:flex; justify-content:space-between; gap:8px}
+    .tot{font-weight:700}
+    table{width:100%; border-collapse:collapse; font-size:11px; margin-top:6px}
+    td{padding:2px 0; vertical-align:top}
+    td.r{text-align:right}
+    .barcode{font-family:monospace; letter-spacing:2px; text-align:center; margin:10px 0; border:1px solid #000; padding:6px}
+    </style></head><body>
+    <h1>${esc(meta.business)}</h1>
+    <div>${esc(meta.address)}</div>
+    <div>${esc(meta.phone)}</div>
+    <hr>
+    <h2>${esc(title)}</h2>
+    <div>${esc(meta.dateStr)}</div>
+    <hr>
+    ${lines}
+    <hr>
+    ${totals}
+    ${footer?('<hr>'+footer):''}
+    </body></html>`;
+  }
+};
+const Payments = {
+  // records a payment against an invoice
+  record(invoice, amountMinor, method, reference, actor){
+    if(amountMinor<=0) throw new Error('Amount must be positive');
+    if(invoice.paid_minor + amountMinor > invoice.amount_minor) throw new Error('Over-payment');
+    invoice.paid_minor += amountMinor;
+    invoice.status = invoice.paid_minor >= invoice.amount_minor ? 'paid' : 'part_paid';
+    if(method==='mpesa' && reference) invoice.mpesa_refs = [...(invoice.mpesa_refs||[]), reference];
+    return { id:uid('pay'), invoice_id:invoice.id, amount_minor:amountMinor, method, reference, at:nowISO(), recorded_by:actor };
+  }
+};
+
+/* ============ 6. AUTOMATIONS ============ */
+const Automations = {
+  rules(){
+    return [
+      {id:'stale_deal', name:'Stale deal', desc:'Open deal with no activity in >5 days.',
+        run(){ const d=AppState.data.deals; const acts=AppState.data.activities;
+          return d.filter(x=>!x.won_at && x.stage!=='won' && x.stage!=='lost').filter(x=>{
+            const recent = acts.filter(a=>a.deal_id===x.id).sort((a,b)=>b.at.localeCompare(a.at))[0];
+            const last = recent?recent.at:x.created_at;
+            return daysBetween(last,nowISO()) > 5;
+          }).map(x=>({label:x.title, id:x.id, meta:`${daysBetween((acts.filter(a=>a.deal_id===x.id).sort((a,b)=>b.at.localeCompare(a.at))[0]?.at||x.created_at),nowISO())} days silent`, action:'Log activity', route:'deal', routeArg:x.id}));
+        }},
+      {id:'quote_expiring', name:'Quote expiring', desc:'Sent quotes expiring within 7 days.',
+        run(){ return AppState.data.quotes.filter(q=>q.status==='sent' && q.valid_until && daysBetween(nowISO(), q.valid_until)<=7 && daysBetween(nowISO(), q.valid_until)>=0)
+          .map(q=>({label:q.number, id:q.id, meta:`${KES(q.total_minor)} · expires ${fmtDate(q.valid_until)}`, action:'Open quote', route:'quote', routeArg:q.id})); }},
+      {id:'quote_expired', name:'Quote expired', desc:'Sent quotes past valid_until.',
+        run(){ return AppState.data.quotes.filter(q=>q.status==='sent' && q.valid_until && daysBetween(q.valid_until, nowISO())>0)
+          .map(q=>({label:q.number, id:q.id, meta:`Expired ${fmtDate(q.valid_until)}`, action:'Mark expired', route:'quote', routeArg:q.id})); }},
+      {id:'followup_due', name:'Follow-up due', desc:'Activity next_step_at on or before today.',
+        run(){ return AppState.data.activities.filter(a=>a.next_step_at && a.next_step_at<=todayISO() && !a.done)
+          .map(a=>({label:a.next_step||'(follow-up)', id:a.id, meta:`Due ${fmtDate(a.next_step_at)}`, action:'Log outcome', route:'activity', routeArg:a.id})); }},
+      {id:'invoice_overdue', name:'Invoice overdue', desc:'Unpaid invoices past due date.',
+        run(){ return AppState.data.invoices.filter(i=>i.status!=='paid' && i.due_date && i.due_date<todayISO())
+          .map(i=>({label:i.number, id:i.id, meta:`${KES(i.amount_minor - i.paid_minor)} · due ${fmtDate(i.due_date)}`, action:'Record payment', route:'invoice', routeArg:i.id})); }},
+      {id:'deal_stuck', name:'Deal stuck in stage', desc:'Deal in same stage >14 days.',
+        run(){ return AppState.data.deals.filter(d=>d.stage!=='won' && d.stage!=='lost' && d.stage_changed_at && daysBetween(d.stage_changed_at, nowISO())>14)
+          .map(d=>({label:d.title, id:d.id, meta:`${d.stage} · ${daysBetween(d.stage_changed_at, nowISO())} days`, action:'Move stage', route:'deal', routeArg:d.id})); }},
+      {id:'target_at_risk', name:'Monthly target at risk', desc:'Rep <60% of target with ≤10 days left.',
+        run(){ const now=new Date(); const dom=now.getDate(); const daysLeft=30-dom;
+          if(daysLeft>10) return [];
+          return AppState.data.staff.filter(s=>s.target_minor_month>0).filter(s=>{
+            const won = AppState.data.deals.filter(d=>d.owner_id===s.id && d.won_at && d.won_at.slice(0,7)===todayISO().slice(0,7)).reduce((a,d)=>a+d.value_minor,0);
+            return won < s.target_minor_month*0.6;
+          }).map(s=>({label:s.name, id:s.id, meta:`${KES(AppState.data.deals.filter(d=>d.owner_id===s.id && d.won_at && d.won_at.slice(0,7)===todayISO().slice(0,7)).reduce((a,d)=>a+d.value_minor,0))} / ${KES(s.target_minor_month)}`, action:'View rep', route:'staff', routeArg:s.id})); }},
+      {id:'dormant_contact', name:'Dormant contact', desc:'Contact with no activity in 60+ days.',
+        run(){ return AppState.data.contacts.filter(c=>c.last_touch_at && daysBetween(c.last_touch_at, nowISO())>60)
+          .map(c=>({label:c.name, id:c.id, meta:`${daysBetween(c.last_touch_at, nowISO())} days silent`, action:'Re-engage', route:'contact', routeArg:c.id})); }},
+      {id:'cash_shortage', name:'Cash-shortage', desc:'End-of-shift cash mismatch.',
+        run(){ return []; }},
+      {id:'backup_reminder', name:'Backup reminder', desc:'No JSON export in 7 days.',
+        run(){ const last = AppState.data.meta?.lastBackupAt; if(!last || daysBetween(last,nowISO())>7) return [{label:'Backup now', id:'backup', meta:'No export in >7 days', action:'Export JSON', route:'settings'}]; return []; }},
+      {id:'daily_summary', name:'Daily pipeline summary', desc:'First login of the day.',
+        run(){ return [{label:'Daily summary', id:'daily', meta:`${AppState.data.deals.length} deals · ${AppState.data.activities.length} activities`, action:'Open Desk', route:'desk'}]; }}
+    ];
+  },
+  status(){ return this.rules().map(r=>{ let matches=[]; try{ matches = r.run(); }catch(e){} return {...r, matches, count:matches.length, firing: matches.length>0}; }); },
+  totalFiring(){ return this.status().filter(r=>r.firing).length; }
+};
+
+/* ============ 7. REPORTS ============ */
+const Reports = {
+  pipelineByStage(){
+    const deals = AppState.data.deals.filter(d=>d.stage!=='won' && d.stage!=='lost');
+    const byStage = {};
+    ['lead','qualified','proposal','negotiation'].forEach(s=>byStage[s]={count:0,value:0});
+    deals.forEach(d=>{ if(byStage[d.stage]){ byStage[d.stage].count++; byStage[d.stage].value+=d.value_minor; }});
+    return byStage;
+  },
+  winRate(){
+    const won = AppState.data.deals.filter(d=>d.stage==='won').length;
+    const lost = AppState.data.deals.filter(d=>d.stage==='lost').length;
+    const total = won+lost;
+    return total? Math.round(won/total*100) : 0;
+  },
+  avgCycleDays(){
+    const won = AppState.data.deals.filter(d=>d.won_at);
+    if(!won.length) return 0;
+    const arr = won.map(d=>daysBetween(d.created_at, d.won_at)).sort((a,b)=>a-b);
+    return arr[Math.floor(arr.length/2)];
+  },
+  staleCount(){
+    const acts=AppState.data.activities;
+    return AppState.data.deals.filter(d=>d.stage!=='won'&&d.stage!=='lost').filter(d=>{
+      const last = acts.filter(a=>a.deal_id===d.id).sort((a,b)=>b.at.localeCompare(a.at))[0];
+      return daysBetween(last?last.at:d.created_at, nowISO())>5;
+    }).length;
+  },
+  quoteAcceptance(){
+    const sent = AppState.data.quotes.filter(q=>['sent','accepted','expired','rejected'].includes(q.status));
+    const acc = sent.filter(q=>q.status==='accepted').length;
+    return sent.length? Math.round(acc/sent.length*100) : 0;
+  },
+  receivablesAging(){
+    const buckets = {'0-30':0,'31-60':0,'61+':0};
+    AppState.data.invoices.filter(i=>i.status!=='paid').forEach(i=>{
+      const age = daysBetween(i.due_date||todayISO(), todayISO());
+      const remain = i.amount_minor - i.paid_minor;
+      if(age<=30) buckets['0-30']+=remain; else if(age<=60) buckets['31-60']+=remain; else buckets['61+']+=remain;
+    });
+    return buckets;
+  },
+  activityByRep(){
+    const out = {};
+    AppState.data.staff.forEach(s=>out[s.name]=0);
+    AppState.data.activities.forEach(a=>{ if(a.owner_name){ out[a.owner_name]=(out[a.owner_name]||0)+1; }});
+    return out;
+  },
+  sourceAttribution(){
+    const out = {};
+    AppState.data.deals.forEach(d=>{ const s=d.source||'unknown'; out[s]=(out[s]||0)+d.value_minor; });
+    return out;
+  },
+  vatSummary(){
+    let subtotal=0, vat=0;
+    AppState.data.invoices.forEach(i=>{
+      if(i.status==='paid'||i.status==='part_paid'){
+        const paidVat = Math.round((i.paid_minor||0) * 16 / 116);
+        vat += paidVat;
+        subtotal += (i.paid_minor||0) - paidVat;
+      }
+    });
+    return {subtotal_minor:subtotal, vat_minor:vat, total_minor:subtotal+vat};
+  }
+};
+
+/* ============ 8. STATE ============ */
+const AppState = {
+  data:{ contacts:[], companies:[], deals:[], activities:[], quotes:[], quoteItems:[], products:[], invoices:[], payments:[], staff:[], attendance:[], meta:{} },
+  async get(k){ return (await Storage.get('state'))?.[k]; },
+  async set(k,v){ const s = (await Storage.get('state'))||{}; s[k]=v; await Storage.set('state', s); },
+  async save(){ await Storage.set('state', this.data); },
+  async load(){ const s = await Storage.get('state'); if(s){ this.data = {...this.data, ...s}; } },
+  async reset(seed=true){
+    await Storage.del('state'); await Storage.del('audit');
+    this.data = {contacts:[], companies:[], deals:[], activities:[], quotes:[], quoteItems:[], products:[], invoices:[], payments:[], staff:[], attendance:[], meta:{}};
+    if(seed) await seedData();
+    await this.save();
+  }
+};
+
+/* ============ 9. SEED ============ */
+async function seedData(){
+  const now = new Date();
+  const iso = (offsetDays=0, offsetHours=0) => { const d=new Date(now); d.setDate(d.getDate()+offsetDays); d.setHours(d.getHours()+offsetHours); return d.toISOString(); };
+  const D = AppState.data;
+  D.meta.business = { name:'Your Agency Name', address:'3rd Floor, Westlands Square, Nairobi', phone:'+254 712 345 678', vatRate:16, quotePrefix:'QT-2025-', invoicePrefix:'INV-2025-' };
+  D.meta.nextQuote = 1001; D.meta.nextInvoice = 5001;
+  D.staff = [
+    {id:uid('st'), name:'Amina Hassan', role:'owner', phone:'+254 712 111 001', badge_barcode:'STAFF001', target_minor_month:150000000, commission_pct:0, active:true},
+    {id:uid('st'), name:'David Kiprop', role:'sales_manager', phone:'+254 722 111 002', badge_barcode:'STAFF002', target_minor_month:120000000, commission_pct:3, active:true},
+    {id:uid('st'), name:'Sarah Wambui', role:'sales_rep', phone:'+254 733 111 003', badge_barcode:'STAFF003', target_minor_month:80000000, commission_pct:5, active:true}
+  ];
+  D.companies = [
+    {id:uid('co'), name:'Savannah Logistics Ltd', industry:'Logistics', phone:'+254 720 300 001', address:'Industrial Area, Nairobi', owner_id:D.staff[1].id, barcode_id:barcodeEAN13('co_sav')},
+    {id:uid('co'), name:'Nairobi Brew Co.', industry:'F&B', phone:'+254 720 300 002', address:'Karen, Nairobi', owner_id:D.staff[1].id, barcode_id:barcodeEAN13('co_brew')},
+    {id:uid('co'), name:'Mombasa Print House', industry:'Printing', phone:'+254 720 300 003', address:'Nyali, Mombasa', owner_id:D.staff[2].id, barcode_id:barcodeEAN13('co_print')},
+    {id:uid('co'), name:'Kilimani Dental', industry:'Health', phone:'+254 720 300 004', address:'Kilimani, Nairobi', owner_id:D.staff[2].id, barcode_id:barcodeEAN13('co_dental')},
+    {id:uid('co'), name:'Westlands Fitness', industry:'Health', phone:'+254 720 300 005', address:'Westlands, Nairobi', owner_id:D.staff[1].id, barcode_id:barcodeEAN13('co_fit')}
+  ];
+  D.contacts = [
+    {id:uid('ct'), name:'Wanjiku Kamau', company_id:D.companies[0].id, role:'Marketing Lead', phone:'+254 701 400 001', email:'wanjiku@savannah.co.ke', owner_id:D.staff[1].id, tags:['warm'], source:'referral', barcode_id:barcodeEAN13('ct_wan'), last_touch_at:iso(-2), created_at:iso(-30)},
+    {id:uid('ct'), name:'Brian Otieno', company_id:D.companies[1].id, role:'Founder', phone:'+254 701 400 002', email:'brian@nairobibrew.co.ke', owner_id:D.staff[1].id, tags:['hot'], source:'whatsapp', barcode_id:barcodeEAN13('ct_bri'), last_touch_at:iso(-1), created_at:iso(-20)},
+    {id:uid('ct'), name:'Fatuma Ali', company_id:D.companies[2].id, role:'Director', phone:'+254 701 400 003', email:'fatuma@mombasaprint.co.ke', owner_id:D.staff[2].id, tags:[], source:'walk-in', barcode_id:barcodeEAN13('ct_fat'), last_touch_at:iso(-8), created_at:iso(-40)},
+    {id:uid('ct'), name:'Peter Mwangi', company_id:D.companies[3].id, role:'Owner', phone:'+254 701 400 004', email:'peter@kilimanidental.co.ke', owner_id:D.staff[2].id, tags:['referral'], source:'referral', barcode_id:barcodeEAN13('ct_pet'), last_touch_at:iso(-15), created_at:iso(-50)},
+    {id:uid('ct'), name:'Grace Njeri', company_id:D.companies[4].id, role:'Operations', phone:'+254 701 400 005', email:'grace@westlandsfit.co.ke', owner_id:D.staff[1].id, tags:['warm'], source:'linkedin', barcode_id:barcodeEAN13('ct_gra'), last_touch_at:iso(-3), created_at:iso(-25)},
+    {id:uid('ct'), name:'Kevin Ochieng', company_id:D.companies[0].id, role:'Operations Manager', phone:'+254 701 400 006', email:'kevin@savannah.co.ke', owner_id:D.staff[2].id, tags:[], source:'cold', barcode_id:barcodeEAN13('ct_kev'), last_touch_at:iso(-70), created_at:iso(-80)}
+  ];
+  D.products = [
+    {id:uid('pr'), name:'Brand Identity Package', sku:'BRD-001', barcode:barcodeEAN13('brd1'), unit_price_minor:8500000, cost_minor:3000000, tax_code:'VAT16', category:'Branding', active:true},
+    {id:uid('pr'), name:'Social Media Retainer (Monthly)', sku:'SMM-001', barcode:barcodeEAN13('smm1'), unit_price_minor:4500000, cost_minor:1500000, tax_code:'VAT16', category:'Digital', active:true},
+    {id:uid('pr'), name:'Website Build — 5 pages', sku:'WEB-005', barcode:barcodeEAN13('web5'), unit_price_minor:12000000, cost_minor:5000000, tax_code:'VAT16', category:'Digital', active:true},
+    {id:uid('pr'), name:'SEO Audit', sku:'SEO-001', barcode:barcodeEAN13('seo1'), unit_price_minor:2500000, cost_minor:800000, tax_code:'VAT16', category:'Digital', active:true},
+    {id:uid('pr'), name:'Photography Half-Day', sku:'PHO-004', barcode:barcodeEAN13('pho4'), unit_price_minor:3500000, cost_minor:1200000, tax_code:'VAT16', category:'Content', active:true}
+  ];
+  const stages = ['lead','qualified','proposal','negotiation','won','lost'];
+  const sources = ['referral','whatsapp','walk-in','linkedin','cold'];
+  D.deals = [
+    {id:uid('dl'), title:'Savannah rebrand', contact_id:D.contacts[0].id, company_id:D.companies[0].id, stage:'lead', value_minor:8500000, owner_id:D.staff[1].id, probability:20, source:'referral', barcode_id:barcodeEAN13('dl_sav'), created_at:iso(-10), stage_changed_at:iso(-10)},
+    {id:uid('dl'), title:'Brew Co. social retainer', contact_id:D.contacts[1].id, company_id:D.companies[1].id, stage:'qualified', value_minor:4500000, owner_id:D.staff[1].id, probability:40, source:'whatsapp', barcode_id:barcodeEAN13('dl_brew'), created_at:iso(-20), stage_changed_at:iso(-15)},
+    {id:uid('dl'), title:'Mombasa Print website', contact_id:D.contacts[2].id, company_id:D.companies[2].id, stage:'proposal', value_minor:12000000, owner_id:D.staff[2].id, probability:60, source:'walk-in', barcode_id:barcodeEAN13('dl_print'), created_at:iso(-25), stage_changed_at:iso(-5)},
+    {id:uid('dl'), title:'Kilimani Dental identity', contact_id:D.contacts[3].id, company_id:D.companies[3].id, stage:'negotiation', value_minor:8500000, owner_id:D.staff[2].id, probability:80, source:'referral', barcode_id:barcodeEAN13('dl_dent'), created_at:iso(-30), stage_changed_at:iso(-3)},
+    {id:uid('dl'), title:'Westlands Fitness SEO', contact_id:D.contacts[4].id, company_id:D.companies[4].id, stage:'won', value_minor:2500000, owner_id:D.staff[1].id, probability:100, source:'linkedin', barcode_id:barcodeEAN13('dl_fit'), created_at:iso(-40), stage_changed_at:iso(-8), won_at:iso(-8)},
+    {id:uid('dl'), title:'Savannah photography', contact_id:D.contacts[0].id, company_id:D.companies[0].id, stage:'lead', value_minor:3500000, owner_id:D.staff[2].id, probability:30, source:'cold', barcode_id:barcodeEAN13('dl_pho'), created_at:iso(-5), stage_changed_at:iso(-5)},
+    {id:uid('dl'), title:'Brew Co. launch event', contact_id:D.contacts[1].id, company_id:D.companies[1].id, stage:'proposal', value_minor:5000000, owner_id:D.staff[1].id, probability:50, source:'whatsapp', barcode_id:barcodeEAN13('dl_event'), created_at:iso(-12), stage_changed_at:iso(-12)},
+    {id:uid('dl'), title:'Nairobi Brew website refresh', contact_id:D.contacts[1].id, company_id:D.companies[1].id, stage:'negotiation', value_minor:15000000, owner_id:D.staff[0].id, probability:75, source:'referral', barcode_id:barcodeEAN13('dl_refresh'), created_at:iso(-45), stage_changed_at:iso(-10)},
+    {id:uid('dl'), title:'Mombasa Print identity', contact_id:D.contacts[2].id, company_id:D.companies[2].id, stage:'lost', value_minor:7000000, owner_id:D.staff[2].id, probability:0, source:'walk-in', barcode_id:barcodeEAN13('dl_mpi'), created_at:iso(-60), stage_changed_at:iso(-20), lost_reason:'Budget'},
+    {id:uid('dl'), title:'Kilimani Dental SEO', contact_id:D.contacts[3].id, company_id:D.companies[3].id, stage:'qualified', value_minor:2500000, owner_id:D.staff[2].id, probability:45, source:'referral', barcode_id:barcodeEAN13('dl_dseo'), created_at:iso(-8), stage_changed_at:iso(-4)},
+    {id:uid('dl'), title:'Savannah website', contact_id:D.contacts[0].id, company_id:D.companies[0].id, stage:'proposal', value_minor:12000000, owner_id:D.staff[1].id, probability:55, source:'referral', barcode_id:barcodeEAN13('dl_sweb'), created_at:iso(-18), stage_changed_at:iso(-18)},
+    {id:uid('dl'), title:'Westlands Fitness rebrand', contact_id:D.contacts[4].id, company_id:D.companies[4].id, stage:'negotiation', value_minor:8500000, owner_id:D.staff[1].id, probability:70, source:'linkedin', barcode_id:barcodeEAN13('dl_wfr'), created_at:iso(-35), stage_changed_at:iso(-2)}
+  ];
+  // activities (some stale detection)
+  D.activities = [
+    {id:uid('ac'), deal_id:D.deals[0].id, type:'call', at:iso(-8), outcome:'Left voicemail', next_step:'Follow up', next_step_at:todayISO(), owner_name:'David Kiprop'},
+    {id:uid('ac'), deal_id:D.deals[1].id, type:'meeting', at:iso(-2), outcome:'Good', next_step:'Send proposal', next_step_at:iso(1,'10'), owner_name:'David Kiprop'},
+    {id:uid('ac'), deal_id:D.deals[2].id, type:'whatsapp', at:iso(-1), outcome:'Shared quote', next_step:'Confirm', next_step_at:iso(3), owner_name:'Sarah Wambui'},
+    {id:uid('ac'), deal_id:D.deals[3].id, type:'site_visit', at:iso(-1), outcome:'Positive', next_step:'Send contract', next_step_at:todayISO(), owner_name:'Sarah Wambui'},
+    {id:uid('ac'), deal_id:D.deals[4].id, type:'note', at:iso(-8), outcome:'Won', owner_name:'David Kiprop'},
+    {id:uid('ac'), deal_id:D.deals[7].id, type:'meeting', at:iso(-9), outcome:'Revised terms', next_step:'Sign', next_step_at:iso(5), owner_name:'Amina Hassan'}
+  ];
+  // quotes
+  D.quotes = [
+    {id:uid('qt'), deal_id:D.deals[2].id, number:'QT-2025-1001', items:[], subtotal_minor:12000000, vat_minor:1655172, total_minor:12000000, valid_until:iso(7), status:'sent', barcode_id:barcodeEAN13('qt1'), created_at:iso(-5)},
+    {id:uid('qt'), deal_id:D.deals[7].id, number:'QT-2025-1002', items:[], subtotal_minor:15000000, vat_minor:2068966, total_minor:15000000, valid_until:iso(-2), status:'sent', barcode_id:barcodeEAN13('qt2'), created_at:iso(-12)},
+    {id:uid('qt'), deal_id:D.deals[4].id, number:'QT-2025-1003', items:[], subtotal_minor:2500000, vat_minor:344828, total_minor:2500000, valid_until:iso(-8), status:'accepted', barcode_id:barcodeEAN13('qt3'), created_at:iso(-20)}
+  ];
+  D.meta.nextQuote = 1004;
+  // invoices
+  D.invoices = [
+    {id:uid('iv'), deal_id:D.deals[4].id, quote_id:D.quotes[2].id, number:'INV-2025-5001', amount_minor:2500000, due_date:iso(-3), paid_minor:2500000, status:'paid', mpesa_refs:['QGH7XK2LMN']},
+    {id:uid('iv'), deal_id:D.deals[3].id, quote_id:null, number:'INV-2025-5002', amount_minor:8500000, due_date:iso(-10), paid_minor:3000000, status:'part_paid', mpesa_refs:['RA12B3CD45']},
+    {id:uid('iv'), deal_id:D.deals[1].id, quote_id:null, number:'INV-2025-5003', amount_minor:4500000, due_date:iso(5), paid_minor:0, status:'unpaid', mpesa_refs:[]}
+  ];
+  D.meta.nextInvoice = 5004;
+  await AppState.save();
+}
+
+/* ============ 10. VIEWS ============ */
+function setTitle(t){ $('#pageTitle').textContent = t; }
+function go(route, arg){
+  if(route==='developer' && Session.role!=='developer'){ toast('Not authorised', 'err'); route='desk'; }
+  AppShell.route = route; AppShell.arg = arg;
+  AppShell.renderRoute();
+}
+
+const Views = {
+  desk(){
+    setTitle('Desk');
+    if(window.matchMedia('(max-width:760px)').matches) return Views.mobileHome();
+    const kp = Reports.pipelineByStage();
+    const dealsOpen = AppState.data.deals.filter(d=>d.stage!=='won'&&d.stage!=='lost');
+    const totalPipe = dealsOpen.reduce((a,d)=>a+d.value_minor,0);
+    const wonMonth = AppState.data.deals.filter(d=>d.won_at && d.won_at.slice(0,7)===todayISO().slice(0,7)).reduce((a,d)=>a+d.value_minor,0);
+    const autos = Automations.status();
+    const firing = autos.filter(a=>a.firing);
+    const recent = AppState.data.activities.slice(0,12).sort((a,b)=>b.at.localeCompare(a.at));
+    const stale = Reports.staleCount();
+    return `
+      <div class="desk-grid">
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <div class="between" style="margin-bottom:10px">
+              <h3>Pipeline</h3>
+              <button class="btn sm" data-go="pipeline">Open pipeline →</button>
+            </div>
+            <div class="pipeline-board" style="grid-template-columns:repeat(5,minmax(160px,1fr))">
+              ${['lead','qualified','proposal','negotiation'].map(stage=>{
+                const arr = AppState.data.deals.filter(d=>d.stage===stage);
+                const sum = arr.reduce((a,d)=>a+d.value_minor,0);
+                return `<div class="pcol"><h4>${stage}<span class="sum">${arr.length} · ${KES(sum)}</span></h4>
+                  ${arr.slice(0,4).map(d=>`<div class="deal-card" data-deal="${d.id}"><div class="title">${esc(d.title)}</div><div class="meta">${esc(AppState.data.contacts.find(c=>c.id===d.contact_id)?.name||'')}</div><div class="val">${KES(d.value_minor)}</div></div>`).join('')}
+                </div>`;
+              }).join('')}
+              <div class="pcol"><h4>Won / Lost<span class="sum">${AppState.data.deals.filter(d=>d.stage==='won'||d.stage==='lost').length}</span></h4>
+                ${AppState.data.deals.filter(d=>d.stage==='won'||d.stage==='lost').slice(0,4).map(d=>`<div class="deal-card" data-deal="${d.id}"><div class="title">${esc(d.title)}</div><div class="meta"><span class="stage ${d.stage}">${d.stage}</span></div><div class="val">${KES(d.value_minor)}</div></div>`).join('')}
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <h3 style="margin-bottom:10px">Activity feed</h3>
+            ${recent.length?recent.map(a=>`<div class="feed-item" data-deal="${a.deal_id}"><div class="type">●</div><div class="body"><div class="t">${esc(a.type)} · ${esc(AppState.data.deals.find(d=>d.id===a.deal_id)?.title||'')}</div><div class="m">${esc(a.outcome||'')} · ${fmtDateTime(a.at)}</div></div></div>`).join(''):`<div class="empty">No activity yet</div>`}
+          </div>
+        </div>
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <h3 style="margin-bottom:10px">Today's Desk</h3>
+            <div class="stack">
+              <div class="kpi"><div><div class="lab">Pipeline value</div><div class="val">${KES(totalPipe)}</div></div><div class="delta up">${dealsOpen.length} open</div></div>
+              <div class="kpi"><div><div class="lab">Won this month</div><div class="val">${KES(wonMonth)}</div></div><div class="delta up">target 60%</div></div>
+              <div class="kpi"><div><div class="lab">Win rate</div><div class="val">${Reports.winRate()}%</div></div><div class="delta up">last 90d</div></div>
+              <div class="kpi"><div><div class="lab">Stale deals</div><div class="val">${stale}</div></div><div class="delta ${stale?'down':''}">${stale>0?'needs action':'clear'}</div></div>
+              <div class="kpi"><div><div class="lab">Avg cycle</div><div class="val">${Reports.avgCycleDays()} days</div></div></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3 style="margin-bottom:10px">Automations</h3>
+            ${firing.slice(0,3).map(f=>`<div class="alert-card ${f.id.includes('invoice')||f.id.includes('stale')?'red':''}"><div class="dot"></div><div><div class="msg">${esc(f.name)}</div><div class="meta">${f.count} matched</div></div></div>`).join('')||'<div class="muted tiny">All clear</div>'}
+            <button class="btn sm block ghost" data-go="automations" style="margin-top:8px">Manage →</button>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+  mobileHome(){
+    setTitle('Desk');
+    const dealsOpen = AppState.data.deals.filter(d=>d.stage!=='won'&&d.stage!=='lost');
+    const totalPipe = dealsOpen.reduce((a,d)=>a+d.value_minor,0);
+    const wonMonth = AppState.data.deals.filter(d=>d.won_at && d.won_at.slice(0,7)===todayISO().slice(0,7)).reduce((a,d)=>a+d.value_minor,0);
+    const actsToday = AppState.data.activities.filter(a=>a.at.slice(0,10)===todayISO()).length;
+    const stale = Reports.staleCount();
+    const autos = Automations.status().filter(a=>a.firing);
+    const overdueFollowups = AppState.data.activities.filter(a=>a.next_step_at && a.next_step_at<=todayISO() && !a.done).slice(0,3);
+    const quoteExp = AppState.data.quotes.filter(q=>q.status==='sent' && q.valid_until && daysBetween(nowISO(), q.valid_until)<=7 && daysBetween(nowISO(), q.valid_until)>=0).slice(0,2);
+    const invOver = AppState.data.invoices.filter(i=>i.status!=='paid' && i.due_date && i.due_date<todayISO()).slice(0,2);
+    const timeline = [];
+    overdueFollowups.forEach(a=>timeline.push({kind:'red', title:'Overdue follow-up', meta:`${esc(a.next_step||'follow up')} · due ${fmtDate(a.next_step_at)}`, deal:a.deal_id, action:'Log outcome'}));
+    AppState.data.activities.filter(a=>a.type==='meeting' && a.at.slice(0,10)===todayISO()).forEach(a=>timeline.push({kind:'orange', title:'Meeting today', meta:`${esc(a.outcome||'meeting')} · ${fmtDateTime(a.at)}`, deal:a.deal_id, action:'Check in'}));
+    quoteExp.forEach(q=>timeline.push({kind:'amber', title:'Quote expiring', meta:`${esc(q.number)} · ${KES(q.total_minor)}`, quote:q.id, action:'Resend'}));
+    const staleDeals = AppState.data.deals.filter(d=>d.stage!=='won'&&d.stage!=='lost').filter(d=>{
+      const acts = AppState.data.activities.filter(a=>a.deal_id===d.id).sort((a,b)=>b.at.localeCompare(a.at))[0];
+      return daysBetween(acts?.at||d.created_at, nowISO())>5;
+    }).slice(0,2);
+    staleDeals.forEach(d=>timeline.push({kind:'', title:'Deal stale', meta:`${esc(d.title)} · silent ${daysBetween((AppState.data.activities.filter(a=>a.deal_id===d.id).sort((a,b)=>b.at.localeCompare(a.at))[0]?.at||d.created_at),nowISO())} days`, deal:d.id, action:'Log activity'}));
+    invOver.forEach(i=>timeline.push({kind:'red', title:'Invoice overdue', meta:`${esc(i.number)} · ${KES(i.amount_minor-i.paid_minor)}`, invoice:i.id, action:'Record payment'}));
+    const firstName = (Session.user?.name||'Amina').split(' ')[0];
+    return `
+      <div class="between" style="margin-bottom:10px">
+        <div>
+          <div style="font-size:22px; font-weight:900; letter-spacing:-.03em">Habari, ${esc(firstName)} 👋</div>
+          <div class="tiny muted">${esc(todayLong())}</div>
+        </div>
+        <button class="iconbtn" data-go="notifications" aria-label="Activity">🔔</button>
+      </div>
+      <div class="kpi-scroll">
+        <div class="kpi-mini"><div class="lab">Pipeline</div><div class="val">${KES(totalPipe)}</div><div class="delta up">${dealsOpen.length} open</div></div>
+        <div class="kpi-mini"><div class="lab">Won this month</div><div class="val">${KES(wonMonth)}</div><div class="delta up">▲</div></div>
+        <div class="kpi-mini"><div class="lab">Activities today</div><div class="val">${actsToday}</div><div class="delta ${actsToday>0?'up':'down'}">${actsToday>0?'active':'quiet'}</div></div>
+        <div class="kpi-mini"><div class="lab">Stale deals</div><div class="val">${stale}</div><div class="delta ${stale>0?'down':'up'}">${stale>0?'needs action':'clear'}</div></div>
+      </div>
+      <div class="mob-hero">
+        <div class="lab">This month</div>
+        <div class="amt">${KES(wonMonth)}</div>
+        <div class="chips">
+          <span class="chip">${AppState.data.deals.filter(d=>d.won_at && d.won_at.slice(0,7)===todayISO().slice(0,7)).length} won</span>
+          <span class="chip">${AppState.data.quotes.filter(q=>q.status==='sent').length} quotes out</span>
+          <span class="chip">${stale} stale</span>
+        </div>
+      </div>
+      <div class="pill-actions">
+        <button class="pill-action primary" data-go="deal.new">+ Deal</button>
+        <button class="pill-action" data-go="activity.new">+ Activity</button>
+        <button class="pill-action" data-scan="universal">Scan</button>
+        <button class="pill-action" data-clock="in">Clock in</button>
+      </div>
+      <h3 style="margin-top:6px; margin-bottom:8px">Today's Desk</h3>
+      <div class="timeline">
+        ${timeline.length ? timeline.slice(0,8).map(t=>`
+          <div class="titem ${t.kind}" ${t.deal?`data-deal="${t.deal}"`:t.quote?`data-quote="${t.quote}"`:t.invoice?`data-invoice="${t.invoice}"`:''}>
+            <div class="t">${esc(t.title)}</div>
+            <div class="m">${t.meta}</div>
+            <div class="actions"><span class="chip orange">${esc(t.action)}</span></div>
+          </div>
+        `).join('') : `<div class="empty"><h3>Desk is clear. Go find a deal.</h3><button class="btn primary" data-go="deal.new" style="margin-top:8px">New deal</button></div>`}
+      </div>
+      ${autos.length?`
+        <div class="between" style="margin-bottom:8px"><h3>Alerts</h3><button class="btn xs ghost" data-go="automations">Manage →</button></div>
+        ${autos.slice(0,3).map(a=>`<div class="alert-card ${a.id.includes('invoice')?'red':'lime'}"><div class="dot"></div><div><div class="msg">${esc(a.name)}</div><div class="meta">${a.count} matched</div></div></div>`).join('')}
+      `:''}
+      <h3 style="margin-top:12px; margin-bottom:8px">Account</h3>
+      <div class="stack" style="margin-bottom:20px">
+        <div class="card" data-go="settings" style="cursor:pointer"><div class="between"><span>Settings</span><span class="muted">→</span></div></div>
+        <div class="card" id="logoutBtn" style="cursor:pointer"><div class="between"><span>Log out</span><span class="muted">→</span></div></div>
+      </div>
+    `;
+  },
+  pipeline(){
+    setTitle('Pipeline');
+    const stages = ['lead','qualified','proposal','negotiation','won','lost'];
+    return `
+      <div class="row wrap" style="margin-bottom:12px; gap:8px">
+        <button class="btn sm primary" data-go="deal.new">+ New deal</button>
+        <button class="btn sm" data-scan="deal">Scan deal card</button>
+        <button class="btn sm ghost" data-export="deals">Export CSV</button>
+        <span class="chip">${AppState.data.deals.filter(d=>d.stage!=='won'&&d.stage!=='lost').length} open</span>
+        <span class="chip orange">${KES(AppState.data.deals.filter(d=>d.stage!=='won'&&d.stage!=='lost').reduce((a,d)=>a+d.value_minor,0))}</span>
+      </div>
+      <div class="pipeline-board">
+        ${stages.map(stage=>{
+          const arr = AppState.data.deals.filter(d=>d.stage===stage);
+          const sum = arr.reduce((a,d)=>a+d.value_minor,0);
+          return `<div class="pcol" data-stage="${stage}"><h4>${stage}<span class="sum">${arr.length} · ${KES(sum)}</span></h4>
+            ${arr.map(d=>{
+              const lastAct = AppState.data.activities.filter(a=>a.deal_id===d.id).sort((a,b)=>b.at.localeCompare(a.at))[0];
+              const silent = daysBetween(lastAct?.at||d.created_at, nowISO());
+              return `<div class="deal-card ${silent>5&&stage!=='won'&&stage!=='lost'?'stale':''}" draggable="true" data-deal="${d.id}">
+                <div class="age">${silent}d</div>
+                <div class="title">${esc(d.title)}</div>
+                <div class="meta">${esc(AppState.data.contacts.find(c=>c.id===d.contact_id)?.name||'')}</div>
+                <div class="val">${KES(d.value_minor)}</div>
+              </div>`;
+            }).join('')}
+          </div>`;
+        }).join('')}
+      </div>
+    `;
+  },
+  contacts(){
+    setTitle('Contacts');
+    const rows = AppState.data.contacts;
+    return `
+      <div class="row wrap" style="margin-bottom:12px; gap:8px">
+        <button class="btn sm primary" data-go="contact.new">+ New contact</button>
+        <button class="btn sm" data-scan="contact">Scan contact card</button>
+        <button class="btn sm ghost" data-export="contacts">Export CSV</button>
+      </div>
+      <div class="card" style="padding:0; overflow:hidden">
+        <table class="tbl">
+          <thead><tr><th>Name</th><th>Company</th><th>Phone</th><th>Owner</th><th>Last touch</th></tr></thead>
+          <tbody>
+            ${rows.map(c=>`<tr data-contact="${c.id}">
+              <td>${esc(c.name)}</td>
+              <td>${esc(AppState.data.companies.find(x=>x.id===c.company_id)?.name||'—')}</td>
+              <td class="mono">${esc(c.phone)}</td>
+              <td>${esc(AppState.data.staff.find(x=>x.id===c.owner_id)?.name||'—')}</td>
+              <td>${fmtDate(c.last_touch_at)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  },
+  quotes(){
+    setTitle('Quotes');
+    return `
+      <div class="row wrap" style="margin-bottom:12px; gap:8px">
+        <button class="btn sm primary" data-go="quote.new">+ New quote</button>
+        <button class="btn sm" data-scan="quote">Scan quote</button>
+        <button class="btn sm ghost" data-export="quotes">Export CSV</button>
+      </div>
+      <div class="card" style="padding:0; overflow:hidden">
+        <table class="tbl">
+          <thead><tr><th>Number</th><th>Deal</th><th>Total</th><th>Valid until</th><th>Status</th></tr></thead>
+          <tbody>
+            ${AppState.data.quotes.map(q=>`<tr data-quote="${q.id}">
+              <td class="mono">${esc(q.number)}</td>
+              <td>${esc(AppState.data.deals.find(d=>d.id===q.deal_id)?.title||'—')}</td>
+              <td class="money">${KES(q.total_minor)}</td>
+              <td>${fmtDate(q.valid_until)}</td>
+              <td><span class="stage ${q.status==='accepted'?'won':q.status==='rejected'?'lost':'proposal'}">${esc(q.status)}</span></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  },
+  invoices(){
+    setTitle('Invoices');
+    return `
+      <div class="row wrap" style="margin-bottom:12px; gap:8px">
+        <button class="btn sm ghost" data-export="invoices">Export CSV</button>
+      </div>
+      <div class="card" style="padding:0; overflow:hidden">
+        <table class="tbl">
+          <thead><tr><th>Number</th><th>Amount</th><th>Paid</th><th>Due</th><th>Status</th></tr></thead>
+          <tbody>
+            ${AppState.data.invoices.map(i=>`<tr data-invoice="${i.id}">
+              <td class="mono">${esc(i.number)}</td>
+              <td class="money">${KES(i.amount_minor)}</td>
+              <td class="money">${KES(i.paid_minor)}</td>
+              <td>${fmtDate(i.due_date)}</td>
+              <td><span class="stage ${i.status==='paid'?'won':i.status==='overdue'?'lost':'negotiation'}">${esc(i.status)}</span></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  },
+  catalogue(){
+    setTitle('Catalogue');
+    return `
+      <div class="row wrap" style="margin-bottom:12px; gap:8px">
+        <button class="btn sm primary" data-go="product.new">+ New item</button>
+        <button class="btn sm" data-scan="product">Scan item</button>
+        <button class="btn sm ghost" data-export="products">Export CSV</button>
+      </div>
+      <div class="card" style="padding:0; overflow:hidden">
+        <table class="tbl">
+          <thead><tr><th>Name</th><th>SKU</th><th>Price</th><th>Cost</th><th>Margin</th></tr></thead>
+          <tbody>
+            ${AppState.data.products.map(p=>{
+              const m = p.unit_price_minor - p.cost_minor;
+              const pct = p.unit_price_minor? Math.round(m/p.unit_price_minor*100):0;
+              return `<tr data-product="${p.id}">
+                <td>${esc(p.name)}</td>
+                <td class="mono">${esc(p.sku)}</td>
+                <td class="money">${KES(p.unit_price_minor)}</td>
+                <td class="money">${KES(p.cost_minor)}</td>
+                <td class="money">${pct}%</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  },
+  staff(){
+    setTitle('Staff');
+    return `
+      <div class="row wrap" style="margin-bottom:12px; gap:8px">
+        <button class="btn sm primary" data-go="staff.new">+ New staff</button>
+        <button class="btn sm" data-clock="in">Clock in</button>
+        <button class="btn sm" data-clock="out">Clock out</button>
+      </div>
+      <div class="card" style="padding:0; overflow:hidden">
+        <table class="tbl">
+          <thead><tr><th>Name</th><th>Role</th><th>Phone</th><th>Target</th><th>Badge</th></tr></thead>
+          <tbody>
+            ${AppState.data.staff.map(s=>`<tr data-staff="${s.id}">
+              <td>${esc(s.name)}</td>
+              <td>${esc(ROLES[s.role]?.label||s.role)}</td>
+              <td class="mono">${esc(s.phone)}</td>
+              <td class="money">${KES(s.target_minor_month)}</td>
+              <td class="mono">${esc(s.badge_barcode)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  },
+  automations(){
+    setTitle('Automations');
+    const status = Automations.status();
+    return `
+      <div class="stack">
+        <div class="card">
+          <h3 style="margin-bottom:4px">Automation Centre</h3>
+          <p class="muted tiny">All rules run on this device. No external SMS or email is ever sent from this app.</p>
+        </div>
+        ${status.map(r=>`
+          <div class="card">
+            <div class="between" style="margin-bottom:4px">
+              <h3 style="margin:0">${esc(r.name)}</h3>
+              <span class="chip ${r.firing?'orange':''}">${r.firing? r.count+' matched':'idle'}</span>
+            </div>
+            <p class="muted tiny" style="margin-bottom:8px">${esc(r.desc)}</p>
+            ${r.firing? r.matches.slice(0,4).map(m=>`<div class="alert-card"><div class="dot"></div><div><div class="msg">${esc(m.label)}</div><div class="meta">${esc(m.meta)}</div></div><button class="btn xs ghost" data-action="autoRun" data-rule="${esc(r.id)}" data-route="${esc(m.route||'')}" data-route-arg="${esc(m.routeArg||'')}">${esc(m.action)}</button></div>`).join(''): '<div class="muted tiny">All clear.</div>'}
+            <div class="row" style="margin-top:8px; gap:6px">
+              <button class="btn xs ghost" data-action="autoSnooze" data-rule="${esc(r.id)}">Snooze today</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  },
+  reports(){
+    setTitle('Reports');
+    return `
+      <div class="stack">
+        <div class="card"><h3>Pipeline by stage</h3>${Object.entries(Reports.pipelineByStage()).map(([k,v])=>`<div class="between"><span class="stage ${k}">${k}</span><span class="money">${KES(v.value)} · ${v.count}</span></div>`).join('')}</div>
+        <div class="card"><h3>Win rate</h3><div class="money" style="font-size:24px; font-weight:900">${Reports.winRate()}%</div></div>
+        <div class="card"><h3>Avg cycle</h3><div class="money">${Reports.avgCycleDays()} days</div></div>
+        <div class="card"><h3>Quote acceptance</h3><div class="money">${Reports.quoteAcceptance()}%</div></div>
+        <div class="card"><h3>Receivables ageing</h3>${Object.entries(Reports.receivablesAging()).map(([k,v])=>`<div class="between"><span>${k}</span><span class="money">${KES(v)}</span></div>`).join('')}</div>
+        <div class="card"><h3>Source attribution</h3>${Object.entries(Reports.sourceAttribution()).map(([k,v])=>`<div class="between"><span>${esc(k)}</span><span class="money">${KES(v)}</span></div>`).join('')}</div>
+        <div class="card"><h3>VAT summary</h3>
+          <div class="between"><span>Subtotal</span><span class="money">${KES(Reports.vatSummary().subtotal_minor)}</span></div>
+          <div class="between"><span>VAT (16%)</span><span class="money">${KES(Reports.vatSummary().vat_minor)}</span></div>
+          <div class="between"><strong>Total</strong><strong class="money">${KES(Reports.vatSummary().total_minor)}</strong></div>
+        </div>
+        <div class="row wrap" style="gap:6px"><button class="btn sm ghost" data-export="pipeline">Export pipeline CSV</button><button class="btn sm ghost" data-export="invoices">Export invoices CSV</button></div>
+      </div>
+    `;
+  },
+  settings(){
+    setTitle('Settings');
+    const m = AppState.data.meta.business||{};
+    return `
+      <div class="stack">
+        <div class="card"><h3>Business</h3>
+          <label class="label">Business name</label><input class="input" id="set-name" value="${esc(m.name||'')}">
+          <label class="label" style="margin-top:8px">Address</label><input class="input" id="set-address" value="${esc(m.address||'')}">
+          <label class="label" style="margin-top:8px">Phone</label><input class="input" id="set-phone" value="${esc(m.phone||'')}">
+          <button class="btn primary" style="margin-top:12px" id="saveSettings">Save</button>
+        </div>
+        <div class="card"><h3>Theme</h3>
+          <div class="row wrap"><button class="btn sm" data-theme="dark">Dark</button><button class="btn sm" data-theme="light">Light</button></div>
+        </div>
+        <div class="card"><h3>Data</h3>
+          <div class="row wrap" style="gap:6px">
+            <button class="btn sm ghost" id="exportJSON">Export JSON</button>
+            <button class="btn sm ghost" id="importJSONBtn">Import JSON</button>
+            <button class="btn sm ghost danger" id="resetDemo">Reset demo data</button>
+          </div>
+          <input type="file" id="importJSON" accept=".json" style="display:none">
+        </div>
+        ${Session.role==='developer'?`<div class="card"><h3>Developer</h3><button class="btn primary" data-go="developer">Open Developer panel</button></div>`:''}
+      </div>
+    `;
+  },
+  developer(){
+    if(Session.role!=='developer'){ go('desk'); return ''; }
+    setTitle('Developer');
+    return `
+      <div class="stack">
+        <div class="card"><h3>Data mode</h3>
+          <div class="row wrap"><button class="btn sm" data-mode="local">Local</button><button class="btn sm" data-mode="hybrid">Hybrid</button><button class="btn sm" data-mode="cloud">Cloud</button></div>
+          <p class="muted tiny" style="margin-top:8px">Current mode: <b>${esc(SyncAdapter.cfg.dataMode)}</b>. Changing to Hybrid/Cloud requires Firestore + Worker credentials. Until then the app stays Local.</p>
+        </div>
+        <div class="card"><h3>Firestore (stub)</h3>
+          <label class="label">Project ID</label><input class="input" id="dev-proj" value="${esc(SyncAdapter.cfg.projectId)}">
+          <label class="label" style="margin-top:6px">Region</label><input class="input" id="dev-region" value="${esc(SyncAdapter.cfg.region)}">
+          <label class="label" style="margin-top:6px">API key</label><input class="input" id="dev-apikey" value="${esc(SyncAdapter.cfg.apiKey)}">
+          <label class="label" style="margin-top:6px">Tenant ID</label><input class="input" id="dev-tenant" value="${esc(SyncAdapter.cfg.tenantId||'tenant_'+barcodeEAN13('tenant'))}">
+          <button class="btn sm" style="margin-top:8px" id="devTestFirestore">Test connection</button>
+        </div>
+        <div class="card"><h3>Cloudflare Worker (stub)</h3>
+          <label class="label">Endpoint URL</label><input class="input" id="dev-worker" value="${esc(SyncAdapter.cfg.workerUrl)}">
+          <label class="label" style="margin-top:6px">Auth token</label><input class="input" id="dev-token" type="password" value="${esc(SyncAdapter.cfg.workerToken)}">
+          <button class="btn sm" style="margin-top:8px" id="devTestWorker">Test connection</button>
+        </div>
+        <div class="card"><h3>Sync adapter</h3>
+          <p class="muted tiny">isConfigured(): <b>false</b> · pending queue: 0 · last push: — · last pull: —</p>
+          <button class="btn sm danger" id="devConnect">Connect</button>
+        </div>
+        <div class="card"><h3>Log console</h3>
+          <div class="mono tiny" style="max-height:220px; overflow:auto; background:var(--bg); border:1px solid var(--border); padding:8px; border-radius:6px">
+            ${Log.buf.slice(0,40).map(l=>`${esc(l.at.slice(11,19))} [${esc(l.type)}] ${esc(l.msg)}`).join('<br>')||'<span class="muted">No events</span>'}
+          </div>
+          <div class="row" style="margin-top:8px"><button class="btn xs ghost" id="devClearLog">Clear</button><button class="btn xs ghost" id="devCopyLog">Copy</button></div>
+        </div>
+        <div class="card"><h3>Feature flags</h3>
+          ${['aiPos','aiRestock','auditRead','verboseSync'].map(k=>`<label class="row" style="min-height:32px"><input type="checkbox" id="ff-${k}" ${SyncAdapter.cfg.featureFlags[k]?'checked':''}> ${esc(k)}</label>`).join('')}
+        </div>
+        <div class="card"><h3>Danger zone</h3>
+          <button class="btn sm danger" id="devWipe">Wipe tenant data</button>
+          <button class="btn sm ghost" id="devReseed">Reseed sample data</button>
+        </div>
+      </div>
+    `;
+  }
+};
+
+/* ============ 11. DRAWERS / MODALS ============ */
+function openModal(html, opts={}){
+  const mr = $('#modalRoot'); mr.classList.add('on');
+  $('#modalBody').innerHTML = `<div class="modal">${html}</div>`;
+  mr.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal(opts.onClose));
+  if(opts.onOpen) opts.onOpen(mr);
+  opts.onClose && (window._lastOnClose = opts.onClose);
+  mr.querySelector('.modal-backdrop').onclick = ()=>closeModal(opts.onClose);
+  document.addEventListener('keydown', escCloser);
+}
+function closeModal(cb){ $('#modalRoot').classList.remove('on'); $('#modalBody').innerHTML=''; document.removeEventListener('keydown', escCloser); BarcodeScanner.stop(); (cb||window._lastOnClose||(()=>{}))(); window._lastOnClose=null; }
+function escCloser(e){ if(e.key==='Escape') closeModal(); }
+
+function openDeal(id){
+  const d = AppState.data.deals.find(x=>x.id===id); if(!d) return;
+  const acts = AppState.data.activities.filter(a=>a.deal_id===id).sort((a,b)=>b.at.localeCompare(a.at));
+  const quotes = AppState.data.quotes.filter(q=>q.deal_id===id);
+  openModal(`
+    <div class="between"><h3>${esc(d.title)}</h3><button class="btn xs ghost" data-close>Close</button></div>
+    <div class="row wrap" style="margin:6px 0 10px"><span class="stage ${d.stage}">${d.stage}</span><span class="chip">${KES(d.value_minor)}</span><span class="chip">${esc(AppState.data.contacts.find(c=>c.id===d.contact_id)?.name||'')}</span></div>
+    <div class="stack">
+      <div class="row wrap" style="gap:6px">
+        <button class="btn sm primary" data-logactivity="${d.id}">+ Log activity</button>
+        <button class="btn sm" data-movestage="${d.id}">Move stage</button>
+        <button class="btn sm ghost" data-quote="${d.id}">+ Quote</button>
+        <button class="btn sm ghost" data-printdeal="${d.id}">Print card</button>
+      </div>
+      <div>
+        <h4>Activity timeline</h4>
+        ${acts.length?acts.map(a=>`<div class="feed-item"><div class="type">●</div><div class="body"><div class="t">${esc(a.type)}</div><div class="m">${esc(a.outcome||'')} · ${fmtDateTime(a.at)}</div></div></div>`).join(''):'<div class="muted tiny">No activities</div>'}
+      </div>
+      <div><h4>Quotes</h4>${quotes.length?quotes.map(q=>`<div class="between"><span class="mono">${esc(q.number)}</span><span class="money">${KES(q.total_minor)}</span></div>`).join(''):'<div class="muted tiny">No quotes</div>'}</div>
+    </div>
+  `, {onOpen:(r)=>{
+    r.querySelectorAll('[data-logactivity]').forEach(b=>b.onclick=()=>{closeModal(); logActivitySheet(id);});
+    r.querySelectorAll('[data-movestage]').forEach(b=>b.onclick=()=>moveStageSheet(id));
+    r.querySelectorAll('[data-quote]').forEach(b=>b.onclick=()=>{closeModal(); quoteBuilder(id);});
+    r.querySelectorAll('[data-printdeal]').forEach(b=>b.onclick=()=>printDealCard(id));
+  }});
+}
+function openContact(id){ const c = AppState.data.contacts.find(x=>x.id===id); if(!c) return; const deals = AppState.data.deals.filter(d=>d.contact_id===id);
+  openModal(`<div class="between"><h3>${esc(c.name)}</h3><button class="btn xs ghost" data-close>Close</button></div>
+    <p class="muted">${esc(c.phone)} · ${esc(c.email||'')}</p>
+    <div class="row wrap" style="gap:6px"><button class="btn sm primary" data-logactivity="" data-contact-id="${id}">+ Log activity</button><button class="btn sm ghost" data-printcontact="${id}">Print card</button></div>
+    <h4 style="margin-top:14px">Deals</h4>
+    ${deals.length?deals.map(d=>`<div class="between" style="padding:6px 0; border-bottom:1px solid var(--hairline)"><span>${esc(d.title)}</span><span class="money">${KES(d.value_minor)}</span></div>`).join(''):'<div class="muted tiny">No deals</div>'}
+  `, {onOpen:(r)=>{
+    r.querySelectorAll('[data-logactivity]').forEach(b=>b.onclick=()=>{closeModal(); logActivitySheet(null, id);});
+    r.querySelectorAll('[data-printcontact]').forEach(b=>b.onclick=()=>printContactCard(id));
+  }});
+}
+function openQuote(id){ const q = AppState.data.quotes.find(x=>x.id===id); if(!q) return;
+  openModal(`<div class="between"><h3>${esc(q.number)}</h3><button class="btn xs ghost" data-close>Close</button></div>
+    <p class="muted tiny">${esc(AppState.data.deals.find(d=>d.id===q.deal_id)?.title||'')}</p>
+    <div class="row wrap" style="gap:6px"><span class="chip">${KES(q.total_minor)}</span><span class="chip">expires ${fmtDate(q.valid_until)}</span><span class="stage ${q.status==='accepted'?'won':''}">${esc(q.status)}</span></div>
+    <div class="row wrap" style="gap:6px; margin-top:10px">
+      <button class="btn sm" data-markquote="${q.id}">Mark sent</button>
+      <button class="btn sm" data-acceptquote="${q.id}">Accept</button>
+      <button class="btn sm ghost" data-expirequote="${q.id}">Expire</button>
+      <button class="btn sm ghost" data-printquote="${q.id}">Print</button>
+      <button class="btn sm accent" data-invoicefromquote="${q.id}">→ Invoice</button>
+    </div>
+  `, {onOpen:(r)=>{
+    r.querySelectorAll('[data-markquote]').forEach(b=>b.onclick=async()=>{q.status='sent'; await AppState.save(); toast('Quote marked sent'); closeModal(); go('quotes');});
+    r.querySelectorAll('[data-acceptquote]').forEach(b=>b.onclick=async()=>{q.status='accepted'; await AppState.save(); toast('Quote accepted'); closeModal(); go('quotes');});
+    r.querySelectorAll('[data-expirequote]').forEach(b=>b.onclick=async()=>{q.status='expired'; await AppState.save(); toast('Quote expired'); closeModal(); go('quotes');});
+    r.querySelectorAll('[data-printquote]').forEach(b=>b.onclick=()=>printQuote(q.id));
+    r.querySelectorAll('[data-invoicefromquote]').forEach(b=>b.onclick=async()=>{
+      const inv = {id:uid('iv'), deal_id:q.deal_id, quote_id:q.id, number:AppState.data.meta.business.invoicePrefix+(AppState.data.meta.nextInvoice++), amount_minor:q.total_minor, due_date:new Date(Date.now()+14*86400000).toISOString().slice(0,10), paid_minor:0, status:'unpaid', mpesa_refs:[]};
+      AppState.data.invoices.push(inv); q.status='accepted'; await AppState.save(); toast('Invoice '+inv.number+' created'); closeModal(); go('invoices');
+    });
+  }});
+}
+function openInvoice(id){ const i = AppState.data.invoices.find(x=>x.id===id); if(!i) return;
+  openModal(`<div class="between"><h3>${esc(i.number)}</h3><button class="btn xs ghost" data-close>Close</button></div>
+    <div class="row wrap" style="gap:6px"><span class="chip">${KES(i.amount_minor)}</span><span class="chip">paid ${KES(i.paid_minor)}</span><span class="stage ${i.status==='paid'?'won':''}">${esc(i.status)}</span></div>
+    <div style="margin-top:10px"><button class="btn sm primary" data-payinvoice="${i.id}">Record payment</button><button class="btn sm ghost" data-printinvoice="${i.id}">Print</button></div>
+    <h4 style="margin-top:12px">M-Pesa refs</h4>
+    <div class="mono tiny">${(i.mpesa_refs||[]).map(r=>esc(r)).join('<br>')||'—'}</div>
+  `, {onOpen:(r)=>{
+    r.querySelectorAll('[data-payinvoice]').forEach(b=>b.onclick=()=>paymentSheet(i.id));
+    r.querySelectorAll('[data-printinvoice]').forEach(b=>b.onclick=()=>printInvoice(i.id));
+  }});
+}
+function openProduct(id){ const p = AppState.data.products.find(x=>x.id===id); if(!p) return;
+  openModal(`<div class="between"><h3>${esc(p.name)}</h3><button class="btn xs ghost" data-close>Close</button></div>
+    <p class="muted mono">${esc(p.sku)} · ${esc(p.barcode)}</p>
+    <div class="row wrap" style="gap:6px"><span class="chip">${KES(p.unit_price_minor)}</span><span class="chip">cost ${KES(p.cost_minor)}</span></div>
+  `);
+}
+function openStaff(id){ const s = AppState.data.staff.find(x=>x.id===id); if(!s) return;
+  openModal(`<div class="between"><h3>${esc(s.name)}</h3><button class="btn xs ghost" data-close>Close</button></div>
+    <p class="muted">${esc(ROLES[s.role]?.label||s.role)} · ${esc(s.phone)}</p>
+    <div class="row wrap" style="gap:6px"><span class="chip">${KES(s.target_minor_month)}</span><span class="chip">${esc(s.badge_barcode)}</span></div>
+  `);
+}
+
+/* ============ 12. SHEETS ============ */
+function logActivitySheet(dealId, contactId){
+  const deals = dealId? AppState.data.deals.filter(d=>d.id===dealId) : AppState.data.deals;
+  openModal(`<h3>Log activity</h3>
+    <label class="label">Type</label>
+    <select class="select" id="la-type"><option value="call">Call</option><option value="whatsapp">WhatsApp</option><option value="meeting">Meeting</option><option value="site_visit">Site visit</option><option value="email">Email</option><option value="note">Note</option></select>
+    <label class="label" style="margin-top:6px">Deal</label>
+    <select class="select" id="la-deal">${deals.map(d=>`<option value="${d.id}" ${d.id===dealId?'selected':''}>${esc(d.title)}</option>`).join('')}</select>
+    <label class="label" style="margin-top:6px">Outcome</label>
+    <textarea class="textarea" id="la-outcome" placeholder="What happened?"></textarea>
+    <label class="label" style="margin-top:6px">Next step</label>
+    <input class="input" id="la-next" placeholder="e.g. Send proposal">
+    <label class="label" style="margin-top:6px">Next step date</label>
+    <input class="input" id="la-date" type="date" value="${todayISO()}">
+    <div class="row" style="margin-top:12px; gap:8px"><button class="btn ghost grow" data-close>Cancel</button><button class="btn primary grow" id="la-save">Save</button></div>
+  `, {onOpen:()=>{
+    $('#la-save').onclick = async ()=>{
+      const dealId = $('#la-deal').value;
+      const deal = AppState.data.deals.find(d=>d.id===dealId);
+      if(!deal){ toast('Pick a deal', 'err'); return; }
+      const act = {id:uid('ac'), deal_id:dealId, contact_id:deal.contact_id, type:$('#la-type').value, at:nowISO(), outcome:$('#la-outcome').value, next_step:$('#la-next').value, next_step_at:$('#la-date').value, owner_name:Session.user?.name||'system'};
+      AppState.data.activities.unshift(act);
+      const ct = AppState.data.contacts.find(c=>c.id===deal.contact_id); if(ct) ct.last_touch_at = nowISO();
+      await AppState.save(); Audit.log('activity.create','activity',act.id);
+      toast('Activity logged'); closeModal(); AppShell.renderRoute();
+    };
+  }});
+}
+function moveStageSheet(dealId){
+  const d = AppState.data.deals.find(x=>x.id===dealId); if(!d) return;
+  openModal(`<h3>Move stage</h3><p class="muted tiny">${esc(d.title)}</p>
+    <div class="stack">
+      ${['lead','qualified','proposal','negotiation','won','lost'].map(s=>`<button class="btn ${d.stage===s?'primary':''}" data-newstage="${s}" style="justify-content:flex-start">${s}</button>`).join('')}
+    </div>
+    <div class="row" style="margin-top:12px"><button class="btn ghost block" data-close>Cancel</button></div>
+  `, {onOpen:(r)=>{
+    r.querySelectorAll('[data-newstage]').forEach(b=>b.onclick=async()=>{
+      const ns = b.dataset.newstage;
+      d.stage = ns; d.stage_changed_at = nowISO();
+      if(ns==='won'){ d.won_at = nowISO(); d.probability = 100; }
+      if(ns==='lost'){ d.probability = 0; }
+      await AppState.save(); Audit.log('deal.move','deal',d.id,{to:ns});
+      toast('Moved to '+ns); closeModal(); AppShell.renderRoute();
+    });
+  }});
+}
+function paymentSheet(invoiceId){
+  const i = AppState.data.invoices.find(x=>x.id===invoiceId); if(!i) return;
+  const remain = i.amount_minor - i.paid_minor;
+  openModal(`<h3>Record payment</h3><p class="muted">${esc(i.number)} · balance ${KES(remain)}</p>
+    <label class="label">Amount (Ksh)</label><input class="input" id="pay-amt" value="${(remain/100).toFixed(2)}">
+    <label class="label" style="margin-top:6px">Method</label>
+    <select class="select" id="pay-method"><option value="cash">Cash</option><option value="mpesa">M-Pesa</option><option value="bank">Bank</option><option value="cheque">Cheque</option></select>
+    <label class="label" style="margin-top:6px">Reference</label><input class="input" id="pay-ref" placeholder="M-Pesa code e.g. QGH7XK2LMN">
+    <div class="row" style="margin-top:12px; gap:8px"><button class="btn ghost grow" data-close>Cancel</button><button class="btn primary grow" id="pay-save">Save</button></div>
+  `, {onOpen:()=>{
+    $('#pay-save').onclick = async ()=>{
+      try{
+        const amt = parseKES($('#pay-amt').value);
+        const method = $('#pay-method').value;
+        const ref = $('#pay-ref').value.trim();
+        const p = Payments.record(i, amt, method, ref, Session.user?.name||'system');
+        AppState.data.payments.push(p);
+        await AppState.save(); Audit.log('payment.record','invoice',i.id,{amt,method});
+        toast('Payment recorded'); closeModal(); AppShell.renderRoute();
+      }catch(e){ toast(e.message,'err'); }
+    };
+  }});
+}
+async function quoteBuilder(dealId){
+  const deal = AppState.data.deals.find(d=>d.id===dealId);
+  if(!deal){ toast('Pick a deal first', 'err'); return; }
+  const items = [];
+  const render = () => {
+    const subtotal = items.reduce((a,i)=>a+i.line_total_minor,0);
+    const vat = Math.round(subtotal*16/116);
+    return `<div class="between"><h3>New quote</h3><button class="btn xs ghost" data-close>Close</button></div>
+      <p class="muted tiny">${esc(deal.title)} · ${esc(AppState.data.contacts.find(c=>c.id===deal.contact_id)?.name||'')}</p>
+      <div class="row" style="margin-bottom:8px; gap:6px"><input class="input grow" id="qb-search" placeholder="Search catalogue…"><button class="btn sm" data-scan="quoteItem">Scan</button></div>
+      <div id="qb-list">${AppState.data.products.filter(p=>p.active).map(p=>`<div class="between" style="padding:6px 0; border-bottom:1px solid var(--hairline)"><span>${esc(p.name)}</span><span class="row"><span class="money">${KES(p.unit_price_minor)}</span><button class="btn xs" data-add="${p.id}">Add</button></span></div>`).join('')}</div>
+      <h4 style="margin-top:10px">Items</h4>
+      ${items.length?items.map((it,i)=>`<div class="between" style="padding:4px 0"><span>${esc(it.description)} × ${it.qty}</span><span class="row"><span class="money">${KES(it.line_total_minor)}</span><button class="btn xs ghost" data-remove="${i}">×</button></span></div>`).join(''):'<div class="muted tiny">No items</div>'}
+      <div class="between" style="margin-top:6px"><span>VAT (16% incl.)</span><span class="money">${KES(vat)}</span></div>
+      <div class="between"><strong>Total</strong><strong class="money">${KES(subtotal)}</strong></div>
+      <label class="label" style="margin-top:8px">Valid until</label><input class="input" type="date" id="qb-valid" value="${new Date(Date.now()+7*86400000).toISOString().slice(0,10)}">
+      <button class="btn primary block" style="margin-top:10px" id="qb-save">Create quote</button>
+    `;
+  };
+  const mount = (html, onOpen) => { $('#modalBody').innerHTML = `<div class="modal">${html}</div>`; $('#modalRoot').classList.add('on'); onOpen && onOpen($('#modalRoot')); };
+  const bind = () => {
+    $('#modalBody').querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{
+      const p = AppState.data.products.find(x=>x.id===b.dataset.add);
+      items.push({description:p.name, qty:1, unit_price_minor:p.unit_price_minor, discount_minor:0, line_total_minor:p.unit_price_minor});
+      refresh();
+    });
+    $('#modalBody').querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{ items.splice(parseInt(b.dataset.remove,10),1); refresh(); });
+    $('#modalBody').querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal());
+    const save = $('#qb-save');
+    if(save) save.onclick = async ()=>{
+      const subtotal = items.reduce((a,i)=>a+i.line_total_minor,0);
+      if(!subtotal){ toast('Add at least one item','err'); return; }
+      const vat = Math.round(subtotal*16/116);
+      const q = {id:uid('qt'), deal_id:deal.id, number:AppState.data.meta.business.quotePrefix+(AppState.data.meta.nextQuote++), items:items.slice(), subtotal_minor:subtotal - vat, vat_minor:vat, total_minor:subtotal, valid_until:$('#qb-valid').value, status:'sent', barcode_id:barcodeEAN13('qt_'+Date.now()), created_at:nowISO()};
+      AppState.data.quotes.push(q); await AppState.save(); Audit.log('quote.create','quote',q.id);
+      toast('Quote '+q.number+' created'); closeModal(); go('quotes');
+    };
+    $('#modalBody').querySelectorAll('[data-scan]').forEach(b=>b.onclick=()=>scanModal(async (value)=>{
+      const p = AppState.data.products.find(x=>x.barcode===value);
+      if(!p){ toast('No product for barcode '+value,'err'); return; }
+      items.push({description:p.name, qty:1, unit_price_minor:p.unit_price_minor, discount_minor:0, line_total_minor:p.unit_price_minor});
+      refresh();
+    }));
+    const s = $('#qb-search');
+    if(s) s.oninput = ()=>{
+      const q = s.value.toLowerCase();
+      const filt = AppState.data.products.filter(p=>p.name.toLowerCase().includes(q)||p.sku.toLowerCase().includes(q));
+      $('#qb-list').innerHTML = filt.map(p=>`<div class="between" style="padding:6px 0; border-bottom:1px solid var(--hairline)"><span>${esc(p.name)}</span><span class="row"><span class="money">${KES(p.unit_price_minor)}</span><button class="btn xs" data-add="${p.id}">Add</button></span></div>`).join('');
+      bind();
+    };
+  };
+  const refresh = () => { mount(render(), bind); };
+  refresh();
+}
+
+/* ============ 13. PRINT ============ */
+function printDealCard(id){
+  const d = AppState.data.deals.find(x=>x.id===id); if(!d) return;
+  const c = AppState.data.contacts.find(x=>x.id===d.contact_id);
+  Printer.printHTML(`<!DOCTYPE html><html><body style="font-family:ui-monospace,monospace; padding:24px">
+    <h2 style="margin:0 0 4px">${esc(d.title)}</h2>
+    <div>${esc(c?.name||'')}</div>
+    <div>Stage: ${esc(d.stage)} · Value: ${KES(d.value_minor)}</div>
+    <div style="margin:20px 0; border:1px dashed #000; padding:10px; text-align:center; letter-spacing:3px">${esc(d.barcode_id||'')}</div>
+    <div style="font-size:11px">${esc(AppState.data.meta.business?.name||'')} · ${esc(AppState.data.meta.business?.phone||'')}</div>
+  </body></html>`);
+}
+function printContactCard(id){
+  const c = AppState.data.contacts.find(x=>x.id===id); if(!c) return;
+  Printer.printHTML(`<!DOCTYPE html><html><body style="font-family:ui-monospace,monospace; padding:24px">
+    <h2 style="margin:0 0 4px">${esc(c.name)}</h2>
+    <div>${esc(c.phone)}</div>
+    <div>${esc(c.email||'')}</div>
+    <div style="margin:20px 0; border:1px dashed #000; padding:10px; text-align:center; letter-spacing:3px">${esc(c.barcode_id||'')}</div>
+    <div style="font-size:11px">${esc(AppState.data.meta.business?.name||'')}</div>
+  </body></html>`);
+}
+function printQuote(id){
+  const q = AppState.data.quotes.find(x=>x.id===id); if(!q) return;
+  const deal = AppState.data.deals.find(d=>d.id===q.deal_id);
+  const contact = AppState.data.contacts.find(c=>c.id===deal?.contact_id);
+  const items = q.items?.length? q.items.map(i=>`<tr><td>${esc(i.description)}</td><td class="r">${i.qty}</td><td class="r">${KES(i.unit_price_minor)}</td><td class="r">${KES(i.line_total_minor)}</td></tr>`).join('')
+    : `<tr><td colspan="4">(sample data — no line items captured)</td></tr>`;
+  Printer.printHTML(Printer.receiptBody({
+    title:'QUOTE '+q.number,
+    meta:{business:AppState.data.meta.business?.name||'', address:AppState.data.meta.business?.address||'', phone:AppState.data.meta.business?.phone||'', dateStr:fmtDateTime(nowISO())},
+    lines:`<table><thead><tr><th>Item</th><th class="r">Qty</th><th class="r">Price</th><th class="r">Total</th></tr></thead><tbody>${items}</tbody></table>
+      <div class="barcode">${esc(q.barcode_id||'')}</div>`,
+    totals:`<div class="row"><span>Subtotal</span><span>${KES(q.subtotal_minor)}</span></div><div class="row"><span>VAT (16% incl.)</span><span>${KES(q.vat_minor)}</span></div><div class="row tot"><span>Total</span><span>${KES(q.total_minor)}</span></div>
+      <div style="margin-top:6px">Valid until ${esc(q.valid_until||'')}</div>
+      <div style="margin-top:6px">Contact: ${esc(contact?.name||'')} · ${esc(contact?.phone||'')}</div>`,
+    footer:`<div style="text-align:center; margin-top:8px">Asante! Karibu tena</div>`
+  }));
+}
+function printInvoice(id){
+  const i = AppState.data.invoices.find(x=>x.id===id); if(!i) return;
+  Printer.printHTML(Printer.receiptBody({
+    title:'INVOICE '+i.number,
+    meta:{business:AppState.data.meta.business?.name||'', address:AppState.data.meta.business?.address||'', phone:AppState.data.meta.business?.phone||'', dateStr:fmtDateTime(nowISO())},
+    lines:`<div>Amount: ${KES(i.amount_minor)}</div><div>Paid: ${KES(i.paid_minor)}</div><div>Due: ${esc(i.due_date)}</div><div>Status: ${esc(i.status)}</div><div>M-Pesa refs: ${(i.mpesa_refs||[]).map(esc).join(', ')||'—'}</div>`,
+    totals:`<div class="row tot"><span>Balance</span><span>${KES(i.amount_minor - i.paid_minor)}</span></div>`,
+    footer:`<div style="text-align:center; margin-top:8px">Asante! Karibu tena</div>`
+  }));
+}
+function printStockTake(){
+  const rows = AppState.data.products.map(p=>`<tr><td>${esc(p.name)}</td><td class="mono">${esc(p.barcode)}</td><td class="r">1</td></tr>`).join('');
+  Printer.printHTML(Printer.receiptBody({
+    title:'STOCK TAKE',
+    meta:{business:AppState.data.meta.business?.name||'', address:'', phone:'', dateStr:fmtDateTime(nowISO())},
+    lines:`<table><thead><tr><th>Item</th><th>Barcode</th><th class="r">Count</th></tr></thead><tbody>${rows}</tbody></table>`,
+    totals:'', footer:''
+  }));
+}
+
+/* ============ 14. BARCODE FLOWS ============ */
+async function universalLookup(code){
+  const D = AppState.data;
+  const hits = [];
+  const c = D.contacts.find(x=>x.barcode_id===code); if(c) hits.push({type:'contact', obj:c});
+  const d = D.deals.find(x=>x.barcode_id===code); if(d) hits.push({type:'deal', obj:d});
+  const q = D.quotes.find(x=>x.barcode_id===code); if(q) hits.push({type:'quote', obj:q});
+  const p = D.products.find(x=>x.barcode===code); if(p) hits.push({type:'product', obj:p});
+  const s = D.staff.find(x=>x.badge_barcode===code); if(s) hits.push({type:'staff', obj:s});
+  if(!hits.length){ toast('No record for '+code,'err'); return; }
+  const h = hits[0];
+  if(h.type==='contact') openContact(h.obj.id);
+  else if(h.type==='deal') openDeal(h.obj.id);
+  else if(h.type==='quote') openQuote(h.obj.id);
+  else if(h.type==='product') openProduct(h.obj.id);
+  else if(h.type==='staff') openStaff(h.obj.id);
+}
+
+async function clockInOut(direction){
+  scanModal(async (value)=>{
+    const st = AppState.data.staff.find(x=>x.badge_barcode===value);
+    if(!st){ toast('Unknown badge','err'); return; }
+    AppState.data.attendance.push({id:uid('at'), staff_id:st.id, direction, at:nowISO(), source:'badge_scan'});
+    await AppState.save(); Audit.log('attendance.'+direction, 'staff', st.id);
+    toast(st.name+' clocked '+direction.toUpperCase());
+  });
+}
+
+async function stockTakeScan(){
+  const counts = {};
+  openModal(`<h3>Stock-take count mode</h3><p class="muted tiny">Scan catalogue barcodes to count.</p>
+    <button class="btn primary" id="st-scan">Scan</button>
+    <div id="st-list" style="margin-top:10px"></div>
+    <button class="btn ghost block" style="margin-top:10px" data-close>Close</button>
+  `, {onOpen:(r)=>{
+    const refresh = ()=>{ $('#st-list').innerHTML = Object.entries(counts).map(([code,n])=>{ const p=AppState.data.products.find(x=>x.barcode===code); return `<div class="between"><span>${esc(p?.name||code)}</span><span class="money">${n}</span></div>`; }).join('')||'<div class="muted tiny">No scans yet</div>'; };
+    refresh();
+    $('#st-scan').onclick = ()=>scanModal((v)=>{ if(AppState.data.products.find(x=>x.barcode===v)){ counts[v]=(counts[v]||0)+1; refresh(); } else toast('Not in catalogue','err'); });
+  }});
+}
+
+async function dispatchScan(direction){
+  scanModal(async (value)=>{
+    const p = AppState.data.products.find(x=>x.barcode===value);
+    if(!p){ toast('Unknown item','err'); return; }
+    AppState.data.meta.dispatches = AppState.data.meta.dispatches||[];
+    AppState.data.meta.dispatches.push({id:uid('dp'), product_id:p.id, direction, at:nowISO(), actor:Session.user?.name});
+    await AppState.save(); toast((direction==='out'?'Dispatched ':'Received ')+p.name);
+  });
+}
+
+/* ============ 15. APP SHELL ============ */
+const AppShell = {
+  route:'desk', arg:null,
+  navItems(){
+    const items = [
+      {id:'desk', label:'Desk', icon:'◰', perms:()=>true},
+      {id:'pipeline', label:'Pipeline', icon:'▤', perms:()=>Session.can('deals')},
+      {id:'contacts', label:'Contacts', icon:'◐', perms:()=>Session.can('contacts')},
+      {id:'quotes', label:'Quotes', icon:'▦', perms:()=>Session.can('quotes')},
+      {id:'invoices', label:'Invoices', icon:'▥', perms:()=>Session.can('invoices')},
+      {id:'catalogue', label:'Catalogue', icon:'▧', perms:()=>Session.can('catalogue')},
+      {id:'staff', label:'Staff', icon:'▣', perms:()=>Session.can('staff.read')||Session.can('staff')},
+      {id:'automations', label:'Automations', icon:'⚙', perms:()=>true, badge:()=>Automations.totalFiring()||null},
+      {id:'reports', label:'Reports', icon:'▤', perms:()=>Session.can('reports')||Session.can('reports.own')},
+      {id:'settings', label:'Settings', icon:'☰', perms:()=>true}
+    ];
+    if(Session.role==='developer') items.push({id:'developer', label:'Developer', icon:'◈', perms:()=>true});
+    return items.filter(i=>i.perms());
+  },
+  renderSidebar(){
+    const nav = $('#sideNav'); nav.innerHTML='';
+    this.navItems().forEach(item=>{
+      const b = document.createElement('button');
+      b.className='nav-item'+(this.route===item.id?' active':'');
+      const badge = item.badge? item.badge():null;
+      b.innerHTML = `<span style="width:18px; text-align:center">${esc(item.icon)}</span><span>${esc(item.label)}</span>${badge?`<span class="badge">${badge}</span>`:''}`;
+      b.onclick = ()=>{ go(item.id); if(window.matchMedia('(max-width:760px)').matches){ $('#sidebar').classList.remove('open'); $('#sidebarBackdrop').classList.remove('open'); } };
+      nav.appendChild(b);
+    });
+  },
+  renderBottomNav(){
+    const nav = $('#bottomNav');
+    const tabs = [
+      {id:'desk', label:'Desk', icon:'▤'},
+      {id:'pipeline', label:'Pipeline', icon:'▥'},
+      {id:'automations', label:'Auto', icon:'⚙', badge:Automations.totalFiring()},
+      {id:'reports', label:'Reports', icon:'◫'}
+    ];
+    nav.innerHTML = tabs.map(t=>`
+      <button class="tab ${this.route===t.id?'active':''}" data-go="${t.id}">
+        <span>${t.icon}</span><span>${t.label}</span>${t.badge?`<span class="chip lime" style="position:absolute; top:2px; right:6px; font-size:9px; padding:0 4px">${t.badge}</span>`:''}
+      </button>
+    `).join('');
+  },
+  renderRoute(){
+    this.renderSidebar();
+    this.renderBottomNav();
+    const view = $('#view');
+    const V = Views[this.route] || Views.desk;
+    view.innerHTML = V();
+    // re-bind nav items on view
+    view.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+    // row opens
+    view.querySelectorAll('[data-deal]').forEach(el=>el.onclick=()=>openDeal(el.dataset.deal));
+    view.querySelectorAll('[data-contact]').forEach(el=>el.onclick=()=>openContact(el.dataset.contact));
+    view.querySelectorAll('[data-quote]').forEach(el=>el.onclick=()=>openQuote(el.dataset.quote));
+    view.querySelectorAll('[data-invoice]').forEach(el=>el.onclick=()=>openInvoice(el.dataset.invoice));
+    view.querySelectorAll('[data-product]').forEach(el=>el.onclick=()=>openProduct(el.dataset.product));
+    view.querySelectorAll('[data-staff]').forEach(el=>el.onclick=()=>openStaff(el.dataset.staff));
+    view.querySelectorAll('[data-scan]').forEach(b=>b.onclick=()=>{
+      const kind = b.dataset.scan;
+      if(kind==='universal') scanModal(universalLookup);
+      else if(kind==='contact') scanModal(universalLookup);
+      else if(kind==='deal') scanModal(universalLookup);
+      else if(kind==='quote') scanModal(universalLookup);
+      else if(kind==='product') scanModal(universalLookup);
+      else scanModal(universalLookup);
+    });
+    view.querySelectorAll('[data-clock]').forEach(b=>b.onclick=()=>clockInOut(b.dataset.clock));
+    view.querySelectorAll('[data-action="autoRun"]').forEach(b=>b.onclick=()=>{
+      const r = b.dataset.route;
+      if(r==='deal') openDeal(b.dataset.routeArg);
+      else if(r==='quote') openQuote(b.dataset.routeArg);
+      else if(r==='invoice') openInvoice(b.dataset.routeArg);
+      else if(r==='staff') openStaff(b.dataset.routeArg);
+      else if(r==='contact') openContact(b.dataset.routeArg);
+      else if(r==='desk') go('desk');
+      else if(r==='settings') go('settings');
+    });
+    view.querySelectorAll('[data-action="autoSnooze"]').forEach(b=>b.onclick=async()=>{
+      AppState.data.meta.snoozed = AppState.data.meta.snoozed||{};
+      AppState.data.meta.snoozed[b.dataset.rule] = todayISO();
+      await AppState.save(); toast('Snoozed for today'); AppShell.renderRoute();
+    });
+    view.querySelectorAll('[data-export]').forEach(b=>b.onclick=()=>{
+      const kind = b.dataset.export;
+      if(kind==='contacts') download('contacts.csv', toCSV(AppState.data.contacts, ['id','name','phone','email','company_id','source']), 'text/csv');
+      else if(kind==='quotes') download('quotes.csv', toCSV(AppState.data.quotes, ['number','status','subtotal_minor','vat_minor','total_minor','valid_until']), 'text/csv');
+      else if(kind==='invoices') download('invoices.csv', toCSV(AppState.data.invoices, ['number','amount_minor','paid_minor','due_date','status']), 'text/csv');
+      else if(kind==='products') download('catalogue.csv', toCSV(AppState.data.products, ['name','sku','barcode','unit_price_minor','cost_minor','category','active']), 'text/csv');
+      else if(kind==='deals') download('deals.csv', toCSV(AppState.data.deals, ['title','stage','value_minor','probability','source','created_at']), 'text/csv');
+      else if(kind==='pipeline'){
+        const rows = Object.entries(Reports.pipelineByStage()).map(([k,v])=>({stage:k,count:v.count,value:v.value}));
+        download('pipeline.csv', toCSV(rows, ['stage','count','value']), 'text/csv');
+      }
+    });
+    view.querySelectorAll('[data-theme]').forEach(b=>b.onclick=async()=>{ document.documentElement.dataset.theme = b.dataset.theme; await Storage.set('theme', b.dataset.theme); });
+    view.querySelectorAll('[data-logactivity]').forEach(b=>b.onclick=()=>logActivitySheet(b.dataset.logactivity||null, b.dataset.contactId||null));
+    view.querySelectorAll('[data-movestage]').forEach(b=>b.onclick=()=>moveStageSheet(b.dataset.movestage));
+    view.querySelectorAll('[data-quote]').forEach(b=>{ if(b.dataset.quote && b.closest('tr')==null){ b.onclick=()=>quoteBuilder(b.dataset.quote); }});
+    // settings binds
+    const save = $('#saveSettings'); if(save) save.onclick = async ()=>{
+      AppState.data.meta.business = {...(AppState.data.meta.business||{}), name:$('#set-name').value, address:$('#set-address').value, phone:$('#set-phone').value};
+      await AppState.save(); $('#sideBrandName').textContent = $('#set-name').value; toast('Saved');
+    };
+    const exp = $('#exportJSON'); if(exp) exp.onclick = ()=>{
+      const payload = {schema:'dealdesk/v1', exportedAt:nowISO(), data:AppState.data};
+      download('dealdesk-backup-'+Date.now()+'.json', JSON.stringify(payload,null,2), 'application/json');
+      AppState.data.meta.lastBackupAt = nowISO(); AppState.save();
+    };
+    const impBtn = $('#importJSONBtn'); if(impBtn) impBtn.onclick = ()=>$('#importJSON').click();
+    const imp = $('#importJSON'); if(imp) imp.onchange = async (e)=>{
+      const file = e.target.files[0]; if(!file) return;
+      const text = await file.text();
+      try{
+        const parsed = JSON.parse(text);
+        if(parsed.schema!=='dealdesk/v1' || !parsed.data) throw new Error('Bad schema');
+        AppState.data = parsed.data; await AppState.save(); toast('Imported'); AppShell.renderRoute();
+      }catch(err){ toast('Import failed: '+err.message,'err'); }
+    };
+    const reset = $('#resetDemo'); if(reset) reset.onclick = async ()=>{
+      if(!confirm('Reset all demo data? This wipes local data.')) return;
+      if(!confirm('Really reset? This cannot be undone.')) return;
+      await AppState.reset(true); toast('Demo reset'); go('desk');
+    };
+    // developer
+    const dm = (mode)=>{ SyncAdapter.cfg.dataMode = mode; AppShell.renderRoute(); toast('Mode: '+mode); };
+    view.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>dm(b.dataset.mode));
+    const ft = $('#devTestFirestore'); if(ft) ft.onclick = ()=>toast('Not wired in this build — adapter stub throws "not configured".','err');
+    const fw = $('#devTestWorker'); if(fw) fw.onclick = ()=>toast('Not wired in this build — adapter stub throws "not configured".','err');
+    const dc = $('#devConnect'); if(dc) dc.onclick = ()=>{ try{ SyncAdapter.init({}); }catch(e){ toast(e.message,'err'); } };
+    ['dev-proj','dev-region','dev-apikey','dev-tenant','dev-worker','dev-token'].forEach(id=>{
+      const el = $('#'+id); if(el) el.onchange = ()=>{ const key = id.replace('dev-',''); SyncAdapter.cfg[key] = el.value; toast('Saved locally','ok'); };
+    });
+    ['aiPos','aiRestock','auditRead','verboseSync'].forEach(k=>{
+      const el = $('#ff-'+k); if(el) el.onchange = ()=>{ SyncAdapter.cfg.featureFlags[k] = el.checked; toast('Flag '+k+'='+el.checked); };
+    });
+    const cl = $('#devClearLog'); if(cl) cl.onclick=()=>{ Log.buf=[]; AppShell.renderRoute(); };
+    const cp = $('#devCopyLog'); if(cp) cp.onclick=()=>{ navigator.clipboard?.writeText(Log.buf.map(l=>`${l.at} [${l.type}] ${l.msg}`).join('\n')); toast('Log copied'); };
+    const dw = $('#devWipe'); if(dw) dw.onclick=async()=>{
+      if(!confirm('Wipe tenant data?')) return;
+      if(!confirm('Confirm wipe — irreversible.')) return;
+      await AppState.reset(false); toast('Wiped'); go('desk');
+    };
+    const dr = $('#devReseed'); if(dr) dr.onclick=async()=>{ await seedData(); toast('Reseeded'); AppShell.renderRoute(); };
+    // deal drag on pipeline
+    view.querySelectorAll('.deal-card[draggable="true"]').forEach(card=>{
+      card.ondragstart = (e)=>{ e.dataTransfer.setData('text/plain', card.dataset.deal); card.classList.add('dragging'); };
+      card.ondragend = ()=>card.classList.remove('dragging');
+    });
+    view.querySelectorAll('.pcol').forEach(col=>{
+      col.ondragover = (e)=>{ e.preventDefault(); col.classList.add('drop-hover'); };
+      col.ondragleave = ()=>col.classList.remove('drop-hover');
+      col.ondrop = async (e)=>{
+        e.preventDefault(); col.classList.remove('drop-hover');
+        const id = e.dataTransfer.getData('text/plain'); const d = AppState.data.deals.find(x=>x.id===id);
+        if(d){ d.stage = col.dataset.stage; d.stage_changed_at = nowISO(); if(d.stage==='won') d.won_at = nowISO(); await AppState.save(); Audit.log('deal.move','deal',d.id,{to:d.stage}); toast('Moved to '+d.stage); AppShell.renderRoute(); }
+      };
+    });
+  }
+};
+
+/* ============ 16. COMMAND PALETTE ============ */
+function renderPalette(){
+  const q = $('#paletteQ')?.value || '';
+  const query = q.toLowerCase();
+  const hits = [];
+  AppState.data.deals.filter(d=>d.title.toLowerCase().includes(query)).slice(0,6).forEach(d=>hits.push({type:'deal', label:d.title, sub:'Stage '+d.stage, run:()=>openDeal(d.id)}));
+  AppState.data.contacts.filter(c=>c.name.toLowerCase().includes(query)).slice(0,6).forEach(c=>hits.push({type:'contact', label:c.name, sub:c.phone, run:()=>openContact(c.id)}));
+  AppState.data.quotes.filter(x=>x.number.toLowerCase().includes(query)).slice(0,6).forEach(x=>hits.push({type:'quote', label:x.number, sub:KES(x.total_minor), run:()=>openQuote(x.id)}));
+  AppState.data.invoices.filter(x=>x.number.toLowerCase().includes(query)).slice(0,6).forEach(x=>hits.push({type:'invoice', label:x.number, sub:KES(x.amount_minor), run:()=>openInvoice(x.id)}));
+  AppState.data.products.filter(p=>p.name.toLowerCase().includes(query)||p.sku.toLowerCase().includes(query)).slice(0,6).forEach(p=>hits.push({type:'product', label:p.name, sub:p.sku, run:()=>openProduct(p.id)}));
+  const routes = [['desk','Desk'],['pipeline','Pipeline'],['contacts','Contacts'],['quotes','Quotes'],['invoices','Invoices'],['catalogue','Catalogue'],['staff','Staff'],['automations','Automations'],['reports','Reports'],['settings','Settings']];
+  routes.filter(r=>r[1].toLowerCase().includes(query)).forEach(r=>hits.push({type:'route', label:r[1], sub:'View', run:()=>go(r[0])}));
+  if('scan'.includes(query)) hits.push({type:'action', label:'Scan barcode', sub:'Universal lookup', run:()=>scanModal(universalLookup)});
+  const el = document.createElement('div');
+  el.className='stack';
+  el.innerHTML = hits.length? hits.map((h,i)=>`<button class="btn" data-i="${i}" style="justify-content:space-between; text-align:left"><span>${esc(h.label)}</span><span class="muted tiny">${esc(h.sub)}</span></button>`).join('') : '<div class="empty">No matches</div>';
+  const body = $('#paletteResults'); body.innerHTML=''; body.appendChild(el);
+  el.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{ const h = hits[parseInt(b.dataset.i,10)]; closeModal(); h.run(); });
+}
+function openPalette(){
+  openModal(`<div class="row" style="margin-bottom:10px"><input class="input" id="paletteQ" placeholder="Jump to a deal, contact, quote, invoice, product or view…" autofocus><span class="chip">Esc</span></div>
+    <div id="paletteResults"></div>`, {onOpen:(r)=>{
+    const q = $('#paletteQ'); q.focus(); q.oninput = renderPalette; renderPalette();
+    if(!window._palKey){ window._palKey = true; document.addEventListener('keydown', e=>{
+      if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); if($('#modalRoot').classList.contains('on')) return; openPalette(); }
+    }); }
+  }});
+}
+
+/* ============ 17. LOGIN ============ */
+function renderLogin(){
+  const roles = [
+    ['owner','Amina (Owner)','OWNER'],
+    ['sales_manager','David (Sales Manager)','MANAGER'],
+    ['sales_rep','Sarah (Sales Rep)','REP'],
+    ['finance','Mary (Finance)','FINANCE']
+  ];
+  const grid = $('#roleGrid'); grid.innerHTML = '';
+  roles.forEach(([role, name, tag])=>{
+    const b = document.createElement('button');
+    b.className='role-btn';
+    b.innerHTML = `<span class="r-role">${tag}</span><span>${esc(name)}</span>`;
+    b.onclick = async ()=>{
+      Session.role = role;
+      const st = AppState.data.staff.find(s=>s.role===role);
+      Session.user = {name: st?.name||name.split(' ')[0]||'User', role};
+      await Session.save();
+      enterApp();
+    };
+    grid.appendChild(b);
+  });
+  $('#devLoginBtn').onclick = async ()=>{
+    Session.role='developer';
+    Session.user = {name:'Developer', role:'developer'};
+    await Session.save();
+    enterApp();
+  };
+}
+async function enterApp(){
+  $('#loginScreen').style.display='none';
+  $('#app').classList.add('on');
+  if(window.matchMedia('(max-width:760px)').matches){
+    $('#mobileMenu').style.display='inline-grid';
+    $('#mobileMenu').onclick = ()=>{ $('#sidebar').classList.add('open'); $('#sidebarBackdrop').classList.add('open'); };
+    $('#sidebarBackdrop').onclick = ()=>{ $('#sidebar').classList.remove('open'); $('#sidebarBackdrop').classList.remove('open'); };
+  }
+  AppShell.renderRoute();
+}
+async function logout(){
+  await Session.clear();
+  $('#app').classList.remove('on');
+  $('#loginScreen').style.display='grid';
+}
+
+/* ============ 18. BOOTSTRAP ============ */
+async function bootstrap(){
+  await Storage.init();
+  $('#storageBadge').textContent = Storage.useIDB? 'IDB' : 'Session only';
+  $('#storageBadge').className = 'badge-pill '+(Storage.useIDB?'local':'local');
+  const t = await Storage.get('theme'); document.documentElement.dataset.theme = t || 'dark';
+  await AppState.load();
+  if(!AppState.data.meta?.business) await seedData();
+  if(!AppState.data.meta?.business?.name) AppState.data.meta.business.name = 'Your Agency Name';
+  $('#sideBrandName').textContent = AppState.data.meta.business.name || 'Your Agency Name';
+  // login button
+  renderLogin();
+  // session restore
+  if(await Session.load()){ await enterApp(); }
+  // palette trigger
+  $('#paletteTrigger').onclick = openPalette;
+  $('#paletteTrigger').onkeydown = (e)=>{ if(e.key==='Enter'){ openPalette(); } };
+  if(!window._palKey){ window._palKey = true; document.addEventListener('keydown', e=>{
+    if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); if($('#app').classList.contains('on')) openPalette(); }
+  }); }
+  // data mode badge
+  $('#dataModeBadge').textContent = SyncAdapter.cfg.dataMode==='local'?'Local':SyncAdapter.cfg.dataMode==='hybrid'?'Hybrid':'Cloud';
+  // notif dot if any automation firing
+  $('#notifDot').style.display = Automations.totalFiring()>0? 'block':'none';
+  // mobile menu show/hide on resize
+  window.addEventListener('resize', ()=>{
+    const m = window.matchMedia('(max-width:760px)').matches;
+    $('#mobileMenu').style.display = m? 'inline-grid' : 'none';
+    if(!m){ $('#sidebar').classList.remove('open'); $('#sidebarBackdrop').classList.remove('open'); }
+    AppShell.renderRoute();
+  });
+  // logout binding (mobile home)
+  document.body.addEventListener('click', (e)=>{
+    if(e.target.id==='logoutBtn' || (e.target.closest('#logoutBtn'))){ logout(); }
+  });
+  // delegate generic route buttons after render
+  document.body.addEventListener('click', (e)=>{
+    const g = e.target.closest('[data-go]'); if(g){ go(g.dataset.go); }
+    const d = e.target.closest('[data-deal]'); if(d && !e.target.closest('[data-action]')) openDeal(d.dataset.deal);
+    const c = e.target.closest('[data-contact]'); if(c && !e.target.closest('tr')) openContact(c.dataset.contact);
+    const q = e.target.closest('[data-quote]'); if(q && !e.target.closest('tr')) openQuote(q.dataset.quote);
+    const i = e.target.closest('[data-invoice]'); if(i && !e.target.closest('tr')) openInvoice(i.dataset.invoice);
+    const st = e.target.closest('[data-staff]'); if(st && !e.target.closest('tr')) openStaff(st.dataset.staff);
+  });
+  // observe table cells for data-label stamping
+  const view = $('#view');
+  const stamp = ()=>{ view.querySelectorAll('table.tbl').forEach(tbl=>{
+    const heads = Array.from(tbl.querySelectorAll('thead th')).map(th=>th.textContent.trim());
+    tbl.querySelectorAll('tbody tr').forEach(tr=>{
+      Array.from(tr.children).forEach((td, idx)=>{ if(!td.dataset.label) td.dataset.label = heads[idx]||''; });
+    });
+  }); };
+  const mo = new MutationObserver(stamp); mo.observe(view, {childList:true, subtree:true});
+  stamp();
+  // show toast on activity dot
+  $('#notifBtn').onclick = ()=>{ go('automations'); };
+}
+document.addEventListener('DOMContentLoaded', bootstrap);
+</script>
+</body>
+</html>

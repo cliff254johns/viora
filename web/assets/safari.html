@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Safari Travellers · Direct-to-Destination Kenya</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #F9F6F0;
+      color: #1E2A1E;
+      line-height: 1.5;
+    }
+    h1, h2, h3, h4, .logo h1, .hero h2, .section-title, .service-card h3, .price, .btn-primary, .nav-links a {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    h2.section-title { font-size: 2.8rem; font-weight: 800; line-height: 1.2; margin-bottom: 0.75rem; text-align: center; }
+    .hero h2 { font-size: 4.8rem; line-height: 1.1; }
+    .price { font-size: 1.8rem; font-weight: 800; }
+    .container { max-width: 1300px; margin: 0 auto; padding: 0 2rem; }
+    :root {
+      --terracotta: #D96C4A;
+      --gold: #E6B85C;
+      --deep-green: #2A5C4A;
+      --warm-sand: #EEDCC8;
+      --card-shadow: 0 15px 30px -8px rgba(0,0,0,0.1);
+    }
+    nav {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1rem 2rem; background: rgba(255, 253, 249, 0.96);
+      backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 1000;
+      border-bottom: 2px solid var(--gold); flex-wrap: wrap;
+    }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-icon { background: var(--terracotta); width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 30px 8px 30px 8px; font-size: 1.8rem; color: white; box-shadow: 4px 4px 0 var(--gold); }
+    .logo h1 { font-size: 1.9rem; }
+    .nav-links { display: flex; gap: 2rem; align-items: center; flex-wrap: wrap; }
+    .currency-toggle { display: flex; gap: 8px; background: var(--warm-sand); padding: 0.3rem 0.8rem; border-radius: 40px; }
+    .currency-toggle button { background: none; border: none; padding: 0.3rem 0.8rem; border-radius: 30px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+    .currency-toggle .active { background: var(--deep-green); color: white; }
+    .menu-toggle { display: none; font-size: 1.8rem; cursor: pointer; color: var(--deep-green); }
+    .btn-primary {
+      background: var(--terracotta); color: white; padding: 0.8rem 2rem; border-radius: 40px;
+      text-decoration: none; border: none; cursor: pointer; display: inline-flex; align-items: center;
+      gap: 8px; box-shadow: 0 6px 12px rgba(217,108,74,0.25); transition: 0.2s;
+    }
+    .btn-primary:hover { background: #c45a3a; transform: translateY(-2px); }
+    .hero {
+      position: relative; min-height: 85vh; display: flex; align-items: center;
+      background: linear-gradient(120deg, #1E3A2F, #2E5E4A); color: white;
+    }
+    .hero-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.3; mix-blend-mode: soft-light; }
+    .hero-content { position: relative; z-index: 5; max-width: 750px; }
+    .hero h2 .accent { color: var(--gold); }
+    .about-grid, .fast-facts { display: flex; gap: 2rem; margin: 2rem 0; flex-wrap: wrap; }
+    .service-card, .fact-card { background: white; border-radius: 32px; padding: 1.5rem; flex: 1; box-shadow: var(--card-shadow); }
+    .service-card { border-left: 6px solid var(--terracotta); }
+    .service-card i, .fact-card i { font-size: 2rem; color: var(--terracotta); margin-bottom: 1rem; }
+    .fact-card { text-align: center; min-width: 160px; border: 1px solid var(--gold); }
+    .group-trips-special {
+      background: linear-gradient(115deg, #FFF3E0, #FEE6CE);
+      border-radius: 56px; margin: 2rem auto; padding: 1.2rem 0 2rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+    }
+    .filter-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin: 2rem 0 1rem; gap: 1rem; }
+    .filter-group { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .filter-select, .search-input {
+      padding: 0.6rem 1.2rem; border-radius: 40px; border: 1px solid var(--gold);
+      background: white; font-family: 'Inter'; outline: none;
+    }
+    .search-input { min-width: 220px; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23999" stroke-width="2"><circle cx="10" cy="10" r="7"/><line x1="21" y1="21" x2="15" y2="15"/></svg>'); background-repeat: no-repeat; background-position: 1rem center; padding-left: 2.5rem; }
+    .tour-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 2rem; margin: 2rem 0; }
+    .tour-card { background: white; border-radius: 28px; overflow: hidden; box-shadow: var(--card-shadow); border: 1px solid rgba(230,184,92,0.3); transition: 0.2s; }
+    .tour-card:hover { transform: translateY(-5px); }
+    .tour-img { height: 200px; background-size: cover; background-position: center; position: relative; }
+    .tour-badge, .featured-tag { position: absolute; top: 16px; right: 16px; background: var(--terracotta); padding: 0.3rem 1rem; border-radius: 30px; color: white; font-size: 0.7rem; font-weight: 600; }
+    .featured-tag { left: 16px; right: auto; background: var(--gold); color: #3E2C1B; }
+    .tour-info { padding: 1.5rem; flex: 1; }
+    .deal-price { text-decoration: line-through; font-size: 1rem; color: #999; margin-right: 0.5rem; }
+    .map-section { background: var(--warm-sand); padding: 4rem 0; }
+    #kenya-map { height: 450px; border-radius: 40px; overflow: hidden; box-shadow: var(--card-shadow); border: 4px solid white; }
+    .testimonial-wrapper { position: relative; overflow: hidden; margin: 2rem 0; }
+    .testi-slider { display: flex; transition: transform 0.5s ease-in-out; will-change: transform; }
+    .testi-card { flex: 0 0 100%; min-width: 100%; background: white; padding: 2rem; border-radius: 32px; border-left: 8px solid var(--gold); box-shadow: var(--card-shadow); scroll-snap-align: start; margin-right: 1.5rem; }
+    .slider-dots { display: flex; justify-content: center; gap: 0.8rem; margin-top: 1.5rem; }
+    .dot { width: 12px; height: 12px; background: #ccc; border-radius: 50%; cursor: pointer; transition: 0.2s; }
+    .dot.active { background: var(--terracotta); width: 24px; border-radius: 20px; }
+    .featured-deals { background: var(--warm-sand); padding: 2rem; border-radius: 50px; margin: 2rem 0; }
+    .faq-item { background: white; border-radius: 20px; padding: 1rem; margin-bottom: 1rem; cursor: pointer; }
+    .faq-answer { display: none; padding-top: 1rem; color: #3E4E3E; }
+    footer { background: #1F2F1F; color: #e0e0e0; padding: 3rem 0 1.5rem; }
+    .floating-chat { position: fixed; bottom: 25px; right: 25px; background: #25D366; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: white; cursor: pointer; z-index: 99; box-shadow: 0 6px 18px rgba(0,0,0,0.25); }
+    /* Modals */
+    .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 2000; }
+    .modal-content { background: white; max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; padding: 2rem; border-radius: 48px; position: relative; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .close-modal { position: absolute; top: 20px; right: 24px; font-size: 2rem; cursor: pointer; color: var(--terracotta); }
+    .trip-header, .dest-header { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
+    .dest-thumb { width: 100px; height: 100px; border-radius: 24px; object-fit: cover; }
+    .seats-left { background: #FFE2D4; display: inline-block; padding: 0.2rem 0.8rem; border-radius: 30px; font-size: 0.8rem; font-weight: 700; color: var(--terracotta); }
+    .vibe-tag { background: var(--gold); padding: 0.2rem 1rem; border-radius: 30px; font-size: 0.7rem; font-weight: 600; display: inline-block; margin-top: 0.5rem; }
+    .host-profile, .passenger-preview { display: flex; align-items: center; gap: 0.8rem; margin: 1rem 0; background: #F8F2EA; padding: 0.8rem; border-radius: 60px; }
+    .host-avatar { width: 44px; height: 44px; background: var(--terracotta); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; }
+    .passenger-icon { width: 36px; height: 36px; background: #E2D9CF; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+    .route-mini { background: #F0EBE2; border-radius: 28px; padding: 0.8rem; display: flex; justify-content: space-between; margin: 1rem 0; }
+    .price-breakdown { background: white; border: 1px solid var(--gold); border-radius: 28px; padding: 1rem; margin: 1rem 0; }
+    .payment-toggle { display: flex; gap: 0.5rem; margin: 0.8rem 0; background: #F0EBE2; border-radius: 60px; padding: 0.2rem; }
+    .payment-option { flex:1; text-align: center; padding: 0.5rem; border-radius: 40px; cursor: pointer; font-weight: 600; }
+    .payment-option.active { background: var(--deep-green); color: white; }
+    .form-row select, .form-row input { width: 100%; padding: 0.8rem 1rem; border-radius: 60px; border: 1px solid #ddd; margin-top: 0.3rem; }
+    .trust-footer { border-top: 1px solid #EADDBF; margin-top: 1rem; padding-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; font-size: 0.8rem; }
+    .modal-actions { display: flex; gap: 1rem; margin-top: 1.5rem; }
+    .btn-outline { background: transparent; border: 2px solid var(--terracotta); color: var(--terracotta); padding: 0.8rem 1.5rem; border-radius: 40px; font-weight: 700; cursor: pointer; }
+    @media (max-width: 800px) {
+      .menu-toggle { display: block; }
+      .nav-links { display: none; width: 100%; flex-direction: column; align-items: center; }
+      .nav-links.active { display: flex; }
+      .hero h2 { font-size: 2.8rem; }
+      h2.section-title { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="floating-chat" id="whatsappFloat"><i class="fab fa-whatsapp"></i></div>
+
+<nav>
+  <div class="logo"><div class="logo-icon"><i class="fas fa-map-signs"></i></div><div><h1>Safari Travellers</h1><span>Karibu · Direct-to-Destination</span></div></div>
+  <div class="menu-toggle" id="mobileMenu"><i class="fas fa-bars"></i></div>
+  <div class="nav-links" id="navLinks">
+    <a href="#">Home</a><a href="#about">Our Ethos</a><a href="#group-trips">Group Trips</a><a href="#destinations">Destinations</a><a href="#map">Map</a><a href="#faq">FAQ</a>
+    <div class="currency-toggle"><button id="btnKES" class="active">KSh</button><button id="btnUSD">USD</button></div>
+  </div>
+</nav>
+
+<section class="hero">
+  <img class="hero-bg" src="https://images.pexels.com/photos/2674052/pexels-photo-2674052.jpeg?auto=compress&w=1600" alt="Kenya landscape">
+  <div class="container hero-content">
+    <h2>Actual destination pricing.<br>Zero agency <span class="accent">markups.</span></h2>
+    <p>Direct digital bridge to Kenya’s iconic lodges, camps & coastal resorts. 24/7 web app, transparent rates, local empowerment.</p>
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem;">
+      <a href="#" class="btn-primary" id="openBookingBtn"><i class="fas fa-calendar-check"></i> Plan your safari</a>
+      <a href="#destinations" class="btn-primary" style="background: transparent; border: 2px solid white;"><i class="fas fa-compass"></i> Explore 50+ spots</a>
+    </div>
+  </div>
+</section>
+
+<section class="container" id="about">
+  <div class="section-badge" style="text-align:center; color: var(--terracotta); letter-spacing: 4px;">🇰🇪 Kenyan travel-tech pioneer</div>
+  <h2 class="section-title">Transparency · Local empowerment · No hidden fees</h2>
+  <div class="about-grid">
+    <div class="service-card"><i class="fas fa-laptop-code"></i><h3>📱 Booking Facilitation</h3><p>24/7 web app connecting you directly with vetted lodges, camps & coastal resorts. Zero traditional agency markup.</p></div>
+    <div class="service-card"><i class="fas fa-users"></i><h3>🎉 Curated Group Trips</h3><p>High-value excursions around Kenyan calendar: WRC Safari Rally, Lamu festival, Maasai Mara migration specials.</p></div>
+    <div class="service-card"><i class="fas fa-hand-holding-usd"></i><h3>💰 Pay what the lodge charges</h3><p>See local pricing in KES, no middleman. Same rate you'd get walking into the camp.</p></div>
+  </div>
+  <div class="fast-facts">
+    <div class="fact-card"><i class="fas fa-clock"></i><h4>24/7 Web App</h4><p>Always-on</p></div>
+    <div class="fact-card"><i class="fas fa-map-marked-alt"></i><h4>100% Kenyan Destinations</h4><p>Coast to savannah</p></div>
+    <div class="fact-card"><i class="fas fa-coins"></i><h4>Local Pricing (KES)</h4><p>Actual destination rates</p></div>
+    <div class="fact-card"><i class="fas fa-link"></i><h4>Direct-to-Destination</h4><p>No agency markups</p></div>
+  </div>
+</section>
+
+<!-- CURATED GROUP TRIPS -->
+<div class="group-trips-special">
+  <div class="container" id="group-trips">
+    <div class="section-badge" style="text-align:center; color:#B45F2B;">🔥 KENYAN CALENDAR · EXCLUSIVE GROUP EXCURSIONS</div>
+    <h2 class="section-title" style="color: #2C4F3B;">Curated Group Trips</h2>
+    <div class="tour-grid" id="groupTripsGrid"></div>
+  </div>
+</div>
+
+<!-- DESTINATIONS FULL LIST -->
+<section class="container" id="destinations">
+  <div class="section-badge" style="text-align:center;">🇰🇪 FULL SPECTRUM TOURISM CIRCUIT</div>
+  <h2 class="section-title">Wildlife · Lakes · Coast · Mountains</h2>
+  <div class="filter-bar">
+    <div class="filter-group">
+      <input type="text" id="searchInput" class="search-input" placeholder="Search destinations...">
+      <select id="regionFilter" class="filter-select"><option value="all">All Regions</option><option value="Central">Central / Mt Kenya</option><option value="Coast">Coast</option><option value="Rift Valley">Rift Valley</option><option value="Nairobi">Nairobi</option><option value="Western">Western</option><option value="Northern">Northern</option></select>
+      <select id="sortBy" class="filter-select"><option value="name">Sort by Name</option><option value="priceAsc">Price: Low to High</option><option value="priceDesc">Price: High to Low</option></select>
+    </div>
+    <span id="resultCount" style="font-weight: 500;"></span>
+  </div>
+  <div class="tour-grid" id="destinationsGrid"></div>
+</section>
+
+<!-- FEATURED DEALS -->
+<section class="container"><div class="featured-deals"><h2 class="section-title" style="color: var(--deep-green);">🏷️ Seasonal specials (actual lodge rates)</h2><div class="tour-grid" id="dealsGrid"></div></div></section>
+
+<!-- SIGNATURE EXPEDITIONS -->
+<section class="container"><h2 class="section-title">🏔️ Signature Expeditions</h2><div class="tour-grid" id="toursContainer"></div></section>
+
+<!-- FAQ -->
+<section class="container" id="faq"><h2 class="section-title">❓ Karibu — Your questions answered</h2>
+  <div class="faq-list">
+    <div class="faq-item"><div class="faq-question"><i class="fas fa-chevron-down"></i> What does "actual destination pricing" mean?</div><div class="faq-answer">You pay exactly the rate the lodge/camp charges — no hidden agency fees.</div></div>
+    <div class="faq-item"><div class="faq-question"><i class="fas fa-chevron-down"></i> Is the 24/7 web app free?</div><div class="faq-answer">Yes! Free for travellers. You only pay the confirmed rate to the provider.</div></div>
+    <div class="faq-item"><div class="faq-question"><i class="fas fa-chevron-down"></i> What group trips are coming up?</div><div class="faq-answer">WRC Safari Rally (July), Lamu Cultural Festival (Nov), Diani New Year Escape, Mara migration convoys.</div></div>
+  </div>
+</section>
+
+<section class="map-section" id="map"><div class="container"><h2 class="section-title">🗺️ Explore Kenya's wild heart</h2><div id="kenya-map"></div><p style="text-align:center; margin-top:1rem;">📍 Over 30 iconic destinations — click any marker</p></div></section>
+
+<!-- Testimonial Slider with Animation -->
+<div class="container">
+  <h2 class="section-title">❤️ Traveller Stories</h2>
+  <div class="testimonial-wrapper">
+    <div class="testi-slider" id="testiSlider">
+      <div class="testi-card"><i class="fas fa-quote-left" style="color:var(--terracotta); font-size:1.8rem;"></i><p style="margin:1rem 0; font-style:italic;">“Safari Travellers made our Mount Kenya climb epic! The guides were superb and the direct pricing saved us 30%.”</p><h4>— Emilia & Carlos, Brazil</h4><div style="margin-top:0.5rem; color:var(--gold);"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div></div>
+      <div class="testi-card"><i class="fas fa-quote-left" style="color:var(--terracotta); font-size:1.8rem;"></i><p style="margin:1rem 0; font-style:italic;">“From Diani to Mara, everything was seamless. Felt like family, and the transparency in pricing was refreshing.”</p><h4>— Aisha, Nairobi</h4><div style="margin-top:0.5rem; color:var(--gold);"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div></div>
+      <div class="testi-card"><i class="fas fa-quote-left" style="color:var(--terracotta); font-size:1.8rem;"></i><p style="margin:1rem 0; font-style:italic;">“Best safari ever! We saw the Big Five in one day and the direct booking process was instant via WhatsApp.”</p><h4>— Mark & Lisa, UK</h4><div style="margin-top:0.5rem; color:var(--gold);"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i></div></div>
+    </div>
+    <div class="slider-dots" id="sliderDots"></div>
+  </div>
+</div>
+
+<section style="background: var(--deep-green); color: white; padding: 3rem 2rem; text-align: center; clip-path: polygon(0 8%, 100% 0, 100% 92%, 0 100%);">
+  <h3 style="font-size:2rem;">📧 Join Safari Travellers family</h3>
+  <p>Get exclusive deals & travel tips</p>
+  <div style="display: flex; max-width: 450px; margin: 2rem auto; background: white; border-radius: 60px; overflow: hidden;">
+    <input type="email" id="newsEmail" placeholder="Your email" style="flex:1; padding: 1rem; border: none; outline: none;">
+    <button id="newsletterBtn" style="background: var(--gold); border: none; padding: 0 2rem; font-weight: 700; cursor: pointer;">Subscribe</button>
+  </div>
+</section>
+
+<!-- Destination Booking Modal (Enhanced) -->
+<div id="destinationModal" class="modal"><div class="modal-content"><span class="close-modal" id="closeDestModal">&times;</span><div id="destModalDynamic"></div></div></div>
+
+<!-- Group Trip Modal -->
+<div id="groupTripModal" class="modal"><div class="modal-content"><span class="close-modal" id="closeGroupModal">&times;</span><div id="groupModalDynamic"></div></div></div>
+
+<footer><div class="container footer-grid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:2rem;"><div><h4 style="color:var(--gold);">Safari Travellers</h4><p>Pioneering Kenyan travel-tech. Direct-to-destination, local empowerment.</p><p><i class="fas fa-map-marker-alt"></i> Nairobi, Kenya</p></div><div><h4 style="color:var(--gold);">Connect</h4><p><i class="fab fa-whatsapp"></i> +254 746 332443<br><i class="fab fa-instagram"></i> @safaritravellers_ke</p></div><div><h4 style="color:var(--gold);">Our promise</h4><p>24/7 web app · 100% Kenyan destinations · Local KES pricing · Zero agency markups</p></div></div><div style="text-align:center; margin-top:2rem;">© 2025 Safari Travellers — Discover · Explore · Belong. <i class="fas fa-heart" style="color: var(--terracotta);"></i></div></footer>
+
+<script>
+(function(){
+  const EXCHANGE_RATE = 130;
+  let currentCurrency = 'KES';
+  const WA_NUM = atob("KzI1NDc0NjMzMjQ0Mw==");
+  const sendWA = msg => window.open(`https://wa.me/${WA_NUM}?text=${encodeURIComponent(msg)}`, '_blank');
+
+  const getSeasonalMultiplier = () => {
+    const m = new Date().getMonth();
+    if (m >= 6 && m <= 9) return 1.20;
+    if (m === 11 || m === 0) return 1.15;
+    if (m === 1) return 1.05;
+    if (m === 2 || m === 10) return 0.95;
+    if (m === 3 || m === 4) return 0.80;
+    return 0.90;
+  };
+  const seasonalPrice = base => Math.round(base * getSeasonalMultiplier());
+
+  const imageMap = {
+    "Masai Mara National Reserve":"https://images.pexels.com/photos/4132137/pexels-photo-4132137.jpeg?w=600","Amboseli National Park":"https://images.pexels.com/photos/247431/pexels-photo-247431.jpeg?w=600","Tsavo East":"https://images.pexels.com/photos/163752/elephant-savannah-tsavo-east-kenya-163752.jpeg?w=600","Tsavo West":"https://images.pexels.com/photos/133394/pexels-photo-133394.jpeg?w=600","Lake Nakuru":"https://images.pexels.com/photos/1683517/pexels-photo-1683517.jpeg?w=600","Lake Naivasha":"https://images.pexels.com/photos/733127/pexels-photo-733127.jpeg?w=600","Diani Beach":"https://images.pexels.com/photos/3601425/pexels-photo-3601425.jpeg?w=600","Watamu Marine Park":"https://images.pexels.com/photos/7063931/pexels-photo-7063931.jpeg?w=600","Malindi":"https://images.pexels.com/photos/2531546/pexels-photo-2531546.jpeg?w=600","Mount Kenya NP":"https://images.pexels.com/photos/933054/pexels-photo-933054.jpeg?w=600","Ol Pejeta Conservancy":"https://images.pexels.com/photos/394419/pexels-photo-394419.jpeg?w=600","Samburu NR":"https://images.pexels.com/photos/171696/pexels-photo-171696.jpeg?w=600","Hell's Gate":"https://images.pexels.com/photos/259731/pexels-photo-259731.jpeg?w=600","Nairobi National Park":"https://images.pexels.com/photos/744984/pexels-photo-744984.jpeg?w=600","Kakamega Forest":"https://images.pexels.com/photos/355862/pexels-photo-355862.jpeg?w=600","Lake Baringo":"https://images.pexels.com/photos/793526/pexels-photo-793526.jpeg?w=600","Lamu Archipelago":"https://images.pexels.com/photos/2199324/pexels-photo-2199324.jpeg?w=600","Chyulu Hills":"https://images.pexels.com/photos/894045/pexels-photo-894045.jpeg?w=600","Meru National Park":"https://images.pexels.com/photos/1159353/pexels-photo-1159353.jpeg?w=600","Aberdare National Park":"https://images.pexels.com/photos/1481937/pexels-photo-1481937.jpeg?w=600","Lake Bogoria":"https://images.pexels.com/photos/802243/pexels-photo-802243.jpeg?w=600","Kisumu Impala Sanctuary":"https://images.pexels.com/photos/219264/pexels-photo-219264.jpeg?w=600","Mount Elgon":"https://images.pexels.com/photos/1095805/pexels-photo-1095805.jpeg?w=600","Lake Turkana":"https://images.pexels.com/photos/674281/pexels-photo-674281.jpeg?w=600","Marsabit National Park":"https://images.pexels.com/photos/399316/pexels-photo-399316.jpeg?w=600","Gede Ruins":"https://images.pexels.com/photos/2283673/pexels-photo-2283673.jpeg?w=600","Karura Forest":"https://images.pexels.com/photos/1444471/pexels-photo-1444471.jpeg?w=600","Ngong Hills":"https://images.pexels.com/photos/299064/pexels-photo-299064.jpeg?w=600","Rusinga Island":"https://images.pexels.com/photos/383543/pexels-photo-383543.jpeg?w=600","Kora National Park":"https://images.pexels.com/photos/376809/pexels-photo-376809.jpeg?w=600"};
+  const regionFallback = { "Central":"https://images.pexels.com/photos/933054/pexels-photo-933054.jpeg?w=600","Coast":"https://images.pexels.com/photos/3601425/pexels-photo-3601425.jpeg?w=600","Rift Valley":"https://images.pexels.com/photos/4132137/pexels-photo-4132137.jpeg?w=600" };
+  const getImg = (name, region) => imageMap[name] || regionFallback[region] || "https://images.pexels.com/photos/2674052/pexels-photo-2674052.jpeg?w=600";
+
+  // Full destinations
+  const core = [
+    { name:"Masai Mara National Reserve", region:"Rift Valley", priceKES:32000, desc:"Great migration, Big Five", featured:true, lat:-1.493,lng:35.143 },
+    { name:"Amboseli National Park", region:"Rift Valley", priceKES:18000, desc:"Elephants & Kilimanjaro", featured:true, lat:-2.638,lng:37.265 },
+    { name:"Tsavo East", region:"Coast", priceKES:15000, desc:"Red elephants", featured:false, lat:-2.985,lng:38.465 },
+    { name:"Tsavo West", region:"Coast", priceKES:15000, desc:"Mzima Springs", featured:false, lat:-3.018,lng:38.003 },
+    { name:"Lake Nakuru", region:"Rift Valley", priceKES:5000, desc:"Flamingos & rhinos", featured:false, lat:-0.366,lng:36.083 },
+    { name:"Lake Naivasha", region:"Rift Valley", priceKES:2000, desc:"Hippos & boat ride", featured:false, lat:-0.767,lng:36.433 },
+    { name:"Diani Beach", region:"Coast", priceKES:9800, desc:"Powder-white sand", featured:true, lat:-4.305,lng:39.580 },
+    { name:"Watamu Marine Park", region:"Coast", priceKES:8000, desc:"Snorkeling, turtles", featured:false, lat:-3.350,lng:40.017 },
+    { name:"Malindi", region:"Coast", priceKES:6000, desc:"Historical & marine", featured:false, lat:-3.218,lng:40.117 },
+    { name:"Mount Kenya NP", region:"Central", priceKES:3000, desc:"Alpine zone", featured:false, lat:-0.152,lng:37.308 },
+    { name:"Ol Pejeta Conservancy", region:"Central", priceKES:8000, desc:"Chimps & rhinos", featured:true, lat:0.042,lng:36.950 },
+    { name:"Samburu NR", region:"Rift Valley", priceKES:45000, desc:"Reticulated giraffe", featured:false, lat:0.600,lng:37.530 },
+    { name:"Hell's Gate", region:"Rift Valley", priceKES:1500, desc:"Walking & biking", featured:false, lat:-0.885,lng:36.316 },
+    { name:"Nairobi National Park", region:"Nairobi", priceKES:4300, desc:"City skyline wildlife", featured:false, lat:-1.374,lng:36.819 },
+    { name:"Kakamega Forest", region:"Western", priceKES:1200, desc:"Rainforest primates", featured:false, lat:0.287,lng:34.860 },
+    { name:"Lake Baringo", region:"Rift Valley", priceKES:2500, desc:"Birdwatching", featured:false, lat:0.635,lng:36.064 },
+    { name:"Lamu Archipelago", region:"Coast", priceKES:34000, desc:"Cultural & dhow", featured:true, lat:-2.269,lng:40.902 },
+    { name:"Chyulu Hills", region:"Rift Valley", priceKES:5200, desc:"Green hills", featured:false, lat:-2.600,lng:37.850 },
+    { name:"Meru National Park", region:"Central", priceKES:3500, desc:"Remote wilderness", featured:false, lat:0.090,lng:38.200 },
+    { name:"Aberdare National Park", region:"Central", priceKES:4000, desc:"Waterfalls", featured:false, lat:-0.417,lng:36.750 },
+    { name:"Lake Bogoria", region:"Rift Valley", priceKES:2000, desc:"Hot springs", featured:false, lat:0.259,lng:36.102 },
+    { name:"Kisumu Impala Sanctuary", region:"Western", priceKES:1000, desc:"Impala & birds", featured:false, lat:-0.102,lng:34.752 },
+    { name:"Mount Elgon", region:"Western", priceKES:2000, desc:"Caves", featured:false, lat:1.113,lng:34.700 },
+    { name:"Lake Turkana", region:"Northern", priceKES:4000, desc:"Jade sea", featured:false, lat:3.500,lng:36.000 },
+    { name:"Marsabit National Park", region:"Northern", priceKES:3500, desc:"Desert oasis", featured:false, lat:2.327,lng:37.989 },
+    { name:"Gede Ruins", region:"Coast", priceKES:1200, desc:"Swahili ruins", featured:false, lat:-3.308,lng:40.019 },
+    { name:"Karura Forest", region:"Nairobi", priceKES:200, desc:"Urban trail", featured:false, lat:-1.234,lng:36.800 },
+    { name:"Ngong Hills", region:"Nairobi", priceKES:500, desc:"Hiking views", featured:false, lat:-1.392,lng:36.639 },
+    { name:"Rusinga Island", region:"Western", priceKES:2500, desc:"Fossil sites", featured:false, lat:-0.400,lng:34.167 },
+    { name:"Kora National Park", region:"Central", priceKES:2800, desc:"Remote rugged", featured:false, lat:-0.250,lng:38.900 }
+  ];
+  const allDestinations = core;
+  const expeditions = [
+    { name:"Mt Kenya Summit (Lenana)", days:"5 days", img:"https://images.pexels.com/photos/933054/pexels-photo-933054.jpeg?w=600", badge:"⭐ 4.9", priceKES:129900, desc:"Chogoria route", lat:-0.152,lng:37.308 },
+    { name:"Mara River Migration Safari", days:"4 days", img:"https://images.pexels.com/photos/4132137/pexels-photo-4132137.jpeg?w=600", badge:"🔥 bestseller", priceKES:159990, desc:"River crossings", lat:-1.493,lng:35.143 },
+    { name:"Amboseli & Kilimanjaro", days:"3 days", img:"https://images.pexels.com/photos/247431/pexels-photo-247431.jpeg?w=600", badge:"🐘 elephants", priceKES:89500, desc:"Direct camp", lat:-2.638,lng:37.265 }
+  ];
+  const groupTrips = [
+    { name:"WRC Safari Rally Thrill", days:"3 days", img:"https://images.pexels.com/photos/1335077/pexels-photo-1335077.jpeg?w=600", badge:"🏁 adrenaline", priceKES:68500, desc:"Group to Naivasha & Hell's Gate", lat:-0.885,lng:36.316 },
+    { name:"Lamu Cultural Festival", days:"4 days", img:"https://images.pexels.com/photos/2199324/pexels-photo-2199324.jpeg?w=600", badge:"🎭 culture", priceKES:89900, desc:"Festival pass & dhow", lat:-2.269,lng:40.902 },
+    { name:"Diani New Year Coastal Escape", days:"5 days", img:"https://images.pexels.com/photos/3601425/pexels-photo-3601425.jpeg?w=600", badge:"🥂 festive", priceKES:115000, desc:"Beach gala + safari", lat:-4.305,lng:39.580 },
+    { name:"Maasai Mara Migration Convoy", days:"3 days", img:"https://images.pexels.com/photos/4132137/pexels-photo-4132137.jpeg?w=600", badge:"🦁 peak", priceKES:46900, desc:"Shared jeep", lat:-1.493,lng:35.143 }
+  ];
+
+  const formatPrice = p => currentCurrency === 'KES' ? `KSh ${p.toLocaleString()}` : `$ ${Math.round(p/EXCHANGE_RATE)}`;
+  const applySeasonal = arr => arr.map(i => ({ ...i, price: seasonalPrice(i.priceKES) }));
+
+  // Render functions
+  function renderDestinations() {
+    let list = applySeasonal(allDestinations);
+    const region = document.getElementById('regionFilter').value;
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    if(region !== 'all') list = list.filter(d => d.region === region);
+    if(search) list = list.filter(d => d.name.toLowerCase().includes(search) || d.desc.toLowerCase().includes(search));
+    const sort = document.getElementById('sortBy').value;
+    if(sort === 'name') list.sort((a,b)=>a.name.localeCompare(b.name));
+    else if(sort === 'priceAsc') list.sort((a,b)=>a.price - b.price);
+    else if(sort === 'priceDesc') list.sort((a,b)=>b.price - a.price);
+    document.getElementById('resultCount').innerText = `${list.length} destinations`;
+    document.getElementById('destinationsGrid').innerHTML = list.map(d => `
+      <div class="tour-card"><div class="tour-img" style="background-image: url('${getImg(d.name, d.region)}');"><div class="tour-badge">${d.region}</div>${d.featured ? '<div class="featured-tag">Featured</div>' : ''}</div>
+      <div class="tour-info"><h3>${d.name}</h3><p>${d.desc}</p><div class="price" data-price="${d.price}">${formatPrice(d.price)}</div><button class="btn-primary book-trigger" data-name="${d.name}" data-price="${d.price}" data-region="${d.region}" data-desc="${d.desc}">Plan visit</button></div></div>
+    `).join('');
+  }
+
+  function renderGroupTrips() {
+    const trips = applySeasonal(groupTrips);
+    document.getElementById('groupTripsGrid').innerHTML = trips.map(t => `
+      <div class="tour-card"><div class="tour-img" style="background-image: url('${t.img}');"><div class="tour-badge">${t.badge}</div></div>
+      <div class="tour-info"><h3>${t.name}</h3><div><i class="fas fa-calendar-week"></i> ${t.days}</div><p>${t.desc}</p><div class="price" data-price="${t.price}">${formatPrice(t.price)}</div><button class="btn-primary join-group-trigger" data-name="${t.name}" data-price="${t.price}" data-img="${t.img}" data-days="${t.days}" data-badge="${t.badge}" data-desc="${t.desc}">Join group trip</button></div></div>
+    `).join('');
+  }
+
+  function renderDeals() {
+    const deals = allDestinations.filter(d=>d.featured).map(d => ({ ...d, price: seasonalPrice(d.priceKES), dealPrice: seasonalPrice(Math.round(d.priceKES*0.85)) }));
+    document.getElementById('dealsGrid').innerHTML = deals.map(d => `
+      <div class="tour-card"><div class="tour-img" style="background-image: url('${getImg(d.name, d.region)}');"><div class="featured-tag" style="background:#D96C4A;">-15%</div></div>
+      <div class="tour-info"><h3>${d.name}</h3><p>${d.desc}</p><div><span class="deal-price" data-orig="${d.price}">${formatPrice(d.price)}</span> <span class="price" data-price="${d.dealPrice}">${formatPrice(d.dealPrice)}</span></div><button class="btn-primary book-trigger" data-name="${d.name}" data-price="${d.dealPrice}" data-region="${d.region}" data-desc="${d.desc} (Special Deal)">Book deal</button></div></div>
+    `).join('');
+  }
+
+  function renderExpeditions() {
+    const exps = applySeasonal(expeditions);
+    document.getElementById('toursContainer').innerHTML = exps.map(e => `
+      <div class="tour-card"><div class="tour-img" style="background-image: url('${e.img}');"><div class="tour-badge">${e.badge}</div></div>
+      <div class="tour-info"><h3>${e.name}</h3><div><i class="fas fa-clock"></i> ${e.days}</div><p>${e.desc}</p><div class="price" data-price="${e.price}">${formatPrice(e.price)}</div><button class="btn-primary book-trigger" data-name="${e.name}" data-price="${e.price}" data-region="Expedition" data-desc="${e.desc}">Book expedition</button></div></div>
+    `).join('');
+  }
+
+  function updatePrices() {
+    document.querySelectorAll('.price[data-price]').forEach(el => { const p = parseInt(el.dataset.price); if(p) el.innerText = formatPrice(p); });
+    document.querySelectorAll('.deal-price[data-orig]').forEach(el => { const o = parseInt(el.dataset.orig); if(o) el.innerText = formatPrice(o); });
+  }
+
+  // Enhanced Destination Modal
+  function openDestinationModal(name, price, region, desc) {
+    const img = getImg(name, region);
+    const deposit = Math.round(price * 0.3);
+    const modalHtml = `
+      <div class="dest-header"><img class="dest-thumb" src="${img}"><div><h3>${name}</h3><div class="seats-left"><i class="fas fa-tag"></i> Best rate guarantee</div><div class="vibe-tag"><i class="fas fa-map-pin"></i> ${region}</div></div></div>
+      <div class="price-breakdown"><div style="display:flex;justify-content:space-between;"><strong>Total price (per person)</strong> <span class="price" data-price="${price}">${formatPrice(price)}</span></div><div style="font-size:0.8rem; margin:0.5rem 0;">✅ Park entry, accommodation (standard lodge)<br>❌ International flights, personal insurance, tips</div><div class="payment-toggle" id="destPayToggle"><div class="payment-option active" data-pay="full">Pay in full (${formatPrice(price)})</div><div class="payment-option" data-pay="deposit">Deposit only (${formatPrice(deposit)})</div></div></div>
+      <div class="form-row"><label>🏨 Accommodation type</label><select id="accomType"><option>Standard Camp (included)</option><option>Luxury Lodge (+${formatPrice(Math.round(price*0.4))})</option><option>Budget Camping (-${formatPrice(Math.round(price*0.3))})</option></select></div>
+      <div class="form-row"><label>👥 Group size (price per person)</label><select id="groupSize"><option>2-3 people</option><option>4-6 people (-10%)</option><option>7+ people (-20%)</option></select></div>
+      <div class="form-row"><label>📅 Preferred travel date</label><input type="date" id="destDate"></div>
+      <div class="form-row"><label>🍽️ Dietary restrictions</label><select id="destDiet"><option>None</option><option>Vegetarian</option><option>Vegan</option><option>Gluten-Free</option></select></div>
+      <div class="trust-footer"><span class="verified-badge"><i class="fas fa-shield-alt"></i> Verified operator</span><span><i class="fas fa-calendar-alt"></i> Free cancellation 7 days prior</span><label><input type="checkbox" id="destTerms"> I agree to terms & conditions</label></div>
+      <div class="modal-actions"><button class="btn-outline" id="destMsgHost"><i class="fab fa-whatsapp"></i> Ask a question</button><button class="btn-primary" id="destSecureBtn" style="flex:1;"><i class="fas fa-lock"></i> Proceed to booking</button></div>
+    `;
+    document.getElementById('destModalDynamic').innerHTML = modalHtml;
+    const modal = document.getElementById('destinationModal');
+    modal.style.display = 'flex';
+    let payment = 'full';
+    document.querySelectorAll('#destModalDynamic .payment-option').forEach(opt => opt.addEventListener('click', function() {
+      document.querySelectorAll('#destModalDynamic .payment-option').forEach(o=>o.classList.remove('active'));
+      this.classList.add('active'); payment = this.dataset.pay;
+    }));
+    document.getElementById('destMsgHost').onclick = () => sendWA(`Hello! I have a question about ${name} safari.`);
+    document.getElementById('destSecureBtn').onclick = () => {
+      const userName = prompt("Full name:") || "Guest";
+      const phone = prompt("WhatsApp number:") || "+254";
+      const date = document.getElementById('destDate').value;
+      const accom = document.getElementById('accomType').value;
+      const group = document.getElementById('groupSize').value;
+      const diet = document.getElementById('destDiet').value;
+      const terms = document.getElementById('destTerms').checked;
+      if(!terms) { alert("Please accept terms & conditions"); return; }
+      const msg = `*SAFARI BOOKING REQUEST*%0ADestination: ${name}%0ADate: ${date || "Not specified"}%0AName: ${userName}%0APhone: ${phone}%0AAccommodation: ${accom}%0AGroup: ${group}%0ADiet: ${diet}%0APayment: ${payment === 'full' ? 'Pay in full' : 'Deposit only'}%0A${desc}`;
+      sendWA(msg);
+      alert(`✅ Request sent! We'll reply via WhatsApp within minutes.`);
+      modal.style.display = 'none';
+    };
+  }
+
+  // Group trip modal (same as before, robust)
+  function openGroupModal(tripName, tripPrice, tripImg, tripDays, tripBadge, tripDesc) {
+    const price = tripPrice;
+    const deposit = Math.round(price * 0.3);
+    const detailMap = {
+      "WRC Safari Rally Thrill":{date:"July 12-14, 2025", start:"Nairobi", end:"Naivasha", seats:4, vibe:"Adrenaline Junkies"},
+      "Lamu Cultural Festival":{date:"Nov 20-23, 2025", start:"Lamu Airport", end:"Lamu Town", seats:7, vibe:"Culture & Chill"},
+      "Diani New Year Coastal Escape":{date:"Dec 29 - Jan 2, 2026", start:"Mombasa", end:"Diani Beach", seats:2, vibe:"Party & Beach"},
+      "Maasai Mara Migration Convoy":{date:"Aug 8-10, 2025", start:"Nairobi", end:"Masai Mara", seats:5, vibe:"Wildlife Photographers"}
+    };
+    const d = detailMap[tripName] || { date:"TBA 2025", start:"Nairobi", end:"Destination", seats:4, vibe:"Adventure Seekers" };
+    const host = { name:"James Mwangi", avatar:"JM" };
+    const passengers = ["Sarah","Alex","Mia"].slice(0, Math.floor(Math.random()*2)+2);
+    const modalHtml = `
+      <div class="trip-header"><img class="trip-thumb" src="${tripImg}"><div><h3>${tripName}</h3><div class="seats-left"><i class="fas fa-users"></i> Only ${d.seats} seats left!</div><div class="vibe-tag"><i class="fas fa-compass"></i> ${d.vibe}</div></div></div>
+      <div class="host-profile"><div class="host-avatar">${host.avatar}</div><div><strong>${host.name}</strong><br>Trip Leader</div></div>
+      <div class="passenger-preview"><span>✨ Already joined:</span>${passengers.map(p=>`<div class="passenger-icon">${p[0]}</div>`).join('')}<div class="passenger-icon" style="background:#D96C4A;color:white;">+${Math.floor(Math.random()*4)+2}</div></div>
+      <div class="route-mini"><span><i class="fas fa-flag-checkered"></i> ${d.start}</span><span>➔</span><span><i class="fas fa-map-marker-alt"></i> ${d.end}</span></div>
+      <div class="price-breakdown"><div style="display:flex;justify-content:space-between;"><strong>Total price pp</strong> <span class="price" data-price="${price}">${formatPrice(price)}</span></div><div style="font-size:0.8rem;">✅ Included: Fuel, park fees, accommodation<br>❌ Excluded: Meals, insurance</div><div class="payment-toggle" id="payToggle"><div class="payment-option active" data-pay="full">Pay in full (${formatPrice(price)})</div><div class="payment-option" data-pay="deposit">Deposit only (${formatPrice(deposit)})</div></div></div>
+      <div class="form-row"><label>🎯 Pickup point</label><select id="pickup"><option>${d.start} Central</option><option>Airport (+500 KES)</option></select></div>
+      <div class="form-row"><label>🧑‍🤝‍🧑 Seat preference</label><select id="seatPref"><option>Window seat</option><option>Aisle seat</option><option>Shared bunk</option></select></div>
+      <div class="form-row"><label>🍽️ Dietary</label><select id="diet"><option>None</option><option>Vegetarian</option><option>Vegan</option></select></div>
+      <div class="trust-footer"><span class="verified-badge"><i class="fas fa-shield-alt"></i> Verified host</span><span><i class="fas fa-calendar-alt"></i> Free cancellation 48h</span><label><input type="checkbox" id="terms"> I agree to conduct rules</label></div>
+      <div class="modal-actions"><button class="btn-outline" id="msgHostBtn"><i class="fab fa-whatsapp"></i> Message host</button><button class="btn-primary" id="secureBtn" style="flex:1;"><i class="fas fa-lock"></i> Secure my seat</button></div>
+    `;
+    document.getElementById('groupModalDynamic').innerHTML = modalHtml;
+    const modal = document.getElementById('groupTripModal');
+    modal.style.display = 'flex';
+    let payment = 'full';
+    document.querySelectorAll('#groupModalDynamic .payment-option').forEach(opt => opt.addEventListener('click', function() {
+      document.querySelectorAll('#groupModalDynamic .payment-option').forEach(o=>o.classList.remove('active'));
+      this.classList.add('active'); payment = this.dataset.pay;
+    }));
+    document.getElementById('msgHostBtn').onclick = () => sendWA(`Hi Safari Travellers! Question about ${tripName}`);
+    document.getElementById('secureBtn').onclick = () => {
+      const name = prompt("Full name:") || "Guest";
+      const phone = prompt("WhatsApp number:") || "+254";
+      const terms = document.getElementById('terms').checked;
+      if(!terms) { alert("Please agree to conduct rules"); return; }
+      const msg = `*NEW GROUP TRIP*%0ATrip: ${tripName}%0ADates: ${d.date}%0AName: ${name}%0APhone: ${phone}%0APickup: ${document.getElementById('pickup').value}%0ASeat: ${document.getElementById('seatPref').value}%0ADiet: ${document.getElementById('diet').value}%0APayment: ${payment === 'full' ? 'Pay in full' : 'Deposit only'}%0AI agree to terms.`;
+      sendWA(msg);
+      alert("✅ Request sent! Host will reply via WhatsApp.");
+      modal.style.display = 'none';
+    };
+  }
+
+  function initMap() {
+    const map = L.map('kenya-map').setView([0.5,37.5],6);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; OSM'}).addTo(map);
+    [...allDestinations, ...groupTrips, ...expeditions].forEach(p => {
+      if(p.lat && p.lng) L.marker([p.lat, p.lng]).addTo(map).bindPopup(`<b>${p.name}</b><br>Book direct`);
+    });
+  }
+
+  // Testimonial slider auto-animation
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.testi-card');
+  const sliderContainer = document.getElementById('testiSlider');
+  let autoInterval;
+  function updateSlider() {
+    if (!sliderContainer || slides.length === 0) return;
+    const slideWidth = slides[0].offsetWidth + 24; // margin gap
+    sliderContainer.style.transform = `translateX(-${currentSlide * slideWidth}px)`;
+    const dots = document.querySelectorAll('.dot');
+    dots.forEach((dot, idx) => dot.classList.toggle('active', idx === currentSlide));
+  }
+  function createDots() {
+    const dotsContainer = document.getElementById('sliderDots');
+    if (!dotsContainer) return;
+    dotsContainer.innerHTML = '';
+    slides.forEach((_, idx) => {
+      const dot = document.createElement('div');
+      dot.classList.add('dot');
+      if (idx === currentSlide) dot.classList.add('active');
+      dot.addEventListener('click', () => {
+        currentSlide = idx;
+        updateSlider();
+        resetAutoScroll();
+      });
+      dotsContainer.appendChild(dot);
+    });
+  }
+  function nextSlide() {
+    if (slides.length === 0) return;
+    currentSlide = (currentSlide + 1) % slides.length;
+    updateSlider();
+  }
+  function resetAutoScroll() {
+    if (autoInterval) clearInterval(autoInterval);
+    autoInterval = setInterval(nextSlide, 5000);
+  }
+  function initSlider() {
+    if (slides.length === 0) return;
+    createDots();
+    updateSlider();
+    resetAutoScroll();
+    sliderContainer.addEventListener('mouseenter', () => clearInterval(autoInterval));
+    sliderContainer.addEventListener('mouseleave', resetAutoScroll);
+  }
+
+  function init() {
+    renderDestinations(); renderGroupTrips(); renderDeals(); renderExpeditions();
+    initMap(); initSlider();
+    document.getElementById('regionFilter').addEventListener('change', renderDestinations);
+    document.getElementById('sortBy').addEventListener('change', renderDestinations);
+    document.getElementById('searchInput').addEventListener('input', renderDestinations);
+    document.getElementById('btnKES').onclick = () => { currentCurrency='KES'; updatePrices(); document.getElementById('btnKES').classList.add('active'); document.getElementById('btnUSD').classList.remove('active'); };
+    document.getElementById('btnUSD').onclick = () => { currentCurrency='USD'; updatePrices(); document.getElementById('btnUSD').classList.add('active'); document.getElementById('btnKES').classList.remove('active'); };
+    document.querySelectorAll('.faq-item').forEach(i => i.addEventListener('click', function(){ const a = this.querySelector('.faq-answer'); if(a) a.style.display = a.style.display === 'block' ? 'none' : 'block'; }));
+    document.addEventListener('click', e => {
+      const bookBtn = e.target.closest('.book-trigger');
+      if(bookBtn) {
+        const name = bookBtn.dataset.name;
+        const price = parseInt(bookBtn.dataset.price);
+        const region = bookBtn.dataset.region;
+        const desc = bookBtn.dataset.desc;
+        openDestinationModal(name, price, region, desc);
+      }
+      const joinBtn = e.target.closest('.join-group-trigger');
+      if(joinBtn) {
+        const name = joinBtn.dataset.name;
+        const price = parseInt(joinBtn.dataset.price);
+        const img = joinBtn.dataset.img;
+        const days = joinBtn.dataset.days;
+        const badge = joinBtn.dataset.badge;
+        const desc = joinBtn.dataset.desc;
+        openGroupModal(name, price, img, days, badge, desc);
+      }
+    });
+    document.getElementById('closeDestModal').onclick = () => document.getElementById('destinationModal').style.display = 'none';
+    document.getElementById('closeGroupModal').onclick = () => document.getElementById('groupTripModal').style.display = 'none';
+    window.onclick = e => { if(e.target === document.getElementById('destinationModal')) document.getElementById('destinationModal').style.display = 'none'; if(e.target === document.getElementById('groupTripModal')) document.getElementById('groupTripModal').style.display = 'none'; };
+    document.getElementById('mobileMenu').onclick = () => document.getElementById('navLinks').classList.toggle('active');
+    document.getElementById('whatsappFloat').onclick = () => sendWA("Hello Safari Travellers! I'm interested in direct destination pricing.");
+    document.getElementById('newsletterBtn').onclick = () => { const em = document.getElementById('newsEmail').value; if(em.includes('@')){ sendWA(`*Newsletter*%0A📧 ${em}`); alert("Subscribed!"); document.getElementById('newsEmail').value=''; } else alert("Valid email required"); };
+  }
+  init();
+})();
+</script>
+</body>
+</html>

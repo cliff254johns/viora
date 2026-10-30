@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>ROYAL DECOR | Premium Interiors Kenya</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #0A0A0A;
+            color: #F0F0F0;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        :root {
+            --black: #050505;
+            --pure-black: #000000;
+            --white: #FFFFFF;
+            --red: #E31B23;
+            --red-dark: #B11018;
+            --red-glow: #FF3B4A;
+            --gray-dark: #1E1E1E;
+            --gray-mid: #2A2A2A;
+            --gray-light: #3A3A3A;
+            --shadow-xl: 0 25px 45px -12px rgba(0, 0, 0, 0.6);
+            --glass: rgba(20, 20, 20, 0.85);
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulseRed {
+            0% { box-shadow: 0 0 0 0 rgba(227, 27, 35, 0.5); }
+            70% { box-shadow: 0 0 0 12px rgba(227, 27, 35, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(227, 27, 35, 0); }
+        }
+
+        .toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: var(--red); backdrop-filter: blur(12px); color: white; padding: 14px 28px;
+            border-radius: 60px; font-weight: 600; z-index: 1200; transition: 0.3s; pointer-events: none;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2);
+            font-size: 0.9rem;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        .top-banner {
+            background: var(--pure-black); color: #ccc; text-align: center; padding: 10px;
+            font-size: 0.8rem; border-bottom: 1px solid var(--red);
+        }
+
+        .navbar {
+            display: flex; justify-content: space-between; align-items: center; padding: 16px 5%;
+            background: rgba(5, 5, 5, 0.95); backdrop-filter: blur(16px); position: sticky; top: 0; z-index: 100;
+            flex-wrap: wrap; border-bottom: 1px solid rgba(227,27,35,0.4);
+        }
+        .logo h1 {
+            font-size: 1.9rem; font-weight: 800;
+            background: linear-gradient(135deg, var(--white), var(--red));
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+        }
+        .nav-links { display: flex; gap: 2rem; align-items: center; flex-wrap: wrap; }
+        .nav-links a {
+            text-decoration: none; font-weight: 600; color: var(--white); transition: 0.2s; position: relative;
+            font-size: 0.95rem;
+        }
+        .nav-links a:hover { color: var(--red); }
+        .nav-links a::after {
+            content: ''; position: absolute; bottom: -5px; left: 0; width: 0; height: 2px;
+            background: var(--red); transition: 0.3s;
+        }
+        .nav-links a:hover::after { width: 100%; }
+        .cart-icon, .wishlist-icon {
+            position: relative; cursor: pointer; font-size: 1.4rem; color: var(--white);
+            transition: 0.2s; margin-left: 15px;
+        }
+        .cart-icon:hover, .wishlist-icon:hover { color: var(--red); transform: scale(1.05); }
+        .cart-count, .wishlist-count {
+            position: absolute; top: -10px; right: -12px; background: var(--red); color: white;
+            border-radius: 30px; width: 22px; height: 22px; font-size: 0.7rem; display: flex;
+            align-items: center; justify-content: center; font-weight: bold;
+        }
+
+        .hero {
+            background: linear-gradient(125deg, rgba(0,0,0,0.92), rgba(227,27,35,0.35)), url('https://images.pexels.com/photos/1571468/pexels-photo-1571468.jpeg');
+            background-size: cover; background-position: center; padding: 80px 5%; text-align: center;
+            border-bottom: 1px solid var(--red);
+        }
+        .hero h2 { font-size: 3rem; font-weight: 800; margin-bottom: 1rem; letter-spacing: -0.5px; }
+        .hero p { font-size: 1.1rem; max-width: 700px; margin: 0 auto 1.5rem; opacity: 0.85; line-height: 1.5; }
+        .search-bar {
+            display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 25px;
+        }
+        .search-bar input {
+            padding: 14px 24px; border-radius: 60px; border: none; width: 320px; font-size: 1rem;
+            background: var(--gray-mid); color: white; border: 1px solid var(--red);
+            transition: all 0.2s; outline: none;
+        }
+        .search-bar input:focus { border-color: var(--white); box-shadow: 0 0 0 2px rgba(227,27,35,0.3); }
+        .image-upload {
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(12px); padding: 12px 28px;
+            border-radius: 60px; display: flex; gap: 12px; align-items: center; cursor: pointer;
+            font-weight: 600; transition: 0.2s; border: 1px solid var(--red);
+            font-size: 0.9rem;
+        }
+        .image-upload:hover { background: var(--red); transform: scale(1.02); }
+        .btn-red {
+            background: linear-gradient(95deg, var(--red), var(--red-glow)); border: none;
+            padding: 12px 28px; border-radius: 60px; font-weight: 700; color: white; cursor: pointer;
+            transition: 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-size: 0.9rem;
+        }
+        .btn-red:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+        .filter-bar {
+            display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin: 35px 5% 20px;
+        }
+        .filter-select {
+            padding: 10px 24px; border-radius: 60px; border: 1px solid var(--red);
+            background: var(--gray-mid); color: white; font-weight: 500; cursor: pointer;
+            font-size: 0.85rem; transition: 0.2s;
+        }
+        .filter-select:hover { border-color: var(--white); }
+
+        .color-swatches {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 12px 0;
+        }
+        .color-swatch {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        .color-swatch:hover { transform: scale(1.1); border-color: var(--white); }
+        .color-swatch.selected { border-color: var(--white); box-shadow: 0 0 0 2px var(--red); }
+        .selected-color-label {
+            font-size: 0.75rem;
+            margin-top: 6px;
+            color: var(--red);
+            font-weight: 500;
+        }
+
+        .size-group, .seat-group, .rod-group {
+            margin: 12px 0;
+        }
+        .size-label, .seat-label, .rod-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--red);
+            margin-bottom: 6px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+        .size-input-wrapper, .seat-select-wrapper, .rod-select-wrapper {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .size-input-wrapper input, .seat-select-wrapper select, .rod-select-wrapper select {
+            flex: 2;
+            padding: 12px 16px;
+            border-radius: 60px;
+            border: 1px solid var(--red);
+            background: #1A1A1A;
+            color: white;
+            font-size: 0.9rem;
+            transition: 0.2s;
+            outline: none;
+        }
+        .size-input-wrapper select, .seat-select-wrapper select, .rod-select-wrapper select {
+            flex: 1;
+            cursor: pointer;
+        }
+        .size-input-wrapper input:focus, .seat-select-wrapper select:focus, .rod-select-wrapper select:focus {
+            border-color: var(--white);
+            box-shadow: 0 0 0 2px rgba(227,27,35,0.2);
+        }
+
+        .addToCartBtn {
+            background: var(--pure-black); color: white; width: 100%; padding: 12px;
+            border: none; border-radius: 60px; font-weight: 700; margin-top: 8px; cursor: pointer;
+            border: 1px solid var(--red); transition: 0.2s; font-size: 0.9rem;
+        }
+        .addToCartBtn:hover { background: var(--red); }
+
+        .products-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 35px; padding: 20px 5% 60px;
+        }
+        .product-card {
+            background: var(--gray-dark); border-radius: 28px; overflow: hidden;
+            box-shadow: var(--shadow-xl); transition: 0.4s; border: 1px solid rgba(227,27,35,0.5);
+            position: relative;
+        }
+        .product-card:hover { transform: translateY(-8px); border-color: var(--red); box-shadow: 0 30px 40px -20px rgba(0,0,0,0.5); }
+        .wishlist-heart {
+            position: absolute; top: 18px; right: 18px; background: rgba(0,0,0,0.7);
+            border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center;
+            justify-content: center; cursor: pointer; z-index: 2; color: #ccc; transition: 0.2s;
+            backdrop-filter: blur(4px);
+        }
+        .wishlist-heart.active { color: var(--red); background: rgba(0,0,0,0.9); }
+        .product-img {
+            height: 220px;
+            background: linear-gradient(145deg, #1A1A1A, #2A1A1A);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .product-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+        .product-card:hover .product-img img {
+            transform: scale(1.05);
+        }
+        .product-info { padding: 20px; }
+        .product-title { font-weight: 800; font-size: 1.2rem; color: white; margin-bottom: 5px; }
+        .price { color: var(--red); font-weight: 800; font-size: 1.2rem; margin: 10px 0; }
+
+        .ai-card, .quiz-section {
+            margin: 20px 5% 30px; background: var(--glass); backdrop-filter: blur(8px);
+            border-radius: 32px; padding: 28px 24px; border: 1px solid rgba(227,27,35,0.4);
+            animation: fadeInUp 0.6s ease;
+        }
+        .ai-title {
+            display: flex; align-items: center; gap: 12px; font-size: 1.5rem;
+            font-weight: 700; color: var(--red); margin-bottom: 20px;
+        }
+        .rec-grid {
+            display: flex;
+            gap: 25px;
+            overflow-x: auto;
+            padding: 15px 5px;
+            scrollbar-width: thin;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+        .rec-grid::-webkit-scrollbar {
+            height: 6px;
+        }
+        .rec-grid::-webkit-scrollbar-track {
+            background: var(--gray-dark);
+            border-radius: 10px;
+        }
+        .rec-grid::-webkit-scrollbar-thumb {
+            background: var(--red);
+            border-radius: 10px;
+        }
+        .rec-item {
+            background: var(--gray-mid); border-radius: 28px; padding: 18px; min-width: 180px;
+            text-align: center; cursor: pointer; transition: 0.3s; border: 1px solid var(--red);
+            flex-shrink: 0;
+        }
+        .rec-item:hover { transform: translateY(-8px); background: #3A1A22; border-color: var(--white); }
+
+        .quiz-options { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px; }
+        .quiz-btn {
+            background: var(--gray-mid); border: 1px solid var(--red); padding: 12px 24px;
+            border-radius: 60px; cursor: pointer; transition: 0.2s; color: white;
+            font-weight: 600; font-size: 0.85rem;
+        }
+        .quiz-btn:hover { background: var(--red); transform: translateY(-2px); }
+
+        .section-title {
+            text-align: center; font-size: 2.2rem; font-weight: 800; margin: 40px 0 20px;
+            display: inline-block; width: auto; padding-bottom: 8px;
+            border-bottom: 3px solid var(--red); letter-spacing: -0.3px;
+        }
+        .section-wrapper { text-align: center; }
+
+        .drill-section {
+            margin: 40px 5%; background: var(--glass); backdrop-filter: blur(8px);
+            border-radius: 32px; padding: 28px 32px; border: 1px solid rgba(227,27,35,0.5);
+        }
+        .drill-input-group {
+            display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+        }
+        .drill-input-group input {
+            padding: 12px 20px; border-radius: 60px; border: 1px solid var(--red);
+            background: #1A1A1A; color: white; font-size: 0.9rem; width: 140px; outline: none;
+        }
+        .ai-chat {
+            position: fixed; bottom: 100px; right: 20px; z-index: 1001;
+        }
+        .chat-toggle {
+            background: linear-gradient(135deg, var(--red), var(--red-dark));
+            width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            animation: pulseRed 2s infinite; transition: 0.2s;
+        }
+        .chat-box {
+            position: absolute; bottom: 80px; right: 0; width: 380px; background: #111;
+            backdrop-filter: blur(12px); border-radius: 28px; display: none; flex-direction: column;
+            box-shadow: 0 25px 40px rgba(0,0,0,0.5); border: 1px solid var(--red);
+            overflow: hidden;
+        }
+        .chat-box.open { display: flex; }
+        .cart-overlay, .fav-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 1100;
+            visibility: hidden; opacity: 0; transition: 0.2s;
+        }
+        .cart-overlay.active, .fav-overlay.active { visibility: visible; opacity: 1; }
+        .cart-drawer, .fav-drawer {
+            position: fixed; right: -500px; top: 0; width: 480px; max-width: 92vw; height: 100%;
+            background: #0A0A0A; z-index: 1101; padding: 25px; transition: right 0.4s;
+            display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+            border-left: 2px solid var(--red);
+        }
+        .cart-drawer.open, .fav-drawer.open { right: 0; }
+        footer {
+            background: var(--pure-black); color: #aaa; text-align: center; padding: 30px;
+            margin-top: 50px; border-top: 1px solid var(--red); font-size: 0.8rem;
+        }
+        @media (max-width: 700px) {
+            .hero h2 { font-size: 2rem; }
+            .size-input-wrapper, .seat-select-wrapper, .rod-select-wrapper { flex-direction: column; }
+            .size-input-wrapper input, .size-input-wrapper select, .seat-select-wrapper select, .rod-select-wrapper select { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="top-banner"><i class="fas fa-map-marker-alt"></i> Nairobi, Kenya | WhatsApp 0746332443 | Free Delivery</div>
+<div class="navbar">
+    <div class="logo"><h1>ROYAL <span style="color:var(--red);">DECOR</span></h1></div>
+    <div class="nav-links">
+        <a href="#products">Products</a><a href="#drill">Drilling</a><a href="#quiz">Style Quiz</a>
+        <div class="wishlist-icon" id="wishlistIconBtn"><i class="fas fa-heart"></i><span class="wishlist-count" id="wishlistCount">0</span></div>
+        <div class="cart-icon" id="cartIcon"><i class="fas fa-shopping-cart"></i><span class="cart-count" id="cartCount">0</span></div>
+    </div>
+</div>
+
+<div class="hero">
+    <h2>Elevate Your Home with Timeless Elegance</h2>
+    <p>Curtains • Sheers • Pillows • Seat Covers • Curtain Rods • Carpets • Holders • & More</p>
+    <div class="search-bar">
+        <input type="text" id="textSearch" placeholder="Search by name, color...">
+        <label class="image-upload"><i class="fas fa-camera"></i> Color Detection <input type="file" id="imageUpload" accept="image/*" style="display:none;"></label>
+        <button id="clearSearchBtn" class="btn-red">Reset</button>
+    </div>
+    <div id="searchResultMsg" style="margin-top: 18px; background: rgba(0,0,0,0.6); display: inline-block; padding: 6px 20px; border-radius: 40px; font-size: 0.85rem;"></div>
+</div>
+
+<div class="filter-bar">
+    <select id="categoryFilter" class="filter-select"><option value="all">All Departments</option><option>Curtains</option><option>Sheers</option><option>Pillows</option><option>Seat Covers</option><option>Rods</option><option>Decor</option><option>Curtain Holders</option><option>Carpets</option><option>Office Curtains</option><option>Kids Curtains</option><option>Kitchen Curtains</option></select>
+    <select id="colorFilter" class="filter-select"><option value="all">All Colours</option><option>Navy Blue</option><option>Grey</option><option>Black</option><option>Mustard</option><option>Orange</option><option>White</option><option>Brown</option><option>Pink</option><option>Maroon</option><option>Green</option><option>Blue</option><option>Cream</option><option>Gold</option><option>Silver</option><option>Sky Blue</option><option>Purple</option><option>Red</option><option>Teal</option><option>Beige</option><option>Ivory</option></select>
+    <select id="priceFilter" class="filter-select"><option value="all">Price Range</option><option value="low">Under KES 3000</option><option value="mid">KES 3000-6000</option><option value="high">Above 6000</option></select>
+    <button id="sortPriceBtn" class="filter-select">Sort by Price 🔽</button>
+</div>
+
+<!-- Style Quiz -->
+<div class="quiz-section" id="quiz">
+    <div class="ai-title"><i class="fas fa-magic"></i> Style Quiz — Get Personalized Collection</div>
+    <div class="quiz-options">
+        <button class="quiz-btn" data-style="luxury">✨ Luxury & Glam</button>
+        <button class="quiz-btn" data-style="minimalist">🌿 Minimalist</button>
+        <button class="quiz-btn" data-style="bohemian">🌸 Bohemian</button>
+        <button class="quiz-btn" data-style="modern">🏙️ Modern</button>
+    </div>
+    <div id="quizResult" style="margin-top: 15px; font-style: italic; font-size: 0.9rem;"></div>
+</div>
+
+<!-- Smart Picks with Auto-Slide Carousel -->
+<div class="ai-card">
+    <div class="ai-title"><i class="fas fa-star"></i> ✨ Smart Picks (Based on Your Activity)</div>
+    <div id="smartPicksCarousel" class="rec-grid"></div>
+</div>
+
+<div class="section-wrapper"><div class="section-title" id="products">✨ Royal Collection</div></div>
+<div class="products-grid" id="productsGrid"></div>
+
+<!-- Frequently Bought Together -->
+<div class="ai-card" id="fbtSection" style="display: none;">
+    <div class="ai-title"><i class="fas fa-link"></i> 🔥 Frequently Bought Together</div>
+    <div id="fbtGrid" class="rec-grid"></div>
+</div>
+
+<div class="drill-section" id="drill">
+    <div style="display:flex; justify-content:space-between; flex-wrap:wrap; align-items:center; gap:15px;">
+        <div><h3><i class="fas fa-drill"></i> Professional Drilling Service</h3><p>KES 300/meter – precision mounting</p></div>
+        <div class="drill-input-group">
+            <input type="number" id="drillMeters" placeholder="Meters (e.g., 2.5)" step="0.5">
+            <button id="addDrillBtn" class="btn-red">Add Drilling</button>
+        </div>
+    </div>
+</div>
+
+<!-- Chat Assistant -->
+<div class="ai-chat">
+    <div class="chat-toggle" id="chatToggle"><i class="fas fa-comment-dots" style="font-size:26px;"></i></div>
+    <div class="chat-box" id="chatBox">
+        <div class="chat-header">🤖 Royal Assistant</div>
+        <div class="chat-messages" id="chatMessages"><div>Assistant: Hello! I can help you find products, add items to cart, or answer questions. Try "add red curtains".</div></div>
+        <div class="chat-input"><input type="text" id="chatInput" placeholder="Type your message..."><button id="sendChatBtn">Send</button></div>
+    </div>
+</div>
+
+<!-- Cart Drawer -->
+<div class="cart-overlay" id="cartOverlay"></div>
+<div class="cart-drawer" id="cartDrawer"><div class="cart-header"><h3>Your Cart</h3><i class="fas fa-times" id="closeCartBtn" style="cursor:pointer; color:var(--red);"></i></div><div id="cartItemsList" style="flex:1; overflow-y:auto; margin:15px 0;"></div><div id="drillCartInfo"></div><div id="discountInfo" style="font-size:0.85rem; color:var(--red); margin:5px 0;"></div><div class="cart-total" id="cartTotal" style="font-size:1.5rem; font-weight:800; border-top:2px solid var(--red); padding-top:15px;">Total: KES 0</div><button id="whatsappOrderBtn" class="btn-red" style="background:#25D366; width:100%; margin:12px 0;"><i class="fab fa-whatsapp"></i> Order on WhatsApp</button><button id="clearCartBtn" style="background:#2A2A2A; border:none; padding:12px; border-radius:60px; color:white; cursor:pointer;">Clear Cart</button></div>
+
+<!-- Favorites Drawer -->
+<div class="fav-overlay" id="favOverlay"></div>
+<div class="fav-drawer" id="favDrawer">
+    <div class="cart-header"><h3><i class="fas fa-heart" style="color:var(--red);"></i> Your Favorites</h3><i class="fas fa-times" id="closeFavBtn" style="cursor:pointer; color:var(--red);"></i></div>
+    <div id="favItemsList" style="flex:1; overflow-y:auto; margin:20px 0;"></div>
+</div>
+
+<footer><p>ROYAL DECOR – Premium Interiors | Westlands, Nairobi | +254 746 332 443</p></footer>
+<div id="toastMsg" class="toast">✨ Action completed</div>
+
+<script>
+    // ======================== PRODUCT DATABASE WITH IMAGE PATHS ========================
+    // Image paths as per the provided table
+    const productImages = {
+        "Blackout Curtains": "royal/black.jpg",
+        "Non-Blackout Curtains": "royal/nonblack.jpg",
+        "Semi-Blackout Curtains": "royal/semi.jpg",
+        "Plain Sheers": "royal/plain.jpg",
+        "Decorated Sheers": "royal/deco.jpg",
+        "Bed Pillow": "royal/pillow.jpg",
+        "Throw Pillows (Pair)": "royal/throw.jpg",
+        "Bubble Seat Covers": "royal/bubble.jpg",
+        "Tetron Seat Covers": "royal/tetron.jpg",
+        "Juakali Curtain Rods": "royal/tujakali.jpg",
+        "Packaged Curtain Rods": "royal/pack.jpg",
+        "Curtain Holders": "royal/holder.jpg",
+        "Carpets": "royal/carpet.jpg",
+        "Office Curtains": "royal/office.jpg",
+        "Kids Curtains": "royal/kids.jpg",
+        "Kitchen Curtains": "royal/kitchen.jpg",
+        "Wall Art Canvas": "royal/wallart.jpg",
+        "Decorative Vase": "royal/vase.jpg",
+        "Luxury Lighting": "royal/lighting.jpg"
+    };
+
+    // Common colors for new products
+    const commonColors = ["Navy Blue", "Grey", "Black", "White", "Brown", "Beige", "Ivory", "Cream"];
+    const commonColorHex = {
+        "Navy Blue": "#001F3F", "Grey": "#808080", "Black": "#1A1A1A", "White": "#FFFFFF",
+        "Brown": "#8B4513", "Beige": "#F5F5DC", "Ivory": "#FFFFF0", "Cream": "#FFFDD0"
+    };
+    
+    // Curtain colors
+    const curtainColors = ["Navy Blue", "Grey", "Black", "Mustard", "Orange", "White", "Brown", "Pink", "Maroon", "Green"];
+    const curtainColorHex = {
+        "Navy Blue": "#001F3F", "Grey": "#808080", "Black": "#1A1A1A", "Mustard": "#E1AD01",
+        "Orange": "#FF8C00", "White": "#FFFFFF", "Brown": "#8B4513", "Pink": "#FF69B4",
+        "Maroon": "#800000", "Green": "#2E8B57"
+    };
+    const plainSheerColors = ["Black", "Pink", "White", "Cream", "Blue"];
+    const plainSheerColorHex = {
+        "Black": "#1A1A1A", "Pink": "#FF69B4", "White": "#FFFFFF", "Cream": "#FFFDD0", "Blue": "#0000FF"
+    };
+    const decoratedSheerColors = ["Brown", "Grey", "Gold", "Silver", "Pink", "Blue"];
+    const decoratedSheerColorHex = {
+        "Brown": "#8B4513", "Grey": "#808080", "Gold": "#C9A87C", "Silver": "#C0C0C0", "Pink": "#FF69B4", "Blue": "#0000FF"
+    };
+    const pillowColors = ["Red", "Gold", "Teal", "Maroon", "Black"];
+    const pillowColorHex = ["#E31B23", "#C9A87C", "#008080", "#800000", "#1A1A1A"];
+    const bubbleSeatColors = ["Blue", "Grey", "Black", "Brown", "Maroon"];
+    const bubbleSeatColorHex = {
+        "Blue": "#0000FF", "Grey": "#808080", "Black": "#1A1A1A", "Brown": "#8B4513", "Maroon": "#800000"
+    };
+    const tetronSeatColors = ["Sky Blue", "Cream", "White", "Brown", "Green", "Purple"];
+    const tetronSeatColorHex = {
+        "Sky Blue": "#87CEEB", "Cream": "#FFFDD0", "White": "#FFFFFF", "Brown": "#8B4513", "Green": "#2E8B57", "Purple": "#800080"
+    };
+    const rodColors = ["Black", "Gold", "Silver"];
+    const rodColorHex = ["#1A1A1A", "#C9A87C", "#C0C0C0"];
+    const holderColors = ["Black", "Gold", "Silver", "Brass", "Nickel"];
+    const holderColorHex = ["#1A1A1A", "#C9A87C", "#C0C0C0", "#B5A642", "#A9A9A9"];
+    const carpetColors = ["Beige", "Grey", "Brown", "Cream", "Navy Blue", "Maroon"];
+    const carpetColorHex = {
+        "Beige": "#F5F5DC", "Grey": "#808080", "Brown": "#8B4513", "Cream": "#FFFDD0", "Navy Blue": "#001F3F", "Maroon": "#800000"
+    };
+    const officeCurtainColors = curtainColors;
+    const officeCurtainColorHex = curtainColorHex;
+    const kidsCurtainColors = ["Pink", "Blue", "Yellow", "Green", "Purple", "White"];
+    const kidsCurtainColorHex = {
+        "Pink": "#FF69B4", "Blue": "#0000FF", "Yellow": "#FFFF00", "Green": "#2E8B57", "Purple": "#800080", "White": "#FFFFFF"
+    };
+    const kitchenCurtainColors = ["White", "Cream", "Beige", "Light Blue", "Yellow", "Green"];
+    const kitchenCurtainColorHex = {
+        "White": "#FFFFFF", "Cream": "#FFFDD0", "Beige": "#F5F5DC", "Light Blue": "#ADD8E6", "Yellow": "#FFFF00", "Green": "#2E8B57"
+    };
+
+    const products = [
+        { id:1, name:"Blackout Curtains", basePrice:1500, category:"Curtains", colors:curtainColors, colorHex:curtainColors.map(c=>curtainColorHex[c]), img:productImages["Blackout Curtains"], sizeReq:true, tags:["luxury","modern"], hasVariant:false },
+        { id:2, name:"Non-Blackout Curtains", basePrice:800, category:"Curtains", colors:curtainColors, colorHex:curtainColors.map(c=>curtainColorHex[c]), img:productImages["Non-Blackout Curtains"], sizeReq:true, tags:["minimalist"], hasVariant:false },
+        { id:3, name:"Semi-Blackout Curtains", basePrice:1200, category:"Curtains", colors:curtainColors, colorHex:curtainColors.map(c=>curtainColorHex[c]), img:productImages["Semi-Blackout Curtains"], sizeReq:true, tags:["modern","bohemian"], hasVariant:false },
+        { id:4, name:"Plain Sheers", basePrice:500, category:"Sheers", colors:plainSheerColors, colorHex:plainSheerColors.map(c=>plainSheerColorHex[c]), img:productImages["Plain Sheers"], sizeReq:true, tags:["bohemian"], hasVariant:false },
+        { id:5, name:"Decorated Sheers", basePrice:700, category:"Sheers", colors:decoratedSheerColors, colorHex:decoratedSheerColors.map(c=>decoratedSheerColorHex[c]), img:productImages["Decorated Sheers"], sizeReq:true, tags:["luxury"], hasVariant:false },
+        { id:6, name:"Bed Pillow", basePrice:800, category:"Pillows", colors:pillowColors, colorHex:pillowColorHex, img:productImages["Bed Pillow"], sizeReq:false, tags:["comfort"], hasVariant:false },
+        { id:7, name:"Throw Pillows (Pair)", basePrice:800, category:"Pillows", colors:pillowColors, colorHex:pillowColorHex, img:productImages["Throw Pillows (Pair)"], sizeReq:false, tags:["bohemian","decor"], hasVariant:false },
+        { id:8, name:"Bubble Seat Covers", basePrice:0, category:"Seat Covers", colors:bubbleSeatColors, colorHex:bubbleSeatColors.map(c=>bubbleSeatColorHex[c]), img:productImages["Bubble Seat Covers"], sizeReq:false, tags:["luxury","premium"], hasVariant:true, variantType:"seat", variantPrices:{ "2-seater":2500, "3-seater":3000 } },
+        { id:9, name:"Tetron Seat Covers", basePrice:0, category:"Seat Covers", colors:tetronSeatColors, colorHex:tetronSeatColors.map(c=>tetronSeatColorHex[c]), img:productImages["Tetron Seat Covers"], sizeReq:false, tags:["modern","durable"], hasVariant:true, variantType:"seat", variantPrices:{ "2-seater":1500, "3-seater":2500 } },
+        { id:10, name:"Juakali Curtain Rods", basePrice:0, category:"Rods", colors:rodColors, colorHex:rodColorHex, img:productImages["Juakali Curtain Rods"], sizeReq:false, tags:["modern","local"], hasVariant:true, variantType:"rod", variantPrices:{ "1m":1200, "2m":1500, "3m":1800 } },
+        { id:11, name:"Packaged Curtain Rods", basePrice:0, category:"Rods", colors:rodColors, colorHex:rodColorHex, img:productImages["Packaged Curtain Rods"], sizeReq:false, tags:["luxury","premium"], hasVariant:true, variantType:"rod", variantPrices:{ "1m":800, "2m":1200, "3m":1500 } },
+        { id:12, name:"Curtain Holders", basePrice:600, category:"Curtain Holders", colors:holderColors, colorHex:holderColorHex, img:productImages["Curtain Holders"], sizeReq:false, tags:["accessories"], hasVariant:false },
+        { id:13, name:"Carpets", basePrice:3500, category:"Carpets", colors:carpetColors, colorHex:carpetColors.map(c=>carpetColorHex[c]), img:productImages["Carpets"], sizeReq:true, tags:["luxury","comfort"], hasVariant:false },
+        { id:14, name:"Office Curtains", basePrice:1800, category:"Office Curtains", colors:officeCurtainColors, colorHex:officeCurtainColors.map(c=>officeCurtainColorHex[c]), img:productImages["Office Curtains"], sizeReq:true, tags:["modern","professional"], hasVariant:false },
+        { id:15, name:"Kids Curtains", basePrice:1200, category:"Kids Curtains", colors:kidsCurtainColors, colorHex:kidsCurtainColors.map(c=>kidsCurtainColorHex[c]), img:productImages["Kids Curtains"], sizeReq:true, tags:["playful","colorful"], hasVariant:false },
+        { id:16, name:"Kitchen Curtains", basePrice:900, category:"Kitchen Curtains", colors:kitchenCurtainColors, colorHex:kitchenCurtainColors.map(c=>kitchenCurtainColorHex[c]), img:productImages["Kitchen Curtains"], sizeReq:true, tags:["functional","light"], hasVariant:false },
+        { id:17, name:"Wall Art Canvas", basePrice:2800, category:"Decor", colors:["Abstract","African"], colorHex:["#FFD700","#8B4513"], img:productImages["Wall Art Canvas"], sizeReq:false, tags:["bohemian"], hasVariant:false },
+        { id:18, name:"Decorative Vase", basePrice:1900, category:"Decor", colors:["Mixed","Orchid"], colorHex:["#DDA0DD","#FF69B4"], img:productImages["Decorative Vase"], sizeReq:false, tags:["bohemian"], hasVariant:false },
+        { id:19, name:"Luxury Lighting", basePrice:5600, category:"Decor", colors:["Gold","Brushed Nickel"], colorHex:["#C9A87C","#B5B5B5"], img:productImages["Luxury Lighting"], sizeReq:false, tags:["luxury"], hasVariant:false }
+    ];
+
+    let cart = [], drilling = null, wishlist = [];
+    let currentFilter = { category:"all", color:"all", price:"all", sort:"none", searchText:"", detectedColors: null };
+    let userStylePref = null;
+    let autoScrollInterval = null;
+    let currentCarousel = null;
+
+    function showToast(msg) { const t=document.getElementById("toastMsg"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200); }
+    function saveData() { localStorage.setItem("royalDecorFinalV9",JSON.stringify({cart,drilling,wishlist})); }
+    function loadData() { const d=localStorage.getItem("royalDecorFinalV9"); if(d){const p=JSON.parse(d); cart=p.cart||[]; drilling=p.drilling||null; wishlist=p.wishlist||[]; updateCartUI(); updateWishlistUI(); updateSmartPicks(); } }
+
+    function applyDiscount(subtotal) { if(subtotal > 10000) return { discount:0.1, discounted:subtotal*0.9 }; if(subtotal > 5000) return { discount:0.05, discounted:subtotal*0.95 }; return { discount:0, discounted:subtotal }; }
+    function addToCart(product,color,sizeVal,unit,variantKey=null) {
+        let finalPrice = product.basePrice;
+        if(product.hasVariant && variantKey) {
+            finalPrice = product.variantPrices[variantKey];
+        } else if(product.sizeReq) {
+            let meters = parseFloat(sizeVal);
+            if(isNaN(meters)) meters = 1;
+            finalPrice = product.basePrice * meters;
+        }
+        const existing = cart.find(i=>i.id===product.id && i.selectedColor===color && i.variantKey===variantKey && i.size===sizeVal);
+        if(existing) existing.qty++;
+        else cart.push({...product, selectedColor:color, size:sizeVal, sizeUnit:unit, qty:1, itemPrice:finalPrice, variantKey:variantKey});
+        saveData(); updateCartUI(); showToast(`✅ ${product.name} added`); updateSmartPicks();
+    }
+    function updateCartUI(){ const container=document.getElementById("cartItemsList"); let subtotal=0; if(cart.length===0 && !drilling) container.innerHTML="<p style='text-align:center; padding:20px;'>✨ Cart empty</p>"; else{ let html=""; cart.forEach((item,idx)=>{ const itemTotal=item.itemPrice*item.qty; subtotal+=itemTotal; let variantDisplay = item.variantKey ? ` | ${item.variantKey}` : ''; let sizeDisplay = (item.size && item.size !== "1") ? ` | ${item.size}${item.sizeUnit}` : ''; html+=`<div style='background:#1A1A1A; margin-bottom:12px; padding:12px; border-radius:24px; border-left:3px solid var(--red);'><div><strong>${item.name}</strong> <button class='removeCart' data-idx='${idx}' style='float:right; background:none; border:none; color:var(--red); cursor:pointer;'><i class='fas fa-trash'></i></button></div>🎨 ${item.selectedColor}${variantDisplay}${sizeDisplay}<br>KES ${item.itemPrice} x ${item.qty} = KES ${itemTotal}<div><button class='cartMinus' data-idx='${idx}'>-</button> ${item.qty} <button class='cartPlus' data-idx='${idx}'>+</button></div></div>`; }); container.innerHTML=html; attachCartEvents(); }
+        if(drilling) subtotal+=drilling.cost;
+        const discountObj = applyDiscount(subtotal);
+        let total = discountObj.discounted;
+        document.getElementById("discountInfo").innerHTML = discountObj.discount>0 ? `🎉 ${discountObj.discount*100}% discount applied!` : "";
+        document.getElementById("drillCartInfo").innerHTML = drilling ? `<div>🔧 Drilling ${drilling.meters}m = KES ${drilling.cost}</div>` : "";
+        document.getElementById("cartTotal").innerHTML = `Total: KES ${total.toLocaleString()} ${discountObj.discount>0 ? `<span class="discount-badge">-${discountObj.discount*100}%</span>` : ""}`;
+        document.getElementById("cartCount").innerText=cart.reduce((s,i)=>s+i.qty,0);
+    }
+    function attachCartEvents(){ 
+        document.querySelectorAll('.removeCart').forEach(btn=>btn.addEventListener('click',()=>{const idx=parseInt(btn.dataset.idx); cart.splice(idx,1); saveData(); updateCartUI(); updateSmartPicks();})); 
+        document.querySelectorAll('.cartMinus').forEach(btn=>btn.addEventListener('click',()=>{const idx=parseInt(btn.dataset.idx); if(cart[idx].qty>1) cart[idx].qty--; else cart.splice(idx,1); saveData(); updateCartUI(); updateSmartPicks();})); 
+        document.querySelectorAll('.cartPlus').forEach(btn=>btn.addEventListener('click',()=>{const idx=parseInt(btn.dataset.idx); cart[idx].qty++; saveData(); updateCartUI(); updateSmartPicks();})); 
+    }
+    function addDrilling(meters){ if(meters>0){ drilling={meters, cost:meters*300}; saveData(); updateCartUI(); showToast(`Drilling ${meters}m added`); } }
+    function sendWhatsApp(){ if(cart.length===0 && !drilling) { showToast("Cart empty"); return; } let msg="🛍️ ROYAL DECOR ORDER\n"; let sub=0; cart.forEach(i=>{const t=i.itemPrice*i.qty; sub+=t; let variantDisplay = i.variantKey ? `, ${i.variantKey}` : ''; let sizeDisplay = (i.size && i.size !== "1") ? `, ${i.size}${i.sizeUnit}` : ''; msg+=`▪️ ${i.name} (${i.selectedColor}${variantDisplay}${sizeDisplay}) x${i.qty} = KES ${t}\n`;}); if(drilling) msg+=`🔧 Drilling ${drilling.meters}m = KES ${drilling.cost}\n`; const discountObj = applyDiscount(sub+(drilling?.cost||0)); msg+=`💰 Subtotal: KES ${(sub+(drilling?.cost||0)).toLocaleString()}\n🎉 Discount: ${discountObj.discount*100}%\n💵 Total: KES ${discountObj.discounted.toLocaleString()}\n📞 Reply with address.`; window.open(`https://wa.me/254746332443?text=${encodeURIComponent(msg)}`,"_blank"); }
+
+    function toggleWishlist(prod){ const idx=wishlist.findIndex(p=>p.id===prod.id); if(idx===-1){ wishlist.push(prod); showToast(`❤️ ${prod.name} added to favorites`); } else { wishlist.splice(idx,1); showToast(`Removed from favorites`); } saveData(); updateWishlistUI(); renderProducts(); updateSmartPicks(); renderFavoritesDrawer(); }
+    function updateWishlistUI(){ document.getElementById("wishlistCount").innerText=wishlist.length; }
+    function renderFavoritesDrawer(){ const container=document.getElementById("favItemsList"); if(!container) return; if(wishlist.length===0) container.innerHTML="<p style='text-align:center; padding:20px;'>No favorites yet. Click the ❤️ on any product.</p>"; else{ let html=""; wishlist.forEach((item)=>{ html+=`<div style='background:#1A1A1A; margin-bottom:12px; padding:12px; border-radius:24px; border-left:3px solid var(--red);'><div><strong>${item.name}</strong> <button class='removeFav' data-id='${item.id}' style='float:right; background:none; border:none; color:var(--red); cursor:pointer;'><i class='fas fa-trash'></i></button></div><div>Price: KES ${item.hasVariant ? Object.values(item.variantPrices)[0] : (item.sizeReq ? item.basePrice+'/m' : item.basePrice)}</div><button class='favAddToCart' data-id='${item.id}' style='background:var(--red); border:none; border-radius:30px; padding:6px 12px; margin-top:8px; color:white; cursor:pointer;'>Add to Cart</button></div>`; }); container.innerHTML=html; document.querySelectorAll('.removeFav').forEach(btn=>btn.addEventListener('click',()=>{ const id=parseInt(btn.dataset.id); const prod=products.find(p=>p.id===id); if(prod) toggleWishlist(prod); renderFavoritesDrawer(); })); document.querySelectorAll('.favAddToCart').forEach(btn=>btn.addEventListener('click',()=>{ const id=parseInt(btn.dataset.id); const prod=products.find(p=>p.id===id); if(prod){ if(prod.hasVariant){ const firstKey = Object.keys(prod.variantPrices)[0]; addToCart(prod, prod.colors[0], "1", "piece", firstKey); } else if(prod.sizeReq){ addToCart(prod, prod.colors[0], "1", "meters"); } else { addToCart(prod, prod.colors[0], "1", "piece"); } } })); } }
+
+    // Color Detection (unchanged)
+    function getDominantColors(imgEl, num=5){ return new Promise(resolve=>{ const canvas=document.createElement('canvas'); const ctx=canvas.getContext('2d'); canvas.width=imgEl.width; canvas.height=imgEl.height; ctx.drawImage(imgEl,0,0); const data=ctx.getImageData(0,0,canvas.width,canvas.height).data; const map=new Map(); for(let i=0;i<data.length;i+=40){ const r=data[i],g=data[i+1],b=data[i+2]; const key=`${Math.floor(r/16)*16},${Math.floor(g/16)*16},${Math.floor(b/16)*16}`; map.set(key,(map.get(key)||0)+1); } let colors=Array.from(map.entries()).map(([k,c])=>({rgb:k.split(',').map(Number),count:c,hex:`#${((1<<24)+(parseInt(k.split(',')[0])<<16)+(parseInt(k.split(',')[1])<<8)+parseInt(k.split(',')[2])).toString(16).slice(1)}`})).sort((a,b)=>b.count-a.count).slice(0,num); resolve(colors); }); }
+    function rgbToName(rgb){ const names={"#001F3F":"Navy Blue","#808080":"Grey","#1A1A1A":"Black","#E1AD01":"Mustard","#FF8C00":"Orange","#FFFFFF":"White","#8B4513":"Brown","#FF69B4":"Pink","#800000":"Maroon","#2E8B57":"Green","#0000FF":"Blue","#FFFDD0":"Cream","#C9A87C":"Gold","#C0C0C0":"Silver","#87CEEB":"Sky Blue","#800080":"Purple","#E31B23":"Red","#008080":"Teal","#F5F5DC":"Beige","#FFFFF0":"Ivory","#FFFF00":"Yellow","#ADD8E6":"Light Blue","#B5A642":"Brass","#A9A9A9":"Nickel"}; let closest="Navy Blue", min=Infinity; for(let [hex,name] of Object.entries(names)){ let r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16); let dist=Math.hypot(rgb[0]-r,rgb[1]-g,rgb[2]-b); if(dist<min){min=dist;closest=name;} } return closest; }
+    document.getElementById("imageUpload").addEventListener("change",async(e)=>{ if(e.target.files[0]){ const img=new Image(); img.src=URL.createObjectURL(e.target.files[0]); img.onload=async()=>{ const colors=await getDominantColors(img,4); const colorNames=colors.map(c=>rgbToName(c.rgb)); currentFilter.detectedColors=colorNames; document.getElementById("searchResultMsg").innerHTML=`🎨 Detected Colors: ${colorNames.join(", ")} — Showing matches.`; renderProducts(); showToast(`Detected ${colorNames.length} colors`); URL.revokeObjectURL(img.src); }; } });
+
+    // Auto-slide for Smart Picks
+    function startAutoSlide() {
+        if (autoScrollInterval) clearInterval(autoScrollInterval);
+        const carousel = document.getElementById("smartPicksCarousel");
+        if (!carousel) return;
+        currentCarousel = carousel;
+        const slideStep = 300;
+        const intervalTime = 3000;
+        autoScrollInterval = setInterval(() => {
+            if (!carousel) return;
+            const maxScroll = carousel.scrollWidth - carousel.clientWidth;
+            let newScroll = carousel.scrollLeft + slideStep;
+            if (newScroll >= maxScroll) newScroll = 0;
+            carousel.scrollTo({ left: newScroll, behavior: 'smooth' });
+        }, intervalTime);
+        const pauseAutoSlide = () => { if (autoScrollInterval) { clearInterval(autoScrollInterval); autoScrollInterval = null; } };
+        const resumeAutoSlide = () => { if (autoScrollInterval) return; autoScrollInterval = setInterval(() => { if (!carousel) return; const maxScroll = carousel.scrollWidth - carousel.clientWidth; let newScroll = carousel.scrollLeft + slideStep; if (newScroll >= maxScroll) newScroll = 0; carousel.scrollTo({ left: newScroll, behavior: 'smooth' }); }, intervalTime); };
+        carousel.removeEventListener('mouseenter', pauseAutoSlide);
+        carousel.removeEventListener('mouseleave', resumeAutoSlide);
+        carousel.addEventListener('mouseenter', pauseAutoSlide);
+        carousel.addEventListener('mouseleave', resumeAutoSlide);
+    }
+    function stopAutoSlide() { if (autoScrollInterval) { clearInterval(autoScrollInterval); autoScrollInterval = null; } if (currentCarousel) { currentCarousel.removeEventListener('mouseenter', () => {}); currentCarousel.removeEventListener('mouseleave', () => {}); } }
+
+    function updateSmartPicks() {
+        let prefTags = [...new Set([...(wishlist.flatMap(p=>p.tags)),...(cart.flatMap(p=>p.tags)), userStylePref || "luxury"])];
+        if(prefTags.length===0) prefTags=["luxury"];
+        let recs=products.filter(p=>p.tags.some(t=>prefTags.includes(t))).slice(0,12);
+        if(recs.length<6) recs=products.slice(0,8);
+        const carousel = document.getElementById("smartPicksCarousel");
+        carousel.innerHTML = recs.map(p=>`<div class="rec-item" onclick="quickAdd(${p.id})"><div style="width:100%; height:100px; background:#333; display:flex; align-items:center; justify-content:center; border-radius:16px; margin-bottom:10px; overflow:hidden;"><img src="${p.img}" onerror="this.src='https://placehold.co/300x200?text=No+Image'" style="width:100%; height:100%; object-fit:cover;"></div><div>${p.name}</div><div>KES ${p.hasVariant ? Object.values(p.variantPrices)[0] : (p.sizeReq ? p.basePrice+'/m' : p.basePrice)}</div><button style="background:var(--red); border:none; border-radius:30px; padding:6px 12px; color:white; cursor:pointer;">Add</button></div>`).join('');
+        window.quickAdd=(id)=>{ const prod=products.find(p=>p.id===id); if(prod.hasVariant){ const firstKey = Object.keys(prod.variantPrices)[0]; addToCart(prod, prod.colors[0], "1", "piece", firstKey); } else if(prod.sizeReq){ addToCart(prod, prod.colors[0], "1", "meters"); } else { addToCart(prod, prod.colors[0], "1", "piece"); } };
+        stopAutoSlide();
+        startAutoSlide();
+        if(cart.length>0){ const comp=products.filter(p=>!cart.map(c=>c.id).includes(p.id) && p.tags.some(t=>cart[0]?.tags.includes(t))).slice(0,3); if(comp.length){ document.getElementById("fbtSection").style.display="block"; document.getElementById("fbtGrid").innerHTML=comp.map(p=>`<div class="rec-item" onclick="quickAdd(${p.id})"><div style="width:100%; height:80px; background:#333; border-radius:12px; overflow:hidden;"><img src="${p.img}" onerror="this.src='https://placehold.co/300x200?text=No+Image'" style="width:100%; height:100%; object-fit:cover;"></div><div>${p.name}</div><div>KES ${p.hasVariant ? Object.values(p.variantPrices)[0] : (p.sizeReq ? p.basePrice+'/m' : p.basePrice)}</div></div>`).join(''); } else document.getElementById("fbtSection").style.display="none"; } else document.getElementById("fbtSection").style.display="none";
+    }
+
+    document.querySelectorAll('.quiz-btn').forEach(btn=>btn.addEventListener('click',()=>{ userStylePref=btn.dataset.style; document.getElementById("quizResult").innerHTML=`✨ Style set to ${userStylePref}. Smart picks updated!`; updateSmartPicks(); showToast(`Style saved`); }));
+
+    function performTextSearch(){ currentFilter.searchText=document.getElementById("textSearch").value.toLowerCase(); renderProducts(); }
+    function renderProducts(){
+        let filtered=[...products];
+        if(currentFilter.category!=="all") filtered=filtered.filter(p=>p.category===currentFilter.category);
+        if(currentFilter.color!=="all") filtered=filtered.filter(p=>p.colors.includes(currentFilter.color));
+        if(currentFilter.detectedColors) filtered=filtered.filter(p=>p.colors.some(c=>currentFilter.detectedColors.includes(c)));
+        if(currentFilter.price==="low") filtered=filtered.filter(p=>p.basePrice<3000);
+        else if(currentFilter.price==="mid") filtered=filtered.filter(p=>p.basePrice>=3000 && p.basePrice<=6000);
+        else if(currentFilter.price==="high") filtered=filtered.filter(p=>p.basePrice>6000);
+        if(currentFilter.searchText) filtered=filtered.filter(p=>p.name.toLowerCase().includes(currentFilter.searchText) || p.colors.some(c=>c.toLowerCase().includes(currentFilter.searchText)));
+        if(currentFilter.sort==="asc") filtered.sort((a,b)=>a.basePrice-b.basePrice);
+        else if(currentFilter.sort==="desc") filtered.sort((a,b)=>b.basePrice-a.basePrice);
+        const grid=document.getElementById("productsGrid");
+        grid.innerHTML=filtered.map(p=>{
+            let priceDisplay = p.hasVariant ? `From KES ${Math.min(...Object.values(p.variantPrices))}` : (p.sizeReq ? `KES ${p.basePrice} per meter` : `KES ${p.basePrice}`);
+            let variantSelector = '';
+            if(p.hasVariant && p.variantType === 'seat') {
+                variantSelector = `<div class="seat-group"><div class="seat-label">🪑 Seat Type</div><div class="seat-select-wrapper"><select class="variantSelect" data-id="${p.id}">${Object.entries(p.variantPrices).map(([key,val])=>`<option value="${key}">${key} (KES ${val})</option>`).join('')}</select></div></div>`;
+            } else if(p.hasVariant && p.variantType === 'rod') {
+                variantSelector = `<div class="rod-group"><div class="rod-label">📏 Length</div><div class="rod-select-wrapper"><select class="variantSelect" data-id="${p.id}">${Object.entries(p.variantPrices).map(([key,val])=>`<option value="${key}">${key} (KES ${val})</option>`).join('')}</select></div></div>`;
+            }
+            let sizeHtml = '';
+            if(p.sizeReq && !p.hasVariant) {
+                sizeHtml = `<div class="size-group"><div class="size-label">📏 Meters (price = per meter × meters)</div><div class="size-input-wrapper"><input type="number" step="0.1" class="prodSize" data-id="${p.id}" value="1" placeholder="Meters"><input type="hidden" class="prodUnit" value="meters"></div></div>`;
+            }
+            return `<div class="product-card"><div class="wishlist-heart ${wishlist.some(w=>w.id===p.id)?'active':''}" data-id="${p.id}"><i class="fas fa-heart"></i></div><div class="product-img"><img src="${p.img}" alt="${p.name}" onerror="this.src='https://placehold.co/400x300?text=ROYAL+DECOR'"></div><div class="product-info"><div class="product-title">${p.name}</div><div class="price">${priceDisplay}</div><div class="color-swatches" data-product-id="${p.id}">${p.colors.map((c,idx)=>`<div class="color-swatch" style="background:${p.colorHex[idx]};" data-color="${c}" data-idx="${idx}"></div>`).join('')}</div><div class="selected-color-label" id="selectedLabel-${p.id}">Selected: ${p.colors[0]}</div>${variantSelector}${sizeHtml}<button class="addToCartBtn" data-id="${p.id}"><i class="fas fa-cart-plus"></i> Add to Cart</button></div></div>`;
+        }).join('');
+        attachProductEvents();
+    }
+    function attachProductEvents(){
+        document.querySelectorAll('.wishlist-heart').forEach(btn=>btn.addEventListener('click',(e)=>{ e.stopPropagation(); const id=parseInt(btn.dataset.id); const prod=products.find(p=>p.id===id); toggleWishlist(prod); renderProducts(); }));
+        document.querySelectorAll('.color-swatch').forEach(swatch=>{
+            swatch.addEventListener('click',(e)=>{
+                const productId = parseInt(swatch.parentElement.dataset.productId);
+                const color = swatch.dataset.color;
+                const label = document.getElementById(`selectedLabel-${productId}`);
+                if(label) label.textContent = `Selected: ${color}`;
+                swatch.parentElement.dataset.selectedColor = color;
+                document.querySelectorAll(`.color-swatch[data-product-id='${productId}']`).forEach(s=>s.classList.remove('selected'));
+                swatch.classList.add('selected');
+            });
+        });
+        document.querySelectorAll('.addToCartBtn').forEach(btn=>btn.addEventListener('click',()=>{ const id=parseInt(btn.dataset.id); const prod=products.find(p=>p.id===id); const card = btn.closest('.product-card'); const swatchContainer = card.querySelector('.color-swatches'); let selectedColor = swatchContainer?.dataset.selectedColor || prod.colors[0]; let variantKey = null; if(prod.hasVariant){ const variantSelect = card.querySelector(`.variantSelect[data-id="${id}"]`); if(variantSelect) variantKey = variantSelect.value; } let size="1", unit="piece"; if(prod.sizeReq && !prod.hasVariant){ size = card.querySelector(`.prodSize[data-id="${id}"]`)?.value||"1"; unit = "meters"; } addToCart(prod,selectedColor,size,unit,variantKey); }));
+        document.querySelectorAll('.color-swatches').forEach(container=>{
+            const firstSwatch = container.querySelector('.color-swatch');
+            if(firstSwatch){
+                firstSwatch.classList.add('selected');
+                container.dataset.selectedColor = firstSwatch.dataset.color;
+                const pid = container.dataset.productId;
+                const label = document.getElementById(`selectedLabel-${pid}`);
+                if(label) label.textContent = `Selected: ${firstSwatch.dataset.color}`;
+            }
+        });
+    }
+
+    function processChat(msg){ const l=msg.toLowerCase(); if(l.includes("add") && (l.includes("curtain")||l.includes("pillow")||l.includes("rod")||l.includes("seat")||l.includes("carpet")||l.includes("holder"))){ const p=products.find(prod=>prod.name.toLowerCase().includes(l.includes("curtain")?"curtain":l.includes("pillow")?"pillow":l.includes("rod")?"rod":l.includes("seat")?"seat":l.includes("carpet")?"carpet":"holder")); if(p){ if(p.hasVariant){ const firstKey = Object.keys(p.variantPrices)[0]; addToCart(p, p.colors[0], "1", "piece", firstKey); } else if(p.sizeReq){ addToCart(p, p.colors[0], "1", "meters"); } else { addToCart(p, p.colors[0], "1", "piece"); } return `Added ${p.name} to cart.`; } return "Product not found."; } if(l.includes("discount")) return "5% off above KES 5,000, 10% off above KES 10,000!"; if(l.includes("recommend")){ const rec=products[Math.floor(Math.random()*3)]; return `I recommend ${rec.name} (KES ${rec.hasVariant ? Object.values(rec.variantPrices)[0] : (rec.sizeReq ? rec.basePrice+'/m' : rec.basePrice)}).`; } return "Try 'add blackout curtains' or 'discount'."; }
+    function sendChat(){ const input=document.getElementById("chatInput"); const msg=input.value.trim(); if(!msg) return; const chatDiv=document.getElementById("chatMessages"); chatDiv.innerHTML+=`<div><strong>You:</strong> ${msg}</div>`; setTimeout(()=>{ chatDiv.innerHTML+=`<div><strong>Assistant:</strong> ${processChat(msg)}</div>`; chatDiv.scrollTop=chatDiv.scrollHeight; },100); input.value=""; updateSmartPicks(); }
+
+    // Event Listeners
+    document.getElementById("categoryFilter").addEventListener("change",e=>{currentFilter.category=e.target.value; renderProducts();});
+    document.getElementById("colorFilter").addEventListener("change",e=>{currentFilter.color=e.target.value; renderProducts();});
+    document.getElementById("priceFilter").addEventListener("change",e=>{currentFilter.price=e.target.value; renderProducts();});
+    document.getElementById("sortPriceBtn").addEventListener("click",()=>{currentFilter.sort=currentFilter.sort==="asc"?"desc":"asc"; renderProducts();});
+    document.getElementById("textSearch").addEventListener("input",performTextSearch);
+    document.getElementById("clearSearchBtn").addEventListener("click",()=>{currentFilter.searchText=""; currentFilter.detectedColors=null; document.getElementById("textSearch").value=""; document.getElementById("searchResultMsg").innerHTML=""; renderProducts();});
+    document.getElementById("addDrillBtn").addEventListener("click",()=>{const m=parseFloat(document.getElementById("drillMeters").value); if(m>0) addDrilling(m); else showToast("Enter valid meters");});
+    document.getElementById("whatsappOrderBtn").addEventListener("click",sendWhatsApp);
+    document.getElementById("clearCartBtn").addEventListener("click",()=>{if(confirm("Clear all?")){cart=[]; drilling=null; saveData(); updateCartUI(); updateSmartPicks();}});
+    document.getElementById("cartIcon").addEventListener("click",()=>{document.getElementById("cartDrawer").classList.add("open"); document.getElementById("cartOverlay").classList.add("active");});
+    document.getElementById("closeCartBtn").addEventListener("click",()=>{document.getElementById("cartDrawer").classList.remove("open"); document.getElementById("cartOverlay").classList.remove("active");});
+    document.getElementById("cartOverlay").addEventListener("click",()=>{document.getElementById("cartDrawer").classList.remove("open"); document.getElementById("cartOverlay").classList.remove("active");});
+    document.getElementById("wishlistIconBtn").addEventListener("click",()=>{ renderFavoritesDrawer(); document.getElementById("favDrawer").classList.add("open"); document.getElementById("favOverlay").classList.add("active"); });
+    document.getElementById("closeFavBtn").addEventListener("click",()=>{document.getElementById("favDrawer").classList.remove("open"); document.getElementById("favOverlay").classList.remove("active");});
+    document.getElementById("favOverlay").addEventListener("click",()=>{document.getElementById("favDrawer").classList.remove("open"); document.getElementById("favOverlay").classList.remove("active");});
+    document.getElementById("chatToggle").addEventListener("click",()=>document.getElementById("chatBox").classList.toggle("open"));
+    document.getElementById("sendChatBtn").addEventListener("click",sendChat);
+    document.getElementById("chatInput").addEventListener("keypress",(e)=>e.key==="Enter"&&sendChat());
+
+    loadData(); renderProducts(); updateSmartPicks(); updateWishlistUI(); renderFavoritesDrawer();
+    setInterval(()=>updateSmartPicks(), 12000);
+</script>
+</body>
+</html>

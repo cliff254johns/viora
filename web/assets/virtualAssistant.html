@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>VIORA Virtual Assistant</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  --cyan:#00d9ff;--blue:#0879ff;--navy:#071b32;--glass:rgba(255,255,255,.72);
+}
+body{
+  margin:0;min-height:100vh;display:grid;place-items:center;
+  font-family:Inter,Arial,sans-serif;
+  background:radial-gradient(circle at 50% 35%,#fff 0,#f4f9fc 55%,#e8f1f6 100%);
+  overflow:hidden;color:#08223d;
+}
+.assistant-wrap{position:relative;width:min(440px,94vw);height:min(720px,94vh);display:flex;align-items:center;justify-content:center}
+.robot{
+  position:relative;width:285px;height:570px;animation:float 3.5s ease-in-out infinite;
+  filter:drop-shadow(0 25px 25px rgba(0,35,65,.18));
+}
+.shadow{
+  position:absolute;bottom:17px;left:35px;width:215px;height:30px;border-radius:50%;
+  background:rgba(10,48,75,.15);filter:blur(9px);animation:shadow 3.5s ease-in-out infinite;
+}
+.head{
+  position:absolute;left:20px;top:18px;width:245px;height:185px;border-radius:68px;
+  background:linear-gradient(145deg,#fff,#e7f0f5);
+  border:5px solid #d9e6ed;box-shadow:inset -12px -13px 25px rgba(0,105,170,.09),inset 8px 8px 16px #fff;
+}
+.screen{
+  position:absolute;left:21px;top:24px;width:195px;height:132px;border-radius:42px;
+  background:linear-gradient(150deg,#08243f,#06182c);
+  border:3px solid #1c506f;box-shadow:inset 0 0 22px rgba(0,217,255,.14),0 0 20px rgba(0,217,255,.12);
+  overflow:hidden;
+}
+.screen:after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.15),transparent 35%);pointer-events:none}
+.eye{position:absolute;top:47px;width:26px;height:35px;border-radius:50%;background:#39e8ff;box-shadow:0 0 14px #00d9ff;animation:blink 5s infinite}
+.eye.left{left:48px}.eye.right{right:48px}
+.mouth{position:absolute;left:78px;top:91px;width:40px;height:17px;border-bottom:6px solid #39e8ff;border-radius:0 0 50px 50px;filter:drop-shadow(0 0 7px #00d9ff)}
+.ear{position:absolute;top:62px;width:33px;height:62px;border-radius:16px;background:linear-gradient(#eaf4f8,#c9e0ea);border:4px solid #c5dce6}
+.ear.left{left:-19px}.ear.right{right:-19px}
+.ear:after{content:"";position:absolute;inset:9px;border-radius:50%;border:4px solid var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.mic{position:absolute;right:-15px;bottom:21px;width:65px;height:13px;border-radius:10px;background:#c9dce5;transform:rotate(8deg)}
+.mic:after{content:"";position:absolute;right:-5px;top:-5px;width:22px;height:22px;border-radius:50%;background:#153954;border:3px solid var(--cyan)}
+.body{
+  position:absolute;left:53px;top:200px;width:180px;height:210px;
+  background:linear-gradient(145deg,#fff,#e5eef3);border:5px solid #d6e4eb;
+  border-radius:65px 65px 45px 45px;box-shadow:inset -10px -15px 22px rgba(0,100,170,.08),inset 8px 8px 14px #fff;
+}
+.logo{
+  position:absolute;top:43px;left:50%;transform:translateX(-50%);
+  font-weight:900;font-size:32px;letter-spacing:-4px;color:#193b59;text-shadow:2px 2px 0 #aebdc6;
+}
+.brand{position:absolute;top:79px;left:50%;transform:translateX(-50%);font-size:14px;font-weight:800;letter-spacing:3px}
+.core{position:absolute;left:50%;bottom:32px;transform:translateX(-50%);width:18px;height:18px;border-radius:50%;background:var(--cyan);box-shadow:0 0 18px var(--cyan);animation:pulse 1.5s infinite}
+.arm{position:absolute;top:225px;width:66px;height:150px;border-radius:35px;background:linear-gradient(#fff,#dce9ef);border:5px solid #d3e2e9}
+.arm.left{left:-9px;transform:rotate(12deg);transform-origin:top center;animation:wave 2.7s ease-in-out infinite}
+.arm.right{right:-9px;transform:rotate(-9deg)}
+.hand{position:absolute;bottom:-18px;width:55px;height:60px;border-radius:28px;background:#f4f9fb;border:4px solid #cfdee6}
+.arm.left .hand{left:-2px}.arm.right .hand{right:-2px}
+.thumb{position:absolute;width:27px;height:48px;border-radius:15px;background:#f4f9fb;border:4px solid #cfdee6;top:-28px;left:13px;transform:rotate(-12deg)}
+.leg{position:absolute;top:395px;width:68px;height:145px;border-radius:30px;background:linear-gradient(#fff,#dce9ef);border:5px solid #d3e2e9}
+.leg.left{left:66px}.leg.right{right:66px}
+.foot{position:absolute;bottom:-10px;width:86px;height:43px;border-radius:30px 30px 22px 22px;background:#f8fbfc;border:5px solid #cddfe7;box-shadow:inset 0 -8px 12px rgba(0,120,190,.08)}
+.leg.left .foot{left:-12px}.leg.right .foot{right:-12px}
+.foot:after{content:"";position:absolute;left:9px;right:9px;bottom:4px;height:6px;border-radius:5px;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.check{
+  position:absolute;left:-78px;top:245px;width:70px;height:70px;border-radius:50%;
+  background:linear-gradient(145deg,#2cff77,#0abf52);border:4px solid #b9ffd1;
+  box-shadow:0 8px 18px rgba(0,150,70,.25),0 0 18px rgba(0,255,120,.35);z-index:5;
+}
+.check:after{content:"";position:absolute;width:31px;height:16px;border-left:8px solid white;border-bottom:8px solid white;transform:rotate(-45deg);left:17px;top:18px}
+.tablet{
+  position:absolute;right:-95px;top:260px;width:105px;height:140px;border-radius:12px;
+  background:linear-gradient(145deg,rgba(130,240,255,.5),rgba(0,135,255,.22));
+  border:3px solid rgba(0,210,255,.75);box-shadow:0 0 25px rgba(0,200,255,.35);
+  transform:rotate(-8deg);overflow:hidden
+}
+.chart{position:absolute;inset:25px 12px 20px;border-left:2px solid rgba(255,255,255,.7);border-bottom:2px solid rgba(255,255,255,.7)}
+.bar{position:absolute;bottom:0;width:13px;background:#fff;border-radius:4px 4px 0 0;box-shadow:0 0 8px #fff}
+.b1{height:25px;left:8px}.b2{height:43px;left:28px}.b3{height:62px;left:48px}.b4{height:82px;left:68px}
+.arrow{position:absolute;width:65px;height:4px;background:white;transform:rotate(-28deg);top:42px;left:28px;box-shadow:0 0 7px white}
+.arrow:after{content:"";position:absolute;right:-2px;top:-6px;border-left:13px solid white;border-top:8px solid transparent;border-bottom:8px solid transparent}
+.panel{
+  position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:360px;
+  padding:15px 18px;border-radius:22px;background:rgba(255,255,255,.76);
+  backdrop-filter:blur(15px);border:1px solid rgba(255,255,255,.9);
+  box-shadow:0 15px 45px rgba(0,45,75,.14);text-align:center;z-index:20
+}
+.status{font-size:13px;color:#547087;margin-bottom:7px}.status b{color:#079ad5}
+.controls{display:flex;gap:8px;margin-top:10px}
+input{
+  flex:1;border:1px solid #d4e4eb;border-radius:13px;padding:11px 12px;outline:none;font-size:14px;
+  background:#fff;color:#153954
+}
+button{border:0;border-radius:13px;padding:11px 15px;background:#082b49;color:#fff;font-weight:700;cursor:pointer}
+button:hover{background:#00aee8}
+.quick{display:flex;justify-content:center;gap:6px;margin-top:9px;flex-wrap:wrap}
+.quick button{font-size:11px;padding:7px 10px;background:#e8f7fb;color:#09678a}
+.speaking .mouth{animation:talk .22s infinite alternate}
+.speaking .core{animation:pulse .5s infinite}
+.thinking .eye{animation:think .7s infinite alternate}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-13px)}}
+@keyframes shadow{0%,100%{transform:scale(1);opacity:.35}50%{transform:scale(.84);opacity:.2}}
+@keyframes blink{0%,44%,48%,100%{transform:scaleY(1)}46%{transform:scaleY(.12)}}
+@keyframes pulse{50%{transform:translateX(-50%) scale(1.45);opacity:.7}}
+@keyframes talk{to{height:5px;border-radius:50%}}
+@keyframes wave{0%,100%{transform:rotate(12deg)}50%{transform:rotate(-5deg)}}
+@keyframes think{to{transform:translateY(7px)}}
+@media(max-width:500px){
+ .robot{transform:scale(.82)}.panel{width:92vw}.check{left:-48px}.tablet{right:-62px}
+}
+</style>
+</head>
+<body>
+<div class="assistant-wrap">
+  <div class="shadow"></div>
+  <div class="robot" id="robot">
+    <div class="head">
+      <div class="ear left"></div><div class="ear right"></div>
+      <div class="screen"><div class="eye left"></div><div class="eye right"></div><div class="mouth"></div></div>
+      <div class="mic"></div>
+    </div>
+    <div class="body"><div class="logo">VR</div><div class="brand">VIORA</div><div class="core"></div></div>
+    <div class="arm left"><div class="hand"></div><div class="thumb"></div></div>
+    <div class="arm right"><div class="hand"></div></div>
+    <div class="leg left"><div class="foot"></div></div><div class="leg right"><div class="foot"></div></div>
+    <div class="check"></div>
+    <div class="tablet"><div class="chart"><div class="bar b1"></div><div class="bar b2"></div><div class="bar b3"></div><div class="bar b4"></div><div class="arrow"></div></div></div>
+  </div>
+
+  <div class="panel">
+    <div class="status" id="status">VIORA Assistant • <b>Online</b></div>
+    <div id="reply">Hello! I'm your VIORA virtual assistant. How can I help you?</div>
+    <div class="controls">
+      <input id="input" placeholder="Ask VIORA something..." autocomplete="off">
+      <button onclick="ask()">Ask</button>
+    </div>
+    <div class="quick">
+      <button onclick="quickAsk('What can you do?')">Capabilities</button>
+      <button onclick="quickAsk('Tell me about VIORA')">About VIORA</button>
+      <button onclick="startListening()">🎙 Voice</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const robot=document.getElementById('robot');
+const reply=document.getElementById('reply');
+const status=document.getElementById('status');
+const input=document.getElementById('input');
+
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.rate=.95; u.pitch=1.05;
+  robot.classList.add('speaking');
+  u.onend=()=>robot.classList.remove('speaking');
+  speechSynthesis.speak(u);
+}
+function respond(q){
+  const s=q.toLowerCase();
+  if(s.includes('hello')||s.includes('hi')) return "Hello! It's great to have you here.";
+  if(s.includes('what can you do')||s.includes('capabilities')) return "I can guide visitors, answer common questions, explain VIORA services, help with business discovery, and connect users to your digital systems.";
+  if(s.includes('about viora')) return "VIORA is a connected digital ecosystem designed to help people discover businesses, products, services and digital solutions.";
+  if(s.includes('business')) return "I can help visitors discover businesses and services. Connect this assistant to your business database or API for live results.";
+  if(s.includes('price')||s.includes('cost')) return "Tell me which VIORA service you are interested in and I can provide the relevant pricing information when connected to your pricing database.";
+  if(s.includes('help')) return "Of course. Ask me about VIORA, businesses, products, services, websites, software or anything you have configured me to handle.";
+  return "I understand your question. For a fully intelligent assistant, connect this interface to your preferred AI API or your VIORA backend.";
+}
+function ask(){
+  const q=input.value.trim(); if(!q)return;
+  status.innerHTML='VIORA Assistant • <b>Thinking...</b>';
+  robot.classList.add('thinking');
+  setTimeout(()=>{
+    const a=respond(q);
+    reply.textContent=a;
+    status.innerHTML='VIORA Assistant • <b>Online</b>';
+    robot.classList.remove('thinking');
+    speak(a);
+  },650);
+  input.value='';
+}
+function quickAsk(q){input.value=q;ask()}
+input.addEventListener('keydown',e=>{if(e.key==='Enter')ask()});
+
+function startListening(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){reply.textContent='Voice recognition is not supported in this browser.';return;}
+  const r=new SR();r.lang='en-US';r.interimResults=false;
+  status.innerHTML='VIORA Assistant • <b>Listening...</b>';
+  r.onresult=e=>{input.value=e.results[0][0].transcript;ask()};
+  r.onerror=()=>status.innerHTML='VIORA Assistant • <b>Online</b>';
+  r.start();
+}
+</script>
+</body>
+</html>

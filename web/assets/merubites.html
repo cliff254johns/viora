@@ -1,0 +1,3804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>2Linq</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js">
+    </script>
+
+    <style>
+        /* (full styles as before — unchanged) */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #fef9f0 0%, #fff5ea 100%);
+            color: #2d2418;
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #e85d04 0%, #d9480f 100%);
+            color: white;
+            padding: 20px 0 18px;
+            border-radius: 0 0 32px 32px;
+            box-shadow: 0 16px 30px -12px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 250px;
+            height: 250px;
+            background: rgba(255, 255, 200, 0.08);
+            border-radius: 50%;
+        }
+        .header-content {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            z-index: 2;
+        }
+        .logo-area h1 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+        }
+        .logo-area h1 i {
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .logo-area h1 i:active {
+            transform: scale(0.92);
+        }
+        .logo-area p {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            margin-top: 2px;
+        }
+        .meru-badge {
+            background: rgba(255, 255, 240, 0.18);
+            backdrop-filter: blur(8px);
+            padding: 6px 16px;
+            border-radius: 60px;
+            font-weight: 500;
+            font-size: 0.8rem;
+        }
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 4px 14px;
+            border-radius: 60px;
+            backdrop-filter: blur(4px);
+        }
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+        .sync-dot.online {
+            background: #4caf50;
+            box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+            animation: pulseGreen 1.5s ease-in-out infinite;
+        }
+        .sync-dot.offline {
+            background: #f44336;
+            box-shadow: 0 0 8px rgba(244, 67, 54, 0.5);
+        }
+        .sync-dot.syncing {
+            background: #ff9800;
+            animation: pulseOrange 0.6s ease-in-out infinite;
+        }
+        @keyframes pulseGreen {
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.3);
+                opacity: 0.7;
+            }
+        }
+        @keyframes pulseOrange {
+            0%,
+            100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.4);
+            }
+        }
+        .business-tabs {
+            display: flex;
+            gap: 10px;
+            margin: 24px 0 18px;
+            flex-wrap: wrap;
+            background: white;
+            padding: 6px 14px;
+            border-radius: 60px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 10px 22px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-radius: 60px;
+            cursor: pointer;
+            color: #7a5a3e;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #e85d04, #f48c06);
+            color: white;
+            box-shadow: 0 4px 12px rgba(232, 93, 4, 0.25);
+        }
+        .tab-pane {
+            display: none;
+            margin: 12px 0 28px;
+            animation: fadeIn 0.25s ease;
+        }
+        .tab-pane.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 14px 16px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+            border-left: 4px solid #e85d04;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        .stat-card h3 {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: #b96f30;
+            margin-bottom: 4px;
+        }
+        .stat-card .value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #2d2418;
+        }
+        table {
+            width: 100%;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            border-collapse: collapse;
+            margin: 10px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+            font-size: 0.8rem;
+        }
+        th,
+        td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #f0e2d4;
+        }
+        th {
+            background: #fff4ea;
+            color: #b25700;
+            font-weight: 600;
+        }
+        .btn-sm {
+            background: linear-gradient(135deg, #e85d04, #f48c06);
+            border: none;
+            padding: 5px 12px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 2px;
+            transition: all 0.2s;
+            font-size: 0.75rem;
+            display: inline-block;
+            text-align: center;
+        }
+        .btn-sm:hover {
+            transform: scale(1.03);
+            filter: brightness(1.05);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+        }
+        .btn-outline {
+            background: white;
+            border: 2px solid #e85d04;
+            color: #e85d04;
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .modal-card {
+            background: white;
+            max-width: 780px;
+            width: 94%;
+            border-radius: 32px;
+            padding: 24px 22px;
+            position: relative;
+            max-height: 92vh;
+            overflow-y: auto;
+            box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.3);
+        }
+        #editMealModal {
+            z-index: 3000 !important;
+        }
+        .form-group {
+            margin-bottom: 14px;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 60px;
+            border: 1.5px solid #ffdec2;
+            font-family: inherit;
+            transition: 0.2s;
+            background: white;
+            font-size: 0.9rem;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #e85d04;
+            box-shadow: 0 0 0 3px rgba(232, 93, 4, 0.1);
+        }
+        .form-group label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 4px;
+            color: #4a3724;
+            font-size: 0.85rem;
+        }
+        .food-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 14px;
+            margin-top: 12px;
+        }
+        .food-card {
+            background: white;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+            padding-bottom: 8px;
+            border: 1px solid #f5ede4;
+            animation: cardPop 0.4s ease backwards;
+        }
+        .food-card:nth-child(1) {
+            animation-delay: 0.05s;
+        }
+        .food-card:nth-child(2) {
+            animation-delay: 0.10s;
+        }
+        .food-card:nth-child(3) {
+            animation-delay: 0.15s;
+        }
+        .food-card:nth-child(4) {
+            animation-delay: 0.20s;
+        }
+        .food-card:nth-child(5) {
+            animation-delay: 0.25s;
+        }
+        .food-card:nth-child(6) {
+            animation-delay: 0.30s;
+        }
+        .food-card:nth-child(7) {
+            animation-delay: 0.35s;
+        }
+        .food-card:nth-child(8) {
+            animation-delay: 0.40s;
+        }
+        .food-card:nth-child(9) {
+            animation-delay: 0.45s;
+        }
+        .food-card:nth-child(10) {
+            animation-delay: 0.50s;
+        }
+        .food-card:nth-child(11) {
+            animation-delay: 0.55s;
+        }
+        .food-card:nth-child(12) {
+            animation-delay: 0.60s;
+        }
+        @keyframes cardPop {
+            0% {
+                opacity: 0;
+                transform: scale(0.92) translateY(12px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        .food-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.10);
+            border-color: #e85d04;
+        }
+        .food-image {
+            width: 100%;
+            aspect-ratio: 1/1;
+            object-fit: cover;
+            background: #fff8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.6rem;
+            color: #b96f30;
+            overflow: hidden;
+        }
+        .food-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .food-image .emoji-only {
+            font-size: 2.8rem;
+            line-height: 1;
+        }
+        .card-body {
+            padding: 6px 8px 8px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .meal-name {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #2d2418;
+            line-height: 1.2;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .hotel-name {
+            color: #b96f30;
+            font-size: 0.6rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+        }
+        .meal-price {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #e85d04;
+            margin: 2px 0 4px;
+        }
+        .meal-category {
+            font-size: 0.55rem;
+            color: #7a5a3e;
+            background: #f0e2d4;
+            padding: 1px 8px;
+            border-radius: 40px;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+        .popular-badge {
+            font-size: 0.5rem;
+            color: #e85d04;
+            background: #fff0e0;
+            padding: 1px 6px;
+            border-radius: 40px;
+            display: inline-block;
+            margin-left: 4px;
+        }
+        .add-to-cart-btn {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 6px 0;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.68rem;
+            cursor: pointer;
+            transition: all 0.25s;
+            margin-top: auto;
+        }
+        .add-to-cart-btn:hover {
+            filter: brightness(1.05);
+            transform: scale(1.02);
+        }
+        .add-to-cart-btn:active {
+            transform: scale(0.95);
+        }
+        .cart-toast {
+            position: fixed;
+            bottom: 170px;
+            right: 20px;
+            background: white;
+            border-radius: 20px;
+            padding: 14px 20px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 950;
+            transform: translateX(120%) scale(0.8);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-left: 5px solid #25D366;
+            max-width: 320px;
+            pointer-events: none;
+        }
+        .cart-toast.show {
+            transform: translateX(0) scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .cart-toast .toast-emoji {
+            font-size: 2rem;
+            line-height: 1;
+        }
+        .cart-toast .toast-text {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #2d2418;
+        }
+        .cart-toast .toast-text small {
+            display: block;
+            font-weight: 400;
+            color: #6b4f36;
+            font-size: 0.7rem;
+        }
+        .cart-toast .toast-check {
+            color: #25D366;
+            font-size: 1.2rem;
+            margin-left: auto;
+        }
+        .cart-toast.bounce-in {
+            animation: bounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        @keyframes bounceIn {
+            0% {
+                transform: translateX(120%) scale(0.6);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(0) scale(1);
+                opacity: 1;
+            }
+        }
+        .cart-toast.bounce-out {
+            animation: bounceOut 0.4s ease-in forwards;
+        }
+        @keyframes bounceOut {
+            0% {
+                transform: translateX(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(60%) scale(0.7);
+                opacity: 0;
+            }
+        }
+        .carousel-section {
+            margin: 8px 0 20px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #fff5ea, #ffede0);
+            padding: 12px 0 8px;
+            box-shadow: 0 4px 16px rgba(232, 93, 4, 0.08);
+        }
+        .carousel-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 20px 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #e85d04;
+        }
+        .carousel-title i {
+            font-size: 1.2rem;
+            animation: pulseStar 1.5s ease-in-out infinite;
+        }
+        @keyframes pulseStar {
+            0%,
+            100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+        }
+        .carousel-track {
+            display: flex;
+            gap: 14px;
+            padding: 0 20px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+            padding-bottom: 8px;
+        }
+        .carousel-track::-webkit-scrollbar {
+            height: 4px;
+        }
+        .carousel-track::-webkit-scrollbar-thumb {
+            background: #e85d04;
+            border-radius: 10px;
+        }
+        .carousel-track::-webkit-scrollbar-track {
+            background: #f0e2d4;
+            border-radius: 10px;
+        }
+        .carousel-item {
+            flex: 0 0 110px;
+            background: white;
+            border-radius: 16px;
+            padding: 8px 6px 10px;
+            text-align: center;
+            scroll-snap-align: start;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            cursor: pointer;
+            min-width: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .carousel-item:hover {
+            transform: translateY(-4px) scale(1.02);
+            border-color: #e85d04;
+            box-shadow: 0 8px 24px rgba(232, 93, 4, 0.15);
+        }
+        .carousel-item .c-image {
+            width: 70px;
+            height: 70px;
+            border-radius: 12px;
+            object-fit: cover;
+            background: #fff8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.4rem;
+            color: #b96f30;
+            margin-bottom: 4px;
+        }
+        .carousel-item .c-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+        .carousel-item .c-image .emoji-only {
+            font-size: 2.4rem;
+        }
+        .carousel-item .c-name {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #2d2418;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            max-width: 100%;
+        }
+        .carousel-item .c-price {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #e85d04;
+        }
+        .carousel-item .c-hotel {
+            font-size: 0.55rem;
+            color: #b96f30;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+        .carousel-item .c-badge {
+            background: #e85d04;
+            color: white;
+            font-size: 0.5rem;
+            padding: 1px 8px;
+            border-radius: 40px;
+            display: inline-block;
+            margin-top: 2px;
+        }
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.85);
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: #e85d04;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            z-index: 5;
+            transition: all 0.2s;
+        }
+        .carousel-nav:hover {
+            background: white;
+            transform: translateY(-50%) scale(1.08);
+        }
+        .carousel-nav.left {
+            left: 6px;
+        }
+        .carousel-nav.right {
+            right: 6px;
+        }
+        .carousel-dots {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            padding-top: 8px;
+        }
+        .carousel-dots span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #d4c5b8;
+            transition: all 0.3s;
+        }
+        .carousel-dots span.active {
+            background: #e85d04;
+            width: 18px;
+            border-radius: 4px;
+        }
+        .cart-badge {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            background: linear-gradient(135deg, #e85d04, #f48c06);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+            z-index: 900;
+            transition: all 0.25s;
+        }
+        .cart-badge:hover {
+            transform: scale(1.08);
+        }
+        .cart-badge:active {
+            transform: scale(0.92);
+        }
+        .cart-count {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #dc3545;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .float-wa {
+            position: fixed;
+            bottom: 24px;
+            right: 20px;
+            background: #25D366;
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            color: white;
+            z-index: 1000;
+            text-decoration: none;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+            transition: all 0.25s;
+        }
+        .float-wa:hover {
+            transform: scale(1.08);
+        }
+        .float-wa:active {
+            transform: scale(0.92);
+        }
+        .admin-pane {
+            display: none;
+            animation: fadeIn 0.2s ease;
+        }
+        .active-admin-pane {
+            display: block;
+        }
+        .admin-subtab {
+            background: #f5ede4;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 60px;
+            margin: 2px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.2s;
+            font-size: 0.8rem;
+        }
+        .admin-subtab.active {
+            background: #e85d04;
+            color: white;
+            box-shadow: 0 3px 10px rgba(232, 93, 4, 0.25);
+        }
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+            padding: 2px 8px;
+            border-radius: 40px;
+            font-size: 10px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 2px 8px;
+            border-radius: 40px;
+            font-size: 10px;
+        }
+        .hotel-chip {
+            padding: 5px 14px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.75rem;
+            transition: all 0.25s;
+            border: 2px solid transparent;
+            background: white;
+            color: #7a5a3e;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+        }
+        .hotel-chip.active {
+            background: #e85d04;
+            color: white;
+            border-color: #e85d04;
+            box-shadow: 0 3px 10px rgba(232, 93, 4, 0.2);
+        }
+        .hotel-chip:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+        }
+        .sync-section {
+            background: #f0f4f8;
+            border-radius: 16px;
+            padding: 12px 16px;
+            margin: 10px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .meal-badge {
+            background: #f0e2d4;
+            padding: 2px 8px;
+            border-radius: 40px;
+            font-size: 10px;
+            margin: 2px;
+            display: inline-block;
+        }
+        .hotel-dir-card {
+            background: #f9f1e8;
+            border-radius: 14px;
+            padding: 10px 14px;
+            margin: 6px 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+        .hotel-dir-card .info {
+            flex: 2;
+            min-width: 140px;
+        }
+        .hotel-dir-card .info h4 {
+            color: #e85d04;
+            margin-bottom: 2px;
+            font-size: 0.95rem;
+        }
+        .hotel-dir-card .info p {
+            font-size: 0.75rem;
+            color: #6b4f36;
+        }
+        .hotel-dir-card .info .meal-badge {
+            font-size: 9px;
+        }
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 16px;
+        }
+        .analytics-grid .chart-box {
+            background: white;
+            border-radius: 20px;
+            padding: 16px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+        }
+        .analytics-grid .chart-box h4 {
+            font-size: 0.85rem;
+            color: #4a3724;
+            margin-bottom: 10px;
+        }
+        .analytics-grid .chart-box canvas {
+            max-height: 180px;
+            width: 100% !important;
+        }
+        .analytics-grid .stat-badge {
+            display: inline-block;
+            background: #fff4ea;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #b25700;
+            margin: 2px;
+        }
+        .order-time {
+            font-size: 0.7rem;
+            color: #6b4f36;
+            display: block;
+        }
+        .order-hotel {
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #e85d04;
+        }
+        .sync-toast {
+            position: fixed;
+            bottom: 180px;
+            right: 20px;
+            background: #1e293b;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            z-index: 999;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s ease;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sync-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .sync-toast i {
+            font-size: 1.1rem;
+        }
+        .sync-toast.success i {
+            color: #4caf50;
+        }
+        .sync-toast.error i {
+            color: #f44336;
+        }
+        .sync-toast.syncing i {
+            color: #ff9800;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .popular-toggle-btn {
+            background: #f0e2d4;
+            border: none;
+            padding: 2px 10px;
+            border-radius: 40px;
+            font-size: 0.65rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+        .popular-toggle-btn.active {
+            background: #e85d04;
+            color: white;
+        }
+        .popular-toggle-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .commission-badge {
+            background: #e85d04;
+            color: white;
+            padding: 2px 12px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: inline-block;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .commission-badge:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(232, 93, 4, 0.3);
+        }
+        .commission-badge i {
+            margin-right: 4px;
+        }
+
+        .header-cart-btn {
+            background: white;
+            border: none;
+            border-radius: 60px;
+            padding: 6px 16px 6px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #e85d04;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+            font-family: 'Inter', sans-serif;
+        }
+        .header-cart-btn:hover {
+            transform: scale(1.04);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+        }
+        .header-cart-btn:active {
+            transform: scale(0.95);
+        }
+        .header-cart-btn .header-cart-count {
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            position: absolute;
+            top: -6px;
+            right: -6px;
+        }
+        .header-cart-text {
+            display: inline-block;
+        }
+        @media (max-width: 640px) {
+            .header-cart-text {
+                display: none;
+            }
+            .header-cart-btn {
+                padding: 6px 10px;
+            }
+            .header-cart-btn .header-cart-count {
+                width: 18px;
+                height: 18px;
+                font-size: 9px;
+                top: -4px;
+                right: -4px;
+            }
+        }
+
+        .cart-item-remove {
+            background: none;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: transform 0.2s;
+            padding: 0 4px;
+        }
+        .cart-item-remove:hover {
+            transform: scale(1.2);
+        }
+
+        /* ---------- ACCOMPANIMENT STYLES ---------- */
+        .accomp-tag {
+            background: #f0e2d4;
+            border-radius: 40px;
+            padding: 1px 8px;
+            font-size: 0.55rem;
+            color: #4a3724;
+            display: inline-block;
+            margin: 1px 2px;
+            white-space: nowrap;
+            max-width: 70px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .accomp-tag .price-tag {
+            color: #e85d04;
+            font-weight: 600;
+            margin-left: 2px;
+        }
+        .accomp-admin-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f9f1e8;
+            padding: 4px 10px 4px 14px;
+            border-radius: 40px;
+            margin: 3px 0;
+            font-size: 0.8rem;
+            flex-wrap: wrap;
+        }
+        .accomp-admin-item .accomp-name {
+            font-weight: 500;
+        }
+        .accomp-admin-item .accomp-price {
+            color: #e85d04;
+            font-weight: 600;
+        }
+        .accomp-admin-item .remove-accomp-btn {
+            background: none;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 0 4px;
+            margin-left: auto;
+        }
+        .accomp-admin-item .remove-accomp-btn:hover {
+            transform: scale(1.2);
+        }
+        .accomp-selector-modal .modal-card {
+            max-width: 420px;
+            padding: 24px 22px;
+        }
+        .accomp-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border-radius: 14px;
+            border: 2px solid #f0e2d4;
+            margin: 6px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .accomp-option:hover {
+            border-color: #e85d04;
+            background: #fff8f0;
+        }
+        .accomp-option.selected {
+            border-color: #e85d04;
+            background: #fff0e0;
+            box-shadow: 0 2px 8px rgba(232, 93, 4, 0.12);
+        }
+        .accomp-option .radio-circle {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid #d4c5b8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: 0.2s;
+        }
+        .accomp-option.selected .radio-circle {
+            border-color: #e85d04;
+            background: #e85d04;
+        }
+        .accomp-option.selected .radio-circle::after {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: white;
+        }
+        .accomp-option .accomp-label {
+            flex: 1;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        .accomp-option .accomp-extra {
+            color: #e85d04;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .accomp-badge-in-cart {
+            display: block;
+            font-size: 0.6rem;
+            color: #6b4f36;
+            background: #f5ede4;
+            padding: 1px 8px;
+            border-radius: 30px;
+            margin-top: 2px;
+            font-weight: 400;
+        }
+        .accomp-badge-in-cart strong {
+            color: #e85d04;
+            font-weight: 600;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 0 12px;
+            }
+            .header {
+                padding: 14px 0 12px;
+                border-radius: 0 0 24px 24px;
+            }
+            .logo-area h1 {
+                font-size: 1.4rem;
+            }
+            .logo-area p {
+                font-size: 0.7rem;
+            }
+            .meru-badge {
+                font-size: 0.7rem;
+                padding: 4px 12px;
+            }
+            .sync-status {
+                font-size: 0.65rem;
+                padding: 3px 10px;
+            }
+            .business-tabs {
+                padding: 4px 10px;
+                gap: 4px;
+                margin: 16px 0 12px;
+                border-radius: 40px;
+            }
+            .tab-btn {
+                padding: 6px 14px;
+                font-size: 0.75rem;
+            }
+            .food-grid {
+                grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+                gap: 10px;
+            }
+            .food-image {
+                font-size: 2rem;
+            }
+            .food-image .emoji-only {
+                font-size: 2.2rem;
+            }
+            .meal-name {
+                font-size: 0.65rem;
+            }
+            .meal-price {
+                font-size: 0.8rem;
+            }
+            .add-to-cart-btn {
+                font-size: 0.6rem;
+                padding: 5px 0;
+            }
+            .hotel-name {
+                font-size: 0.55rem;
+            }
+            .meal-category {
+                font-size: 0.5rem;
+                padding: 1px 6px;
+            }
+            .card-body {
+                padding: 4px 6px 6px;
+                gap: 1px;
+            }
+            .food-card {
+                border-radius: 14px;
+                padding-bottom: 6px;
+            }
+            .modal-card {
+                padding: 18px 14px;
+            }
+            .dashboard-stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            .stat-card {
+                padding: 10px 12px;
+            }
+            .stat-card .value {
+                font-size: 1.2rem;
+            }
+            .stat-card h3 {
+                font-size: 0.6rem;
+            }
+            .cart-badge {
+                width: 44px;
+                height: 44px;
+                font-size: 17px;
+                bottom: 86px;
+                right: 14px;
+            }
+            .float-wa {
+                width: 48px;
+                height: 48px;
+                font-size: 22px;
+                bottom: 18px;
+                right: 14px;
+            }
+            .hotel-chip {
+                font-size: 0.65rem;
+                padding: 4px 12px;
+            }
+            .admin-subtab {
+                font-size: 0.7rem;
+                padding: 5px 12px;
+            }
+            table {
+                font-size: 0.7rem;
+            }
+            th,
+            td {
+                padding: 6px 8px;
+            }
+            .filter-bar {
+                flex-direction: column;
+                gap: 8px !important;
+            }
+            .filter-bar input,
+            .filter-bar select {
+                font-size: 0.8rem !important;
+                padding: 8px 12px !important;
+            }
+            .analytics-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+            .carousel-item {
+                flex: 0 0 85px;
+                padding: 6px 4px 8px;
+                min-width: 80px;
+            }
+            .carousel-item .c-image {
+                width: 56px;
+                height: 56px;
+                font-size: 2rem;
+            }
+            .carousel-item .c-image .emoji-only {
+                font-size: 2rem;
+            }
+            .carousel-item .c-name {
+                font-size: 0.6rem;
+            }
+            .carousel-item .c-price {
+                font-size: 0.6rem;
+            }
+            .carousel-item .c-hotel {
+                font-size: 0.5rem;
+            }
+            .carousel-nav {
+                width: 26px;
+                height: 26px;
+                font-size: 0.7rem;
+            }
+            .carousel-nav.left {
+                left: 2px;
+            }
+            .carousel-nav.right {
+                right: 2px;
+            }
+            .cart-toast {
+                bottom: 150px;
+                right: 14px;
+                padding: 12px 16px;
+                max-width: 260px;
+            }
+            .cart-toast .toast-emoji {
+                font-size: 1.6rem;
+            }
+            .cart-toast .toast-text {
+                font-size: 0.75rem;
+            }
+            .sync-toast {
+                bottom: 160px;
+                right: 14px;
+                font-size: 0.7rem;
+                padding: 8px 14px;
+            }
+            .commission-badge {
+                font-size: 0.6rem;
+                padding: 2px 8px;
+            }
+            .accomp-selector-modal .modal-card {
+                padding: 18px 14px;
+                max-width: 94%;
+            }
+            .accomp-option {
+                padding: 8px 12px;
+            }
+            .accomp-option .accomp-label {
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .food-grid {
+                grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+                gap: 8px;
+            }
+            .food-image {
+                font-size: 1.6rem;
+            }
+            .food-image .emoji-only {
+                font-size: 1.8rem;
+            }
+            .meal-name {
+                font-size: 0.58rem;
+            }
+            .meal-price {
+                font-size: 0.7rem;
+            }
+            .add-to-cart-btn {
+                font-size: 0.55rem;
+                padding: 4px 0;
+            }
+            .hotel-name {
+                font-size: 0.5rem;
+            }
+            .meal-category {
+                font-size: 0.45rem;
+            }
+            .carousel-item {
+                flex: 0 0 72px;
+                padding: 4px 2px 6px;
+                min-width: 68px;
+            }
+            .carousel-item .c-image {
+                width: 48px;
+                height: 48px;
+                font-size: 1.6rem;
+            }
+            .carousel-item .c-image .emoji-only {
+                font-size: 1.6rem;
+            }
+            .carousel-item .c-name {
+                font-size: 0.5rem;
+            }
+            .carousel-item .c-price {
+                font-size: 0.55rem;
+            }
+            .commission-badge {
+                font-size: 0.5rem;
+                padding: 1px 6px;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .food-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 24px;
+            }
+            .food-image {
+                font-size: 3.6rem;
+            }
+            .food-image .emoji-only {
+                font-size: 3.8rem;
+            }
+            .meal-name {
+                font-size: 1rem;
+            }
+            .meal-price {
+                font-size: 1.2rem;
+            }
+            .add-to-cart-btn {
+                font-size: 0.85rem;
+                padding: 8px 0;
+            }
+            .hotel-name {
+                font-size: 0.8rem;
+            }
+            .meal-category {
+                font-size: 0.7rem;
+                padding: 2px 10px;
+            }
+            .card-body {
+                padding: 10px 12px 14px;
+                gap: 4px;
+            }
+            .food-card {
+                border-radius: 24px;
+                padding-bottom: 12px;
+            }
+            .container {
+                padding: 0 32px;
+            }
+            .header {
+                padding: 28px 0 24px;
+                border-radius: 0 0 40px 40px;
+            }
+            .logo-area h1 {
+                font-size: 2.2rem;
+            }
+            .meru-badge {
+                font-size: 0.9rem;
+                padding: 8px 20px;
+            }
+            .sync-status {
+                font-size: 0.8rem;
+                padding: 6px 18px;
+            }
+            .business-tabs {
+                padding: 8px 20px;
+                gap: 12px;
+                margin: 32px 0 24px;
+                border-radius: 80px;
+            }
+            .tab-btn {
+                padding: 12px 28px;
+                font-size: 0.95rem;
+            }
+            .filter-bar {
+                gap: 16px !important;
+            }
+            .filter-bar input {
+                font-size: 1rem !important;
+                padding: 14px 20px 14px 48px !important;
+            }
+            .filter-bar select {
+                font-size: 1rem !important;
+                padding: 14px 24px !important;
+            }
+            .hotel-chip {
+                font-size: 0.85rem;
+                padding: 8px 20px;
+            }
+            .cart-badge {
+                width: 60px;
+                height: 60px;
+                font-size: 26px;
+                bottom: 100px;
+                right: 28px;
+            }
+            .float-wa {
+                width: 60px;
+                height: 60px;
+                font-size: 28px;
+                bottom: 28px;
+                right: 28px;
+            }
+            .modal-card {
+                padding: 32px 36px;
+            }
+            .dashboard-stats {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+            }
+            .stat-card {
+                padding: 20px 24px;
+            }
+            .stat-card .value {
+                font-size: 2rem;
+            }
+            .stat-card h3 {
+                font-size: 0.8rem;
+            }
+            table {
+                font-size: 0.9rem;
+            }
+            th,
+            td {
+                padding: 12px 18px;
+            }
+            .admin-subtab {
+                font-size: 0.9rem;
+                padding: 10px 24px;
+            }
+            .analytics-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 24px;
+            }
+            .analytics-grid .chart-box canvas {
+                max-height: 220px;
+            }
+            .carousel-item {
+                flex: 0 0 150px;
+                padding: 10px 8px 12px;
+                min-width: 130px;
+            }
+            .carousel-item .c-image {
+                width: 90px;
+                height: 90px;
+                font-size: 3rem;
+            }
+            .carousel-item .c-image .emoji-only {
+                font-size: 3rem;
+            }
+            .carousel-item .c-name {
+                font-size: 0.85rem;
+            }
+            .carousel-item .c-price {
+                font-size: 0.85rem;
+            }
+            .carousel-item .c-hotel {
+                font-size: 0.65rem;
+            }
+            .carousel-nav {
+                width: 38px;
+                height: 38px;
+                font-size: 1rem;
+            }
+            .carousel-nav.left {
+                left: 10px;
+            }
+            .carousel-nav.right {
+                right: 10px;
+            }
+            .carousel-track {
+                gap: 20px;
+                padding: 0 32px;
+            }
+            .carousel-section {
+                padding: 16px 0 12px;
+                border-radius: 28px;
+            }
+            .carousel-title {
+                font-size: 1.2rem;
+                padding: 0 32px 12px;
+            }
+            .cart-toast {
+                bottom: 180px;
+                right: 32px;
+                padding: 16px 24px;
+                max-width: 380px;
+            }
+            .cart-toast .toast-emoji {
+                font-size: 2.4rem;
+            }
+            .cart-toast .toast-text {
+                font-size: 0.95rem;
+            }
+            .sync-toast {
+                bottom: 200px;
+                right: 32px;
+                padding: 12px 24px;
+                font-size: 0.9rem;
+            }
+            .commission-badge {
+                font-size: 0.8rem;
+                padding: 4px 16px;
+            }
+            .header-cart-btn {
+                padding: 8px 20px 8px 14px;
+                font-size: 0.95rem;
+            }
+            .header-cart-btn .header-cart-count {
+                width: 22px;
+                height: 22px;
+                font-size: 11px;
+            }
+            .accomp-selector-modal .modal-card {
+                max-width: 440px;
+            }
+            .accomp-option {
+                padding: 12px 18px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .food-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        .carousel-track {
+            scrollbar-width: thin;
+            scrollbar-color: #e85d04 #f0e2d4;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+        <div class="container header-content">
+            <div class="logo-area">
+                <h1><i class="fas fa-utensil-spoon" id="logoDoubleClick"></i> 2Linq</h1>
+                <p>Fresh Meals </p>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                <div class="sync-status" id="syncStatus">
+                    <span class="sync-dot" id="syncDot"></span>
+                    <span id="syncText">Connecting...</span>
+                </div>
+                <div class="meru-badge"><i class="fas fa-map-marker-alt"></i> Meru, Kenya</div>
+                <button class="header-cart-btn" id="headerCartBtn" title="View your cart and place order">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span class="header-cart-count" id="headerCartCount">0</span>
+                    <span class="header-cart-text">Place Order</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== SYNC TOAST ===== -->
+    <div class="sync-toast" id="syncToast">
+        <i class="fas fa-cloud-upload-alt"></i>
+        <span id="syncToastText">Syncing...</span>
+    </div>
+
+    <!-- ===== MAIN ===== -->
+    <main class="container">
+        <div class="business-tabs">
+            <button class="tab-btn active" data-tab="customer"><i class="fas fa-utensils"></i> Order Food</button>
+        </div>
+
+        <div id="customerTab" class="tab-pane active">
+            <div class="carousel-section" id="carouselSection">
+                <div class="carousel-title">
+                    <i class="fas fa-star" style="color:#f4b400;"></i>
+                    <span>🔥 Popular Bites</span>
+                    <span style="font-size:0.7rem;font-weight:400;color:#b96f30;margin-left:auto;">swipe →</span>
+                </div>
+                <div class="carousel-track" id="carouselTrack"></div>
+                <button class="carousel-nav left" id="carouselLeft"><i class="fas fa-chevron-left"></i></button>
+                <button class="carousel-nav right" id="carouselRight"><i class="fas fa-chevron-right"></i></button>
+                <div class="carousel-dots" id="carouselDots"></div>
+            </div>
+
+            <div class="filter-bar" style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+                <div style="flex:1;position:relative;min-width:150px;">
+                    <i class="fas fa-search" style="position:absolute;left:14px;top:10px;color:#e85d04;font-size:0.8rem;"></i>
+                    <input type="text" id="customerSearch" placeholder="Search meals…" style="width:100%;padding:8px 12px 8px 34px;border-radius:60px;border:1px solid #ffdec2;font-size:0.85rem;">
+                </div>
+                <select id="sortFilter" style="padding:8px 14px;border-radius:60px;border:1px solid #ffdec2;background:white;font-size:0.85rem;min-width:140px;">
+                    <option value="featured">Sort: Featured</option>
+                    <option value="low-high">Price: Low → High</option>
+                    <option value="high-low">Price: High → Low</option>
+                </select>
+                <select id="categoryFilter" style="padding:8px 14px;border-radius:60px;border:1px solid #ffdec2;background:white;font-size:0.85rem;min-width:120px;">
+                    <option value="all">All Categories</option>
+                </select>
+            </div>
+
+            <div id="hotelsFilterGrid" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;"></div>
+            <div id="customerMealsContainer" class="food-grid"></div>
+
+            <div class="info-banner" style="background:linear-gradient(135deg,#e9f5e9,#d4edda);padding:10px 16px;border-radius:20px;margin-top:18px;font-size:0.8rem;">
+                <span><i class="fas fa-credit-card"></i> No delivery fees — pay only for meals.</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- ===== FOOTER ===== -->
+    <footer style="background:#2d2418;color:#ffd8b5;text-align:center;padding:18px;margin-top:32px;border-radius:32px 32px 0 0;">
+        <p style="font-size:0.8rem;"><i class="fas fa-heart" style="color:#e85d04"></i> 2Linq — empowering local businesses</p>
+    </footer>
+
+    <!-- ===== FLOATING ===== -->
+    <a href="https://wa.me/254710497009?text=Meru%20Bites%20Support" class="float-wa" target="_blank"><i class="fab fa-whatsapp"></i></a>
+    <div class="cart-badge" id="cartIcon">
+        <i class="fas fa-shopping-bag"></i>
+        <span id="cartItemCount" class="cart-count">0</span>
+    </div>
+
+    <div class="cart-toast" id="cartToast">
+        <span class="toast-emoji" id="toastEmoji">🍔</span>
+        <div class="toast-text" id="toastText">
+            Added to cart!
+            <small id="toastSubtext">Beef Burger</small>
+        </div>
+        <span class="toast-check"><i class="fas fa-check-circle"></i></span>
+    </div>
+
+    <!-- ===== ADMIN AUTH ===== -->
+    <div id="adminModal" class="modal">
+        <div class="modal-card">
+            <h2 style="color:#e85d04;font-size:1.3rem;"><i class="fas fa-shield-alt"></i> Admin Access</h2>
+            <p style="margin:4px 0 14px;font-size:0.9rem;">Enter the secure password</p>
+            <div class="form-group"><input type="password" id="adminPassword" placeholder="••••••••" style="font-size:1rem;"></div>
+            <button id="verifyAdminBtn" class="btn-sm"><i class="fas fa-unlock"></i> Unlock</button>
+            <button id="closeAdminModal" class="btn-sm btn-outline">Cancel</button>
+            <div id="adminAuthMessage" style="margin-top:10px;font-size:0.85rem;color:#e85d04;"></div>
+        </div>
+    </div>
+
+    <!-- ===== ADMIN DASHBOARD ===== -->
+    <div id="adminDashboardPanel" class="modal" style="z-index:2100;">
+        <div class="modal-card" style="max-width:1300px;width:95%;max-height:92vh;overflow-y:auto;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+                <h2 style="color:#e85d04;font-size:1.2rem;"><i class="fas fa-chalkboard-user"></i> Admin Dashboard</h2>
+                <button id="closeAdminPanel" class="btn-sm btn-outline"><i class="fas fa-times"></i> Close</button>
+            </div>
+            <div id="adminStatsOverview" class="dashboard-stats"></div>
+            <div class="sync-section">
+                <span><i class="fas fa-cloud-upload-alt"></i> <strong>Firebase Realtime</strong> — changes sync globally</span>
+                <span style="font-size:0.75rem;color:#555;" id="adminSyncStatus">✅ Connected</span>
+            </div>
+            <div style="background:#f8f3ed;padding:4px 10px;border-radius:60px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:4px;" id="adminSubtabContainer">
+                <button class="admin-subtab active" data-admin="popular">⭐ Popular</button>
+                <button class="admin-subtab" data-admin="hotel-reg">🏨 Hotels</button>
+                <button class="admin-subtab" data-admin="meal-manager">🍔 Meals</button>
+                <button class="admin-subtab" data-admin="all-orders">📦 Orders</button>
+                <button class="admin-subtab" data-admin="hotel-sales">📊 Analytics</button>
+            </div>
+            <div id="adminPopular" class="admin-pane active-admin-pane"></div>
+            <div id="adminHotelReg" class="admin-pane"></div>
+            <div id="adminMealManager" class="admin-pane"></div>
+            <div id="adminAllOrders" class="admin-pane"></div>
+            <div id="adminHotelSales" class="admin-pane"></div>
+        </div>
+    </div>
+
+    <!-- ===== CART MODAL ===== -->
+    <div id="cartModalContainer"></div>
+
+    <!-- ===== EDIT MEAL MODAL ===== -->
+    <div id="editMealModal" class="modal" style="z-index:3000;">
+        <div class="modal-card" style="max-width:520px;">
+            <h3 style="color:#e85d04;font-size:1.1rem;margin-bottom:14px;"><i class="fas fa-pen"></i> Edit Meal</h3>
+            <div class="form-group">
+                <label>Meal Name</label>
+                <input type="text" id="editMealName" placeholder="Meal name">
+            </div>
+            <div class="form-group">
+                <label>Price (KSh)</label>
+                <input type="number" id="editMealPrice" placeholder="Price">
+            </div>
+            <div class="form-group">
+                <label>Category</label>
+                <input type="text" id="editMealCategory" placeholder="e.g. breakfast, lunch, dinner, dessert, snacks">
+            </div>
+            <div class="form-group">
+                <label>Current Image</label>
+                <div id="editMealCurrentImage" style="margin:6px 0 10px;border-radius:12px;overflow:hidden;width:80px;height:80px;background:#f0e2d4;display:flex;align-items:center;justify-content:center;font-size:2.4rem;"></div>
+            </div>
+            <div class="form-group">
+                <label>Change Image</label>
+                <input type="file" id="editMealImage" accept="image/*" style="padding:8px 12px;border-radius:60px;border:1.5px solid #ffdec2;width:100%;">
+            </div>
+
+            <!-- ===== ACCOMPANIMENTS SECTION ===== -->
+            <hr style="margin:16px 0 12px;border-color:#f0e2d4;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+                <h4 style="font-size:0.95rem;color:#4a3724;"><i class="fas fa-utensils"></i> Accompaniments (Sides)</h4>
+                <span style="font-size:0.7rem;color:#6b4f36;">Customers choose one when ordering</span>
+            </div>
+            <div id="editAccompanimentsContainer" style="margin:8px 0 12px;max-height:180px;overflow-y:auto;background:#faf6f0;border-radius:16px;padding:8px 12px;border:1px solid #f0e2d4;">
+                <div id="editAccompanimentsList" style="display:flex;flex-direction:column;gap:4px;">
+                    <span style="font-size:0.75rem;color:#7a5a3e;">No accompaniments added yet.</span>
+                </div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+                <input id="editAccompName" placeholder="Side name (e.g. Chapati)" style="flex:2;min-width:100px;padding:6px 12px;border-radius:60px;border:1.5px solid #ffdec2;font-size:0.8rem;">
+                <input id="editAccompPrice" placeholder="Extra KSh" type="number" style="flex:1;min-width:70px;padding:6px 12px;border-radius:60px;border:1.5px solid #ffdec2;font-size:0.8rem;" value="0">
+                <button id="addAccompBtn" class="btn-sm" style="font-size:0.7rem;padding:4px 12px;"><i class="fas fa-plus"></i> Add</button>
+            </div>
+            <div style="font-size:0.65rem;color:#6b4f36;margin-top:4px;">💡 Leave price as 0 for free sides.</div>
+
+            <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
+                <button id="saveEditMealBtn" class="btn-sm"><i class="fas fa-save"></i> Save Meal</button>
+                <button id="cancelEditMealBtn" class="btn-sm btn-outline">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ACCOMPANIMENT SELECTOR MODAL (Customer) ===== -->
+    <div id="accompSelectorModal" class="modal accomm-selector-modal" style="z-index:3500;">
+        <div class="modal-card" style="max-width:440px;">
+            <h3 style="color:#e85d04;font-size:1.1rem;margin-bottom:4px;"><i class="fas fa-utensils"></i> Choose your side</h3>
+            <p style="font-size:0.85rem;color:#6b4f36;margin-bottom:14px;" id="accompSelectorMealName">For: <strong>Beef Burger</strong></p>
+            <div id="accompOptionsList" style="margin-bottom:16px;"></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <button id="confirmAccompSelection" class="btn-sm"><i class="fas fa-check"></i> Add to cart</button>
+                <button id="cancelAccompSelection" class="btn-sm btn-outline">Skip</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- ====================== JAVASCRIPT =========================== -->
+    <!-- ============================================================ -->
+    <script>
+        // ================================================================
+        //  1.  FIREBASE CONFIG — (Obfuscated for basic security)
+        // ================================================================
+        const _cfg = atob("eyJhcGlLZXkiOiJBSXphU3lCRkd4WTl1OTloNjlWcUtBUHREaWtEVXlGbi1LUm1XMGsiLCJhdXRoRG9tYWluIjoibWVydS1iaXRlcy5maXJlYmFzZWFwcC5jb20iLCJkYXRhYmFzZVVSTCI6Imh0dHBzOi8vbWVydS1iaXRlcy1kZWZhdWx0LXJ0ZGIuZmlyZWJhc2Vpby5jb20iLCJwcm9qZWN0SWQiOiJtZXJ1LWJpdGVzIiwic3RvcmFnZUJ1Y2tldCI6Im1lcnUtYml0ZXMuZmlyZWJhc2VzdG9yYWdlLmFwcCIsIm1lc3NhZ2luZ1NlbmRlcklkIjoiMjIzNzQ3MTQ3NzI5IiwiYXBwSWQiOiIxOjIyMzc0NzE0NzcyOTp3ZWI6MTVjYTRkZDI5YjhkYzZkODUxMDJmMCJ9");
+        const firebaseConfig = JSON.parse(_cfg);
+
+        let firebaseApp = null;
+        let db = null;
+        let firebaseReady = false;
+        let popularMealIds = [];
+
+        try {
+            firebaseApp = firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+            firebaseReady = true;
+            console.log("✅ Firebase initialized");
+        } catch (e) {
+            console.warn("⚠️ Firebase init error:", e.message);
+        }
+
+        // ================================================================
+        //  2.  SYNC STATUS & TOAST
+        // ================================================================
+        function updateSyncStatus(online, text) {
+            const dot = document.getElementById('syncDot');
+            const txt = document.getElementById('syncText');
+            const adminStatus = document.getElementById('adminSyncStatus');
+            if (dot) dot.className = 'sync-dot ' + (online ? 'online' : 'offline');
+            if (txt) txt.textContent = text || (online ? 'Live' : 'Offline');
+            if (adminStatus) {
+                adminStatus.textContent = online ? '✅ Connected' : '⚠️ Offline — local only';
+                adminStatus.style.color = online ? '#4caf50' : '#f44336';
+            }
+        }
+
+        function showSyncToast(message, type) {
+            const toast = document.getElementById('syncToast');
+            const text = document.getElementById('syncToastText');
+            const icon = toast.querySelector('i');
+            if (!toast || !text) return;
+            text.textContent = message;
+            toast.className = 'sync-toast ' + type;
+            icon.className = 'fas ' + (type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' :
+                'fa-cloud-upload-alt');
+            toast.classList.add('show');
+            clearTimeout(window.syncToastTimeout);
+            window.syncToastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // ================================================================
+        //  3.  DATA LAYER
+        // ================================================================
+        const DB_PATHS = {
+            hotels: 'meru_hotels',
+            orders: 'meru_orders',
+            transactions: 'meru_transactions',
+            popular: 'popular_meals',
+            adminPassword: 'admin_password'
+        };
+
+        let hotels = [];
+        let orders = [];
+        let transactions = [];
+        let adminPassword = 'meru2025';
+        const DEFAULT_COMMISSION = 0.12;
+        const ADMIN_WHATSAPP = "254710497009";
+        let toastTimeout = null;
+        let isInitialLoad = true;
+
+        function getHotelCommission(hotelName) {
+            const hotel = hotels.find(h => h.name === hotelName);
+            if (hotel && hotel.commissionRate !== undefined && hotel.commissionRate !== null) {
+                return parseFloat(hotel.commissionRate);
+            }
+            return DEFAULT_COMMISSION;
+        }
+
+        function showCartToast(emoji, name, hotel, accomp) {
+            const toast = document.getElementById('cartToast');
+            const emojiEl = document.getElementById('toastEmoji');
+            const textEl = document.getElementById('toastText');
+            const subEl = document.getElementById('toastSubtext');
+            if (toastTimeout) {
+                clearTimeout(toastTimeout);
+                toastTimeout = null;
+                toast.classList.remove('bounce-in', 'bounce-out', 'show');
+                void toast.offsetWidth;
+            }
+            emojiEl.textContent = emoji || '🍽️';
+            textEl.innerHTML = 'Added to cart!';
+            let subText = `${name} · ${hotel}`;
+            if (accomp) subText += ` + ${accomp.name}`;
+            subEl.textContent = subText;
+            toast.classList.remove('bounce-out');
+            toast.classList.add('show', 'bounce-in');
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('bounce-in');
+                toast.classList.add('bounce-out');
+                setTimeout(() => {
+                    toast.classList.remove('show', 'bounce-out');
+                    toastTimeout = null;
+                }, 400);
+            }, 2500);
+        }
+
+        function saveLocal() {
+            localStorage.setItem('meru_hotels_pro', JSON.stringify(hotels));
+            localStorage.setItem('meru_orders_pro', JSON.stringify(orders));
+            localStorage.setItem('meru_transactions_pro', JSON.stringify(transactions));
+            localStorage.setItem('meru_popular_pro', JSON.stringify(popularMealIds));
+        }
+
+        function loadLocal() {
+            try { hotels = JSON.parse(localStorage.getItem('meru_hotels_pro')) || []; } catch (e) { hotels = []; }
+            try { orders = JSON.parse(localStorage.getItem('meru_orders_pro')) || []; } catch (e) { orders = []; }
+            try { transactions = JSON.parse(localStorage.getItem('meru_transactions_pro')) || []; } catch (e) {
+                transactions = []; }
+            try { popularMealIds = JSON.parse(localStorage.getItem('meru_popular_pro')) || []; } catch (e) {
+                popularMealIds = []; }
+            hotels.forEach(h => {
+                if (h.commissionRate === undefined || h.commissionRate === null) {
+                    h.commissionRate = DEFAULT_COMMISSION;
+                }
+                // Ensure each meal has accompaniments array
+                if (h.meals) {
+                    h.meals.forEach(m => {
+                        if (!m.accompaniments) m.accompaniments = [];
+                    });
+                }
+            });
+            orders = orders.map(o => {
+                const clean = { ...o };
+                delete clean.riderId;
+                delete clean.distanceKm;
+                delete clean.distanceCharge;
+                delete clean.riderEarnings;
+                delete clean.deliveryFee;
+                if (!clean.totalPaid || clean.totalPaid > clean.mealSubtotal) clean.totalPaid = clean.mealSubtotal;
+                if (!clean.createdAt) clean.createdAt = new Date().toLocaleString();
+                return clean;
+            });
+            transactions = transactions.filter(t => t.type !== 'rider_subscription');
+            saveLocal();
+        }
+
+        function writeToFirebase(path, data) {
+            if (!firebaseReady || !db) return Promise.resolve();
+            return db.ref(path).set(data).then(() => {
+                showSyncToast('Synced to cloud', 'success');
+                return true;
+            }).catch(err => {
+                console.warn("Firebase write error:", err);
+                showSyncToast('Sync failed: ' + err.message, 'error');
+                return false;
+            });
+        }
+
+        function syncAllToFirebase() {
+            if (!firebaseReady) return;
+            updateSyncStatus(true, 'Syncing...');
+            const dot = document.getElementById('syncDot');
+            if (dot) dot.className = 'sync-dot syncing';
+            showSyncToast('Syncing...', 'syncing');
+            Promise.all([
+                writeToFirebase(DB_PATHS.hotels, hotels),
+                writeToFirebase(DB_PATHS.orders, orders),
+                writeToFirebase(DB_PATHS.transactions, transactions),
+                writeToFirebase(DB_PATHS.popular, popularMealIds)
+            ]).then(() => {
+                updateSyncStatus(true, 'Live');
+                if (dot) dot.className = 'sync-dot online';
+                showSyncToast('All changes saved', 'success');
+            }).catch(() => {
+                updateSyncStatus(false, 'Offline');
+                if (dot) dot.className = 'sync-dot offline';
+            });
+        }
+
+        function loadFromFirebase() {
+            if (!firebaseReady || !db) return Promise.resolve(false);
+            showSyncToast('Loading from cloud...', 'syncing');
+            return Promise.all([
+                db.ref(DB_PATHS.hotels).once('value'),
+                db.ref(DB_PATHS.orders).once('value'),
+                db.ref(DB_PATHS.transactions).once('value'),
+                db.ref(DB_PATHS.popular).once('value'),
+                db.ref(DB_PATHS.adminPassword).once('value')
+            ]).then(([hotsSnap, ordSnap, transSnap, popSnap, pwSnap]) => {
+                let changed = false;
+                const hots = hotsSnap.val();
+                if (hots && Object.keys(hots).length > 0) {
+                    hotels = Object.values(hots);
+                    hotels.forEach(h => {
+                        if (h.commissionRate === undefined || h.commissionRate === null) {
+                            h.commissionRate = DEFAULT_COMMISSION;
+                        }
+                        if (h.meals) {
+                            h.meals.forEach(m => {
+                                if (!m.accompaniments) m.accompaniments = [];
+                            });
+                        }
+                    });
+                    changed = true;
+                }
+                const ords = ordSnap.val();
+                if (ords && Object.keys(ords).length > 0) {
+                    orders = Object.values(ords);
+                    changed = true;
+                }
+                const trans = transSnap.val();
+                if (trans && Object.keys(trans).length > 0) {
+                    transactions = Object.values(trans);
+                    changed = true;
+                }
+                const pop = popSnap.val();
+                if (pop && Array.isArray(pop)) {
+                    popularMealIds = pop;
+                    changed = true;
+                }
+                const pw = pwSnap.val();
+                if (pw && typeof pw === 'string' && pw.length > 0) {
+                    adminPassword = pw;
+                } else {
+                    db.ref(DB_PATHS.adminPassword).set('meru2025');
+                    adminPassword = 'meru2025';
+                }
+                if (changed) saveLocal();
+                showSyncToast('Data loaded from cloud', 'success');
+                return changed;
+            }).catch(err => {
+                console.warn("Firebase load error:", err);
+                showSyncToast('Error loading data', 'error');
+                return false;
+            });
+        }
+
+        function listenFirebase() {
+            if (!firebaseReady || !db) return;
+            db.ref(DB_PATHS.hotels).on('value', snap => {
+                const val = snap.val();
+                if (val && Object.keys(val).length > 0) {
+                    let newData = Object.values(val);
+                    newData.forEach(h => {
+                        if (h.commissionRate === undefined || h.commissionRate === null) {
+                            h.commissionRate = DEFAULT_COMMISSION;
+                        }
+                        if (h.meals) {
+                            h.meals.forEach(m => {
+                                if (!m.accompaniments) m.accompaniments = [];
+                            });
+                        }
+                    });
+                    if (JSON.stringify(newData) !== JSON.stringify(hotels)) {
+                        hotels = newData;
+                        saveLocal();
+                        if (!isInitialLoad) showSyncToast('Hotels updated', 'success');
+                        refreshAllUI();
+                    }
+                }
+            }, err => console.warn("Hotels listen error:", err));
+
+            db.ref(DB_PATHS.orders).on('value', snap => {
+                const val = snap.val();
+                if (val && Object.keys(val).length > 0) {
+                    const newData = Object.values(val);
+                    if (JSON.stringify(newData) !== JSON.stringify(orders)) {
+                        orders = newData;
+                        saveLocal();
+                        if (!isInitialLoad) showSyncToast('Orders updated', 'success');
+                        refreshAllUI();
+                    }
+                }
+            }, err => console.warn("Orders listen error:", err));
+
+            db.ref(DB_PATHS.transactions).on('value', snap => {
+                const val = snap.val();
+                if (val && Object.keys(val).length > 0) {
+                    const newData = Object.values(val);
+                    if (JSON.stringify(newData) !== JSON.stringify(transactions)) {
+                        transactions = newData;
+                        saveLocal();
+                    }
+                }
+            }, err => console.warn("Transactions listen error:", err));
+
+            db.ref(DB_PATHS.popular).on('value', snap => {
+                const val = snap.val();
+                if (val && Array.isArray(val)) {
+                    if (JSON.stringify(val) !== JSON.stringify(popularMealIds)) {
+                        popularMealIds = val;
+                        saveLocal();
+                        if (!isInitialLoad) showSyncToast('Popular meals updated', 'success');
+                        refreshAllUI();
+                    }
+                }
+            }, err => console.warn("Popular listen error:", err));
+
+            db.ref(DB_PATHS.adminPassword).on('value', snap => {
+                const val = snap.val();
+                if (val && typeof val === 'string' && val.length > 0) {
+                    adminPassword = val;
+                }
+            }, err => console.warn("Password listen error:", err));
+
+            updateSyncStatus(true, 'Live');
+            showSyncToast('Real-time sync active', 'success');
+        }
+
+        // ================================================================
+        //  4.  SEED DATA (with accompaniments)
+        // ================================================================
+        function getSeedData() {
+            return [{
+                id: 1,
+                name: "Meru Palace Hotel",
+                phone: "0712345678",
+                address: "Makutano, Meru Town",
+                commissionRate: 0.12,
+                meals: [
+                    { name: "Nyama Choma + Ugali", price: 450, category: "dinner", emoji: "🍗", image: null,
+                        accompaniments: [{ name: "Kachumbari", price: 50 }, { name: "Sukuma Wiki", price: 40 },
+                        { name: "Extra Ugali", price: 60 }] },
+                    { name: "Grilled Tilapia", price: 600, category: "dinner", emoji: "🐟", image: null,
+                        accompaniments: [{ name: "Chips", price: 80 }, { name: "Rice", price: 70 },
+                        { name: "Vegetable Salad", price: 50 }] },
+                    { name: "Chapati & Beef Stew", price: 350, category: "lunch", emoji: "🌯", image: null,
+                        accompaniments: [{ name: "Extra Chapati", price: 40 }, { name: "Rice", price: 60 }] }
+                ]
+            }, {
+                id: 2,
+                name: "Java House Meru",
+                phone: "0722334455",
+                address: "Makutano Mall, Meru",
+                commissionRate: 0.10,
+                meals: [
+                    { name: "Beef Burger", price: 650, category: "lunch", emoji: "🍔", image: null,
+                        accompaniments: [{ name: "Chips", price: 100 }, { name: "Onion Rings", price: 80 },
+                        { name: "Coleslaw", price: 60 }] },
+                    { name: "Spaghetti Bolognese", price: 700, category: "dinner", emoji: "🍝", image: null,
+                        accompaniments: [{ name: "Garlic Bread", price: 70 }, { name: "Side Salad", price: 50 }] },
+                    { name: "Pancakes & Coffee", price: 380, category: "breakfast", emoji: "🥞", image: null,
+                        accompaniments: [{ name: "Maple Syrup", price: 40 }, { name: "Fresh Fruit", price: 60 }] },
+                    { name: "Chicken Caesar Salad", price: 550, category: "lunch", emoji: "🥗", image: null,
+                        accompaniments: [{ name: "Garlic Bread", price: 70 }, { name: "Grilled Chicken Extra",
+                            price: 120 }] }
+                ]
+            }, {
+                id: 3,
+                name: "The Green Garden Restaurant",
+                phone: "0711122233",
+                address: "Maua Road, Meru",
+                commissionRate: 0.15,
+                meals: [
+                    { name: "Vegetable Pilau", price: 420, category: "lunch", emoji: "🍚", image: null,
+                        accompaniments: [{ name: "Kachumbari", price: 30 }, { name: "Yoghurt", price: 50 }] },
+                    { name: "Grilled Chicken", price: 580, category: "dinner", emoji: "🍗", image: null,
+                        accompaniments: [{ name: "Chips", price: 80 }, { name: "Rice", price: 70 },
+                        { name: "Vegetable Salad", price: 50 }] },
+                    { name: "Fresh Fruit Juice", price: 250, category: "beverage", emoji: "🥤", image: null,
+                        accompaniments: [] },
+                    { name: "Samosa Platter", price: 300, category: "snacks", emoji: "🥟", image: null,
+                        accompaniments: [{ name: "Mint Sauce", price: 30 }, { name: "Tamarind Chutney",
+                            price: 40 }] }
+                ]
+            }, {
+                id: 4,
+                name: "Highway Inn Meru",
+                phone: "0722555666",
+                address: "Nkubu Road, Meru",
+                commissionRate: 0.12,
+                meals: [
+                    { name: "Fish & Chips", price: 620, category: "lunch", emoji: "🐟", image: null,
+                        accompaniments: [{ name: "Tartar Sauce", price: 40 }, { name: "Mushy Peas", price: 50 },
+                        { name: "Extra Chips", price: 70 }] },
+                    { name: "Beef Steak", price: 780, category: "dinner", emoji: "🥩", image: null,
+                        accompaniments: [{ name: "Mashed Potatoes", price: 80 }, { name: "Grilled Veggies",
+                            price: 70 }, { name: "Peppercorn Sauce", price: 60 }] },
+                    { name: "Mashed Potatoes", price: 200, category: "side", emoji: "🥔", image: null,
+                        accompaniments: [] },
+                    { name: "Chocolate Brownie", price: 320, category: "dessert", emoji: "🍫", image: null,
+                        accompaniments: [{ name: "Ice Cream", price: 60 }, { name: "Whipped Cream", price: 40 }] }
+                ]
+            }, {
+                id: 5,
+                name: "Meru Coffee House",
+                phone: "0712349876",
+                address: "Mwirgia Street, Meru",
+                commissionRate: 0.08,
+                meals: [
+                    { name: "Cappuccino & Croissant", price: 380, category: "breakfast", emoji: "☕", image: null,
+                        accompaniments: [{ name: "Butter", price: 20 }, { name: "Jam", price: 20 }] },
+                    { name: "Full English Breakfast", price: 550, category: "breakfast", emoji: "🍳", image: null,
+                        accompaniments: [{ name: "Hash Browns", price: 70 }, { name: "Grilled Tomato", price: 40 },
+                        { name: "Baked Beans", price: 50 }] },
+                    { name: "Club Sandwich", price: 480, category: "lunch", emoji: "🥪", image: null,
+                        accompaniments: [{ name: "Chips", price: 70 }, { name: "Side Salad", price: 40 }] },
+                    { name: "Carrot Cake", price: 280, category: "dessert", emoji: "🍰", image: null,
+                        accompaniments: [{ name: "Cream Cheese Frosting", price: 30 }, { name: "Walnuts",
+                            price: 40 }] }
+                ]
+            }];
+        }
+
+        // ================================================================
+        //  5.  HELPERS
+        // ================================================================
+        function getFoodEmoji(name) {
+            const s = name.toLowerCase();
+            if (s.includes('burger') || s.includes('beef')) return '🍔';
+            if (s.includes('chicken') || s.includes('nyama') || s.includes('kuku')) return '🍗';
+            if (s.includes('fish') || s.includes('tilapia') || s.includes('samaki')) return '🐟';
+            if (s.includes('pasta') || s.includes('spaghetti') || s.includes('mac')) return '🍝';
+            if (s.includes('cake') || s.includes('sweet') || s.includes('pancake') || s.includes('pastry')) return '🍰';
+            if (s.includes('pancake')) return '🥞';
+            if (s.includes('coffee') || s.includes('tea')) return '☕';
+            if (s.includes('salad') || s.includes('market') || s.includes('veggie') || s.includes('greet')) return '🥗';
+            if (s.includes('pizza')) return '🍕';
+            if (s.includes('rice')) return '🍚';
+            if (s.includes('ugali') || s.includes('chapati')) return '🌽';
+            if (s.includes('noodle') || s.includes('ramen')) return '🍜';
+            if (s.includes('taco') || s.includes('burrito')) return '🌮';
+            if (s.includes('soup')) return '🍲';
+            if (s.includes('sandwich')) return '🥪';
+            if (s.includes('egg')) return '🍳';
+            if (s.includes('sushi')) return '🍣';
+            if (s.includes('steak')) return '🥩';
+            if (s.includes('fruit') || s.includes('juice')) return '🥤';
+            if (s.includes('samosa')) return '🥟';
+            if (s.includes('potato')) return '🥔';
+            if (s.includes('brownie')) return '🍫';
+            return '🍽️';
+        }
+
+        function sendWhatsApp(phone, message) {
+            let p = phone.replace(/\D/g, '');
+            if (p.startsWith('0')) p = '254' + p.substring(1);
+            if (!p.startsWith('254')) p = '254' + p;
+            window.open(`https://wa.me/${p}?text=${encodeURIComponent(message)}`, '_blank');
+        }
+
+        function getMealId(meal, hotelId) {
+            return `${hotelId}_${meal.name.replace(/\s+/g, '_').toLowerCase()}`;
+        }
+
+        // ================================================================
+        //  6.  CART FUNCTIONS (with accompaniment support)
+        // ================================================================
+        let cart = [];
+
+        function updateCartUI() {
+            const count = cart.reduce((s, i) => s + i.quantity, 0);
+            document.getElementById('cartItemCount').textContent = count;
+            document.getElementById('headerCartCount').textContent = count;
+        }
+
+        function removeFromCart(index) {
+            if (index >= 0 && index < cart.length) {
+                cart.splice(index, 1);
+                updateCartUI();
+                const modal = document.getElementById('cartModal');
+                if (modal && modal.style.display === 'flex') {
+                    showCartModalContent();
+                }
+                showSyncToast('Item removed from cart', 'success');
+            }
+        }
+
+        function showCartModalContent() {
+            const container = document.getElementById('cartModalContainer');
+            if (!container) return;
+            if (cart.length === 0) {
+                container.innerHTML = `
+              <div class="modal" id="cartModal" style="display:flex;">
+                <div class="modal-card">
+                  <h3 style="font-size:1.1rem;"><i class="fas fa-shopping-bag"></i> Your Cart</h3>
+                  <p style="color:#7a5a3e;padding:20px 0;text-align:center;">Your cart is empty.</p>
+                  <button id="closeCartModalEmpty" class="btn-sm btn-outline">Close</button>
+                </div>
+              </div>
+            `;
+                document.getElementById('closeCartModalEmpty').onclick = () => { container.innerHTML = ''; };
+                return;
+            }
+            const subtotal = cart.reduce((s, i) => s + (i.price * i.quantity), 0);
+            let html = `
+            <div class="modal" id="cartModal" style="display:flex;">
+              <div class="modal-card">
+                <h3 style="font-size:1.1rem;"><i class="fas fa-shopping-bag"></i> Your Order</h3>
+                <div style="max-height:300px;overflow-y:auto;margin:10px 0;">
+          `;
+            cart.forEach((item, idx) => {
+                const accompText = item.accompaniment ? ` + ${item.accompaniment.name}` : '';
+                const accompPrice = item.accompaniment ? item.accompaniment.price : 0;
+                const totalItemPrice = (item.price + accompPrice) * item.quantity;
+                html += `
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f0e2d4;font-size:0.85rem;">
+                <span>${item.emoji || '🍽️'} ${item.quantity}x ${item.meal} <small style="color:#b96f30;">(${item.hotel})</small>
+                  ${accompText ? `<span class="accomp-badge-in-cart"><i class="fas fa-utensils"></i> ${item.accompaniment.name} ${item.accompaniment.price > 0 ? '+KSh '+item.accompaniment.price : ''}</span>` : ''}
+                </span>
+                <span style="display:flex;align-items:center;gap:8px;">
+                  <span>KSh ${totalItemPrice}</span>
+                  <button class="cart-item-remove" onclick="removeFromCart(${idx})" title="Remove item" style="background:none;border:none;color:#dc3545;cursor:pointer;font-size:1rem;">
+                    <i class="fas fa-times-circle"></i>
+                  </button>
+                </span>
+              </div>
+            `;
+            });
+            html += `
+                </div>
+                <hr style="margin:12px 0;">
+                <div class="form-group"><input id="custNameCart" placeholder="Full Name *" required></div>
+                <div class="form-group"><input id="custPhoneCart" placeholder="Phone Number *" required></div>
+                <div class="form-group"><input id="custAddressCart" placeholder="Delivery Address *" required></div>
+                <p style="font-size:0.9rem;"><strong>Total:</strong> KSh ${subtotal}<br><small style="color:#6b4f36;">No delivery fee</small></p>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+                  <button id="confirmCartOrder" class="btn-sm"><i class="fas fa-check"></i> Place Order</button>
+                  <button id="closeCartModal" class="btn-sm btn-outline">Continue</button>
+                </div>
+              </div>
+            </div>
+          `;
+            container.innerHTML = html;
+
+            document.getElementById('closeCartModal').onclick = () => { container.innerHTML = ''; };
+            document.getElementById('confirmCartOrder').onclick = () => {
+                const name = document.getElementById('custNameCart').value.trim();
+                const phone = document.getElementById('custPhoneCart').value.trim();
+                const address = document.getElementById('custAddressCart').value.trim();
+                if (!name || !phone || !address) return alert("Please fill all fields.");
+                placeOrder(name, phone, address, container);
+            };
+        }
+
+        function placeOrder(name, phone, address, container) {
+            const subtotal = cart.reduce((s, i) => {
+                const accompPrice = i.accompaniment ? i.accompaniment.price : 0;
+                return s + ((i.price + accompPrice) * i.quantity);
+            }, 0);
+            const hotelGroups = {};
+            cart.forEach(item => {
+                if (!hotelGroups[item.hotel]) hotelGroups[item.hotel] = [];
+                hotelGroups[item.hotel].push(item);
+            });
+            let totalCommission = 0;
+            const orderItems = cart.map(c => ({
+                mealName: c.meal,
+                quantity: c.quantity,
+                price: c.price,
+                hotel: c.hotel,
+                emoji: c.emoji || '🍽️',
+                accompaniment: c.accompaniment ? { name: c.accompaniment.name, price: c.accompaniment.price } :
+                null
+            }));
+            Object.keys(hotelGroups).forEach(hotelName => {
+                const items = hotelGroups[hotelName];
+                const hotelSubtotal = items.reduce((sum, i) => {
+                    const ap = i.accompaniment ? i.accompaniment.price : 0;
+                    return sum + ((i.price + ap) * i.quantity);
+                }, 0);
+                const rate = getHotelCommission(hotelName);
+                const commission = Math.floor(hotelSubtotal * rate);
+                totalCommission += commission;
+            });
+            const newOrder = {
+                id: Date.now(),
+                customerName: name,
+                customerPhone: phone,
+                customerAddress: address,
+                items: orderItems,
+                mealSubtotal: subtotal,
+                commission: totalCommission,
+                totalPaid: subtotal,
+                status: 'pending',
+                createdAt: new Date().toLocaleString(),
+                createdAtTimestamp: new Date().toISOString()
+            };
+            orders.unshift(newOrder);
+            transactions.unshift({
+                id: Date.now() + Math.random(),
+                type: 'user_payment',
+                description: `Payment from ${name}`,
+                amount: subtotal,
+                reference: `Order #${newOrder.id}`,
+                date: new Date().toLocaleString()
+            });
+            transactions.unshift({
+                id: Date.now() + Math.random() + 1,
+                type: 'commission',
+                description: `Commission #${newOrder.id}`,
+                amount: totalCommission,
+                reference: `Items: ${orderItems.length}`,
+                date: new Date().toLocaleString()
+            });
+            saveLocal();
+            syncAllToFirebase();
+            const itemSummary = orderItems.map(i =>
+                `${i.quantity}x ${i.mealName}${i.accompaniment ? ' + '+i.accompaniment.name : ''}`
+            ).join(', ');
+            sendWhatsApp(ADMIN_WHATSAPP,
+                `🆕 ORDER #${newOrder.id} by ${name}\nTotal: KSh ${subtotal}\nCommission: KSh ${totalCommission}\nItems: ${itemSummary}\nAddress: ${address}`
+                );
+            alert(`✅ Order placed! ID: #${newOrder.id}\nTotal: KSh ${subtotal}`);
+            cart = [];
+            updateCartUI();
+            container.innerHTML = '';
+            renderCustomerMeals();
+            refreshAdminUI();
+            renderCarousel();
+        }
+
+        function showCartModal() {
+            const container = document.getElementById('cartModalContainer');
+            showCartModalContent();
+        }
+
+        document.getElementById('cartIcon').addEventListener('click', showCartModal);
+        document.getElementById('headerCartBtn').addEventListener('click', showCartModal);
+
+        // ================================================================
+        //  7.  ACCOMPANIMENT SELECTOR (Customer)
+        // ================================================================
+        let pendingAccompMeal = null;
+        let selectedAccomp = null;
+
+        function showAccompanimentSelector(meal, hotel, price, emoji, mealId) {
+            if (!meal.accompaniments || meal.accompaniments.length === 0) {
+                // No accompaniments — add directly
+                addToCartDirect(meal, hotel, price, emoji);
+                return;
+            }
+            pendingAccompMeal = { meal, hotel, price, emoji, mealId };
+            selectedAccomp = null;
+
+            const modal = document.getElementById('accompSelectorModal');
+            const nameEl = document.getElementById('accompSelectorMealName');
+            nameEl.innerHTML = `For: <strong>${meal.name}</strong> · ${hotel}`;
+
+            const list = document.getElementById('accompOptionsList');
+            list.innerHTML = meal.accompaniments.map((a, idx) => `
+            <div class="accomp-option" data-idx="${idx}">
+              <div class="radio-circle"></div>
+              <span class="accomp-label">${a.name}</span>
+              <span class="accomp-extra">${a.price > 0 ? '+KSh '+a.price : 'free'}</span>
+            </div>
+          `).join('');
+
+            list.querySelectorAll('.accomp-option').forEach(el => {
+                el.addEventListener('click', function() {
+                    list.querySelectorAll('.accomp-option').forEach(o => o.classList.remove('selected'));
+                    this.classList.add('selected');
+                    const idx = parseInt(this.dataset.idx);
+                    selectedAccomp = pendingAccompMeal.meal.accompaniments[idx];
+                });
+            });
+
+            modal.style.display = 'flex';
+        }
+
+        document.getElementById('confirmAccompSelection').addEventListener('click', () => {
+            if (!pendingAccompMeal) return;
+            if (!selectedAccomp) {
+                // If no selection, allow adding without accompaniment
+                const confirmAdd = confirm(
+                    'No side selected. Add the meal without a side?');
+                if (!confirmAdd) return;
+                // Add without accompaniment
+                const { meal, hotel, price, emoji } = pendingAccompMeal;
+                addToCartDirect(meal, hotel, price, emoji);
+                document.getElementById('accompSelectorModal').style.display = 'none';
+                pendingAccompMeal = null;
+                selectedAccomp = null;
+                return;
+            }
+            const { meal, hotel, price, emoji } = pendingAccompMeal;
+            const totalPrice = price + selectedAccomp.price;
+            const existing = cart.find(i =>
+                i.meal === meal.name &&
+                i.hotel === hotel &&
+                i.accompaniment &&
+                i.accompaniment.name === selectedAccomp.name
+            );
+            if (existing) {
+                existing.quantity++;
+            } else {
+                cart.push({
+                    meal: meal.name,
+                    price: price,
+                    hotel: hotel,
+                    quantity: 1,
+                    emoji: emoji || getFoodEmoji(meal.name),
+                    accompaniment: { name: selectedAccomp.name, price: selectedAccomp.price }
+                });
+            }
+            updateCartUI();
+            showCartToast(emoji || '🍽️', meal.name, hotel, selectedAccomp);
+            document.getElementById('accompSelectorModal').style.display = 'none';
+            pendingAccompMeal = null;
+            selectedAccomp = null;
+        });
+
+        document.getElementById('cancelAccompSelection').addEventListener('click', () => {
+            document.getElementById('accompSelectorModal').style.display = 'none';
+            pendingAccompMeal = null;
+            selectedAccomp = null;
+        });
+
+        document.getElementById('accompSelectorModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('accompSelectorModal')) {
+                document.getElementById('accompSelectorModal').style.display = 'none';
+                pendingAccompMeal = null;
+                selectedAccomp = null;
+            }
+        });
+
+        function addToCartDirect(meal, hotel, price, emoji) {
+            const existing = cart.find(i => i.meal === meal.name && i.hotel === hotel && !i.accompaniment);
+            if (existing) {
+                existing.quantity++;
+            } else {
+                cart.push({ meal: meal.name, price, hotel, quantity: 1, emoji: emoji || getFoodEmoji(meal.name),
+                    accompaniment: null });
+            }
+            updateCartUI();
+            showCartToast(emoji || '🍽️', meal.name, hotel, null);
+        }
+
+        // ================================================================
+        //  8.  UI RENDER — Carousel, Filters, Meals
+        // ================================================================
+        let activeHotelFilter = null;
+        let carouselAutoScroll = null;
+
+        function renderCarousel() {
+            const track = document.getElementById('carouselTrack');
+            const dots = document.getElementById('carouselDots');
+            if (!track) return;
+            let allMeals = [];
+            hotels.forEach(hotel => {
+                if (hotel.meals) {
+                    hotel.meals.forEach(meal => {
+                        const id = getMealId(meal, hotel.id);
+                        allMeals.push({ ...meal, hotelName: hotel.name, hotelId: hotel.id, id });
+                    });
+                }
+            });
+            const popular = allMeals.filter(m => popularMealIds.includes(m.id));
+            if (popular.length === 0) {
+                track.innerHTML =
+                    '<div style="padding:12px 20px;color:#7a5a3e;font-size:0.85rem;">No popular meals selected. Admin can add from dashboard.</div>';
+                if (dots) dots.innerHTML = '';
+                return;
+            }
+            track.innerHTML = popular.map(m => {
+                const imageHtml = m.image ?
+                    `<img src="${m.image}" alt="${m.name}" />` :
+                    `<span class="emoji-only">${m.emoji || '🍽️'}</span>`;
+                const hasAccomp = m.accompaniments && m.accompaniments.length > 0;
+                return `
+              <div class="carousel-item" data-name="${m.name}" data-price="${m.price}" data-hotel="${m.hotelName}" data-emoji="${m.emoji}" data-has-accomp="${hasAccomp}">
+                <div class="c-image">${imageHtml}</div>
+                <div class="c-name">${m.name}</div>
+                <div class="c-price">KSh ${m.price}</div>
+                <div class="c-hotel">${m.hotelName}</div>
+                <span class="c-badge">${hasAccomp ? '🍽️+' : '⭐'}</span>
+              </div>
+            `;
+            }).join('');
+            if (dots) {
+                const itemCount = track.children.length;
+                const visibleCount = Math.min(itemCount, 6);
+                const dotCount = Math.ceil(itemCount / visibleCount);
+                dots.innerHTML = '';
+                for (let i = 0; i < dotCount; i++) {
+                    const dot = document.createElement('span');
+                    dot.dataset.index = i;
+                    if (i === 0) dot.classList.add('active');
+                    dots.appendChild(dot);
+                }
+            }
+            track.querySelectorAll('.carousel-item').forEach(el => {
+                el.addEventListener('click', function() {
+                    const name = this.dataset.name;
+                    const price = parseInt(this.dataset.price);
+                    const hotel = this.dataset.hotel;
+                    const emoji = this.dataset.emoji || '🍽️';
+                    const hasAccomp = this.dataset.hasAccomp === 'true';
+                    // Find the meal object
+                    let mealObj = null;
+                    let hotelObj = null;
+                    for (const h of hotels) {
+                        if (h.name === hotel) {
+                            const m = h.meals.find(m => m.name === name);
+                            if (m) { mealObj = m;
+                                hotelObj = h; break; }
+                        }
+                    }
+                    if (mealObj && hasAccomp && mealObj.accompaniments && mealObj.accompaniments.length > 0) {
+                        showAccompanimentSelector(mealObj, hotel, price, emoji, getMealId(mealObj, hotelObj.id));
+                    } else {
+                        const existing = cart.find(i => i.meal === name && i.hotel === hotel && !i
+                        .accompaniment);
+                        if (existing) existing.quantity++;
+                        else cart.push({ meal: name, price, hotel, quantity: 1, emoji, accompaniment: null });
+                        updateCartUI();
+                        showCartToast(emoji, name, hotel, null);
+                        this.style.transform = 'scale(0.92)';
+                        setTimeout(() => { this.style.transform = ''; }, 300);
+                    }
+                });
+            });
+            startCarouselAutoScroll();
+        }
+
+        function startCarouselAutoScroll() {
+            const track = document.getElementById('carouselTrack');
+            if (!track) return;
+            if (carouselAutoScroll) { clearInterval(carouselAutoScroll);
+                carouselAutoScroll = null; }
+            if (track.children.length < 3) return;
+            let scrollAmount = 0;
+            const itemWidth = track.children[0]?.offsetWidth || 120;
+            const gap = 20;
+            const step = itemWidth + gap;
+            carouselAutoScroll = setInterval(() => {
+                const maxScroll = track.scrollWidth - track.clientWidth;
+                if (scrollAmount >= maxScroll) {
+                    scrollAmount = 0;
+                    track.scrollTo({ left: 0, behavior: 'smooth' });
+                } else {
+                    scrollAmount += step;
+                    if (scrollAmount > maxScroll) scrollAmount = maxScroll;
+                    track.scrollTo({ left: scrollAmount, behavior: 'smooth' });
+                }
+                updateDots(track);
+            }, 3500);
+        }
+
+        function updateDots(track) {
+            const dots = document.getElementById('carouselDots');
+            if (!dots) return;
+            const children = dots.children;
+            if (children.length === 0) return;
+            const scrollLeft = track.scrollLeft;
+            const maxScroll = track.scrollWidth - track.clientWidth;
+            const ratio = maxScroll > 0 ? scrollLeft / maxScroll : 0;
+            const activeIndex = Math.min(Math.floor(ratio * children.length), children.length - 1);
+            for (let i = 0; i < children.length; i++) {
+                children[i].classList.toggle('active', i === activeIndex);
+            }
+        }
+
+        document.getElementById('carouselSection')?.addEventListener('mouseenter', () => {
+            if (carouselAutoScroll) { clearInterval(carouselAutoScroll);
+                carouselAutoScroll = null; }
+        });
+        document.getElementById('carouselSection')?.addEventListener('mouseleave', () => { startCarouselAutoScroll(); });
+        document.getElementById('carouselTrack')?.addEventListener('touchstart', () => {
+            if (carouselAutoScroll) { clearInterval(carouselAutoScroll);
+                carouselAutoScroll = null; }
+        });
+        document.getElementById('carouselTrack')?.addEventListener('touchend', () => {
+            setTimeout(() => { startCarouselAutoScroll(); }, 3000);
+        });
+        document.getElementById('carouselLeft')?.addEventListener('click', () => {
+            const track = document.getElementById('carouselTrack');
+            if (track) {
+                const itemWidth = track.children[0]?.offsetWidth || 120;
+                const gap = 20;
+                track.scrollBy({ left: -(itemWidth + gap) * 2, behavior: 'smooth' });
+                setTimeout(() => updateDots(track), 400);
+            }
+        });
+        document.getElementById('carouselRight')?.addEventListener('click', () => {
+            const track = document.getElementById('carouselTrack');
+            if (track) {
+                const itemWidth = track.children[0]?.offsetWidth || 120;
+                const gap = 20;
+                track.scrollBy({ left: (itemWidth + gap) * 2, behavior: 'smooth' });
+                setTimeout(() => updateDots(track), 400);
+            }
+        });
+        document.getElementById('carouselTrack')?.addEventListener('scroll', function() { updateDots(this); });
+
+        // ---- Admin: Popular Meals Management ----
+        function renderAdminPopular() {
+            const c = document.getElementById('adminPopular');
+            if (!c) return;
+            let allMeals = [];
+            hotels.forEach(hotel => {
+                if (hotel.meals) {
+                    hotel.meals.forEach(meal => {
+                        const id = getMealId(meal, hotel.id);
+                        allMeals.push({ ...meal, hotelName: hotel.name, hotelId: hotel.id, id });
+                    });
+                }
+            });
+            if (allMeals.length === 0) {
+                c.innerHTML =
+                    `<p style="color:#7a5a3e;font-size:0.9rem;">No meals available. Add some meals first.</p>`;
+                return;
+            }
+            let html = `
+            <h3 style="font-size:1rem;">⭐ Manage Popular Meals</h3>
+            <p style="font-size:0.85rem;color:#6b4f36;margin-bottom:12px;">Toggle the star to add/remove meals from the Popular Bites carousel.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">
+          `;
+            allMeals.forEach(meal => {
+                const isPopular = popularMealIds.includes(meal.id);
+                const imgPreview = meal.image ?
+                    `<img src="${meal.image}" style="width:30px;height:30px;border-radius:8px;object-fit:cover;margin-right:6px;" />` :
+                    `<span style="font-size:1.4rem;margin-right:6px;">${meal.emoji || '🍽️'}</span>`;
+                const hasAccomp = meal.accompaniments && meal.accompaniments.length > 0;
+                html += `
+              <div style="background:#f9f1e8;border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:10px;border:${isPopular ? '2px solid #e85d04' : '1px solid #f0e2d4'};">
+                ${imgPreview}
+                <div style="flex:1;min-width:0;">
+                  <div style="font-weight:600;font-size:0.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${meal.name} ${hasAccomp ? '🍽️+' : ''}</div>
+                  <div style="font-size:0.7rem;color:#6b4f36;">${meal.hotelName} · KSh ${meal.price}</div>
+                </div>
+                <button class="popular-toggle-btn ${isPopular ? 'active' : ''}" data-meal-id="${meal.id}" data-hotel-id="${meal.hotelId}" data-meal-name="${meal.name}">
+                  ${isPopular ? '⭐' : '☆'}
+                </button>
+              </div>
+            `;
+            });
+            html += `</div>`;
+            c.innerHTML = html;
+            c.querySelectorAll('.popular-toggle-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const mealId = this.dataset.mealId;
+                    const idx = popularMealIds.indexOf(mealId);
+                    if (idx > -1) {
+                        popularMealIds.splice(idx, 1);
+                        this.textContent = '☆';
+                        this.classList.remove('active');
+                        this.closest('div').style.border = '1px solid #f0e2d4';
+                        showSyncToast('Removed from popular', 'success');
+                    } else {
+                        popularMealIds.push(mealId);
+                        this.textContent = '⭐';
+                        this.classList.add('active');
+                        this.closest('div').style.border = '2px solid #e85d04';
+                        showSyncToast('Added to popular', 'success');
+                    }
+                    saveLocal();
+                    syncAllToFirebase();
+                    renderCarousel();
+                    renderCustomerMeals();
+                });
+            });
+        }
+
+        // ---- Hotel Filters ----
+        function renderHotelFilters() {
+            const grid = document.getElementById('hotelsFilterGrid');
+            if (!grid) return;
+            let html = `<span class="hotel-chip ${!activeHotelFilter ? 'active' : ''}" data-hotel="">🏨 All</span>`;
+            hotels.forEach(h => {
+                const active = activeHotelFilter === h.name ? 'active' : '';
+                html += `<span class="hotel-chip ${active}" data-hotel="${h.name}">${h.name}</span>`;
+            });
+            grid.innerHTML = html;
+            grid.querySelectorAll('.hotel-chip').forEach(el => {
+                el.addEventListener('click', () => {
+                    activeHotelFilter = el.dataset.hotel || null;
+                    renderHotelFilters();
+                    renderCustomerMeals();
+                    renderCarousel();
+                });
+            });
+        }
+
+        // ---- Category Filter ----
+        function updateCategoryFilter() {
+            const sel = document.getElementById('categoryFilter');
+            if (!sel) return;
+            const categories = new Set();
+            hotels.forEach(h => {
+                if (h.meals) {
+                    h.meals.forEach(m => {
+                        if (m.category) categories.add(m.category.toLowerCase());
+                    });
+                }
+            });
+            const current = sel.value;
+            sel.innerHTML = '<option value="all">All Categories</option>';
+            categories.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c.charAt(0).toUpperCase() + c.slice(1);
+                sel.appendChild(opt);
+            });
+            if (current && categories.has(current)) sel.value = current;
+            else sel.value = 'all';
+        }
+
+        // ---- Customer Meals ----
+        function renderCustomerMeals() {
+            const container = document.getElementById('customerMealsContainer');
+            if (!container) return;
+            let allMeals = [];
+            hotels.forEach(hotel => {
+                if (hotel.meals) {
+                    hotel.meals.forEach(meal => {
+                        const id = getMealId(meal, hotel.id);
+                        allMeals.push({ ...meal, hotelName: hotel.name, hotelId: hotel.id, id,
+                            emoji: meal.emoji || getFoodEmoji(meal.name) });
+                    });
+                }
+            });
+            const term = (document.getElementById('customerSearch')?.value || '').toLowerCase();
+            let filtered = allMeals.filter(m =>
+                m.name.toLowerCase().includes(term) ||
+                m.hotelName.toLowerCase().includes(term)
+            );
+            if (activeHotelFilter) filtered = filtered.filter(m => m.hotelName === activeHotelFilter);
+            const catFilter = document.getElementById('categoryFilter')?.value;
+            if (catFilter && catFilter !== 'all') {
+                filtered = filtered.filter(m => m.category && m.category.toLowerCase() === catFilter);
+            }
+            const sort = document.getElementById('sortFilter')?.value;
+            if (sort === 'low-high') filtered.sort((a, b) => a.price - b.price);
+            else if (sort === 'high-low') filtered.sort((a, b) => b.price - a.price);
+            if (filtered.length === 0) {
+                container.innerHTML =
+                    `<div style="text-align:center;padding:28px 12px;background:white;border-radius:24px;color:#7a5a3e;font-size:0.85rem;"><i class="fas fa-utensils" style="font-size:2rem;opacity:0.3;display:block;margin-bottom:8px;"></i>No meals found</div>`;
+                return;
+            }
+            container.innerHTML = filtered.map((meal, idx) => {
+                const imageHtml = meal.image ?
+                    `<img src="${meal.image}" alt="${meal.name}" />` :
+                    `<span class="emoji-only">${meal.emoji}</span>`;
+                const catDisplay = meal.category ? `<span class="meal-category">${meal.category}</span>` : '';
+                const popularBadge = popularMealIds.includes(meal.id) ?
+                    `<span class="popular-badge">⭐</span>` : '';
+                const hasAccomp = meal.accompaniments && meal.accompaniments.length > 0;
+                const accompHint = hasAccomp ?
+                    `<span style="font-size:0.5rem;color:#b96f30;display:block;margin-top:-2px;"><i class="fas fa-utensils"></i> +sides available</span>` :
+                    '';
+                return `
+              <div class="food-card" style="animation-delay:${(idx % 12) * 0.05}s">
+                <div class="food-image">${imageHtml}</div>
+                <div class="card-body">
+                  <div class="meal-name">${meal.name} ${popularBadge}</div>
+                  <div class="hotel-name"><i class="fas fa-store"></i> ${meal.hotelName}</div>
+                  ${catDisplay}
+                  <div class="meal-price">KSh ${meal.price}</div>
+                  ${accompHint}
+                  <button class="add-to-cart-btn" data-name="${meal.name}" data-price="${meal.price}" data-hotel="${meal.hotelName}" data-emoji="${meal.emoji}" data-meal-id="${meal.id}" data-has-accomp="${hasAccomp}">
+                    <i class="fas fa-cart-plus"></i> Add
+                  </button>
+                </div>
+              </div>
+            `;
+            }).join('');
+            container.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const name = this.dataset.name;
+                    const price = parseInt(this.dataset.price);
+                    const hotel = this.dataset.hotel;
+                    const emoji = this.dataset.emoji || '🍽️';
+                    const hasAccomp = this.dataset.hasAccomp === 'true';
+                    const mealId = this.dataset.mealId;
+                    // Find the meal object
+                    let mealObj = null;
+                    let hotelObj = null;
+                    for (const h of hotels) {
+                        if (h.name === hotel) {
+                            const m = h.meals.find(m => m.name === name);
+                            if (m) { mealObj = m;
+                                hotelObj = h; break; }
+                        }
+                    }
+                    if (mealObj && hasAccomp && mealObj.accompaniments && mealObj.accompaniments.length > 0) {
+                        showAccompanimentSelector(mealObj, hotel, price, emoji, mealId);
+                    } else {
+                        const existing = cart.find(i => i.meal === name && i.hotel === hotel && !i
+                            .accompaniment);
+                        if (existing) existing.quantity++;
+                        else cart.push({ meal: name, price, hotel, quantity: 1, emoji,
+                            accompaniment: null });
+                        updateCartUI();
+                        showCartToast(emoji, name, hotel, null);
+                        this.innerHTML = '<i class="fas fa-check"></i> Added!';
+                        setTimeout(() => { this.innerHTML = '<i class="fas fa-cart-plus"></i> Add'; },
+                        700);
+                    }
+                });
+            });
+        }
+
+        // ================================================================
+        //  9.  ADMIN — HOTELS, MEALS, ORDERS, ANALYTICS
+        // ================================================================
+        let editingMealContext = null;
+
+        function renderAdminHotelReg() {
+            const c = document.getElementById('adminHotelReg');
+            if (!c) return;
+
+            let html = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+              <h3 style="font-size:1rem;margin:0;">🏨 Manage Hotels</h3>
+              <span style="font-size:0.75rem;color:#6b4f36;"><i class="fas fa-info-circle"></i> Click the <strong>commission badge</strong> to edit rate</span>
+            </div>
+            <div id="hotelListAdmin" style="margin-bottom:16px;">
+          `;
+
+            if (hotels.length === 0) {
+                html += `<p style="color:#7a5a3e;font-size:0.9rem;">No hotels yet. Add one below.</p>`;
+            } else {
+                hotels.forEach(h => {
+                    const ratePercent = Math.round((h.commissionRate || DEFAULT_COMMISSION) * 100);
+                    html += `
+                <div class="hotel-dir-card" style="border-left:4px solid #e85d04;">
+                  <div class="info">
+                    <h4>${h.name}</h4>
+                    <p>📞 ${h.phone || '—'} &nbsp; 📍 ${h.address || '—'}</p>
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px;">
+                      <span style="font-size:0.75rem;color:#6b4f36;">Commission:</span>
+                      <button class="commission-badge" data-hotel-id="${h.id}" title="Click to change commission rate">
+                        <i class="fas fa-percent"></i> ${ratePercent}%
+                      </button>
+                      <span style="font-size:0.65rem;color:#6b4f36;">(click to edit)</span>
+                    </div>
+                    <div style="margin-top:4px;"><strong>Meals:</strong> ${h.meals?.length ? h.meals.slice(0,4).map(m => `<span class="meal-badge">${m.emoji||'🍽️'} ${m.name}${m.accompaniments?.length ? ' 🍽️+' : ''}</span>`).join(' ') : '—'}</div>
+                  </div>
+                  <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                    <button class="btn-sm edit-hotel-btn" data-id="${h.id}">✏️ Edit</button>
+                    <button class="btn-sm btn-danger delete-hotel-btn" data-id="${h.id}">🗑 Delete</button>
+                  </div>
+                </div>
+              `;
+                });
+            }
+
+            html += `
+            </div>
+            <hr style="margin:14px 0;">
+            <h4 style="font-size:0.95rem;">➕ Add New Hotel</h4>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+              <input id="newHotelNameAdmin" placeholder="Hotel Name *" style="flex:2;min-width:120px;padding:8px 14px;border-radius:60px;border:1.5px solid #ffdec2;font-size:0.85rem;">
+              <input id="newHotelPhoneAdmin" placeholder="Phone" style="flex:1;min-width:80px;padding:8px 14px;border-radius:60px;border:1.5px solid #ffdec2;font-size:0.85rem;">
+              <input id="newHotelAddressAdmin" placeholder="Address" style="flex:1;min-width:80px;padding:8px 14px;border-radius:60px;border:1.5px solid #ffdec2;font-size:0.85rem;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <label style="font-size:0.8rem;font-weight:500;color:#4a3724;">Commission %</label>
+                <input id="newHotelCommissionAdmin" placeholder="12" style="width:70px;padding:8px 10px;border-radius:60px;border:1.5px solid #ffdec2;font-size:0.85rem;" value="12">
+              </div>
+              <button id="addHotelAdminBtn" class="btn-sm"><i class="fas fa-plus"></i> Add</button>
+            </div>
+          `;
+
+            c.innerHTML = html;
+
+            document.getElementById('addHotelAdminBtn')?.addEventListener('click', () => {
+                const name = document.getElementById('newHotelNameAdmin').value.trim();
+                if (!name) return alert("Hotel name required");
+                const commission = parseFloat(document.getElementById('newHotelCommissionAdmin').value) / 100;
+                const newHotel = {
+                    id: Date.now(),
+                    name,
+                    phone: document.getElementById('newHotelPhoneAdmin').value.trim(),
+                    address: document.getElementById('newHotelAddressAdmin').value.trim(),
+                    commissionRate: isNaN(commission) ? DEFAULT_COMMISSION : Math.min(Math.max(commission, 0), 1),
+                    meals: []
+                };
+                hotels.push(newHotel);
+                saveLocal();
+                syncAllToFirebase();
+                renderAdminHotelReg();
+                renderHotelFilters();
+                renderCustomerMeals();
+                renderAdminMealManager();
+                renderAdminHotelSales();
+                renderAdminPopular();
+                updateAdminStats();
+                renderCarousel();
+                updateCategoryFilter();
+                alert("Hotel added and synced!");
+            });
+
+            document.querySelectorAll('.edit-hotel-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = parseInt(btn.dataset.id);
+                    const hotel = hotels.find(h => h.id === id);
+                    if (!hotel) return;
+                    const n = prompt("Hotel name:", hotel.name);
+                    if (n !== null && n.trim()) {
+                        hotel.name = n.trim();
+                        hotel.phone = prompt("Phone:", hotel.phone) || '';
+                        hotel.address = prompt("Address:", hotel.address) || '';
+                        const comm = prompt("Commission rate (as percentage, e.g. 12)", (hotel
+                            .commissionRate || DEFAULT_COMMISSION) * 100);
+                        if (comm !== null) {
+                            const rate = parseFloat(comm) / 100;
+                            hotel.commissionRate = isNaN(rate) ? DEFAULT_COMMISSION : Math.min(Math.max(rate, 0),
+                                1);
+                        }
+                        saveLocal();
+                        syncAllToFirebase();
+                        renderAdminHotelReg();
+                        renderHotelFilters();
+                        renderCustomerMeals();
+                        renderAdminMealManager();
+                        renderAdminHotelSales();
+                        renderAdminPopular();
+                        updateAdminStats();
+                        renderCarousel();
+                        updateCategoryFilter();
+                        alert("Hotel updated and synced!");
+                    }
+                });
+            });
+
+            document.querySelectorAll('.commission-badge').forEach(badge => {
+                badge.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const id = parseInt(this.dataset.hotelId);
+                    const hotel = hotels.find(h => h.id === id);
+                    if (!hotel) return;
+                    const currentRate = Math.round((hotel.commissionRate || DEFAULT_COMMISSION) * 100);
+                    const newRate = prompt(
+                        `Edit commission rate for "${hotel.name}"\nEnter percentage (e.g. 12 for 12%):`,
+                        currentRate
+                    );
+                    if (newRate !== null) {
+                        const rate = parseFloat(newRate) / 100;
+                        if (isNaN(rate) || rate < 0 || rate > 1) {
+                            alert("Please enter a valid percentage between 0 and 100.");
+                            return;
+                        }
+                        hotel.commissionRate = Math.min(Math.max(rate, 0), 1);
+                        saveLocal();
+                        syncAllToFirebase();
+                        renderAdminHotelReg();
+                        renderAdminHotelSales();
+                        updateAdminStats();
+                        showSyncToast(`Commission for ${hotel.name} updated to ${Math.round(rate*100)}%`, 'success');
+                        alert(`✅ Commission for "${hotel.name}" set to ${Math.round(rate*100)}%`);
+                    }
+                });
+            });
+
+            document.querySelectorAll('.delete-hotel-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = parseInt(btn.dataset.id);
+                    if (!confirm("Delete this hotel? This will sync across all devices.")) return;
+                    const hotel = hotels.find(h => h.id === id);
+                    if (hotel && hotel.meals) {
+                        hotel.meals.forEach(meal => {
+                            const mealId = getMealId(meal, id);
+                            const idx = popularMealIds.indexOf(mealId);
+                            if (idx > -1) popularMealIds.splice(idx, 1);
+                        });
+                    }
+                    hotels = hotels.filter(h => h.id !== id);
+                    saveLocal();
+                    syncAllToFirebase();
+                    renderAdminHotelReg();
+                    renderHotelFilters();
+                    renderCustomerMeals();
+                    renderAdminMealManager();
+                    renderAdminHotelSales();
+                    renderAdminAllOrders();
+                    renderAdminPopular();
+                    updateAdminStats();
+                    renderCarousel();
+                    updateCategoryFilter();
+                    alert("Hotel deleted and synced!");
+                });
+            });
+        }
+
+        // ---- Render accompaniments in edit modal ----
+        function renderEditAccompaniments(accompaniments) {
+            const list = document.getElementById('editAccompanimentsList');
+            if (!list) return;
+            if (!accompaniments || accompaniments.length === 0) {
+                list.innerHTML = `<span style="font-size:0.75rem;color:#7a5a3e;">No accompaniments added yet.</span>`;
+                return;
+            }
+            list.innerHTML = accompaniments.map((a, idx) => `
+            <div class="accomp-admin-item">
+              <span class="accomp-name">${a.name}</span>
+              <span class="accomp-price">${a.price > 0 ? '+KSh '+a.price : 'free'}</span>
+              <button class="remove-accomp-btn" data-idx="${idx}" title="Remove this side"><i class="fas fa-times-circle"></i></button>
+            </div>
+          `).join('');
+            list.querySelectorAll('.remove-accomp-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const idx = parseInt(this.dataset.idx);
+                    if (!editingMealContext) return;
+                    const { hotelId, mealIdx } = editingMealContext;
+                    const hotel = hotels.find(h => h.id === hotelId);
+                    if (!hotel || !hotel.meals || !hotel.meals[mealIdx]) return;
+                    const meal = hotel.meals[mealIdx];
+                    if (!meal.accompaniments) meal.accompaniments = [];
+                    meal.accompaniments.splice(idx, 1);
+                    renderEditAccompaniments(meal.accompaniments);
+                    showSyncToast('Removed accompaniment', 'success');
+                });
+            });
+        }
+
+        function renderAdminMealManager() {
+            const c = document.getElementById('adminMealManager');
+            if (!c) return;
+            c.innerHTML = `
+            <h3 style="font-size:1rem;">🍔 Manage Meals</h3>
+            <div class="form-group">
+              <select id="mealManagerHotelSelect" style="padding:8px 14px;border-radius:60px;border:1.5px solid #ffdec2;width:100%;font-size:0.9rem;">
+                <option value="">— Select Hotel —</option>
+                ${hotels.map(h => `<option value="${h.id}">${h.name}</option>`).join('')}
+              </select>
+            </div>
+            <div id="mealManagerContent"></div>
+          `;
+            const sel = document.getElementById('mealManagerHotelSelect');
+            sel.addEventListener('change', () => {
+                const hotelId = parseInt(sel.value);
+                const hotel = hotels.find(h => h.id === hotelId);
+                const content = document.getElementById('mealManagerContent');
+                if (!hotel) { content.innerHTML = ''; return; }
+                let html =
+                    `<h4 style="font-size:0.95rem;margin:6px 0;">${hotel.name} — Meals</h4><div id="mealsListAdmin">`;
+                if (hotel.meals?.length) {
+                    hotel.meals.forEach((m, idx) => {
+                        const imgPreview = m.image ?
+                            `<img src="${m.image}" style="width:36px;height:36px;border-radius:10px;object-fit:cover;margin-right:6px;" />` :
+                            `<span style="font-size:1.6rem;margin-right:6px;">${m.emoji||'🍽️'}</span>`;
+                        const isPopular = popularMealIds.includes(getMealId(m, hotel.id));
+                        const hasAccomp = m.accompaniments && m.accompaniments.length > 0;
+                        html += `
+                  <div style="background:#fff8f0;border-radius:14px;padding:8px 12px;margin:6px 0;display:flex;flex-wrap:wrap;align-items:center;gap:8px;border:${isPopular ? '2px solid #e85d04' : 'none'};">
+                    ${imgPreview}
+                    <div style="flex:2;min-width:100px;"><strong style="font-size:0.85rem;">${m.name}</strong><br><span style="color:#b96f30;font-size:0.8rem;">KSh ${m.price}</span><br><span style="font-size:0.7rem;color:#7a5a3e;">${m.category || '—'}</span>${isPopular ? ' <span style="font-size:0.6rem;color:#e85d04;">⭐</span>' : ''}${hasAccomp ? ' <span style="font-size:0.6rem;color:#6b4f36;"><i class="fas fa-utensils"></i> '+m.accompaniments.length+' sides</span>' : ''}</div>
+                    <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                      <button class="btn-sm edit-meal-btn" data-hotel="${hotel.id}" data-idx="${idx}">✏️ Edit</button>
+                      <button class="btn-sm btn-danger delete-meal-btn" data-hotel="${hotel.id}" data-idx="${idx}">🗑 Delete</button>
+                    </div>
+                  </div>
+                `;
+                    });
+                } else html += '<p style="color:#7a5a3e;font-size:0.85rem;">No meals yet.</p>';
+                html += `</div><hr style="margin:12px 0;"><h4 style="font-size:0.95rem;">➕ Add Meal</h4>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+                <input id="newMealName" placeholder="Meal name *" style="flex:2;min-width:100px;padding:8px 14px;border-radius:60px;border:1.5px solid #ffdec2;font-size:0.85rem;">
+                <input id="newMealPrice" placeholder="Price KSh *" type="number" style="flex:1;min-width:70px;padding:8px 14px;border-radius:60px;border:1.5px solid #ffdec2;font-size:0.85rem;">
+                <input id="newMealCategory" placeholder="Category" style="flex:1;min-width:80px;padding:8px 14px;border-radius:60px;border:1.5px solid #ffdec2;font-size:0.85rem;">
+                <label style="display:flex;align-items:center;gap:4px;font-size:0.8rem;font-weight:500;color:#4a3724;cursor:pointer;background:#f0e2d4;padding:6px 14px;border-radius:60px;">
+                  <i class="fas fa-image"></i> Image
+                  <input type="file" id="newMealImage" accept="image/*" style="display:none;">
+                </label>
+                <button id="addMealToHotelBtn" class="btn-sm"><i class="fas fa-plus"></i> Add</button>
+              </div>
+            `;
+                content.innerHTML = html;
+                let selectedImageData = null;
+                const fileInput = document.getElementById('newMealImage');
+                if (fileInput) {
+                    fileInput.addEventListener('change', (e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (ev) => { selectedImageData = ev.target.result; };
+                            reader.readAsDataURL(file);
+                        }
+                    });
+                }
+                document.getElementById('addMealToHotelBtn')?.addEventListener('click', () => {
+                    const name = document.getElementById('newMealName').value.trim();
+                    const price = parseInt(document.getElementById('newMealPrice').value);
+                    const category = document.getElementById('newMealCategory').value.trim() || 'uncategorized';
+                    if (!name || isNaN(price) || price <= 0) return alert("Valid name & price required");
+                    const emoji = getFoodEmoji(name);
+                    hotel.meals = hotel.meals || [];
+                    hotel.meals.push({ name, price, category, emoji, image: selectedImageData || null,
+                        accompaniments: [] });
+                    saveLocal();
+                    syncAllToFirebase();
+                    renderAdminMealManager();
+                    renderCustomerMeals();
+                    renderAdminHotelReg();
+                    renderAdminHotelSales();
+                    renderAdminPopular();
+                    renderCarousel();
+                    updateCategoryFilter();
+                    alert("Meal added and synced!");
+                    selectedImageData = null;
+                    if (fileInput) fileInput.value = '';
+                });
+                document.querySelectorAll('.edit-meal-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const hid = parseInt(btn.dataset.hotel);
+                        const idx = parseInt(btn.dataset.idx);
+                        const h = hotels.find(h => h.id === hid);
+                        if (!h || !h.meals || !h.meals[idx]) return;
+                        const m = h.meals[idx];
+                        editingMealContext = { hotelId: hid, mealIdx: idx };
+                        document.getElementById('editMealName').value = m.name;
+                        document.getElementById('editMealPrice').value = m.price;
+                        document.getElementById('editMealCategory').value = m.category || '';
+                        const preview = document.getElementById('editMealCurrentImage');
+                        if (m.image) {
+                            preview.innerHTML =
+                                `<img src="${m.image}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" />`;
+                        } else {
+                            preview.innerHTML = `<span style="font-size:2.8rem;">${m.emoji || '🍽️'}</span>`;
+                        }
+                        document.getElementById('editMealImage').value = '';
+                        // Render accompaniments
+                        if (!m.accompaniments) m.accompaniments = [];
+                        renderEditAccompaniments(m.accompaniments);
+                        // Clear add inputs
+                        document.getElementById('editAccompName').value = '';
+                        document.getElementById('editAccompPrice').value = '0';
+                        document.getElementById('editMealModal').style.display = 'flex';
+                    });
+                });
+                document.querySelectorAll('.delete-meal-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const hid = parseInt(btn.dataset.hotel);
+                        const idx = parseInt(btn.dataset.idx);
+                        const h = hotels.find(h => h.id === hid);
+                        if (!h || !h.meals || !h.meals[idx]) return;
+                        const mealId = getMealId(h.meals[idx], hid);
+                        const popIdx = popularMealIds.indexOf(mealId);
+                        if (popIdx > -1) popularMealIds.splice(popIdx, 1);
+                        if (!confirm("Delete this meal? This will sync across all devices.")) return;
+                        h.meals.splice(idx, 1);
+                        saveLocal();
+                        syncAllToFirebase();
+                        renderAdminMealManager();
+                        renderCustomerMeals();
+                        renderAdminHotelReg();
+                        renderAdminHotelSales();
+                        renderAdminPopular();
+                        renderCarousel();
+                        updateCategoryFilter();
+                        alert("Meal deleted and synced!");
+                    });
+                });
+            });
+            sel.dispatchEvent(new Event('change'));
+        }
+
+        // ---- Add accompaniment from edit modal ----
+        document.getElementById('addAccompBtn').addEventListener('click', () => {
+            if (!editingMealContext) return alert("Please open a meal in edit mode first.");
+            const name = document.getElementById('editAccompName').value.trim();
+            const price = parseInt(document.getElementById('editAccompPrice').value) || 0;
+            if (!name) return alert("Please enter a side name.");
+            const { hotelId, mealIdx } = editingMealContext;
+            const hotel = hotels.find(h => h.id === hotelId);
+            if (!hotel || !hotel.meals || !hotel.meals[mealIdx]) return alert("Meal not found.");
+            const meal = hotel.meals[mealIdx];
+            if (!meal.accompaniments) meal.accompaniments = [];
+            meal.accompaniments.push({ name, price: Math.max(0, price) });
+            renderEditAccompaniments(meal.accompaniments);
+            document.getElementById('editAccompName').value = '';
+            document.getElementById('editAccompPrice').value = '0';
+            showSyncToast(`Added "${name}" as accompaniment`, 'success');
+        });
+
+        // ---- Save edit meal (with accompaniments) ----
+        document.getElementById('saveEditMealBtn').addEventListener('click', () => {
+            if (!editingMealContext) return;
+            const { hotelId, mealIdx } = editingMealContext;
+            const hotel = hotels.find(h => h.id === hotelId);
+            if (!hotel || !hotel.meals || !hotel.meals[mealIdx]) return;
+            const meal = hotel.meals[mealIdx];
+            const newName = document.getElementById('editMealName').value.trim();
+            const newPrice = parseInt(document.getElementById('editMealPrice').value);
+            const newCategory = document.getElementById('editMealCategory').value.trim() || 'uncategorized';
+            if (!newName || isNaN(newPrice) || newPrice <= 0) return alert("Valid name & price required");
+            const oldId = getMealId(meal, hotelId);
+            const oldPopularIdx = popularMealIds.indexOf(oldId);
+            meal.name = newName;
+            meal.price = newPrice;
+            meal.category = newCategory;
+            meal.emoji = getFoodEmoji(newName);
+            if (oldPopularIdx > -1) {
+                popularMealIds.splice(oldPopularIdx, 1);
+                popularMealIds.push(getMealId(meal, hotelId));
+            }
+            const fileInput = document.getElementById('editMealImage');
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    meal.image = ev.target.result;
+                    saveLocal();
+                    syncAllToFirebase();
+                    renderAdminMealManager();
+                    renderCustomerMeals();
+                    renderAdminHotelReg();
+                    renderAdminHotelSales();
+                    renderAdminPopular();
+                    renderCarousel();
+                    updateCategoryFilter();
+                    document.getElementById('editMealModal').style.display = 'none';
+                    editingMealContext = null;
+                    alert("Meal updated and synced!");
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                saveLocal();
+                syncAllToFirebase();
+                renderAdminMealManager();
+                renderCustomerMeals();
+                renderAdminHotelReg();
+                renderAdminHotelSales();
+                renderAdminPopular();
+                renderCarousel();
+                updateCategoryFilter();
+                document.getElementById('editMealModal').style.display = 'none';
+                editingMealContext = null;
+                alert("Meal updated and synced!");
+            }
+        });
+
+        document.getElementById('cancelEditMealBtn').addEventListener('click', () => {
+            document.getElementById('editMealModal').style.display = 'none';
+            editingMealContext = null;
+        });
+        document.getElementById('editMealModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('editMealModal')) {
+                document.getElementById('editMealModal').style.display = 'none';
+                editingMealContext = null;
+            }
+        });
+
+        function renderAdminAllOrders() {
+            const c = document.getElementById('adminAllOrders');
+            if (!c) return;
+            if (!orders.length) {
+                c.innerHTML =
+                    `<h3 style="font-size:1rem;">📦 Orders</h3><p style="color:#7a5a3e;font-size:0.9rem;">No orders yet.</p>`;
+                return;
+            }
+            let html =
+                `<h3 style="font-size:1rem;">📦 All Orders</h3><div style="overflow-x:auto;"><table><thead><tr><th>#</th><th>Customer</th><th>Items (Hotel) + Side</th><th>Subtotal</th><th>Commission</th><th>Status</th><th>Time / Date</th><th>Actions</th></tr></thead><tbody>`;
+            orders.slice(0, 50).forEach(o => {
+                const itemsStr = o.items.map(i => {
+                    let line = `${i.quantity}x ${i.mealName} <span class="order-hotel">(${i.hotel})</span>`;
+                    if (i.accompaniment) {
+                        line +=
+                            ` <span style="font-size:0.65rem;color:#6b4f36;"><i class="fas fa-utensils"></i> ${i.accompaniment.name}${i.accompaniment.price > 0 ? ' +KSh '+i.accompaniment.price : ''}</span>`;
+                    }
+                    return line;
+                }).join('<br>');
+                const timeStr = o.createdAt || '—';
+                const dateObj = o.createdAtTimestamp ? new Date(o.createdAtTimestamp) : null;
+                const displayDate = dateObj ?
+                    dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], { hour: '2-digit',
+                        minute: '2-digit' }) :
+                    timeStr;
+                html += `
+              <tr>
+                <td>${o.id}</td>
+                <td><strong>${o.customerName}</strong><br><small>${o.customerPhone}</small><br>${o.customerAddress}</td>
+                <td><small>${itemsStr}</small></td>
+                <td>KSh ${o.mealSubtotal}</td>
+                <td>KSh ${o.commission || 0}</td>
+                <td><span class="${o.status === 'delivered' ? 'badge-success' : 'badge-warning'}">${o.status}</span></td>
+                <td><span class="order-time">${displayDate}</span></td>
+                <td>
+                  ${o.status !== 'delivered' ? `<button class="btn-sm mark-delivered-btn" data-id="${o.id}">✅ Delivered</button>` : ''}
+                  <button class="btn-sm btn-outline edit-order-btn" data-id="${o.id}">✏️</button>
+                  <button class="btn-sm btn-danger delete-order-btn" data-id="${o.id}">🗑</button>
+                </td>
+              </tr>
+            `;
+            });
+            html += `</tbody></table></div>`;
+            c.innerHTML = html;
+            c.querySelectorAll('.mark-delivered-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = parseInt(btn.dataset.id);
+                    const order = orders.find(o => o.id === id);
+                    if (order) { order.status = 'delivered';
+                        saveLocal();
+                        syncAllToFirebase();
+                        renderAdminAllOrders();
+                        renderAdminHotelSales();
+                        updateAdminStats();
+                        alert("Order marked delivered and synced!"); }
+                });
+            });
+            c.querySelectorAll('.edit-order-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = parseInt(btn.dataset.id);
+                    const order = orders.find(o => o.id === id);
+                    if (!order) return;
+                    const n = prompt("Customer name:", order.customerName);
+                    if (n !== null && n.trim()) {
+                        order.customerName = n.trim();
+                        order.customerPhone = prompt("Phone:", order.customerPhone) || '';
+                        order.customerAddress = prompt("Address:", order.customerAddress) || '';
+                        saveLocal();
+                        syncAllToFirebase();
+                        renderAdminAllOrders();
+                        alert("Order updated and synced!");
+                    }
+                });
+            });
+            c.querySelectorAll('.delete-order-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = parseInt(btn.dataset.id);
+                    if (!confirm("Delete this order? This will sync across all devices.")) return;
+                    orders = orders.filter(o => o.id !== id);
+                    saveLocal();
+                    syncAllToFirebase();
+                    renderAdminAllOrders();
+                    renderAdminHotelSales();
+                    updateAdminStats();
+                    alert("Order deleted and synced!");
+                });
+            });
+        }
+
+        let salesChart = null,
+            commissionChart = null,
+            orderTrendChart = null;
+
+        function renderAdminHotelSales() {
+            const c = document.getElementById('adminHotelSales');
+            if (!c) return;
+            const stats = {};
+            hotels.forEach(h => { stats[h.name] = { sales: 0, commission: 0, orders: 0, delivered: 0 }; });
+            let totalDelivered = 0,
+                totalRevenue = 0,
+                totalCommissionSum = 0;
+            orders.forEach(o => {
+                if (o.status === 'delivered') {
+                    totalDelivered++;
+                    totalRevenue += o.mealSubtotal || 0;
+                    totalCommissionSum += o.commission || 0;
+                }
+                const hotelItemsMap = {};
+                o.items.forEach(item => {
+                    if (!hotelItemsMap[item.hotel]) hotelItemsMap[item.hotel] = [];
+                    hotelItemsMap[item.hotel].push(item);
+                });
+                Object.keys(hotelItemsMap).forEach(hotelName => {
+                    const items = hotelItemsMap[hotelName];
+                    const sub = items.reduce((s, i) => {
+                        const ap = i.accompaniment ? i.accompaniment.price : 0;
+                        return s + ((i.price + ap) * i.quantity);
+                    }, 0);
+                    const rate = getHotelCommission(hotelName);
+                    const comm = Math.floor(sub * rate);
+                    if (stats[hotelName]) {
+                        stats[hotelName].sales += sub;
+                        stats[hotelName].commission += comm;
+                        stats[hotelName].orders += 1;
+                        if (o.status === 'delivered') stats[hotelName].delivered += 1;
+                    } else stats[hotelName] = { sales: sub, commission: comm, orders: 1, delivered: o.status ===
+                            'delivered' ? 1 : 0 };
+                });
+            });
+            const totalOrders = orders.length;
+            const pendingOrders = orders.filter(o => o.status !== 'delivered').length;
+            const avgOrderValue = totalDelivered > 0 ? Math.round(totalRevenue / totalDelivered) : 0;
+            let html = `
+            <h3 style="font-size:1rem;">📊 Analytics Overview</h3>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin:10px 0;">
+              <span class="stat-badge">📦 Total Orders: ${totalOrders}</span>
+              <span class="stat-badge">✅ Delivered: ${totalDelivered}</span>
+              <span class="stat-badge">⏳ Pending: ${pendingOrders}</span>
+              <span class="stat-badge">💰 Total Revenue: KSh ${totalRevenue}</span>
+              <span class="stat-badge">📈 Avg Order: KSh ${avgOrderValue}</span>
+              <span class="stat-badge">🏨 Hotels: ${hotels.length}</span>
+              <span class="stat-badge">🍔 Total Meals: ${hotels.reduce((s,h) => s + (h.meals?.length||0), 0)}</span>
+              <span class="stat-badge">💸 Total Commission: KSh ${totalCommissionSum}</span>
+            </div>
+            <div class="analytics-grid">
+              <div class="chart-box"><h4>Sales by Hotel</h4><canvas id="salesChart"></canvas></div>
+              <div class="chart-box"><h4>Commission by Hotel</h4><canvas id="commissionChart"></canvas></div>
+            </div>
+            <div class="analytics-grid" style="margin-top:16px;">
+              <div class="chart-box"><h4>Order Status</h4><canvas id="orderTrendChart"></canvas></div>
+              <div class="chart-box">
+                <h4>Summary</h4>
+                <div style="font-size:0.85rem;color:#4a3724;line-height:1.8;">
+                  <div><strong>Total Commission:</strong> KSh ${totalCommissionSum}</div>
+                  <div><strong>Avg Commission per Order:</strong> KSh ${totalDelivered > 0 ? Math.round(totalCommissionSum/totalDelivered) : 0}</div>
+                  <div><strong>Most Popular Hotel:</strong> ${Object.keys(stats).length ? Object.keys(stats).reduce((a,b) => stats[a].orders > stats[b].orders ? a : b) : '—'}</div>
+                  <div><strong>Total Meals Sold:</strong> ${orders.reduce((s,o) => s + o.items.reduce((ss,i) => ss + i.quantity, 0), 0)}</div>
+                </div>
+              </div>
+            </div>
+            <div style="overflow-x:auto;margin-top:20px;">
+              <table><thead><tr><th>Hotel</th><th>Sales (KSh)</th><th>Commission (KSh)</th><th>Orders</th><th>Delivered</th></tr></thead><tbody>`;
+            for (const h in stats) {
+                html +=
+                    `<tr><td>${h}</td><td>KSh ${stats[h].sales}</td><td>KSh ${stats[h].commission}</td><td>${stats[h].orders}</td><td>${stats[h].delivered}</td></tr>`;
+            }
+            html += `</tbody></table></div>`;
+            c.innerHTML = html;
+
+            const ctx1 = document.getElementById('salesChart')?.getContext('2d');
+            const ctx2 = document.getElementById('commissionChart')?.getContext('2d');
+            const ctx3 = document.getElementById('orderTrendChart')?.getContext('2d');
+            const labels = Object.keys(stats);
+            const salesData = Object.values(stats).map(v => v.sales);
+            const commData = Object.values(stats).map(v => v.commission);
+            if (ctx1 && labels.length) {
+                if (salesChart) salesChart.destroy();
+                salesChart = new Chart(ctx1, {
+                    type: 'bar',
+                    data: { labels, datasets: [{ label: 'Sales (KSh)', data: salesData, backgroundColor: '#e85d04',
+                            borderRadius: 4 }] },
+                    options: { responsive: true, plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } } }
+                });
+            }
+            if (ctx2 && labels.length) {
+                if (commissionChart) commissionChart.destroy();
+                commissionChart = new Chart(ctx2, {
+                    type: 'bar',
+                    data: { labels, datasets: [{ label: 'Commission (KSh)', data: commData,
+                            backgroundColor: '#f48c06', borderRadius: 4 }] },
+                    options: { responsive: true, plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } } }
+                });
+            }
+            if (ctx3) {
+                if (orderTrendChart) orderTrendChart.destroy();
+                const deliveredCount = orders.filter(o => o.status === 'delivered').length;
+                const pendingCount = orders.filter(o => o.status !== 'delivered').length;
+                orderTrendChart = new Chart(ctx3, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Delivered', 'Pending'],
+                        datasets: [{ data: [deliveredCount, pendingCount], backgroundColor: ['#4caf50',
+                                '#ff9800'], borderWidth: 0 }]
+                    },
+                    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+                });
+            }
+        }
+
+        function updateAdminStats() {
+            const totalCommission = orders.filter(o => o.status === 'delivered').reduce((s, o) => s + (o.commission || 0),
+            0);
+            const totalRevenue = orders.filter(o => o.status === 'delivered').reduce((s, o) => s + (o.mealSubtotal || 0),
+            0);
+            const el = document.getElementById('adminStatsOverview');
+            if (!el) return;
+            el.innerHTML = `
+            <div class="stat-card"><h3>💰 Commission</h3><div class="value">KSh ${totalCommission}</div></div>
+            <div class="stat-card"><h3>💵 Revenue</h3><div class="value">KSh ${totalRevenue}</div></div>
+            <div class="stat-card"><h3>📦 Delivered</h3><div class="value">${orders.filter(o=>o.status==='delivered').length}</div></div>
+            <div class="stat-card"><h3>🏨 Hotels</h3><div class="value">${hotels.length}</div></div>
+            <div class="stat-card"><h3>🍔 Meals</h3><div class="value">${hotels.reduce((s,h) => s + (h.meals?.length||0), 0)}</div></div>
+          `;
+        }
+
+        function refreshAdminUI() {
+            renderAdminPopular();
+            renderAdminHotelReg();
+            renderAdminMealManager();
+            renderAdminAllOrders();
+            renderAdminHotelSales();
+            updateAdminStats();
+        }
+
+        // ================================================================
+        //  10.  REFRESH ALL UI
+        // ================================================================
+        function refreshAllUI() {
+            renderHotelFilters();
+            renderCustomerMeals();
+            renderCarousel();
+            updateCategoryFilter();
+            if (document.getElementById('adminDashboardPanel').style.display === 'flex') {
+                refreshAdminUI();
+            }
+            updateCartUI();
+        }
+
+        // ================================================================
+        //  11.  ADMIN AUTH
+        // ================================================================
+        document.getElementById('logoDoubleClick').addEventListener('dblclick', () => {
+            document.getElementById('adminModal').style.display = 'flex';
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('adminPassword').focus();
+            document.getElementById('adminAuthMessage').textContent = '';
+        });
+        document.getElementById('closeAdminModal').onclick = () => document.getElementById('adminModal').style.display =
+            'none';
+
+        document.getElementById('verifyAdminBtn').onclick = async () => {
+            const pw = document.getElementById('adminPassword').value;
+            const msg = document.getElementById('adminAuthMessage');
+            if (firebaseReady && db) {
+                try {
+                    const snap = await db.ref(DB_PATHS.adminPassword).once('value');
+                    const storedPw = snap.val();
+                    if (storedPw && pw === storedPw) {
+                        document.getElementById('adminModal').style.display = 'none';
+                        document.getElementById('adminDashboardPanel').style.display = 'flex';
+                        refreshAdminUI();
+                        return;
+                    }
+                } catch (e) { console.warn("Auth error:", e); }
+            }
+            if (pw === 'meru2025') {
+                if (firebaseReady && db) { db.ref(DB_PATHS.adminPassword).set('meru2025').catch(() => {}); }
+                document.getElementById('adminModal').style.display = 'none';
+                document.getElementById('adminDashboardPanel').style.display = 'flex';
+                refreshAdminUI();
+                return;
+            }
+            msg.textContent = '❌ Incorrect password.';
+            msg.style.color = '#dc3545';
+        };
+
+        document.getElementById('adminPassword').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') document.getElementById('verifyAdminBtn').click();
+        });
+        document.getElementById('closeAdminPanel').onclick = () => {
+            document.getElementById('adminDashboardPanel').style.display = 'none';
+        };
+
+        const adminSubtabs = document.querySelectorAll('.admin-subtab');
+        const adminPanes = {
+            'popular': 'adminPopular',
+            'hotel-reg': 'adminHotelReg',
+            'meal-manager': 'adminMealManager',
+            'all-orders': 'adminAllOrders',
+            'hotel-sales': 'adminHotelSales'
+        };
+        adminSubtabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                adminSubtabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const paneId = adminPanes[tab.dataset.admin];
+                document.querySelectorAll('.admin-pane').forEach(p => p.classList.remove('active-admin-pane'));
+                const pane = document.getElementById(paneId);
+                if (pane) pane.classList.add('active-admin-pane');
+                if (paneId === 'adminPopular') renderAdminPopular();
+                else if (paneId === 'adminHotelReg') renderAdminHotelReg();
+                else if (paneId === 'adminMealManager') renderAdminMealManager();
+                else if (paneId === 'adminAllOrders') renderAdminAllOrders();
+                else if (paneId === 'adminHotelSales') renderAdminHotelSales();
+            });
+        });
+
+        // ================================================================
+        //  12.  INIT
+        // ================================================================
+        function init() {
+            loadLocal();
+            if (hotels.length === 0) {
+                hotels = getSeedData();
+                hotels.forEach(h => {
+                    if (h.commissionRate === undefined) h.commissionRate = DEFAULT_COMMISSION;
+                    if (h.meals && h.meals.length > 0) {
+                        const firstMeal = h.meals[0];
+                        popularMealIds.push(getMealId(firstMeal, h.id));
+                        if (h.meals.length > 1) {
+                            popularMealIds.push(getMealId(h.meals[1], h.id));
+                        }
+                    }
+                });
+                saveLocal();
+                console.log("🌱 Seeded initial data");
+            }
+            if (firebaseReady && db) {
+                loadFromFirebase().then(changed => {
+                    if (!changed && hotels.length === 0) {
+                        hotels = getSeedData();
+                        hotels.forEach(h => { if (h.commissionRate === undefined) h.commissionRate =
+                                DEFAULT_COMMISSION; });
+                        saveLocal();
+                        syncAllToFirebase();
+                        console.log("🌱 Seeded Firebase");
+                    }
+                    listenFirebase();
+                    isInitialLoad = false;
+                    refreshAllUI();
+                    showSyncToast('Connected to Firebase', 'success');
+                });
+            } else {
+                updateSyncStatus(false, 'Offline');
+                refreshAllUI();
+                showSyncToast('Running offline — changes saved locally', 'error');
+            }
+            document.getElementById('sortFilter').addEventListener('change', renderCustomerMeals);
+            document.getElementById('categoryFilter').addEventListener('change', renderCustomerMeals);
+            document.getElementById('customerSearch').addEventListener('input', renderCustomerMeals);
+            document.querySelectorAll('.modal').forEach(m => {
+                m.addEventListener('click', (e) => {
+                    if (e.target === m) {
+                        if (m.id === 'adminModal') document.getElementById('closeAdminModal').click();
+                        else if (m.id === 'adminDashboardPanel') document.getElementById('closeAdminPanel')
+                            .click();
+                        else if (m.id === 'cartModal') {
+                            const cont = document.getElementById('cartModalContainer');
+                            if (cont) cont.innerHTML = '';
+                        } else if (m.id === 'editMealModal') {
+                            document.getElementById('editMealModal').style.display = 'none';
+                            editingMealContext = null;
+                        } else if (m.id === 'accompSelectorModal') {
+                            document.getElementById('accompSelectorModal').style.display = 'none';
+                            pendingAccompMeal = null;
+                            selectedAccomp = null;
+                        }
+                    }
+                });
+            });
+            let resizeTimer;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    if (carouselAutoScroll) {
+                        clearInterval(carouselAutoScroll);
+                        carouselAutoScroll = null;
+                        startCarouselAutoScroll();
+                    }
+                }, 300);
+            });
+            console.log("🚀 2Linq initialized. Firebase:", firebaseReady ? 'connected' : 'local-only');
+        }
+        init();
+    </script>
+</body>
+</html>

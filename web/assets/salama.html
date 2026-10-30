@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Move & Shield | Movers & Fumigation Services</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f4f7fc 0%, #eef2f5 100%); color: #1e2a32; scroll-behavior: smooth; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 0 28px; }
+    .header { background: linear-gradient(135deg, #0b3b5f, #1b4f72); color: white; padding: 28px 0 24px; border-radius: 0 0 40px 40px; box-shadow: 0 20px 35px -12px rgba(0,0,0,0.2); position: relative; overflow: hidden; }
+    .header::before { content: ''; position: absolute; top: -50%; right: -20%; width: 300px; height: 300px; background: rgba(255,255,200,0.08); border-radius: 50%; }
+    .header-content { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px; position: relative; z-index: 2; }
+    .logo-area h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.5px; }
+    .logo-area p { font-size: 0.9rem; opacity: 0.9; margin-top: 6px; }
+    .meru-badge { background: rgba(255,255,240,0.2); backdrop-filter: blur(8px); padding: 8px 20px; border-radius: 60px; font-weight: 500; font-size: 0.9rem; }
+    .admin-secret-btn { background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 18px; border-radius: 60px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; backdrop-filter: blur(4px); }
+    .admin-secret-btn:hover { background: rgba(0,0,0,0.4); transform: scale(1.02); }
+    .business-tabs { display: flex; gap: 12px; margin: 32px 0 24px; flex-wrap: wrap; background: white; padding: 8px 16px; border-radius: 80px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    .tab-btn { background: transparent; border: none; padding: 12px 28px; font-weight: 600; font-size: 0.95rem; border-radius: 60px; cursor: pointer; color: #2c5a7a; transition: all 0.2s; }
+    .tab-btn.active { background: linear-gradient(135deg, #1b4f72, #2c7da0); color: white; box-shadow: 0 6px 14px rgba(27,79,114,0.3); }
+    .tab-pane { display: none; margin: 20px 0 40px; animation: fadeIn 0.3s ease; }
+    .tab-pane.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .dashboard-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-bottom: 32px; }
+    .stat-card { background: white; border-radius: 28px; padding: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); border-left: 5px solid #1b4f72; transition: transform 0.2s, box-shadow 0.2s; }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 16px 32px rgba(0,0,0,0.1); }
+    .stat-card h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: #2c7da0; margin-bottom: 12px; }
+    .stat-card .value { font-size: 2.2rem; font-weight: 800; color: #1e2a32; }
+    table { width: 100%; background: white; border-radius: 24px; overflow: hidden; border-collapse: collapse; margin: 16px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+    th, td { padding: 14px 18px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: #eef2f9; color: #1b4f72; font-weight: 600; }
+    .btn-sm { background: linear-gradient(135deg, #1b4f72, #2c7da0); border: none; padding: 8px 18px; border-radius: 40px; color: white; font-weight: 600; cursor: pointer; margin: 4px; transition: all 0.2s; font-size: 0.85rem; display: inline-block; text-align: center; }
+    .btn-sm:hover { transform: scale(1.02); filter: brightness(1.05); }
+    .btn-success { background: linear-gradient(135deg, #25D366, #128C7E); }
+    .btn-outline { background: white; border: 2px solid #1b4f72; color: #1b4f72; }
+    .btn-danger { background: linear-gradient(135deg, #dc3545, #c82333); }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); justify-content: center; align-items: center; z-index: 2000; }
+    .modal-card { background: white; max-width: 800px; width: 90%; border-radius: 40px; padding: 32px; position: relative; max-height: 85vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+    .form-group { margin-bottom: 20px; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 14px 18px; border-radius: 60px; border: 1.5px solid #cbd5e1; font-family: inherit; transition: 0.2s; }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: #1b4f72; box-shadow: 0 0 0 3px rgba(27,79,114,0.1); }
+    .form-group label { font-weight: 600; display: block; margin-bottom: 8px; color: #2c3e50; }
+    .service-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 32px; margin-top: 20px; }
+    .service-card { background: white; border-radius: 32px; overflow: hidden; box-shadow: 0 12px 28px rgba(0,0,0,0.08); transition: all 0.3s ease; display: flex; flex-direction: column; }
+    .service-card:hover { transform: translateY(-6px); box-shadow: 0 24px 40px rgba(0,0,0,0.12); }
+    .card-img { width: 100%; height: 200px; object-fit: cover; background: #e2e8f0; }
+    .card-body { padding: 24px; flex: 1; display: flex; flex-direction: column; }
+    .service-name { font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; color: #1e2a32; line-height: 1.3; }
+    .provider-name { color: #2c7da0; font-size: 0.9rem; font-weight: 500; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .service-price { font-size: 1.8rem; font-weight: 800; color: #1b4f72; margin: 12px 0 16px; }
+    .add-to-booking-btn { background: linear-gradient(135deg, #25D366, #128C7E); color: white; border: none; width: 100%; padding: 14px; border-radius: 60px; font-weight: 700; font-size: 1rem; cursor: pointer; margin-top: auto; transition: 0.2s; }
+    .add-to-booking-btn:hover { filter: brightness(1.05); transform: scale(1.02); }
+    .booking-badge { position: fixed; bottom: 100px; right: 28px; background: linear-gradient(135deg, #1b4f72, #2c7da0); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; color: white; cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.2); z-index: 900; transition: 0.2s; }
+    .booking-badge:hover { transform: scale(1.05); }
+    .booking-count { position: absolute; top: -5px; right: -5px; background: #dc3545; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    .float-wa { position: fixed; bottom: 28px; right: 28px; background: #25D366; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; color: white; z-index: 1000; text-decoration: none; box-shadow: 0 8px 16px rgba(0,0,0,0.2); transition: 0.2s; }
+    .float-wa:hover { transform: scale(1.08); }
+    .admin-pane { display: none; animation: fadeIn 0.2s ease; }
+    .active-admin-pane { display: block; }
+    .admin-subtab { background: #eef2f9; border: none; padding: 10px 24px; border-radius: 60px; margin: 4px; cursor: pointer; font-weight: 500; transition: 0.2s; }
+    .admin-subtab.active { background: #1b4f72; color: white; box-shadow: 0 4px 10px rgba(27,79,114,0.3); }
+    .badge-success { background: #d4edda; color: #155724; padding: 4px 12px; border-radius: 40px; font-size: 12px; font-weight: 600; display: inline-block; }
+    .badge-warning { background: #fff3cd; color: #856404; padding: 4px 12px; border-radius: 40px; font-size: 12px; }
+    .provider-card { background: white; border-radius: 28px; padding: 20px; margin: 16px 0; box-shadow: 0 6px 14px rgba(0,0,0,0.05); transition: 0.2s; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; }
+    .provider-info h3 { font-size: 1.3rem; color: #1b4f72; }
+    .service-badge { background: #eef2f9; padding: 4px 12px; border-radius: 40px; font-size: 12px; margin: 2px; display: inline-block; }
+    .photo-preview { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
+    @media (max-width: 768px) { .service-grid { grid-template-columns: 1fr; } .dashboard-stats { grid-template-columns: 1fr; } }
+    .sync-section { background: #eef2f9; border-radius: 24px; padding: 20px; margin: 20px 0; display: flex; gap: 20px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="container header-content">
+    <div class="logo-area"><h1><i class="fas fa-truck-moving"></i> MOVE & SHIELD</h1><p>Movers • Fumigation • Professional Service Hub</p></div>
+    <div class="meru-badge"><i class="fas fa-map-marker-alt"></i> Nationwide | Reliable</div>
+  </div>
+</header>
+
+<main class="container">
+  <div class="business-tabs">
+    <button class="tab-btn active" data-tab="customer">🚚 Book a Service</button>
+    <button class="tab-btn" data-tab="providers">🏢 Providers & Register</button>
+    <button id="secretAdminTrigger" class="admin-secret-btn"><i class="fas fa-crown"></i> Admin Portal</button>
+  </div>
+
+  <!-- CUSTOMER TAB - Service Booking -->
+  <div id="customerTab" class="tab-pane active">
+    <div class="filter-bar" style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
+      <div class="relative" style="flex:1;"><i class="fas fa-search" style="position: absolute; left: 20px; top: 16px; color:#1b4f72"></i>
+        <input type="text" id="customerSearch" placeholder="Search services or providers..." style="width:100%; padding:14px 20px 14px 48px; border-radius:60px; border:1px solid #cbd5e1;">
+      </div>
+      <select id="priceSort" style="padding:12px 20px; border-radius:60px; border:1px solid #cbd5e1;">
+        <option value="default">Sort: Featured</option>
+        <option value="low-high">Price: Low to High</option>
+        <option value="high-low">Price: High to Low</option>
+      </select>
+    </div>
+    <div id="providersFilterGrid" style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:24px;"></div>
+    <div id="customerServicesContainer" class="service-grid"></div>
+    <div class="info-banner" style="background:linear-gradient(135deg,#e6f4ea,#d1e7dd); padding:16px 24px; border-radius:28px; margin-top:28px;"><span><i class="fas fa-handshake"></i> No hidden fees — pay only for the service. Admin confirms bookings.</span></div>
+  </div>
+
+  <!-- PROVIDERS TAB - Directory & Registration -->
+  <div id="providersTab" class="tab-pane">
+    <div style="background: white; border-radius: 32px; padding: 28px; margin-bottom: 32px;">
+      <h2><i class="fas fa-building"></i> Register Your Moving / Fumigation Company</h2>
+      <p>Free registration. After approval, you can manage services via admin panel.</p>
+      <div class="form-group"><input type="text" id="newProviderNameReg" placeholder="Company Name *"></div>
+      <div class="form-group"><input type="text" id="newProviderPhoneReg" placeholder="Phone Number"></div>
+      <div class="form-group"><input type="text" id="newProviderAddressReg" placeholder="Service Area / Address"></div>
+      <button id="registerProviderPublicBtn" class="btn-sm btn-success"><i class="fas fa-plus-circle"></i> Register Company</button>
+      <div id="providerRegMessage" style="margin-top:12px;"></div>
+    </div>
+    <h2><i class="fas fa-store"></i> Trusted Service Providers</h2>
+    <div id="providersDirectoryContainer"></div>
+  </div>
+</main>
+
+<footer style="background:#1e2a32; color:#cbd5e1; text-align:center; padding:28px; margin-top:48px; border-radius:40px 40px 0 0;"><p><i class="fas fa-heart" style="color:#2c7da0"></i> Move & Shield — Professional Movers & Fumigation Experts</p></footer>
+<a href="https://wa.me/254746332443?text=Move%20%26%20Shield%20Inquiry" class="float-wa" target="_blank"><i class="fab fa-whatsapp"></i></a>
+<div class="booking-badge" id="cartIcon"><i class="fas fa-clipboard-list"></i><span id="bookingItemCount" class="booking-count">0</span></div>
+
+<!-- Admin Modal Auth -->
+<div id="adminModal" class="modal"><div class="modal-card"><h2 style="color:#1b4f72"><i class="fas fa-shield-alt"></i> Admin Authentication</h2><p>Enter secure password</p><div class="form-group"><input type="password" id="adminPassword" placeholder="••••••••"></div><button id="verifyAdminBtn" class="btn-sm">Access Dashboard</button><button id="closeAdminModal" class="btn-sm btn-outline">Cancel</button></div></div>
+
+<!-- Admin Dashboard Panel -->
+<div id="adminDashboardPanel" class="modal" style="z-index: 2100;"><div class="modal-card" style="max-width: 1300px; width: 95%; max-height: 90vh; overflow-y: auto;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;"><h2 style="color:#1b4f72"><i class="fas fa-chalkboard-user"></i> Admin Dashboard | Movers & Fumigation</h2><button id="closeAdminPanel" class="btn-sm btn-outline"><i class="fas fa-times"></i> Close</button></div><div id="adminStatsOverview" class="dashboard-stats"></div><div class="sync-section"><span><i class="fas fa-cloud-upload-alt"></i> <strong>Cross-Device Sync</strong> – Generate token to share data</span><div><button id="generateSyncToken" class="btn-sm btn-success"><i class="fas fa-key"></i> Generate Sync Token</button></div></div><div class="sync-section" style="background:#e9ecef;"><div style="flex:2;"><input type="text" id="syncTokenInput" placeholder="Paste sync token here" style="width:100%; padding:12px; border-radius:60px;"></div><button id="loadFromToken" class="btn-sm"><i class="fas fa-sync-alt"></i> Load from Token</button><button id="clearLocalToken" class="btn-sm btn-outline"><i class="fas fa-trash"></i> Clear Saved Token</button></div><div class="chart-container"><canvas id="revenueChart" style="max-height: 300px;"></canvas></div><div class="business-tabs" style="background:#f8f3ed; padding: 8px; margin-bottom: 24px;" id="adminSubtabContainer">
+    <button class="admin-subtab active" data-admin="provider-reg">🏢 Manage Providers</button>
+    <button class="admin-subtab" data-admin="provider-sales">📊 Provider Analytics</button>
+    <button class="admin-subtab" data-admin="service-manager">🛠️ Manage Services</button>
+    <button class="admin-subtab" data-admin="all-bookings">📋 All Bookings</button>
+  </div><div id="adminProviderReg" class="admin-pane active-admin-pane"></div><div id="adminProviderSales" class="admin-pane"></div><div id="adminServiceManager" class="admin-pane"></div><div id="adminAllBookings" class="admin-pane"></div></div></div>
+
+<script>
+  // Data models: providers, bookings, transactions
+  let providers = JSON.parse(localStorage.getItem('move_providers_v2') || '[]');
+  let bookings = JSON.parse(localStorage.getItem('move_bookings_v2') || '[]');
+  let transactions = JSON.parse(localStorage.getItem('move_transactions_v2') || '[]');
+  const COMMISSION_RATE = 0.12;
+  const ADMIN_WHATSAPP = "254746332443";
+  let bookingCart = []; // { serviceName, price, provider, quantity, image? }
+  let revenueChart = null;
+
+  function saveAll() { 
+    localStorage.setItem('move_providers_v2', JSON.stringify(providers));
+    localStorage.setItem('move_bookings_v2', JSON.stringify(bookings));
+    localStorage.setItem('move_transactions_v2', JSON.stringify(transactions));
+  }
+
+  function addTransaction(type, description, amount, reference) { 
+    transactions.unshift({ id: Date.now()+Math.random(), type, description, amount, reference, date: new Date().toLocaleString() }); 
+    saveAll(); 
+  }
+
+  // ----- Sync token logic -----
+  function generateSyncToken() {
+    const data = { providers, bookings, transactions };
+    return btoa(encodeURIComponent(JSON.stringify(data)));
+  }
+  function loadFromToken(token) {
+    try {
+      const data = JSON.parse(decodeURIComponent(atob(token)));
+      if (data.providers) providers = data.providers;
+      if (data.bookings) bookings = data.bookings;
+      if (data.transactions) transactions = data.transactions;
+      saveAll();
+      renderAllUI();
+      alert("Data loaded successfully!");
+      return true;
+    } catch(err) { alert("Invalid token."); return false; }
+  }
+
+  // Sample initial data with IMAGES for services
+  if(providers.length === 0){
+    providers.push({ id: 101, name: "Swift Movers Kenya", phone: "0712345678", address: "Nairobi & Meru", services: [
+      { name: "Local Move (1-2BR)", price: 3800, category: "moving", image: "https://images.unsplash.com/photo-1604335399105-a0c585fd81a1?w=400&h=200&fit=crop" },
+      { name: "Long Distance Move", price: 8900, category: "moving", image: "https://images.unsplash.com/photo-1530124566583-a618b261f50a?w=400&h=200&fit=crop" },
+      { name: "Premium Packing Service", price: 2500, category: "moving", image: "https://images.unsplash.com/photo-1580839975350-95a10f1d2275?w=400&h=200&fit=crop" }
+    ]});
+    providers.push({ id: 102, name: "Shield Fumigation Experts", phone: "0722889900", address: "Nationwide", services: [
+      { name: "Residential Fumigation", price: 4200, category: "fumigation", image: "https://images.unsplash.com/photo-1585418727183-6c5bf1b0c6c8?w=400&h=200&fit=crop" },
+      { name: "Commercial Fumigation", price: 8500, category: "fumigation", image: "https://images.unsplash.com/photo-1578849278619-e73505e9610f?w=400&h=200&fit=crop" },
+      { name: "Termite Control Treatment", price: 5900, category: "fumigation", image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&h=200&fit=crop" }
+    ]});
+    saveAll();
+  }
+
+  function renderAllUI() {
+    renderProviderFilters();
+    renderCustomerServices();
+    renderProvidersDirectory();
+    if(document.getElementById('adminAllBookings')) renderAdminAllBookings();
+    if(document.getElementById('adminProviderSales')) renderAdminProviderSales();
+    if(document.getElementById('adminServiceManager')) renderAdminServiceManager();
+    if(document.getElementById('adminProviderReg')) renderAdminProviderReg();
+    updateAdminStats();
+  }
+
+  // PROVIDERS DIRECTORY (public)
+  function renderProvidersDirectory() {
+    const container = document.getElementById('providersDirectoryContainer');
+    if(!container) return;
+    if(providers.length === 0) { container.innerHTML = '<p>No service providers yet. Register yours!</p>'; return; }
+    let html = '';
+    providers.forEach(p => {
+      html += `<div class="provider-card"><div class="provider-info"><h3><i class="fas fa-building"></i> ${p.name}</h3><p><i class="fas fa-phone"></i> ${p.phone || '—'} &nbsp; <i class="fas fa-location-dot"></i> ${p.address || 'Kenya'}</p><div><strong>🛠️ Services:</strong> ${p.services?.length ? p.services.slice(0,3).map(s=>`<span class="service-badge">${s.name} (KSh ${s.price})</span>`).join(' ') : 'No services added'}</div></div></div>`;
+    });
+    container.innerHTML = html;
+  }
+
+  function registerPublicProvider(name, phone, address) {
+    if(!name.trim()) return alert("Company name required");
+    if(providers.some(p => p.name.toLowerCase() === name.toLowerCase())) return alert("Company already registered.");
+    providers.push({ id: Date.now(), name, phone, address, services: [] });
+    saveAll();
+    renderProviderFilters();
+    renderCustomerServices();
+    renderProvidersDirectory();
+    renderAdminProviderReg();
+    document.getElementById('providerRegMessage').innerHTML = '<span style="color:green">✅ Company registered! Admin will manage services.</span>';
+    setTimeout(()=>document.getElementById('providerRegMessage').innerHTML='', 4000);
+    document.getElementById('newProviderNameReg').value = '';
+    document.getElementById('newProviderPhoneReg').value = '';
+    document.getElementById('newProviderAddressReg').value = '';
+  }
+
+  // CUSTOMER SERVICE RENDERING (with images)
+  let activeProviderFilter = null;
+  function renderCustomerServices() {
+    let allServices = [];
+    providers.forEach(provider => {
+      provider.services?.forEach(service => {
+        allServices.push({ ...service, providerName: provider.name, providerId: provider.id, image: service.image || null });
+      });
+    });
+    const term = document.getElementById('customerSearch')?.value.toLowerCase() || '';
+    let filtered = allServices.filter(s => s.name.toLowerCase().includes(term) || s.providerName.toLowerCase().includes(term));
+    if(activeProviderFilter) filtered = filtered.filter(s => s.providerName === activeProviderFilter);
+    const sort = document.getElementById('priceSort')?.value;
+    if(sort === 'low-high') filtered.sort((a,b)=>a.price-b.price);
+    else if(sort === 'high-low') filtered.sort((a,b)=>b.price-a.price);
+    const container = document.getElementById('customerServicesContainer');
+    container.innerHTML = filtered.length ? filtered.map(service => `
+      <div class="service-card">
+        <img class="card-img" src="${service.image || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=200&fit=crop'}" onerror="this.src='https://placehold.co/400x200/1b4f72/white?text=Service'">
+        <div class="card-body">
+          <div class="service-name">${service.name}</div>
+          <div class="provider-name"><i class="fas fa-truck"></i> ${service.providerName}</div>
+          <div class="service-price">KSh ${service.price}</div>
+          <button class="add-to-booking-btn" data-name="${service.name}" data-price="${service.price}" data-provider="${service.providerName}" data-img="${service.image || ''}"><i class="fas fa-cart-plus"></i> Book Now</button>
+        </div>
+      </div>
+    `).join('') : '<div style="text-align:center; padding:40px">No services found</div>';
+    attachBookingEvents();
+  }
+  function attachBookingEvents() {
+    document.querySelectorAll('.add-to-booking-btn').forEach(btn => {
+      btn.removeEventListener('click', window.bookingHandler);
+      const handler = () => {
+        const name = btn.dataset.name, price = parseInt(btn.dataset.price), provider = btn.dataset.provider;
+        const existing = bookingCart.find(i => i.serviceName === name && i.provider === provider);
+        if(existing) existing.quantity++;
+        else bookingCart.push({ serviceName: name, price, provider, quantity: 1 });
+        updateBookingUI();
+        btn.innerHTML = '<i class="fas fa-check"></i> Added!';
+        setTimeout(() => btn.innerHTML = '<i class="fas fa-cart-plus"></i> Book Now', 1000);
+      };
+      btn.addEventListener('click', handler);
+      window.bookingHandler = handler;
+    });
+  }
+  function renderProviderFilters() {
+    const grid = document.getElementById('providersFilterGrid');
+    if(!grid) return;
+    let html = `<div class="provider-chip ${!activeProviderFilter ? 'active' : ''}" data-provider="" style="padding:8px 20px; background:${!activeProviderFilter ? '#1b4f72' : 'white'}; color:${!activeProviderFilter ? 'white' : '#2c5a7a'}; border-radius:40px; cursor:pointer;">All Providers</div>`;
+    providers.forEach(p => {
+      html += `<div class="provider-chip ${activeProviderFilter === p.name ? 'active' : ''}" data-provider="${p.name}" style="padding:8px 20px; background:${activeProviderFilter === p.name ? '#1b4f72' : 'white'}; color:${activeProviderFilter === p.name ? 'white' : '#2c5a7a'}; border-radius:40px; cursor:pointer;">${p.name}</div>`;
+    });
+    grid.innerHTML = html;
+    document.querySelectorAll('.provider-chip').forEach(chip => chip.addEventListener('click', () => {
+      activeProviderFilter = chip.dataset.provider || null;
+      renderProviderFilters();
+      renderCustomerServices();
+    }));
+  }
+  function updateBookingUI() { document.getElementById('bookingItemCount').innerText = bookingCart.reduce((s,i)=>s+i.quantity,0); }
+
+  function showBookingModal() {
+    if(bookingCart.length === 0) return alert("Booking cart empty.");
+    const modalDiv = document.createElement('div'); modalDiv.className = 'modal'; modalDiv.id = 'bookingModal';
+    const subtotal = bookingCart.reduce((s,i)=>s+(i.price*i.quantity),0);
+    modalDiv.innerHTML = `<div class="modal-card"><h3>Your Service Booking</h3>${bookingCart.map(i=>`<div style="display:flex; justify-content:space-between; padding:8px 0;"><span>${i.quantity}x ${i.serviceName} (${i.provider})</span><span>KSh ${i.price*i.quantity}</span></div>`).join('')}<hr/><div class="form-group"><input id="custNameBook" placeholder="Full Name" required></div><div class="form-group"><input id="custPhoneBook" placeholder="Phone Number" required></div><div class="form-group"><input id="custAddressBook" placeholder="Service Address / Location" required></div><div class="form-group"><input type="date" id="serviceDateBook" required></div><div class="form-group"><textarea id="extraNotes" placeholder="Special requests (e.g., fumigation area size, moving floors)"></textarea></div><p><strong>Total Service Cost:</strong> KSh ${subtotal}<br><small>No extra fees — secure booking</small></p><button id="confirmBookingBtn" class="btn-sm">Confirm Booking</button><button id="closeBookingModal" class="btn-sm btn-outline">Continue Shopping</button></div>`;
+    document.body.appendChild(modalDiv); modalDiv.style.display = 'flex';
+    document.getElementById('confirmBookingBtn').onclick = () => {
+      const name = document.getElementById('custNameBook').value, phone = document.getElementById('custPhoneBook').value, address = document.getElementById('custAddressBook').value, serviceDate = document.getElementById('serviceDateBook').value;
+      if(!name || !phone || !address || !serviceDate) return alert("Please fill all required fields (including date)");
+      const commissionAmount = Math.floor(subtotal * COMMISSION_RATE);
+      const bookingItems = bookingCart.map(c => ({ serviceName: c.serviceName, quantity: c.quantity, price: c.price, provider: c.provider }));
+      const newBooking = { id: Date.now(), customerName: name, customerPhone: phone, customerAddress: address, serviceDate, extraNotes: document.getElementById('extraNotes').value, items: bookingItems, totalAmount: subtotal, commission: commissionAmount, status: 'pending', createdAt: new Date().toLocaleString() };
+      bookings.unshift(newBooking);
+      addTransaction('booking_payment', `Booking from ${name}`, subtotal, `Booking #${newBooking.id}`);
+      addTransaction('commission', `Commission Booking #${newBooking.id}`, commissionAmount, `Services: ${bookingItems.length}`);
+      saveAll();
+      window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=🔔 NEW BOOKING #${newBooking.id}%0AName: ${name}%0ATotal: KSh ${subtotal}%0ADate: ${serviceDate}`, '_blank');
+      alert(`✅ Booking confirmed! ID: #${newBooking.id}\nTotal: KSh ${subtotal}\nWe'll contact you soon.`);
+      bookingCart = []; updateBookingUI(); modalDiv.remove();
+      renderCustomerServices();
+      if(document.getElementById('adminAllBookings')) renderAdminAllBookings();
+      updateAdminStats();
+    };
+    document.getElementById('closeBookingModal').onclick = () => modalDiv.remove();
+  }
+  document.getElementById('cartIcon')?.addEventListener('click', showBookingModal);
+
+  // ---------- ADMIN PANEL FUNCTIONS ----------
+  function renderAdminProviderReg() {
+    const container = document.getElementById('adminProviderReg'); if(!container) return;
+    container.innerHTML = `<h3>🏢 Manage Service Providers</h3><div id="providerListAdmin"></div><hr/><h4>Add New Provider (Admin)</h4><div class="form-group"><input id="newProviderNameAdmin" placeholder="Company Name"></div><div class="form-group"><input id="newProviderPhoneAdmin" placeholder="Phone"></div><div class="form-group"><input id="newProviderAddressAdmin" placeholder="Address"></div><button id="addProviderAdminBtn" class="btn-sm">Create Company</button>`;
+    const refreshList = () => {
+      const listDiv = document.getElementById('providerListAdmin');
+      if(listDiv) listDiv.innerHTML = providers.map(p => `<div style="background:#f1f5f9; border-radius:20px; margin:10px 0; padding:15px;"><b>${p.name}</b> | ${p.phone || '-'} | ${p.address || '-'}<br><button onclick="window.editProviderFn(${p.id})" class="btn-sm">Edit</button> <button onclick="window.deleteProviderFn(${p.id})" class="btn-sm btn-danger">Delete</button></div>`).join('');
+    };
+    window.editProviderFn = (id) => { const p = providers.find(p=>p.id===id); if(p){ const newName=prompt("New name",p.name); if(newName){ p.name=newName; p.phone=prompt("Phone",p.phone); p.address=prompt("Address",p.address); saveAll(); refreshList(); renderAllUI(); } } };
+    window.deleteProviderFn = (id) => { if(confirm("Delete provider & all services?")){ providers = providers.filter(p=>p.id!==id); saveAll(); refreshList(); renderAllUI(); } };
+    document.getElementById('addProviderAdminBtn')?.addEventListener('click', () => {
+      const name = document.getElementById('newProviderNameAdmin').value; if(!name) return;
+      providers.push({ id: Date.now(), name, phone: document.getElementById('newProviderPhoneAdmin').value, address: document.getElementById('newProviderAddressAdmin').value, services: [] });
+      saveAll(); refreshList(); renderAllUI();
+    });
+    refreshList();
+  }
+
+  function renderAdminProviderSales() {
+    const container = document.getElementById('adminProviderSales'); if(!container) return;
+    const providerStats = {};
+    providers.forEach(p => { providerStats[p.name] = { revenue: 0, commission: 0, bookings: 0 }; });
+    bookings.forEach(b => {
+      if(b.status !== 'delivered' && b.status !== 'completed') return; // only completed bookings
+      const uniqueProviders = [...new Set(b.items.map(i => i.provider))];
+      uniqueProviders.forEach(provName => {
+        const provItems = b.items.filter(i => i.provider === provName);
+        const provSubtotal = provItems.reduce((sum,i) => sum + (i.price * i.quantity), 0);
+        const provCommission = Math.floor(provSubtotal * COMMISSION_RATE);
+        if(providerStats[provName]) { providerStats[provName].revenue += provSubtotal; providerStats[provName].commission += provCommission; providerStats[provName].bookings += 1; }
+        else providerStats[provName] = { revenue: provSubtotal, commission: provCommission, bookings: 1 };
+      });
+    });
+    let html = `<h3>📊 Provider Performance (Completed Bookings)</h3><table><thead><tr><th>Provider</th><th>Revenue (KSh)</th><th>Admin Commission (12%)</th><th>Bookings</th></tr></thead><tbody>`;
+    for(let prov in providerStats) html += `<tr><td>${prov}</td><td>KSh ${providerStats[prov].revenue}</td><td>KSh ${providerStats[prov].commission}</td><td>${providerStats[prov].bookings}</td></tr>`;
+    html += `</tbody></table><canvas id="providerSalesChart" style="max-height:300px; margin-top:20px;"></canvas>`;
+    container.innerHTML = html;
+    const ctx = document.getElementById('providerSalesChart')?.getContext('2d');
+    if(ctx && Object.keys(providerStats).length) new Chart(ctx, { type: 'bar', data: { labels: Object.keys(providerStats), datasets: [{ label: 'Total Revenue (KSh)', data: Object.values(providerStats).map(v=>v.revenue), backgroundColor: '#1b4f72', borderRadius: 8 }] }, options: { responsive: true } });
+  }
+
+  function renderAdminServiceManager() {
+    const container = document.getElementById('adminServiceManager'); if(!container) return;
+    container.innerHTML = `<h3>🛠️ Manage Services (Movers & Fumigation)</h3><select id="serviceProviderSelect"><option value="">-- Select Provider --</option>${providers.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}</select><div id="serviceManagerContent"></div>`;
+    const providerSelect = document.getElementById('serviceProviderSelect');
+    providerSelect.addEventListener('change', () => {
+      const providerId = parseInt(providerSelect.value); const provider = providers.find(p => p.id === providerId);
+      if(!provider) { document.getElementById('serviceManagerContent').innerHTML = ''; return; }
+      let servicesHtml = `<h4>Services from ${provider.name}</h4><div id="servicesListAdmin">`;
+      if(provider.services?.length) provider.services.forEach((s, idx) => {
+        servicesHtml += `<div style="background:#f8fafc; border-radius:24px; padding:16px; margin:12px 0; display:flex; gap:16px; align-items:center;"><img src="${s.image || 'https://placehold.co/60x60/1b4f72/white?text=Service'}" style="width:60px;height:60px;border-radius:12px;object-fit:cover;"><div><strong>${s.name}</strong><br>KSh ${s.price}</div><div style="margin-left:auto;"><button class="btn-sm edit-service-btn" data-provider="${provider.id}" data-idx="${idx}">Edit</button><button class="btn-sm btn-danger delete-service-btn" data-provider="${provider.id}" data-idx="${idx}">Delete</button></div></div>`;
+      }); else servicesHtml += `<p>No services yet.</p>`;
+      servicesHtml += `</div><hr/><h4>Add New Service (with Image)</h4><div class="form-group"><input id="newServiceName" placeholder="Service Name (e.g., Residential Fumigation)"></div><div class="form-group"><input id="newServicePrice" placeholder="Price (KSh)" type="number"></div><div class="form-group"><select id="newServiceCategory"><option value="moving">Moving</option><option value="fumigation">Fumigation</option></select></div><div class="form-group"><label>Service Image</label><input type="file" id="newServiceImage" accept="image/*"></div><button id="addServiceToProviderBtn" class="btn-sm">Add Service</button>`;
+      document.getElementById('serviceManagerContent').innerHTML = servicesHtml;
+      document.getElementById('addServiceToProviderBtn')?.addEventListener('click', () => {
+        const name = document.getElementById('newServiceName').value.trim(); const price = parseInt(document.getElementById('newServicePrice').value); const category = document.getElementById('newServiceCategory').value; const imgFile = document.getElementById('newServiceImage').files[0];
+        if(!name || isNaN(price)) return alert("Valid name & price");
+        const addSvc = (imgData) => { provider.services = provider.services || []; provider.services.push({ name, price, category, image: imgData || null }); saveAll(); renderAdminServiceManager(); renderCustomerServices(); alert("Service added!"); };
+        if(imgFile) { const reader = new FileReader(); reader.onload = (ev) => addSvc(ev.target.result); reader.readAsDataURL(imgFile); } else addSvc(null);
+      });
+      document.querySelectorAll('.edit-service-btn, .delete-service-btn').forEach(btn => {
+        btn.onclick = () => { const pId = parseInt(btn.dataset.provider), idx = parseInt(btn.dataset.idx), prov = providers.find(p=>p.id===pId); if(btn.classList.contains('edit-service-btn') && prov?.services[idx]) { const svc = prov.services[idx]; const newName=prompt("Name",svc.name); const newPrice=prompt("Price",svc.price); if(newName && newPrice){ svc.name=newName; svc.price=parseInt(newPrice); saveAll(); renderAdminServiceManager(); renderCustomerServices(); } } else if(btn.classList.contains('delete-service-btn') && prov && confirm("Delete service?")){ prov.services.splice(idx,1); saveAll(); renderAdminServiceManager(); renderCustomerServices(); } };
+      });
+    });
+    providerSelect.dispatchEvent(new Event('change'));
+  }
+
+  function renderAdminAllBookings() {
+    const pane = document.getElementById('adminAllBookings'); if(!pane) return;
+    if(bookings.length === 0) { pane.innerHTML = `<h3>📋 All Bookings</h3><p>No bookings yet.</p>`; return; }
+    let html = `<h3>📋 All Service Bookings</h3><table><thead><tr><th>ID</th><th>Customer</th><th>Services</th><th>Total (KSh)</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>`;
+    bookings.forEach(b => {
+      html += `<tr><td>#${b.id}</td><td>${b.customerName}<br><small>${b.customerPhone}</small><br>${b.customerAddress}</td><td><small>${b.items.map(i=>`${i.quantity}x ${i.serviceName}`).join(', ')}</small><br>📅 ${b.serviceDate || '—'}</td><td>KSh ${b.totalAmount}</td><td><span class="badge-${b.status==='completed'?'success':'warning'}">${b.status}</span></td><td>${b.createdAt}</td><td><button class="btn-sm edit-booking-btn" data-id="${b.id}">✏️ Edit</button> <button class="btn-sm btn-danger delete-booking-btn" data-id="${b.id}">🗑 Delete</button> ${b.status !== 'completed' ? `<button class="btn-sm mark-complete-btn" data-id="${b.id}">✅ Complete</button>` : ''}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+    pane.innerHTML = html;
+    document.querySelectorAll('.mark-complete-btn').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.dataset.id); const b = bookings.find(b=>b.id===id); if(b && b.status !== 'completed'){ b.status = 'completed'; saveAll(); renderAdminAllBookings(); renderAdminProviderSales(); updateAdminStats(); alert("Booking marked completed"); } }));
+    document.querySelectorAll('.edit-booking-btn').forEach(btn => btn.addEventListener('click', () => { const id = parseInt(btn.dataset.id); const b = bookings.find(b=>b.id===id); if(b){ const newName=prompt("Customer Name",b.customerName); if(newName) { b.customerName=newName; b.customerPhone=prompt("Phone",b.customerPhone); b.customerAddress=prompt("Address",b.customerAddress); saveAll(); renderAdminAllBookings(); } } }));
+    document.querySelectorAll('.delete-booking-btn').forEach(btn => btn.addEventListener('click', () => { if(confirm("Delete booking permanently?")){ bookings = bookings.filter(b=>b.id !== parseInt(btn.dataset.id)); saveAll(); renderAdminAllBookings(); renderAdminProviderSales(); updateAdminStats(); } }));
+  }
+
+  function updateAdminStats() {
+    const totalCommission = bookings.filter(b => b.status === 'completed').reduce((sum, b) => sum + (b.commission || 0), 0);
+    document.getElementById('adminStatsOverview').innerHTML = `<div class="stat-card"><h3>💰 Total Commission Earned</h3><div class="value">KSh ${totalCommission}</div></div><div class="stat-card"><h3>📦 Completed Bookings</h3><div class="value">${bookings.filter(b=>b.status==='completed').length}</div></div><div class="stat-card"><h3>🏢 Providers</h3><div class="value">${providers.length}</div></div>`;
+    const weeklyData = [0,0,0,0]; const now = new Date(); bookings.filter(b=>b.status==='completed').forEach(b=>{ const diffDays=(now - new Date(b.createdAt))/(1000*60*60*24); if(diffDays<=7) weeklyData[3]+=(b.commission||0); else if(diffDays<=14) weeklyData[2]+=(b.commission||0); else if(diffDays<=21) weeklyData[1]+=(b.commission||0); else weeklyData[0]+=(b.commission||0); });
+    if(revenueChart) { revenueChart.data.datasets[0].data=weeklyData; revenueChart.update(); } else { const ctx=document.getElementById('revenueChart')?.getContext('2d'); if(ctx) revenueChart=new Chart(ctx,{ type:'line', data:{ labels:['Week 4','Week 3','Week 2','Week 1'], datasets:[{ label:'Commission (KSh)', data:weeklyData, borderColor:'#1b4f72', tension:0.3, fill:true }] }, options:{ responsive:true } }); }
+  }
+
+  function initAdminDashboard() { updateAdminStats(); renderAdminProviderReg(); renderAdminProviderSales(); renderAdminServiceManager(); renderAdminAllBookings(); }
+
+  // Tabs & Auth
+  document.getElementById('secretAdminTrigger').onclick=()=>document.getElementById('adminModal').style.display='flex';
+  document.getElementById('closeAdminModal').onclick=()=>document.getElementById('adminModal').style.display='none';
+  document.getElementById('verifyAdminBtn').onclick=()=>{ if(document.getElementById('adminPassword').value==="move2025"){ document.getElementById('adminModal').style.display='none'; document.getElementById('adminDashboardPanel').style.display='flex'; initAdminDashboard(); } else alert("Incorrect password"); };
+  document.getElementById('closeAdminPanel').onclick=()=>document.getElementById('adminDashboardPanel').style.display='none';
+  document.getElementById('generateSyncToken').onclick = () => { const token = generateSyncToken(); prompt("Copy sync token:", token); localStorage.setItem('move_sync_token', token); };
+  document.getElementById('loadFromToken').onclick = () => { const token = document.getElementById('syncTokenInput').value.trim(); if(token) loadFromToken(token); };
+  document.getElementById('clearLocalToken').onclick = () => { localStorage.removeItem('move_sync_token'); alert("Cleared"); };
+  document.getElementById('registerProviderPublicBtn')?.addEventListener('click', () => { registerPublicProvider(document.getElementById('newProviderNameReg').value, document.getElementById('newProviderPhoneReg').value, document.getElementById('newProviderAddressReg').value); });
+  const mainTabs = document.querySelectorAll('.tab-btn');
+  mainTabs.forEach(btn => { btn.addEventListener('click', () => { const tabId = btn.dataset.tab; if(tabId === 'customer') { document.getElementById('customerTab').classList.add('active'); document.getElementById('providersTab').classList.remove('active'); } else if(tabId === 'providers') { document.getElementById('providersTab').classList.add('active'); document.getElementById('customerTab').classList.remove('active'); renderProvidersDirectory(); } mainTabs.forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }); });
+  const adminSubtabs = document.querySelectorAll('.admin-subtab');
+  function switchAdminPane(activeId){ document.querySelectorAll('.admin-pane').forEach(p=>p.classList.remove('active-admin-pane')); document.getElementById(activeId).classList.add('active-admin-pane'); adminSubtabs.forEach(t=>t.classList.remove('active')); const map={'provider-reg':'adminProviderReg','provider-sales':'adminProviderSales','service-manager':'adminServiceManager','all-bookings':'adminAllBookings'}; const tab=Array.from(adminSubtabs).find(t=>map[t.dataset.admin]===activeId); if(tab) tab.classList.add('active'); }
+  adminSubtabs.forEach(tab=>{ tab.addEventListener('click',()=>{ const map={'provider-reg':'adminProviderReg','provider-sales':'adminProviderSales','service-manager':'adminServiceManager','all-bookings':'adminAllBookings'}; const paneId=map[tab.dataset.admin]; if(paneId) switchAdminPane(paneId); }); });
+  document.getElementById('customerSearch')?.addEventListener('input', () => renderCustomerServices());
+  document.getElementById('priceSort')?.addEventListener('change', () => renderCustomerServices());
+  renderAllUI();
+  const savedToken = localStorage.getItem('move_sync_token');
+  if(savedToken && confirm("Load previously saved data from token?")) loadFromToken(savedToken);
+</script>
+</body>
+</html>

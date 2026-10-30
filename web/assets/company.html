@@ -1,0 +1,2226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForgeFlow · Manufacturing Operations Platform</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg-app:#f6f8fc;--bg-panel:#fff;--bg-sidebar:#0f1a2c;--bg-sidebar-hover:#1e2a3d;
+--bg-sidebar-active:#1e3a5f;--border-light:#e2e8f0;--border-medium:#cbd5e1;
+--text-primary:#0b1a2e;--text-secondary:#475569;--text-muted:#64748b;
+--text-sidebar:#b0c4de;--accent:#1e5f8e;--accent-light:#e6f0f9;--accent-hover:#154a6e;
+--success:#0b7b4b;--success-light:#e3f5ed;--warning:#b85e00;--warning-light:#fef3e0;
+--danger:#b91c1c;--danger-light:#fee2e2;--info:#1e6f9f;
+--shadow-sm:0 1px 2px rgba(0,0,0,.03),0 1px 3px rgba(0,0,0,.06);
+--shadow-md:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -2px rgba(0,0,0,.05);
+--shadow-lg:0 10px 15px -3px rgba(0,0,0,.08),0 4px 6px -4px rgba(0,0,0,.03);
+--radius-sm:8px;--radius-md:12px;--radius-lg:16px;
+--font-sans:'Inter',sans-serif;--font-mono:'Space Grotesk',monospace
+}
+body{font-family:var(--font-sans);background:var(--bg-app);color:var(--text-primary);line-height:1.5;overflow:hidden;height:100vh}
+.hidden{display:none!important}
+.flex{display:flex}.flex-col{flex-direction:column}.items-center{align-items:center}
+.justify-between{justify-content:space-between}.gap-1{gap:.5rem}.gap-2{gap:1rem}.gap-3{gap:1.5rem}
+.text-sm{font-size:.8rem}.text-xs{font-size:.7rem}.font-medium{font-weight:500}
+.font-semibold{font-weight:600}.font-bold{font-weight:700}.text-muted{color:var(--text-muted)}
+.text-success{color:var(--success)}.text-warning{color:var(--warning)}.text-danger{color:var(--danger)}
+.mt-1{margin-top:.5rem}.mt-2{margin-top:1rem}.mt-3{margin-top:1.5rem}
+.mb-1{margin-bottom:.5rem}.mb-2{margin-bottom:1rem}.mb-3{margin-bottom:1.5rem}
+.p-1{padding:.5rem}.p-2{padding:1rem}.p-3{padding:1.5rem}
+#loginScreen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+background:linear-gradient(145deg,#0f1a2c 0%,#1e3a5f 100%);z-index:1000}
+.login-card{background:rgba(255,255,255,.98);backdrop-filter:blur(10px);border-radius:var(--radius-lg);
+box-shadow:0 25px 50px -12px rgba(0,0,0,.5);width:100%;max-width:420px;padding:2.5rem 2rem}
+.login-logo{font-family:var(--font-mono);font-size:1.6rem;font-weight:700;letter-spacing:-.5px;
+color:var(--accent);display:flex;align-items:center;gap:.5rem;justify-content:center;margin-bottom:.25rem}
+.login-logo i{font-size:1.8rem}
+.login-sub{text-align:center;color:var(--text-muted);font-size:.85rem;margin-bottom:2rem}
+.login-tabs{display:flex;border-bottom:1px solid var(--border-light);margin-bottom:1.5rem}
+.login-tab{flex:1;padding:.75rem;text-align:center;font-weight:500;font-size:.9rem;
+color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:.15s}
+.login-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.login-form .form-group{margin-bottom:1.25rem}
+.login-form label{display:block;font-size:.8rem;font-weight:500;margin-bottom:.35rem;color:var(--text-secondary)}
+.login-form input,.login-form select{width:100%;padding:.7rem 1rem;border:1px solid var(--border-medium);
+border-radius:var(--radius-sm);font-family:var(--font-sans);font-size:.9rem}
+.login-form input:focus,.login-form select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(30,95,142,.15)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.65rem 1.25rem;
+border-radius:var(--radius-sm);font-weight:600;font-size:.85rem;border:1px solid transparent;
+cursor:pointer;transition:.15s;font-family:var(--font-sans);white-space:nowrap}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-secondary{background:#fff;color:var(--text-primary);border-color:var(--border-medium)}
+.btn-secondary:hover{background:#f1f5f9}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-danger:hover{background:#991b1b}
+.btn-success{background:var(--success);color:#fff}
+.btn-warning{background:var(--warning);color:#fff}
+.btn-sm{padding:.4rem .9rem;font-size:.75rem}
+.btn-full{width:100%}
+#appShell{display:flex;height:100vh;width:100vw;overflow:hidden}
+.sidebar{width:270px;background:var(--bg-sidebar);color:var(--text-sidebar);display:flex;
+flex-direction:column;flex-shrink:0;transition:transform .2s;height:100vh;overflow-y:auto;scrollbar-width:thin}
+.sidebar::-webkit-scrollbar{width:4px}.sidebar::-webkit-scrollbar-thumb{background:#2d3f56;border-radius:4px}
+.sidebar-header{padding:1.25rem 1.25rem .75rem;display:flex;align-items:center;gap:.6rem;
+border-bottom:1px solid rgba(255,255,255,.06)}
+.sidebar-header .logo{font-family:var(--font-mono);font-size:1.2rem;font-weight:700;color:#fff;
+letter-spacing:-.5px;display:flex;align-items:center;gap:.4rem}
+.sidebar-header .logo i{color:#6ea8d9;font-size:1.4rem}
+.sidebar-section{padding:.5rem .75rem .25rem}
+.sidebar-section-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:#5a6f8a;
+font-weight:600;padding:0 .75rem .4rem}
+.sidebar-nav-item{display:flex;align-items:center;gap:.75rem;padding:.55rem .75rem;
+border-radius:var(--radius-sm);cursor:pointer;font-size:.82rem;font-weight:500;
+color:var(--text-sidebar);transition:.12s;margin-bottom:1px}
+.sidebar-nav-item i{width:1.2rem;text-align:center;font-size:.9rem}
+.sidebar-nav-item:hover{background:var(--bg-sidebar-hover);color:#e2e8f0}
+.sidebar-nav-item.active{background:var(--bg-sidebar-active);color:#fff}
+.sidebar-nav-item .badge{margin-left:auto;background:var(--danger);color:#fff;font-size:.6rem;
+font-weight:700;padding:.15rem .5rem;border-radius:999px;min-width:1.2rem;text-align:center}
+.main-content{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{height:60px;background:var(--bg-panel);border-bottom:1px solid var(--border-light);
+display:flex;align-items:center;padding:0 1.25rem;gap:1rem;flex-shrink:0;box-shadow:var(--shadow-sm);z-index:10}
+.topbar-search{flex:1;max-width:400px;position:relative}
+.topbar-search input{width:100%;padding:.5rem .9rem .5rem 2.2rem;border:1px solid var(--border-light);
+border-radius:999px;font-size:.82rem;background:#f8fafc}
+.topbar-search input:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(30,95,142,.1)}
+.topbar-search i{position:absolute;left:.8rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:.8rem}
+.sync-status{display:flex;align-items:center;gap:.4rem;font-size:.7rem;font-weight:500;
+padding:.3rem .7rem;border-radius:999px;background:var(--success-light);color:var(--success)}
+.sync-status.offline{background:var(--warning-light);color:var(--warning)}
+.topbar-icon-btn{background:none;border:none;color:var(--text-secondary);font-size:1rem;
+cursor:pointer;padding:.4rem;border-radius:var(--radius-sm);position:relative}
+.topbar-icon-btn:hover{background:#f1f5f9;color:var(--text-primary)}
+.topbar-icon-btn .dot{position:absolute;top:2px;right:2px;width:8px;height:8px;
+background:var(--danger);border-radius:50%;border:2px solid #fff}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;
+display:flex;align-items:center;justify-content:center;font-weight:600;font-size:.75rem;cursor:pointer}
+.user-menu-wrap{position:relative}
+.user-dropdown{position:absolute;top:42px;right:0;background:#fff;border-radius:var(--radius-md);
+box-shadow:var(--shadow-lg);border:1px solid var(--border-light);min-width:200px;z-index:100;display:none}
+.user-dropdown.show{display:block}
+.user-dropdown-item{padding:.6rem 1rem;font-size:.8rem;cursor:pointer;
+display:flex;align-items:center;gap:.6rem}
+.user-dropdown-item:hover{background:#f1f5f9}
+.user-dropdown-item i{color:var(--text-muted);width:1rem}
+.content-area{flex:1;overflow-y:auto;padding:1.5rem;background:var(--bg-app)}
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem}
+.page-title{font-size:1.4rem;font-weight:700;letter-spacing:-.3px}
+.page-sub{font-size:.8rem;color:var(--text-muted)}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem}
+.kpi-card{background:var(--bg-panel);border-radius:var(--radius-md);padding:1rem 1.1rem;
+box-shadow:var(--shadow-sm);border:1px solid var(--border-light)}
+.kpi-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600}
+.kpi-value{font-size:1.4rem;font-weight:700;font-family:var(--font-mono)}
+.kpi-sub{font-size:.7rem;color:var(--text-muted)}
+.card{background:var(--bg-panel);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);
+border:1px solid var(--border-light);padding:1.25rem;margin-bottom:1.5rem}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.75rem}
+.card-title{font-size:.95rem;font-weight:600;display:flex;align-items:center;gap:.5rem}
+.card-title i{color:var(--accent)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.78rem}
+th{text-align:left;padding:.55rem .65rem;font-weight:600;color:var(--text-muted);
+border-bottom:1px solid var(--border-light);font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+td{padding:.55rem .65rem;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+tr:hover td{background:#f8fafc}
+.badge{display:inline-block;padding:.15rem .6rem;border-radius:999px;font-size:.65rem;font-weight:600;white-space:nowrap}
+.badge.success{background:var(--success-light);color:var(--success)}
+.badge.warning{background:var(--warning-light);color:var(--warning)}
+.badge.danger{background:var(--danger-light);color:var(--danger)}
+.badge.info{background:var(--accent-light);color:var(--accent)}
+.badge.neutral{background:#f1f5f9;color:var(--text-muted)}
+.modal-overlay{position:fixed;inset:0;background:rgba(15,26,44,.5);backdrop-filter:blur(3px);
+display:flex;align-items:center;justify-content:center;z-index:500;padding:1rem;
+opacity:0;pointer-events:none;transition:.15s}
+.modal-overlay.show{opacity:1;pointer-events:auto}
+.modal{background:#fff;border-radius:var(--radius-lg);max-width:750px;width:100%;
+max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-lg);transform:translateY(10px);transition:.2s}
+.modal-overlay.show .modal{transform:translateY(0)}
+.modal-header{padding:1.1rem 1.5rem;border-bottom:1px solid var(--border-light);
+display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:2}
+.modal-header h3{font-size:1rem;font-weight:700}
+.modal-close{background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--text-muted)}
+.modal-body{padding:1.5rem}
+.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border-light);
+display:flex;justify-content:flex-end;gap:.75rem;position:sticky;bottom:0;background:#fff}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem}
+.form-group{margin-bottom:.9rem}
+.form-group label{display:block;font-size:.72rem;font-weight:600;margin-bottom:.25rem;color:var(--text-secondary)}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:.5rem .7rem;
+border:1px solid var(--border-medium);border-radius:var(--radius-sm);font-family:var(--font-sans);font-size:.8rem}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;
+border-color:var(--accent);box-shadow:0 0 0 3px rgba(30,95,142,.1)}
+.form-group textarea{resize:vertical;min-height:60px}
+.form-group .hint{font-size:.65rem;color:var(--text-muted);margin-top:.15rem}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+.chart-container{position:relative;height:220px;width:100%}
+.insight-item{padding:.7rem;border-radius:var(--radius-sm);border-left:3px solid var(--accent);
+background:#f8fafc;margin-bottom:.5rem;font-size:.76rem}
+.insight-item .insight-title{font-weight:600;display:flex;justify-content:space-between}
+.insight-item .insight-desc{color:var(--text-muted);margin-top:.1rem}
+.activity-item{display:flex;gap:.75rem;padding:.45rem 0;border-bottom:1px solid #f1f5f9;font-size:.74rem}
+.activity-icon{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;
+justify-content:center;font-size:.65rem;flex-shrink:0;background:var(--accent-light);color:var(--accent)}
+.activity-time{color:var(--text-muted);font-size:.65rem}
+#toastContainer{position:fixed;bottom:1.5rem;right:1.5rem;z-index:2000;
+display:flex;flex-direction:column;gap:.5rem;align-items:flex-end}
+.toast{background:#1e293b;color:#fff;padding:.7rem 1.2rem;border-radius:var(--radius-sm);
+font-size:.8rem;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:.5rem;max-width:340px}
+.toast.success{background:var(--success)}.toast.warning{background:var(--warning)}
+.toast.danger{background:var(--danger)}
+.kanban{display:flex;gap:1rem;overflow-x:auto;padding-bottom:1rem}
+.kanban-col{min-width:220px;background:#f8fafc;border-radius:var(--radius-md);padding:.75rem}
+.kanban-col h4{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:.5rem}
+.kanban-card{background:#fff;border-radius:var(--radius-sm);padding:.6rem;margin-bottom:.5rem;
+box-shadow:var(--shadow-sm);border:1px solid var(--border-light);font-size:.75rem;cursor:pointer}
+.timeline{position:relative;padding-left:1.5rem}
+.timeline:before{content:'';position:absolute;left:.4rem;top:0;bottom:0;width:2px;background:var(--border-medium)}
+.timeline-item{position:relative;margin-bottom:.75rem;font-size:.78rem}
+.timeline-item:before{content:'';position:absolute;left:-1.25rem;top:.35rem;width:.6rem;height:.6rem;
+border-radius:50%;background:var(--accent);border:2px solid #fff;box-shadow:0 0 0 2px var(--accent)}
+@media (max-width:900px){
+.sidebar{position:fixed;z-index:50;transform:translateX(-100%)}
+.sidebar.open{transform:translateX(0)}
+.chart-grid{grid-template-columns:1fr}
+.form-row,.form-row-3{grid-template-columns:1fr}
+.kpi-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:480px){.kpi-grid{grid-template-columns:1fr}.content-area{padding:1rem}}
+.hamburger{display:none;background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text-secondary)}
+@media (max-width:900px){.hamburger{display:block}}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+<div class="login-card">
+<div class="login-logo"><i class="fas fa-industry"></i> ForgeFlow</div>
+<div class="login-sub">Manufacturing Operations Platform</div>
+<div class="login-tabs">
+<div class="login-tab active" data-tab="signin">Sign In</div>
+<div class="login-tab" data-tab="signup">Sign Up</div>
+</div>
+<form class="login-form" id="loginForm" autocomplete="off">
+<div class="form-group"><label>Email</label><input type="email" id="loginEmail" value="admin@forgeflow.io" required></div>
+<div class="form-group"><label>Password</label><input type="password" id="loginPassword" value="admin123" required></div>
+<div class="form-group"><label>Role</label><select id="loginRole">
+<option value="Admin">Admin</option><option value="Production Manager">Production Manager</option>
+<option value="Sales">Sales</option><option value="Warehouse">Warehouse</option>
+<option value="Finance">Finance</option><option value="Driver/Logistics">Driver/Logistics</option>
+<option value="Executive">Executive</option>
+</select></div>
+<button type="submit" class="btn btn-primary btn-full">Sign In</button>
+</form>
+<form class="login-form hidden" id="signupForm" autocomplete="off">
+<div class="form-group"><label>Full Name</label><input type="text" id="signupName"></div>
+<div class="form-group"><label>Email</label><input type="email" id="signupEmail"></div>
+<div class="form-group"><label>Password</label><input type="password" id="signupPassword"></div>
+<div class="form-group"><label>Role</label><select id="signupRole">
+<option>Admin</option><option>Production Manager</option><option>Sales</option>
+<option>Warehouse</option><option>Finance</option><option>Driver/Logistics</option><option>Executive</option>
+</select></div>
+<button type="submit" class="btn btn-primary btn-full">Create Account</button>
+</form>
+<div style="text-align:center;margin-top:1rem;font-size:.7rem;color:var(--text-muted)">
+<i class="fas fa-lock"></i> Demo credentials prefilled
+</div>
+</div>
+</div>
+
+<div id="appShell" class="hidden">
+<aside class="sidebar" id="sidebar">
+<div class="sidebar-header"><div class="logo"><i class="fas fa-industry"></i> ForgeFlow</div></div>
+<div class="sidebar-section"><div class="sidebar-section-label">Overview</div>
+<div class="sidebar-nav-item active" data-page="dashboard"><i class="fas fa-chart-pie"></i> Dashboard</div></div>
+<div class="sidebar-section"><div class="sidebar-section-label">Organization</div>
+<div class="sidebar-nav-item" data-page="identity"><i class="fas fa-building"></i> Org Identity</div></div>
+<div class="sidebar-section"><div class="sidebar-section-label">People / Customers</div>
+<div class="sidebar-nav-item" data-page="customers"><i class="fas fa-users"></i> Customers</div>
+
+<div class="sidebar-section"><div class="sidebar-section-label">Demand / Orders</div>
+<div class="sidebar-nav-item" data-page="orders"><i class="fas fa-file-invoice"></i> Orders</div>
+
+<div class="sidebar-section"><div class="sidebar-section-label">Sales / Procurement</div>
+<div class="sidebar-nav-item" data-page="sales"><i class="fas fa-chart-line"></i> Sales Pipeline</div>
+<div class="sidebar-nav-item" data-page="procurement"><i class="fas fa-shopping-cart"></i> Procurement</div>
+
+<div class="sidebar-section"><div class="sidebar-section-label">Resources / Inventory</div>
+<div class="sidebar-nav-item" data-page="inventory"><i class="fas fa-boxes"></i> Inventory <span class="badge danger" id="badgeLowStock">0</span></div>
+
+<div class="sidebar-section"><div class="sidebar-section-label">Production / Operations</div>
+<div class="sidebar-nav-item" data-page="production"><i class="fas fa-cogs"></i> Production</div>
+<div class="sidebar-nav-item" data-page="bom"><i class="fas fa-sitemap"></i> Bill of Materials</div>
+
+<div class="sidebar-section"><div class="sidebar-section-label">Workforce</div>
+<div class="sidebar-nav-item" data-page="workforce"><i class="fas fa-user-hard-hat"></i> Workforce</div></div>
+<div class="sidebar-section"><div class="sidebar-section-label">Logistics / Delivery</div>
+<div class="sidebar-nav-item" data-page="delivery"><i class="fas fa-truck"></i> Delivery</div></div>
+<div class="sidebar-section"><div class="sidebar-section-label">Finance</div>
+<div class="sidebar-nav-item" data-page="finance"><i class="fas fa-coins"></i> Finance</div>
+<div class="sidebar-nav-item" data-page="invoices"><i class="fas fa-file-invoice-dollar"></i> Invoices</div>
+<div class="sidebar-nav-item" data-page="financefields"><i class="fas fa-list"></i> Finance Fields</div></div>
+<div class="sidebar-section"><div class="sidebar-section-label">Documents / Data</div>
+<div class="sidebar-nav-item" data-page="documents"><i class="fas fa-folder-open"></i> Documents</div>
+<div class="sidebar-nav-item" data-page="communications"><i class="fas fa-comments"></i> Communications</div></div>
+<div class="sidebar-section"><div class="sidebar-section-label">Analytics</div>
+<div class="sidebar-nav-item" data-page="analytics"><i class="fas fa-chart-bar"></i> Analytics</div></div>
+<div class="sidebar-section"><div class="sidebar-section-label">Intelligence / AI</div>
+<div class="sidebar-nav-item" data-page="ai"><i class="fas fa-robot"></i> AI Insights</div>
+
+<div class="sidebar-section"><div class="sidebar-section-label">Orchestration</div>
+<div class="sidebar-nav-item" data-page="orchestration"><i class="fas fa-sitemap"></i> Orchestration</div>
+<div class="sidebar-nav-item" data-page="activity"><i class="fas fa-history"></i> Activity Log</div></div>
+<div class="sidebar-section" style="margin-top:auto;padding-bottom:1rem">
+<div class="sidebar-nav-item" data-page="settings"><i class="fas fa-cog"></i> Settings</div></div>
+</aside>
+
+<div class="main-content">
+<header class="topbar">
+<button class="hamburger" id="hamburgerBtn"><i class="fas fa-bars"></i></button>
+<div class="topbar-search"><i class="fas fa-search"></i><input type="text" id="globalSearch" placeholder="Search orders, customers, invoices..."></div>
+<div class="sync-status" id="syncStatus"><i class="fas fa-circle"></i> Online</div>
+<button class="topbar-icon-btn" id="notifBtn"><i class="fas fa-bell"></i><span class="dot"></span></button>
+<button class="topbar-icon-btn" id="themeToggle"><i class="fas fa-moon"></i></button>
+<div class="user-menu-wrap">
+<div class="user-avatar" id="userAvatar">AD</div>
+<div class="user-dropdown" id="userDropdown">
+<div class="user-dropdown-item" id="userNameDisplay"><i class="fas fa-user"></i> Admin</div>
+<div class="user-dropdown-item" id="userRoleDisplay"><i class="fas fa-badge"></i> Admin</div>
+<div class="user-dropdown-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sign Out</div>
+</div>
+</div>
+</header>
+<main class="content-area" id="contentArea"></main>
+</div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay"><div class="modal" id="modalContent"></div></div>
+<div id="toastContainer"></div>
+
+<script>
+/* ============================================================
+   DATA LAYER (isolated)
+   ============================================================ */
+const DB = (() => {
+    const KEY = 'forgeflow_db_v4';
+    function seed() {
+        const now = new Date();
+        const iso = (d) => d.toISOString().slice(0,19).replace('T',' ');
+        const daysAgo = (n) => new Date(now - n*86400000);
+        const daysFromNow = (n) => new Date(now.getTime() + n*86400000);
+
+        const identity = {
+            companyName:'ForgeFlow Manufacturing Inc.', legalName:'ForgeFlow Manufacturing Incorporated',
+            registrationNumber:'US-DE-7728193', taxId:'US-88-1234567', vatNumber:'VAT-88291-DE',
+            address:'1200 Industrial Parkway, Detroit, MI 48201', country:'United States',
+            phone:'+1 313 555 0100', email:'ops@forgeflow.io', website:'www.forgeflow.io',
+            industry:'Industrial Machinery & Components', foundedYear:1998, employeeCount:240,
+            fiscalYearStart:'01-01', currency:'USD', timezone:'America/Detroit',
+            logo:'fa-industry', brandColor:'#1e5f8e', primaryContact:'Robert Chen, CEO',
+            bankingDetails:'First Industrial Bank · Acct 8891-2234 · SWIFT FIBKUS33',
+            certifications:['ISO 9001:2015','ISO 14001','AS9100D'],
+            capacity:{ dailyUnits: 120, shiftsPerDay: 3, linesActive: 4 },
+            defaults:{ taxRate:10, paymentTerms:'Net 30', currency:'USD', leadTimeDays:14 }
+        };
+
+        const customers = [
+            { id:'CUST-001',
+              profile:{name:'Apex Automotive',legalName:'Apex Automotive LLC',industry:'Automotive OEM',since:'2018-03-12',tier:'Platinum',accountManager:'Alice Chen',website:'apexauto.com'},
+              contact:{primaryName:'John Mercer',primaryTitle:'Procurement Director',email:'j.mercer@apexauto.com',phone:'+1 555-0101',altContact:'Sarah Bell',altEmail:'s.bell@apexauto.com',altPhone:'+1 555-0102'},
+              location:{billingAddress:'1 Apex Way, Detroit, MI 48201',shippingAddress:'500 Assembly Dr, Detroit, MI 48202',region:'North America',country:'USA',city:'Detroit',postalCode:'48201',warehouse:'WH-Detroit'},
+              segment:'OEM',creditStatus:'Approved',creditLimit:250000,paymentTerms:'Net 30',
+              purchaseHistory:{totalOrders:42,totalValue:892000,lastOrderDate:'2026-02-10',avgOrderValue:21238,lifetimeValue:892000,returnsCount:2},
+              preferences:{preferredChannel:'Email',preferredPayment:'Bank Transfer',packaging:'Standard pallet',deliveryWindow:'08:00–12:00',notes:'Expedited shipping required for Q3 orders'} },
+            { id:'CUST-002',
+              profile:{name:'Nordic Steel Works',legalName:'Nordic Steel Works AS',industry:'Steel Fabrication',since:'2020-07-01',tier:'Gold',accountManager:'Bob Smith',website:'nordicsteel.no'},
+              contact:{primaryName:'Ingrid Larsen',primaryTitle:'Head of Purchasing',email:'ingrid@nordicsteel.no',phone:'+47 555 0202',altContact:'Lars Berg',altEmail:'lars@nordicsteel.no',altPhone:'+47 555 0203'},
+              location:{billingAddress:'Havnegata 12, Oslo 0150',shippingAddress:'Dock 4, Oslo Port',region:'Europe',country:'Norway',city:'Oslo',postalCode:'0150',warehouse:'WH-Oslo'},
+              segment:'Industrial',creditStatus:'Approved',creditLimit:180000,paymentTerms:'Net 45',
+              purchaseHistory:{totalOrders:28,totalValue:512000,lastOrderDate:'2026-01-22',avgOrderValue:18286,lifetimeValue:512000,returnsCount:1},
+              preferences:{preferredChannel:'Email',preferredPayment:'Bank Transfer',packaging:'Bulk container',deliveryWindow:'07:00–11:00',notes:'Bulk orders only · EPD documentation required'} },
+            { id:'CUST-003',
+              profile:{name:'Pacific Rim Electronics',legalName:'Pacific Rim Electronics KK',industry:'Electronics',since:'2019-11-15',tier:'Silver',accountManager:'Kenji Tanaka',website:'prelec.jp'},
+              contact:{primaryName:'Kenji Tanaka',primaryTitle:'Supply Chain Manager',email:'k.tanaka@prelec.jp',phone:'+81 555 0303',altContact:'Yuki Mori',altEmail:'y.mori@prelec.jp',altPhone:'+81 555 0304'},
+              location:{billingAddress:'2-4-1 Umeda, Osaka 530-0001',shippingAddress:'Osaka DC, Bay 7',region:'Asia-Pacific',country:'Japan',city:'Osaka',postalCode:'530-0001',warehouse:'WH-Osaka'},
+              segment:'Electronics',creditStatus:'On Hold',creditLimit:90000,paymentTerms:'Net 30',
+              purchaseHistory:{totalOrders:15,totalValue:198000,lastOrderDate:'2025-12-05',avgOrderValue:13200,lifetimeValue:198000,returnsCount:3},
+              preferences:{preferredChannel:'WhatsApp',preferredPayment:'Letter of Credit',packaging:'Anti-static wrap',deliveryWindow:'09:00–15:00',notes:'Quality certificates required per shipment'} },
+            { id:'CUST-004',
+              profile:{name:'Summit Construction',legalName:'Summit Construction Group',industry:'Construction',since:'2021-05-20',tier:'Bronze',accountManager:'Alice Chen',website:'summitbuild.com'},
+              contact:{primaryName:'Maria Gonzalez',primaryTitle:'Site Procurement Lead',email:'maria@summitbuild.com',phone:'+1 555-0404',altContact:'Tom Reyes',altEmail:'tom@summitbuild.com',altPhone:'+1 555-0405'},
+              location:{billingAddress:'880 Peak Ave, Denver, CO 80202',shippingAddress:'Job Site 14, Denver, CO 80210',region:'North America',country:'USA',city:'Denver',postalCode:'80202',warehouse:'WH-Denver'},
+              segment:'Construction',creditStatus:'Approved',creditLimit:120000,paymentTerms:'Net 45',
+              purchaseHistory:{totalOrders:9,totalValue:76000,lastOrderDate:'2026-02-01',avgOrderValue:8444,lifetimeValue:76000,returnsCount:0},
+              preferences:{preferredChannel:'SMS',preferredPayment:'Check',packaging:'Heavy-duty crate',deliveryWindow:'06:00–10:00',notes:'Net 45 terms · site delivery only'} },
+        ];
+
+        const boms = {
+            'FG-GBX-100':[
+                {itemId:'INV-001',qty:8.5,unit:'kg',name:'Cold Rolled Steel Sheet'},
+                {itemId:'INV-003',qty:12,unit:'pcs',name:'Hex Bolt M8x40'},
+                {itemId:'INV-004',qty:4,unit:'pcs',name:'Ball Bearing 6204'},
+                {itemId:'INV-007',qty:1.2,unit:'L',name:'Epoxy Paint Grey'},
+            ],
+            'FG-MTR-200':[
+                {itemId:'INV-002',qty:6.2,unit:'kg',name:'Aluminium Billet 6061'},
+                {itemId:'INV-003',qty:8,unit:'pcs',name:'Hex Bolt M8x40'},
+                {itemId:'INV-004',qty:2,unit:'pcs',name:'Ball Bearing 6204'},
+            ],
+        };
+
+        const inventory = [
+            {id:'INV-001',sku:'RM-STEEL-001',name:'Cold Rolled Steel Sheet',category:'Raw Material',type:'Raw Material',qty:1250,unit:'kg',warehouse:'WH-A',locationBin:'A-01-01',batch:'B2401',serialNumber:null,expiry:null,cost:2.40,reorderLevel:300,reserved:0},
+            {id:'INV-002',sku:'RM-ALU-002',name:'Aluminium Billet 6061',category:'Raw Material',type:'Raw Material',qty:820,unit:'kg',warehouse:'WH-A',locationBin:'A-02-03',batch:'B2402',serialNumber:null,expiry:null,cost:3.10,reorderLevel:200,reserved:0},
+            {id:'INV-003',sku:'CMP-BLT-010',name:'Hex Bolt M8x40',category:'Component',type:'Component',qty:4800,unit:'pcs',warehouse:'WH-B',locationBin:'B-03-12',batch:'B2403',serialNumber:null,expiry:null,cost:0.18,reorderLevel:1000,reserved:0},
+            {id:'INV-004',sku:'CMP-BRG-020',name:'Ball Bearing 6204',category:'Component',type:'Component',qty:320,unit:'pcs',warehouse:'WH-B',locationBin:'B-04-05',batch:'B2404',serialNumber:null,expiry:null,cost:4.20,reorderLevel:150,reserved:0},
+            {id:'INV-005',sku:'FG-GBX-100',name:'Industrial Gearbox GBX-100',category:'Finished Product',type:'Finished Product',qty:42,unit:'pcs',warehouse:'WH-C',locationBin:'C-01-01',batch:'FG2401',serialNumber:'SN-GBX-001..042',expiry:null,cost:340.00,reorderLevel:20,reserved:0},
+            {id:'INV-006',sku:'FG-MTR-200',name:'Electric Motor MTR-200',category:'Finished Product',type:'Finished Product',qty:18,unit:'pcs',warehouse:'WH-C',locationBin:'C-01-02',batch:'FG2402',serialNumber:'SN-MTR-001..018',expiry:null,cost:520.00,reorderLevel:15,reserved:0},
+            {id:'INV-007',sku:'RM-PAINT-005',name:'Epoxy Paint Grey',category:'Raw Material',type:'Raw Material',qty:85,unit:'L',warehouse:'WH-A',locationBin:'A-05-01',batch:'B2405',serialNumber:null,expiry:daysFromNow(25).toISOString().slice(0,10),cost:12.00,reorderLevel:30,reserved:0},
+        ];
+
+        const orders = [
+            {id:'ORD-2026-0001',customerId:'CUST-001',product:'FG-GBX-100',productName:'Industrial Gearbox GBX-100',qty:10,specification:'Standard · IP54',unitPrice:680,discount:0,taxRate:10,requiredDate:daysFromNow(14).toISOString().slice(0,10),priority:'High',status:'Confirmed',salesperson:'Alice Chen',createdAt:iso(daysAgo(3)),notes:'Rush order'},
+            {id:'ORD-2026-0002',customerId:'CUST-002',product:'FG-MTR-200',productName:'Electric Motor MTR-200',qty:5,specification:'IP55 · 15kW',unitPrice:890,discount:5,taxRate:25,requiredDate:daysFromNow(21).toISOString().slice(0,10),priority:'Medium',status:'Draft',salesperson:'Bob Smith',createdAt:iso(daysAgo(1)),notes:''},
+            {id:'ORD-2026-0003',customerId:'CUST-003',product:'FG-GBX-100',productName:'Industrial Gearbox GBX-100',qty:4,specification:'Custom ratio 3:1',unitPrice:720,discount:0,taxRate:10,requiredDate:daysFromNow(30).toISOString().slice(0,10),priority:'Low',status:'In Production',salesperson:'Kenji Tanaka',createdAt:iso(daysAgo(6)),notes:'Custom spec'},
+        ];
+
+        const productionOrders = [
+            {id:'PRD-2026-0001',orderId:'ORD-2026-0003',product:'FG-GBX-100',productName:'Industrial Gearbox GBX-100',qtyPlanned:4,qtyProduced:2,bom:boms['FG-GBX-100'],materialsRequired:4,machine:'CNC-01',line:'Line A',workerTeam:'Alpha Team',startTime:iso(daysAgo(2)),endTime:null,stage:'In Progress',qualityResult:'Pass',wastePct:2.1,downtimeMin:45,status:'Active'},
+            {id:'PRD-2026-0002',orderId:'ORD-2026-0001',product:'FG-GBX-100',productName:'Industrial Gearbox GBX-100',qtyPlanned:10,qtyProduced:0,bom:boms['FG-GBX-100'],materialsRequired:10,machine:'CNC-02',line:'Line A',workerTeam:'Bravo Team',startTime:null,endTime:null,stage:'Queued',qualityResult:null,wastePct:null,downtimeMin:0,status:'Planned'},
+        ];
+
+        const deliveries = [
+            {id:'DEL-2026-0001',orderId:'ORD-2026-0001',customerId:'CUST-001',items:'FG-GBX-100 x10',qty:10,vehicle:'TRK-101',driver:'Mike Ross',route:'Detroit Loop',dispatchTime:iso(daysAgo(1)),eta:iso(daysFromNow(1)),actualDelivery:null,pod:null,failureReason:null,status:'In Transit'},
+        ];
+
+        const workforce = [
+            {id:'EMP-001',name:'Carlos Mendez',position:'Machine Operator',department:'Production',skills:'CNC, Lathe, Milling',shift:'Morning',attendance:'Present',hoursWorked:38,overtime:4,productivity:94,safetyIncidents:0,training:'Advanced CNC',performance:'Exceeds'},
+            {id:'EMP-002',name:'Aisha Khan',position:'Quality Inspector',department:'QC',skills:'Calibration, CMM, Metrology',shift:'Morning',attendance:'Present',hoursWorked:40,overtime:0,productivity:98,safetyIncidents:0,training:'ISO 9001',performance:'Exceeds'},
+            {id:'EMP-003',name:'Dmitri Volkov',position:'Welder',department:'Production',skills:'MIG, TIG, Arc',shift:'Evening',attendance:'Present',hoursWorked:36,overtime:2,productivity:82,safetyIncidents:1,training:'Welding Cert',performance:'Meets'},
+            {id:'EMP-004',name:'Sarah Okafor',position:'Production Planner',department:'Planning',skills:'Scheduling, ERP, MRP',shift:'Morning',attendance:'Present',hoursWorked:40,overtime:0,productivity:91,safetyIncidents:0,training:'APICS',performance:'Exceeds'},
+        ];
+
+        const invoices = [
+            {id:'INV-2026-0001',orderId:'ORD-2026-0001',customerId:'CUST-001',items:[{desc:'Industrial Gearbox GBX-100',qty:10,unitPrice:680}],extraCharges:[{desc:'Freight',amount:450}],discount:0,taxRate:10,subtotal:7250,tax:725,total:7975,status:'Sent',dueDate:daysFromNow(15).toISOString().slice(0,10),paidAmount:0,createdAt:iso(daysAgo(1))},
+        ];
+
+        const payments = [
+            {id:'PAY-001',invoiceId:'INV-2026-0001',customerId:'CUST-001',amount:2000,method:'Bank Transfer',ref:'BT-88921',date:iso(daysAgo(0)),matched:false,confidence:0},
+        ];
+
+        const salesPipeline = [
+            {id:'LEAD-001',type:'Lead',name:'Titan Mining Corp',value:45000,stage:'Lead',probability:20,owner:'Alice Chen',customerId:null,source:'Trade Show',expectedClose:daysFromNow(90).toISOString().slice(0,10),notes:'Heavy-duty gearboxes interest'},
+            {id:'OPP-001',type:'Opportunity',name:'Apex Automotive - Q3 Gearbox',value:128000,stage:'Negotiation',probability:65,owner:'Bob Smith',customerId:'CUST-001',source:'Existing Customer',expectedClose:daysFromNow(30).toISOString().slice(0,10),notes:'Negotiating volume discount'},
+            {id:'QTN-001',type:'Quotation',name:'Nordic Steel - Motor Order',value:89000,stage:'Quotation',probability:50,owner:'Alice Chen',customerId:'CUST-002',source:'Referral',expectedClose:daysFromNow(45).toISOString().slice(0,10),notes:'Awaiting spec approval'},
+        ];
+
+        const purchaseOrders = [
+            {id:'PO-2026-0001',supplier:'SteelCo International',items:[{itemId:'INV-001',qty:500,unitPrice:2.35}],status:'Approved',expectedDelivery:daysFromNow(10).toISOString().slice(0,10),total:1175,createdAt:iso(daysAgo(5))},
+        ];
+
+        const communications = [
+            {id:'COM-001',channel:'Email',recipient:'j.mercer@apexauto.com',subject:'Order Confirmation ORD-2026-0001',body:'Your order has been confirmed and is now in production.',relatedEntity:'ORD-2026-0001',sender:'system',timestamp:iso(daysAgo(3)),status:'Delivered'},
+            {id:'COM-002',channel:'SMS',recipient:'+1 555-0404',subject:'Delivery Update',body:'Your delivery DEL-2026-0001 is in transit. ETA tomorrow.',relatedEntity:'DEL-2026-0001',sender:'system',timestamp:iso(daysAgo(1)),status:'Sent'},
+        ];
+
+        const activity = [
+            {id:'ACT-001',module:'Order',action:'Created',detail:'Order ORD-2026-0001 created',user:'Admin',timestamp:iso(daysAgo(3))},
+            {id:'ACT-002',module:'Order',action:'Status Change',detail:'ORD-2026-0001 → Confirmed',user:'Admin',timestamp:iso(daysAgo(3))},
+            {id:'ACT-003',module:'Inventory',action:'Reserved',detail:'Reserved 42 pcs of FG-GBX-100 for ORD-2026-0001',user:'System',timestamp:iso(daysAgo(3))},
+            {id:'ACT-004',module:'Production',action:'Created',detail:'Production order PRD-2026-0002 generated from ORD-2026-0001',user:'System',timestamp:iso(daysAgo(3))},
+        ];
+
+        const documents = [
+            {id:'DOC-001',name:'Quality Certificate - Steel Batch B2401',type:'Quality Certificate',relatedEntity:'INV-001',uploadedBy:'QC Team',date:iso(daysAgo(10)),size:'245 KB'},
+        ];
+
+        const expenses = [
+            {id:'EXP-001',category:'Utilities',description:'Electricity - Plant',amount:12400,date:iso(daysAgo(15)),supplier:'City Power',status:'Paid'},
+            {id:'EXP-002',category:'Transport',description:'Freight - Detroit route',amount:450,date:iso(daysAgo(1)),supplier:'FastFreight',status:'Pending'},
+            {id:'EXP-003',category:'Materials',description:'Steel sheet purchase',amount:8200,date:iso(daysAgo(20)),supplier:'SteelCo',status:'Paid'},
+        ];
+
+        const aiBaselines = {
+            qualityAvgByProduct:{'FG-GBX-100':2.5,'FG-MTR-200':2.0},
+            machineHours:{'CNC-01':1420,'CNC-02':980,'WLD-01':2100},
+            deliveryOnTimeByRoute:{'Detroit Loop':0.92,'Nordic Route':0.87,'Denver Route':0.78},
+            demandHistory:{'FG-GBX-100':[6,8,10,9,12,11],'FG-MTR-200':[4,5,3,6,5,7]},
+            costTrend:{material:[2.20,2.30,2.35,2.40],labour:[42,43,44,45]},
+            throughputTrend:[100,105,110,108,115,120],
+        };
+
+        return {
+            identity,customers,orders,boms,inventory,productionOrders,deliveries,
+            workforce,invoices,payments,salesPipeline,purchaseOrders,communications,activity,
+            documents,expenses,aiBaselines,
+            counters:{order:3,production:2,invoice:1,delivery:1,customer:4,employee:4,activity:4,comm:2,payment:1,doc:1,expense:3,lead:1,opp:1,qtn:1,po:1}
+        };
+    }
+
+    let state;
+    try {
+        const stored = localStorage.getItem(KEY);
+        state = stored ? JSON.parse(stored) : seed();
+        if (!state || !state.identity) state = seed();
+    } catch(e) { console.warn('DB load error, reseeding', e); state = seed(); }
+    function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){ console.error('Save failed', e); } }
+
+    return {
+        get(c){ return state[c] ? [...state[c]] : []; },
+        getById(c,id){ return (state[c]||[]).find(x => x.id === id) || null; },
+        add(c,item){ if (!state[c]) state[c] = []; state[c].push(item); save(); return item; },
+        update(c,id,u){ const a = state[c]; if (!a) return null; const i = a.findIndex(x => x.id === id); if (i === -1) return null; a[i] = {...a[i], ...u}; save(); return a[i]; },
+        remove(c,id){ const a = state[c]; if (!a) return false; const i = a.findIndex(x => x.id === id); if (i === -1) return false; a.splice(i,1); save(); return true; },
+        nextId(prefix,key){ if (!state.counters) state.counters = {}; state.counters[key] = (state.counters[key] || 0) + 1; const y = new Date().getFullYear(); const p = String(state.counters[key]).padStart(4,'0'); save(); return `${prefix}-${y}-${p}`; },
+        getState(){ return state; },
+        save, reset(){ state = seed(); save(); },
+        getAvailable(itemId){ const it = (state.inventory||[]).find(i => i.id === itemId); if (!it) return 0; return it.qty - (it.reserved || 0); },
+        getStockStatus(item){
+            const avail = item.qty - (item.reserved || 0);
+            if (avail <= 0) return 'Out of Stock';
+            if (avail < item.reorderLevel * 0.5) return 'Critical';
+            if (avail < item.reorderLevel) return 'Low';
+            if (item.expiry){ const d = (new Date(item.expiry) - new Date()) / 86400000; if (d < 30 && d > 0) return 'Expiring Soon'; }
+            return 'OK';
+        }
+    };
+})();
+
+/* ============================================================
+   EVENT LOGGING (Event Stage) + LEARNING feedback
+   ============================================================ */
+function logActivity(module, action, detail, user = 'System') {
+    const entry = { id:'ACT-' + Date.now() + '-' + Math.random().toString(36).slice(2,6), module, action, detail, user, timestamp:new Date().toISOString().slice(0,19).replace('T',' ') };
+    try { DB.add('activity', entry); } catch(e) { console.warn('logActivity failed', e); }
+    try { updateBadges(); } catch(e){}
+    try { recomputeAIBaselines(); } catch(e){}
+    if (window.App && App.currentPage === 'activity') { try { App.renderPage('activity'); } catch(e){} }
+    return entry;
+}
+
+function recomputeAIBaselines() {
+    try {
+        const pos = DB.get('productionOrders');
+        const byProd = {};
+        pos.forEach(po => { if (po.wastePct != null) { (byProd[po.product] = byProd[po.product] || []).push(po.wastePct); } });
+        const b = DB.getState().aiBaselines;
+        if (!b.qualityAvgByProduct) b.qualityAvgByProduct = {};
+        Object.keys(byProd).forEach(p => { b.qualityAvgByProduct[p] = byProd[p].reduce((a,c) => a+c,0) / byProd[p].length; });
+        // Demand history update
+        if (!b.demandHistory) b.demandHistory = {};
+        DB.get('orders').forEach(o => {
+            if (!b.demandHistory[o.product]) b.demandHistory[o.product] = [];
+            b.demandHistory[o.product].push(o.qty);
+            if (b.demandHistory[o.product].length > 12) b.demandHistory[o.product].shift();
+        });
+        DB.save();
+    } catch(e){ console.warn('recomputeAIBaselines failed', e); }
+}
+
+function showToast(msg, type = 'info') {
+    const c = document.getElementById('toastContainer');
+    if (!c) return;
+    const el = document.createElement('div');
+    el.className = 'toast ' + type;
+    const icons = { success:'fa-check-circle', warning:'fa-exclamation-triangle', danger:'fa-times-circle', info:'fa-info-circle' };
+    el.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i> ${msg}`;
+    c.appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(() => el.remove(), 300); }, 3500);
+}
+
+/* ============================================================
+   AI LAYER (Intelligence Stage)
+   ============================================================ */
+const AI = {
+    demandForecast(){
+        const orders = DB.get('orders').filter(o => o.status !== 'Draft');
+        const byProd = {};
+        orders.forEach(o => { (byProd[o.product] = byProd[o.product] || []).push(o.qty); });
+        const out = {};
+        Object.keys(byProd).forEach(p => { const a = byProd[p]; const avg = a.reduce((x,y) => x+y,0) / a.length; out[p] = Math.round(avg * 1.1 * 10)/10; });
+        return out;
+    },
+    productionPlanning(){
+        const orders = DB.get('orders').filter(o => o.status === 'Confirmed');
+        const prio = { High:0, Medium:1, Low:2 };
+        return [...orders].sort((a,b) => {
+            const pa = prio[a.priority] ?? 1, pb = prio[b.priority] ?? 1;
+            if (pa !== pb) return pa - pb;
+            return new Date(a.requiredDate) - new Date(b.requiredDate);
+        }).map((o,i) => ({ sequence:i+1, orderId:o.id, product:o.product, qty:o.qty, requiredDate:o.requiredDate, priority:o.priority }));
+    },
+    inventoryPrediction(){
+        const inv = DB.get('inventory');
+        const orders = DB.get('orders').filter(o => ['Confirmed','In Production'].includes(o.status));
+        const consumption = {};
+        orders.forEach(o => { consumption[o.productName] = (consumption[o.productName] || 0) + o.qty; });
+        return inv.filter(i => i.type === 'Finished Product').map(i => {
+            const rate = consumption[i.name] || 0;
+            const avail = i.qty - (i.reserved || 0);
+            const days = rate > 0 ? Math.round(avail / (rate / 30)) : null;
+            return days !== null && days < 30 ? { itemId:i.id, name:i.name, daysLeft:days, available:avail, rate } : null;
+        }).filter(Boolean);
+    },
+    procurementRecommendations(){
+        const pos = DB.get('productionOrders').filter(p => p.status !== 'Completed');
+        const inv = DB.get('inventory');
+        const needs = {};
+        pos.forEach(po => { (po.bom || []).forEach(l => { needs[l.itemId] = (needs[l.itemId] || 0) + l.qty * (po.qtyPlanned - po.qtyProduced); }); });
+        const recs = [];
+        Object.keys(needs).forEach(id => {
+            const item = inv.find(i => i.id === id);
+            if (!item) return;
+            const avail = item.qty - (item.reserved || 0);
+            const short = needs[id] - avail;
+            if (short > 0) recs.push({ itemId:id, name:item.name, needed:Math.ceil(needs[id]), available:avail, shortfall:Math.ceil(short), unit:item.unit, leadTimeDays:14 });
+        });
+        return recs;
+    },
+    qualityAnomalies(){
+        const pos = DB.get('productionOrders');
+        const b = DB.getState().aiBaselines.qualityAvgByProduct || {};
+        return pos.filter(po => po.wastePct != null && b[po.product] != null && po.wastePct > b[po.product] * 1.5).map(po => ({ id:po.id, product:po.product, wastePct:po.wastePct, baseline:b[po.product], deviation:((po.wastePct - b[po.product]) / b[po.product] * 100).toFixed(0) }));
+    },
+    maintenancePrediction(){
+        const m = DB.getState().aiBaselines.machineHours || {};
+        const thresholds = { 'CNC-01':2000, 'CNC-02':2000, 'WLD-01':2500 };
+        return Object.keys(m).filter(mach => m[mach] > (thresholds[mach] || 2000) * 0.85).map(mach => ({ machine:mach, hours:m[mach], threshold:thresholds[mach] || 2000, pct:Math.round(m[mach] / (thresholds[mach] || 2000) * 100) }));
+    },
+    labourProductivity(){
+        const wf = DB.get('workforce');
+        const sorted = [...wf].sort((a,b) => b.productivity - a.productivity);
+        return { top:sorted.slice(0,2), bottom:sorted.slice(-2).reverse() };
+    },
+    costForecast(){
+        const prod = DB.get('productionOrders');
+        const exp = DB.get('expenses');
+        const mat = prod.reduce((s,po) => s + (po.bom || []).reduce((ss,l) => { const it = DB.getById('inventory', l.itemId); return ss + (it ? it.cost * l.qty * (po.qtyProduced || 0) : 0); }, 0), 0);
+        const lab = prod.reduce((s,po) => s + (po.qtyProduced || 0) * 45, 0);
+        const oh = exp.reduce((s,e) => s + e.amount, 0);
+        return { materialCost:mat, labourCost:lab, overhead:oh, total:mat + lab + oh };
+    },
+    deliveryPrediction(){
+        const d = DB.get('deliveries');
+        const b = DB.getState().aiBaselines.deliveryOnTimeByRoute || {};
+        return d.filter(x => !['Delivered','Failed'].includes(x.status)).map(x => ({ ...x, onTimeRate:b[x.route] || 0.9, risk:(b[x.route] || 0.9) < 0.9 ? 'High' : 'Low' }));
+    },
+    profitability(){
+        const inv = DB.get('invoices');
+        const byCust = {};
+        inv.forEach(i => { byCust[i.customerId] = (byCust[i.customerId] || 0) + i.total; });
+        const cost = this.costForecast();
+        const totalRev = Object.values(byCust).reduce((a,b) => a+b, 0);
+        const out = {};
+        Object.keys(byCust).forEach(c => { const share = totalRev > 0 ? byCust[c] / totalRev : 0; out[c] = { revenue:byCust[c], cost:cost.total * share, margin:byCust[c] - cost.total * share }; });
+        return out;
+    },
+    recommendations(){
+        const recs = [];
+        const low = DB.get('inventory').filter(i => ['Low','Critical','Out of Stock'].includes(DB.getStockStatus(i)));
+        if (low.length) recs.push({ id:'r1', title:'Reorder low-stock items', module:'inventory', desc:`${low.length} item(s) below reorder: ${low.map(i => i.name).join(', ')}`, action:'Review Inventory', icon:'fa-boxes' });
+        const open = DB.get('orders').filter(o => o.status === 'Confirmed');
+        if (open.length) recs.push({ id:'r2', title:'Schedule production for open orders', module:'production', desc:`${open.length} confirmed order(s) awaiting production.`, action:'View Production', icon:'fa-cogs' });
+        const anom = this.qualityAnomalies();
+        if (anom.length) recs.push({ id:'r3', title:'Quality anomaly detected', module:'production', desc:`${anom.length} production order(s) with waste above baseline.`, action:'View Production', icon:'fa-exclamation-triangle' });
+        const maint = this.maintenancePrediction();
+        if (maint.length) recs.push({ id:'r4', title:'Preventive maintenance due', module:'production', desc:`Machine ${maint[0].machine} at ${maint[0].pct}% of threshold.`, action:'View Machines', icon:'fa-tools' });
+        const proc = this.procurementRecommendations();
+        if (proc.length) recs.push({ id:'r5', title:'Procurement needed', module:'procurement', desc:`${proc.length} material(s) short: ${proc.map(p => p.name).join(', ')}`, action:'Review Procurement', icon:'fa-truck-loading' });
+        const risk = this.deliveryPrediction().filter(d => d.risk === 'High');
+        if (risk.length) recs.push({ id:'r6', title:'Delivery risk detected', module:'delivery', desc:`${risk.length} delivery(ies) on low-reliability routes.`, action:'View Deliveries', icon:'fa-truck' });
+        return recs.slice(0, 6);
+    }
+};
+
+/* ============================================================
+   ORCHESTRATION LAYER
+   ============================================================ */
+const Orchestrator = {
+    confirmOrder(orderId){
+        const order = DB.getById('orders', orderId);
+        if (!order || order.status !== 'Draft') { showToast('Order not in Draft state', 'warning'); return; }
+        const product = DB.get('inventory').find(i => i.name === order.productName || i.sku === order.product);
+        let reserved = false, productionNeeded = false;
+        if (product){
+            const avail = product.qty - (product.reserved || 0);
+            if (avail >= order.qty){
+                DB.update('inventory', product.id, { reserved:(product.reserved || 0) + order.qty });
+                reserved = true;
+                logActivity('Inventory', 'Reserved', `Reserved ${order.qty} ${product.unit} of ${product.name} for ${order.id}`);
+            } else {
+                const canRes = Math.max(0, avail);
+                if (canRes > 0) DB.update('inventory', product.id, { reserved:(product.reserved || 0) + canRes });
+                productionNeeded = true;
+                logActivity('Inventory', 'Shortfall', `Insufficient stock for ${order.id}. Available: ${avail}, Required: ${order.qty}`);
+            }
+        } else { productionNeeded = true; }
+        DB.update('orders', orderId, { status:'Confirmed' });
+        logActivity('Order', 'Status Change', `${orderId} → Confirmed`);
+        if (productionNeeded){
+            const bom = DB.getState().boms[order.product] || [];
+            const prodId = DB.nextId('PRD', 'production');
+            DB.add('productionOrders', { id:prodId, orderId, product:order.product, productName:order.productName, qtyPlanned:order.qty, qtyProduced:0, bom, materialsRequired:order.qty, machine:'CNC-01', line:'Line A', workerTeam:'Alpha Team', startTime:null, endTime:null, stage:'Queued', qualityResult:null, wastePct:null, downtimeMin:0, status:'Planned' });
+            logActivity('Production', 'Created', `Production order ${prodId} generated from ${orderId}`);
+            showToast(`Production order ${prodId} auto-created`, 'success');
+        }
+        this.sendAutoCommunication(order, 'Order Confirmed', `Your order ${orderId} has been confirmed and is being processed.`);
+        showToast(`Order ${orderId} confirmed.`, 'success');
+        updateBadges();
+        if (App.currentPage === 'orders') App.renderPage('orders');
+    },
+
+    completeProduction(prodId){
+        const po = DB.getById('productionOrders', prodId);
+        if (!po || po.status === 'Completed') { showToast('Production already completed', 'warning'); return; }
+        const produced = po.qtyPlanned;
+        (po.bom || []).forEach(l => {
+            const item = DB.getById('inventory', l.itemId);
+            if (item){
+                const consumed = l.qty * produced;
+                DB.update('inventory', item.id, { qty:Math.max(0, item.qty - consumed) });
+                logActivity('Inventory', 'Consumed', `Consumed ${consumed.toFixed(1)} ${item.unit} of ${item.name} for ${prodId}`);
+            }
+        });
+        const fg = DB.get('inventory').find(i => i.name === po.productName || i.sku === po.product);
+        if (fg){ DB.update('inventory', fg.id, { qty:fg.qty + produced }); logActivity('Inventory', 'Produced', `Added ${produced} units of ${fg.name}`); }
+        else {
+            const newId = 'INV-' + Date.now();
+            DB.add('inventory', { id:newId, sku:'FG-' + po.product, name:po.productName || po.product, category:'Finished Product', type:'Finished Product', qty:produced, unit:'pcs', warehouse:'WH-C', locationBin:'C-01-01', batch:'FG' + Date.now(), serialNumber:null, expiry:null, cost:300, reorderLevel:10, reserved:0 });
+        }
+        DB.update('productionOrders', prodId, { qtyProduced:produced, stage:'Complete', status:'Completed', endTime:new Date().toISOString().slice(0,19).replace('T',' '), qualityResult:'Pass', wastePct:1.8 });
+        if (po.orderId){
+            const order = DB.getById('orders', po.orderId);
+            if (order){
+                DB.update('orders', po.orderId, { status:'Ready' });
+                logActivity('Order', 'Status Change', `${po.orderId} → Ready (production complete)`);
+                this.sendAutoCommunication(order, 'Production Complete', `Your order ${po.orderId} is ready for dispatch.`);
+            }
+        }
+        logActivity('Production', 'Completed', `Production order ${prodId} completed (${produced} units)`);
+        showToast(`Production ${prodId} completed.`, 'success');
+        updateBadges();
+        if (App.currentPage === 'production') App.renderPage('production');
+    },
+
+    dispatchDelivery(delId){
+        const del = DB.getById('deliveries', delId);
+        if (!del) return;
+        if (del.status !== 'Scheduled') { showToast('Delivery already dispatched', 'warning'); return; }
+        DB.update('deliveries', delId, { status:'Dispatched', dispatchTime:new Date().toISOString().slice(0,19).replace('T',' ') });
+        const productName = del.items.split(' x')[0];
+        const fg = DB.get('inventory').find(i => i.name === productName);
+        if (fg){ DB.update('inventory', fg.id, { qty:Math.max(0, fg.qty - del.qty) }); logActivity('Inventory', 'Dispatched', `Decremented ${del.qty} units of ${fg.name} for ${delId}`); }
+        if (del.orderId){ DB.update('orders', del.orderId, { status:'Dispatched' }); logActivity('Order', 'Status Change', `${del.orderId} → Dispatched`); }
+        logActivity('Delivery', 'Dispatched', `Delivery ${delId} dispatched via ${del.vehicle}`);
+        this.sendAutoCommunication(del, 'Dispatch Notice', `Your delivery ${delId} is on the way. ETA: ${del.eta}`);
+        showToast(`Delivery ${delId} dispatched.`, 'success');
+        updateBadges();
+        if (App.currentPage === 'delivery') App.renderPage('delivery');
+    },
+
+    deliverOrder(delId){
+        const del = DB.getById('deliveries', delId);
+        if (!del) return;
+        if (del.status === 'Delivered') { showToast('Already delivered', 'warning'); return; }
+        DB.update('deliveries', delId, { status:'Delivered', actualDelivery:new Date().toISOString().slice(0,19).replace('T',' '), pod:'Signed by customer' });
+        if (del.orderId){ DB.update('orders', del.orderId, { status:'Delivered' }); logActivity('Order', 'Status Change', `${del.orderId} → Delivered`); }
+        this.autoDraftInvoice(del);
+        logActivity('Delivery', 'Delivered', `Delivery ${delId} confirmed delivered`);
+        showToast(`Delivery ${delId} delivered. Invoice auto-drafted.`, 'success');
+        updateBadges();
+        if (App.currentPage === 'delivery') App.renderPage('delivery');
+    },
+
+    autoDraftInvoice(delivery){
+        const order = DB.getById('orders', delivery.orderId);
+        if (!order) return;
+        const invId = DB.nextId('INV', 'invoice');
+        const items = [{ desc:order.productName || order.product, qty:order.qty, unitPrice:order.unitPrice }];
+        const sub = items.reduce((s,i) => s + i.qty * i.unitPrice, 0);
+        const afterDisc = sub * (1 - (order.discount || 0) / 100);
+        const tax = afterDisc * (order.taxRate / 100);
+        const total = afterDisc + tax;
+        DB.add('invoices', { id:invId, orderId:order.id, customerId:order.customerId, items, extraCharges:[], discount:order.discount || 0, taxRate:order.taxRate, subtotal:afterDisc, tax, total, status:'Draft', dueDate:new Date(Date.now() + 30*86400000).toISOString().slice(0,10), paidAmount:0, createdAt:new Date().toISOString().slice(0,19).replace('T',' ') });
+        logActivity('Finance', 'Invoice Drafted', `Auto-drafted ${invId} for ${order.id} ($${total.toFixed(2)})`);
+        updateBadges();
+    },
+
+    sendAutoCommunication(entity, subject, body){
+        DB.add('communications', { id:'COM-' + Date.now(), channel:'Email', recipient:entity.email || (entity.contact && entity.contact.email) || 'customer@example.com', subject, body, relatedEntity:entity.id, sender:'system', timestamp:new Date().toISOString().slice(0,19).replace('T',' '), status:'Sent' });
+        logActivity('Communications', 'Sent', `Auto-message: ${subject}`);
+    },
+
+    matchPayment(paymentId){
+        const p = DB.getById('payments', paymentId);
+        if (!p || p.matched) { showToast('Payment already matched', 'warning'); return; }
+        const open = DB.get('invoices').filter(i => i.customerId === p.customerId && !['Paid','Draft'].includes(i.status));
+        if (!open.length) { showToast('No open invoices for this customer', 'warning'); return; }
+        let best = null, bestScore = 0;
+        open.forEach(inv => {
+            const out = inv.total - (inv.paidAmount || 0);
+            const diff = Math.abs(out - p.amount) / out;
+            const score = Math.max(0, 1 - diff);
+            if (score > bestScore){ bestScore = score; best = inv; }
+        });
+        if (best && bestScore > 0.5){
+            const newPaid = (best.paidAmount || 0) + p.amount;
+            DB.update('invoices', best.id, { paidAmount:newPaid, status:newPaid >= best.total ? 'Paid' : 'Partially Paid' });
+            DB.update('payments', paymentId, { matched:true, invoiceId:best.id, confidence:Math.round(bestScore * 100) });
+            logActivity('Finance', 'Payment Matched', `Payment ${paymentId} → ${best.id} (${Math.round(bestScore*100)}%)`);
+            showToast(`Payment matched to ${best.id}`, 'success');
+        } else {
+            DB.update('payments', paymentId, { matched:false, confidence:Math.round(bestScore*100) });
+            showToast('No confident match found', 'warning');
+        }
+        updateBadges();
+        if (['invoices','finance'].includes(App.currentPage)) App.renderPage(App.currentPage);
+    },
+
+    createPurchaseOrder(rec){
+        const poId = DB.nextId('PO', 'po');
+        const item = DB.getById('inventory', rec.itemId);
+        DB.add('purchaseOrders', { id:poId, supplier:'Default Supplier', items:[{ itemId:rec.itemId, qty:rec.shortfall, unitPrice:item ? item.cost : 0 }], status:'Approved', expectedDelivery:new Date(Date.now() + 14*86400000).toISOString().slice(0,10), total:item ? item.cost * rec.shortfall : 0, createdAt:new Date().toISOString().slice(0,19).replace('T',' ') });
+        logActivity('Procurement', 'PO Created', `PO ${poId} for ${rec.name} x${rec.shortfall}`);
+        showToast(`PO ${poId} created`, 'success');
+        if (App.currentPage === 'procurement') App.renderPage('procurement');
+    },
+
+    receivePurchaseOrder(poId){
+        const po = DB.getById('purchaseOrders', poId);
+        if (!po || po.status === 'Received') { showToast('Already received', 'warning'); return; }
+        (po.items || []).forEach(it => {
+            const item = DB.getById('inventory', it.itemId);
+            if (item){ DB.update('inventory', item.id, { qty:item.qty + it.qty }); logActivity('Inventory', 'Received', `Received ${it.qty} of ${item.name} from ${poId}`); }
+        });
+        DB.update('purchaseOrders', poId, { status:'Received' });
+        showToast(`${poId} received, inventory updated`, 'success');
+        if (App.currentPage === 'procurement') App.renderPage('procurement');
+        updateBadges();
+    }
+};
+
+/* ============================================================
+   APP CONTROLLER
+   ============================================================ */
+const App = {
+    currentPage:'dashboard',
+    currentUser:{ name:'Admin User', role:'Admin', email:'admin@forgeflow.io' },
+    charts:{},
+
+    init(){
+        this.bindEvents();
+        document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('appShell').classList.add('hidden');
+        const saved = localStorage.getItem('forgeflow_user');
+        if (saved){
+            try { this.currentUser = JSON.parse(saved); this.enterApp(); }
+            catch(e){ localStorage.removeItem('forgeflow_user'); }
+        }
+    },
+
+    bindEvents(){
+        document.querySelectorAll('.login-tab').forEach(t => t.addEventListener('click', () => {
+            document.querySelectorAll('.login-tab').forEach(x => x.classList.remove('active'));
+            t.classList.add('active');
+            const isIn = t.dataset.tab === 'signin';
+            document.getElementById('loginForm').classList.toggle('hidden', !isIn);
+            document.getElementById('signupForm').classList.toggle('hidden', isIn);
+        }));
+
+        document.getElementById('loginForm').addEventListener('submit', e => {
+            e.preventDefault();
+            e.stopPropagation();
+            const email = document.getElementById('loginEmail').value.trim();
+            const role = document.getElementById('loginRole').value;
+            if (!email){ showToast('Email required', 'danger'); return; }
+            this.login(email, role);
+        });
+
+        document.getElementById('signupForm').addEventListener('submit', e => {
+            e.preventDefault();
+            e.stopPropagation();
+            const email = document.getElementById('signupEmail').value.trim();
+            const role = document.getElementById('signupRole').value;
+            const name = document.getElementById('signupName').value.trim();
+            if (!email){ showToast('Email required', 'danger'); return; }
+            this.login(email, role, name);
+        });
+
+        document.querySelectorAll('.sidebar-nav-item').forEach(i => i.addEventListener('click', () => {
+            if (i.dataset.page) this.navigate(i.dataset.page);
+            if (window.innerWidth <= 900) document.getElementById('sidebar').classList.remove('open');
+        }));
+
+        document.getElementById('hamburgerBtn').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('open'));
+
+        document.getElementById('userAvatar').addEventListener('click', e => {
+            e.stopPropagation();
+            document.getElementById('userDropdown').classList.toggle('show');
+        });
+        document.addEventListener('click', () => document.getElementById('userDropdown').classList.remove('show'));
+        document.getElementById('logoutBtn').addEventListener('click', () => this.logout());
+
+        document.getElementById('globalSearch').addEventListener('keydown', e => {
+            if (e.key === 'Enter') this.globalSearch(e.target.value);
+        });
+
+        document.getElementById('modalOverlay').addEventListener('click', e => {
+            if (e.target === e.currentTarget) this.closeModal();
+        });
+
+        document.getElementById('notifBtn').addEventListener('click', () => {
+            const alerts = this.getAlerts();
+            this.showModal('Notifications', `<div style="max-height:300px;overflow-y:auto;">${alerts.length === 0 ? '<p class="text-muted">No new notifications</p>' : alerts.map(a => `<div class="insight-item"><div class="insight-title">${a.title}</div><div class="insight-desc">${a.desc}</div></div>`).join('')}</div>`, [{ label:'Close', class:'btn-secondary', action:'App.closeModal()' }]);
+        });
+
+        document.getElementById('themeToggle').addEventListener('click', () => showToast('Theme toggle coming soon', 'info'));
+    },
+
+    login(email, role, name){
+        const userName = name || email.split('@')[0].replace(/\./g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        this.currentUser = { name:userName, role, email };
+        localStorage.setItem('forgeflow_user', JSON.stringify(this.currentUser));
+        this.enterApp();
+        logActivity('Auth', 'Login', `${userName} signed in as ${role}`);
+        showToast(`Welcome, ${userName}`, 'success');
+    },
+
+    logout(){
+        localStorage.removeItem('forgeflow_user');
+        document.getElementById('appShell').classList.add('hidden');
+        document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('userDropdown').classList.remove('show');
+        showToast('Signed out', 'info');
+    },
+
+    enterApp(){
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('appShell').classList.remove('hidden');
+        document.getElementById('userAvatar').textContent = this.currentUser.name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase();
+        document.getElementById('userNameDisplay').innerHTML = `<i class="fas fa-user"></i> ${this.currentUser.name}`;
+        document.getElementById('userRoleDisplay').innerHTML = `<i class="fas fa-badge"></i> ${this.currentUser.role}`;
+        this.applyRolePermissions();
+        this.navigate('dashboard');
+        updateBadges();
+    },
+
+    applyRolePermissions(){
+        const role = this.currentUser.role;
+        document.querySelectorAll('.sidebar-nav-item').forEach(item => {
+            const page = item.dataset.page;
+            if (role === 'Admin' || role === 'Executive'){ item.style.display = ''; return; }
+            const hide = {
+                'Production Manager':['finance','invoices','financefields','sales','salesfields'],
+                'Sales':['production','productionfields','bom','workforce','orchestration'],
+                'Warehouse':['sales','salesfields','finance','invoices','financefields'],
+                'Finance':['production','productionfields','bom','workforce','delivery','orchestration'],
+                'Driver/Logistics':['sales','salesfields','finance','invoices','financefields','production','productionfields','bom','workforce','orchestration','aifields','procurement'],
+            };
+            item.style.display = (hide[role] || []).includes(page) ? 'none' : '';
+        });
+    },
+
+    navigate(page){
+        this.currentPage = page;
+        document.querySelectorAll('.sidebar-nav-item').forEach(i => i.classList.toggle('active', i.dataset.page === page));
+        this.renderPage(page);
+    },
+
+    renderPage(page){
+        const area = document.getElementById('contentArea');
+        if (!area) return;
+        area.innerHTML = '';
+        const fn = this['render_' + page];
+        if (typeof fn === 'function'){
+            try { fn.call(this, area); } catch(e){ console.error('Render error for page', page, e); area.innerHTML = `<div class="card"><p class="text-danger">Error rendering page: ${e.message}</p></div>`; }
+        } else {
+            area.innerHTML = '<div class="card"><p>Page not found: ' + page + '</p></div>';
+        }
+        updateBadges();
+    },
+
+    /* ---------- DASHBOARD ---------- */
+    render_dashboard(c){
+        const orders = DB.get('orders'), prod = DB.get('productionOrders'), inv = DB.get('inventory'), del = DB.get('deliveries'), invoices = DB.get('invoices');
+        const openOrders = orders.filter(o => !['Closed','Delivered'].includes(o.status)).length;
+        const inProd = prod.filter(p => p.status === 'Active').length;
+        const low = inv.filter(i => ['Low','Critical','Out of Stock'].includes(DB.getStockStatus(i))).length;
+        const pendDel = del.filter(d => !['Delivered','Failed'].includes(d.status)).length;
+        const revMTD = invoices.filter(i => { const d = new Date(i.createdAt); const n = new Date(); return d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear(); }).reduce((s,i) => s+i.total, 0);
+        const outstanding = invoices.reduce((s,i) => s + (i.total - (i.paidAmount || 0)), 0);
+        const alerts = this.getAlerts();
+        const recs = AI.recommendations();
+        const activity = DB.get('activity').slice(-8).reverse();
+
+        c.innerHTML = `
+            <div class="page-header">
+                <div><div class="page-title">Operations Dashboard</div>
+                <div class="page-sub">Org → People → Demand → Sales → Inventory → Production → Workforce → Logistics → Finance → Data → Analytics → AI → Orchestration</div></div>
+                <div class="flex gap-2">
+                    <button class="btn btn-secondary btn-sm" onclick="App.navigate('analytics')"><i class="fas fa-chart-bar"></i> Reports</button>
+                    <button class="btn btn-primary btn-sm" onclick="App.navigate('orders')"><i class="fas fa-plus"></i> New Order</button>
+                </div>
+            </div>
+            <div class="kpi-grid">
+                <div class="kpi-card"><div class="kpi-label">Open Orders</div><div class="kpi-value">${openOrders}</div><div class="kpi-sub">Awaiting fulfillment</div></div>
+                <div class="kpi-card"><div class="kpi-label">In Production</div><div class="kpi-value">${inProd}</div><div class="kpi-sub">Active jobs</div></div>
+                <div class="kpi-card"><div class="kpi-label">Low Stock</div><div class="kpi-value" style="color:${low>0?'var(--danger)':'var(--success)'}">${low}</div><div class="kpi-sub">Items below reorder</div></div>
+                <div class="kpi-card"><div class="kpi-label">Pending Deliveries</div><div class="kpi-value">${pendDel}</div><div class="kpi-sub">In transit / scheduled</div></div>
+                <div class="kpi-card"><div class="kpi-label">Revenue (MTD)</div><div class="kpi-value">$${revMTD.toLocaleString()}</div><div class="kpi-sub">Month to date</div></div>
+                <div class="kpi-card"><div class="kpi-label">Receivables</div><div class="kpi-value" style="color:var(--warning)">$${outstanding.toLocaleString()}</div><div class="kpi-sub">Outstanding</div></div>
+                <div class="kpi-card"><div class="kpi-label">On-Time Delivery</div><div class="kpi-value">92%</div><div class="kpi-sub">Last 30 days</div></div>
+                <div class="kpi-card"><div class="kpi-label">OEE</div><div class="kpi-value">78%</div><div class="kpi-sub">Overall equipment effectiveness</div></div>
+            </div>
+            <div class="chart-grid">
+                <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-chart-line"></i> Revenue Trend</div></div><div class="chart-container"><canvas id="revenueChart"></canvas></div></div>
+                <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-filter"></i> Order Pipeline</div></div><div class="chart-container"><canvas id="pipelineChart"></canvas></div></div>
+            </div>
+            <div class="chart-grid">
+                <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-exclamation-triangle" style="color:var(--warning)"></i> Alerts</div></div>
+                    ${alerts.length === 0 ? '<p class="text-muted text-sm">All clear.</p>' : alerts.slice(0,5).map(a => `<div class="insight-item" style="border-left-color:${a.severity==='high'?'var(--danger)':'var(--warning)'};cursor:pointer" onclick="App.navigate('${a.module}')"><div class="insight-title">${a.title}</div><div class="insight-desc">${a.desc}</div></div>`).join('')}
+                </div>
+                <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-robot" style="color:var(--accent)"></i> AI Recommendations</div></div>
+                    ${recs.length === 0 ? '<p class="text-muted text-sm">No recommendations.</p>' : recs.map(r => `<div class="insight-item"><div class="insight-title">${r.title}</div><div class="insight-desc">${r.desc}</div><button class="btn btn-sm btn-secondary mt-1" onclick="App.navigate('${r.module}')">${r.action} →</button></div>`).join('')}
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><div class="card-title"><i class="fas fa-history"></i> Live Activity Feed</div><button class="btn btn-sm btn-secondary" onclick="App.navigate('activity')">View All</button></div>
+                ${activity.map(a => `<div class="activity-item"><div class="activity-icon"><i class="fas fa-${a.module==='Order'?'file-invoice':a.module==='Production'?'cogs':a.module==='Inventory'?'boxes':a.module==='Finance'?'coins':'circle'}"></i></div><div style="flex:1"><div>${a.detail}</div><div class="activity-time">${a.timestamp} · ${a.user}</div></div></div>`).join('')}
+            </div>`;
+        setTimeout(() => { this.renderRevenueChart(); this.renderPipelineChart(); }, 50);
+    },
+
+    renderRevenueChart(){
+        const inv = DB.get('invoices'), months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], now = new Date();
+        const data = new Array(12).fill(0);
+        inv.forEach(i => { const d = new Date(i.createdAt); if (d.getFullYear() === now.getFullYear()) data[d.getMonth()] += i.total; });
+        const ctx = document.getElementById('revenueChart'); if (!ctx) return;
+        if (this.charts.revenue) this.charts.revenue.destroy();
+        this.charts.revenue = new Chart(ctx, { type:'bar', data:{ labels:months.slice(0, now.getMonth()+1), datasets:[{ label:'Revenue ($)', data:data.slice(0, now.getMonth()+1), backgroundColor:'#1e5f8e', borderRadius:4 }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } } });
+    },
+
+    renderPipelineChart(){
+        const orders = DB.get('orders'), stages = ['Draft','Confirmed','In Production','Ready','Dispatched','Delivered','Invoiced','Closed'];
+        const counts = stages.map(s => orders.filter(o => o.status === s).length);
+        const ctx = document.getElementById('pipelineChart'); if (!ctx) return;
+        if (this.charts.pipeline) this.charts.pipeline.destroy();
+        this.charts.pipeline = new Chart(ctx, { type:'doughnut', data:{ labels:stages, datasets:[{ data:counts, backgroundColor:['#94a3b8','#1e5f8e','#0b7b4b','#b85e00','#1e6f9f','#6d28d9','#b91c1c','#475569'] }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'right', labels:{ boxWidth:12, font:{ size:10 } } } } } });
+    },
+
+    getAlerts(){
+        const a = [];
+        DB.get('inventory').forEach(i => {
+            const s = DB.getStockStatus(i);
+            if (s === 'Out of Stock') a.push({ title:`Out of Stock: ${i.name}`, desc:`SKU ${i.sku}`, module:'inventory', severity:'high' });
+            else if (s === 'Critical') a.push({ title:`Critical: ${i.name}`, desc:`Only ${i.qty - (i.reserved||0)} ${i.unit} left`, module:'inventory', severity:'high' });
+            else if (s === 'Low') a.push({ title:`Low: ${i.name}`, desc:`Below reorder (${i.reorderLevel} ${i.unit})`, module:'inventory', severity:'medium' });
+            else if (s === 'Expiring Soon') a.push({ title:`Expiring: ${i.name}`, desc:`Expires ${i.expiry}`, module:'inventory', severity:'medium' });
+        });
+        DB.get('invoices').forEach(i => { if (i.status !== 'Paid' && i.dueDate && new Date(i.dueDate) < new Date()) a.push({ title:`Overdue: ${i.id}`, desc:`Due ${i.dueDate}. Bal: $${(i.total-(i.paidAmount||0)).toFixed(2)}`, module:'invoices', severity:'high' }); });
+        DB.get('productionOrders').forEach(p => { if (p.status === 'Active' && p.endTime && new Date(p.endTime) < new Date()) a.push({ title:`Delayed: ${p.id}`, desc:`Should complete by ${p.endTime}`, module:'production', severity:'medium' }); });
+        return a;
+    },
+
+    /* ---------- ORGANIZATIONAL IDENTITY ---------- */
+    render_identity(c){
+        const id = DB.getState().identity;
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">Organizational Identity</div><div class="page-sub">Company profile · branding · settings · capacity · defaults</div></div>
+            <button class="btn btn-primary btn-sm" onclick="App.showIdentityModal()"><i class="fas fa-edit"></i> Edit</button></div>
+            <div class="card">
+                <div class="form-row"><div><strong>Company Name</strong><br>${id.companyName}</div><div><strong>Legal Name</strong><br>${id.legalName}</div></div>
+                <div class="form-row mt-2"><div><strong>Registration #</strong><br>${id.registrationNumber}</div><div><strong>Tax ID</strong><br>${id.taxId}</div></div>
+                <div class="form-row mt-2"><div><strong>VAT</strong><br>${id.vatNumber}</div><div><strong>Industry</strong><br>${id.industry}</div></div>
+                <div class="form-row mt-2"><div><strong>Founded</strong><br>${id.foundedYear}</div><div><strong>Employees</strong><br>${id.employeeCount}</div></div>
+                <div class="form-row mt-2"><div><strong>Address</strong><br>${id.address}</div><div><strong>Country</strong><br>${id.country}</div></div>
+                <div class="form-row mt-2"><div><strong>Phone</strong><br>${id.phone}</div><div><strong>Email</strong><br>${id.email}</div></div>
+                <div class="form-row mt-2"><div><strong>Website</strong><br>${id.website}</div><div><strong>Primary Contact</strong><br>${id.primaryContact}</div></div>
+                <div class="form-row mt-2"><div><strong>Fiscal Year Start</strong><br>${id.fiscalYearStart}</div><div><strong>Currency</strong><br>${id.currency}</div></div>
+                <div class="form-row mt-2"><div><strong>Banking</strong><br>${id.bankingDetails}</div><div><strong>Certifications</strong><br>${id.certifications.join(' · ')}</div></div>
+                <div class="form-row mt-2"><div><strong>Daily Capacity</strong><br>${id.capacity.dailyUnits} units</div><div><strong>Shifts / Lines</strong><br>${id.capacity.shiftsPerDay} shifts · ${id.capacity.linesActive} lines</div></div>
+                <div class="form-row mt-2"><div><strong>Default Tax Rate</strong><br>${id.defaults.taxRate}%</div><div><strong>Default Terms</strong><br>${id.defaults.paymentTerms}</div></div>
+            </div>`;
+    },
+
+    showIdentityModal(){
+        const id = DB.getState().identity;
+        this.showModal('Edit Organizational Identity', `
+            <div class="form-row"><div class="form-group"><label>Company Name</label><input id="idCompany" value="${id.companyName}"></div>
+            <div class="form-group"><label>Legal Name</label><input id="idLegal" value="${id.legalName}"></div></div>
+            <div class="form-row"><div class="form-group"><label>Registration #</label><input id="idReg" value="${id.registrationNumber}"></div>
+            <div class="form-group"><label>Tax ID</label><input id="idTax" value="${id.taxId}"></div></div>
+            <div class="form-row"><div class="form-group"><label>VAT</label><input id="idVat" value="${id.vatNumber}"></div>
+            <div class="form-group"><label>Industry</label><input id="idIndustry" value="${id.industry}"></div></div>
+            <div class="form-row"><div class="form-group"><label>Address</label><input id="idAddress" value="${id.address}"></div>
+            <div class="form-group"><label>Country</label><input id="idCountry" value="${id.country}"></div></div>
+            <div class="form-row"><div class="form-group"><label>Phone</label><input id="idPhone" value="${id.phone}"></div>
+            <div class="form-group"><label>Email</label><input id="idEmail" value="${id.email}"></div></div>
+            <div class="form-row"><div class="form-group"><label>Website</label><input id="idWebsite" value="${id.website}"></div>
+            <div class="form-group"><label>Primary Contact</label><input id="idContact" value="${id.primaryContact}"></div></div>
+            <div class="form-row"><div class="form-group"><label>Founded Year</label><input type="number" id="idFounded" value="${id.foundedYear}"></div>
+            <div class="form-group"><label>Employee Count</label><input type="number" id="idEmp" value="${id.employeeCount}"></div></div>
+            <div class="form-row"><div class="form-group"><label>Daily Capacity (units)</label><input type="number" id="idCap" value="${id.capacity.dailyUnits}"></div>
+            <div class="form-group"><label>Shifts / Lines</label><input type="number" id="idShifts" value="${id.capacity.shiftsPerDay}"></div></div>
+            <div class="form-group"><label>Banking Details</label><input id="idBank" value="${id.bankingDetails}"></div>
+            <div class="form-group"><label>Certifications (comma-separated)</label><input id="idCerts" value="${id.certifications.join(', ')}"></div>
+        `, [
+            { label:'Cancel', class:'btn-secondary', action:'App.closeModal()' },
+            { label:'Save', class:'btn-primary', action:'App.saveIdentity()' }
+        ]);
+    },
+
+    saveIdentity(){
+        const id = DB.getState().identity;
+        id.companyName = document.getElementById('idCompany').value;
+        id.legalName = document.getElementById('idLegal').value;
+        id.registrationNumber = document.getElementById('idReg').value;
+        id.taxId = document.getElementById('idTax').value;
+        id.vatNumber = document.getElementById('idVat').value;
+        id.industry = document.getElementById('idIndustry').value;
+        id.address = document.getElementById('idAddress').value;
+        id.country = document.getElementById('idCountry').value;
+        id.phone = document.getElementById('idPhone').value;
+        id.email = document.getElementById('idEmail').value;
+        id.website = document.getElementById('idWebsite').value;
+        id.primaryContact = document.getElementById('idContact').value;
+        id.foundedYear = parseInt(document.getElementById('idFounded').value) || 1998;
+        id.employeeCount = parseInt(document.getElementById('idEmp').value) || 0;
+        id.capacity.dailyUnits = parseInt(document.getElementById('idCap').value) || 120;
+        id.capacity.shiftsPerDay = parseInt(document.getElementById('idShifts').value) || 3;
+        id.bankingDetails = document.getElementById('idBank').value;
+        id.certifications = document.getElementById('idCerts').value.split(',').map(s => s.trim()).filter(Boolean);
+        DB.save();
+        logActivity('Organization', 'Updated', 'Organizational identity updated');
+        showToast('Identity saved', 'success');
+        this.closeModal();
+        this.renderPage('identity');
+    },
+
+    /* ---------- CUSTOMERS ---------- */
+    render_customers(c){
+        const customers = DB.get('customers');
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">Customers</div><div class="page-sub">${customers.length} customer profiles · full 360 view</div></div>
+            <button class="btn btn-primary btn-sm" onclick="App.showCustomerModal()"><i class="fas fa-plus"></i> Add Customer</button></div>
+            <div class="card"><div class="table-wrap"><table>
+                <thead><tr><th>ID</th><th>Name</th><th>Segment</th><th>Contact</th><th>Location</th><th>Credit</th><th>Lifetime Value</th><th></th></tr></thead>
+                <tbody>${customers.map(cu => `<tr>
+                    <td class="font-mono text-xs">${cu.id}</td>
+                    <td><strong>${cu.profile.name}</strong><br><span class="text-muted text-xs">${cu.profile.industry}</span></td>
+                    <td><span class="badge neutral">${cu.segment}</span></td>
+                    <td>${cu.contact.primaryName}<br><span class="text-muted text-xs">${cu.contact.email}</span></td>
+                    <td>${cu.location.city}, ${cu.location.country}</td>
+                    <td><span class="badge ${cu.creditStatus === 'Approved' ? 'success' : 'danger'}">${cu.creditStatus}</span></td>
+                    <td>$${cu.purchaseHistory.lifetimeValue.toLocaleString()}</td>
+                    <td style="white-space:nowrap">
+                        <button class="btn btn-sm btn-secondary" onclick="App.viewCustomer('${cu.id}')"><i class="fas fa-eye"></i></button>
+                        <button class="btn btn-sm btn-secondary" onclick="App.showCustomerModal('${cu.id}')"><i class="fas fa-edit"></i></button>
+                    </td>
+                </tr>`).join('')}</tbody>
+            </table></div></div>`;
+    },
+
+    render_customerfields(c){
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">Customer Schema</div><div class="page-sub">All fields stored per customer</div></div></div>
+            <div class="card"><table><thead><tr><th>Field Group</th><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody>
+                <tr><td rowspan="6"><strong>Profile</strong></td><td>name</td><td>string</td><td>Display name</td></tr>
+                <tr><td>legalName</td><td>string</td><td>Registered legal name</td></tr>
+                <tr><td>industry</td><td>string</td><td>Industry classification</td></tr>
+                <tr><td>since</td><td>date</td><td>Customer since</td></tr>
+                <tr><td>tier</td><td>enum</td><td>Platinum / Gold / Silver / Bronze</td></tr>
+                <tr><td>accountManager</td><td>string</td><td>Assigned salesperson</td></tr>
+                <tr><td rowspan="6"><strong>Contact</strong></td><td>primaryName</td><td>string</td><td>Main contact person</td></tr>
+                <tr><td>primaryTitle</td><td>string</td><td>Job title</td></tr>
+                <tr><td>email</td><td>email</td><td>Primary email</td></tr>
+                <tr><td>phone</td><td>string</td><td>Primary phone</td></tr>
+                <tr><td>altContact</td><td>string</td><td>Alternate contact</td></tr>
+                <tr><td>altEmail / altPhone</td><td>string</td><td>Alternate reach</td></tr>
+                <tr><td rowspan="7"><strong>Location</strong></td><td>billingAddress</td><td>string</td><td>Billing address</td></tr>
+                <tr><td>shippingAddress</td><td>string</td><td>Shipping address</td></tr>
+                <tr><td>region</td><td>string</td><td>Geographic region</td></tr>
+                <tr><td>country</td><td>string</td><td>Country</td></tr>
+                <tr><td>city</td><td>string</td><td>City</td></tr>
+                <tr><td>postalCode</td><td>string</td><td>Postal / ZIP code</td></tr>
+                <tr><td>warehouse</td><td>string</td><td>Assigned warehouse</td></tr>
+                <tr><td><strong>Segment</strong></td><td>segment</td><td>enum</td><td>OEM / Industrial / Electronics / Construction</td></tr>
+                <tr><td rowspan="3"><strong>Credit Status</strong></td><td>creditStatus</td><td>enum</td><td>Approved / On Hold / Blocked</td></tr>
+                <tr><td>creditLimit</td><td>number</td><td>Maximum credit allowed</td></tr>
+                <tr><td>paymentTerms</td><td>string</td><td>Net 30 / Net 45 / etc.</td></tr>
+                <tr><td rowspan="5"><strong>Purchase History</strong></td><td>totalOrders</td><td>number</td><td>Count of orders</td></tr>
+                <tr><td>totalValue</td><td>number</td><td>Total spend</td></tr>
+                <tr><td>lastOrderDate</td><td>date</td><td>Most recent order</td></tr>
+                <tr><td>avgOrderValue</td><td>number</td><td>Average order size</td></tr>
+                <tr><td>lifetimeValue / returnsCount</td><td>number</td><td>CLV / returns</td></tr>
+                <tr><td rowspan="5"><strong>Preferences</strong></td><td>preferredChannel</td><td>string</td><td>Email / SMS / WhatsApp</td></tr>
+                <tr><td>preferredPayment</td><td>string</td><td>Payment method</td></tr>
+                <tr><td>packaging</td><td>string</td><td>Packaging requirement</td></tr>
+                <tr><td>deliveryWindow</td><td>string</td><td>Preferred delivery hours</td></tr>
+                <tr><td>notes</td><td>text</td><td>Free-text notes</td></tr>
+            </tbody></table></div>`;
+    },
+
+    showCustomerModal(id){
+        const cu = id ? DB.getById('customers', id) : null;
+        const e = cu || { profile:{}, contact:{}, location:{}, purchaseHistory:{}, preferences:{} };
+        this.showModal(cu ? 'Edit Customer' : 'Add Customer', `
+            <div style="font-weight:600;margin-bottom:.5rem">Profile</div>
+            <div class="form-row"><div class="form-group"><label>Name</label><input id="cName" value="${e.profile.name || ''}"></div>
+            <div class="form-group"><label>Legal Name</label><input id="cLegal" value="${e.profile.legalName || ''}"></div></div>
+            <div class="form-row"><div class="form-group"><label>Industry</label><input id="cIndustry" value="${e.profile.industry || ''}"></div>
+            <div class="form-group"><label>Tier</label><select id="cTier">${['Platinum','Gold','Silver','Bronze'].map(t => `<option ${e.profile.tier === t ? 'selected' : ''}>${t}</option>`).join('')}</select></div></div>
+            <div class="form-row"><div class="form-group"><label>Account Manager</label><input id="cAM" value="${e.profile.accountManager || ''}"></div>
+            <div class="form-group"><label>Website</label><input id="cWeb" value="${e.profile.website || ''}"></div></div>
+
+            <div style="font-weight:600;margin:.75rem 0 .5rem">Contact</div>
+            <div class="form-row"><div class="form-group"><label>Primary Name</label><input id="cContact" value="${e.contact.primaryName || ''}"></div>
+            <div class="form-group"><label>Title</label><input id="cTitle" value="${e.contact.primaryTitle || ''}"></div></div>
+            <div class="form-row"><div class="form-group"><label>Email</label><input id="cEmail" value="${e.contact.email || ''}"></div>
+            <div class="form-group"><label>Phone</label><input id="cPhone" value="${e.contact.phone || ''}"></div></div>
+            <div class="form-row"><div class="form-group"><label>Alt Contact</label><input id="cAlt" value="${e.contact.altContact || ''}"></div>
+            <div class="form-group"><label>Alt Email</label><input id="cAltEmail" value="${e.contact.altEmail || ''}"></div></div>
+
+            <div style="font-weight:600;margin:.75rem 0 .5rem">Location</div>
+            <div class="form-group"><label>Billing Address</label><input id="cBill" value="${e.location.billingAddress || ''}"></div>
+            <div class="form-group"><label>Shipping Address</label><input id="cShip" value="${e.location.shippingAddress || ''}"></div>
+            <div class="form-row"><div class="form-group"><label>City</label><input id="cCity" value="${e.location.city || ''}"></div>
+            <div class="form-group"><label>Country</label><input id="cCountry" value="${e.location.country || ''}"></div></div>
+            <div class="form-row"><div class="form-group"><label>Region</label><input id="cRegion" value="${e.location.region || ''}"></div>
+            <div class="form-group"><label>Postal Code</label><input id="cPostal" value="${e.location.postalCode || ''}"></div></div>
+
+            <div style="font-weight:600;margin:.75rem 0 .5rem">Segment & Credit</div>
+            <div class="form-row"><div class="form-group"><label>Segment</label><select id="cSegment">${['OEM','Industrial','Electronics','Construction'].map(s => `<option ${e.segment === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
+            <div class="form-group"><label>Credit Status</label><select id="cCredit">${['Approved','On Hold','Blocked'].map(s => `<option ${e.creditStatus === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div></div>
+            <div class="form-row"><div class="form-group"><label>Credit Limit</label><input type="number" id="cLimit" value="${e.creditLimit || 0}"></div>
+            <div class="form-group"><label>Payment Terms</label><input id="cTerms" value="${e.paymentTerms || 'Net 30'}"></div></div>
+
+            <div style="font-weight:600;margin:.75rem 0 .5rem">Preferences</div>
+            <div class="form-row"><div class="form-group"><label>Preferred Channel</label><input id="cChannel" value="${e.preferences.preferredChannel || ''}"></div>
+            <div class="form-group"><label>Preferred Payment</label><input id="cPrefPay" value="${e.preferences.preferredPayment || ''}"></div></div>
+            <div class="form-row"><div class="form-group"><label>Packaging</label><input id="cPack" value="${e.preferences.packaging || ''}"></div>
+            <div class="form-group"><label>Delivery Window</label><input id="cWindow" value="${e.preferences.deliveryWindow || ''}"></div></div>
+            <div class="form-group"><label>Notes</label><textarea id="cNotes">${e.preferences.notes || ''}</textarea></div>
+        `, [
+            { label:'Cancel', class:'btn-secondary', action:'App.closeModal()' },
+            { label:cu ? 'Save' : 'Create', class:'btn-primary', action:`App.saveCustomer('${id || ''}')` }
+        ]);
+    },
+
+    saveCustomer(id){
+        const name = document.getElementById('cName').value.trim();
+        if (!name){ showToast('Name required', 'danger'); return; }
+        const data = {
+            profile:{ name, legalName:document.getElementById('cLegal').value, industry:document.getElementById('cIndustry').value, since:new Date().toISOString().slice(0,10), tier:document.getElementById('cTier').value, accountManager:document.getElementById('cAM').value, website:document.getElementById('cWeb').value },
+            contact:{ primaryName:document.getElementById('cContact').value, primaryTitle:document.getElementById('cTitle').value, email:document.getElementById('cEmail').value, phone:document.getElementById('cPhone').value, altContact:document.getElementById('cAlt').value, altEmail:document.getElementById('cAltEmail').value, altPhone:'' },
+            location:{ billingAddress:document.getElementById('cBill').value, shippingAddress:document.getElementById('cShip').value, region:document.getElementById('cRegion').value, country:document.getElementById('cCountry').value, city:document.getElementById('cCity').value, postalCode:document.getElementById('cPostal').value, warehouse:'' },
+            segment:document.getElementById('cSegment').value,
+            creditStatus:document.getElementById('cCredit').value,
+            creditLimit:parseFloat(document.getElementById('cLimit').value) || 0,
+            paymentTerms:document.getElementById('cTerms').value,
+            purchaseHistory:id ? DB.getById('customers', id).purchaseHistory : { totalOrders:0, totalValue:0, lastOrderDate:null, avgOrderValue:0, lifetimeValue:0, returnsCount:0 },
+            preferences:{ preferredChannel:document.getElementById('cChannel').value, preferredPayment:document.getElementById('cPrefPay').value, packaging:document.getElementById('cPack').value, deliveryWindow:document.getElementById('cWindow').value, notes:document.getElementById('cNotes').value }
+        };
+        if (id){ DB.update('customers', id, data); logActivity('Customer', 'Updated', `Customer ${id} updated`); }
+        else { const newId = 'CUST-' + String(DB.get('customers').length + 1).padStart(3, '0'); DB.add('customers', { id:newId, ...data }); logActivity('Customer', 'Created', `Customer ${newId} (${name}) created`); }
+        showToast('Customer saved', 'success');
+        this.closeModal();
+        this.renderPage('customers');
+    },
+
+    viewCustomer(id){
+        const c = DB.getById('customers', id); if (!c) return;
+        const orders = DB.get('orders').filter(o => o.customerId === id);
+        const invoices = DB.get('invoices').filter(i => i.customerId === id);
+        const deliveries = DB.get('deliveries').filter(d => d.customerId === id);
+        const outstanding = invoices.reduce((s,i) => s + (i.total - (i.paidAmount || 0)), 0);
+        this.showModal(`Customer 360: ${c.profile.name}`, `
+            <div class="form-row"><div><strong>Contact</strong><br>${c.contact.primaryName}<br><span class="text-muted">${c.contact.email}</span><br>${c.contact.phone}</div>
+            <div><strong>Location</strong><br>${c.location.city}, ${c.location.country}<br><strong>Segment:</strong> ${c.segment}<br><strong>Credit:</strong> <span class="badge ${c.creditStatus === 'Approved' ? 'success' : 'danger'}">${c.creditStatus}</span></div></div>
+            <div class="mt-2"><strong>Outstanding:</strong> $${outstanding.toFixed(2)}</div>
+            <div class="mt-3"><strong>Orders (${orders.length})</strong></div>
+            ${orders.length ? `<table><thead><tr><th>ID</th><th>Product</th><th>Qty</th><th>Status</th></tr></thead><tbody>${orders.map(o => `<tr><td>${o.id}</td><td>${o.productName}</td><td>${o.qty}</td><td><span class="badge info">${o.status}</span></td></tr>`).join('')}</tbody></table>` : '<p class="text-muted text-sm">No orders</p>'}
+            <div class="mt-3"><strong>Invoices (${invoices.length})</strong></div>
+            ${invoices.length ? `<table><thead><tr><th>ID</th><th>Total</th><th>Status</th></tr></thead><tbody>${invoices.map(i => `<tr><td>${i.id}</td><td>$${i.total.toFixed(2)}</td><td><span class="badge ${i.status === 'Paid' ? 'success' : 'warning'}">${i.status}</span></td></tr>`).join('')}</tbody></table>` : '<p class="text-muted text-sm">No invoices</p>'}
+            <div class="mt-3"><strong>Deliveries (${deliveries.length})</strong></div>
+            ${deliveries.length ? `<table><thead><tr><th>ID</th><th>Items</th><th>Status</th></tr></thead><tbody>${deliveries.map(d => `<tr><td>${d.id}</td><td>${d.items}</td><td><span class="badge ${d.status === 'Delivered' ? 'success' : 'info'}">${d.status}</span></td></tr>`).join('')}</tbody></table>` : '<p class="text-muted text-sm">No deliveries</p>'}
+        `, [{ label:'Close', class:'btn-secondary', action:'App.closeModal()' },
+            { label:'Send Message', class:'btn-primary', action:`App.showCommunicationModal('${c.contact.email}', 'Customer ${c.profile.name}')` }]);
+    },
+
+    /* ---------- ORDERS ---------- */
+    render_orders(c){
+        const orders = DB.get('orders'), customers = DB.get('customers');
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">Orders</div><div class="page-sub">${orders.length} orders · ${orders.filter(o => o.status === 'Confirmed').length} awaiting production</div></div>
+            <button class="btn btn-primary btn-sm" onclick="App.showOrderModal()"><i class="fas fa-plus"></i> New Order</button></div>
+            <div class="card"><div class="table-wrap"><table>
+                <thead><tr><th>Order #</th><th>Customer</th><th>Product</th><th>Qty</th><th>Value</th><th>Required</th><th>Priority</th><th>Status</th><th></th></tr></thead>
+                <tbody>${orders.map(o => {
+                    const cu = customers.find(x => x.id === o.customerId);
+                    const value = o.qty * o.unitPrice * (1 - (o.discount || 0) / 100);
+                    return `<tr>
+                        <td class="font-mono text-xs">${o.id}</td>
+                        <td>${cu ? cu.profile.name : o.customerId}</td>
+                        <td>${o.productName || o.product}</td>
+                        <td>${o.qty}</td>
+                        <td>$${value.toFixed(2)}</td>
+                        <td>${o.requiredDate}</td>
+                        <td><span class="badge ${o.priority === 'High' ? 'danger' : o.priority === 'Medium' ? 'warning' : 'neutral'}">${o.priority}</span></td>
+                        <td><span class="badge ${['Delivered','Closed'].includes(o.status) ? 'success' : o.status === 'Draft' ? 'neutral' : 'info'}">${o.status}</span></td>
+                        <td style="white-space:nowrap">
+                            ${o.status === 'Draft' ? `<button class="btn btn-sm btn-primary" onclick="Orchestrator.confirmOrder('${o.id}')">Confirm</button>` : ''}
+                            <button class="btn btn-sm btn-secondary" onclick="App.viewOrder('${o.id}')"><i class="fas fa-eye"></i></button>
+                        </td>
+                    </tr>`;
+                }).join('')}</tbody></table></div></div>`;
+    },
+
+    render_orderfields(c){
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">Order Schema</div><div class="page-sub">All fields per order</div></div></div>
+            <div class="card"><table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody>
+                <tr><td>id</td><td>string</td><td>Auto order number (ORD-YYYY-####)</td></tr>
+                <tr><td>customerId</td><td>ref</td><td>Link to Customer</td></tr>
+                <tr><td>product</td><td>string</td><td>Product code</td></tr>
+                <tr><td>productName</td><td>string</td><td>Human-readable name</td></tr>
+                <tr><td>qty</td><td>number</td><td>Ordered quantity</td></tr>
+                <tr><td>specification</td><td>string</td><td>Custom spec / variant</td></tr>
+                <tr><td>unitPrice</td><td>number</td><td>Price per unit</td></tr>
+                <tr><td>discount</td><td>number</td><td>Discount %</td></tr>
+                <tr><td>taxRate</td><td>number</td><td>Tax %</td></tr>
+                <tr><td>requiredDate</td><td>date</td><td>Customer required date</td></tr>
+                <tr><td>priority</td><td>enum</td><td>High / Medium / Low</td></tr>
+                <tr><td>status</td><td>enum</td><td>Draft → Confirmed → In Production → Ready → Dispatched → Delivered → Invoiced → Closed</td></tr>
+                <tr><td>salesperson</td><td>string</td><td>Responsible salesperson</td></tr>
+                <tr><td>createdAt</td><td>datetime</td><td>Creation timestamp</td></tr>
+                <tr><td>notes</td><td>text</td><td>Free-text notes</td></tr>
+            </tbody></table></div>`;
+    },
+
+    showOrderModal(){
+        const customers = DB.get('customers'), products = DB.get('inventory').filter(i => i.type === 'Finished Product');
+        this.showModal('New Order', `
+            <div class="form-row"><div class="form-group"><label>Customer</label><select id="ordCustomer">${customers.map(c => `<option value="${c.id}">${c.profile.name}</option>`).join('')}</select></div>
+            <div class="form-group"><label>Product</label><select id="ordProduct">${products.map(p => `<option value="${p.name}" data-sku="${p.sku}">${p.name}</option>`).join('')}</select></div></div>
+            <div class="form-row"><div class="form-group"><label>Quantity</label><input type="number" id="ordQty" value="1" min="1"></div>
+            <div class="form-group"><label>Specification</label><input id="ordSpec" value="Standard"></div></div>
+            <div class="form-row"><div class="form-group"><label>Unit Price</label><input type="number" id="ordPrice" value="500" step="0.01"></div>
+            <div class="form-group"><label>Discount %</label><input type="number" id="ordDiscount" value="0" step="0.1"></div></div>
+            <div class="form-row"><div class="form-group"><label>Tax Rate %</label><input type="number" id="ordTax" value="10" step="0.1"></div>
+            <div class="form-group"><label>Required Date</label><input type="date" id="ordDate" value="${new Date(Date.now()+14*86400000).toISOString().slice(0,10)}"></div></div>
+            <div class="form-row"><div class="form-group"><label>Priority</label><select id="ordPriority"><option>Low</option><option selected>Medium</option><option>High</option></select></div>
+            <div class="form-group"><label>Salesperson</label><input id="ordSales" value="${this.currentUser.name}"></div></div>
+            <div class="form-group"><label>Notes</label><textarea id="ordNotes"></textarea></div>
+        `, [
+            { label:'Cancel', class:'btn-secondary', action:'App.closeModal()' },
+            { label:'Create Order', class:'btn-primary', action:'App.saveOrder()' }
+        ]);
+    },
+
+    saveOrder(){
+        const customerId = document.getElementById('ordCustomer').value;
+        const productName = document.getElementById('ordProduct').value;
+        const qty = parseInt(document.getElementById('ordQty').value);
+        if (!qty || qty <= 0){ showToast('Quantity must be > 0', 'danger'); return; }
+        const product = DB.get('inventory').find(i => i.name === productName);
+        const orderId = DB.nextId('ORD', 'order');
+        DB.add('orders', { id:orderId, customerId, product:product ? product.sku : productName, productName, qty, specification:document.getElementById('ordSpec').value, unitPrice:parseFloat(document.getElementById('ordPrice').value), discount:parseFloat(document.getElementById('ordDiscount').value) || 0, taxRate:parseFloat(document.getElementById('ordTax').value) || 0, requiredDate:document.getElementById('ordDate').value, priority:document.getElementById('ordPriority').value, status:'Draft', salesperson:document.getElementById('ordSales').value, createdAt:new Date().toISOString().slice(0,19).replace('T',' '), notes:document.getElementById('ordNotes').value });
+        logActivity('Order', 'Created', `Order ${orderId} created for ${productName} x${qty}`);
+        showToast(`Order ${orderId} created as Draft`, 'success');
+        this.closeModal();
+        this.renderPage('orders');
+    },
+
+    viewOrder(id){
+        const o = DB.getById('orders', id); if (!o) return;
+        const cu = DB.getById('customers', o.customerId);
+        const prod = DB.get('productionOrders').filter(p => p.orderId === id);
+        const del = DB.get('deliveries').filter(d => d.orderId === id);
+        const inv = DB.get('invoices').filter(i => i.orderId === id);
+        this.showModal(`Order ${o.id}`, `
+            <div class="form-row"><div><strong>Customer:</strong> ${cu ? cu.profile.name : o.customerId}<br><strong>Product:</strong> ${o.productName}<br><strong>Qty:</strong> ${o.qty}<br><strong>Spec:</strong> ${o.specification}</div>
+            <div><strong>Unit Price:</strong> $${o.unitPrice}<br><strong>Discount:</strong> ${o.discount}%<br><strong>Tax:</strong> ${o.taxRate}%<br><strong>Required:</strong> ${o.requiredDate}</div></div>
+            <div class="mt-2"><strong>Status:</strong> <span class="badge info">${o.status}</span> · <strong>Priority:</strong> ${o.priority} · <strong>Salesperson:</strong> ${o.salesperson}</div>
+            ${prod.length ? `<div class="mt-3"><strong>Production Orders</strong>${prod.map(p => `<div class="insight-item"><div class="insight-title">${p.id} · ${p.stage}</div><div class="insight-desc">Planned: ${p.qtyPlanned} · Produced: ${p.qtyProduced} · Machine: ${p.machine}</div></div>`).join('')}</div>` : ''}
+            ${del.length ? `<div class="mt-3"><strong>Deliveries</strong>${del.map(d => `<div class="insight-item"><div class="insight-title">${d.id} · ${d.status}</div><div class="insight-desc">${d.items} · ETA: ${d.eta || '—'}</div></div>`).join('')}</div>` : ''}
+            ${inv.length ? `<div class="mt-3"><strong>Invoices</strong>${inv.map(i => `<div class="insight-item"><div class="insight-title">${i.id} · $${i.total.toFixed(2)}</div><div class="insight-desc">Status: ${i.status} · Due: ${i.dueDate}</div></div>`).join('')}</div>` : ''}
+        `, [{ label:'Close', class:'btn-secondary', action:'App.closeModal()' },
+            { label:'Send Update', class:'btn-primary', action:`App.showCommunicationModal('${cu?.contact.email || ''}', 'Order ${o.id}')` }]);
+    },
+
+    /* ---------- SALES PIPELINE ---------- */
+    render_sales(c){
+        const pipeline = DB.get('salesPipeline'), customers = DB.get('customers');
+        const stages = ['Lead','Opportunity','Quotation','Negotiation','Contract'];
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">Sales Pipeline</div><div class="page-sub">${pipeline.length} active opportunities</div></div>
+            <button class="btn btn-primary btn-sm" onclick="App.showSalesModal()"><i class="fas fa-plus"></i> New Lead/Opportunity</button></div>
+            <div class="kanban">
+                ${stages.map(st => {
+                    const items = pipeline.filter(p => p.stage === st);
+                    return `<div class="kanban-col"><h4>${st} (${items.length})</h4>
+                        ${items.map(p => `<div class="kanban-card" onclick="App.convertLead('${p.id}')">
+                            <div><strong>${p.name}</strong></div>
+                            <div class="text-muted text-xs">${p.id} · $${p.value.toLocaleString()}</div>
+                            <div class="text-xs mt-1">Prob: ${p.probability}% · ${p.owner}</div>
+                        </div>`).join('')}
+                    </div>`;
+                }).join('')}
+            </div>
+            <div class="card"><div class="table-wrap"><table>
+                <thead><tr><th>ID</th><th>Type</th><th>Name</th><th>Value</th><th>Stage</th><th>Probability</th><th>Owner</th><th>Customer</th><th>Expected Close</th><th></th></tr></thead>
+                <tbody>${pipeline.map(p => {
+                    const cu = customers.find(x => x.id === p.customerId);
+                    return `<tr>
+                        <td class="font-mono text-xs">${p.id}</td>
+                        <td><span class="badge ${p.type === 'Lead' ? 'neutral' : p.type === 'Opportunity' ? 'info' : 'warning'}">${p.type}</span></td>
+                        <td>${p.name}</td>
+                        <td>$${p.value.toLocaleString()}</td>
+                        <td>${p.stage}</td>
+                        <td>${p.probability}%</td>
+                        <td>${p.owner}</td>
+                        <td>${cu ? cu.profile.name : '—'}</td>
+                        <td>${p.expectedClose || '—'}</td>
+                        <td><button class="btn btn-sm btn-primary" onclick="App.convertLead('${p.id}')">Convert</button></td>
+                    </tr>`;
+                }).join('')}</tbody></table></div></div>`;
+    },
+
+    render_salesfields(c){
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">Sales Schema</div><div class="page-sub">Lead / Opportunity / Quotation / Negotiation / Contract / Invoice / Payment / Salesperson</div></div></div>
+            <div class="card"><table><thead><tr><th>Stage</th><th>Fields</th><th>Description</th></tr></thead><tbody>
+                <tr><td><strong>Lead</strong></td><td>id, name, value, source, owner, notes</td><td>Unqualified prospect</td></tr>
+                <tr><td><strong>Opportunity</strong></td><td>+ customerId, probability, expectedClose</td><td>Qualified prospect with value</td></tr>
+                <tr><td><strong>Quotation</strong></td><td>+ lineItems, validUntil</td><td>Formal price quote</td></tr>
+                <tr><td><strong>Negotiation</strong></td><td>+ negotiationNotes, revisedValue</td><td>Terms under discussion</td></tr>
+                <tr><td><strong>Contract</strong></td><td>+ contractId, signedDate, terms</td><td>Signed agreement</td></tr>
+                <tr><td><strong>Invoice</strong></td><td>See Invoice module</td><td>Billing document</td></tr>
+                <tr><td><strong>Payment</strong></td><td>See Payment module</td><td>Receipt of funds</td></tr>
+                <tr><td><strong>Salesperson</strong></td><td>name, email, target, achieved</td><td>Owner of the deal</td></tr>
+            </tbody></table></div>`;
+    },
+
+    showSalesModal(){
+        const customers = DB.get('customers');
+        this.showModal('New Lead / Opportunity', `
+            <div class="form-row"><div class="form-group"><label>Type</label><select id="sType"><option>Lead</option><option>Opportunity</option><option>Quotation</option></select></div>
+            <div class="form-group"><label>Name</label><input id="sName"></div></div>
+            <div class="form-row"><div class="form-group"><label>Value</label><input type="number" id="sValue" value="10000"></div>
+            <div class="form-group"><label>Probability %</label><input type="number" id="sProb" value="20"></div></div>
+            <div class="form-row"><div class="form-group"><label>Owner</label><input id="sOwner" value="${this.currentUser.name}"></div>
+            <div class="form-group"><label>Customer (optional)</label><select id="sCustomer"><option value="">— None —</option>${customers.map(c => `<option value="${c.id}">${c.profile.name}</option>`).join('')}</select></div></div>
+            <div class="form-row"><div class="form-group"><label>Source</label><input id="sSource" value="Direct"></div>
+            <div class="form-group"><label>Expected Close</label><input type="date" id="sClose" value="${new Date(Date.now()+30*86400000).toISOString().slice(0,10)}"></div></div>
+            <div class="form-group"><label>Notes</label><textarea id="sNotes"></textarea></div>
+        `, [
+            { label:'Cancel', class:'btn-secondary', action:'App.closeModal()' },
+            { label:'Create', class:'btn-primary', action:'App.saveSales()' }
+        ]);
+    },
+
+    saveSales(){
+        const type = document.getElementById('sType').value;
+        const name = document.getElementById('sName').value.trim();
+        if (!name){ showToast('Name required', 'danger'); return; }
+        const prefix = type === 'Lead' ? 'LEAD' : type === 'Opportunity' ? 'OPP' : 'QTN';
+        const key = type === 'Lead' ? 'lead' : type === 'Opportunity' ? 'opp' : 'qtn';
+        const id = DB.nextId(prefix, key);
+        DB.add('salesPipeline', { id, type, name, value:parseFloat(document.getElementById('sValue').value) || 0, stage:type === 'Lead' ? 'Lead' : type === 'Opportunity' ? 'Opportunity' : 'Quotation', probability:parseInt(document.getElementById('sProb').value) || 20, owner:document.getElementById('sOwner').value, customerId:document.getElementById('sCustomer').value || null, source:document.getElementById('sSource').value, expectedClose:document.getElementById('sClose').value, notes:document.getElementById('sNotes').value });
+        logActivity('Sales', 'Created', `${type} ${id} (${name}) created`);
+        showToast(`${type} created`, 'success');
+        this.closeModal();
+        this.renderPage('sales');
+    },
+
+    convertLead(id){
+        const p = DB.getById('salesPipeline', id);
+        if (!p) return;
+        if (!p.customerId){ showToast('Link a customer first', 'warning'); return; }
+        const orderId = DB.nextId('ORD', 'order');
+        DB.add('orders', { id:orderId, customerId:p.customerId, product:'FG-GBX-100', productName:'Industrial Gearbox GBX-100', qty:Math.max(1, Math.round(p.value / 680)), specification:'Standard', unitPrice:680, discount:0, taxRate:10, requiredDate:new Date(Date.now()+30*86400000).toISOString().slice(0,10), priority:'Medium', status:'Draft', salesperson:p.owner, createdAt:new Date().toISOString().slice(0,19).replace('T',' '), notes:`Converted from ${id}` });
+        logActivity('Sales', 'Converted', `${id} converted to order ${orderId}`);
+        showToast(`Converted to ${orderId}`, 'success');
+        this.navigate('orders');
+    },
+
+    /* ---------- PROCUREMENT ---------- */
+    render_procurement(c){
+        const pos = DB.get('purchaseOrders');
+        const recs = AI.procurementRecommendations();
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">Procurement</div><div class="page-sub">Purchase orders and AI-driven recommendations</div></div>
+            <button class="btn btn-primary btn-sm" onclick="App.showPOModal()"><i class="fas fa-plus"></i> Create PO</button></div>
+            ${recs.length ? `<div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-robot"></i> AI Recommendations</div></div>
+                ${recs.map(r => `<div class="insight-item"><div class="insight-title">${r.name}</div><div class="insight-desc">Need ${r.needed} ${r.unit} · Available ${r.available} · Short ${r.shortfall} · Lead ${r.leadTimeDays}d</div>
+                <button class="btn btn-sm btn-primary mt-1" onclick='Orchestrator.createPurchaseOrder(${JSON.stringify(r).replace(/'/g, "&#39;")})'>Create PO for Shortfall</button></div>`).join('')}
+            </div>` : ''}
+            <div class="card"><div class="table-wrap"><table>
+                <thead><tr><th>ID</th><th>Supplier</th><th>Items</th><th>Total</th><th>Expected</th><th>Status</th><th></th></tr></thead>
+                <tbody>${pos.map(p => `<tr>
+                    <td class="font-mono text-xs">${p.id}</td>
+                    <td>${p.supplier}</td>
+                    <td>${(p.items || []).map(it => { const item = DB.getById('inventory', it.itemId); return `${item ? item.name : it.itemId} × ${it.qty}`; }).join('<br>')}</td>
+                    <td>$${p.total.toFixed(2)}</td>
+                    <td>${p.expectedDelivery}</td>
+                    <td><span class="badge ${p.status === 'Received' ? 'success' : 'info'}">${p.status}</span></td>
+                    <td>${p.status !== 'Received' ? `<button class="btn btn-sm btn-primary" onclick="Orchestrator.receivePurchaseOrder('${p.id}')">Receive</button>` : ''}</td>
+                </tr>`).join('')}</tbody></table></div></div>`;
+    },
+
+    showPOModal(){
+        const items = DB.get('inventory').filter(i => i.type !== 'Finished Product');
+        this.showModal('Create Purchase Order', `
+            <div class="form-group"><label>Supplier</label><input id="poSupplier" value="Default Supplier"></div>
+            <div class="form-row"><div class="form-group"><label>Item</label><select id="poItem">${items.map(i => `<option value="${i.id}">${i.name} (${i.sku})</option>`).join('')}</select></div>
+            <div class="form-group"><label>Quantity</label><input type="number" id="poQty" value="100"></div></div>
+            <div class="form-row"><div class="form-group"><label>Unit Price</label><input type="number" id="poPrice" value="1.00" step="0.01"></div>
+            <div class="form-group"><label>Expected Delivery</label><input type="date" id="poDelivery" value="${new Date(Date.now()+14*86400000).toISOString().slice(0,10)}"></div></div>
+        `, [
+            { label:'Cancel', class:'btn-secondary', action:'App.closeModal()' },
+            { label:'Create PO', class:'btn-primary', action:'App.savePO()' }
+        ]);
+    },
+
+    savePO(){
+        const itemId = document.getElementById('poItem').value;
+        const qty = parseInt(document.getElementById('poQty').value);
+        const price = parseFloat(document.getElementById('poPrice').value);
+        const id = DB.nextId('PO', 'po');
+        DB.add('purchaseOrders', { id, supplier:document.getElementById('poSupplier').value, items:[{ itemId, qty, unitPrice:price }], status:'Approved', expectedDelivery:document.getElementById('poDelivery').value, total:qty * price, createdAt:new Date().toISOString().slice(0,19).replace('T',' ') });
+        logActivity('Procurement', 'PO Created', `PO ${id} created`);
+        showToast(`PO ${id} created`, 'success');
+        this.closeModal();
+        this.renderPage('procurement');
+    },
+
+    /* ---------- INVENTORY ---------- */
+    render_inventory(c){
+        const items = DB.get('inventory');
+        const order = { 'Out of Stock':0, 'Critical':1, 'Low':2, 'Expiring Soon':3, 'OK':4 };
+        const sorted = [...items].sort((a,b) => order[DB.getStockStatus(a)] - order[DB.getStockStatus(b)]);
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">Inventory</div><div class="page-sub">${items.length} items · ${items.filter(i => DB.getStockStatus(i) !== 'OK').length} need attention</div></div>
+            <button class="btn btn-primary btn-sm" onclick="App.showInventoryModal()"><i class="fas fa-plus"></i> Add Item</button></div>
+            <div class="card"><div class="table-wrap"><table>
+                <thead><tr><th>SKU</th><th>Name</th><th>Category</th><th>Type</th><th>Qty</th><th>Reserved</th><th>Available</th><th>Unit</th><th>Warehouse / Bin</th><th>Batch</th><th>Expiry</th><th>Reorder</th><th>Status</th><th></th></tr></thead>
+                <tbody>${sorted.map(i => {
+                    const avail = i.qty - (i.reserved || 0);
+                    const status = DB.getStockStatus(i);
+                    const badge = status === 'OK' ? 'success' : status === 'Low' ? 'warning' : ['Critical','Out of Stock'].includes(status) ? 'danger' : 'warning';
+                    return `<tr>
+                        <td class="font-mono text-xs">${i.sku}</td>
+                        <td>${i.name}</td>
+                        <td>${i.category}</td>
+                        <td>${i.type}</td>
+                        <td>${i.qty} ${i.unit}</td>
+                        <td>${i.reserved || 0}</td>
+                        <td><strong>${avail}</strong></td>
+                        <td>${i.unit}</td>
+                        <td>${i.warehouse} / ${i.locationBin || '—'}</td>
+                        <td>${i.batch || '—'}</td>
+                        <td>${i.expiry || '—'}</td>
+                        <td>${i.reorderLevel}</td>
+                        <td><span class="badge ${badge}">${status}</span></td>
+                        <td><button class="btn btn-sm btn-secondary" onclick="App.showInventoryModal('${i.id}')"><i class="fas fa-edit"></i></button></td>
+                    </tr>`;
+                }).join('')}</tbody></table></div></div>`;
+    },
+
+    render_inventoryfields(c){
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">Inventory Schema</div><div class="page-sub">All fields per inventory item</div></div></div>
+            <div class="card"><table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody>
+                <tr><td>id</td><td>string</td><td>Internal item ID (INV-###)</td></tr>
+                <tr><td>sku</td><td>string</td><td>Stock Keeping Unit</td></tr>
+                <tr><td>name</td><td>string</td><td>Human-readable name</td></tr>
+                <tr><td>category</td><td>enum</td><td>Raw Material / Component / Finished Product</td></tr>
+                <tr><td>type</td><td>enum</td><td>Raw material / Component / Finished product</td></tr>
+                <tr><td>qty</td><td>number</td><td>Quantity on hand</td></tr>
+                <tr><td>unit</td><td>string</td><td>Unit of measure (kg, pcs, L)</td></tr>
+                <tr><td>warehouse</td><td>string</td><td>Warehouse code</td></tr>
+                <tr><td>locationBin</td><td>string</td><td>Bin / location within warehouse</td></tr>
+                <tr><td>batch</td><td>string</td><td>Batch number</td></tr>
+                <tr><td>serialNumber</td><td>string</td><td>Serial number (if serialized)</td></tr>
+                <tr><td>expiry</td><td>date</td><td>Expiry date (if perishable)</td></tr>
+                <tr><td>cost</td><td>number</td><td>Cost per unit</td></tr>
+                <tr><td>reorderLevel</td><td>number</td><td>Threshold for reordering</td></tr>
+                <tr><td>reserved</td><td>number</td><td>Quantity reserved for orders</td></tr>
+                <tr><td>available</td><td>number</td><td>qty − reserved (computed)</td></tr>
+                <tr><td>stockStatus</td><td>enum</td><td>OK / Low / Critical / Out of Stock / Expiring Soon (computed)</td></tr>
+            </tbody></table></div>`;
+    },
+
+    showInventoryModal(id){
+        const i = id ? DB.getById('inventory', id) : null;
+        const e = i || {};
+        this.showModal(i ? 'Edit Inventory Item' : 'Add Inventory Item', `
+            <div class="form-row"><div class="form-group"><label>SKU</label><input id="invSku" value="${e.sku || ''}"></div>
+            <div class="form-group"><label>Name</label><input id="invName" value="${e.name || ''}"></div></div>
+            <div class="form-row"><div class="form-group"><label>Category</label><select id="invCategory">${['Raw Material','Component','Finished Product'].map(x => `<option ${e.category === x ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
+            <div class="form-group"><label>Type</label><select id="invType">${['Raw Material','Component','Finished Product'].map(x => `<option ${e.type === x ? 'selected' : ''}>${x}</option>`).join('')}</select></div></div>
+            <div class="form-row"><div class="form-group"><label>Quantity</label><input type="number" id="invQty" value="${e.qty || 0}"></div>
+            <div class="form-group"><label>Unit</label><input id="invUnit" value="${e.unit || 'pcs'}"></div></div>
+            <div class="form-row"><div class="form-group"><label>Cost per Unit</label><input type="number" id="invCost" value="${e.cost || 0}" step="0.01"></div>
+            <div class="form-group"><label>Reorder Level</label><input type="number" id="invReorder" value="${e.reorderLevel || 0}"></div></div>
+            <div class="form-row"><div class="form-group"><label>Warehouse</label><input id="invWarehouse" value="${e.warehouse || 'WH-A'}"></div>
+            <div class="form-group"><label>Location / Bin</label><input id="invBin" value="${e.locationBin || ''}"></div></div>
+            <div class="form-row"><div class="form-group"><label>Batch</label><input id="invBatch" value="${e.batch || ''}"></div>
+            <div class="form-group"><label>Serial Number</label><input id="invSerial" value="${e.serialNumber || ''}"></div></div>
+            <div class="form-group"><label>Expiry Date</label><input type="date" id="invExpiry" value="${e.expiry || ''}"></div>
+        `, [
+            { label:'Cancel', class:'btn-secondary', action:'App.closeModal()' },
+            { label:i ? 'Save' : 'Create', class:'btn-primary', action:`App.saveInventory('${id || ''}')` }
+        ]);
+    },
+
+    saveInventory(id){
+        const qty = parseFloat(document.getElementById('invQty').value) || 0;
+        const reserved = id ? DB.getById('inventory', id).reserved : 0;
+        const data = {
+            sku:document.getElementById('invSku').value,
+            name:document.getElementById('invName').value,
+            category:document.getElementById('invCategory').value,
+            type:document.getElementById('invType').value,
+            qty,
+            unit:document.getElementById('invUnit').value,
+            cost:parseFloat(document.getElementById('invCost').value) || 0,
+            reorderLevel:parseFloat(document.getElementById('invReorder').value) || 0,
+            warehouse:document.getElementById('invWarehouse').value,
+            locationBin:document.getElementById('invBin').value,
+            batch:document.getElementById('invBatch').value,
+            serialNumber:document.getElementById('invSerial').value || null,
+            expiry:document.getElementById('invExpiry').value || null,
+            reserved,
+        };
+        if (id){ DB.update('inventory', id, data); logActivity('Inventory', 'Updated', `Inventory ${id} updated`); }
+        else { const newId = 'INV-' + String(DB.get('inventory').length + 1).padStart(3, '0'); DB.add('inventory', { id:newId, ...data }); logActivity('Inventory', 'Created', `Inventory ${newId} (${data.name}) created`); }
+        showToast('Inventory saved', 'success');
+        this.closeModal();
+        this.renderPage('inventory');
+    },
+
+    /* ---------- PRODUCTION ---------- */
+    render_production(c){
+        const pos = DB.get('productionOrders');
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">Production</div><div class="page-sub">${pos.length} production orders · ${pos.filter(p => p.status === 'Active').length} active</div></div>
+            <button class="btn btn-primary btn-sm" onclick="App.showProductionModal()"><i class="fas fa-plus"></i> New Production Order</button></div>
+            <div class="card"><div class="table-wrap"><table>
+                <thead><tr><th>ID</th><th>Order</th><th>Product</th><th>Planned</th><th>Produced</th><th>Machine</th><th>Line</th><th>Team</th><th>Stage</th><th>Quality</th><th>Waste</th><th>Downtime</th><th>Status</th><th></th></tr></thead>
+                <tbody>${pos.map(p => `<tr>
+                    <td class="font-mono text-xs">${p.id}</td>
+                    <td>${p.orderId || '—'}</td>
+                    <td>${p.productName || p.product}</td>
+                    <td>${p.qtyPlanned}</td>
+                    <td>${p.qtyProduced}</td>
+                    <td>${p.machine}</td>
+                    <td>${p.line}</td>
+                    <td>${p.workerTeam}</td>
+                    <td><span class="badge ${p.stage === 'Complete' ? 'success' : p.stage === 'In Progress' ? 'info' : 'neutral'}">${p.stage}</span></td>
+                    <td>${p.qualityResult ? `<span class="badge ${p.qualityResult === 'Pass' ? 'success' : 'danger'}">${p.qualityResult}</span>` : '—'}</td>
+                    <td>${p.wastePct != null ? p.wastePct + '%' : '—'}</td>
+                    <td>${p.downtimeMin}min</td>
+                    <td><span class="badge ${p.status === 'Completed' ? 'success' : p.status === 'Active' ? 'info' : 'neutral'}">${p.status}</span></td>
+                    <td style="white-space:nowrap">
+                        ${p.status === 'Active' ? `<button class="btn btn-sm btn-primary" onclick="Orchestrator.completeProduction('${p.id}')">Complete</button>` : ''}
+                        <button class="btn btn-sm btn-secondary" onclick="App.viewProduction('${p.id}')"><i class="fas fa-eye"></i></button>
+                    </td>
+                </tr>`).join('')}</tbody></table></div></div>`;
+    },
+
+    render_productionfields(c){
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">Production Schema</div><div class="page-sub">All fields per production order</div></div></div>
+            <div class="card"><table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody>
+                <tr><td>id</td><td>string</td><td>Production order number (PRD-YYYY-####)</td></tr>
+                <tr><td>orderId</td><td>ref</td><td>Linked sales order</td></tr>
+                <tr><td>product</td><td>string</td><td>Product code</td></tr>
+                <tr><td>productName</td><td>string</td><td>Human-readable name</td></tr>
+                <tr><td>qtyPlanned</td><td>number</td><td>Target quantity</td></tr>
+                <tr><td>qtyProduced</td><td>number</td><td>Actual quantity produced</td></tr>
+                <tr><td>bom</td><td>array</td><td>Bill of Materials (item + qty per unit)</td></tr>
+                <tr><td>materialsRequired</td><td>number</td><td>Computed total materials needed</td></tr>
+                <tr><td>machine</td><td>string</td><td>Assigned machine</td></tr>
+                <tr><td>line</td><td>string</td><td>Production line</td></tr>
+                <tr><td>workerTeam</td><td>string</td><td>Assigned team</td></tr>
+                <tr><td>startTime</td><td>datetime</td><td>Start timestamp</td></tr>
+                <tr><td>endTime</td><td>datetime</td><td>End timestamp</td></tr>
+                <tr><td>stage</td><td>enum</td><td>Queued → In Progress → QC → Complete → On Hold</td></tr>
+                <tr><td>qualityResult</td><td>enum</td><td>Pass / Fail / Pending</td></tr>
+                <tr><td>wastePct</td><td>number</td><td>Waste percentage</td></tr>
+                <tr><td>downtimeMin</td><td>number</td><td>Downtime in minutes</td></tr>
+                <tr><td>status</td><td>enum</td><td>Planned / Active / Completed / On Hold</td></tr>
+            </tbody></table></div>`;
+    },
+
+    showProductionModal(){
+        const orders = DB.get('orders').filter(o => ['Confirmed','In Production'].includes(o.status));
+        const products = DB.get('inventory').filter(i => i.type === 'Finished Product');
+        this.showModal('New Production Order', `
+            <div class="form-row"><div class="form-group"><label>Linked Order</label><select id="prodOrder"><option value="">— None —</option>${orders.map(o => `<option value="${o.id}">${o.id} · ${o.productName} x${o.qty}</option>`).join('')}</select></div>
+            <div class="form-group"><label>Product</label><select id="prodProduct">${products.map(p => `<option value="${p.name}">${p.name}</option>`).join('')}</select></div></div>
+            <div class="form-row"><div class="form-group"><label>Quantity Planned</label><input type="number" id="prodQty" value="10" min="1"></div>
+            <div class="form-group"><label>Machine</label><input id="prodMachine" value="CNC-01"></div></div>
+            <div class="form-row"><div class="form-group"><label>Line</label><input id="prodLine" value="Line A"></div>
+            <div class="form-group"><label>Worker/Team</label><input id="prodTeam" value="Alpha Team"></div></div>
+            <div class="form-group"><label>Start Time</label><input type="datetime-local" id="prodStart" value="${new Date().toISOString().slice(0,16)}"></div>
+        `, [
+            { label:'Cancel', class:'btn-secondary', action:'App.closeModal()' },
+            { label:'Create', class:'btn-primary', action:'App.saveProduction()' }
+        ]);
+    },
+
+    saveProduction(){
+        const orderId = document.getElementById('prodOrder').value;
+        const productName = document.getElementById('prodProduct').value;
+        const qty = parseInt(document.getElementById('prodQty').value);
+        const bom = DB.getState().boms[productName] || [];
+        const prodId = DB.nextId('PRD', 'production');
+        DB.add('productionOrders', { id:prodId, orderId:orderId || null, product:productName, productName, qtyPlanned:qty, qtyProduced:0, bom, materialsRequired:qty, machine:document.getElementById('prodMachine').value, line:document.getElementById('prodLine').value, workerTeam:document.getElementById('prodTeam').value, startTime:document.getElementById('prodStart').value ? document.getElementById('prodStart').value.replace('T',' ') : null, endTime:null, stage:'Queued', qualityResult:null, wastePct:null, downtimeMin:0, status:'Planned' });
+        logActivity('Production', 'Created', `Production ${prodId} for ${productName} x${qty}`);
+        showToast(`Production ${prodId} created`, 'success');
+        this.closeModal();
+        this.renderPage('production');
+    },
+
+    viewProduction(id){
+        const p = DB.getById('productionOrders', id); if (!p) return;
+        const order = p.orderId ? DB.getById('orders', p.orderId) : null;
+        this.showModal(`Production ${p.id}`, `
+            <div class="form-row"><div><strong>Product:</strong> ${p.productName}<br><strong>Planned:</strong> ${p.qtyPlanned}<br><strong>Produced:</strong> ${p.qtyProduced}<br><strong>Machine:</strong> ${p.machine}<br><strong>Line:</strong> ${p.line}</div>
+            <div><strong>Team:</strong> ${p.workerTeam}<br><strong>Stage:</strong> ${p.stage}<br><strong>Status:</strong> ${p.status}<br><strong>Quality:</strong> ${p.qualityResult || '—'}<br><strong>Waste:</strong> ${p.wastePct != null ? p.wastePct + '%' : '—'}</div></div>
+            ${order ? `<div class="mt-2"><strong>Linked Order:</strong> ${order.id} (${order.status})</div>` : ''}
+            <div class="mt-2"><strong>BOM:</strong></div>
+            ${(p.bom || []).map(b => `<div class="insight-item"><div class="insight-title">${b.name || b.itemId} × ${b.qty} ${b.unit || ''}</div></div>`).join('')}
+        `, [{ label:'Close', class:'btn-secondary', action:'App.closeModal()' }]);
+    },
+
+    /* ---------- BOM ---------- */
+    render_bom(c){
+        const boms = DB.getState().boms || {};
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">Bill of Materials</div><div class="page-sub">${Object.keys(boms).length} product BOMs</div></div></div>
+            ${Object.keys(boms).map(prod => `<div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-sitemap"></i> ${prod}</div></div>
+                <table><thead><tr><th>Item</th><th>Qty per Unit</th><th>Unit</th><th>Cost/Unit</th><th>Line Cost</th></tr></thead><tbody>
+                    ${boms[prod].map(line => { const item = DB.getById('inventory', line.itemId); return `<tr><td>${item ? item.name : line.itemId}</td><td>${line.qty}</td><td>${line.unit}</td><td>$${item ? item.cost.toFixed(2) : '—'}</td><td>$${item ? (item.cost * line.qty).toFixed(2) : '—'}</td></tr>`; }).join('')}
+                    <tr style="font-weight:600"><td colspan="4">Total Material Cost per Unit</td><td>$${boms[prod].reduce((s,l) => { const it = DB.getById('inventory', l.itemId); return s + (it ? it.cost * l.qty : 0); }, 0).toFixed(2)}</td></tr>
+                </tbody></table></div>`).join('')}`;
+    },
+
+    /* ---------- WORKFORCE ---------- */
+    render_workforce(c){
+        const wf = DB.get('workforce');
+        const prod = AI.labourProductivity();
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">Workforce</div><div class="page-sub">${wf.length} employees</div></div>
+            <button class="btn btn-primary btn-sm" onclick="App.showWorkforceModal()"><i class="fas fa-plus"></i> Add Employee</button></div>
+            <div class="card"><div class="table-wrap"><table>
+                <thead><tr><th>ID</th><th>Name</th><th>Position</th><th>Dept</th><th>Skills</th><th>Shift</th><th>Hours</th><th>Overtime</th><th>Productivity</th><th>Safety</th><th>Performance</th></tr></thead>
+                <tbody>${wf.map(e => `<tr>
+                    <td class="font-mono text-xs">${e.id}</td>
+                    <td>${e.name}</td>
+                    <td>${e.position}</td>
+                    <td>${e.department}</td>
+                    <td>${e.skills}</td>
+                    <td>${e.shift}</td>
+                    <td>${e.hoursWorked}h</td>
+                    <td>${e.overtime}h</td>
+                    <td><strong>${e.productivity}%</strong></td>
+                    <td>${e.safetyIncidents}</td>
+                    <td><span class="badge ${e.performance === 'Exceeds' ? 'success' : 'neutral'}">${e.performance}</span></td>
+                </tr>`).join('')}</tbody></table></div></div>
+            <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-chart-line"></i> Labour Productivity Insights</div></div>
+                <div class="insight-item"><div class="insight-title">Top Performers</div><div class="insight-desc">${prod.top.map(t => `${t.name} (${t.productivity}%)`).join(', ')}</div></div>
+                <div class="insight-item"><div class="insight-title">Needs Improvement</div><div class="insight-desc">${prod.bottom.map(b => `${b.name} (${b.productivity}%)`).join(', ')}</div></div>
+            </div>`;
+    },
+
+    showWorkforceModal(){
+        this.showModal('Add Employee', `
+            <div class="form-row"><div class="form-group"><label>Name</label><input id="empName"></div>
+            <div class="form-group"><label>Position</label><input id="empPosition"></div></div>
+            <div class="form-row"><div class="form-group"><label>Department</label><input id="empDept"></div>
+            <div class="form-group"><label>Shift</label><select id="empShift"><option>Morning</option><option>Evening</option><option>Night</option></select></div></div>
+            <div class="form-row"><div class="form-group"><label>Skills</label><input id="empSkills"></div>
+            <div class="form-group"><label>Productivity %</label><input type="number" id="empProd" value="85"></div></div>
+        `, [
+            { label:'Cancel', class:'btn-secondary', action:'App.closeModal()' },
+            { label:'Create', class:'btn-primary', action:'App.saveEmployee()' }
+        ]);
+    },
+
+    saveEmployee(){
+        const name = document.getElementById('empName').value.trim();
+        if (!name){ showToast('Name required', 'danger'); return; }
+        const id = 'EMP-' + String(DB.get('workforce').length + 1).padStart(3, '0');
+        DB.add('workforce', { id, name, position:document.getElementById('empPosition').value, department:document.getElementById('empDept').value, shift:document.getElementById('empShift').value, skills:document.getElementById('empSkills').value, attendance:'Present', hoursWorked:40, overtime:0, productivity:parseFloat(document.getElementById('empProd').value) || 85, safetyIncidents:0, training:'', performance:'Meets' });
+        logActivity('Workforce', 'Created', `Employee ${id} (${name}) added`);
+        showToast('Employee added', 'success');
+        this.closeModal();
+        this.renderPage('workforce');
+    },
+
+    /* ---------- DELIVERY ---------- */
+    render_delivery(c){
+        const d = DB.get('deliveries');
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">Delivery</div><div class="page-sub">${d.length} deliveries</div></div>
+            <button class="btn btn-primary btn-sm" onclick="App.showDeliveryModal()"><i class="fas fa-plus"></i> Schedule Delivery</button></div>
+            <div class="card"><div class="table-wrap"><table>
+                <thead><tr><th>ID</th><th>Order</th><th>Items</th><th>Vehicle</th><th>Driver</th><th>Route</th><th>ETA</th><th>Status</th><th></th></tr></thead>
+                <tbody>${d.map(x => `<tr>
+                    <td class="font-mono text-xs">${x.id}</td>
+                    <td>${x.orderId}</td>
+                    <td>${x.items}</td>
+                    <td>${x.vehicle}</td>
+                    <td>${x.driver}</td>
+                    <td>${x.route}</td>
+                    <td>${x.eta || '—'}</td>
+                    <td><span class="badge ${x.status === 'Delivered' ? 'success' : x.status === 'In Transit' ? 'info' : 'neutral'}">${x.status}</span></td>
+                    <td style="white-space:nowrap">
+                        ${x.status === 'Scheduled' ? `<button class="btn btn-sm btn-primary" onclick="Orchestrator.dispatchDelivery('${x.id}')">Dispatch</button>` : ''}
+                        ${['Dispatched','In Transit'].includes(x.status) ? `<button class="btn btn-sm btn-primary" onclick="Orchestrator.deliverOrder('${x.id}')">Deliver</button>` : ''}
+                        ${x.status === 'Delivered' ? `<button class="btn btn-sm btn-secondary" onclick="App.viewDelivery('${x.id}')"><i class="fas fa-eye"></i></button>` : ''}
+                    </td>
+                </tr>`).join('')}</tbody></table></div></div>`;
+    },
+
+    showDeliveryModal(){
+        const ready = DB.get('orders').filter(o => o.status === 'Ready');
+        this.showModal('Schedule Delivery', `
+            <div class="form-group"><label>Order</label><select id="delOrder">${ready.length ? ready.map(o => `<option value="${o.id}">${o.id} · ${o.productName} x${o.qty}</option>`).join('') : '<option value="">No ready orders</option>'}</select></div>
+            <div class="form-row"><div class="form-group"><label>Vehicle</label><input id="delVehicle" value="TRK-101"></div>
+            <div class="form-group"><label>Driver</label><input id="delDriver" value="Mike Ross"></div></div>
+            <div class="form-row"><div class="form-group"><label>Route</label><input id="delRoute" value="Detroit Loop"></div>
+            <div class="form-group"><label>ETA</label><input type="date" id="delEta" value="${new Date(Date.now()+2*86400000).toISOString().slice(0,10)}"></div></div>
+        `, [
+            { label:'Cancel', class:'btn-secondary', action:'App.closeModal()' },
+            { label:'Schedule', class:'btn-primary', action:'App.saveDelivery()' }
+        ]);
+    },
+
+    saveDelivery(){
+        const orderId = document.getElementById('delOrder').value;
+        if (!orderId){ showToast('Select an order', 'danger'); return; }
+        const o = DB.getById('orders', orderId);
+        const delId = DB.nextId('DEL', 'delivery');
+        DB.add('deliveries', { id:delId, orderId, customerId:o.customerId, items:`${o.productName} x${o.qty}`, qty:o.qty, vehicle:document.getElementById('delVehicle').value, driver:document.getElementById('delDriver').value, route:document.getElementById('delRoute').value, dispatchTime:null, eta:document.getElementById('delEta').value, actualDelivery:null, pod:null, failureReason:null, status:'Scheduled' });
+        logActivity('Delivery', 'Scheduled', `Delivery ${delId} scheduled for ${orderId}`);
+        showToast(`Delivery ${delId} scheduled`, 'success');
+        this.closeModal();
+        this.renderPage('delivery');
+    },
+
+    viewDelivery(id){
+        const d = DB.getById('deliveries', id); if (!d) return;
+        this.showModal(`Delivery ${d.id}`, `
+            <div><strong>Order:</strong> ${d.orderId}<br><strong>Items:</strong> ${d.items}<br><strong>Vehicle:</strong> ${d.vehicle}<br><strong>Driver:</strong> ${d.driver}<br><strong>Route:</strong> ${d.route}</div>
+            <div class="mt-2"><strong>Status:</strong> <span class="badge ${d.status === 'Delivered' ? 'success' : 'info'}">${d.status}</span></div>
+            ${d.pod ? `<div class="mt-2"><strong>Proof of Delivery:</strong> ${d.pod}</div>` : ''}
+        `, [{ label:'Close', class:'btn-secondary', action:'App.closeModal()' }]);
+    },
+
+    /* ---------- FINANCE ---------- */
+    render_finance(c){
+        const inv = DB.get('invoices'), exp = DB.get('expenses'), pay = DB.get('payments');
+        const rev = inv.reduce((s,i) => s+i.total, 0);
+        const out = inv.reduce((s,i) => s + (i.total - (i.paidAmount || 0)), 0);
+        const totExp = exp.reduce((s,e) => s+e.amount, 0);
+        const cost = AI.costForecast();
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">Finance</div><div class="page-sub">Revenue · COGS · Labour · Materials · Utilities · Transport · Payments · Tax · AR/AP · Profitability</div></div></div>
+            <div class="kpi-grid">
+                <div class="kpi-card"><div class="kpi-label">Revenue</div><div class="kpi-value">$${rev.toLocaleString()}</div></div>
+                <div class="kpi-card"><div class="kpi-label">Outstanding (AR)</div><div class="kpi-value" style="color:var(--warning)">$${out.toLocaleString()}</div></div>
+                <div class="kpi-card"><div class="kpi-label">Expenses (AP)</div><div class="kpi-value">$${totExp.toLocaleString()}</div></div>
+                <div class="kpi-card"><div class="kpi-label">COGS</div><div class="kpi-value">$${cost.total.toFixed(0)}</div></div>
+            </div>
+            <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-receipt"></i> Expenses</div>
+                <button class="btn btn-sm btn-primary" onclick="App.showExpenseModal()"><i class="fas fa-plus"></i> Add</button></div>
+                <table><thead><tr><th>ID</th><th>Category</th><th>Description</th><th>Amount</th><th>Date</th><th>Supplier</th><th>Status</th></tr></thead><tbody>
+                    ${exp.map(e => `<tr><td>${e.id}</td><td>${e.category}</td><td>${e.description}</td><td>$${e.amount.toFixed(2)}</td><td>${e.date}</td><td>${e.supplier}</td><td><span class="badge ${e.status === 'Paid' ? 'success' : 'warning'}">${e.status}</span></td></tr>`).join('')}
+                </tbody></table></div>
+            <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-credit-card"></i> Payments</div></div>
+                <table><thead><tr><th>ID</th><th>Customer</th><th>Amount</th><th>Date</th><th>Matched</th><th>Confidence</th><th></th></tr></thead><tbody>
+                    ${pay.map(p => `<tr><td>${p.id}</td><td>${p.customerId}</td><td>$${p.amount.toFixed(2)}</td><td>${p.date}</td><td>${p.matched ? '<span class="badge success">Yes</span>' : '<span class="badge warning">No</span>'}</td><td>${p.confidence || 0}%</td><td>${!p.matched ? `<button class="btn btn-sm btn-primary" onclick="Orchestrator.matchPayment('${p.id}')">Match</button>` : ''}</td></tr>`).join('')}
+                </tbody></table></div>`;
+    },
+
+    render_financefields(c){
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">Finance Schema</div><div class="page-sub">All finance-related fields</div></div></div>
+            <div class="card"><table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody>
+                <tr><td>Revenue</td><td>number</td><td>Total invoiced revenue</td></tr>
+                <tr><td>Cost of Goods (COGS)</td><td>number</td><td>Computed from materials + labour + overhead</td></tr>
+                <tr><td>Labour</td><td>number</td><td>Labour cost component</td></tr>
+                <tr><td>Materials</td><td>number</td><td>Material cost component</td></tr>
+                <tr><td>Utilities</td><td>number</td><td>Utility expenses</td></tr>
+                <tr><td>Transport</td><td>number</td><td>Freight / logistics expenses</td></tr>
+                <tr><td>Supplier Payments</td><td>number</td><td>Amounts payable to suppliers</td></tr>
+                <tr><td>Customer Payments</td><td>number</td><td>Amounts received from customers</td></tr>
+                <tr><td>Tax</td><td>number</td><td>Tax collected / payable</td></tr>
+                <tr><td>Cash Flow</td><td>number</td><td>Net cash position</td></tr>
+                <tr><td>Accounts Receivable</td><td>number</td><td>Outstanding customer invoices</td></tr>
+                <tr><td>Accounts Payable</td><td>number</td><td>Outstanding supplier bills</td></tr>
+                <tr><td>Profitability</td><td>number</td><td>Revenue − COGS</td></tr>
+            </tbody></table></div>`;
+    },
+
+    showExpenseModal(){
+        this.showModal('Add Expense', `
+            <div class="form-group"><label>Category</label><select id="expCat"><option>Utilities</option><option>Transport</option><option>Materials</option><option>Labour</option><option>Maintenance</option></select></div>
+            <div class="form-group"><label>Description</label><input id="expDesc"></div>
+            <div class="form-row"><div class="form-group"><label>Amount</label><input type="number" id="expAmount" value="0" step="0.01"></div>
+            <div class="form-group"><label>Date</label><input type="date" id="expDate" value="${new Date().toISOString().slice(0,10)}"></div></div>
+            <div class="form-group"><label>Supplier</label><input id="expSupplier"></div>
+        `, [
+            { label:'Cancel', class:'btn-secondary', action:'App.closeModal()' },
+            { label:'Add', class:'btn-primary', action:'App.saveExpense()' }
+        ]);
+    },
+
+    saveExpense(){
+        const id = 'EXP-' + String(DB.get('expenses').length + 1).padStart(3, '0');
+        DB.add('expenses', { id, category:document.getElementById('expCat').value, description:document.getElementById('expDesc').value, amount:parseFloat(document.getElementById('expAmount').value) || 0, date:document.getElementById('expDate').value, supplier:document.getElementById('expSupplier').value, status:'Pending' });
+        logActivity('Finance', 'Expense Added', `Expense ${id} recorded`);
+        showToast('Expense added', 'success');
+        this.closeModal();
+        this.renderPage('finance');
+    },
+
+    /* ---------- INVOICES ---------- */
+    render_invoices(c){
+        const inv = DB.get('invoices'), customers = DB.get('customers');
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">Invoices</div><div class="page-sub">${inv.length} invoices · ${inv.filter(i => i.status === 'Overdue').length} overdue</div></div></div>
+            <div class="card"><div class="table-wrap"><table>
+                <thead><tr><th>Invoice #</th><th>Customer</th><th>Order</th><th>Total</th><th>Paid</th><th>Balance</th><th>Due</th><th>Status</th><th></th></tr></thead>
+                <tbody>${inv.map(i => {
+                    const cu = customers.find(x => x.id === i.customerId);
+                    const bal = i.total - (i.paidAmount || 0);
+                    return `<tr>
+                        <td class="font-mono text-xs">${i.id}</td>
+                        <td>${cu ? cu.profile.name : i.customerId}</td>
+                        <td>${i.orderId}</td>
+                        <td>$${i.total.toFixed(2)}</td>
+                        <td>$${(i.paidAmount || 0).toFixed(2)}</td>
+                        <td><strong>$${bal.toFixed(2)}</strong></td>
+                        <td>${i.dueDate}</td>
+                        <td><span class="badge ${i.status === 'Paid' ? 'success' : i.status === 'Overdue' ? 'danger' : i.status === 'Draft' ? 'neutral' : 'warning'}">${i.status}</span></td>
+                        <td><button class="btn btn-sm btn-secondary" onclick="App.viewInvoice('${i.id}')"><i class="fas fa-eye"></i></button></td>
+                    </tr>`;
+                }).join('')}</tbody></table></div></div>`;
+    },
+
+    viewInvoice(id){
+        const inv = DB.getById('invoices', id); if (!inv) return;
+        const cu = DB.getById('customers', inv.customerId);
+        const idn = DB.getState().identity;
+        this.showModal(`Invoice ${inv.id}`, `
+            <div style="border:1px solid var(--border-light);padding:1.5rem;border-radius:8px">
+                <div style="display:flex;justify-content:space-between">
+                    <div><strong>${idn.companyName}</strong><br>${idn.address}<br>Tax ID: ${idn.taxId}</div>
+                    <div style="text-align:right"><strong>INVOICE</strong><br>${inv.id}<br>Date: ${inv.createdAt}<br>Due: ${inv.dueDate}</div>
+                </div>
+                <hr style="margin:1rem 0;border:none;border-top:1px solid var(--border-light)">
+                <div><strong>Bill To:</strong><br>${cu ? cu.profile.name : inv.customerId}<br>${cu?.location.city || ''}, ${cu?.location.country || ''}</div>
+                <table style="width:100%;margin-top:1rem">
+                    <thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
+                    <tbody>${(inv.items || []).map(it => `<tr><td>${it.desc}</td><td>${it.qty}</td><td>$${it.unitPrice.toFixed(2)}</td><td>$${(it.qty*it.unitPrice).toFixed(2)}</td></tr>`).join('')}
+                    ${(inv.extraCharges || []).map(ec => `<tr><td>${ec.desc}</td><td>—</td><td>—</td><td>$${ec.amount.toFixed(2)}</td></tr>`).join('')}</tbody>
+                </table>
+                <div style="text-align:right;margin-top:1rem">
+                    <div>Subtotal: $${inv.subtotal.toFixed(2)}</div>
+                    <div>Tax (${inv.taxRate}%): $${inv.tax.toFixed(2)}</div>
+                    <div style="font-weight:700;font-size:1.1rem">Total: $${inv.total.toFixed(2)}</div>
+                    <div>Paid: $${(inv.paidAmount || 0).toFixed(2)}</div>
+                    <div style="font-weight:600">Balance: $${(inv.total - (inv.paidAmount || 0)).toFixed(2)}</div>
+                </div>
+            </div>
+        `, [{ label:'Close', class:'btn-secondary', action:'App.closeModal()' },
+            { label:'Send Reminder', class:'btn-primary', action:`App.showCommunicationModal('${cu?.contact.email || ''}', 'Invoice ${inv.id}')` }]);
+    },
+
+    /* ---------- DOCUMENTS ---------- */
+    render_documents(c){
+        const docs = DB.get('documents');
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">Documents</div><div class="page-sub">Central document vault</div></div>
+            <button class="btn btn-primary btn-sm" onclick="App.showDocumentModal()"><i class="fas fa-upload"></i> Upload</button></div>
+            <div class="card"><table><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Related</th><th>Uploaded By</th><th>Date</th><th>Size</th></tr></thead><tbody>
+                ${docs.map(d => `<tr><td>${d.id}</td><td>${d.name}</td><td><span class="badge neutral">${d.type}</span></td><td>${d.relatedEntity || '—'}</td><td>${d.uploadedBy}</td><td>${d.date}</td><td>${d.size}</td></tr>`).join('')}
+            </tbody></table></div>`;
+    },
+
+    showDocumentModal(){
+        this.showModal('Upload Document', `
+            <div class="form-group"><label>Document Name</label><input id="docName"></div>
+            <div class="form-group"><label>Type</label><select id="docType"><option>Contract</option><option>Quality Certificate</option><option>Delivery Note</option><option>Compliance</option><option>Other</option></select></div>
+            <div class="form-group"><label>Related Entity</label><input id="docEntity" placeholder="e.g. ORD-2026-0001"></div>
+        `, [
+            { label:'Cancel', class:'btn-secondary', action:'App.closeModal()' },
+            { label:'Upload', class:'btn-primary', action:'App.saveDocument()' }
+        ]);
+    },
+
+    saveDocument(){
+        const name = document.getElementById('docName').value.trim();
+        if (!name){ showToast('Name required', 'danger'); return; }
+        const id = 'DOC-' + String(DB.get('documents').length + 1).padStart(3, '0');
+        DB.add('documents', { id, name, type:document.getElementById('docType').value, relatedEntity:document.getElementById('docEntity').value, uploadedBy:this.currentUser.name, date:new Date().toISOString().slice(0,10), size:'—' });
+        logActivity('Documents', 'Uploaded', `Document ${id} (${name}) uploaded`);
+        showToast('Document uploaded', 'success');
+        this.closeModal();
+        this.renderPage('documents');
+    },
+
+    /* ---------- COMMUNICATIONS ---------- */
+    render_communications(c){
+        const comms = DB.get('communications').slice().reverse();
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">Communications</div><div class="page-sub">${comms.length} messages</div></div>
+            <button class="btn btn-primary btn-sm" onclick="App.showCommunicationModal('', 'General')"><i class="fas fa-paper-plane"></i> New Message</button></div>
+            <div class="card">${comms.map(x => `<div class="activity-item"><div class="activity-icon"><i class="fas fa-${x.channel === 'Email' ? 'envelope' : x.channel === 'SMS' ? 'sms' : 'comment'}"></i></div><div style="flex:1"><div><strong>${x.subject}</strong> · <span class="badge neutral">${x.channel}</span></div><div class="text-muted text-xs">To: ${x.recipient} · ${x.timestamp}</div><div class="text-xs" style="margin-top:.2rem">${x.body}</div></div></div>`).join('')}</div>`;
+    },
+
+    showCommunicationModal(recipient, relatedEntity){
+        this.showModal('Send Message', `
+            <div class="form-group"><label>Channel</label><select id="commChannel"><option>Email</option><option>SMS</option><option>WhatsApp</option><option>Internal Note</option></select></div>
+            <div class="form-group"><label>Recipient</label><input id="commRecipient" value="${recipient}"></div>
+            <div class="form-group"><label>Subject</label><input id="commSubject" value="Update regarding ${relatedEntity}"></div>
+            <div class="form-group"><label>Message</label><textarea id="commBody" rows="4">Dear customer,\n\nPlease find an update on your order.\n\nBest regards,\nForgeFlow Team</textarea></div>
+        `, [
+            { label:'Cancel', class:'btn-secondary', action:'App.closeModal()' },
+            { label:'Send', class:'btn-primary', action:`App.sendCommunication('${relatedEntity}')` }
+        ]);
+    },
+
+    sendCommunication(relatedEntity){
+        DB.add('communications', { id:'COM-' + Date.now(), channel:document.getElementById('commChannel').value, recipient:document.getElementById('commRecipient').value, subject:document.getElementById('commSubject').value, body:document.getElementById('commBody').value, relatedEntity:relatedEntity || null, sender:this.currentUser.name, timestamp:new Date().toISOString().slice(0,19).replace('T',' '), status:'Sent' });
+        logActivity('Communications', 'Sent', `Message to ${document.getElementById('commRecipient').value}: ${document.getElementById('commSubject').value}`);
+        showToast('Message sent', 'success');
+        this.closeModal();
+        if (this.currentPage === 'communications') this.renderPage('communications');
+    },
+
+    /* ---------- ANALYTICS ---------- */
+    render_analytics(c){
+        const cost = AI.costForecast(), profit = AI.profitability();
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">Analytics</div><div class="page-sub">Sales trends · Production efficiency · Inventory turnover · On-time delivery · Cost breakdown · Profitability</div></div></div>
+            <div class="chart-grid">
+                <div class="card"><div class="card-header"><div class="card-title">Cost Breakdown</div></div><div class="chart-container"><canvas id="costChart"></canvas></div></div>
+                <div class="card"><div class="card-header"><div class="card-title">Profitability by Customer</div></div><div class="chart-container"><canvas id="profitChart"></canvas></div></div>
+            </div>
+            <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-calculator"></i> Cost Forecast</div></div>
+                <div class="kpi-grid">
+                    <div class="kpi-card"><div class="kpi-label">Material</div><div class="kpi-value">$${cost.materialCost.toFixed(0)}</div></div>
+                    <div class="kpi-card"><div class="kpi-label">Labour</div><div class="kpi-value">$${cost.labourCost.toFixed(0)}</div></div>
+                    <div class="kpi-card"><div class="kpi-label">Overhead</div><div class="kpi-value">$${cost.overhead.toFixed(0)}</div></div>
+                    <div class="kpi-card"><div class="kpi-label">Total COGS</div><div class="kpi-value">$${cost.total.toFixed(0)}</div></div>
+                </div></div>
+            <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-chart-line"></i> Demand History by Product</div></div>
+                <div class="chart-container" style="height:200px"><canvas id="demandChart"></canvas></div></div>
+        `;
+        setTimeout(() => {
+            const c1 = document.getElementById('costChart');
+            if (c1) new Chart(c1, { type:'doughnut', data:{ labels:['Material','Labour','Overhead'], datasets:[{ data:[cost.materialCost, cost.labourCost, cost.overhead], backgroundColor:['#1e5f8e','#0b7b4b','#b85e00'] }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom' } } } });
+            const c2 = document.getElementById('profitChart');
+            const custs = Object.keys(profit);
+            if (c2 && custs.length) new Chart(c2, { type:'bar', data:{ labels:custs, datasets:[{ label:'Margin ($)', data:custs.map(x => profit[x].margin || 0), backgroundColor:'#1e5f8e', borderRadius:4 }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } } });
+            const c3 = document.getElementById('demandChart');
+            const dh = DB.getState().aiBaselines.demandHistory || {};
+            if (c3 && Object.keys(dh).length) {
+                const labels = Object.keys(dh);
+                new Chart(c3, { type:'line', data:{ labels, datasets:[{ label:'Order Qty (recent)', data:labels.map(k => dh[k][dh[k].length-1] || 0), borderColor:'#1e5f8e', tension:.3, fill:false }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } } });
+            }
+        }, 100);
+    },
+
+    /* ---------- AI ---------- */
+    render_ai(c){
+        const recs = AI.recommendations(), forecast = AI.demandForecast(), anom = AI.qualityAnomalies(), maint = AI.maintenancePrediction(), invPred = AI.inventoryPrediction(), plan = AI.productionPlanning(), proc = AI.procurementRecommendations(), delRisk = AI.deliveryPrediction();
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">AI Insights</div><div class="page-sub">Intelligence layer · recommendations from live data</div></div></div>
+            <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-robot"></i> Recommendations</div></div>
+                ${recs.length === 0 ? '<p class="text-muted text-sm">No recommendations.</p>' : recs.map(r => `<div class="insight-item"><div class="insight-title">${r.title}</div><div class="insight-desc">${r.desc}</div><button class="btn btn-sm btn-secondary mt-1" onclick="App.navigate('${r.module}')">${r.action} →</button></div>`).join('')}</div>
+            <div class="chart-grid">
+                <div class="card"><div class="card-header"><div class="card-title">Demand Forecast</div></div><table><thead><tr><th>Product</th><th>Forecast Qty</th></tr></thead><tbody>${Object.entries(forecast).map(([p,q]) => `<tr><td>${p}</td><td>${q}</td></tr>`).join('')}</tbody></table></div>
+                <div class="card"><div class="card-header"><div class="card-title">Production Planning</div></div><table><thead><tr><th>#</th><th>Order</th><th>Product</th><th>Qty</th><th>Required</th></tr></thead><tbody>${plan.map(p => `<tr><td>${p.sequence}</td><td>${p.orderId}</td><td>${p.product}</td><td>${p.qty}</td><td>${p.requiredDate}</td></tr>`).join('')}</tbody></table></div>
+            </div>
+            <div class="chart-grid">
+                <div class="card"><div class="card-header"><div class="card-title">Inventory Prediction</div></div>${invPred.length === 0 ? '<p class="text-muted text-sm">No imminent stock-outs.</p>' : invPred.map(p => `<div class="insight-item"><div class="insight-title">${p.name}</div><div class="insight-desc">~${p.daysLeft} days left (available: ${p.available})</div></div>`).join('')}</div>
+                <div class="card"><div class="card-header"><div class="card-title">Procurement Recommendations</div></div>${proc.length === 0 ? '<p class="text-muted text-sm">No procurement needed.</p>' : proc.map(p => `<div class="insight-item"><div class="insight-title">${p.name}</div><div class="insight-desc">Need ${p.needed} ${p.unit} · Available ${p.available} · Short ${p.shortfall} · Lead ${p.leadTimeDays}d</div></div>`).join('')}</div>
+            </div>
+            <div class="chart-grid">
+                <div class="card"><div class="card-header"><div class="card-title">Quality Anomalies</div></div>${anom.length === 0 ? '<p class="text-muted text-sm">No anomalies.</p>' : anom.map(a => `<div class="insight-item" style="border-left-color:var(--danger)"><div class="insight-title">${a.id} · ${a.product}</div><div class="insight-desc">Waste ${a.wastePct}% vs baseline ${a.baseline.toFixed(1)}% (+${a.deviation}%)</div></div>`).join('')}</div>
+                <div class="card"><div class="card-header"><div class="card-title">Machine Maintenance</div></div>${maint.length === 0 ? '<p class="text-muted text-sm">All machines OK.</p>' : maint.map(m => `<div class="insight-item" style="border-left-color:var(--warning)"><div class="insight-title">${m.machine}</div><div class="insight-desc">${m.hours}h (${m.pct}% of ${m.threshold}h)</div></div>`).join('')}</div>
+            </div>
+            <div class="chart-grid">
+                <div class="card"><div class="card-header"><div class="card-title">Labour Productivity</div></div>${(() => { const l = AI.labourProductivity(); return `<div class="insight-item"><div class="insight-title">Top</div><div class="insight-desc">${l.top.map(t => `${t.name} (${t.productivity}%)`).join(', ')}</div></div><div class="insight-item"><div class="insight-title">Bottom</div><div class="insight-desc">${l.bottom.map(b => `${b.name} (${b.productivity}%)`).join(', ')}</div></div>`; })()}</div>
+                <div class="card"><div class="card-header"><div class="card-title">Delivery Risk</div></div>${delRisk.length === 0 ? '<p class="text-muted text-sm">No deliveries in progress.</p>' : delRisk.map(d => `<div class="insight-item" style="border-left-color:${d.risk === 'High' ? 'var(--danger)' : 'var(--accent)'}"><div class="insight-title">${d.id} · ${d.route}</div><div class="insight-desc">On-time rate: ${(d.onTimeRate*100).toFixed(0)}% · Risk: ${d.risk}</div></div>`).join('')}</div>
+            </div>`;
+    },
+
+    render_aifields(c){
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">AI Feature Schema</div><div class="page-sub">Fields used by each AI model</div></div></div>
+            <div class="card"><table><thead><tr><th>Feature</th><th>Input Fields</th><th>Output</th></tr></thead><tbody>
+                <tr><td><strong>Demand Forecasting</strong></td><td>order.qty, order.createdAt, order.product</td><td>Next-period demand per product</td></tr>
+                <tr><td><strong>Production Planning</strong></td><td>order.priority, order.requiredDate, production.machine, production.line</td><td>Suggested production sequence</td></tr>
+                <tr><td><strong>Inventory Prediction</strong></td><td>inventory.qty, inventory.reserved, order.qty, order.status</td><td>Predicted stock-out date per item</td></tr>
+                <tr><td><strong>Procurement Recommendations</strong></td><td>production.bom, production.qtyPlanned, inventory.qty, inventory.reserved</td><td>Suggested purchase qty + timing</td></tr>
+                <tr><td><strong>Quality Anomaly Detection</strong></td><td>production.wastePct, production.qualityResult, aiBaselines.qualityAvgByProduct</td><td>Flagged anomalies vs baseline</td></tr>
+                <tr><td><strong>Machine Maintenance Prediction</strong></td><td>aiBaselines.machineHours, production.machine, production.downtimeMin</td><td>Maintenance alerts</td></tr>
+                <tr><td><strong>Labour Productivity Analysis</strong></td><td>workforce.hoursWorked, workforce.overtime, workforce.productivity, production.workerTeam</td><td>Top/bottom performers</td></tr>
+                <tr><td><strong>Cost Forecasting</strong></td><td>production.bom, inventory.cost, workforce.hoursWorked, expenses.amount</td><td>Projected COGS</td></tr>
+                <tr><td><strong>Delivery Prediction</strong></td><td>delivery.route, aiBaselines.deliveryOnTimeByRoute, delivery.eta, delivery.dispatchTime</td><td>Risk / ETA reliability</td></tr>
+                <tr><td><strong>Profitability Analysis</strong></td><td>invoice.total, invoice.customerId, costForecast.materialCost/labourCost/overhead</td><td>Margin by customer/product/order</td></tr>
+            </tbody></table></div>`;
+    },
+
+    /* ---------- ORCHESTRATION ---------- */
+    render_orchestration(c){
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">Orchestration Layer</div><div class="page-sub">Automation vs Human Decision · Event → Learning</div></div></div>
+            <div class="chart-grid">
+                <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-robot"></i> Automation</div></div>
+                    <div class="insight-item"><div class="insight-title">Auto-reserve inventory</div><div class="insight-desc">Triggered on Order confirmation</div></div>
+                    <div class="insight-item"><div class="insight-title">Auto-create Production Order</div><div class="insight-desc">When finished stock insufficient</div></div>
+                    <div class="insight-item"><div class="insight-title">Auto-decrement stock</div><div class="insight-desc">On Production completion / Delivery dispatch</div></div>
+                    <div class="insight-item"><div class="insight-title">Auto-draft Invoice</div><div class="insight-desc">On Delivery marked Delivered</div></div>
+                    <div class="insight-item"><div class="insight-title">Auto-send Communication</div><div class="insight-desc">On status changes</div></div>
+                    <div class="insight-item"><div class="insight-title">Auto-flag low stock</div><div class="insight-desc">When available &lt; reorder level</div></div>
+                </div>
+                <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-user-check"></i> Human Decision</div></div>
+                    <div class="insight-item"><div class="insight-title">Accept AI production schedule</div><div class="insight-desc">User reviews in AI Insights</div></div>
+                    <div class="insight-item"><div class="insight-title">Approve procurement recommendation</div><div class="insight-desc">User confirms quantities</div></div>
+                    <div class="insight-item"><div class="insight-title">Match ambiguous payment</div><div class="insight-desc">Manual match when confidence low</div></div>
+                    <div class="insight-item"><div class="insight-title">Override quality result</div><div class="insight-desc">User can override flagged anomaly</div></div>
+                </div>
+            </div>
+            <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-sitemap"></i> Data Flow</div></div>
+                <div class="timeline">
+                    <div class="timeline-item">ORGANIZATION</div>
+                    <div class="timeline-item">Organizational Identity</div>
+                    <div class="timeline-item">People / Customers</div>
+                    <div class="timeline-item">Demand / Order</div>
+                    <div class="timeline-item">Sales / Procurement</div>
+                    <div class="timeline-item">Resources / Inventory</div>
+                    <div class="timeline-item">Production / Operations</div>
+                    <div class="timeline-item">Workforce</div>
+                    <div class="timeline-item">Logistics / Delivery</div>
+                    <div class="timeline-item">Finance</div>
+                    <div class="timeline-item">Documents / Data</div>
+                    <div class="timeline-item">Analytics</div>
+                    <div class="timeline-item">Intelligence / AI</div>
+                    <div class="timeline-item">Orchestration → Automation | Human Decision</div>
+                    <div class="timeline-item">New Action → Event → Learning (feeds back into AI)</div>
+                </div>
+            </div>`;
+    },
+
+    /* ---------- ACTIVITY ---------- */
+    render_activity(c){
+        const acts = DB.get('activity').slice().reverse();
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">Activity Log</div><div class="page-sub">${acts.length} events · every create/update/status change</div></div></div>
+            <div class="card">${acts.map(a => `<div class="activity-item"><div class="activity-icon"><i class="fas fa-${a.module === 'Order' ? 'file-invoice' : a.module === 'Production' ? 'cogs' : a.module === 'Inventory' ? 'boxes' : a.module === 'Finance' ? 'coins' : a.module === 'Communications' ? 'comments' : 'circle'}"></i></div><div style="flex:1"><div>${a.detail}</div><div class="activity-time">${a.timestamp} · ${a.module} · ${a.user}</div></div></div>`).join('')}</div>`;
+    },
+
+    /* ---------- SETTINGS ---------- */
+    render_settings(c){
+        const s = DB.getState().identity;
+        c.innerHTML = `
+            <div class="page-header"><div><div class="page-title">Settings</div><div class="page-sub">System configuration</div></div></div>
+            <div class="card">
+                <div class="form-row"><div class="form-group"><label>Company Name</label><input id="setCompany" value="${s.companyName}"></div>
+                <div class="form-group"><label>Tax ID</label><input id="setTax" value="${s.taxId}"></div></div>
+                <div class="form-group"><label>Address</label><input id="setAddress" value="${s.address}"></div>
+                <div class="form-row"><div class="form-group"><label>Invoice Prefix</label><input id="setInvPrefix" value="INV"></div>
+                <div class="form-group"><label>Default Tax Rate %</label><input type="number" id="setTaxRate" value="${s.defaults.taxRate}"></div></div>
+                <button class="btn btn-primary" onclick="App.saveSettings()">Save Settings</button>
+                <button class="btn btn-danger" style="margin-left:.5rem" onclick="if(confirm('Reset all demo data?')){DB.reset();location.reload();}">Reset Demo Data</button>
+            </div>`;
+    },
+
+    saveSettings(){
+        const id = DB.getState().identity;
+        id.companyName = document.getElementById('setCompany').value;
+        id.taxId = document.getElementById('setTax').value;
+        id.address = document.getElementById('setAddress').value;
+        id.defaults.taxRate = parseFloat(document.getElementById('setTaxRate').value) || 10;
+        DB.save();
+        logActivity('Settings', 'Updated', 'System settings updated');
+        showToast('Settings saved', 'success');
+    },
+
+    /* ---------- GLOBAL SEARCH ---------- */
+    globalSearch(query){
+        if (!query.trim()) return;
+        const q = query.toLowerCase();
+        const results = [];
+        DB.get('customers').forEach(c => { if (c.profile.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q)) results.push({ type:'Customer', id:c.id, name:c.profile.name, page:'customers' }); });
+        DB.get('orders').forEach(o => { if (o.id.toLowerCase().includes(q)) results.push({ type:'Order', id:o.id, name:`${o.id} · ${o.productName}`, page:'orders' }); });
+        DB.get('inventory').forEach(i => { if (i.name.toLowerCase().includes(q) || i.sku.toLowerCase().includes(q)) results.push({ type:'Inventory', id:i.id, name:`${i.sku} · ${i.name}`, page:'inventory' }); });
+        DB.get('invoices').forEach(i => { if (i.id.toLowerCase().includes(q)) results.push({ type:'Invoice', id:i.id, name:`${i.id} · $${i.total.toFixed(2)}`, page:'invoices' }); });
+        if (results.length === 0){ showToast('No results found', 'info'); return; }
+        this.showModal('Search Results', results.slice(0,10).map(r => `<div class="insight-item" style="cursor:pointer" onclick="App.closeModal();App.navigate('${r.page}')"><div class="insight-title">${r.type} · ${r.name}</div><div class="insight-desc">ID: ${r.id}</div></div>`).join(''), [{ label:'Close', class:'btn-secondary', action:'App.closeModal()' }]);
+    },
+
+    /* ---------- MODAL ---------- */
+    showModal(title, body, buttons = []){
+        document.getElementById('modalContent').innerHTML = `
+            <div class="modal-header"><h3>${title}</h3><button class="modal-close" onclick="App.closeModal()"><i class="fas fa-times"></i></button></div>
+            <div class="modal-body">${body}</div>
+            ${buttons.length ? `<div class="modal-footer">${buttons.map(b => `<button class="btn ${b.class}" onclick="${b.action}">${b.label}</button>`).join('')}</div>` : ''}`;
+        document.getElementById('modalOverlay').classList.add('show');
+    },
+
+    closeModal(){ document.getElementById('modalOverlay').classList.remove('show'); }
+};
+
+/* ============================================================
+   BADGES
+   ============================================================ */
+function updateBadges(){
+    const low = DB.get('inventory').filter(i => ['Low','Critical','Out of Stock'].includes(DB.getStockStatus(i))).length;
+    const el = document.getElementById('badgeLowStock');
+    if (el){ el.textContent = low; el.style.display = low === 0 ? 'none' : 'inline-block'; }
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+function bootApp(){
+    try {
+        App.init();
+        setInterval(() => { try { recomputeAIBaselines(); } catch(e){} }, 60000);
+        window.App = App;
+        window.Orchestrator = Orchestrator;
+        window.AI = AI;
+        window.DB = DB;
+        window.showToast = showToast;
+        window.logActivity = logActivity;
+        console.log('ForgeFlow booted');
+    } catch(err){
+        console.error('Boot error:', err);
+        alert('Boot error: ' + err.message);
+    }
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootApp);
+else bootApp();
+</script>
+</body>
+</html>

@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Campus Connect | Internship & Attachment Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f4f7fc;
+            color: #1e2a3a;
+            padding: 24px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* ========== THEME: DARK NAVY + GOLD ACCENTS ========== */
+        .header {
+            background: linear-gradient(135deg, #0a1c2e 0%, #0f2b3d 100%);
+            color: white;
+            padding: 28px 32px;
+            border-radius: 32px;
+            margin-bottom: 32px;
+            box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.25);
+            border-bottom: 3px solid #F5B042;
+        }
+
+        .logo h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #ffffff, #F5B042);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .logo p {
+            opacity: 0.85;
+            margin-top: 6px;
+            font-weight: 500;
+        }
+
+        .nav-bar {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.12);
+            border: none;
+            padding: 10px 28px;
+            border-radius: 60px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: 0.25s;
+            backdrop-filter: blur(4px);
+        }
+
+        .nav-btn.active {
+            background: #F5B042;
+            color: #0a1c2e;
+            box-shadow: 0 4px 12px rgba(245, 176, 66, 0.4);
+        }
+
+        .nav-btn:hover {
+            background: rgba(245, 176, 66, 0.8);
+            color: #0a1c2e;
+            transform: translateY(-2px);
+        }
+
+        .pane {
+            display: none;
+            background: white;
+            border-radius: 32px;
+            padding: 32px;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            animation: fadeIn 0.25s ease;
+        }
+
+        .pane.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            font-size: 1.7rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            color: #0f2b3d;
+            border-left: 5px solid #F5B042;
+            padding-left: 18px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+            color: #1e3a4d;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 60px;
+            border: 1px solid #cbd5e1;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: 0.2s;
+            background: #ffffff;
+        }
+
+        input:focus, select:focus {
+            border-color: #F5B042;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(245, 176, 66, 0.2);
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            max-height: 320px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            padding: 18px;
+            border-radius: 28px;
+            background: #fafcff;
+        }
+
+        .checkbox-group label {
+            font-weight: normal;
+            width: calc(33% - 14px);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 40px;
+            background: white;
+            transition: 0.1s;
+        }
+
+        .checkbox-group label:hover {
+            background: #fff3e0;
+        }
+
+        .btn {
+            background: #F5B042;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 60px;
+            color: #0a1c2e;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            transition: 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .btn:hover {
+            background: #e09d2c;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(245, 176, 66, 0.3);
+        }
+
+        .btn-success {
+            background: #F5B042;
+            color: #0a1c2e;
+        }
+
+        .btn-warning {
+            background: #e67e22;
+            color: white;
+        }
+
+        .fee-card {
+            background: #fff9ef;
+            padding: 20px;
+            border-radius: 28px;
+            margin: 24px 0;
+            border-left: 6px solid #F5B042;
+            font-weight: 500;
+            color: #1e3a4d;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border-radius: 24px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 14px 12px;
+            text-align: left;
+            border-bottom: 1px solid #eef2f8;
+            vertical-align: middle;
+        }
+
+        th {
+            background: #0f2b3d;
+            color: white;
+            font-weight: 700;
+        }
+
+        .institution-tag {
+            background: #fff3e0;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 12px;
+            display: inline-block;
+            margin: 2px;
+            color: #0f2b3d;
+            font-weight: 500;
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .status-input {
+            width: 160px;
+            padding: 8px 12px;
+            border-radius: 40px;
+            border: 1px solid #cbd5e1;
+            font-size: 12px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 48px;
+            padding: 20px;
+            color: #5c6f87;
+            font-size: 0.85rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .inst-card {
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            transition: 0.2s;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .inst-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px -8px rgba(245, 176, 66, 0.2);
+            border-color: #F5B042;
+        }
+
+        .badge-gold {
+            background: #F5B042;
+            color: #0a1c2e;
+            padding: 4px 12px;
+            border-radius: 60px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        @media (max-width: 700px) {
+            .checkbox-group label {
+                width: 100%;
+            }
+            th, td {
+                font-size: 0.75rem;
+            }
+            .container {
+                padding: 0 12px;
+            }
+            body {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="logo">
+            <h1><i class="fas fa-graduation-cap"></i> CAMPUS CONNECT</h1>
+            <p>Student Attachment & Internship Programs | Kenya</p>
+        </div>
+        <div class="nav-bar">
+            <button class="nav-btn active" data-pane="institutions">🏛️ Institutions</button>
+            <button class="nav-btn" data-pane="register">📝 Register</button>
+            <button class="nav-btn" data-pane="applicants">📋 Applicants List</button>
+            <button class="nav-btn" data-pane="admin">🔐 Admin Console</button>
+        </div>
+    </div>
+
+    <!-- Institutions Panel -->
+    <div id="institutionsPane" class="pane active">
+        <h2><i class="fas fa-building"></i> Partner Institutions</h2>
+        <div id="institutionsList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 24px; margin-top: 24px;"></div>
+    </div>
+
+    <!-- Registration Panel -->
+    <div id="registerPane" class="pane">
+        <h2><i class="fas fa-user-plus"></i> Register for Attachment / Internship</h2>
+        <form id="regForm">
+            <div class="form-group"><label>Full Name</label><input type="text" id="fullName" required placeholder="Enter full name"></div>
+            <div class="form-group"><label>Program Type</label><select id="type" required><option value="Internship">Internship</option><option value="Attachment">Attachment</option></select></div>
+            <div class="form-group"><label>Course / Program</label><input type="text" id="course" required placeholder="e.g., IT, Business, Engineering, Health Sciences"></div>
+            <div class="form-group"><label>School / University</label><input type="text" id="school" required placeholder="Institution name"></div>
+            <div class="form-group"><label>Admission Number</label><input type="text" id="admission" required placeholder="Registration ID"></div>
+            <div class="form-group"><label>Preferred Institutions (up to 3)</label><div id="instChecklist" class="checkbox-group"></div><small id="instCounter" style="color:#F5B042;"></small></div>
+            <div class="form-group"><label>Country</label><input type="text" id="country" value="Kenya" readonly style="background:#f1f5f9;"></div>
+            <div class="form-group"><label>Upload Curriculum Vitae (CV)</label><input type="file" id="cvFile" accept=".pdf,.doc,.docx"><small>CV upload reduces registration fee</small></div>
+            <div id="feeDisplay" class="fee-card">Total Registration Fee: —</div>
+            <button type="submit" class="btn btn-success"><i class="fab fa-whatsapp"></i> Submit Registration</button>
+        </form>
+    </div>
+
+    <!-- Applicants List Panel -->
+    <div id="applicantsPane" class="pane">
+        <h2><i class="fas fa-users"></i> Registered Applicants</h2>
+        <input type="text" id="searchInput" placeholder="Search by name, admission, or institution" style="width:100%; max-width:360px; margin: 20px 0 16px; padding:12px 18px; border-radius:60px;">
+        <div style="overflow-x:auto;"><table id="applicantsTable"><thead><tr><th>Name</th><th>Admission No</th><th>Type</th><th>Institutions</th><th>CV</th><th>Fee (KES)</th><th>Status</th></tr></thead><tbody id="applicantsBody"></tbody></table></div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="adminPane" class="pane">
+        <h2><i class="fas fa-lock"></i> Administration</h2>
+        <div id="adminLoginBox">
+            <label>Administrator Password</label>
+            <input type="password" id="adminPass" placeholder="" style="width:280px;">
+            <button id="adminLoginBtn" class="btn" style="margin-top:16px;">Unlock Console</button>
+            <p id="adminError" style="color:#c00; margin-top:12px;"></p>
+        </div>
+        <div id="adminContent" style="display:none;"></div>
+    </div>
+    <footer>© Campus Connect — Hands-on experience | Mentorship | Networking | Career pathways</footer>
+</div>
+
+<script>
+    // ==================== SECURE CONFIGURATION ====================
+    const ADMIN_PASSWORD = "admin2025";
+    const WHATSAPP_NUMBER = "254746332443";
+
+    // ==================== INSTITUTIONS (52+ real businesses) ====================
+    const institutionData = [
+        { name: "Nairobi Serena Hotel", location: "Nairobi" }, { name: "Nairobi Bakers & Co", location: "Nairobi" }, { name: "Nairobi Electrical Hub", location: "Nairobi" },
+        { name: "Nairobi City Hospital", location: "Nairobi" }, { name: "Nairobi Fresh Farm Produce", location: "Nairobi" }, { name: "Nairobi Innovation Hub", location: "Nairobi" },
+        { name: "Nairobi Legal Chambers", location: "Nairobi" }, { name: "Nairobi Digital Academy", location: "Nairobi" },
+        { name: "Meru Grand Hotel", location: "Meru" }, { name: "Meru Bookshop Junction", location: "Meru" }, { name: "Meru Tech Solutions", location: "Meru" },
+        { name: "Meru Beauty Palace", location: "Meru" }, { name: "Meru Farmers Co-op", location: "Meru" }, { name: "Meru Engineering Works", location: "Meru" }, { name: "Meru Maternity Hospital", location: "Meru" },
+        { name: "Nanyuki Farm Fresh", location: "Nanyuki" }, { name: "Nanyuki Bookstore", location: "Nanyuki" }, { name: "Nanyuki Electrical", location: "Nanyuki" }, { name: "Nanyuki Equator Resort", location: "Nanyuki" },
+        { name: "Isiolo Oasis Hotel", location: "Isiolo" }, { name: "Isiolo General Traders", location: "Isiolo" }, { name: "Isiolo Modern Salon", location: "Isiolo" }, { name: "Isiolo Camel Dairy", location: "Isiolo" },
+        { name: "Embu Bakeries", location: "Embu" }, { name: "Embu Medical Centre", location: "Embu" }, { name: "Embu Tech Hub", location: "Embu" },
+        { name: "Chuka Bookshop", location: "Chuka" }, { name: "Chuka Farmers Coop", location: "Chuka" }, { name: "Chuka Beauty & Barber", location: "Chuka" }, { name: "Chuka University Enterprises", location: "Chuka" },
+        { name: "Kisumu Impala Hotel", location: "Kisumu" }, { name: "Kisumu Lake Hospital", location: "Kisumu" }, { name: "Kisumu Dunga Beach Resort", location: "Kisumu" }, { name: "Kisumu Maritime Institute", location: "Kisumu" },
+        { name: "Makueni Fresh Farm", location: "Makueni" }, { name: "Makueni Electrical", location: "Makueni" }, { name: "Makueni Green Energy", location: "Makueni" },
+        { name: "Thika Bakers", location: "Thika" }, { name: "Thika Steel & Hardware", location: "Thika" }, { name: "Thika Pineapple Plantation", location: "Thika" },
+        { name: "Nyeri Highland Hotel", location: "Nyeri" }, { name: "Nyeri Bookshop", location: "Nyeri" }, { name: "Nyeri Coffee Mill", location: "Nyeri" },
+        { name: "Machakos Hospital", location: "Machakos" }, { name: "Machakos Green Farms", location: "Machakos" }, { name: "Machakos Business Centre", location: "Machakos" },
+        { name: "Mombasa Beach Hotel", location: "Mombasa" }, { name: "Mombasa Old Town Crafts", location: "Mombasa" }, { name: "Mombasa Port Logistics", location: "Mombasa" }, { name: "Mombasa Maritime Academy", location: "Mombasa" },
+        { name: "Nakuru Flamingo Resort", location: "Nakuru" }, { name: "Nakuru Menengai Farm", location: "Nakuru" }, { name: "Nakuru Tech Park", location: "Nakuru" }, { name: "Nakuru Medical Centre", location: "Nakuru" },
+        { name: "Eldoret Champions Hotel", location: "Eldoret" }, { name: "Eldoret Grain Millers", location: "Eldoret" }, { name: "Eldoret Textile Hub", location: "Eldoret" },
+        { name: "Kisii Soapstone Works", location: "Kisii" }, { name: "Kisii Highlands Hotel", location: "Kisii" }, { name: "Kisii Farmers Cooperative", location: "Kisii" }
+    ];
+    const institutions = institutionData.map((inst, idx) => ({ id: idx+1, name: inst.name, location: inst.location }));
+
+    function computeFee(type, hasCV) {
+        if (type === "Attachment") return hasCV ? 100 : 150;
+        return hasCV ? 200 : 250;
+    }
+
+    // ==================== APPLICANTS STORAGE ====================
+    let applicants = [];
+
+    function generateDemoApplicants() {
+        const demo = [];
+        const names = ["James Otieno","Mary Wanjiku","Peter Mbugua","Grace Akinyi","Brian Kipchoge","Cynthia Muthoni","Dennis Mutua","Esther Nthenya","Frank Mwangi","Linet Atieno",
+                       "Samuel Kariuki","Faith Mueni","Kelvin Odhiambo","Ruth Wambui","Victor Kimathi","Diana Chebet","Emmanuel Maina","Sharon Mwikali","Collins Omondi","Beatrice Njeri"];
+        const groups = [
+            ["CC/2025/1001","CC/2025/1002","CC/2025/1003"],
+            ["CC/2025/2101","CC/2025/2102","CC/2025/2103","CC/2025/2104"],
+            ["CC/2025/305","CC/2025/306","CC/2025/307"],
+            ["CC/2025/452","CC/2025/453","CC/2025/454","CC/2025/455"],
+            ["CC/2025/598","CC/2025/599","CC/2025/600"],
+            ["CC/2025/701","CC/2025/702","CC/2025/703","CC/2025/704"]
+        ];
+        let flatAdmissions = [];
+        for (let g of groups) flatAdmissions.push(...g);
+        while(flatAdmissions.length < 20) flatAdmissions.push(`CC/RND/${Math.floor(1000+Math.random()*9000)}`);
+        for (let i = 0; i < 20; i++) {
+            const type = i % 2 === 0 ? "Internship" : "Attachment";
+            const hasCV = i % 3 !== 0;
+            const fee = computeFee(type, hasCV);
+            const shuffled = [...institutions];
+            for (let j = shuffled.length - 1; j > 0; j--) { const k = Math.floor(Math.random()*(j+1)); [shuffled[j], shuffled[k]] = [shuffled[k], shuffled[j]]; }
+            const selectedInsts = shuffled.slice(0, Math.floor(Math.random() * 3) + 1).map(inst => ({ id: inst.id, name: inst.name }));
+            demo.push({
+                id: Date.now() + i,
+                name: names[i % names.length],
+                admission: flatAdmissions[i],
+                type: type,
+                course: type === "Internship" ? "Business Admin" : "Hospitality",
+                school: ["University of Nairobi","Kenyatta University","MKU","Technical University"][i % 4],
+                institutions: selectedInsts,
+                hasCV: hasCV,
+                fee: fee,
+                country: "Kenya",
+                paymentApproved: false,
+                statusUpdate: "Pending approval",
+                registrationDate: new Date().toISOString()
+            });
+        }
+        return demo;
+    }
+
+    function loadApplicants() {
+        const stored = localStorage.getItem("campus_applicants_final");
+        if (stored) {
+            applicants = JSON.parse(stored);
+        } else {
+            applicants = generateDemoApplicants();
+            localStorage.setItem("campus_applicants_final", JSON.stringify(applicants));
+        }
+    }
+    function saveApplicants() { localStorage.setItem("campus_applicants_final", JSON.stringify(applicants)); }
+
+    // ==================== UI HELPERS ====================
+    function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+    function renderInstitutions() {
+        const container = document.getElementById("institutionsList");
+        container.innerHTML = institutions.map(inst => `
+            <div class="inst-card" data-id="${inst.id}" data-name="${escapeHtml(inst.name)}">
+                <h3>${escapeHtml(inst.name)}</h3>
+                <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(inst.location)}</p>
+                <span class="badge-gold">Partner</span>
+            </div>
+        `).join("");
+        document.querySelectorAll(".inst-card").forEach(card => {
+            card.addEventListener("click", (e) => {
+                const instId = parseInt(card.dataset.id);
+                document.querySelectorAll(".pane").forEach(p => p.classList.remove("active"));
+                document.getElementById("registerPane").classList.add("active");
+                document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.remove("active"));
+                document.querySelector(".nav-btn[data-pane='register']").classList.add("active");
+                setTimeout(() => {
+                    const checkbox = document.querySelector(`.instCheck[value="${instId}"]`);
+                    if (checkbox && !checkbox.checked) {
+                        checkbox.checked = true;
+                        const changeEvent = new Event('change', { bubbles: true });
+                        checkbox.dispatchEvent(changeEvent);
+                    }
+                    document.getElementById("instChecklist").scrollIntoView({ behavior: "smooth", block: "center" });
+                }, 150);
+            });
+        });
+    }
+
+    function renderChecklist() {
+        const container = document.getElementById("instChecklist");
+        if (!container) return;
+        container.innerHTML = institutions.map(inst => `
+            <label><input type="checkbox" class="instCheck" value="${inst.id}" data-name="${inst.name}"> ${escapeHtml(inst.name)} (${escapeHtml(inst.location)})</label>
+        `).join("");
+        attachCounter();
+    }
+
+    function attachCounter() {
+        const checkboxes = document.querySelectorAll(".instCheck");
+        const counterSpan = document.getElementById("instCounter");
+        if (!counterSpan) return;
+        function update() {
+            const checked = document.querySelectorAll(".instCheck:checked").length;
+            counterSpan.innerText = `Selected ${checked} of 3 maximum`;
+            checkboxes.forEach(cb => {
+                if (document.querySelectorAll(".instCheck:checked").length >= 3 && !cb.checked) cb.disabled = true;
+                else cb.disabled = false;
+            });
+        }
+        checkboxes.forEach(cb => cb.addEventListener("change", update));
+        update();
+    }
+
+    function getSelectedInstitutions() {
+        const selected = [];
+        document.querySelectorAll(".instCheck:checked").forEach(cb => {
+            const id = parseInt(cb.value);
+            const inst = institutions.find(i => i.id === id);
+            if (inst) selected.push({ id: inst.id, name: inst.name });
+        });
+        return selected;
+    }
+
+    function updateFeePreview() {
+        const type = document.getElementById("type").value;
+        const cvFile = document.getElementById("cvFile").files[0];
+        const hasCV = !!cvFile;
+        const fee = computeFee(type, hasCV);
+        const feeCard = document.getElementById("feeDisplay");
+        if (feeCard) feeCard.innerHTML = `Total Registration Fee: <strong>KES ${fee}</strong> (${hasCV ? "CV uploaded – reduced rate" : "No CV – standard rate"})`;
+    }
+
+    function handleSubmit(e) {
+        e.preventDefault();
+        const name = document.getElementById("fullName").value.trim();
+        const type = document.getElementById("type").value;
+        const course = document.getElementById("course").value.trim();
+        const school = document.getElementById("school").value.trim();
+        const admission = document.getElementById("admission").value.trim();
+        const country = document.getElementById("country").value.trim();
+        const cvFile = document.getElementById("cvFile").files[0];
+        const hasCV = !!cvFile;
+        const cwStatus = hasCV ? "Yes (uploaded)" : "No";
+        const selectedInsts = getSelectedInstitutions();
+        if (!name || !course || !school || !admission || selectedInsts.length === 0) {
+            alert("Please complete all required fields and select at least one institution.");
+            return;
+        }
+        if (selectedInsts.length > 3) { alert("Maximum 3 institutions allowed."); return; }
+        const totalFee = computeFee(type, hasCV);
+        const instList = selectedInsts.map(i => i.name).join(", ");
+
+        const message = `*CAMPUS CONNECT REGISTRATION*%0A① Name: ${name}%0A② Type: ${type}%0A③ Course: ${course}%0A④ School: ${school}%0A⑤ Admission: ${admission}%0A⑥ Institutions: ${instList}%0A⑦ Country: ${country}%0A⑧ CV Upload: ${cwStatus}%0A⑨ Total Fee: KES ${totalFee}`;
+        const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
+        const newWindow = window.open(whatsappUrl, '_blank');
+        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+            alert("Please allow popups or copy this message and send manually:\n\n" + decodeURIComponent(message.replace(/%0A/g, "\n")));
+        } else {
+            alert("Registration details forwarded. Thank you.");
+        }
+
+        const newApplicant = {
+            id: Date.now(),
+            name, admission, type, course, school,
+            institutions: selectedInsts,
+            hasCV, fee: totalFee, country,
+            paymentApproved: false,
+            statusUpdate: "Pending approval",
+            registrationDate: new Date().toISOString()
+        };
+        applicants.unshift(newApplicant);
+        saveApplicants();
+        renderApplicantsTable();
+        document.getElementById("regForm").reset();
+        document.querySelectorAll(".instCheck").forEach(cb => cb.checked = false);
+        attachCounter();
+        updateFeePreview();
+        if (adminLoggedIn && document.getElementById("adminContent").style.display === "block") renderAdminDashboard();
+    }
+
+    function renderApplicantsTable() {
+        const searchTerm = document.getElementById("searchInput")?.value.toLowerCase() || "";
+        let filtered = applicants.filter(app => 
+            app.name.toLowerCase().includes(searchTerm) || 
+            app.admission.toLowerCase().includes(searchTerm) ||
+            app.institutions.some(i => i.name.toLowerCase().includes(searchTerm))
+        );
+        const tbody = document.getElementById("applicantsBody");
+        if (!tbody) return;
+        tbody.innerHTML = filtered.map(app => `
+            <tr>
+                <td>${escapeHtml(app.name)}</td>
+                <td><strong>${escapeHtml(app.admission)}</strong></td>
+                <td>${app.type}</td>
+                <td>${app.institutions.map(i => `<span class="institution-tag">${escapeHtml(i.name)}</span>`).join(" ")}</td>
+                <td>${app.hasCV ? "Yes" : "No"}</td>
+                <td>KES ${app.fee}</td>
+                <td>${app.paymentApproved ? '<span style="color:#0f6e3f;">Approved</span>' : '<span style="color:#b91c1c;">Pending</span>'}<br><small>${escapeHtml(app.statusUpdate)}</small></td>
+            </tr>
+        `).join("");
+        if (filtered.length === 0) tbody.innerHTML = "<tr><td colspan='7'>No applicants found</td></tr>";
+    }
+
+    // ==================== ADMIN DASHBOARD ====================
+    let adminLoggedIn = false;
+
+    function renderAdminDashboard() {
+        const adminDiv = document.getElementById("adminContent");
+        if (!adminLoggedIn) return;
+        adminDiv.style.display = "block";
+        document.getElementById("adminLoginBox").style.display = "none";
+        adminDiv.innerHTML = `<h3>Management Console</h3>
+        <div style="overflow-x:auto;">
+        <table style="width:100%">
+            <thead><tr><th>Name</th><th>Admission</th><th>Type</th><th>Institutions</th><th>CV</th><th>Fee</th><th>Payment</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="adminTableBody"></tbody>
+        </table>
+        </div>`;
+        renderAdminTable();
+    }
+
+    function renderAdminTable() {
+        const tbody = document.getElementById("adminTableBody");
+        if (!tbody) return;
+        tbody.innerHTML = applicants.map(app => `
+            <tr>
+                <td>${escapeHtml(app.name)}</td>
+                <td>${escapeHtml(app.admission)}</td>
+                <td>${app.type}</td>
+                <td>${app.institutions.map(i => escapeHtml(i.name)).join(", ")}</td>
+                <td>${app.hasCV ? "✓" : "✗"}</td>
+                <td>KES ${app.fee}</td>
+                <td id="payStatus_${app.id}">${app.paymentApproved ? "Approved" : "Pending"}</td>
+                <td><input type="text" id="statusInput_${app.id}" value="${escapeHtml(app.statusUpdate)}" class="status-input"></td>
+                <td class="admin-actions">
+                    <button class="btn approveBtn" data-id="${app.id}" style="padding:6px 14px; font-size:12px;">Approve</button>
+                    <button class="btn updateStatusBtn" data-id="${app.id}" style="padding:6px 14px; font-size:12px; background:#e67e22;">Update</button>
+                </td>
+            </tr>
+        `).join("");
+        document.querySelectorAll(".approveBtn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const id = parseInt(btn.dataset.id);
+                const app = applicants.find(a => a.id === id);
+                if (app && !app.paymentApproved) {
+                    app.paymentApproved = true;
+                    app.statusUpdate = "Payment approved. Placement in progress.";
+                    saveApplicants();
+                    renderAdminTable();
+                    renderApplicantsTable();
+                    alert(`Approved: ${app.name}`);
+                } else if (app && app.paymentApproved) alert("Already approved.");
+            });
+        });
+        document.querySelectorAll(".updateStatusBtn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const id = parseInt(btn.dataset.id);
+                const app = applicants.find(a => a.id === id);
+                const newStatus = document.getElementById(`statusInput_${id}`).value;
+                if (app && newStatus.trim()) {
+                    app.statusUpdate = newStatus.trim();
+                    saveApplicants();
+                    renderAdminTable();
+                    renderApplicantsTable();
+                    alert(`Status updated for ${app.name}`);
+                }
+            });
+        });
+    }
+
+    function setupAdmin() {
+        const loginBtn = document.getElementById("adminLoginBtn");
+        const passInput = document.getElementById("adminPass");
+        const errorSpan = document.getElementById("adminError");
+        loginBtn.addEventListener("click", () => {
+            if (passInput.value === ADMIN_PASSWORD) {
+                adminLoggedIn = true;
+                errorSpan.innerText = "";
+                document.getElementById("adminLoginBox").style.display = "none";
+                renderAdminDashboard();
+            } else {
+                errorSpan.innerText = "Access denied. Invalid credentials.";
+                passInput.value = "";
+            }
+        });
+    }
+
+    // ==================== NAVIGATION ====================
+    function setupNavigation() {
+        const btns = document.querySelectorAll(".nav-btn");
+        const panes = { institutions: "institutionsPane", register: "registerPane", applicants: "applicantsPane", admin: "adminPane" };
+        btns.forEach(btn => {
+            btn.addEventListener("click", () => {
+                const paneId = panes[btn.dataset.pane];
+                document.querySelectorAll(".pane").forEach(p => p.classList.remove("active"));
+                document.getElementById(paneId).classList.add("active");
+                btns.forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                if (paneId === "applicants") renderApplicantsTable();
+                if (paneId === "admin") {
+                    if (adminLoggedIn) {
+                        document.getElementById("adminLoginBox").style.display = "none";
+                        renderAdminDashboard();
+                    } else {
+                        document.getElementById("adminLoginBox").style.display = "block";
+                        document.getElementById("adminContent").style.display = "none";
+                    }
+                }
+            });
+        });
+    }
+
+    // ==================== INIT ====================
+    function init() {
+        loadApplicants();
+        renderInstitutions();
+        renderChecklist();
+        renderApplicantsTable();
+        setupNavigation();
+        setupAdmin();
+        document.getElementById("type").addEventListener("change", updateFeePreview);
+        document.getElementById("cvFile").addEventListener("change", updateFeePreview);
+        document.getElementById("regForm").addEventListener("submit", handleSubmit);
+        document.getElementById("searchInput").addEventListener("input", () => renderApplicantsTable());
+        updateFeePreview();
+    }
+    init();
+</script>
+</body>
+</html>

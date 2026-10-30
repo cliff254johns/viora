@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Real Estate</title>
+  <!-- Google Fonts + DM Mono -->
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      background: #FFFFFF;
+      font-family: 'DM Sans', sans-serif;
+      color: #1E1E1E;
+      overflow-x: hidden;
+    }
+    ::-webkit-scrollbar {
+      width: 3px;
+      height: 3px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2E7D32;
+      border-radius: 2px;
+    }
+    .serif {
+      font-family: 'Cormorant Garamond', serif;
+    }
+    .mono {
+      font-family: 'DM Mono', monospace;
+    }
+    .green-btn {
+      background: linear-gradient(135deg, #2E7D32 0%, #4CAF50 50%, #2E7D32 100%);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.6rem;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-radius: 3px;
+    }
+    .green-btn:hover {
+      box-shadow: 0 8px 28px rgba(46,125,50,0.38);
+      transform: translateY(-1px);
+    }
+    .green-btn:active {
+      transform: scale(0.97);
+    }
+    .ghost-btn {
+      background: transparent;
+      border: 1px solid rgba(46,125,50,0.5);
+      color: #2E7D32;
+      padding: 0.7rem 1.4rem;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-radius: 3px;
+    }
+    .ghost-btn:hover {
+      background: rgba(46,125,50,0.08);
+      border-color: #2E7D32;
+    }
+    .chip {
+      display: inline-block;
+      padding: 0.18rem 0.55rem;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 600;
+      border-radius: 2px;
+    }
+    .chip-green { background: rgba(46,125,50,0.1); color: #2E7D32; border: 1px solid rgba(46,125,50,0.2); }
+    .chip-gold { background: rgba(46,125,50,0.08); color: #2E7D32; border: 1px solid rgba(46,125,50,0.2); }
+    .chip-orange { background: rgba(230,81,0,0.1); color: #E65100; border: 1px solid rgba(230,81,0,0.2); }
+    .chip-blue { background: rgba(25,118,210,0.1); color: #1976D2; border: 1px solid rgba(25,118,210,0.2); }
+    .chip-purple { background: rgba(103,58,183,0.1); color: #673AB7; border: 1px solid rgba(103,58,183,0.2); }
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0,0,0,0.1), transparent);
+    }
+    .stat-card {
+      background: #F9F9F9;
+      border: 1px solid #E0E0E0;
+      border-radius: 5px;
+      padding: 1.1rem 1.25rem;
+    }
+    .progress-bar {
+      height: 3px;
+      background: #E0E0E0;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 0.35rem;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #2E7D32, #4CAF50);
+      border-radius: 2px;
+    }
+    .input-field {
+      background: #F5F5F5;
+      border: 1px solid #DDD;
+      color: #1E1E1E;
+      padding: 0.7rem 0.9rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.88rem;
+      width: 100%;
+      border-radius: 3px;
+      outline: none;
+      transition: border 0.2s;
+    }
+    .input-field:focus {
+      border-color: #2E7D32;
+    }
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(6px);
+      z-index: 500;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-sheet {
+      background: white;
+      border-radius: 14px 14px 0 0;
+      width: 100%;
+      max-width: 520px;
+      max-height: 92vh;
+      overflow-y: auto;
+      box-shadow: 0 -2px 20px rgba(0,0,0,0.1);
+    }
+    .modal-handle {
+      width: 40px;
+      height: 4px;
+      background: #CCC;
+      border-radius: 2px;
+      margin: 0.75rem auto 0.25rem;
+    }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 300;
+      background: white;
+      border-top: 1px solid #EEE;
+      display: flex;
+      height: 64px;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    }
+    .bnav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.2rem;
+      background: none;
+      border: none;
+      color: #757575;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .bnav-btn.active {
+      color: #2E7D32;
+    }
+    .tx-spinner {
+      width: 42px;
+      height: 42px;
+      border: 3px solid rgba(46,125,50,0.2);
+      border-top-color: #2E7D32;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0.75rem auto;
+    }
+    .notif {
+      position: fixed;
+      top: 1.2rem;
+      right: 1rem;
+      left: 1rem;
+      max-width: 340px;
+      margin: 0 auto;
+      z-index: 900;
+      padding: 0.8rem 1.1rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      animation: slideIn 0.3s ease;
+    }
+    .notif-success { background: #E8F5E9; border-left: 4px solid #2E7D32; color: #1E1E1E; }
+    .notif-error { background: #FFEBEE; border-left: 4px solid #D32F2F; color: #1E1E1E; }
+    .notif-info { background: #E3F2FD; border-left: 4px solid #1976D2; color: #1E1E1E; }
+    .ticker-strip {
+      overflow: hidden;
+      white-space: nowrap;
+      background: #F5F5F5;
+      border-top: 1px solid #E0E0E0;
+      border-bottom: 1px solid #E0E0E0;
+    }
+    .filter-row {
+      display: flex;
+      gap: 0.4rem;
+      overflow-x: auto;
+      padding-bottom: 0.3rem;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .filter-row::-webkit-scrollbar { display: none; }
+    .filter-chip {
+      flex-shrink: 0;
+      background: white;
+      border: 1px solid #DDD;
+      color: #555;
+      padding: 0.3rem 0.75rem;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 20px;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .filter-chip.active {
+      background: #2E7D32;
+      border-color: #2E7D32;
+      color: white;
+    }
+    .hero-fade {
+      animation: fadeUp 0.7s ease both;
+    }
+    .hero-fade-2 { animation: fadeUp 0.7s 0.12s ease both; }
+    .hero-fade-3 { animation: fadeUp 0.7s 0.24s ease both; }
+    .hero-fade-4 { animation: fadeUp 0.7s 0.36s ease both; }
+    .grid-overlay {
+      background-image: linear-gradient(rgba(46,125,50,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(46,125,50,0.03) 1px, transparent 1px);
+      background-size: 36px 36px;
+    }
+    .prow {
+      display: grid;
+      grid-template-columns: 1fr 72px 88px 88px;
+      gap: 0.75rem;
+      align-items: center;
+      padding: 0.9rem 1rem;
+      border-bottom: 1px solid #EEE;
+    }
+    @media (max-width: 480px) {
+      .prow { grid-template-columns: 1fr 68px 80px; }
+      .prow > :last-child { display: none; }
+    }
+    .flag-ke {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.18rem 0.55rem;
+      background: #E8F5E9;
+      border: 1px solid #C8E6C9;
+      border-radius: 20px;
+      font-size: 0.62rem;
+      letter-spacing: 0.08em;
+      color: #2E7D32;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .menu-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(4px);
+      z-index: 400;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 2rem;
+    }
+    .menu-link {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.2rem;
+      font-weight: 300;
+      color: #1E1E1E;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: color 0.2s;
+    }
+    .menu-link.active, .menu-link:hover { color: #2E7D32; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes glow {
+      0%,100% { text-shadow: 0 0 6px rgba(46,125,50,0.2); }
+      50% { text-shadow: 0 0 14px rgba(46,125,50,0.4); }
+    }
+    .logo-glow { animation: glow 3s ease-in-out infinite; color: #1E1E1E; }
+    .card-hover {
+      background: white;
+      border: 1px solid #EEE;
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
+    .card-hover:hover {
+      border-color: #2E7D32;
+      transform: translateY(-4px);
+      box-shadow: 0 20px 30px -12px rgba(0,0,0,0.1);
+    }
+    .property-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 1.5rem;
+    }
+    @media (max-width: 768px) {
+      .property-grid { grid-template-columns: 1fr; }
+    }
+    .whatsapp-float {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      z-index: 400;
+      background-color: #25D366;
+      border-radius: 50%;
+      width: 56px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      transition: transform 0.2s;
+      cursor: pointer;
+    }
+    @media (min-width: 768px) {
+      .whatsapp-float { bottom: 24px; }
+    }
+    nav {
+      background: white;
+      border-bottom: 1px solid #EEE;
+    }
+    .stat-card .serif, .card-hover .serif {
+      color: #1E1E1E;
+    }
+    .green-text {
+      color: #2E7D32;
+    }
+  </style>
+</head>
+<body>
+<div id="app-root"></div>
+<script>
+  // ---------- DATA ----------
+  const PROPERTIES = [
+    { id:1,name:"Westlands Sky Residences",location:"Westlands, Nairobi",type:"Luxury Residential",image:"https://images.unsplash.com/photo-1613977257363-707ba9348227?w=800&q=80",totalValue:920000000,tokenPrice:9200,totalTokens:100000,soldTokens:74200,apy:9.8,contractAddress:"0x4Fa...c1B9",chain:"Ethereum",highlights:["Rooftop Pool","Smart Home","24/7 Security"],status:"Active",rentalYield:"KES 748,000/mo",county:"Nairobi" },
+    { id:2,name:"Two Rivers Business Tower",location:"Ruaraka, Nairobi",type:"Commercial Office",image:"https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&q=80",totalValue:2400000000,tokenPrice:12000,totalTokens:200000,soldTokens:138000,apy:12.3,contractAddress:"0x8Bb...d5A4",chain:"Polygon",highlights:["Grade A","LEED Certified","Fibre Ready"],status:"Active",rentalYield:"KES 2.46M/mo",county:"Nairobi" },
+    { id:3,name:"Diani Beachfront Villas",location:"Diani Beach, Kwale",type:"Vacation Rental",image:"https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=800&q=80",totalValue:680000000,tokenPrice:6800,totalTokens:100000,soldTokens:29000,apy:15.4,contractAddress:"0x2Dc...e7F3",chain:"Ethereum",highlights:["Ocean Front","Private Jetty","5-Star"],status:"New Listing",rentalYield:"KES 870,000/mo",county:"Kwale" },
+    { id:4,name:"Karen Greens Estate",location:"Karen, Nairobi",type:"Luxury Residential",image:"https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80",totalValue:1560000000,tokenPrice:15600,totalTokens:100000,soldTokens:91200,apy:8.6,contractAddress:"0x6Ce...a2D8",chain:"Ethereum",highlights:["Half Acre","Stable","Gated Community"],status:"Almost Full",rentalYield:"KES 1.12M/mo",county:"Nairobi" },
+    { id:5,name:"Upperhill Plaza",location:"Upperhill, Nairobi",type:"Commercial Office",image:"https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80",totalValue:3100000000,tokenPrice:15500,totalTokens:200000,soldTokens:88000,apy:11.7,contractAddress:"0x5Af...b3C6",chain:"Polygon",highlights:["CBD Adjacent","Embassy Zone","Rooftop Terrace"],status:"Active",rentalYield:"KES 3.02M/mo",county:"Nairobi" },
+    { id:6,name:"Mombasa Old Town Lofts",location:"Old Town, Mombasa",type:"Multi-Family",image:"https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80",totalValue:420000000,tokenPrice:4200,totalTokens:100000,soldTokens:62500,apy:10.1,contractAddress:"0x7Ed...f9A2",chain:"Polygon",highlights:["Historic District","18 Units","Sea Breeze"],status:"Active",rentalYield:"KES 354,000/mo",county:"Mombasa" },
+    { id:7,name:"Kisumu Lakefront Suites",location:"Milimani, Kisumu",type:"Vacation Rental",image:"https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=800&q=80",totalValue:310000000,tokenPrice:3100,totalTokens:100000,soldTokens:41000,apy:13.2,contractAddress:"0x1Gb...c4E5",chain:"Ethereum",highlights:["Lake Victoria View","Conference Centre","Spa"],status:"New Listing",rentalYield:"KES 340,000/mo",county:"Kisumu" },
+    { id:8,name:"Runda Garden Villas",location:"Runda, Nairobi",type:"Luxury Residential",image:"https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80",totalValue:2200000000,tokenPrice:22000,totalTokens:100000,soldTokens:54800,apy:9.2,contractAddress:"0x3He...d6B1",chain:"Ethereum",highlights:["Diplomatic Zone","Forest Edge","Private Pool"],status:"Active",rentalYield:"KES 1.68M/mo",county:"Nairobi" },
+    { id:9,name:"Nakuru Innovation Hub",location:"Section 58, Nakuru",type:"Commercial Office",image:"https://images.unsplash.com/photo-1497366412874-3415097a27e7?w=800&q=80",totalValue:580000000,tokenPrice:5800,totalTokens:100000,soldTokens:33000,apy:13.9,contractAddress:"0x9Jf...e8C3",chain:"Polygon",highlights:["County HQ Area","Co-working Floors","EV Parking"],status:"New Listing",rentalYield:"KES 672,000/mo",county:"Nakuru" },
+    { id:10,name:"Malindi Ocean Residences",location:"Silversands, Malindi",type:"Vacation Rental",image:"https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80",totalValue:490000000,tokenPrice:4900,totalTokens:100000,soldTokens:19500,apy:16.1,contractAddress:"0x0Kd...f2D7",chain:"Ethereum",highlights:["Indian Ocean","Dive Centre","Airport 10 min"],status:"New Listing",rentalYield:"KES 658,000/mo",county:"Kilifi" },
+    { id:11,name:"Eldoret Grain Valley Complex",location:"Uganda Road, Eldoret",type:"Multi-Family",image:"https://images.unsplash.com/photo-1574362848149-11496d93a7c7?w=800&q=80",totalValue:260000000,tokenPrice:2600,totalTokens:100000,soldTokens:77000,apy:11.0,contractAddress:"0xALe...g3F8",chain:"Polygon",highlights:["Athletics Hub","24 Units","Near University"],status:"Almost Full",rentalYield:"KES 238,000/mo",county:"Uasin Gishu" },
+    { id:12,name:"Thika Road Mixed-Use Mall",location:"Garden City, Nairobi",type:"Commercial Office",image:"https://images.unsplash.com/photo-1555636222-cae831e670b3?w=800&q=80",totalValue:4800000000,tokenPrice:24000,totalTokens:200000,soldTokens:102000,apy:10.5,contractAddress:"0xBMf...h4G9",chain:"Ethereum",highlights:["Anchor Tenant","250+ Retailers","Cinema Complex"],status:"Active",rentalYield:"KES 4.2M/mo",county:"Nairobi" },
+    { id:13,name:"Kiambu Tech Park",location:"Tatu City, Kiambu",type:"Commercial Office",image:"https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=800&q=80",totalValue:750000000,tokenPrice:7500,totalTokens:100000,soldTokens:44000,apy:12.8,contractAddress:"0xKiT...pPk9",chain:"Polygon",highlights:["Tech Corridor","SEZ Zone","Solar Ready"],status:"Active",rentalYield:"KES 800,000/mo",county:"Kiambu" },
+    { id:14,name:"Machakos Green Fields",location:"Konza City, Machakos",type:"Multi-Family",image:"https://images.unsplash.com/photo-1560448204-603b3fc33ddc?w=800&q=80",totalValue:380000000,tokenPrice:3800,totalTokens:100000,soldTokens:19000,apy:14.2,contractAddress:"0xMaC...fGd2",chain:"Ethereum",highlights:["Eco-friendly","Smart Meters","Playgrounds"],status:"New Listing",rentalYield:"KES 345,000/mo",county:"Machakos" },
+    { id:15,name:"Nyeri Hillview Residences",location:"Nyeri Town, Nyeri",type:"Luxury Residential",image:"https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80",totalValue:295000000,tokenPrice:2950,totalTokens:100000,soldTokens:52000,apy:10.8,contractAddress:"0xNyR...hVw3",chain:"Polygon",highlights:["Aberdare Views","Quiet Estate","24/7 Power"],status:"Active",rentalYield:"KES 265,000/mo",county:"Nyeri" }
+  ];
+  const PORTFOLIO = [
+    { property: "Westlands Sky Residences", tokens: 15, value: 138000, gain: 11040, gainPct: 8.7 },
+    { property: "Diani Beachfront Villas", tokens: 25, value: 170000, gain: 22100, gainPct: 14.9 },
+    { property: "Karen Greens Estate", tokens: 10, value: 156000, gain: 12480, gainPct: 8.7 },
+    { property: "Kiambu Tech Park", tokens: 8, value: 60000, gain: 7680, gainPct: 14.7 }
+  ];
+  const TYPES = ["All", "Luxury Residential", "Commercial Office", "Vacation Rental", "Multi-Family"];
+  const COUNTIES = ["All Counties", "Nairobi", "Mombasa", "Kisumu", "Kwale", "Nakuru", "Uasin Gishu", "Kilifi", "Kiambu", "Machakos", "Nyeri"];
+
+  function KES(n) { return "KES " + new Intl.NumberFormat("en-KE", { maximumFractionDigits: 0 }).format(n); }
+  function SHORT(n) { return n >= 1e9 ? `KES ${(n/1e9).toFixed(1)}B` : n >= 1e6 ? `KES ${(n/1e6).toFixed(1)}M` : `KES ${(n/1e3).toFixed(0)}K`; }
+
+  // ---------- STATE ----------
+  let state = {
+    tab: "market",
+    walletConnected: false,
+    walletAddress: "",
+    selectedProperty: null,
+    buyAmount: 1,
+    txState: null,
+    typeFilter: "All",
+    countyFilter: "All Counties",
+    notification: null,
+    menuOpen: false,
+    isMobile: window.innerWidth < 768,
+    heroIn: true
+  };
+
+  let tickerInterval = null;
+  let root = document.getElementById("app-root");
+
+  function toast(msg, type = "info") {
+    state.notification = { msg, type };
+    render();
+    setTimeout(() => { state.notification = null; render(); }, 3200);
+  }
+
+  function connectWallet() {
+    const addr = "0x" + Math.random().toString(16).slice(2,6).toUpperCase() + "…" + Math.random().toString(16).slice(2,6).toUpperCase();
+    state.walletConnected = true;
+    state.walletAddress = addr;
+    state.menuOpen = false;
+    toast("Wallet connected!", "success");
+    render();
+  }
+
+  function iconSVG(name, size=20) {
+    if(name === "pin") return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+    if(name === "close") return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+    if(name === "whatsapp") return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor"><path d="M19.077 4.928C17.191 3.041 14.683 2 12.006 2c-5.506 0-9.987 4.48-9.99 9.986 0 1.76.459 3.48 1.334 4.996L2 22l5.233-1.366c1.462.795 3.108 1.214 4.77 1.215h.004c5.505 0 9.986-4.48 9.989-9.986.001-2.66-1.034-5.16-2.92-7.047zM12.006 20.51h-.004c-1.49-.001-2.954-.405-4.239-1.17l-.304-.18-3.106.812.831-3.027-.198-.314c-.816-1.294-1.247-2.79-1.247-4.33.003-4.607 3.75-8.353 8.36-8.353 2.232 0 4.33.87 5.91 2.449 1.58 1.58 2.45 3.68 2.448 5.91-.003 4.608-3.75 8.355-8.36 8.355zm4.58-6.265c-.252-.126-1.488-.734-1.718-.818-.23-.084-.398-.126-.565.126-.167.252-.647.818-.794.986-.146.168-.293.19-.545.064-.252-.127-1.064-.392-2.025-1.25-.748-.668-1.253-1.493-1.4-1.746-.146-.252-.015-.388.11-.514.112-.112.252-.293.378-.44.126-.146.168-.252.252-.42.084-.168.042-.315-.021-.44-.063-.126-.565-1.361-.775-1.864-.204-.49-.411-.423-.565-.43a10.7 10.7 0 0 0-.48-.008c-.167 0-.44.063-.67.316-.23.252-.878.857-.878 2.09 0 1.233.898 2.424 1.023 2.592.126.168 1.766 2.697 4.278 3.782.597.258 1.064.413 1.428.53.6.19 1.146.163 1.578.099.48-.072 1.488-.608 1.698-1.195.21-.587.21-1.09.147-1.195-.063-.105-.23-.168-.482-.294z"/></svg>`;
+    if(name === "market") return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
+    if(name === "portfolio") return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>`;
+    if(name === "governance") return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>`;
+    return "";
+  }
+
+  function getFilteredProperties() {
+    return PROPERTIES.filter(p => (state.typeFilter === "All" || p.type === state.typeFilter) && (state.countyFilter === "All Counties" || p.county === state.countyFilter));
+  }
+
+  // render functions (similar structure but with green color scheme and white backgrounds)
+  function renderMarket() {
+    const filtered = getFilteredProperties();
+    const totalMktCap = PROPERTIES.reduce((s,p)=>s+p.totalValue,0);
+    const avgApy = (PROPERTIES.reduce((s,p)=>s+p.apy,0)/PROPERTIES.length).toFixed(1);
+    const uniqueCounties = new Set(PROPERTIES.map(p=>p.county)).size;
+    return `
+      <section style="padding-top: ${state.isMobile ? '2.5rem' : '4.5rem'}; padding-bottom: ${state.isMobile ? '2rem' : '3.5rem'}; position: relative;">
+        <div class="grid-overlay" style="position:absolute; inset:0; opacity:.35; pointer-events:none;"></div>
+        <div style="position:relative; display:grid; grid-template-columns: ${state.isMobile ? '1fr' : '1fr 1fr'}; gap: ${state.isMobile ? '2rem' : '4rem'}; align-items:center;">
+          <div>
+            <div class="hero-fade" style="margin-bottom:1.25rem;"><span class="chip chip-green">◆ Web3 Real Estate · Kenya</span></div>
+            <h1 class="hero-fade-2 serif" style="font-size: ${state.isMobile ? 'clamp(2.6rem,12vw,3.8rem)' : 'clamp(3rem,6vw,5.8rem)'}; font-weight:300; line-height:0.9; letter-spacing:-.02em;">Invest in<br /><em style="font-style:italic;color:#2E7D32;">Kenyan</em><br />Property<br />On-Chain</h1>
+            <p class="hero-fade-3" style="margin-top:1.25rem; color:#555; font-size:0.92rem; max-width:420px;">Fractional ownership of premium real estate across Kenya — secured on blockchain, earning rental income 24/7.</p>
+            <div class="hero-fade-4" style="margin-top:1.75rem; display:flex; gap:0.85rem;"><button class="green-btn" id="exploreBtn">Explore Properties</button><button class="ghost-btn" id="portfolioBtn">My Portfolio</button></div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:.85rem;">
+            ${[
+              { label:"Market Cap", value: SHORT(totalMktCap), sub:"Tokenized KE Assets" },
+              { label:"Avg. APY", value: `${avgApy}%`, sub:"Annual Rental Yield" },
+              { label:"Properties", value: PROPERTIES.length, sub:"On-Chain Assets" },
+              { label:"Counties", value: uniqueCounties, sub:"Across Kenya" }
+            ].map(s => `<div class="stat-card"><div style="font-size:.62rem; color:#666;">${s.label}</div><div class="serif" style="font-size:${state.isMobile ? '1.5rem' : '1.9rem'}; font-weight:300; color:#2E7D32;">${s.value}</div><div style="font-size:.65rem; color:#777;">${s.sub}</div></div>`).join('')}
+          </div>
+        </div>
+      </section>
+      <div class="divider" style="margin-bottom:2rem;"></div>
+      <div id="listings" style="margin-bottom:1.5rem;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:1rem; flex-direction:${state.isMobile ? 'column' : 'row'}; gap:.75rem;"><h2 class="serif" style="font-size:${state.isMobile ? '1.7rem' : '2.4rem'}; font-weight:300;">Property <em style="font-style:italic;color:#2E7D32;">Listings</em><span style="font-size:.8rem; margin-left:.75rem; color:#555;">${filtered.length} properties</span></h2></div>
+        <div class="filter-row" style="margin-bottom:.6rem;">${TYPES.map(t => `<button class="filter-chip ${state.typeFilter===t ? 'active' : ''}" data-type="${t}">${t}</button>`).join('')}</div>
+        <div class="filter-row">${COUNTIES.map(c => `<button class="filter-chip ${state.countyFilter===c ? 'active' : ''}" data-county="${c}">📍 ${c}</button>`).join('')}</div>
+      </div>
+      <div class="property-grid">
+        ${filtered.map(p => {
+          const pct = Math.round((p.soldTokens/p.totalTokens)*100);
+          return `<div class="card-hover" data-id="${p.id}">
+            <div style="position:relative; height:200px;"><img src="${p.image}" style="width:100%; height:100%; object-fit:cover; filter:brightness(0.98);" /><div style="position:absolute; top:.7rem; left:.7rem; display:flex; gap:.35rem;"><span class="chip ${p.status==='Active'?'chip-green':p.status==='New Listing'?'chip-green':'chip-orange'}">${p.status}</span><span class="chip ${p.chain==='Ethereum'?'chip-blue':'chip-purple'}">${p.chain}</span></div><div style="position:absolute; bottom:.7rem; right:.7rem; background:rgba(0,0,0,0.7); padding:.3rem .65rem; border-radius:20px;"><span class="serif" style="font-size:1.05rem;color:#2E7D32;">${SHORT(p.totalValue)}</span></div></div>
+            <div style="padding:1.1rem;"><div style="font-size:.62rem;color:#777;">${p.type}</div><h3 class="serif" style="font-size:1.3rem;font-weight:300;">${p.name}</h3><div style="font-size:.75rem;color:#666; display:flex; gap:.3rem; margin-bottom:.8rem;">${iconSVG('pin',12)} ${p.location}</div>
+            <div style="display:flex; gap:.35rem; flex-wrap:wrap; margin-bottom:.9rem;">${p.highlights.map(h=>`<span style="font-size:.6rem; background:#F5F5F5; padding:.12rem .45rem; border-radius:20px;">${h}</span>`).join('')}</div>
+            <div class="divider" style="margin-bottom:.9rem;"></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:.6rem; margin-bottom:.9rem;">
+              ${[["Token Price",KES(p.tokenPrice),"#2E7D32"],["APY",`+${p.apy}%`,"#2E7D32"],["Rental Yield",p.rentalYield,"#1E1E1E"],["Contract",p.contractAddress,"#1976D2"]].map(([k,v,c])=>`<div><div style="font-size:.58rem;color:#777;">${k}</div><div class="mono" style="font-size:.75rem;color:${c};">${v}</div></div>`).join('')}
+            </div>
+            <div style="display:flex; justify-content:space-between;"><span style="font-size:.65rem;">${pct}% funded</span><span class="mono" style="font-size:.65rem;">${p.soldTokens.toLocaleString()} / ${p.totalTokens.toLocaleString()}</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;"></div></div></div></div>`;
+        }).join('')}
+      </div>
+      ${filtered.length === 0 ? '<div style="text-align:center; padding:4rem;"><div style="font-size:2rem;">◆</div><p>No properties match.</p></div>' : ''}
+      <div style="height:3rem;"></div>
+    `;
+  }
+
+  function renderPortfolio() {
+    if(!state.walletConnected) return `<div style="text-align:center;padding:5rem 1rem;"><div style="font-size:3rem;">◆</div><h2 class="serif" style="font-size:2rem;">Connect Your Wallet</h2><button class="green-btn" id="connectWalletBtn">Connect Wallet</button></div>`;
+    const totalVal = PORTFOLIO.reduce((s,p)=>s+p.value,0);
+    const totalGain = PORTFOLIO.reduce((s,p)=>s+p.gain,0);
+    return `
+      <div style="padding-top:2.5rem;"><div style="display:flex; justify-content:space-between; flex-wrap:wrap;"><div><div style="font-size:.68rem; color:#666;">Total Portfolio Value</div><div class="serif" style="font-size:${state.isMobile?'2.5rem':'3.2rem'}; color:#1E1E1E;">${KES(totalVal)}</div><div style="color:#2E7D32;">▲ +${KES(totalGain)} all time</div></div><button class="ghost-btn" id="investMoreBtn">+ Invest More</button></div>
+      <div style="display:grid; grid-template-columns:${state.isMobile?'1fr 1fr':'repeat(3,1fr)'}; gap:.85rem; margin:1.75rem 0;">${[ {label:"Properties",value:PORTFOLIO.length},{label:"Total Tokens",value:PORTFOLIO.reduce((s,p)=>s+p.tokens,0)},{label:"Avg. Gain",value:`+${(PORTFOLIO.reduce((s,p)=>s+p.gainPct,0)/PORTFOLIO.length).toFixed(1)}%`} ].map(s=>`<div class="stat-card"><div style="font-size:.62rem;">${s.label}</div><div class="serif" style="font-size:1.75rem; color:#2E7D32;">${s.value}</div></div>`).join('')}</div>
+      <div style="background:white;border:1px solid #EEE;border-radius:12px;overflow:hidden;margin-bottom:1.5rem;"><div style="display:grid; grid-template-columns:1fr 68px 88px 88px; padding:.8rem 1rem; background:#F9F9F9;"><span style="font-size:.6rem;">Property</span><span>Tokens</span><span>Value</span><span>Gain</span></div>
+      ${PORTFOLIO.map(row=>`<div class="prow"><div><div class="serif">${row.property}</div><div style="font-size:.65rem;">Real Estate Token · Kenya</div></div><div class="mono">${row.tokens}</div><div class="mono">${KES(row.value)}</div><div><div class="mono" style="color:#2E7D32;">+${KES(row.gain)}</div><div class="mono" style="font-size:.65rem;">+${row.gainPct}%</div></div></div>`).join('')}</div>
+      <div style="padding:1.25rem; background:#F9F9F9; border:1px solid #E8F5E9; border-radius:12px;"><h3 class="serif">Pending Rental Rewards</h3><div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;"><div><div class="mono" style="font-size:1.4rem; color:#2E7D32;">KES 162,480</div><div style="font-size:.72rem;">Accrued across 4 properties</div></div><button class="green-btn" id="claimRewardsBtn">Claim Rewards</button></div></div></div>
+    `;
+  }
+
+  function renderGovernance() {
+    const proposals = [
+      { id:"VIP-10", title:"Acquire Kiambu Tech Park Phase 2", desc:"Expand into Kiambu's SEZ with additional 30,000 sq ft office space, projected 14.5% APY.", votes:{ for:68,against:22,abstain:10 }, status:"Active", ends:"11 days" },
+      { id:"VIP-09", title:"Add M-PESA On-Ramp Integration", desc:"Partner with a licensed VASP to allow KES funding via M-PESA Paybill.", votes:{ for:94,against:3,abstain:3 }, status:"Passed", ends:"Ended" },
+      { id:"VIP-08", title:"Acquire Mombasa Marina Hotel (30% Stake)", desc:"Allocate KES 480M from treasury to tokenize 30% ownership of Mombasa Marina, projected 18.2% APY.", votes:{ for:72,against:18,abstain:10 }, status:"Active", ends:"4 days" }
+    ];
+    return `<div style="padding-top:2.5rem;"><h2 class="serif" style="font-size:${state.isMobile?'1.8rem':'2.4rem'};">Protocol <em style="font-style:italic;color:#2E7D32;">Governance</em></h2><p style="color:#555;margin-bottom:2rem;">Token holders vote on Kenya property acquisitions, protocol fees, and network expansion.</p>
+    <div style="display:grid;gap:1rem;">${proposals.map(prop=>`
+      <div style="background:white;border:1px solid #EEE;border-radius:12px;padding:${state.isMobile?'1.1rem':'1.4rem'}; box-shadow:0 1px 3px rgba(0,0,0,0.02);"><div style="display:flex; justify-content:space-between;"><div><span class="mono" style="font-size:.65rem;background:#E8F5E9;padding:.18rem .45rem;border-radius:20px;">${prop.id}</span><h3 class="serif" style="font-size:1.1rem;">${prop.title}</h3></div><span class="chip ${prop.status==='Active'?'chip-green':'chip-green'}">${prop.status}</span></div><p style="margin:1rem 0;">${prop.desc}</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.65rem;">${[["For",prop.votes.for,"#2E7D32"],["Against",prop.votes.against,"#D32F2F"],["Abstain",prop.votes.abstain,"#757575"]].map(([l,v,c])=>`<div><div style="display:flex;justify-content:space-between;"><span style="font-size:.65rem;">${l}</span><span class="mono" style="color:${c};">${v}%</span></div><div class="progress-bar"><div style="height:100%; width:${v}%; background:${c}; border-radius:2px;"></div></div></div>`).join('')}</div>
+      ${prop.status === "Active" ? `<div style="margin-top:1rem; display:flex; gap:.65rem;"><button class="green-btn vote-for" data-proposal="${prop.id}" style="padding:.5rem .9rem;">Vote For</button><button class="ghost-btn vote-against" data-proposal="${prop.id}" style="padding:.5rem .9rem;">Vote Against</button><span style="margin-left:auto; font-size:.65rem;">Ends in ${prop.ends}</span></div>` : ''}
+      </div>`).join('')}</div></div>`;
+  }
+
+  function renderModals() {
+    let modal = '';
+    if(state.selectedProperty && !state.txState) {
+      const p = state.selectedProperty;
+      modal = `<div class="modal-overlay" id="buyModalOverlay"><div class="modal-sheet" id="modalSheet"><div class="modal-handle"></div><div style="padding:.75rem 1.25rem .25rem; display:flex; justify-content:space-between;"><h3 class="serif">Purchase Tokens</h3><button id="closeModalBtn" style="background:none; border:none; color:#777;">${iconSVG('close',20)}</button></div>
+      <div style="padding:1.25rem;"><div style="display:flex; gap:.8rem;"><img src="${p.image}" style="width:72px; height:54px; object-fit:cover; border-radius:8px;"><div><div class="serif">${p.name}</div><div style="font-size:.7rem; display:flex; gap:.25rem;">${iconSVG('pin',11)} ${p.location}</div><div><span class="chip ${p.chain==='Ethereum'?'chip-blue':'chip-purple'}">${p.chain}</span><span class="chip chip-green">+${p.apy}% APY</span></div></div></div>
+      <div style="margin:1rem 0;"><label style="font-size:.68rem;">Number of Tokens</label><div style="display:flex; gap:.5rem;"><button id="decToken" style="width:42px; background:#F5F5F5; border:1px solid #DDD; border-radius:3px;">−</button><input id="tokenAmount" type="number" min="1" value="${state.buyAmount}" class="input-field" style="text-align:center;"><button id="incToken" style="width:42px; background:#F5F5F5; border:1px solid #DDD; border-radius:3px;">+</button></div></div>
+      <div style="background:#F9F9F9; padding:.9rem; border-radius:8px;">${[
+        ["Token Price", KES(p.tokenPrice)],
+        ["Quantity", `${state.buyAmount} token${state.buyAmount>1?'s':''}`],
+        ["Est. Annual Return", KES(Math.round(p.tokenPrice*state.buyAmount*p.apy/100))],
+        ["Network Fee", "~KES 550"]
+      ].map(([l,v])=>`<div style="display:flex; justify-content:space-between; padding:.32rem 0;"><span style="font-size:.76rem;">${l}</span><span class="mono">${v}</span></div>`).join('')}
+      <div style="display:flex; justify-content:space-between; margin-top:.6rem; padding-top:.6rem; border-top:1px solid #DDD;"><span>Total</span><span class="mono" style="color:#2E7D32;">${KES(p.tokenPrice*state.buyAmount+550)}</span></div></div>
+      <button class="green-btn" id="purchaseBtn" style="width:100%; padding:.95rem;">${state.walletConnected ? "Purchase Tokens" : "Connect Wallet to Buy"}</button></div></div></div>`;
+    }
+    if(state.txState) {
+      const isConfirm = state.txState === "confirm";
+      const isPending = state.txState === "pending";
+      const isSuccess = state.txState === "success";
+      modal = `<div class="modal-overlay"><div class="modal-sheet" style="text-align:center; padding:2.5rem 1.5rem; max-width:360px;">
+        ${isConfirm ? `<div style="font-size:2rem;color:#2E7D32;">◆</div><h3 class="serif" style="font-size:1.4rem;">Confirm Transaction</h3><p>Purchasing ${state.buyAmount} token(s) of</p><p class="serif" style="color:#2E7D32;">${state.selectedProperty?.name}</p><div class="mono" style="font-size:1.45rem;">${KES(state.selectedProperty?.tokenPrice*state.buyAmount+550)}</div><div style="display:flex; gap:.6rem; margin-top:1.4rem;"><button id="cancelTxBtn" class="ghost-btn" style="flex:1;">Cancel</button><button id="confirmTxBtn" class="green-btn" style="flex:2;">Confirm & Sign</button></div>` : ''}
+        ${isPending ? `<div class="tx-spinner"></div><h3 class="serif">Broadcasting…</h3><p>Awaiting blockchain confirmation</p><p class="mono" style="font-size:.62rem;">0x${Math.random().toString(16).slice(2,14)}…</p>` : ''}
+        ${isSuccess ? `<div style="width:52px;height:52px;border-radius:50%;background:#E8F5E9;border:2px solid #2E7D32;display:flex;align-items:center;justify-content:center;margin:0 auto .9rem;">✓</div><h3 class="serif" style="color:#2E7D32;">Confirmed!</h3><p>Tokens added to your wallet</p>` : ''}
+      </div></div>`;
+    }
+    return modal;
+  }
+
+  function render() {
+    const mainContent = state.tab === "market" ? renderMarket() : (state.tab === "portfolio" ? renderPortfolio() : renderGovernance());
+    const notificationHtml = state.notification ? `<div class="notif notif-${state.notification.type}">${state.notification.type === "success" ? "✓ " : state.notification.type === "error" ? "✗ " : "◆ "}${state.notification.msg}</div>` : '';
+    const menuHtml = state.menuOpen ? `<div class="menu-overlay" id="menuOverlay"><div style="display:flex; flex-direction:column; align-items:center; gap:1.75rem;">${[["market","Market"],["portfolio","Portfolio"],["governance","Governance"]].map(([k,l])=>`<span class="menu-link ${state.tab===k?'active':''}" data-tab="${k}">${l}</span>`).join('')}<div>${state.walletConnected ? `<div style="display:flex; align-items:center; gap:.5rem; background:#E8F5E9; padding:.5rem 1rem;"><div style="width:6px;height:6px;border-radius:50%;background:#2E7D32;"></div><span class="mono">${state.walletAddress}</span></div>` : `<button class="green-btn" id="menuConnectBtn">Connect Wallet</button>`}</div></div><button id="closeMenuBtn" style="position:absolute; top:1.25rem; right:1.25rem; background:none; border:none; color:#777;">${iconSVG('close',24)}</button></div>` : '';
+    const footer = `<div style="border-top:1px solid #EEE; padding:${state.isMobile ? '1.25rem .9rem' : '1.25rem 2rem'}; display:flex; justify-content:space-between; background:#FAFAFA; flex-wrap:wrap;"><div style="display:flex; gap:.5rem;"><div style="width:20px;height:20px;background:linear-gradient(135deg,#2E7D32,#4CAF50);border-radius:4px;"></div><span class="serif" style="color:#1E1E1E;">HOMES PROTOCOL</span></div><span class="mono" style="font-size:.6rem; color:#888;">ERC-3643 · CMA Kenya Compliant</span></div>`;
+    const bottomNav = state.isMobile ? `<div class="bottom-nav">${[["market","Market"],["portfolio","Portfolio"],["governance","Govern"]].map(([k,l])=>`<button class="bnav-btn ${state.tab===k?'active':''}" data-tab="${k}">${iconSVG(k,19)}<span>${l}</span></button>`).join('')}</div>` : '';
+    const whatsapp = `<a href="https://wa.me/254700000000?text=Hello%2C%20I%27m%20interested%20in%20%20HOMES%20tokenized%20real%20estate%20investments." target="_blank" class="whatsapp-float" style="color:white;">${iconSVG('whatsapp',32)}</a>`;
+    const ticker = `<div class="ticker-strip" style="padding:.45rem 0;"><div id="tickerInner" style="display:inline-flex; overflow:hidden; white-space:nowrap; width:100%;">${[...PROPERTIES,...PROPERTIES].map(p=>`<span style="display:inline-flex; align-items:center; gap:.35rem; padding:0 2rem; border-right:1px solid #DDD; flex-shrink:0;"><span style="font-size:.68rem; color:#555;">${p.name.toUpperCase()}</span><span class="mono" style="font-size:.68rem;color:#2E7D32;">${KES(p.tokenPrice)}</span><span style="color:#2E7D32;">+${p.apy}%</span></span>`).join('')}</div></div>`;
+    const fullHtml = `<div style="font-family:'DM Sans',sans-serif; background:white; min-height:100vh; color:#1E1E1E; padding-bottom:${state.isMobile ? '72px' : '0'};">
+      ${notificationHtml}
+      ${menuHtml}
+      <nav style="position:sticky; top:0; z-index:200; background:white; backdrop-filter:blur(10px); border-bottom:1px solid #EEE; padding:${state.isMobile ? '0 1rem' : '0 2rem'}; display:flex; align-items:center; justify-content:space-between; height:60px;">
+        <div style="display:flex; align-items:center; gap:.5rem;"><div style="width:28px;height:28px;background:linear-gradient(135deg,#2E7D32,#4CAF50);border-radius:6px;display:flex;align-items:center;justify-content:center;"><span style="color:white;font-weight:700;">V</span></div><span class="logo-glow serif" style="font-size:${state.isMobile?'1.1rem':'1.25rem'}; font-weight:400;"> HOMES</span><span class="flag-ke">🇰🇪 Kenya</span></div>
+        ${!state.isMobile ? `<div style="display:flex; gap:2rem;">${[["market","Market"],["portfolio","Portfolio"],["governance","Governance"]].map(([k,l])=>`<span data-tab="${k}" style="color:${state.tab===k?'#2E7D32':'#555'}; font-size:.82rem; font-weight:500; letter-spacing:.1em; text-transform:uppercase; cursor:pointer;">${l}</span>`).join('')}</div>` : ''}
+        <div style="display:flex; align-items:center; gap:.75rem;">${!state.isMobile ? (state.walletConnected ? `<div style="display:flex; align-items:center; gap:.5rem; background:#E8F5E9; padding:.4rem .85rem; border-radius:30px;"><div style="width:6px;height:6px;border-radius:50%;background:#2E7D32;"></div><span class="mono">${state.walletAddress}</span></div>` : `<button class="green-btn" id="desktopConnectBtn" style="padding:.55rem 1.2rem;">Connect Wallet</button>`) : `<button id="mobileMenuBtn" style="background:none; border:1px solid #DDD; width:38px; height:38px; border-radius:8px; font-size:1.2rem;">☰</button>`}</div>
+      </nav>
+      ${ticker}
+      <div style="max-width:1300px; margin:0 auto; padding:${state.isMobile ? '0 .9rem' : '0 2rem'};">${mainContent}</div>
+      ${footer}
+      ${bottomNav}
+      ${whatsapp}
+      ${renderModals()}
+    </div>`;
+    root.innerHTML = fullHtml;
+    attachEvents();
+  }
+
+  function attachEvents() {
+    document.querySelectorAll('[data-tab]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        const tab = el.getAttribute('data-tab');
+        if(tab) { state.tab = tab; state.selectedProperty = null; state.txState = null; render(); }
+      });
+    });
+    const exploreBtn = document.getElementById('exploreBtn');
+    if(exploreBtn) exploreBtn.addEventListener('click', () => document.getElementById('listings')?.scrollIntoView({behavior:'smooth'}));
+    const portfolioBtn = document.getElementById('portfolioBtn');
+    if(portfolioBtn) portfolioBtn.addEventListener('click', () => { state.tab = "portfolio"; render(); });
+    const investMoreBtn = document.getElementById('investMoreBtn');
+    if(investMoreBtn) investMoreBtn.addEventListener('click', () => { state.tab = "market"; render(); });
+    const claimRewardsBtn = document.getElementById('claimRewardsBtn');
+    if(claimRewardsBtn) claimRewardsBtn.addEventListener('click', () => toast("Rewards claimed! KES 162,480 sent to wallet.", "success"));
+    const desktopConnect = document.getElementById('desktopConnectBtn');
+    if(desktopConnect) desktopConnect.addEventListener('click', connectWallet);
+    const menuConnect = document.getElementById('menuConnectBtn');
+    if(menuConnect) menuConnect.addEventListener('click', connectWallet);
+    document.querySelectorAll('[data-type]').forEach(btn => {
+      btn.addEventListener('click', () => { state.typeFilter = btn.getAttribute('data-type'); render(); });
+    });
+    document.querySelectorAll('[data-county]').forEach(btn => {
+      btn.addEventListener('click', () => { state.countyFilter = btn.getAttribute('data-county'); render(); });
+    });
+    document.querySelectorAll('.card-hover').forEach(card => {
+      card.addEventListener('click', (e) => {
+        const id = parseInt(card.getAttribute('data-id'));
+        const prop = PROPERTIES.find(p => p.id === id);
+        if(prop) { state.selectedProperty = prop; state.buyAmount = 1; state.txState = null; render(); }
+      });
+    });
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    if(mobileMenuBtn) mobileMenuBtn.addEventListener('click', () => { state.menuOpen = true; render(); });
+    const closeMenuBtn = document.getElementById('closeMenuBtn');
+    if(closeMenuBtn) closeMenuBtn.addEventListener('click', () => { state.menuOpen = false; render(); });
+    const menuOverlay = document.getElementById('menuOverlay');
+    if(menuOverlay) menuOverlay.addEventListener('click', (e) => { if(e.target === menuOverlay) { state.menuOpen = false; render(); } });
+    document.querySelectorAll('.menu-link').forEach(link => {
+      link.addEventListener('click', (e) => { const t = link.getAttribute('data-tab'); if(t) { state.tab = t; state.menuOpen = false; render(); } });
+    });
+    const closeModal = document.getElementById('closeModalBtn');
+    if(closeModal) closeModal.addEventListener('click', () => { state.selectedProperty = null; render(); });
+    const modalOverlay = document.getElementById('buyModalOverlay');
+    if(modalOverlay) modalOverlay.addEventListener('click', (e) => { if(e.target === modalOverlay) { state.selectedProperty = null; render(); } });
+    const decToken = document.getElementById('decToken');
+    const incToken = document.getElementById('incToken');
+    const tokenInput = document.getElementById('tokenAmount');
+    if(decToken && tokenInput) decToken.addEventListener('click', () => { let v = Math.max(1, parseInt(tokenInput.value)-1); state.buyAmount = v; render(); });
+    if(incToken && tokenInput) incToken.addEventListener('click', () => { let v = Math.min(500, parseInt(tokenInput.value)+1); state.buyAmount = v; render(); });
+    if(tokenInput) tokenInput.addEventListener('change', (e) => { let v = Math.max(1, parseInt(e.target.value)||1); state.buyAmount = v; render(); });
+    const purchaseBtn = document.getElementById('purchaseBtn');
+    if(purchaseBtn) purchaseBtn.addEventListener('click', () => { if(!state.walletConnected) { connectWallet(); } else { state.txState = "confirm"; render(); } });
+    const cancelTx = document.getElementById('cancelTxBtn');
+    if(cancelTx) cancelTx.addEventListener('click', () => { state.txState = null; render(); });
+    const confirmTx = document.getElementById('confirmTxBtn');
+    if(confirmTx) confirmTx.addEventListener('click', () => { state.txState = "pending"; render(); setTimeout(() => { state.txState = "success"; render(); setTimeout(() => { state.txState = null; state.selectedProperty = null; toast(`${state.buyAmount} token(s) purchased!`, "success"); render(); }, 2000); }, 2600); });
+    document.querySelectorAll('.vote-for').forEach(btn => btn.addEventListener('click', () => toast("Vote cast: For ✓","success")));
+    document.querySelectorAll('.vote-against').forEach(btn => btn.addEventListener('click', () => toast("Vote cast: Against","info")));
+  }
+
+  function startTicker() {
+    const tickerInner = document.getElementById('tickerInner');
+    if(!tickerInner) return;
+    let scrollPos = 0;
+    if(tickerInterval) clearInterval(tickerInterval);
+    tickerInterval = setInterval(() => {
+      if(!tickerInner) return;
+      scrollPos += 1;
+      tickerInner.scrollLeft = scrollPos;
+      if(scrollPos >= tickerInner.scrollWidth/2) scrollPos = 0;
+    }, 28);
+  }
+
+  window.addEventListener('resize', () => {
+    state.isMobile = window.innerWidth < 768;
+    render();
+    startTicker();
+  });
+  render();
+  startTicker();
+</script>
+</body>
+</html>

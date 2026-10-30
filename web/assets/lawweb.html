@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lawyer </title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+    <style>
+        /* ── Reset & Variables ── */
+        :root {
+            --primary: #1A3A5C;      /* Dark blue for lawyer */
+            --accent: #B8860B;       /* Gold accent */
+            --secondary: #2E5A7A;
+            --light-bg: #F8FAFC;
+            --text-dark: #1E293B;
+            --text-muted: #64748B;
+            --white: #FFFFFF;
+            --danger: #EF4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            color: var(--text-dark);
+            background-color: var(--light-bg);
+            line-height: 1.6;
+        }
+
+        /* ── Navigation ── */
+        nav {
+            background: var(--white);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.2rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand-logo {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .brand-logo span {
+            color: var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-dark);
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent);
+        }
+
+        .btn-mua-portal {
+            background: var(--primary);
+            color: var(--white);
+            padding: 0.6rem 1.4rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: background 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-mua-portal:hover {
+            background: #0F2A42;
+        }
+
+        /* ── Hero ── */
+        .hero {
+            background: linear-gradient(135deg, rgba(26, 58, 92, 0.95), rgba(46, 90, 122, 0.9));
+            color: var(--white);
+            padding: 5rem 2rem;
+        }
+
+        .hero-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .hero-text {
+            text-align: left;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 0.4rem 1.2rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-block;
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(5px);
+        }
+
+        .hero h1 {
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .hero-image-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero-portrait {
+            width: 100%;
+            max-width: 380px;
+            height: 440px;
+            object-fit: cover;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            transition: opacity 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--white);
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: opacity 0.3s ease;
+            display: inline-block;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.85;
+        }
+
+        .btn-secondary {
+            border: 2px solid var(--white);
+            color: var(--white);
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .btn-secondary:hover {
+            background: var(--white);
+            color: var(--primary);
+        }
+
+        /* ── Container & Sections ── */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 5rem 2rem;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.2rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .section-header p {
+            color: var(--text-muted);
+        }
+
+        /* ── Services Grid ── */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .service-card {
+            background: var(--white);
+            padding: 2.5rem 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+        }
+
+        .service-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(26, 58, 92, 0.08);
+            color: var(--primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .service-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.8rem;
+            color: var(--primary);
+        }
+
+        .service-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* ── Firm Banner ── */
+        .firm-banner {
+            background: var(--primary);
+            color: var(--white);
+            border-radius: 20px;
+            padding: 3.5rem 2rem;
+            text-align: center;
+            margin-top: 3rem;
+        }
+
+        .firm-banner h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .firm-banner p {
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            opacity: 0.9;
+        }
+
+        /* ── Contact ── */
+        .contact-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 3rem;
+            background: var(--white);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+        }
+
+        .contact-info h3 {
+            font-size: 1.8rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-icon {
+            width: 45px;
+            height: 45px;
+            background: rgba(184, 134, 11, 0.1);
+            color: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .social-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--light-bg);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .social-icon:hover {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        /* ── WhatsApp Float ── */
+        .whatsapp-float {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: #25d366;
+            color: #FFF;
+            border-radius: 50px;
+            text-align: center;
+            font-size: 30px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+
+        .whatsapp-float:hover {
+            transform: scale(1.1);
+        }
+
+        /* ── Admin Modals ── */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 650px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--light-bg);
+        }
+
+        .modal-header h3 {
+            color: var(--primary);
+            font-size: 1.4rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: color 0.3s ease;
+        }
+
+        .close-modal:hover {
+            color: var(--text-dark);
+        }
+
+        .form-section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 1.5rem 0 1rem;
+            padding-bottom: 0.3rem;
+            border-bottom: 1px solid #E2E8F0;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+            color: var(--text-dark);
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.7rem;
+            border: 1px solid #CBD5E1;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(26, 58, 92, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-group input[type="file"] {
+            padding: 0.5rem 0;
+            border: none;
+            cursor: pointer;
+        }
+
+        .form-group input[type="file"]::-webkit-file-upload-button {
+            background: var(--primary);
+            color: var(--white);
+            padding: 0.5rem 1.2rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .form-group input[type="file"]::-webkit-file-upload-button:hover {
+            background: #0F2A42;
+        }
+
+        /* Image Preview */
+        .image-preview-wrapper {
+            margin-top: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .image-preview-wrapper img {
+            max-width: 120px;
+            max-height: 120px;
+            border-radius: 12px;
+            border: 3px solid #E2E8F0;
+            object-fit: cover;
+            background: #F1F5F9;
+            padding: 4px;
+        }
+
+        .image-preview-wrapper .preview-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .image-preview-wrapper .btn-clear-preview {
+            background: var(--danger);
+            color: var(--white);
+            border: none;
+            border-radius: 6px;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        .image-preview-wrapper .btn-clear-preview:hover {
+            opacity: 0.8;
+        }
+
+        .service-editor-item {
+            background: var(--light-bg);
+            border: 1px solid #E2E8F0;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .btn-delete-service {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--danger);
+            color: var(--white);
+            border: none;
+            border-radius: 6px;
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        .btn-delete-service:hover {
+            opacity: 0.8;
+        }
+
+        .btn-add-service {
+            background: var(--secondary);
+            color: var(--white);
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 1.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: opacity 0.3s ease;
+        }
+
+        .btn-add-service:hover {
+            opacity: 0.85;
+        }
+
+        .btn-save {
+            width: 100%;
+            background: var(--primary);
+            color: var(--white);
+            padding: 0.8rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+            font-size: 1rem;
+            transition: opacity 0.3s ease;
+        }
+
+        .btn-save:hover {
+            opacity: 0.85;
+        }
+
+        /* ── Footer ── */
+        footer {
+            background: #0F1E2F;
+            color: var(--white);
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .hero-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .hero-text {
+                text-align: center;
+            }
+            .hero-buttons {
+                justify-content: center;
+            }
+            .nav-links {
+                display: none;
+            }
+            .contact-section {
+                padding: 1.5rem;
+            }
+            .hero h1 {
+                font-size: 2rem;
+            }
+            .modal-card {
+                padding: 1.2rem;
+            }
+            .image-preview-wrapper img {
+                max-width: 80px;
+                max-height: 80px;
+            }
+        }
+
+        .mt-1 {
+            margin-top: 0.5rem;
+        }
+        .text-muted {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ═══════════════ NAVIGATION ═══════════════ -->
+    <nav>
+        <div class="nav-container">
+            <a href="#" class="brand-logo" id="logoBtn" title="Double‑click for Admin Panel">
+                <span id="navName">Lawyer Kithinji</span> <span>.</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#about">About</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <a href="https://www.lawfirm.example.com" target="_blank" rel="noopener" id="firmLink1" class="btn-mua-portal">
+                Visit Our Firm <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </a>
+        </div>
+    </nav>
+
+    <!-- ═══════════════ HERO ═══════════════ -->
+    <section class="hero" id="about">
+        <div class="hero-container">
+            <div class="hero-text">
+                <span class="badge" id="companyBadge">Law &amp; Associates Advocates</span>
+                <h1 id="heroTitle">Your Trusted Legal Partner, Defending Your Rights</h1>
+                <p id="heroBio">I am Kithinji, a dedicated advocate with over a decade of experience in corporate law, conveyancing, litigation, and family law. I provide pragmatic legal solutions tailored to your unique needs.</p>
+                <div class="hero-buttons">
+                    <a href="#contact" class="btn-primary">Request a Consultation</a>
+                    <a href="tel:0712345678" id="heroPhoneBtn" class="btn-secondary"><i class="fa-solid fa-phone"></i> Call <span class="phoneText">0712 345 678</span></a>
+                </div>
+            </div>
+            <div class="hero-image-wrapper">
+                <img src="https://images.unsplash.com/photo-1589578527966-fdac0f44566c?auto=format&fit=crop&q=80&w=600" alt=" Mwangi" id="heroImage" class="hero-portrait" />
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════ SERVICES ═══════════════ -->
+    <section class="container" id="services">
+        <div class="section-header">
+            <h2>Legal Services &amp; Practice Areas</h2>
+            <p>Comprehensive legal counsel across multiple disciplines</p>
+        </div>
+
+        <div class="services-grid" id="servicesGrid">
+            <!-- Rendered dynamically -->
+        </div>
+
+        <div class="firm-banner">
+            <h2>Visit Our Law Firm Website</h2>
+            <p>Explore our practice areas, team profiles, and legal resources on our official website.</p>
+            <a href="https://www.lawfirm.example.com" target="_blank" rel="noopener" id="firmLink2" class="btn-primary" style="background: var(--white); color: var(--primary);">
+                Go to Law &amp; Associates <i class="fa-solid fa-external-link" style="margin-left: 5px;"></i>
+            </a>
+        </div>
+    </section>
+
+    <!-- ═══════════════ CONTACT ═══════════════ -->
+    <section class="container" id="contact" style="padding-top: 0;">
+        <div class="contact-section">
+            <div class="contact-info">
+                <h3>Get in Touch</h3>
+                <p style="color: var(--text-muted); margin-bottom: 2rem;">Reach out today for a confidential consultation or legal advice.</p>
+
+                <div class="info-item">
+                    <div class="info-icon"><i class="fa-solid fa-user"></i></div>
+                    <div>
+                        <strong style="display:block;">Advocate</strong>
+                        <span id="contactName">Lawyer Kithinji</span>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-icon"><i class="fa-solid fa-building"></i></div>
+                    <div>
+                        <strong style="display:block;">Firm</strong>
+                        <span id="contactCompany">Law &amp; Associates Advocates</span>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-icon"><i class="fa-solid fa-phone"></i></div>
+                    <div>
+                        <strong style="display:block;">Direct Line</strong>
+                        <a href="tel:0712345678" id="contactPhone" style="color: var(--primary); text-decoration: none; font-weight: 600;"><span class="phoneText">0712 345 678</span></a>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-icon"><i class="fa-solid fa-envelope"></i></div>
+                    <div>
+                        <strong style="display:block;">Email</strong>
+                        <span id="contactEmail">info@kithinjiassociates.co.ke</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem;">
+                    <strong style="display:block; margin-bottom: 0.8rem;">Professional Networks:</strong>
+                    <div class="social-links">
+                        <a href="https://linkedin.com" id="linkedinLink" target="_blank" class="social-icon" title="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                        <a href="https://facebook.com" id="facebookLink" target="_blank" class="social-icon" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="https://twitter.com" id="twitterLink" target="_blank" class="social-icon" title="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+                        <a href="https://instagram.com" id="instagramLink" target="_blank" class="social-icon" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: var(--light-bg); padding: 2rem; border-radius: 12px; display: flex; flex-direction: column; justify-content: center;">
+                <h4 style="font-size: 1.3rem; color: var(--primary); margin-bottom: 1rem;">Direct Assistance</h4>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">Prefer instant messaging? Start a chat on WhatsApp or call directly for urgent legal matters.</p>
+
+                <a href="https://wa.me/254712345678" id="chatWhatsappBtn" target="_blank" class="btn-primary" style="background: #25d366; text-align: center; margin-bottom: 1rem;">
+                    <i class="fa-brands fa-whatsapp" style="margin-right: 8px;"></i> Chat on WhatsApp
+                </a>
+
+                <a href="tel:0712345678" id="callPhoneBtn" class="btn-primary" style="background: var(--primary); text-align: center;">
+                    <i class="fa-solid fa-phone" style="margin-right: 8px;"></i> Call <span class="phoneText">0712 345 678</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════ FLOATING WHATSAPP ═══════════════ -->
+    <a href="https://wa.me/254712345678" id="floatWhatsapp" class="whatsapp-float" target="_blank" rel="noopener" title="Chat on WhatsApp">
+        <i class="fa-brands fa-whatsapp"></i>
+    </a>
+
+    <!-- ═══════════════ FOOTER ═══════════════ -->
+    <footer>
+        <p>&copy; 2026 <span id="footerName">Cliff Johns</span> — Developer &amp; IT Consultant. All Rights Reserved.</p>
+    </footer>
+
+    <!-- ═══════════════ PASSWORD MODAL ═══════════════ -->
+    <div class="modal-overlay" id="passwordModal">
+        <div class="modal-card" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Admin Authentication</h3>
+                <button class="close-modal" id="closePassModal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Enter Password to edit site:</label>
+                <input type="password" id="passInput" placeholder="Password" />
+            </div>
+            <button class="btn-save" id="verifyPassBtn">Access Admin Panel</button>
+        </div>
+    </div>
+
+    <!-- ═══════════════ ADMIN MODAL ═══════════════ -->
+    <div class="modal-overlay" id="adminModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Edit Portfolio Content</h3>
+                <button class="close-modal" id="closeAdminModal">&times;</button>
+            </div>
+            <form id="adminForm">
+                <!-- ── Personal Info ── -->
+                <div class="form-section-title">Personal Information</div>
+
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="editName" />
+                </div>
+
+                <div class="form-group">
+                    <label>Phone Number (also used as Admin Password)</label>
+                    <input type="text" id="editPhone" />
+                </div>
+
+                <div class="form-group">
+                    <label>Firm Name</label>
+                    <input type="text" id="editCompany" />
+                </div>
+
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="editEmail" />
+                </div>
+
+                <!-- ── Profile Picture ── -->
+                <div class="form-section-title">Profile Picture</div>
+
+                <div class="form-group">
+                    <label>Image URL (external link)</label>
+                    <input type="url" id="editImage" placeholder="https://example.com/photo.jpg" />
+                    <span class="text-muted" style="display:block; margin-top:4px;">Paste a direct image URL, or use the uploader below.</span>
+                </div>
+
+                <div class="form-group">
+                    <label>Upload a new profile picture</label>
+                    <input type="file" id="editImageFile" accept="image/*" />
+                    <div class="image-preview-wrapper">
+                        <img id="imagePreview" src="" alt="Profile preview" />
+                        <span class="preview-label">Current preview</span>
+                        <button type="button" class="btn-clear-preview" id="clearImageBtn">✕ Clear</button>
+                    </div>
+                    <span class="text-muted" style="display:block; margin-top:4px;">Max 2MB (JPG, PNG, WebP). Larger images will be auto‑compressed.</span>
+                </div>
+
+                <!-- ── Hero Content ── -->
+                <div class="form-section-title">Hero Section</div>
+
+                <div class="form-group">
+                    <label>Hero Title</label>
+                    <input type="text" id="editTitle" />
+                </div>
+
+                <div class="form-group">
+                    <label>Bio / Description</label>
+                    <textarea id="editBio"></textarea>
+                </div>
+
+                <!-- ── Services ── -->
+                <div class="form-section-title">Services Management</div>
+                <div id="servicesEditorList">
+                    <!-- Dynamic Service Form Fields -->
+                </div>
+                <button type="button" class="btn-add-service" id="addServiceBtn">
+                    <i class="fa-solid fa-plus"></i> Add New Service
+                </button>
+
+                <!-- ── External Links ── -->
+                <div class="form-section-title">External Links &amp; Socials</div>
+
+                <div class="form-group">
+                    <label>Firm Website Link</label>
+                    <input type="url" id="editFirmLink" />
+                </div>
+
+                <div class="form-group">
+                    <label>LinkedIn URL</label>
+                    <input type="url" id="editLinkedin" />
+                </div>
+
+                <div class="form-group">
+                    <label>Facebook URL</label>
+                    <input type="url" id="editFacebook" />
+                </div>
+
+                <div class="form-group">
+                    <label>Twitter / X URL</label>
+                    <input type="url" id="editTwitter" />
+                </div>
+
+                <div class="form-group">
+                    <label>Instagram URL</label>
+                    <input type="url" id="editInstagram" />
+                </div>
+
+                <button type="submit" class="btn-save">Publish Live Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ═══════════════ FIREBASE ═══════════════ -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        // ── Firebase Config (same project) ──
+        const firebaseConfig = {
+            apiKey: "AIzaSyBYWxCXqglvzCkXp5NVLy043sLb-X8_4Z0",
+            authDomain: "bomu-b9b23.firebaseapp.com",
+            projectId: "bomu-b9b23",
+            storageBucket: "bomu-b9b23.firebasestorage.app",
+            messagingSenderId: "1073070850082",
+            appId: "1:1073070850082:web:77334c47bbe26e1160ca7b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // ── DIFFERENT DOCUMENT: "portfolio/kithinji" ──
+        const docRef = doc(db, "portfolio", "kithinji");
+
+        // ── Icon Options (legal-themed) ──
+        const iconOptions = [
+            { label: "Gavel / Litigation", value: "fa-solid fa-gavel" },
+            { label: "Building / Property", value: "fa-solid fa-building" },
+            { label: "Briefcase / Corporate", value: "fa-solid fa-briefcase" },
+            { label: "Scale / Justice", value: "fa-solid fa-scale-balanced" },
+            { label: "Family / Home", value: "fa-solid fa-people-group" },
+            { label: "File / Contract", value: "fa-solid fa-file-signature" },
+            { label: "Shield / Protection", value: "fa-solid fa-shield-halved" },
+            { label: "Hands / Care", value: "fa-solid fa-hand-holding-heart" }
+        ];
+
+        // ── Default State ──
+        let state = {
+            name: "Law Mwangi",
+            phone: "0712345678",
+            company: "Law & Associates Advocates",
+            email: "info@law.co.ke",
+            image: "",
+            heroTitle: "Your Trusted Legal Partner, Defending Your Rights",
+            heroBio: "I am Mwangi, a dedicated advocate with over a decade of experience in corporate law, conveyancing, litigation, and family law. I provide pragmatic legal solutions tailored to your unique needs.",
+            firmLink: "https://www.lawfirm.example.com",
+            linkedin: "https://linkedin.com",
+            facebook: "https://facebook.com",
+            twitter: "https://twitter.com",
+            instagram: "https://instagram.com",
+            services: [
+                { icon: "fa-solid fa-briefcase", title: "Corporate Law", description: "Company formation, governance, compliance, and commercial contracts for businesses of all sizes." },
+                { icon: "fa-solid fa-building", title: "Conveyancing & Property", description: "Property transactions, lease agreements, due diligence, and land dispute resolution." },
+                { icon: "fa-solid fa-gavel", title: "Civil Litigation", description: "Representation in civil disputes including contract breaches, tort claims, and debt recovery." },
+                { icon: "fa-solid fa-people-group", title: "Family Law", description: "Divorce, child custody, succession, and matrimonial property division with compassion." },
+                { icon: "fa-solid fa-file-signature", title: "Employment & Labour", description: "Advising both employers and employees on labour disputes, contracts, and workplace policies." },
+                { icon: "fa-solid fa-scale-balanced", title: "Criminal Defence", description: "Robust defence representation in criminal proceedings, from pre-trial to appeal." }
+            ]
+        };
+
+        let tempServices = [];
+
+        // ── Helpers ──
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
+        }
+
+        function formatPhone(phone) {
+            if (!phone) return '';
+            const digits = phone.replace(/\D/g, '');
+            if (digits.length === 10) {
+                return digits.replace(/(\d{4})(\d{3})(\d{3})/, "$1 $2 $3");
+            }
+            return phone;
+        }
+
+        function getIntlPhone(phone) {
+            const digits = phone.replace(/\D/g, '');
+            if (digits.startsWith('0')) return '254' + digits.slice(1);
+            return digits;
+        }
+
+        // ── Compress image ──
+        function compressImage(file, maxSizeMB = 2, quality = 0.7) {
+            return new Promise((resolve, reject) => {
+                if (file.size <= maxSizeMB * 1024 * 1024) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                    return;
+                }
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let w = img.width,
+                        h = img.height;
+                    const maxDim = 1200;
+                    if (w > maxDim || h > maxDim) {
+                        const ratio = Math.min(maxDim / w, maxDim / h);
+                        w = Math.round(w * ratio);
+                        h = Math.round(h * ratio);
+                    }
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                    ctx.drawImage(img, 0, 0, w, h);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.onerror = reject;
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
+        // ── Render UI from State ──
+        function renderUI(data) {
+            const formatted = formatPhone(data.phone);
+            const intl = getIntlPhone(data.phone);
+            const waLink = `https://wa.me/${intl}?text=Hello%20${encodeURIComponent(data.name)},%20I%20would%20like%20to%20inquire%20about%20legal%20services.`;
+
+            document.getElementById("navName").innerText = data.name;
+            document.getElementById("heroTitle").innerText = data.heroTitle;
+            document.getElementById("heroBio").innerText = data.heroBio;
+            document.getElementById("heroImage").src = data.image;
+            document.getElementById("contactName").innerText = data.name;
+            document.getElementById("contactCompany").innerText = data.company;
+            document.getElementById("contactEmail").innerText = data.email;
+            document.getElementById("footerName").innerText = data.name;
+            document.getElementById("companyBadge").innerText = data.company;
+
+            document.querySelectorAll(".phoneText").forEach(el => el.innerText = formatted);
+            document.querySelectorAll("a[href^='tel:']").forEach(el => el.href = `tel:${data.phone}`);
+
+            document.getElementById("firmLink1").href = data.firmLink;
+            document.getElementById("firmLink2").href = data.firmLink;
+            document.getElementById("chatWhatsappBtn").href = waLink;
+            document.getElementById("floatWhatsapp").href = waLink;
+
+            document.getElementById("linkedinLink").href = data.linkedin;
+            document.getElementById("facebookLink").href = data.facebook;
+            document.getElementById("twitterLink").href = data.twitter;
+            document.getElementById("instagramLink").href = data.instagram;
+
+            // Services Grid
+            const grid = document.getElementById("servicesGrid");
+            grid.innerHTML = "";
+            (data.services || []).forEach(s => {
+                const card = document.createElement("div");
+                card.className = "service-card";
+                card.innerHTML = `
+                    <div class="service-icon"><i class="${s.icon}"></i></div>
+                    <h3>${escapeHtml(s.title)}</h3>
+                    <p>${escapeHtml(s.description)}</p>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // ── Firestore Listener ──
+        onSnapshot(docRef, (snap) => {
+            if (snap.exists()) {
+                state = { ...state, ...snap.data() };
+                renderUI(state);
+            } else {
+                // Seed default data
+                setDoc(docRef, state);
+                renderUI(state);
+            }
+        });
+
+        // ── DOM refs ──
+        const logoBtn = document.getElementById("logoBtn");
+        const passModal = document.getElementById("passwordModal");
+        const adminModal = document.getElementById("adminModal");
+        const closePass = document.getElementById("closePassModal");
+        const closeAdmin = document.getElementById("closeAdminModal");
+        const verifyBtn = document.getElementById("verifyPassBtn");
+        const passInput = document.getElementById("passInput");
+
+        // ── Open Password Modal on double-click ──
+        logoBtn.addEventListener("dblclick", () => {
+            passModal.style.display = "flex";
+            passInput.value = "";
+            passInput.focus();
+        });
+
+        closePass.onclick = () => passModal.style.display = "none";
+        closeAdmin.onclick = () => adminModal.style.display = "none";
+
+        // ── Verify Password ──
+        verifyBtn.onclick = () => {
+            if (passInput.value.trim() === state.phone) {
+                passModal.style.display = "none";
+                openAdminPanel();
+            } else {
+                alert("Incorrect Password!");
+            }
+        };
+        passInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") verifyBtn.click();
+        });
+
+        // ── Open Admin Panel ──
+        function openAdminPanel() {
+            document.getElementById("editName").value = state.name;
+            document.getElementById("editPhone").value = state.phone;
+            document.getElementById("editCompany").value = state.company;
+            document.getElementById("editEmail").value = state.email;
+            document.getElementById("editImage").value = state.image;
+            document.getElementById("editTitle").value = state.heroTitle;
+            document.getElementById("editBio").value = state.heroBio;
+            document.getElementById("editFirmLink").value = state.firmLink;
+            document.getElementById("editLinkedin").value = state.linkedin;
+            document.getElementById("editFacebook").value = state.facebook;
+            document.getElementById("editTwitter").value = state.twitter;
+            document.getElementById("editInstagram").value = state.instagram;
+
+            document.getElementById("imagePreview").src = state.image || '';
+
+            tempServices = JSON.parse(JSON.stringify(state.services || []));
+            renderServicesEditor();
+
+            adminModal.style.display = "flex";
+        }
+
+        // ── Render Services Editor ──
+        function renderServicesEditor() {
+            const container = document.getElementById("servicesEditorList");
+            container.innerHTML = "";
+
+            tempServices.forEach((service, index) => {
+                const item = document.createElement("div");
+                item.className = "service-editor-item";
+
+                const opts = iconOptions.map(opt =>
+                    `<option value="${opt.value}" ${opt.value === service.icon ? 'selected' : ''}>${opt.label}</option>`
+                ).join('');
+
+                item.innerHTML = `
+                    <button type="button" class="btn-delete-service" data-index="${index}"><i class="fa-solid fa-trash"></i> Remove</button>
+                    <div class="form-group">
+                        <label>Icon Type</label>
+                        <select class="svc-icon" data-index="${index}">${opts}</select>
+                    </div>
+                    <div class="form-group">
+                        <label>Service Title</label>
+                        <input type="text" class="svc-title" data-index="${index}" value="${escapeHtml(service.title)}">
+                    </div>
+                    <div class="form-group">
+                        <label>Service Description</label>
+                        <textarea class="svc-desc" data-index="${index}">${escapeHtml(service.description)}</textarea>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+
+            // Delete buttons
+            container.querySelectorAll(".btn-delete-service").forEach(btn => {
+                btn.onclick = (e) => {
+                    const idx = e.target.closest("button").dataset.index;
+                    tempServices.splice(idx, 1);
+                    renderServicesEditor();
+                };
+            });
+
+            // Live sync
+            container.querySelectorAll(".svc-icon").forEach(sel => {
+                sel.onchange = (e) => tempServices[e.target.dataset.index].icon = e.target.value;
+            });
+            container.querySelectorAll(".svc-title").forEach(inp => {
+                inp.oninput = (e) => tempServices[e.target.dataset.index].title = e.target.value;
+            });
+            container.querySelectorAll(".svc-desc").forEach(txt => {
+                txt.oninput = (e) => tempServices[e.target.dataset.index].description = e.target.value;
+            });
+        }
+
+        // ── Add Service ──
+        document.getElementById("addServiceBtn").onclick = () => {
+            tempServices.push({
+                icon: "fa-solid fa-scale-balanced",
+                title: "New Legal Service",
+                description: "Description of the new legal service offered."
+            });
+            renderServicesEditor();
+        };
+
+        // ── File Upload Handler ──
+        const fileInput = document.getElementById("editImageFile");
+        const imagePreview = document.getElementById("imagePreview");
+        const clearImageBtn = document.getElementById("clearImageBtn");
+        const editImageUrl = document.getElementById("editImage");
+
+        fileInput.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                alert('Please select a valid image file.');
+                fileInput.value = '';
+                return;
+            }
+            try {
+                const dataUrl = await compressImage(file, 2, 0.7);
+                editImageUrl.value = dataUrl;
+                imagePreview.src = dataUrl;
+                const label = fileInput.closest('.form-group').querySelector('.text-muted');
+                if (label) label.textContent = '✅ Image uploaded & compressed successfully!';
+                setTimeout(() => {
+                    if (label) label.textContent = 'Max 2MB (JPG, PNG, WebP). Larger images will be auto‑compressed.';
+                }, 4000);
+            } catch (err) {
+                alert('Failed to process image.');
+                console.error(err);
+                fileInput.value = '';
+            }
+        };
+
+        clearImageBtn.onclick = () => {
+            editImageUrl.value = '';
+            imagePreview.src = '';
+            fileInput.value = '';
+            const label = fileInput.closest('.form-group').querySelector('.text-muted');
+            if (label) label.textContent = 'Max 2MB (JPG, PNG, WebP). Larger images will be auto‑compressed.';
+        };
+
+        editImageUrl.addEventListener('input', () => {
+            imagePreview.src = editImageUrl.value || '';
+        });
+
+        // ── Form Submit → Firestore ──
+        document.getElementById("adminForm").onsubmit = async (e) => {
+            e.preventDefault();
+
+            const updated = {
+                name: document.getElementById("editName").value.trim(),
+                phone: document.getElementById("editPhone").value.trim(),
+                company: document.getElementById("editCompany").value.trim(),
+                email: document.getElementById("editEmail").value.trim(),
+                image: document.getElementById("editImage").value.trim(),
+                heroTitle: document.getElementById("editTitle").value.trim(),
+                heroBio: document.getElementById("editBio").value.trim(),
+                firmLink: document.getElementById("editFirmLink").value.trim(),
+                linkedin: document.getElementById("editLinkedin").value.trim(),
+                facebook: document.getElementById("editFacebook").value.trim(),
+                twitter: document.getElementById("editTwitter").value.trim(),
+                instagram: document.getElementById("editInstagram").value.trim(),
+                services: tempServices
+            };
+
+            if (!updated.name) return alert('Name is required.');
+            if (!updated.phone) return alert('Phone number is required.');
+            if (!updated.image) return alert('Profile picture is required.');
+
+            await setDoc(docRef, updated);
+            adminModal.style.display = "none";
+        };
+
+        // ── Close modals on overlay click ──
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) overlay.style.display = 'none';
+            });
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                passModal.style.display = 'none';
+                adminModal.style.display = 'none';
+            }
+        });
+
+        console.log('✅ Lawyer page ready. Double‑click the logo to edit.');
+    </script>
+</body>
+</html>

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>PrimeSheq Kenya | SHERQ & ESG Excellence | Safety · Sustainability · Kenya</title>
+  <meta name="description" content="PrimeSheq Kenya delivers NITA-accredited SHERQ training, ESG consultancy, mentorship, and awards. Empowering Kenyan industries for safer, sustainable growth.">
+  <meta name="keywords" content="SHERQ, ESG, SHE Training, Safety Awards, Risk Management, NITA Kenya, OSHA, Nairobi, Kenya">
+  
+  <!-- Google Fonts + Font Awesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #ffffff;
+      color: #1e293b;
+      line-height: 1.5;
+      scroll-behavior: smooth;
+      transition: background 0.3s, color 0.2s;
+    }
+    /* Dark Mode */
+    body.dark-mode {
+      background: #121826;
+      color: #e2e8f0;
+    }
+    body.dark-mode .site-header,
+    body.dark-mode .service-card,
+    body.dark-mode .contact-wrapper,
+    body.dark-mode .quiz-box,
+    body.dark-mode .timeline-step,
+    body.dark-mode .award-card,
+    body.dark-mode .resource-grid .service-card,
+    body.dark-mode .member-card,
+    body.dark-mode .case-card,
+    body.dark-mode .event-card,
+    body.dark-mode .accordion-item,
+    body.dark-mode .safety-card {
+      background: #1e293b;
+      color: #e2e8f0;
+      border-color: #334155;
+    }
+    body.dark-mode .hero,
+    body.dark-mode .services,
+    body.dark-mode .assessment,
+    body.dark-mode .testimonials,
+    body.dark-mode .contact-section,
+    body.dark-mode .events-section,
+    body.dark-mode .resources,
+    body.dark-mode .team-carousel,
+    body.dark-mode .faq-section,
+    body.dark-mode .sectors-section,
+    body.dark-mode .case-studies-section {
+      background: #0f172a;
+    }
+    body.dark-mode .btn-outline {
+      border-color: #6cae3d;
+      color: #6cae3d;
+    }
+    h1, h2, h3, h4, .logo-text, .nav-links a, .btn {
+      font-family: 'Poppins', sans-serif;
+    }
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    :root {
+      --primary-dark: #0a2b3e;
+      --primary-accent: #1e6f9f;
+      --secondary-accent: #6cae3d;
+      --light-bg: #f8fafc;
+      --gray-light: #f1f5f9;
+      --text-dark: #0f172a;
+      --text-muted: #475569;
+      --white: #ffffff;
+      --shadow-sm: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.02);
+      --shadow-hover: 0 20px 30px -12px rgba(0,0,0,0.1);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 28px;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: var(--transition);
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      justify-content: center;
+    }
+    .btn-primary { background: var(--primary-accent); color: white; }
+    .btn-primary:hover { background: #0e5a85; transform: translateY(-2px); }
+    .btn-outline { background: transparent; border: 2px solid var(--primary-accent); color: var(--primary-accent); }
+    .btn-outline:hover { background: var(--primary-accent); color: white; }
+    .btn-secondary { background: var(--secondary-accent); color: var(--primary-dark); font-weight: 700; }
+    /* Navigation */
+    .site-header {
+      position: sticky;
+      top: 0;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      z-index: 1000;
+    }
+    body.dark-mode .site-header { background: rgba(18,24,38,0.96); border-bottom-color: #334155; }
+    .navbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; flex-wrap: wrap; }
+    .logo-area { display: flex; align-items: center; gap: 12px; }
+    .logo-icon { width: 48px; height: 48px; background: linear-gradient(135deg, var(--primary-dark), var(--primary-accent)); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: var(--secondary-accent); font-size: 28px; }
+    .logo-text h2 { font-size: 1.5rem; font-weight: 800; color: var(--primary-dark); }
+    body.dark-mode .logo-text h2 { color: white; }
+    .logo-text span { font-size: 0.7rem; font-weight: 500; color: var(--primary-accent); }
+    .nav-links { display: flex; gap: 28px; align-items: center; list-style: none; }
+    .nav-links a { text-decoration: none; font-weight: 500; color: var(--text-dark); transition: 0.2s; }
+    body.dark-mode .nav-links a { color: #e2e8f0; }
+    .nav-links a:hover, .nav-links a.active { color: var(--secondary-accent); }
+    .dropdown-menu { position: absolute; top: 38px; left: -20px; background: white; width: 220px; border-radius: 20px; box-shadow: 0 20px 35px -12px rgba(0,0,0,0.15); padding: 12px 0; opacity: 0; visibility: hidden; transition: 0.2s; }
+    body.dark-mode .dropdown-menu { background: #1e293b; }
+    .dropdown:hover .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(6px); }
+    .contact-nav { background: var(--secondary-accent); padding: 8px 22px; border-radius: 40px; color: white !important; }
+    .mobile-toggle { display: none; font-size: 1.8rem; cursor: pointer; }
+    .dark-toggle { background: var(--gray-light); border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; display: inline-flex; align-items: center; justify-content: center; }
+    /* Hero */
+    .hero { background: linear-gradient(105deg, #fefcf5 0%, #f3f9fe 100%); padding: 70px 0 80px; }
+    body.dark-mode .hero { background: #0f172a; }
+    .hero-grid { display: flex; align-items: center; gap: 50px; flex-wrap: wrap; }
+    .hero-content { flex: 1; }
+    .hero-badge { background: rgba(108,174,61,0.12); display: inline-block; padding: 5px 16px; border-radius: 40px; color: var(--secondary-accent); font-weight: 700; margin-bottom: 24px; }
+    .hero-content h1 { font-size: 3rem; font-weight: 800; line-height: 1.2; color: var(--primary-dark); margin-bottom: 20px; }
+    body.dark-mode .hero-content h1 { color: white; }
+    .hero-highlight { color: var(--secondary-accent); }
+    .hero-desc { font-size: 1rem; color: var(--text-muted); margin-bottom: 32px; }
+    .hero-image { flex: 1; text-align: center; }
+    .hero-image img { max-width: 100%; border-radius: 36px; box-shadow: 0 30px 40px -20px rgba(0,0,0,0.2); }
+    /* News Ticker */
+    .news-ticker { background: var(--primary-dark); color: white; padding: 8px 0; overflow: hidden; white-space: nowrap; font-size: 0.85rem; }
+    .ticker-content { display: inline-block; animation: ticker 25s linear infinite; }
+    @keyframes ticker { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+    /* Sections */
+    .section-title { text-align: center; margin-bottom: 56px; }
+    .section-title h2 { font-size: 2.2rem; color: var(--primary-dark); margin-bottom: 12px; }
+    body.dark-mode .section-title h2 { color: white; }
+    .section-title p { color: var(--text-muted); max-width: 680px; margin: 0 auto; }
+    .services { padding: 80px 0; background: var(--light-bg); }
+    .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px; }
+    .service-card { background: white; padding: 32px 28px; border-radius: 32px; transition: var(--transition); }
+    .stats-row { background: linear-gradient(120deg, #0a2b3e, #1e6f9f); color: white; padding: 60px 0; }
+    .stats-grid { display: flex; justify-content: space-between; flex-wrap: wrap; text-align: center; gap: 30px; }
+    .stat-block h3 { font-size: 2.5rem; font-weight: 800; }
+    /* Industry Sectors */
+    .sectors-section { padding: 80px 0; background: var(--light-bg); }
+    .sectors-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; text-align: center; }
+    .sector-card { background: white; padding: 24px; border-radius: 28px; transition: 0.2s; }
+    /* Case Studies */
+    .case-studies-section { padding: 80px 0; }
+    .case-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px; }
+    .case-card { background: white; border-radius: 28px; overflow: hidden; box-shadow: var(--shadow-sm); }
+    .case-img { height: 160px; background: #cbd5e1; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: var(--primary-accent); }
+    .case-content { padding: 24px; }
+    /* FAQ Accordion */
+    .faq-section { padding: 80px 0; background: var(--light-bg); }
+    .accordion-item { background: white; margin-bottom: 16px; border-radius: 24px; overflow: hidden; }
+    .accordion-header { padding: 20px 28px; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; }
+    .accordion-content { padding: 0 28px; max-height: 0; overflow: hidden; transition: 0.3s ease; color: var(--text-muted); }
+    .accordion-item.active .accordion-content { padding: 0 28px 24px 28px; max-height: 300px; }
+    /* Safety Tips Carousel */
+    .safety-tips { padding: 80px 0; background: white; }
+    .tips-carousel { max-width: 800px; margin: 0 auto; position: relative; }
+    .tip-card { background: var(--gray-light); border-radius: 32px; padding: 32px; text-align: center; }
+    /* Partners */
+    .partners { background: #f1f5f9; padding: 50px 0; text-align: center; }
+    .partner-logos { display: flex; justify-content: center; gap: 48px; flex-wrap: wrap; align-items: center; }
+    /* Responsive */
+    @media (max-width: 768px) {
+      .mobile-toggle { display: block; }
+      .nav-links { position: fixed; top: 80px; left: -100%; width: 80%; height: calc(100vh - 80px); background: white; flex-direction: column; align-items: flex-start; padding: 40px; transition: 0.3s; z-index: 999; }
+      .nav-links.active { left: 0; }
+      .dropdown-menu { position: static; opacity: 1; visibility: visible; box-shadow: none; display: none; padding-left: 20px; background: transparent; }
+      .dropdown.active .dropdown-menu { display: block; }
+      .container { padding: 0 20px; }
+      .hero-content h1 { font-size: 2rem; }
+      .section-title h2 { font-size: 1.8rem; }
+      .stats-grid { flex-direction: column; align-items: center; }
+      .stat-block h3 { font-size: 2rem; }
+    }
+    .fade-up { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .fade-up.visible { opacity: 1; transform: translateY(0); }
+    /* Chat Widget */
+    .chat-widget { position: fixed; bottom: 90px; right: 30px; width: 280px; background: white; border-radius: 24px; box-shadow: 0 20px 35px -10px rgba(0,0,0,0.2); z-index: 1000; display: none; flex-direction: column; overflow: hidden; }
+    body.dark-mode .chat-widget { background: #1e293b; }
+    .chat-header { background: var(--secondary-accent); padding: 12px; color: var(--primary-dark); font-weight: bold; display: flex; justify-content: space-between; }
+    .chat-body { padding: 16px; font-size: 0.85rem; max-height: 200px; overflow-y: auto; }
+    .chat-input { display: flex; border-top: 1px solid #e2e8f0; }
+    .chat-input input { flex:1; border: none; padding: 10px; outline: none; background: transparent; }
+    .chat-toggle { position: fixed; bottom: 30px; right: 30px; background: var(--secondary-accent); width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem; cursor: pointer; z-index: 1001; box-shadow: 0 8px 16px rgba(0,0,0,0.2); }
+    .back-to-top { position: fixed; bottom: 30px; left: 30px; background: var(--primary-accent); width: 48px; height: 48px; border-radius: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: 0.2s; z-index: 99; }
+    .back-to-top.visible { opacity: 1; }
+    .footer { background: #0f172a; padding: 56px 0 32px; color: #cbd5e1; }
+    input, textarea { font-family: inherit; }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <div class="navbar">
+      <div class="logo-area">
+        <div class="logo-icon"><i class="fas fa-shield-haltered"></i></div>
+        <div class="logo-text"><h2>PrimeSheq Kenya</h2><span>SHERQ · ESG · Excellence</span></div>
+      </div>
+      <div class="mobile-toggle" id="mobileToggle"><i class="fas fa-bars"></i></div>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#home" class="active">Home</a></li>
+        <li class="dropdown"><a href="#">Services <i class="fas fa-chevron-down"></i></a><div class="dropdown-menu"><a href="#services">SHE Training</a><a href="#services">ESG Strategy</a><a href="#services">SHERQ Audits</a><a href="#awards">Awards</a></div></li>
+        <li><a href="#sectors">Sectors</a></li>
+        <li><a href="#case-studies">Success Stories</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="#contact" class="contact-nav">Contact <i class="fas fa-arrow-right"></i></a></li>
+        <li><button id="darkModeToggle" class="dark-toggle"><i class="fas fa-moon"></i></button></li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<!-- News Ticker -->
+<div class="news-ticker"><div class="container"><div class="ticker-content"><i class="fas fa-newspaper"></i> 🇰🇪 SHERQ Impact Awards Kenya 2026 – Nominations Open | NITA Accredited Training – New Dates in Nairobi & Mombasa | ESG Forum: Kenya Vision 2030 & Green Economy – Register Now | Free Safety Webinar May 20 → </div></div></div>
+
+<main>
+  <!-- Hero Section -->
+  <section id="home" class="hero">
+    <div class="container hero-grid">
+      <div class="hero-content">
+        <div class="hero-badge"><i class="fas fa-medal"></i> SHERQ Impact Awards Kenya 2026</div>
+        <h1>Driving <span class="hero-highlight">Safety & Sustainability</span> Across Kenya's Industries</h1>
+        <p class="hero-desc">PrimeSheq Kenya delivers NITA-accredited SHERQ training, ESG strategy, and mentorship. Empowering businesses in Nairobi, Mombasa, Kisumu and beyond to achieve operational excellence and compliance with OSHA, NEMA, and global standards.</p>
+        <div class="hero-buttons"><a href="#contact" class="btn btn-primary">Request Consultation <i class="fas fa-calendar-alt"></i></a><a href="#services" class="btn btn-outline">Explore Solutions</a></div>
+      </div>
+      <div class="hero-image"><img src="https://placehold.co/600x500/1e6f9f/white?text=Kenya+SHERQ+Leadership" alt="Safety and sustainability Kenya"></div>
+    </div>
+  </section>
+
+  <!-- Services -->
+  <section id="services" class="services"><div class="container"><div class="section-title"><h2>Integrated SHERQ & ESG Solutions</h2><p>Tailored for Kenyan enterprises – from manufacturing to energy</p></div><div class="services-grid">
+    <div class="service-card"><div class="service-icon"><i class="fas fa-chalkboard-user"></i></div><h3>NITA-Accredited SHE Training</h3><p>NOSA, ISO 45001, Incident Investigation, Legal Liability, First Aid – certified by NITA Kenya.</p></div>
+    <div class="service-card"><div class="service-icon"><i class="fas fa-chart-line"></i></div><h3>ESG Strategy & Reporting</h3><p>Materiality assessments, decarbonisation aligned with Kenya's green agenda & Vision 2030.</p></div>
+    <div class="service-card"><div class="service-icon"><i class="fas fa-clipboard-list"></i></div><h3>SHERQ Audits & Compliance</h3><p>Legal registers, OSHA compliance, NEMA audits, and risk assessments for Kenyan law.</p></div>
+    <div class="service-card"><div class="service-icon"><i class="fas fa-trophy"></i></div><h3>SHERQ Impact Awards Kenya</h3><p>Celebrating safety & sustainability excellence across Kenyan counties. Nominate now!</p></div>
+    <div class="service-card"><div class="service-icon"><i class="fas fa-handshake"></i></div><h3>Mentorship & Culture Change</h3><p>Executive mentoring and workforce safety culture transformation programs.</p></div>
+    <div class="service-card"><div class="service-icon"><i class="fas fa-leaf"></i></div><h3>Sustainable Supply Chains</h3><p>Supplier ESG assessments, carbon footprint mapping for Kenyan supply chains.</p></div>
+  </div></div></section>
+
+  <!-- Stats Counter (Expanded) -->
+  <div class="stats-row"><div class="container"><div class="stats-grid">
+    <div class="stat-block"><h3 class="counter" data-target="287">0</h3><p>Projects in Kenya</p></div>
+    <div class="stat-block"><h3 class="counter" data-target="96">0</h3><p>Client Retention (%)</p></div>
+    <div class="stat-block"><h3 class="counter" data-target="18">0</h3><p>Years Experience</p></div>
+    <div class="stat-block"><h3 class="counter" data-target="3200">0</h3><p>Professionals Trained</p></div>
+    <div class="stat-block"><h3 class="counter" data-target="42">0</h3><p>Industrial Awards</p></div>
+  </div></div></div>
+
+  <!-- Industry Sectors Served (NEW) -->
+  <section id="sectors" class="sectors-section"><div class="container"><div class="section-title"><h2>Industries We Serve</h2><p>Tailored SHERQ solutions for Kenya's diverse economy</p></div><div class="sectors-grid">
+    <div class="sector-card"><i class="fas fa-hard-hat" style="font-size: 2rem; color: var(--secondary-accent);"></i><h3 style="margin-top: 12px;">Construction</h3><p>Site safety, OSHA compliance, high-risk training</p></div>
+    <div class="sector-card"><i class="fas fa-industry"></i><h3 style="margin-top: 12px;">Manufacturing</h3><p>Process safety, machine guarding, ISO 45001</p></div>
+    <div class="sector-card"><i class="fas fa-oil-can"></i><h3 style="margin-top: 12px;">Energy & Oil</h3><p>H2S, permit to work, emergency response</p></div>
+    <div class="sector-card"><i class="fas fa-tractor"></i><h3 style="margin-top: 12px;">Agriculture</h3><p>Agri-SHERQ, pesticide safety, worker welfare</p></div>
+    <div class="sector-card"><i class="fas fa-hospital"></i><h3 style="margin-top: 12px;">Healthcare</h3><p>Biohazard, waste management, patient safety</p></div>
+    <div class="sector-card"><i class="fas fa-hotel"></i><h3 style="margin-top: 12px;">Hospitality</h3><p>Food safety, fire safety, staff well-being</p></div>
+  </div></div></section>
+
+  <!-- Case Studies (Expanded with more info) -->
+  <section id="case-studies" class="case-studies-section"><div class="container"><div class="section-title"><h2>Success Stories & Impact</h2><p>Real results from our Kenyan clients</p></div><div class="case-grid">
+    <div class="case-card"><div class="case-img"><i class="fas fa-industry"></i></div><div class="case-content"><h3>Mombasa Cement Plant</h3><p><strong>Challenge:</strong> High incident rate & OSHA non-compliance.<br><strong>Solution:</strong> Full SHERQ management system + behavioral training.<br><strong>Result:</strong> 67% reduction in LTIs within 9 months, ISO 45001 certified.</p><span style="color: var(--secondary-accent); font-weight: 600;">+ Improved productivity by 23%</span></div></div>
+    <div class="case-card"><div class="case-img"><i class="fas fa-solar-panel"></i></div><div class="case-content"><h3>Kenyan Solar Energy Co.</h3><p><strong>Challenge:</strong> ESG reporting gaps for investors.<br><strong>Solution:</strong> Materiality assessment & GRI-aligned report.<br><strong>Result:</strong> Secured $5M green financing, ranked top ESG performer.</p></div></div>
+    <div class="case-card"><div class="case-img"><i class="fas fa-building"></i></div><div class="case-content"><h3>Nairobi Construction Giant</h3><p><strong>Challenge:</strong> High subcontractor risk.<br><strong>Solution:</strong> Contractor SHEQ pre-qualification & audit program.<br><strong>Result:</strong> Zero major incidents in 18 months, 40% lower insurance premiums.</p></div></div>
+  </div></div></section>
+
+  <!-- FAQ Accordion (Expanded with 6 questions) -->
+  <section id="faq" class="faq-section"><div class="container"><div class="section-title"><h2>Frequently Asked Questions</h2><p>Everything you need to know about SHERQ & ESG in Kenya</p></div>
+  <div class="accordion" id="faqAccordion">
+    <div class="accordion-item"><div class="accordion-header">What is SHERQ and why does it matter for Kenyan businesses? <i class="fas fa-plus"></i></div><div class="accordion-content">SHERQ stands for Safety, Health, Environment, Risk, and Quality. It's a holistic management approach that ensures compliance with Kenyan laws (OSHA, NEMA, Water Resources Authority) and improves operational efficiency, reduces costs, and enhances reputation.</div></div>
+    <div class="accordion-item"><div class="accordion-header">Are your training programs accredited in Kenya? <i class="fas fa-plus"></i></div><div class="accordion-content">Yes. All our SHE training is NITA-accredited and recognized by the Ministry of Labour. We also offer NOSA, IOSH, and ISO lead auditor certifications.</div></div>
+    <div class="accordion-item"><div class="accordion-header">How can I nominate for the SHERQ Impact Awards Kenya? <i class="fas fa-plus"></i></div><div class="accordion-content">Nominations open annually until August 31st. Visit our awards page or contact us directly to receive the nomination kit. Winners announced at the Nairobi Gala in November.</div></div>
+    <div class="accordion-item"><div class="accordion-header">Do you offer on-site training across Kenya? <i class="fas fa-plus"></i></div><div class="accordion-content">Absolutely. Our trainers travel to any county – from Nairobi to Kisumu, Mombasa to Eldoret. We customize training to your specific industry and workplace hazards.</div></div>
+    <div class="accordion-item"><div class="accordion-header">What ESG frameworks do you follow? <i class="fas fa-plus"></i></div><div class="accordion-content">We align with GRI, SASB, TCFD, and the UN Sustainable Development Goals, adapted to Kenya's unique regulatory environment (e.g., Climate Change Act, 2016).</div></div>
+    <div class="accordion-item"><div class="accordion-header">How do I get started with a SHERQ audit? <i class="fas fa-plus"></i></div><div class="accordion-content">Simply contact us for a free initial consultation. We'll conduct a preliminary gap analysis and provide a tailored proposal for your organization.</div></div>
+  </div></div></section>
+
+  <!-- Safety Tips Carousel (NEW) -->
+  <section class="safety-tips"><div class="container"><div class="section-title"><h2>Weekly Safety Tip</h2><p>Practical SHERQ advice for Kenyan workplaces</p></div><div class="tips-carousel"><div class="tip-card" id="safetyTip"><i class="fas fa-lightbulb" style="font-size: 2rem; color: var(--secondary-accent);"></i><p style="margin: 20px 0; font-size: 1.1rem;">"Always conduct a Job Safety Analysis (JSA) before starting high-risk tasks. Involve your team – they know the hazards best."</p><span>PrimeSheq Safety Minute</span></div><div style="text-align: center; margin-top: 20px;"><button id="nextTip" class="btn btn-outline">Next Tip <i class="fas fa-arrow-right"></i></button></div></div></div></section>
+
+  <!-- Partners & Accreditations -->
+  <div class="partners"><div class="container"><h3 style="color: var(--primary-dark);">Trusted & Accredited By</h3><div class="partner-logos"><i class="fas fa-gavel"></i><i class="fas fa-building"></i><i class="fas fa-chalkboard"></i><i class="fas fa-leaf"></i><i class="fas fa-shield-alt"></i><i class="fas fa-globe"></i><i class="fas fa-certificate"></i></div><p style="margin-top: 24px;">NITA Kenya · KEBS · NOSA · GRI · IOSH · OSHA Compliant · NEMA Partner</p></div></div>
+
+  <!-- Resource Hub -->
+  <section id="resources" class="resources" style="background: var(--light-bg); padding: 80px 0;"><div class="container"><div class="section-title"><h2>Resource Hub</h2><p>Free guides, templates & Kenyan compliance checklists</p></div><div class="services-grid">
+    <div class="service-card"><i class="fas fa-file-pdf"></i><h3>Kenya OSHA Compliance Checklist</h3><button class="btn btn-outline" style="margin-top: 16px;">Download</button></div>
+    <div class="service-card"><i class="fas fa-calendar-alt"></i><h3>2026 SHERQ Calendar (Kenya)</h3><button class="btn btn-outline">Get Calendar</button></div>
+    <div class="service-card"><i class="fas fa-chart-line"></i><h3>ESG Guide for Kenyan SMEs</h3><button class="btn btn-outline">Download</button></div>
+    <div class="service-card"><i class="fas fa-hard-hat"></i><h3>Toolbox Talk Templates (Swahili)</h3><button class="btn btn-outline">Download</button></div>
+  </div><div class="download-brochure" style="text-align:center; margin-top: 40px;"><a href="#" class="btn btn-primary"><i class="fas fa-download"></i> Download Corporate Brochure (Kenya Edition)</a></div></div></section>
+
+  <!-- Contact Section - Kenyan details -->
+  <section id="contact" class="contact-section" style="padding: 80px 0; background: linear-gradient(120deg, #f4f9fe 0%, white 100%);">
+    <div class="container"><div class="contact-wrapper" style="display: flex; flex-wrap: wrap; gap: 48px; background: white; border-radius: 48px; padding: 40px 32px; box-shadow: var(--shadow-sm);">
+      <div class="contact-info" style="flex:1;"><h3>Let's Elevate Your SHERQ Performance in Kenya</h3><p>Reach out for training, awards sponsorship, or a strategic consultation.</p>
+        <div style="margin: 24px 0; display: flex; gap: 16px; align-items: center;"><i class="fas fa-map-marker-alt"></i><span>Westlands, Nairobi, Kenya (Headquarters)</span></div>
+        <div style="display: flex; gap: 16px; margin-bottom: 16px;"><i class="fas fa-envelope"></i><span>info@primesheq.co.ke</span></div>
+        <div style="display: flex; gap: 16px;"><i class="fas fa-phone-alt"></i><span>+254 712 345 678</span></div>
+        <div style="margin-top: 28px;"><a href="#" style="background: #eef2ff; padding: 8px 12px; border-radius: 50%; margin-right: 12px;"><i class="fab fa-linkedin-in"></i></a><a href="#" style="background: #eef2ff; padding: 8px 12px; border-radius: 50%;"><i class="fab fa-twitter"></i></a><a href="#" style="background: #eef2ff; padding: 8px 12px; border-radius: 50%; margin-left: 8px;"><i class="fab fa-whatsapp"></i></a></div>
+      </div>
+      <div class="contact-form" style="flex:1;"><form id="contactForm"><input type="text" placeholder="Full name" required style="width:100%; padding:14px; border-radius:40px; margin-bottom:16px; border:1px solid #e2e8f0;"><input type="email" placeholder="Email address" required style="width:100%; padding:14px; border-radius:40px; margin-bottom:16px; border:1px solid #e2e8f0;"><textarea rows="3" placeholder="Tell us about your SHERQ needs in Kenya" style="width:100%; padding:14px; border-radius:24px; border:1px solid #e2e8f0;"></textarea><button type="submit" class="btn btn-secondary" style="margin-top:16px;">Send Message <i class="fas fa-paper-plane"></i></button></form></div>
+    </div>
+    <div class="newsletter" style="margin-top: 40px; background: var(--primary-dark); border-radius: 32px; padding: 32px; text-align: center;"><h4 style="color:white;">Subscribe to Kenyan SHERQ Insights</h4><div style="display:flex; gap:12px; justify-content:center; margin-top:16px; flex-wrap:wrap;"><input type="email" id="newsEmail" placeholder="Your email" style="padding:12px 20px; border-radius:40px; width:260px; border:none;"><button id="newsletterBtn" class="btn btn-primary">Subscribe <i class="fas fa-bell"></i></button></div></div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer"><div class="container"><div class="footer-grid" style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 30px;"><div><h4>PrimeSheq Kenya</h4><p>SHERQ & ESG Excellence<br>© 2025 All rights reserved</p></div><div><h4>Services</h4><p><a href="#" style="color:#94a3b8;">SHE Training (NITA)</a><br><a href="#" style="color:#94a3b8;">ESG Consulting</a><br><a href="#" style="color:#94a3b8;">SHERQ Awards Kenya</a></p></div><div><h4>Contact</h4><p><a href="#" style="color:#94a3b8;">info@primesheq.co.ke</a><br><a href="#" style="color:#94a3b8;">+254 712 345 678</a><br><a href="#" style="color:#94a3b8;">Nairobi, Kenya</a></p></div></div><div class="copyright" style="text-align: center; margin-top: 40px;">Safety · Sustainability · Performance — Empowering Kenya's industries for a safer future</div></div></footer>
+
+<!-- Live Chat Widget -->
+<div class="chat-widget" id="chatWidget"><div class="chat-header"><span>PrimeSheq Support KE</span><i class="fas fa-times" id="closeChat" style="cursor:pointer;"></i></div><div class="chat-body"><div id="chatMessages"></div></div><div class="chat-input"><input type="text" id="chatInput" placeholder="Type a message..."><button id="sendChat" style="background: var(--secondary-accent); border:none; padding:10px;"><i class="fas fa-paper-plane"></i></button></div></div>
+<div class="chat-toggle" id="chatToggle"><i class="fas fa-comment-dots"></i></div>
+<div class="back-to-top" id="backToTop"><i class="fas fa-chevron-up"></i></div>
+
+<script>
+  // Mobile toggle
+  const toggleBtn = document.getElementById('mobileToggle');
+  const navMenu = document.getElementById('navLinks');
+  toggleBtn?.addEventListener('click', () => navMenu.classList.toggle('active'));
+  document.querySelectorAll('.dropdown > a').forEach(d => d.addEventListener('click', (e) => { if(window.innerWidth <= 768) { e.preventDefault(); d.parentElement.classList.toggle('active'); } }));
+  
+  // Back to top
+  const backTop = document.getElementById('backToTop');
+  window.addEventListener('scroll', () => backTop.classList.toggle('visible', window.scrollY > 400));
+  backTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  
+  // Counters
+  const counters = document.querySelectorAll('.counter');
+  const observerCount = new IntersectionObserver((entries) => { entries.forEach(entry => { if(entry.isIntersecting) { const el = entry.target; const target = parseInt(el.dataset.target); let count = 0; const update = setInterval(() => { if(count >= target) { clearInterval(update); el.innerText = target; } else { count += Math.ceil(target/50); if(count > target) count = target; el.innerText = count; } }, 30); observerCount.unobserve(el); } }); }, { threshold: 0.5 });
+  counters.forEach(c => observerCount.observe(c));
+  
+  // Dark Mode
+  const darkToggle = document.getElementById('darkModeToggle');
+  darkToggle.addEventListener('click', () => { document.body.classList.toggle('dark-mode'); localStorage.setItem('darkMode', document.body.classList.contains('dark-mode')); const icon = darkToggle.querySelector('i'); if(document.body.classList.contains('dark-mode')) icon.classList.replace('fa-moon','fa-sun'); else icon.classList.replace('fa-sun','fa-moon'); });
+  if(localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode');
+  
+  // FAQ Accordion
+  document.querySelectorAll('.accordion-header').forEach(header => { header.addEventListener('click', () => { const parent = header.parentElement; parent.classList.toggle('active'); const icon = header.querySelector('i'); if(parent.classList.contains('active')) icon.className = 'fas fa-minus'; else icon.className = 'fas fa-plus'; }); });
+  
+  // Safety Tips Carousel
+  const tips = [
+    "Always conduct a Job Safety Analysis (JSA) before starting high-risk tasks. Involve your team – they know the hazards best.",
+    "In case of a chemical spill, refer to your SDS and use proper PPE. Never rinse chemicals into drains without neutralization.",
+    "Good housekeeping reduces accidents by 30%. Keep walkways clear, tools stored, and spills cleaned immediately.",
+    "Report near misses! They are free lessons to prevent future injuries. Create a no-blame reporting culture.",
+    "Use the 5S methodology: Sort, Set in order, Shine, Standardize, Sustain – it improves safety and efficiency.",
+    "In Kenya, OSHA requires a safety committee in workplaces with 20+ employees. Ensure yours meets monthly."
+  ];
+  let tipIndex = 0;
+  const tipElement = document.querySelector('#safetyTip p');
+  const nextTipBtn = document.getElementById('nextTip');
+  if(tipElement && nextTipBtn) {
+    nextTipBtn.addEventListener('click', () => { tipIndex = (tipIndex + 1) % tips.length; tipElement.innerText = `"${tips[tipIndex]}"`; });
+  }
+  
+  // Live Chat
+  const chatWidget = document.getElementById('chatWidget');
+  const chatToggleBtn = document.getElementById('chatToggle');
+  const closeChat = document.getElementById('closeChat');
+  chatToggleBtn.addEventListener('click', () => { chatWidget.style.display = chatWidget.style.display === 'flex' ? 'none' : 'flex'; });
+  closeChat.addEventListener('click', () => { chatWidget.style.display = 'none'; });
+  const sendChat = document.getElementById('sendChat');
+  const chatInput = document.getElementById('chatInput');
+  const chatMessagesDiv = document.getElementById('chatMessages');
+  function addMessage(text, isUser = false) { const msg = document.createElement('p'); msg.style.margin = '6px 0'; msg.style.fontSize = '0.8rem'; msg.innerHTML = `<strong>${isUser ? 'You' : 'Agent'}:</strong> ${text}`; chatMessagesDiv.appendChild(msg); chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight; }
+  sendChat.addEventListener('click', () => { if(chatInput.value.trim()) { addMessage(chatInput.value, true); setTimeout(() => { addMessage("Thank you! A PrimeSheq Kenya expert will respond shortly. Karibu!"); }, 500); chatInput.value = ''; } });
+  chatInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendChat.click(); });
+  
+  // Forms
+  document.getElementById('contactForm')?.addEventListener('submit', e=>{ e.preventDefault(); alert('Asante! A PrimeSheq Kenya specialist will contact you within 24 hours.'); e.target.reset(); });
+  document.getElementById('newsletterBtn')?.addEventListener('click',()=>{ let email = document.getElementById('newsEmail')?.value; if(email) alert(`Subscribed! ${email} will receive Kenyan SHERQ insights.`); else alert('Please enter a valid email.'); });
+  
+  // Fade-up
+  const faders = document.querySelectorAll('.service-card, .sector-card, .case-card, .accordion-item, .stat-block');
+  const appearOptions = { threshold: 0.2 };
+  const appearOnScroll = new IntersectionObserver((entries) => { entries.forEach(entry => { if(entry.isIntersecting) { entry.target.classList.add('visible'); appearOnScroll.unobserve(entry.target); } }); }, appearOptions);
+  faders.forEach(el => { el.classList.add('fade-up'); appearOnScroll.observe(el); });
+</script>
+</body>
+</html>

@@ -1,0 +1,3937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIORA ERP — Business Operating System</title>
+  <style>
+    /* ---------- RESET & VARIABLES ---------- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    :root {
+      --bg-primary: #020817;
+      --bg-secondary: #06152B;
+      --card-bg: #081A32;
+      --card-border: #1E3A5F;
+      --primary-blue: #008CFF;
+      --primary-cyan: #22D3EE;
+      --text-primary: #F8FAFC;
+      --text-secondary: #A9BDD4;
+      --success: #22C55E;
+      --warning: #F59E0B;
+      --danger: #F43F5E;
+      --purple: #8B5CF6;
+      --sidebar-width: 260px;
+      --header-height: 70px;
+      --mobile-nav-height: 68px;
+      --shadow-neon: 0 0 20px rgba(0, 140, 255, 0.15);
+      --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.4);
+      --radius: 12px;
+      --transition: all 0.3s ease;
+    }
+
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.5;
+    }
+
+    /* ---------- SCROLLBAR ---------- */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+    ::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--primary-blue); }
+
+    /* ---------- UTILITIES ---------- */
+    .hidden { display: none !important; }
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .gap-1 { gap: 0.5rem; }
+    .gap-2 { gap: 1rem; }
+    .gap-3 { gap: 1.5rem; }
+    .text-secondary { color: var(--text-secondary); }
+    .text-success { color: var(--success); }
+    .text-danger { color: var(--danger); }
+    .text-warning { color: var(--warning); }
+    .text-cyan { color: var(--primary-cyan); }
+    .text-sm { font-size: 0.875rem; }
+    .text-xs { font-size: 0.75rem; }
+    .font-bold { font-weight: 700; }
+    .font-semibold { font-weight: 600; }
+    .mt-1 { margin-top: 0.5rem; }
+    .mt-2 { margin-top: 1rem; }
+    .mt-3 { margin-top: 1.5rem; }
+    .mb-1 { margin-bottom: 0.5rem; }
+    .mb-2 { margin-bottom: 1rem; }
+    .mb-3 { margin-bottom: 1.5rem; }
+    .w-full { width: 100%; }
+
+    /* ---------- LOGIN SCREEN ---------- */
+    #login-screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 20% 50%, #06152B 0%, #020817 100%);
+      z-index: 1000;
+      padding: 1.5rem;
+    }
+
+    .login-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: var(--shadow-neon), 0 20px 40px rgba(0, 0, 0, 0.6);
+      animation: fadeSlideUp 0.5s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(from 0deg, transparent, rgba(0, 140, 255, 0.05), transparent, rgba(34, 211, 238, 0.05), transparent);
+      animation: rotate 8s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes rotate { 100% { transform: rotate(360deg); } }
+    @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .login-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.25rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .login-logo .v-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--primary-blue), var(--primary-cyan));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1.5rem;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(0, 140, 255, 0.4);
+    }
+
+    .login-logo .brand-text {
+      font-size: 1.8rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      background: linear-gradient(90deg, #fff, var(--primary-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .login-subtitle {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .login-form { position: relative; z-index: 1; }
+
+    .form-group { margin-bottom: 1.25rem; }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .input-wrapper { position: relative; display: flex; align-items: center; }
+
+    .input-wrapper input {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .input-wrapper input:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 3px rgba(0, 140, 255, 0.15); }
+    .input-wrapper input::placeholder { color: #4A6580; }
+
+    .input-wrapper .toggle-pw {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 0.25rem;
+    }
+
+    .login-options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+    }
+
+    .login-options label { display: flex; align-items: center; gap: 0.4rem; cursor: pointer; }
+    .login-options input[type="checkbox"] { accent-color: var(--primary-blue); width: 16px; height: 16px; }
+
+    .btn-primary {
+      width: 100%;
+      padding: 0.9rem;
+      background: linear-gradient(135deg, var(--primary-blue), #0066CC);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 140, 255, 0.4); }
+    .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+    .btn-primary .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .demo-accounts {
+      margin-top: 1.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--card-border);
+      position: relative;
+      z-index: 1;
+    }
+
+    .demo-accounts p {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 0.75rem;
+      text-align: center;
+    }
+
+    .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+
+    .demo-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 0.5rem 0.4rem;
+      color: var(--text-secondary);
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: var(--transition);
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .demo-btn:hover { border-color: var(--primary-blue); color: var(--text-primary); background: rgba(0, 140, 255, 0.1); }
+
+    .error-msg {
+      color: var(--danger);
+      font-size: 0.85rem;
+      text-align: center;
+      margin-top: 0.75rem;
+      min-height: 1.2rem;
+    }
+
+    /* 2FA Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 1rem;
+    }
+
+    .modal-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: var(--shadow-neon);
+      animation: fadeSlideUp 0.3s ease;
+    }
+
+    .modal-box h3 { margin-bottom: 0.5rem; font-size: 1.2rem; }
+    .modal-box p { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.25rem; }
+
+    .modal-box input {
+      width: 100%;
+      padding: 0.85rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 1.2rem;
+      text-align: center;
+      letter-spacing: 0.5rem;
+      outline: none;
+      margin-bottom: 1rem;
+    }
+
+    .modal-box input:focus { border-color: var(--primary-blue); }
+
+    .modal-actions { display: flex; gap: 0.75rem; }
+
+    .btn-secondary {
+      flex: 1;
+      padding: 0.75rem;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); }
+
+    /* ---------- APP SHELL ---------- */
+    #app-shell { display: none; min-height: 100vh; }
+
+    /* Sidebar */
+    #sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-width);
+      height: 100vh;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1.25rem 1.25rem;
+      border-bottom: 1px solid var(--card-border);
+      flex-shrink: 0;
+    }
+
+    .sidebar-brand .v-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--primary-blue), var(--primary-cyan));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1.2rem;
+      color: #fff;
+      box-shadow: 0 0 15px rgba(0, 140, 255, 0.3);
+      flex-shrink: 0;
+    }
+
+    .sidebar-brand .brand-text {
+      font-size: 1.2rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      background: linear-gradient(90deg, #fff, var(--primary-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .sidebar-brand .brand-sub { font-size: 0.6rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .sidebar-nav { padding: 0.75rem 0.6rem; flex: 1; overflow-y: auto; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 0.9rem;
+      border-radius: 8px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 0.15rem;
+      border: 1px solid transparent;
+      user-select: none;
+    }
+
+    .nav-item:hover { background: rgba(0, 140, 255, 0.08); color: var(--text-primary); border-color: rgba(0, 140, 255, 0.1); }
+
+    .nav-item.active {
+      background: linear-gradient(90deg, rgba(0, 140, 255, 0.15), rgba(34, 211, 238, 0.05));
+      color: var(--text-primary);
+      border-color: rgba(0, 140, 255, 0.3);
+      box-shadow: inset 3px 0 0 var(--primary-blue);
+    }
+
+    .nav-item .nav-icon { width: 20px; text-align: center; font-size: 1rem; flex-shrink: 0; }
+    .nav-item .nav-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Main Content */
+    #main-content {
+      margin-left: var(--sidebar-width);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      transition: margin-left 0.3s ease;
+      padding-bottom: 0;
+    }
+
+    /* Header */
+    #top-header {
+      height: var(--header-height);
+      background: rgba(6, 21, 43, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      gap: 1rem;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 1rem; flex: 1; min-width: 0; }
+
+    .mobile-toggle { display: none; background: none; border: none; color: var(--text-primary); font-size: 1.4rem; cursor: pointer; padding: 0.25rem; }
+
+    .page-title { font-size: 1.1rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .global-search { flex: 1; max-width: 360px; position: relative; }
+
+    .global-search input {
+      width: 100%;
+      padding: 0.55rem 0.9rem 0.55rem 2.2rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .global-search input:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 3px rgba(0, 140, 255, 0.1); }
+
+    .global-search .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 0.9rem; }
+
+    .header-right { display: flex; align-items: center; gap: 1rem; flex-shrink: 0; }
+
+    .header-time { font-size: 0.8rem; color: var(--text-secondary); white-space: nowrap; }
+
+    .notification-btn {
+      position: relative;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0.3rem;
+      transition: var(--transition);
+    }
+
+    .notification-btn:hover { color: var(--text-primary); }
+
+    .notification-badge {
+      position: absolute;
+      top: -2px;
+      right: -4px;
+      background: var(--danger);
+      color: #fff;
+      font-size: 0.6rem;
+      font-weight: 700;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      padding: 0.3rem 0.5rem;
+      border-radius: 8px;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .user-profile:hover { background: rgba(255, 255, 255, 0.05); }
+
+    .user-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-blue), var(--purple));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .user-info { display: flex; flex-direction: column; }
+    .user-info .user-name { font-size: 0.8rem; font-weight: 600; white-space: nowrap; }
+    .user-info .user-role { font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .profile-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 0.5rem;
+      min-width: 180px;
+      box-shadow: var(--shadow-card);
+      z-index: 200;
+      animation: fadeSlideUp 0.2s ease;
+    }
+
+    .profile-dropdown .dropdown-item {
+      padding: 0.6rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .profile-dropdown .dropdown-item:hover { background: rgba(0, 140, 255, 0.1); color: var(--text-primary); }
+    .profile-dropdown .dropdown-item.danger:hover { background: rgba(244, 63, 94, 0.1); color: var(--danger); }
+
+    /* Content Area */
+    #content-area { padding: 1.5rem; flex: 1; overflow-y: auto; }
+
+    /* ---------- MODULE TILES GRID ---------- */
+    .module-tiles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .module-tile {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 1.5rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .module-tile::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary-blue), var(--primary-cyan));
+      opacity: 0;
+      transition: var(--transition);
+    }
+
+    .module-tile:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-neon);
+      border-color: rgba(0, 140, 255, 0.4);
+    }
+
+    .module-tile:hover::before { opacity: 1; }
+
+    .module-tile .tile-icon {
+      font-size: 2.2rem;
+      line-height: 1;
+      transition: transform 0.3s ease;
+    }
+
+    .module-tile:hover .tile-icon { transform: scale(1.15); }
+
+    .module-tile .tile-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-align: center;
+    }
+
+    .module-tile .tile-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: var(--danger);
+      color: #fff;
+      font-size: 0.6rem;
+      font-weight: 700;
+      padding: 0.15rem 0.45rem;
+      border-radius: 10px;
+    }
+
+    /* Module Section Header */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      margin-top: 0.5rem;
+    }
+
+    .section-header h3 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .section-header .section-line {
+      flex: 1;
+      height: 1px;
+      background: var(--card-border);
+    }
+
+    /* Dashboard KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .kpi-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.2rem;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 3px;
+      height: 100%;
+      background: linear-gradient(180deg, var(--primary-blue), var(--primary-cyan));
+      opacity: 0.7;
+    }
+
+    .kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-neon); border-color: rgba(0, 140, 255, 0.3); }
+
+    .kpi-card .kpi-label {
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 0.4rem;
+      font-weight: 600;
+    }
+
+    .kpi-card .kpi-value {
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin-bottom: 0.2rem;
+      background: linear-gradient(90deg, #fff, var(--primary-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .kpi-card .kpi-change { font-size: 0.75rem; display: flex; align-items: center; gap: 0.25rem; }
+    .kpi-card .kpi-change.up { color: var(--success); }
+    .kpi-card .kpi-change.down { color: var(--danger); }
+
+    /* Chart Grid */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .chart-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: var(--shadow-card);
+    }
+
+    .chart-card h4 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .chart-card svg { width: 100%; height: auto; display: block; }
+
+    .chart-filters { display: flex; gap: 0.4rem; margin-bottom: 1rem; flex-wrap: wrap; }
+
+    .chart-filters button {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 0.3rem 0.7rem;
+      color: var(--text-secondary);
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: var(--transition);
+      font-weight: 600;
+    }
+
+    .chart-filters button.active { background: rgba(0, 140, 255, 0.15); border-color: var(--primary-blue); color: var(--text-primary); }
+    .chart-filters button:hover { border-color: var(--primary-blue); }
+
+    /* Tables */
+    .data-table-wrapper {
+      overflow-x: auto;
+      border-radius: var(--radius);
+      border: 1px solid var(--card-border);
+      background: var(--card-bg);
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      min-width: 600px;
+    }
+
+    .data-table thead { background: rgba(0, 140, 255, 0.06); }
+
+    .data-table th {
+      text-align: left;
+      padding: 0.8rem 1rem;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-secondary);
+      font-weight: 700;
+      border-bottom: 1px solid var(--card-border);
+      white-space: nowrap;
+    }
+
+    .data-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(30, 58, 95, 0.4);
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+
+    .data-table tbody tr:hover { background: rgba(0, 140, 255, 0.04); }
+    .data-table tbody tr:last-child td { border-bottom: none; }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .status-badge.success { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+    .status-badge.warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .status-badge.danger { background: rgba(244, 63, 94, 0.15); color: var(--danger); }
+    .status-badge.info { background: rgba(0, 140, 255, 0.15); color: var(--primary-blue); }
+    .status-badge.purple { background: rgba(139, 92, 246, 0.15); color: var(--purple); }
+
+    /* Buttons */
+    .btn {
+      padding: 0.55rem 1.1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      white-space: nowrap;
+    }
+
+    .btn-primary-sm { background: linear-gradient(135deg, var(--primary-blue), #0066CC); color: #fff; }
+    .btn-primary-sm:hover { box-shadow: 0 4px 15px rgba(0, 140, 255, 0.4); transform: translateY(-1px); }
+
+    .btn-outline { background: transparent; border-color: var(--card-border); color: var(--text-secondary); }
+    .btn-outline:hover { border-color: var(--primary-blue); color: var(--text-primary); background: rgba(0, 140, 255, 0.05); }
+
+    .btn-danger-sm { background: rgba(244, 63, 94, 0.15); color: var(--danger); border-color: rgba(244, 63, 94, 0.3); }
+    .btn-danger-sm:hover { background: rgba(244, 63, 94, 0.25); }
+
+    /* Module Header */
+    .module-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .module-header h2 { font-size: 1.3rem; font-weight: 700; }
+    .module-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+    /* Search & Filter Bar */
+    .filter-bar {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-bar input, .filter-bar select {
+      padding: 0.5rem 0.9rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .filter-bar input:focus, .filter-bar select:focus { border-color: var(--primary-blue); }
+    .filter-bar select option { background: var(--card-bg); color: var(--text-primary); }
+
+    /* POS Layout */
+    .pos-layout {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 1rem;
+      height: calc(100vh - var(--header-height) - 3rem);
+    }
+
+    .pos-products { display: flex; flex-direction: column; overflow: hidden; }
+
+    .pos-product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 0.75rem;
+      overflow-y: auto;
+      padding-right: 0.25rem;
+      flex: 1;
+    }
+
+    .pos-product-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 0.9rem;
+      cursor: pointer;
+      transition: var(--transition);
+      text-align: center;
+    }
+
+    .pos-product-card:hover { border-color: var(--primary-blue); transform: translateY(-2px); box-shadow: var(--shadow-neon); }
+    .pos-product-card .prod-name { font-size: 0.8rem; font-weight: 600; margin-bottom: 0.3rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pos-product-card .prod-price { font-size: 0.9rem; font-weight: 800; color: var(--primary-cyan); margin-bottom: 0.2rem; }
+    .pos-product-card .prod-stock { font-size: 0.7rem; color: var(--text-secondary); }
+
+    .pos-cart {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .pos-cart-header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--card-border);
+      font-weight: 700;
+      font-size: 0.95rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .pos-cart-items { flex: 1; overflow-y: auto; padding: 0.5rem; }
+
+    .pos-cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.6rem 0.5rem;
+      border-bottom: 1px solid rgba(30, 58, 95, 0.3);
+      font-size: 0.85rem;
+      gap: 0.5rem;
+    }
+
+    .pos-cart-item:last-child { border-bottom: none; }
+    .pos-cart-item .item-info { flex: 1; min-width: 0; }
+    .pos-cart-item .item-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pos-cart-item .item-price { font-size: 0.75rem; color: var(--text-secondary); }
+
+    .pos-cart-item .item-qty { display: flex; align-items: center; gap: 0.3rem; }
+
+    .pos-cart-item .item-qty button {
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      border: 1px solid var(--card-border);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-primary);
+      cursor: pointer;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .pos-cart-item .item-qty button:hover { border-color: var(--primary-blue); background: rgba(0, 140, 255, 0.1); }
+    .pos-cart-item .item-total { font-weight: 700; min-width: 60px; text-align: right; color: var(--primary-cyan); }
+
+    .pos-cart-footer {
+      padding: 1rem;
+      border-top: 1px solid var(--card-border);
+      background: rgba(0, 140, 255, 0.03);
+    }
+
+    .pos-total-row { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.3rem; color: var(--text-secondary); }
+    .pos-total-row.grand-total { font-size: 1.1rem; font-weight: 800; color: var(--text-primary); margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--card-border); }
+
+    /* Barcode Scanner */
+    #barcode-scanner-container {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 3000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    #barcode-scanner-container video {
+      width: 100%;
+      max-width: 500px;
+      border-radius: 12px;
+      border: 2px solid var(--primary-blue);
+      box-shadow: 0 0 30px rgba(0, 140, 255, 0.5);
+    }
+
+    #barcode-scanner-container .scanner-overlay {
+      position: relative;
+      width: 100%;
+      max-width: 500px;
+      margin-top: -300px;
+      height: 300px;
+      pointer-events: none;
+    }
+
+    .scanner-frame {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 250px;
+      height: 150px;
+      border: 3px solid var(--primary-cyan);
+      border-radius: 12px;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4);
+    }
+
+    .scanner-frame::before, .scanner-frame::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-color: var(--primary-cyan);
+      border-style: solid;
+    }
+
+    .scanner-frame::before { top: -3px; left: -3px; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+    .scanner-frame::after { bottom: -3px; right: -3px; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+
+    .scanner-hint {
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      margin-top: 1rem;
+      text-align: center;
+    }
+
+    #barcode-scanner-container .scanner-close {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--card-border);
+      color: var(--text-primary);
+      font-size: 1.5rem;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    #barcode-scanner-container .scanner-close:hover { background: rgba(244, 63, 94, 0.3); border-color: var(--danger); }
+
+    /* Toast Notifications */
+    #toast-container {
+      position: fixed;
+      top: 80px;
+      right: 1.5rem;
+      z-index: 4000;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-left: 3px solid var(--primary-blue);
+      border-radius: 10px;
+      padding: 0.8rem 1.1rem;
+      min-width: 260px;
+      max-width: 360px;
+      box-shadow: var(--shadow-card);
+      animation: slideInRight 0.3s ease;
+      pointer-events: auto;
+      font-size: 0.85rem;
+    }
+
+    .toast.success { border-left-color: var(--success); }
+    .toast.warning { border-left-color: var(--warning); }
+    .toast.danger { border-left-color: var(--danger); }
+    .toast .toast-title { font-weight: 700; margin-bottom: 0.15rem; }
+    .toast .toast-msg { color: var(--text-secondary); font-size: 0.8rem; }
+
+    @keyframes slideInRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+
+    /* Modal */
+    .modal-content {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 600px;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-neon);
+      animation: fadeSlideUp 0.3s ease;
+    }
+
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+    .modal-header h3 { font-size: 1.1rem; font-weight: 700; }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.3rem;
+      cursor: pointer;
+      padding: 0.2rem;
+      transition: var(--transition);
+    }
+
+    .modal-close:hover { color: var(--danger); }
+
+    /* Form inside modal */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .form-field { margin-bottom: 0.9rem; }
+
+    .form-field label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.35rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-field input, .form-field select, .form-field textarea {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 3px rgba(0, 140, 255, 0.1); }
+    .form-field select option { background: var(--card-bg); }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-secondary); }
+    .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.5; }
+
+    /* AI Chat Interface */
+    .ai-chat-container {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - var(--header-height) - 6rem);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .ai-chat-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: rgba(0, 140, 255, 0.05);
+    }
+
+    .ai-chat-header .ai-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--primary-cyan));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+    }
+
+    .ai-chat-header .ai-title { font-weight: 700; font-size: 0.95rem; }
+    .ai-chat-header .ai-status { font-size: 0.7rem; color: var(--success); }
+
+    .ai-chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .ai-message {
+      max-width: 80%;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      animation: fadeSlideUp 0.3s ease;
+    }
+
+    .ai-message.bot {
+      align-self: flex-start;
+      background: rgba(0, 140, 255, 0.1);
+      border: 1px solid rgba(0, 140, 255, 0.2);
+      border-bottom-left-radius: 4px;
+    }
+
+    .ai-message.user {
+      align-self: flex-end;
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      border-bottom-right-radius: 4px;
+    }
+
+    .ai-message .ai-msg-time {
+      font-size: 0.65rem;
+      color: var(--text-secondary);
+      margin-top: 0.3rem;
+      opacity: 0.7;
+    }
+
+    .ai-chat-input {
+      padding: 0.75rem 1rem;
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      gap: 0.5rem;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .ai-chat-input input {
+      flex: 1;
+      padding: 0.7rem 1rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    .ai-chat-input input:focus { border-color: var(--primary-blue); }
+
+    .ai-chat-input button {
+      padding: 0.7rem 1.2rem;
+      background: linear-gradient(135deg, var(--primary-blue), var(--purple));
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .ai-chat-input button:hover { box-shadow: 0 4px 15px rgba(0, 140, 255, 0.4); }
+
+    .ai-quick-actions {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      border-top: 1px solid var(--card-border);
+      flex-wrap: wrap;
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    .ai-quick-actions button {
+      padding: 0.4rem 0.8rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .ai-quick-actions button:hover { border-color: var(--primary-blue); color: var(--text-primary); background: rgba(0, 140, 255, 0.1); }
+
+    /* Restricted View */
+    .restricted-view {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 2rem;
+      text-align: center;
+      color: var(--text-secondary);
+    }
+
+    .restricted-view .icon { font-size: 4rem; margin-bottom: 1rem; opacity: 0.3; }
+    .restricted-view h3 { font-size: 1.3rem; color: var(--text-primary); margin-bottom: 0.5rem; }
+    .restricted-view p { max-width: 400px; font-size: 0.9rem; line-height: 1.6; }
+
+    /* ---------- MOBILE BOTTOM NAVIGATION ---------- */
+    #mobile-bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: var(--mobile-nav-height);
+      background: rgba(6, 21, 43, 0.95);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--card-border);
+      z-index: 150;
+      padding: 0 0.5rem;
+      align-items: center;
+      justify-content: space-around;
+    }
+
+    .mobile-nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.2rem;
+      padding: 0.4rem 0.6rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: var(--transition);
+      color: var(--text-secondary);
+      font-size: 0.6rem;
+      font-weight: 600;
+      flex: 1;
+      max-width: 72px;
+      border: none;
+      background: none;
+      position: relative;
+    }
+
+    .mobile-nav-item .m-icon { font-size: 1.3rem; line-height: 1; }
+    .mobile-nav-item .m-label { font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.3px; }
+
+    .mobile-nav-item.active { color: var(--primary-cyan); }
+    .mobile-nav-item.active .m-icon { transform: translateY(-2px); }
+
+    .mobile-nav-item .m-badge {
+      position: absolute;
+      top: 2px;
+      right: 12px;
+      background: var(--danger);
+      color: #fff;
+      font-size: 0.5rem;
+      font-weight: 700;
+      padding: 0.1rem 0.3rem;
+      border-radius: 8px;
+    }
+
+    /* Mobile menu overlay */
+    #mobile-menu-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 140;
+      backdrop-filter: blur(2px);
+    }
+
+    /* Receipt print */
+    @media print {
+      body * { visibility: hidden; }
+      #receipt-print, #receipt-print * { visibility: visible; }
+      #receipt-print { position: absolute; left: 0; top: 0; width: 100%; padding: 1rem; background: #fff; color: #000; font-family: monospace; }
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .pos-layout { grid-template-columns: 1fr; height: auto; }
+      .pos-product-grid { max-height: 400px; }
+    }
+
+    @media (max-width: 768px) {
+      :root { --sidebar-width: 0px; }
+      #sidebar { transform: translateX(-100%); width: 260px; z-index: 160; }
+      #sidebar.open { transform: translateX(0); }
+      #main-content { margin-left: 0; padding-bottom: var(--mobile-nav-height); }
+      .mobile-toggle { display: block; }
+      .global-search { display: none; }
+      .header-time { display: none; }
+      .user-info { display: none; }
+      #content-area { padding: 1rem; }
+      .kpi-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+      .chart-grid { grid-template-columns: 1fr; }
+      .demo-grid { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      .module-tiles-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.75rem; }
+      .module-tile { padding: 1.1rem 0.75rem; }
+      .module-tile .tile-icon { font-size: 1.8rem; }
+      .module-tile .tile-label { font-size: 0.75rem; }
+      #mobile-bottom-nav { display: flex; }
+      #mobile-menu-overlay.active { display: block; }
+      .ai-chat-container { height: calc(100vh - var(--header-height) - var(--mobile-nav-height) - 2rem); }
+    }
+
+    @media (max-width: 480px) {
+      .login-card { padding: 1.5rem 1.25rem; }
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+      .kpi-card .kpi-value { font-size: 1.1rem; }
+      .module-tiles-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== LOGIN SCREEN ==================== -->
+  <div id="login-screen">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="v-icon">V</div>
+        <span class="brand-text">VIORA</span>
+      </div>
+      <p class="login-subtitle">Business Operating System — Connect People. Empower Businesses.</p>
+
+      <form class="login-form" id="login-form" autocomplete="off">
+        <div class="form-group">
+          <label for="login-email">Email or Username</label>
+          <div class="input-wrapper">
+            <input type="text" id="login-email" placeholder="admin@viora.demo" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <div class="input-wrapper">
+            <input type="password" id="login-password" placeholder="••••••••" required>
+            <button type="button" class="toggle-pw" id="toggle-password" aria-label="Show password">👁</button>
+          </div>
+        </div>
+        <div class="login-options">
+          <label><input type="checkbox" id="remember-me"> Remember me</label>
+          <span style="color: var(--primary-cyan); cursor: pointer; font-size: 0.8rem;">Forgot password?</span>
+        </div>
+        <button type="submit" class="btn-primary" id="login-btn">
+          <span id="login-btn-text">Sign In</span>
+        </button>
+        <div class="error-msg" id="login-error"></div>
+      </form>
+
+      <div class="demo-accounts">
+        <p>🔑 Demo Accounts (click to fill)</p>
+        <div class="demo-grid">
+          <button class="demo-btn" data-email="admin@viora.demo" data-pass="Admin@123">Admin</button>
+          <button class="demo-btn" data-email="manager@viora.demo" data-pass="Manager@123">Manager</button>
+          <button class="demo-btn" data-email="accountant@viora.demo" data-pass="Account@123">Accountant</button>
+          <button class="demo-btn" data-email="staff@viora.demo" data-pass="Staff@123">Staff</button>
+          <button class="demo-btn" data-email="customer@viora.demo" data-pass="Customer@123">Customer</button>
+          <button class="demo-btn" data-email="partner@viora.demo" data-pass="Partner@123">Partner</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2FA Modal -->
+  <div id="twofa-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <h3>🔐 Two-Factor Authentication</h3>
+      <p>Enter the 6-digit demo code: <strong style="color: var(--primary-cyan);">123456</strong></p>
+      <input type="text" id="twofa-input" maxlength="6" placeholder="000000" inputmode="numeric">
+      <div class="modal-actions">
+        <button class="btn-secondary" id="twofa-cancel">Cancel</button>
+        <button class="btn-primary" id="twofa-verify" style="flex:1;">Verify</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== APP SHELL ==================== -->
+  <div id="app-shell">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-menu-overlay"></div>
+
+    <!-- Sidebar (desktop + mobile slide-in) -->
+    <aside id="sidebar">
+      <div class="sidebar-brand">
+        <div class="v-icon">V</div>
+        <div>
+          <div class="brand-text">VIORA</div>
+          <div class="brand-sub">Enterprise Solutions</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav" id="sidebar-nav">
+        <!-- Nav items injected by JS -->
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div id="main-content">
+      <!-- Header -->
+      <header id="top-header">
+        <div class="header-left">
+          <button class="mobile-toggle" id="mobile-toggle" aria-label="Toggle menu">☰</button>
+          <h1 class="page-title" id="page-title">Dashboard</h1>
+          <div class="global-search">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="global-search-input" placeholder="Search products, customers, invoices...">
+          </div>
+        </div>
+        <div class="header-right">
+          <span class="header-time" id="header-time"></span>
+          <button class="notification-btn" id="notification-btn" aria-label="Notifications">
+            🔔
+            <span class="notification-badge" id="notification-badge">0</span>
+          </button>
+          <div class="user-profile" id="user-profile">
+            <div class="user-avatar" id="user-avatar">A</div>
+            <div class="user-info">
+              <span class="user-name" id="user-name">Admin</span>
+              <span class="user-role" id="user-role">Admin</span>
+            </div>
+            <div class="profile-dropdown hidden" id="profile-dropdown">
+              <div class="dropdown-item" data-action="profile">👤 My Profile</div>
+              <div class="dropdown-item" data-action="settings">⚙️ Settings</div>
+              <div class="dropdown-item danger" data-action="logout">🚪 Logout</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content Area -->
+      <main id="content-area">
+        <!-- Dynamic content -->
+      </main>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav id="mobile-bottom-nav">
+      <!-- Injected by JS -->
+    </nav>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- Modal Container -->
+  <div id="modal-container"></div>
+
+  <!-- Barcode Scanner Container -->
+  <div id="barcode-scanner-container" class="hidden">
+    <button class="scanner-close" id="scanner-close-btn">✕</button>
+    <video id="scanner-video" autoplay playsinline></video>
+    <div class="scanner-overlay">
+      <div class="scanner-frame"></div>
+    </div>
+    <p class="scanner-hint">📷 Point your camera at a product barcode or QR code</p>
+    <p class="scanner-hint text-xs" style="color: var(--text-secondary); margin-top: 0.25rem;">Detection is automatic. The scanner will close when a code is found.</p>
+  </div>
+
+  <!-- Receipt Print Area -->
+  <div id="receipt-print" class="hidden"></div>
+
+  <script>
+    /* ================================================================
+       VIORA ERP — Complete Business Operating System (Single File)
+       All data persists in localStorage. No external dependencies.
+       ================================================================ */
+
+    // ==================== 1. DATA LAYER ====================
+    const DATA_VERSION = 'v1.2.0';
+    const STORAGE_KEY = 'viora_erp_data';
+
+    // Demo users with role-based permissions
+    const DEMO_USERS = [
+      {
+        id: 'USR-001', name: 'John Mwangi', email: 'admin@viora.demo', password: 'Admin@123',
+        role: 'Admin', avatar: 'JM', active: true, lastLogin: null,
+        permissions: ['*'] // full access
+      },
+      {
+        id: 'USR-002', name: 'Grace Wanjiku', email: 'manager@viora.demo', password: 'Manager@123',
+        role: 'Manager', avatar: 'GW', active: true, lastLogin: null,
+        permissions: ['dashboard', 'sales', 'inventory', 'crm', 'purchasing', 'reports', 'projects', 'assets', 'ecommerce', 'marketing', 'documents', 'mpesa', 'etims', 'ai_assistant', 'settings_view']
+      },
+      {
+        id: 'USR-003', name: 'Peter Ochieng', email: 'accountant@viora.demo', password: 'Account@123',
+        role: 'Accountant', avatar: 'PO', active: true, lastLogin: null,
+        permissions: ['dashboard', 'accounting', 'sales_view', 'inventory_view', 'crm_view', 'purchasing_view', 'reports', 'mpesa', 'etims', 'documents', 'ai_assistant', 'settings_view']
+      },
+      {
+        id: 'USR-004', name: 'Mary Achieng', email: 'staff@viora.demo', password: 'Staff@123',
+        role: 'Staff', avatar: 'MA', active: true, lastLogin: null,
+        permissions: ['sales', 'crm_view', 'inventory_view', 'documents', 'ai_assistant']
+      },
+      {
+        id: 'USR-005', name: 'David Kamau', email: 'customer@viora.demo', password: 'Customer@123',
+        role: 'Customer', avatar: 'DK', active: true, lastLogin: null,
+        permissions: ['my_orders', 'my_invoices', 'my_profile'] // No dashboard
+      },
+      {
+        id: 'USR-006', name: 'Sarah Njeri', email: 'partner@viora.demo', password: 'Partner@123',
+        role: 'Partner', avatar: 'SN', active: true, lastLogin: null,
+        permissions: ['projects_view', 'reports_view', 'documents_view', 'commissions'] // No dashboard
+      }
+    ];
+
+    // Business configuration
+    const DEFAULT_SETTINGS = {
+      businessName: 'VIORA General Trading',
+      country: 'Kenya',
+      currency: 'KES',
+      timezone: 'Africa/Nairobi',
+      dateFormat: 'DD/MM/YYYY',
+      taxRate: 16,
+      lowStockThreshold: 10,
+      sessionTimeout: 30,
+      twoFactorEnabled: false,
+      theme: 'dark',
+      invoicePrefix: 'INV',
+      receiptFooter: 'Thank you for your business!',
+      version: DATA_VERSION
+    };
+
+    // Central application state
+    let appState = {
+      users: [], products: [], customers: [], suppliers: [],
+      sales: [], saleItems: [], invoices: [], payments: [], expenses: [],
+      purchaseOrders: [], goodsReceipts: [], inventoryMovements: [],
+      employees: [], attendance: [], leaveRequests: [], payroll: [],
+      projects: [], tasks: [], assets: [], notifications: [], auditLogs: [],
+      settings: {}
+    };
+
+    let currentUser = null;
+    let sessionTimer = null;
+    let currentPage = 'dashboard';
+    let posCart = [];
+    let posSelectedCustomer = null;
+    let barcodeStream = null;
+
+    // ==================== 2. UTILITIES ====================
+    function uid(prefix = 'ID') {
+      return prefix + '-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+    }
+
+    function formatMoney(amount) {
+      return 'KES ' + Number(amount || 0).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatDate(date) {
+      const d = new Date(date);
+      return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+    }
+
+    function formatDateTime(date) {
+      const d = new Date(date);
+      return formatDate(d) + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+
+    function now() { return new Date().toISOString(); }
+
+    function daysAgo(n) {
+      const d = new Date();
+      d.setDate(d.getDate() - n);
+      return d.toISOString();
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function toast(title, msg, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const el = document.createElement('div');
+      el.className = 'toast ' + type;
+      el.innerHTML = `<div class="toast-title">${escapeHtml(title)}</div><div class="toast-msg">${escapeHtml(msg)}</div>`;
+      container.appendChild(el);
+      setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(30px)'; setTimeout(() => el.remove(), 300); }, 3500);
+    }
+
+    // ==================== 3. STATE MANAGEMENT ====================
+    function loadState() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.version === DATA_VERSION && parsed.data) {
+            appState = { ...appState, ...parsed.data };
+            appState.settings = { ...DEFAULT_SETTINGS, ...(appState.settings || {}) };
+            return true;
+          }
+        }
+      } catch (e) { console.warn('Failed to load stored state:', e); }
+      return false;
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: DATA_VERSION, data: appState }));
+      } catch (e) { console.warn('Failed to save state:', e); }
+    }
+
+    function seedDemoData() {
+      appState.users = DEMO_USERS.map(u => ({ ...u, lastLogin: null }));
+
+      // Generic Products for any business (30 items across categories)
+      const productData = [
+        { name: 'Premium Rice 5kg', category: 'Groceries', cost: 450, price: 600 },
+        { name: 'Cooking Oil 2L', category: 'Groceries', cost: 320, price: 420 },
+        { name: 'Wheat Flour 2kg', category: 'Groceries', cost: 180, price: 250 },
+        { name: 'Sugar 1kg', category: 'Groceries', cost: 120, price: 160 },
+        { name: 'Milk 500ml', category: 'Dairy', cost: 50, price: 70 },
+        { name: 'Cheese 200g', category: 'Dairy', cost: 280, price: 380 },
+        { name: 'Yoghurt 1L', category: 'Dairy', cost: 150, price: 220 },
+        { name: 'Bread Loaf', category: 'Bakery', cost: 60, price: 90 },
+        { name: 'Cake 500g', category: 'Bakery', cost: 250, price: 400 },
+        { name: 'Biscuits 300g', category: 'Snacks', cost: 80, price: 130 },
+        { name: 'Chocolate Bar', category: 'Snacks', cost: 100, price: 180 },
+        { name: 'Crisps 150g', category: 'Snacks', cost: 70, price: 120 },
+        { name: 'Soda 500ml', category: 'Beverages', cost: 40, price: 70 },
+        { name: 'Juice 1L', category: 'Beverages', cost: 120, price: 180 },
+        { name: 'Water 1.5L', category: 'Beverages', cost: 30, price: 60 },
+        { name: 'Coffee 200g', category: 'Beverages', cost: 350, price: 500 },
+        { name: 'Tea Leaves 250g', category: 'Beverages', cost: 200, price: 300 },
+        { name: 'Laundry Detergent 1kg', category: 'Household', cost: 180, price: 260 },
+        { name: 'Dish Soap 500ml', category: 'Household', cost: 90, price: 140 },
+        { name: 'Floor Cleaner 1L', category: 'Household', cost: 150, price: 230 },
+        { name: 'Tissue Paper 4-pack', category: 'Household', cost: 120, price: 190 },
+        { name: 'Notebook A5', category: 'Stationery', cost: 60, price: 110 },
+        { name: 'Pen Pack (5)', category: 'Stationery', cost: 50, price: 100 },
+        { name: 'Stapler', category: 'Stationery', cost: 200, price: 320 },
+        { name: 'Calculator', category: 'Stationery', cost: 450, price: 650 },
+        { name: 'Printer Paper A4', category: 'Stationery', cost: 350, price: 500 },
+        { name: 'Hand Sanitizer 500ml', category: 'Health', cost: 180, price: 280 },
+        { name: 'Face Masks (50)', category: 'Health', cost: 250, price: 400 },
+        { name: 'Pain Relief Tablets', category: 'Health', cost: 120, price: 200 },
+        { name: 'Vitamins 30-pack', category: 'Health', cost: 400, price: 600 }
+      ];
+
+      appState.products = productData.map((p, i) => ({
+        id: 'PRD-' + String(i + 1).padStart(4, '0'),
+        name: p.name, sku: 'SKU-' + String(1000 + i),
+        barcode: 'BAR' + String(2000 + i) + Math.floor(Math.random() * 1000),
+        qrCode: 'QR-' + String(3000 + i),
+        category: p.category,
+        supplierId: 'SUP-' + String((i % 5) + 1).padStart(3, '0'),
+        purchasePrice: p.cost, sellingPrice: p.price,
+        quantity: 10 + Math.floor(Math.random() * 150),
+        minStock: 10 + Math.floor(Math.random() * 15),
+        warehouse: ['Nairobi Main', 'Mombasa Branch', 'Kisumu Branch'][i % 3],
+        status: 'Active',
+        expiryDate: ['Dairy', 'Bakery', 'Health'].includes(p.category) ? daysAgo(-30 - Math.floor(Math.random() * 90)) : null
+      }));
+
+      const supplierNames = ['East African Distributors', 'Kenya Wholesale Ltd', 'Nairobi Suppliers Co', 'Mombasa Traders', 'Kisumu Distributors', 'Rift Valley Supplies', 'Coast General Traders', 'Highland Distributors', 'Lake Region Suppliers', 'Central Kenya Traders'];
+      appState.suppliers = supplierNames.map((name, i) => ({
+        id: 'SUP-' + String(i + 1).padStart(3, '0'), name,
+        contactPerson: ['James Mwangi', 'Alice Wambui', 'Peter Njoroge', 'Grace Akinyi', 'Daniel Kiprop'][i % 5],
+        phone: '+2547' + String(10000000 + Math.floor(Math.random() * 89999999)),
+        email: name.toLowerCase().replace(/[^a-z]/g, '') + '@supplier.co.ke',
+        address: ['Nairobi CBD', 'Westlands', 'Industrial Area', 'Mombasa Road', 'Karen'][i % 5] + ', Kenya',
+        balance: Math.floor(Math.random() * 500000), status: 'Active'
+      }));
+
+      const customerNames = ['Walk-in Customer', 'James Kamau', 'Mary Wanjiku', 'Peter Ochieng', 'Grace Akinyi', 'David Mutua', 'Sarah Njeri', 'John Kiprop', 'Lucy Muthoni', 'Brian Onyango', 'Faith Chebet', 'Samuel Njoroge', 'Esther Wairimu', 'Michael Odhiambo', 'Catherine Mwende'];
+      appState.customers = customerNames.map((name, i) => ({
+        id: 'CUS-' + String(i + 1).padStart(4, '0'), name,
+        email: i === 0 ? 'walkin@viora.demo' : name.toLowerCase().replace(/\s+/g, '.') + '@email.co.ke',
+        phone: i === 0 ? '-' : '+2547' + String(20000000 + Math.floor(Math.random() * 79999999)),
+        address: i === 0 ? '-' : ['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret'][i % 5] + ', Kenya',
+        category: i === 0 ? 'Walk-in' : ['Retail', 'Wholesale', 'Corporate', 'VIP'][i % 4],
+        loyaltyPoints: i === 0 ? 0 : Math.floor(Math.random() * 5000),
+        outstandingBalance: 0, totalPurchases: 0, notes: '', status: 'Active',
+        createdAt: daysAgo(Math.floor(Math.random() * 365))
+      }));
+      appState.customers[4].email = 'customer@viora.demo';
+      appState.customers[4].name = 'David Kamau';
+
+      const empNames = ['John Mwangi', 'Grace Wanjiku', 'Peter Ochieng', 'Mary Achieng', 'David Kamau', 'Sarah Njeri', 'James Kiprop', 'Lucy Muthoni'];
+      const departments = ['Management', 'Finance', 'Sales', 'IT', 'HR', 'Operations'];
+      appState.employees = empNames.map((name, i) => ({
+        id: 'EMP-' + String(i + 1).padStart(3, '0'), name,
+        email: name.toLowerCase().replace(/\s+/g, '.') + '@viora.co.ke',
+        phone: '+2547' + String(30000000 + Math.floor(Math.random() * 69999999)),
+        department: departments[i % departments.length],
+        jobTitle: ['CEO', 'Finance Manager', 'Sales Executive', 'IT Support', 'HR Officer', 'Operations Lead', 'Accountant', 'Sales Rep'][i],
+        employmentStatus: 'Active', hireDate: daysAgo(365 + Math.floor(Math.random() * 1000)),
+        basicSalary: 30000 + Math.floor(Math.random() * 120000),
+        allowances: 5000 + Math.floor(Math.random() * 20000),
+        deductions: 3000 + Math.floor(Math.random() * 10000)
+      }));
+
+      appState.sales = [];
+      for (let i = 0; i < 40; i++) {
+        const prod = appState.products[Math.floor(Math.random() * appState.products.length)];
+        const qty = 1 + Math.floor(Math.random() * 8);
+        const cust = appState.customers[Math.floor(Math.random() * appState.customers.length)];
+        const total = prod.sellingPrice * qty;
+        appState.sales.push({
+          id: 'SAL-' + String(i + 1).padStart(5, '0'),
+          date: daysAgo(Math.floor(Math.random() * 180)),
+          customerId: cust.id, customerName: cust.name,
+          items: [{ productId: prod.id, productName: prod.name, qty, price: prod.sellingPrice, total }],
+          subtotal: total, discount: 0, tax: total * 0.16, total: total * 1.16,
+          paymentMethod: ['Cash', 'M-Pesa', 'Card', 'Bank Transfer'][Math.floor(Math.random() * 4)],
+          status: 'Completed', cashier: 'Admin', reference: 'REF-' + String(1000 + i)
+        });
+      }
+
+      appState.invoices = [];
+      for (let i = 0; i < 15; i++) {
+        const cust = appState.customers[1 + Math.floor(Math.random() * (appState.customers.length - 1))];
+        const amount = 5000 + Math.floor(Math.random() * 200000);
+        const statuses = ['Paid', 'Unpaid', 'Partially Paid', 'Overdue'];
+        const status = statuses[Math.floor(Math.random() * statuses.length)];
+        const paid = status === 'Paid' ? amount : status === 'Partially Paid' ? amount * 0.4 : 0;
+        appState.invoices.push({
+          id: 'INV-' + String(i + 1).padStart(4, '0'),
+          invoiceNumber: 'INV-' + String(2000 + i),
+          customerId: cust.id, customerName: cust.name,
+          date: daysAgo(Math.floor(Math.random() * 90)),
+          dueDate: daysAgo(-30 + Math.floor(Math.random() * 60)),
+          amount, paid, balance: amount - paid, status, items: []
+        });
+      }
+
+      appState.expenses = [];
+      const expenseCats = ['Rent', 'Utilities', 'Salaries', 'Transport', 'Marketing', 'Supplies', 'Internet', 'Insurance'];
+      for (let i = 0; i < 15; i++) {
+        appState.expenses.push({
+          id: 'EXP-' + String(i + 1).padStart(4, '0'),
+          date: daysAgo(Math.floor(Math.random() * 180)),
+          category: expenseCats[i % expenseCats.length],
+          description: expenseCats[i % expenseCats.length] + ' payment',
+          amount: 5000 + Math.floor(Math.random() * 150000),
+          paymentMethod: ['Cash', 'Bank Transfer', 'M-Pesa'][i % 3], status: 'Approved'
+        });
+      }
+
+      appState.purchaseOrders = [];
+      for (let i = 0; i < 10; i++) {
+        const sup = appState.suppliers[Math.floor(Math.random() * appState.suppliers.length)];
+        const prod = appState.products[Math.floor(Math.random() * appState.products.length)];
+        const qty = 10 + Math.floor(Math.random() * 50);
+        appState.purchaseOrders.push({
+          id: 'PO-' + String(i + 1).padStart(4, '0'),
+          orderNumber: 'PO-' + String(3000 + i),
+          supplierId: sup.id, supplierName: sup.name,
+          date: daysAgo(Math.floor(Math.random() * 60)),
+          items: [{ productId: prod.id, productName: prod.name, qty, price: prod.purchasePrice, total: qty * prod.purchasePrice }],
+          total: qty * prod.purchasePrice,
+          status: ['Draft', 'Approved', 'Received', 'Pending'][i % 4],
+          expectedDelivery: daysAgo(-7 + Math.floor(Math.random() * 14))
+        });
+      }
+
+      const projectNames = ['Shop Renovation', 'New Branch Setup', 'Inventory Digitization', 'Staff Training Program', 'Supplier Expansion', 'Customer Loyalty Program', 'Warehouse Optimization', 'POS System Upgrade'];
+      appState.projects = projectNames.map((name, i) => ({
+        id: 'PRJ-' + String(i + 1).padStart(3, '0'), name,
+        owner: appState.employees[i % appState.employees.length].name,
+        assignedTo: [appState.employees[i % appState.employees.length].id],
+        budget: 50000 + Math.floor(Math.random() * 500000),
+        startDate: daysAgo(60 + Math.floor(Math.random() * 120)),
+        deadline: daysAgo(-15 + Math.floor(Math.random() * 90)),
+        status: ['Active', 'Completed', 'On Hold', 'Planning'][i % 4],
+        priority: ['High', 'Medium', 'Low'][i % 3],
+        progress: Math.floor(Math.random() * 100),
+        description: 'Project for ' + name
+      }));
+
+      appState.assets = [];
+      const assetNames = ['Delivery Van', 'Refrigerator Unit', 'POS Terminal', 'Warehouse Shelving', 'Forklift', 'Air Conditioner', 'Generator 5KVA', 'Office Desk', 'Filing Cabinet', 'Water Dispenser'];
+      for (let i = 0; i < 10; i++) {
+        appState.assets.push({
+          id: 'AST-' + String(i + 1).padStart(3, '0'), name: assetNames[i],
+          category: ['Vehicles', 'Equipment', 'IT Equipment', 'Furniture', 'Machinery'][i % 5],
+          purchaseDate: daysAgo(100 + Math.floor(Math.random() * 500)),
+          purchaseCost: 20000 + Math.floor(Math.random() * 300000),
+          assignedTo: appState.employees[i % appState.employees.length].name,
+          department: appState.employees[i % appState.employees.length].department,
+          condition: ['Excellent', 'Good', 'Fair', 'Needs Repair'][i % 4],
+          location: ['Nairobi HQ', 'Mombasa Branch', 'Kisumu Branch'][i % 3],
+          status: 'Active', maintenanceHistory: []
+        });
+      }
+
+      appState.notifications = [
+        { title: 'Low Stock Alert', msg: 'Premium Rice 5kg is below minimum stock level', type: 'warning', read: false },
+        { title: 'New Sale', msg: 'Sale SAL-00035 completed successfully', type: 'success', read: false },
+        { title: 'Pending Approval', msg: 'Purchase Order PO-0003 needs approval', type: 'warning', read: false },
+        { title: 'Overdue Invoice', msg: 'Invoice INV-2005 is overdue by 5 days', type: 'danger', read: false },
+        { title: 'Payment Received', msg: 'M-Pesa payment of KES 45,000 received', type: 'success', read: true },
+        { title: 'Low Stock Alert', msg: 'Cooking Oil 2L is below minimum stock level', type: 'warning', read: true },
+        { title: 'New Customer', msg: 'Customer Esther Wairimu registered', type: 'info', read: true },
+        { title: 'Project Deadline', msg: 'Shop Renovation deadline approaching', type: 'warning', read: true },
+        { title: 'System Update', msg: 'VIORA ERP updated to v1.2.0', type: 'info', read: true },
+        { title: 'Expense Approved', msg: 'Marketing expense of KES 25,000 approved', type: 'success', read: true }
+      ].map((n, i) => ({ id: 'NOT-' + String(i + 1).padStart(3, '0'), ...n, date: daysAgo(Math.floor(Math.random() * 7)), module: 'system' }));
+
+      appState.auditLogs = [];
+      const auditActions = [
+        { action: 'LOGIN', module: 'Auth', desc: 'User logged in successfully' },
+        { action: 'SALE', module: 'Sales', desc: 'Completed sale SAL-00035' },
+        { action: 'INVENTORY_UPDATE', module: 'Inventory', desc: 'Adjusted stock for PRD-0001' },
+        { action: 'INVOICE_CREATED', module: 'Accounting', desc: 'Created invoice INV-2005' },
+        { action: 'PAYMENT_RECORDED', module: 'Accounting', desc: 'Recorded payment for INV-2003' },
+        { action: 'USER_CREATED', module: 'Users', desc: 'Created user staff@viora.demo' },
+        { action: 'SETTINGS_CHANGED', module: 'Settings', desc: 'Updated tax rate to 16%' },
+        { action: 'PO_APPROVED', module: 'Purchasing', desc: 'Approved PO-0003' },
+        { action: 'LOGOUT', module: 'Auth', desc: 'User logged out' },
+        { action: 'PRODUCT_CREATED', module: 'Inventory', desc: 'Created product PRD-0031' }
+      ];
+      for (let i = 0; i < 25; i++) {
+        const a = auditActions[i % auditActions.length];
+        appState.auditLogs.push({
+          id: 'AUD-' + String(i + 1).padStart(4, '0'),
+          timestamp: daysAgo(Math.floor(Math.random() * 30)),
+          userId: 'USR-' + String(1 + Math.floor(Math.random() * 6)).padStart(3, '0'),
+          username: ['admin', 'manager', 'accountant', 'staff', 'customer', 'partner'][Math.floor(Math.random() * 6)],
+          action: a.action, module: a.module,
+          recordRef: 'REF-' + String(1000 + i), description: a.desc
+        });
+      }
+
+      appState.settings = { ...DEFAULT_SETTINGS };
+
+      appState.inventoryMovements = [];
+      for (let i = 0; i < 20; i++) {
+        const prod = appState.products[Math.floor(Math.random() * appState.products.length)];
+        appState.inventoryMovements.push({
+          id: 'MOV-' + String(i + 1).padStart(4, '0'),
+          date: daysAgo(Math.floor(Math.random() * 90)),
+          productId: prod.id, productName: prod.name,
+          type: ['Sale', 'Purchase', 'Adjustment', 'Return'][i % 4],
+          quantity: (i % 4 === 0 ? -1 : 1) * (1 + Math.floor(Math.random() * 10)),
+          reference: 'REF-' + String(2000 + i),
+          notes: 'Inventory movement for ' + prod.name
+        });
+      }
+
+      appState.payments = [];
+      for (let i = 0; i < 15; i++) {
+        const inv = appState.invoices[i % appState.invoices.length];
+        appState.payments.push({
+          id: 'PAY-' + String(i + 1).padStart(4, '0'),
+          date: daysAgo(Math.floor(Math.random() * 60)),
+          invoiceId: inv.id, invoiceNumber: inv.invoiceNumber,
+          amount: inv.paid > 0 ? inv.paid : 0,
+          method: ['M-Pesa', 'Bank Transfer', 'Cash', 'Card'][i % 4],
+          reference: 'PAYREF-' + String(3000 + i), status: 'Completed'
+        });
+      }
+
+      saveState();
+    }
+
+    // ==================== 4. AUTHENTICATION ====================
+    function authenticateUser(email, password) {
+      const user = appState.users.find(u => u.email === email && u.active);
+      if (!user) return { success: false, error: 'Invalid email or password.' };
+      if (user.password !== password) return { success: false, error: 'Invalid email or password.' };
+      return { success: true, user };
+    }
+
+    function startSession(user) {
+      currentUser = user;
+      sessionStorage.setItem('viora_session', JSON.stringify({ userId: user.id, loginTime: now() }));
+      user.lastLogin = now();
+      saveState();
+      writeAuditLog(user.id, user.name, 'LOGIN', 'Auth', user.id, 'User logged in successfully');
+    }
+
+    function endSession() {
+      if (currentUser) writeAuditLog(currentUser.id, currentUser.name, 'LOGOUT', 'Auth', currentUser.id, 'User logged out');
+      currentUser = null;
+      sessionStorage.removeItem('viora_session');
+      if (sessionTimer) clearTimeout(sessionTimer);
+    }
+
+    function restoreSession() {
+      try {
+        const sess = sessionStorage.getItem('viora_session');
+        if (sess) {
+          const parsed = JSON.parse(sess);
+          const user = appState.users.find(u => u.id === parsed.userId && u.active);
+          if (user) {
+            const elapsed = (Date.now() - new Date(parsed.loginTime).getTime()) / 60000;
+            if (elapsed < (appState.settings.sessionTimeout || 30)) { currentUser = user; return true; }
+          }
+        }
+      } catch (e) { /* ignore */ }
+      return false;
+    }
+
+    function hasPermission(permission) {
+      if (!currentUser) return false;
+      if (currentUser.permissions.includes('*')) return true;
+      if (currentUser.permissions.includes(permission)) return true;
+      const base = permission.split('_')[0];
+      if (currentUser.permissions.includes(base)) return true;
+      return false;
+    }
+
+    function requirePermission(permission) {
+      if (!hasPermission(permission)) {
+        toast('Access Denied', 'You do not have permission to perform this action.', 'danger');
+        return false;
+      }
+      return true;
+    }
+
+    // ==================== 5. AUDIT LOGGING ====================
+    function writeAuditLog(userId, username, action, module, recordRef, description) {
+      appState.auditLogs.unshift({
+        id: uid('AUD'), timestamp: now(),
+        userId: userId || 'SYSTEM', username: username || 'system',
+        action, module, recordRef: recordRef || '-', description
+      });
+      if (appState.auditLogs.length > 200) appState.auditLogs = appState.auditLogs.slice(0, 200);
+      saveState();
+    }
+
+    // ==================== 6. NAVIGATION & MODULES ====================
+    const NAV_ITEMS = [
+      { id: 'dashboard', label: 'Dashboard', icon: '📊', permission: 'dashboard', group: 'core' },
+      { id: 'business', label: 'Business Overview', icon: '🏢', permission: 'dashboard', group: 'core' },
+      { id: 'sales', label: 'Sales & POS', icon: '🛒', permission: 'sales', group: 'operations' },
+      { id: 'inventory', label: 'Inventory', icon: '📦', permission: 'inventory', group: 'operations' },
+      { id: 'accounting', label: 'Accounting', icon: '💰', permission: 'accounting', group: 'finance' },
+      { id: 'hr', label: 'Human Resources', icon: '👥', permission: 'hr', group: 'people' },
+      { id: 'crm', label: 'CRM & Customers', icon: '🤝', permission: 'crm', group: 'people' },
+      { id: 'purchasing', label: 'Purchasing', icon: '📋', permission: 'purchasing', group: 'operations' },
+      { id: 'projects', label: 'Projects', icon: '📁', permission: 'projects', group: 'operations' },
+      { id: 'reports', label: 'Reports', icon: '📈', permission: 'reports', group: 'analytics' },
+      { id: 'assets', label: 'Assets', icon: '🏭', permission: 'assets', group: 'operations' },
+      { id: 'ecommerce', label: 'E-commerce', icon: '🌐', permission: 'ecommerce', group: 'growth' },
+      { id: 'marketing', label: 'Marketing', icon: '📣', permission: 'marketing', group: 'growth' },
+      { id: 'documents', label: 'Documents', icon: '📄', permission: 'documents', group: 'core' },
+      { id: 'mpesa', label: 'M-Pesa', icon: '📱', permission: 'mpesa', group: 'integrations' },
+      { id: 'etims', label: 'eTIMS', icon: '🧾', permission: 'etims', group: 'integrations' },
+      { id: 'ai', label: 'AI Assistant', icon: '🤖', permission: 'ai_assistant', group: 'intelligence' },
+      { id: 'users', label: 'Users & Roles', icon: '🔐', permission: 'users', group: 'admin' },
+      { id: 'audit', label: 'Audit Logs', icon: '📜', permission: 'audit', group: 'admin' },
+      { id: 'settings', label: 'Settings', icon: '⚙️', permission: 'settings', group: 'admin' },
+      { id: 'help', label: 'Help & Support', icon: '❓', permission: 'help', group: 'core' }
+    ];
+
+    const MODULE_GROUPS = {
+      core: 'Core',
+      operations: 'Operations',
+      finance: 'Finance',
+      people: 'People',
+      analytics: 'Analytics',
+      growth: 'Growth',
+      integrations: 'Integrations',
+      intelligence: 'Intelligence',
+      admin: 'Administration'
+    };
+
+    function renderSidebar() {
+      const nav = document.getElementById('sidebar-nav');
+      nav.innerHTML = '';
+      NAV_ITEMS.forEach(item => {
+        if (!hasPermission(item.permission)) return;
+        const el = document.createElement('div');
+        el.className = 'nav-item' + (currentPage === item.id ? ' active' : '');
+        el.dataset.page = item.id;
+        el.innerHTML = `<span class="nav-icon">${item.icon}</span><span class="nav-label">${item.label}</span>`;
+        el.addEventListener('click', () => navigateTo(item.id));
+        nav.appendChild(el);
+      });
+    }
+
+    function renderMobileBottomNav() {
+      const nav = document.getElementById('mobile-bottom-nav');
+      nav.innerHTML = '';
+      // Determine which items to show in bottom nav (max 5)
+      const permitted = NAV_ITEMS.filter(i => hasPermission(i.permission));
+      
+      // For restricted users (no dashboard), show their top 5 permitted items
+      const itemsToShow = permitted.slice(0, 5);
+      
+      itemsToShow.forEach(item => {
+        const btn = document.createElement('button');
+        btn.className = 'mobile-nav-item' + (currentPage === item.id ? ' active' : '');
+        btn.innerHTML = `<span class="m-icon">${item.icon}</span><span class="m-label">${item.label.split(' ')[0]}</span>`;
+        btn.addEventListener('click', () => navigateTo(item.id));
+        nav.appendChild(btn);
+      });
+
+      // Always add hamburger menu as LAST item
+      const menuBtn = document.createElement('button');
+      menuBtn.className = 'mobile-nav-item';
+      menuBtn.innerHTML = `<span class="m-icon">☰</span><span class="m-label">Menu</span>`;
+      menuBtn.addEventListener('click', () => {
+        document.getElementById('sidebar').classList.toggle('open');
+        document.getElementById('mobile-menu-overlay').classList.toggle('active');
+      });
+      nav.appendChild(menuBtn);
+    }
+
+    function navigateTo(page) {
+      const navItem = NAV_ITEMS.find(n => n.id === page);
+      if (navItem && !hasPermission(navItem.permission)) {
+        toast('Access Denied', 'You do not have permission to access this module.', 'danger');
+        return;
+      }
+      currentPage = page;
+      renderSidebar();
+      renderMobileBottomNav();
+      renderPage(page);
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('mobile-menu-overlay').classList.remove('active');
+    }
+
+    // ==================== 7. PAGE RENDERING ====================
+    function renderPage(page) {
+      const area = document.getElementById('content-area');
+      const title = document.getElementById('page-title');
+      const navItem = NAV_ITEMS.find(n => n.id === page);
+      title.textContent = navItem ? navItem.label : 'Dashboard';
+
+      // Restricted users (Customer/Partner) don't get Dashboard
+      const isRestricted = currentUser && (currentUser.role === 'Customer' || currentUser.role === 'Partner');
+
+      switch (page) {
+        case 'dashboard':
+          if (isRestricted) renderRestrictedView(area);
+          else renderDashboard(area);
+          break;
+        case 'business': renderBusinessOverview(area); break;
+        case 'sales': renderSales(area); break;
+        case 'inventory': renderInventory(area); break;
+        case 'accounting': renderAccounting(area); break;
+        case 'hr': renderHR(area); break;
+        case 'crm': renderCRM(area); break;
+        case 'purchasing': renderPurchasing(area); break;
+        case 'projects': renderProjects(area); break;
+        case 'reports': renderReports(area); break;
+        case 'assets': renderAssets(area); break;
+        case 'ecommerce': renderEcommerce(area); break;
+        case 'marketing': renderMarketing(area); break;
+        case 'documents': renderDocuments(area); break;
+        case 'mpesa': renderMpesa(area); break;
+        case 'etims': renderEtims(area); break;
+        case 'ai': renderAI(area); break;
+        case 'users': renderUsers(area); break;
+        case 'audit': renderAudit(area); break;
+        case 'settings': renderSettings(area); break;
+        case 'help': renderHelp(area); break;
+        default: 
+          if (isRestricted) renderRestrictedView(area);
+          else renderDashboard(area);
+      }
+    }
+
+    function renderRestrictedView(container) {
+      container.innerHTML = `
+        <div class="restricted-view">
+          <div class="icon">🔒</div>
+          <h3>Access Restricted</h3>
+          <p>Your role (<strong>${escapeHtml(currentUser.role)}</strong>) does not have permission to view the main dashboard.</p>
+          <p style="margin-top:0.5rem;">Please use the navigation menu to access your permitted modules.</p>
+          <div style="margin-top:1.5rem; display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:center;">
+            ${currentUser.role === 'Customer' ? '<span class="status-badge info">My Orders</span><span class="status-badge info">My Invoices</span><span class="status-badge info">My Profile</span>' : ''}
+            ${currentUser.role === 'Partner' ? '<span class="status-badge info">Projects</span><span class="status-badge info">Reports</span><span class="status-badge info">Commissions</span>' : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    // ==================== MODULE TILES RENDERER ====================
+    function renderModuleTiles(container, groupFilter = null) {
+      const permitted = NAV_ITEMS.filter(i => hasPermission(i.permission) && i.id !== 'dashboard' && i.id !== 'business');
+      
+      const groups = {};
+      permitted.forEach(item => {
+        if (!groups[item.group]) groups[item.group] = [];
+        groups[item.group].push(item);
+      });
+
+      let html = '';
+      const groupOrder = ['core', 'operations', 'finance', 'people', 'analytics', 'growth', 'integrations', 'intelligence', 'admin'];
+      
+      groupOrder.forEach(groupKey => {
+        if (!groups[groupKey]) return;
+        if (groupFilter && groupFilter !== groupKey) return;
+        html += `
+          <div class="section-header">
+            <h3>${MODULE_GROUPS[groupKey] || groupKey}</h3>
+            <div class="section-line"></div>
+          </div>
+          <div class="module-tiles-grid">
+            ${groups[groupKey].map(item => `
+              <div class="module-tile" data-page="${item.id}">
+                <div class="tile-icon">${item.icon}</div>
+                <div class="tile-label">${item.label}</div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      });
+
+      return html;
+    }
+
+    // ==================== 8. DASHBOARD ====================
+    function renderDashboard(container) {
+      const totalRevenue = appState.sales.reduce((s, x) => s + x.total, 0);
+      const totalExpenses = appState.expenses.reduce((s, x) => s + x.amount, 0);
+      const netProfit = totalRevenue - totalExpenses;
+      const totalOrders = appState.sales.length;
+      const outstandingInvoices = appState.invoices.filter(i => i.status !== 'Paid').reduce((s, i) => s + i.balance, 0);
+      const inventoryValue = appState.products.reduce((s, p) => s + (p.quantity * p.purchasePrice), 0);
+      const lowStockCount = appState.products.filter(p => p.quantity <= p.minStock).length;
+      const activeCustomers = appState.customers.filter(c => c.status === 'Active').length;
+
+      container.innerHTML = `
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-label">Total Revenue</div><div class="kpi-value">${formatMoney(totalRevenue)}</div><div class="kpi-change up">↑ 12.5% vs last period</div></div>
+          <div class="kpi-card"><div class="kpi-label">Total Expenses</div><div class="kpi-value">${formatMoney(totalExpenses)}</div><div class="kpi-change down">↑ 8.2% vs last period</div></div>
+          <div class="kpi-card"><div class="kpi-label">Net Profit</div><div class="kpi-value" style="background: linear-gradient(90deg, #fff, ${netProfit >= 0 ? 'var(--success)' : 'var(--danger)'}); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${formatMoney(netProfit)}</div><div class="kpi-change ${netProfit >= 0 ? 'up' : 'down'}">${netProfit >= 0 ? '↑' : '↓'} ${Math.abs((netProfit / (totalRevenue || 1)) * 100).toFixed(1)}% margin</div></div>
+          <div class="kpi-card"><div class="kpi-label">Total Orders</div><div class="kpi-value">${totalOrders}</div><div class="kpi-change up">↑ 5.3% vs last period</div></div>
+          <div class="kpi-card"><div class="kpi-label">Outstanding Invoices</div><div class="kpi-value">${formatMoney(outstandingInvoices)}</div><div class="kpi-change down">${appState.invoices.filter(i => i.status === 'Overdue').length} overdue</div></div>
+          <div class="kpi-card"><div class="kpi-label">Inventory Value</div><div class="kpi-value">${formatMoney(inventoryValue)}</div><div class="kpi-change up">${appState.products.length} products</div></div>
+          <div class="kpi-card"><div class="kpi-label">Low-Stock Products</div><div class="kpi-value" style="color: ${lowStockCount > 0 ? 'var(--warning)' : 'var(--success)'};">${lowStockCount}</div><div class="kpi-change ${lowStockCount > 0 ? 'down' : 'up'}">${lowStockCount > 0 ? '⚠️ Requires attention' : '✅ All stocked'}</div></div>
+          <div class="kpi-card"><div class="kpi-label">Active Customers</div><div class="kpi-value">${activeCustomers}</div><div class="kpi-change up">↑ 3 new this month</div></div>
+        </div>
+
+        <div class="section-header"><h3>Quick Modules</h3><div class="section-line"></div></div>
+        ${renderModuleTiles(container)}
+
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h4>Revenue vs Expenses</h4>
+            <div class="chart-filters" id="chart-filters">
+              <button class="active" data-range="30">30 Days</button>
+              <button data-range="90">90 Days</button>
+              <button data-range="365">This Year</button>
+            </div>
+            <svg viewBox="0 0 500 200" id="revenue-chart"></svg>
+          </div>
+          <div class="chart-card"><h4>Sales by Category</h4><svg viewBox="0 0 500 200" id="category-chart"></svg></div>
+        </div>
+
+        <div class="chart-grid">
+          <div class="chart-card"><h4>Top Selling Products</h4><svg viewBox="0 0 500 200" id="top-products-chart"></svg></div>
+          <div class="chart-card"><h4>Payment Methods</h4><svg viewBox="0 0 500 200" id="payment-chart"></svg></div>
+        </div>
+
+        <div style="margin-top: 1.5rem;">
+          <h4 style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Recent Activity</h4>
+          <div class="data-table-wrapper">
+            <table class="data-table">
+              <thead><tr><th>Date</th><th>Action</th><th>Module</th><th>User</th><th>Description</th></tr></thead>
+              <tbody>
+                ${appState.auditLogs.slice(0, 8).map(log => `
+                  <tr><td>${formatDateTime(log.timestamp)}</td><td><span class="status-badge info">${escapeHtml(log.action)}</span></td><td>${escapeHtml(log.module)}</td><td>${escapeHtml(log.username)}</td><td>${escapeHtml(log.description)}</td></tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+
+      // Attach tile click handlers
+      container.querySelectorAll('.module-tile').forEach(tile => {
+        tile.addEventListener('click', () => navigateTo(tile.dataset.page));
+      });
+
+      renderRevenueChart(30);
+      renderCategoryChart();
+      renderTopProductsChart();
+      renderPaymentChart();
+
+      document.querySelectorAll('#chart-filters button').forEach(btn => {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('#chart-filters button').forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+          renderRevenueChart(parseInt(this.dataset.range));
+        });
+      });
+    }
+
+    function renderRevenueChart(days) {
+      const svg = document.getElementById('revenue-chart');
+      if (!svg) return;
+      const cutoff = Date.now() - days * 86400000;
+      const filteredSales = appState.sales.filter(s => new Date(s.date).getTime() >= cutoff);
+      const filteredExpenses = appState.expenses.filter(e => new Date(e.date).getTime() >= cutoff);
+
+      const monthlyData = {};
+      filteredSales.forEach(s => {
+        const key = new Date(s.date).toLocaleString('default', { month: 'short' });
+        monthlyData[key] = monthlyData[key] || { revenue: 0, expenses: 0 };
+        monthlyData[key].revenue += s.total;
+      });
+      filteredExpenses.forEach(e => {
+        const key = new Date(e.date).toLocaleString('default', { month: 'short' });
+        monthlyData[key] = monthlyData[key] || { revenue: 0, expenses: 0 };
+        monthlyData[key].expenses += e.amount;
+      });
+
+      const keys = Object.keys(monthlyData).slice(-6);
+      if (keys.length === 0) { svg.innerHTML = '<text x="250" y="100" fill="#A9BDD4" text-anchor="middle" font-size="12">No data for this period</text>'; return; }
+
+      const maxVal = Math.max(...keys.map(k => Math.max(monthlyData[k].revenue, monthlyData[k].expenses)), 1);
+      const barWidth = 30, gap = 20, startX = 50, chartHeight = 140, baseY = 170;
+
+      let bars = '';
+      keys.forEach((k, i) => {
+        const revH = (monthlyData[k].revenue / maxVal) * chartHeight;
+        const expH = (monthlyData[k].expenses / maxVal) * chartHeight;
+        const x = startX + i * (barWidth * 2 + gap);
+        bars += `<rect x="${x}" y="${baseY - revH}" width="${barWidth}" height="${revH}" fill="url(#revGrad)" rx="3"/>`;
+        bars += `<rect x="${x + barWidth + 4}" y="${baseY - expH}" width="${barWidth}" height="${expH}" fill="url(#expGrad)" rx="3"/>`;
+        bars += `<text x="${x + barWidth}" y="${baseY + 15}" fill="#A9BDD4" font-size="9" text-anchor="middle">${k}</text>`;
+      });
+
+      svg.innerHTML = `
+        <defs>
+          <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#008CFF"/><stop offset="100%" stop-color="#004488"/></linearGradient>
+          <linearGradient id="expGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#F43F5E"/><stop offset="100%" stop-color="#881122"/></linearGradient>
+        </defs>
+        ${bars}
+        <rect x="50" y="185" width="10" height="10" fill="#008CFF" rx="2"/><text x="65" y="194" fill="#A9BDD4" font-size="9">Revenue</text>
+        <rect x="130" y="185" width="10" height="10" fill="#F43F5E" rx="2"/><text x="145" y="194" fill="#A9BDD4" font-size="9">Expenses</text>
+      `;
+    }
+
+    function renderCategoryChart() {
+      const svg = document.getElementById('category-chart');
+      if (!svg) return;
+      const catData = {};
+      appState.sales.forEach(s => {
+        s.items.forEach(item => {
+          const prod = appState.products.find(p => p.id === item.productId);
+          if (prod) catData[prod.category] = (catData[prod.category] || 0) + item.total;
+        });
+      });
+      const entries = Object.entries(catData).sort((a, b) => b[1] - a[1]).slice(0, 6);
+      if (entries.length === 0) { svg.innerHTML = '<text x="250" y="100" fill="#A9BDD4" text-anchor="middle" font-size="12">No sales data</text>'; return; }
+      const maxVal = Math.max(...entries.map(e => e[1]), 1);
+      const colors = ['#008CFF', '#22D3EE', '#8B5CF6', '#22C55E', '#F59E0B', '#F43F5E'];
+      let bars = '';
+      entries.forEach(([cat, val], i) => {
+        const w = (val / maxVal) * 320;
+        bars += `<text x="50" y="${35 + i * 28}" fill="#A9BDD4" font-size="9" text-anchor="end">${escapeHtml(cat)}</text>`;
+        bars += `<rect x="60" y="${25 + i * 28}" width="${w}" height="16" fill="${colors[i % colors.length]}" rx="4" opacity="0.85"/>`;
+        bars += `<text x="${65 + w}" y="${37 + i * 28}" fill="#F8FAFC" font-size="8">${formatMoney(val)}</text>`;
+      });
+      svg.innerHTML = bars;
+    }
+
+    function renderTopProductsChart() {
+      const svg = document.getElementById('top-products-chart');
+      if (!svg) return;
+      const prodSales = {};
+      appState.sales.forEach(s => {
+        s.items.forEach(item => { prodSales[item.productName] = (prodSales[item.productName] || 0) + item.qty; });
+      });
+      const entries = Object.entries(prodSales).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      if (entries.length === 0) { svg.innerHTML = '<text x="250" y="100" fill="#A9BDD4" text-anchor="middle" font-size="12">No product data</text>'; return; }
+      const maxVal = Math.max(...entries.map(e => e[1]), 1);
+      let bars = '';
+      entries.forEach(([name, qty], i) => {
+        const w = (qty / maxVal) * 300;
+        bars += `<text x="50" y="${45 + i * 32}" fill="#A9BDD4" font-size="9" text-anchor="end">${escapeHtml(name.substring(0, 16))}</text>`;
+        bars += `<rect x="60" y="${35 + i * 32}" width="${w}" height="18" fill="url(#topGrad)" rx="4" opacity="0.85"/>`;
+        bars += `<text x="${65 + w}" y="${48 + i * 32}" fill="#F8FAFC" font-size="9">${qty} units</text>`;
+      });
+      svg.innerHTML = `<defs><linearGradient id="topGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#008CFF"/><stop offset="100%" stop-color="#22D3EE"/></linearGradient></defs>${bars}`;
+    }
+
+    function renderPaymentChart() {
+      const svg = document.getElementById('payment-chart');
+      if (!svg) return;
+      const payData = {};
+      appState.sales.forEach(s => { payData[s.paymentMethod] = (payData[s.paymentMethod] || 0) + s.total; });
+      const entries = Object.entries(payData).sort((a, b) => b[1] - a[1]);
+      if (entries.length === 0) { svg.innerHTML = '<text x="250" y="100" fill="#A9BDD4" text-anchor="middle" font-size="12">No payment data</text>'; return; }
+      const total = entries.reduce((s, e) => s + e[1], 0);
+      const colors = ['#008CFF', '#22D3EE', '#8B5CF6', '#22C55E', '#F59E0B'];
+      let currentAngle = -90;
+      const cx = 250, cy = 90, r = 60;
+      let paths = '';
+      entries.forEach(([method, val], i) => {
+        const sliceAngle = (val / total) * 360;
+        const startRad = (currentAngle * Math.PI) / 180;
+        const endRad = ((currentAngle + sliceAngle) * Math.PI) / 180;
+        const x1 = cx + r * Math.cos(startRad), y1 = cy + r * Math.sin(startRad);
+        const x2 = cx + r * Math.cos(endRad), y2 = cy + r * Math.sin(endRad);
+        const largeArc = sliceAngle > 180 ? 1 : 0;
+        paths += `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${largeArc},1 ${x2},${y2} Z" fill="${colors[i % colors.length]}" opacity="0.85"/>`;
+        currentAngle += sliceAngle;
+      });
+      let legend = '';
+      entries.forEach(([method, val], i) => {
+        legend += `<rect x="350" y="${30 + i * 22}" width="10" height="10" fill="${colors[i % colors.length]}" rx="2"/>`;
+        legend += `<text x="366" y="${39 + i * 22}" fill="#A9BDD4" font-size="9">${escapeHtml(method)} (${((val / total) * 100).toFixed(0)}%)</text>`;
+      });
+      svg.innerHTML = paths + legend;
+    }
+
+    // ==================== 9. BUSINESS OVERVIEW ====================
+    function renderBusinessOverview(container) {
+      const totalRevenue = appState.sales.reduce((s, x) => s + x.total, 0);
+      const totalExpenses = appState.expenses.reduce((s, x) => s + x.amount, 0);
+      const profit = totalRevenue - totalExpenses;
+
+      container.innerHTML = `
+        <div class="module-header"><h2>Business Overview</h2></div>
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-label">Revenue</div><div class="kpi-value">${formatMoney(totalRevenue)}</div></div>
+          <div class="kpi-card"><div class="kpi-label">Expenses</div><div class="kpi-value">${formatMoney(totalExpenses)}</div></div>
+          <div class="kpi-card"><div class="kpi-label">Net Profit</div><div class="kpi-value" style="color: ${profit >= 0 ? 'var(--success)' : 'var(--danger)'}">${formatMoney(profit)}</div></div>
+          <div class="kpi-card"><div class="kpi-label">Profit Margin</div><div class="kpi-value">${totalRevenue > 0 ? ((profit / totalRevenue) * 100).toFixed(1) : 0}%</div></div>
+        </div>
+        <div class="chart-card">
+          <h4>Monthly Performance Summary</h4>
+          <div class="data-table-wrapper">
+            <table class="data-table">
+              <thead><tr><th>Month</th><th>Revenue</th><th>Expenses</th><th>Profit</th><th>Margin</th></tr></thead>
+              <tbody>
+                ${(() => {
+                  const months = {};
+                  appState.sales.forEach(s => {
+                    const key = new Date(s.date).toLocaleString('default', { month: 'short', year: 'numeric' });
+                    months[key] = months[key] || { rev: 0, exp: 0 }; months[key].rev += s.total;
+                  });
+                  appState.expenses.forEach(e => {
+                    const key = new Date(e.date).toLocaleString('default', { month: 'short', year: 'numeric' });
+                    months[key] = months[key] || { rev: 0, exp: 0 }; months[key].exp += e.amount;
+                  });
+                  return Object.entries(months).slice(-6).map(([m, d]) => {
+                    const p = d.rev - d.exp;
+                    return `<tr><td>${m}</td><td>${formatMoney(d.rev)}</td><td>${formatMoney(d.exp)}</td><td style="color:${p >= 0 ? 'var(--success)' : 'var(--danger)'}">${formatMoney(p)}</td><td>${d.rev > 0 ? ((p / d.rev) * 100).toFixed(1) : 0}%</td></tr>`;
+                  }).join('');
+                })()}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // ==================== 10. SALES & POS ====================
+    function renderSales(container) {
+      container.innerHTML = `
+        <div class="module-header">
+          <h2>Sales & POS</h2>
+          <div class="module-actions">
+            <button class="btn btn-outline" id="scan-barcode-btn">📷 Scan Barcode</button>
+            <button class="btn btn-outline" id="view-sales-history">📋 Sales History</button>
+          </div>
+        </div>
+        <div class="pos-layout">
+          <div class="pos-products">
+            <div class="filter-bar">
+              <input type="text" id="pos-search" placeholder="Search products by name or SKU..." style="flex:1;">
+              <select id="pos-category-filter">
+                <option value="">All Categories</option>
+                ${[...new Set(appState.products.map(p => p.category))].map(c => `<option value="${c}">${c}</option>`).join('')}
+              </select>
+            </div>
+            <div class="pos-product-grid" id="pos-product-grid"></div>
+          </div>
+          <div class="pos-cart" id="pos-cart">
+            <div class="pos-cart-header"><span>🛒 Cart</span><span id="cart-count" style="font-size:0.8rem;color:var(--text-secondary);">0 items</span></div>
+            <div class="pos-cart-items" id="pos-cart-items">
+              <div class="empty-state" style="padding:2rem 1rem;"><div class="empty-icon">🛒</div><p class="text-sm">Cart is empty</p></div>
+            </div>
+            <div class="pos-cart-footer">
+              <div class="pos-total-row"><span>Subtotal</span><span id="pos-subtotal">KES 0.00</span></div>
+              <div class="pos-total-row"><span>Tax (16%)</span><span id="pos-tax">KES 0.00</span></div>
+              <div class="pos-total-row grand-total"><span>Total</span><span id="pos-total">KES 0.00</span></div>
+              <div class="form-field mt-1">
+                <label>Customer</label>
+                <select id="pos-customer-select">
+                  <option value="">Walk-in Customer</option>
+                  ${appState.customers.filter(c => c.id !== 'CUS-0001').map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}
+                </select>
+              </div>
+              <div class="form-field">
+                <label>Payment Method</label>
+                <select id="pos-payment-method">
+                  <option value="Cash">Cash</option>
+                  <option value="M-Pesa">M-Pesa</option>
+                  <option value="Card">Card</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                </select>
+              </div>
+              <button class="btn btn-primary-sm w-full mt-1" id="pos-checkout-btn" disabled>Complete Sale</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      posCart = [];
+      posSelectedCustomer = null;
+      renderPosProducts();
+      updatePosCart();
+
+      document.getElementById('pos-search').addEventListener('input', renderPosProducts);
+      document.getElementById('pos-category-filter').addEventListener('change', renderPosProducts);
+      document.getElementById('pos-checkout-btn').addEventListener('click', completeSale);
+      document.getElementById('pos-customer-select').addEventListener('change', function() { posSelectedCustomer = this.value || null; });
+      document.getElementById('view-sales-history').addEventListener('click', () => renderSalesHistory(container));
+      document.getElementById('scan-barcode-btn').addEventListener('click', startBarcodeScanner);
+    }
+
+    function renderPosProducts() {
+      const grid = document.getElementById('pos-product-grid');
+      if (!grid) return;
+      const search = (document.getElementById('pos-search')?.value || '').toLowerCase();
+      const cat = document.getElementById('pos-category-filter')?.value || '';
+      const filtered = appState.products.filter(p =>
+        p.status === 'Active' &&
+        (!search || p.name.toLowerCase().includes(search) || p.sku.toLowerCase().includes(search) || (p.barcode && p.barcode.toLowerCase().includes(search))) &&
+        (!cat || p.category === cat)
+      );
+      grid.innerHTML = filtered.map(p => `
+        <div class="pos-product-card" data-id="${p.id}">
+          <div class="prod-name">${escapeHtml(p.name)}</div>
+          <div class="prod-price">${formatMoney(p.sellingPrice)}</div>
+          <div class="prod-stock">Stock: ${p.quantity} | ${escapeHtml(p.sku)}</div>
+        </div>
+      `).join('');
+      grid.querySelectorAll('.pos-product-card').forEach(card => {
+        card.addEventListener('click', () => addToPosCart(card.dataset.id));
+      });
+    }
+
+    function addToPosCart(productId) {
+      const prod = appState.products.find(p => p.id === productId);
+      if (!prod) return;
+      if (prod.quantity <= 0) { toast('Out of Stock', `${prod.name} is out of stock.`, 'warning'); return; }
+      const existing = posCart.find(item => item.productId === productId);
+      if (existing) {
+        if (existing.qty >= prod.quantity) { toast('Stock Limit', `Only ${prod.quantity} units available for ${prod.name}.`, 'warning'); return; }
+        existing.qty++;
+      } else {
+        posCart.push({ productId, name: prod.name, price: prod.sellingPrice, qty: 1 });
+      }
+      updatePosCart();
+    }
+
+    function updatePosCart() {
+      const cartItems = document.getElementById('pos-cart-items');
+      const count = document.getElementById('cart-count');
+      if (!cartItems) return;
+      if (posCart.length === 0) {
+        cartItems.innerHTML = '<div class="empty-state" style="padding:2rem 1rem;"><div class="empty-icon">🛒</div><p class="text-sm">Cart is empty</p></div>';
+        count.textContent = '0 items';
+        document.getElementById('pos-subtotal').textContent = 'KES 0.00';
+        document.getElementById('pos-tax').textContent = 'KES 0.00';
+        document.getElementById('pos-total').textContent = 'KES 0.00';
+        document.getElementById('pos-checkout-btn').disabled = true;
+        return;
+      }
+      let subtotal = 0;
+      cartItems.innerHTML = posCart.map((item, idx) => {
+        const lineTotal = item.price * item.qty;
+        subtotal += lineTotal;
+        return `
+          <div class="pos-cart-item">
+            <div class="item-info"><div class="item-name">${escapeHtml(item.name)}</div><div class="item-price">${formatMoney(item.price)} each</div></div>
+            <div class="item-qty">
+              <button data-action="dec" data-idx="${idx}">−</button>
+              <span>${item.qty}</span>
+              <button data-action="inc" data-idx="${idx}">+</button>
+            </div>
+            <div class="item-total">${formatMoney(lineTotal)}</div>
+          </div>
+        `;
+      }).join('');
+      const tax = subtotal * 0.16;
+      const total = subtotal + tax;
+      document.getElementById('pos-subtotal').textContent = formatMoney(subtotal);
+      document.getElementById('pos-tax').textContent = formatMoney(tax);
+      document.getElementById('pos-total').textContent = formatMoney(total);
+      document.getElementById('pos-checkout-btn').disabled = false;
+      count.textContent = posCart.reduce((s, i) => s + i.qty, 0) + ' items';
+
+      cartItems.querySelectorAll('button[data-action]').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const idx = parseInt(this.dataset.idx);
+          if (this.dataset.action === 'inc') {
+            const prod = appState.products.find(p => p.id === posCart[idx].productId);
+            if (posCart[idx].qty >= prod.quantity) { toast('Stock Limit', `Only ${prod.quantity} units available.`, 'warning'); return; }
+            posCart[idx].qty++;
+          } else {
+            posCart[idx].qty--;
+            if (posCart[idx].qty <= 0) posCart.splice(idx, 1);
+          }
+          updatePosCart();
+        });
+      });
+    }
+
+    let saleInProgress = false;
+    function completeSale() {
+      if (saleInProgress) return;
+      if (posCart.length === 0) return;
+
+      for (const item of posCart) {
+        const prod = appState.products.find(p => p.id === item.productId);
+        if (!prod || prod.quantity < item.qty) {
+          toast('Insufficient Stock', `Not enough stock for ${item.name}. Available: ${prod ? prod.quantity : 0}`, 'danger');
+          return;
+        }
+      }
+
+      saleInProgress = true;
+      const btn = document.getElementById('pos-checkout-btn');
+      btn.disabled = true;
+      btn.textContent = 'Processing...';
+
+      setTimeout(() => {
+        const subtotal = posCart.reduce((s, i) => s + i.price * i.qty, 0);
+        const tax = subtotal * 0.16;
+        const total = subtotal + tax;
+        const saleId = uid('SAL');
+        const customerId = posSelectedCustomer || 'CUS-0001';
+        const customer = appState.customers.find(c => c.id === customerId) || appState.customers[0];
+        const paymentMethod = document.getElementById('pos-payment-method').value;
+
+        const sale = {
+          id: saleId, date: now(),
+          customerId, customerName: customer.name,
+          items: posCart.map(i => ({ productId: i.productId, productName: i.name, qty: i.qty, price: i.price, total: i.price * i.qty })),
+          subtotal, discount: 0, tax, total, paymentMethod,
+          status: 'Completed', cashier: currentUser.name,
+          reference: 'REF-' + Date.now().toString(36).toUpperCase()
+        };
+        appState.sales.unshift(sale);
+
+        posCart.forEach(item => {
+          const prod = appState.products.find(p => p.id === item.productId);
+          if (prod) {
+            prod.quantity -= item.qty;
+            appState.inventoryMovements.unshift({
+              id: uid('MOV'), date: now(),
+              productId: prod.id, productName: prod.name,
+              type: 'Sale', quantity: -item.qty,
+              reference: saleId, notes: `Sold via POS to ${customer.name}`
+            });
+          }
+        });
+
+        appState.payments.unshift({
+          id: uid('PAY'), date: now(),
+          invoiceId: saleId, invoiceNumber: sale.reference,
+          amount: total, method: paymentMethod,
+          reference: 'PAYREF-' + Date.now().toString(36).toUpperCase(), status: 'Completed'
+        });
+
+        if (customer) {
+          customer.totalPurchases = (customer.totalPurchases || 0) + total;
+          customer.loyaltyPoints = (customer.loyaltyPoints || 0) + Math.floor(total / 100);
+        }
+
+        appState.notifications.unshift({
+          id: uid('NOT'), title: 'New Sale',
+          msg: `Sale ${saleId} completed for ${formatMoney(total)}`,
+          type: 'success', read: false, date: now(), module: 'sales'
+        });
+
+        writeAuditLog(currentUser.id, currentUser.name, 'SALE', 'Sales', saleId, `Completed sale ${saleId} for ${formatMoney(total)}`);
+        saveState();
+        updateNotificationBadge();
+        showReceipt(sale);
+
+        posCart = [];
+        updatePosCart();
+        renderPosProducts();
+        toast('Sale Complete', `Transaction ${saleId} completed successfully.`, 'success');
+
+        saleInProgress = false;
+        btn.disabled = false;
+        btn.textContent = 'Complete Sale';
+      }, 800);
+    }
+
+    function showReceipt(sale) {
+      const receipt = document.getElementById('receipt-print');
+      receipt.classList.remove('hidden');
+      receipt.innerHTML = `
+        <div style="font-family: monospace; max-width: 320px; margin: 0 auto; padding: 1rem;">
+          <div style="text-align:center; margin-bottom: 1rem;">
+            <h2 style="margin:0;">${escapeHtml(appState.settings.businessName)}</h2>
+            <p style="margin:0; font-size:0.8rem;">${escapeHtml(appState.settings.country)}</p>
+            <p style="margin:0; font-size:0.8rem;">Tel: +254 700 000 000</p>
+          </div>
+          <hr>
+          <p>Receipt: ${escapeHtml(sale.id)}</p>
+          <p>Date: ${formatDateTime(sale.date)}</p>
+          <p>Customer: ${escapeHtml(sale.customerName)}</p>
+          <p>Cashier: ${escapeHtml(sale.cashier)}</p>
+          <hr>
+          <table style="width:100%; font-size:0.8rem;">
+            <tr><th align="left">Item</th><th align="right">Qty</th><th align="right">Price</th><th align="right">Total</th></tr>
+            ${sale.items.map(i => `<tr><td>${escapeHtml(i.productName)}</td><td align="right">${i.qty}</td><td align="right">${formatMoney(i.price)}</td><td align="right">${formatMoney(i.total)}</td></tr>`).join('')}
+          </table>
+          <hr>
+          <p align="right">Subtotal: ${formatMoney(sale.subtotal)}</p>
+          <p align="right">Tax (16%): ${formatMoney(sale.tax)}</p>
+          <p align="right" style="font-weight:bold;">Total: ${formatMoney(sale.total)}</p>
+          <p align="right">Payment: ${escapeHtml(sale.paymentMethod)}</p>
+          <hr>
+          <p style="text-align:center; font-size:0.75rem;">${escapeHtml(appState.settings.receiptFooter)}</p>
+        </div>
+      `;
+      setTimeout(() => { window.print(); receipt.classList.add('hidden'); }, 500);
+    }
+
+    // ==================== BARCODE SCANNER ====================
+    function startBarcodeScanner() {
+      const container = document.getElementById('barcode-scanner-container');
+      const video = document.getElementById('scanner-video');
+      container.classList.remove('hidden');
+
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+        .then(stream => {
+          barcodeStream = stream;
+          video.srcObject = stream;
+          video.play();
+          scanBarcodeLoop(video);
+        })
+        .catch(err => {
+          toast('Camera Error', 'Could not access camera. Please allow camera permissions or use manual entry.', 'danger');
+          container.classList.add('hidden');
+        });
+    }
+
+    function scanBarcodeLoop(video) {
+      if (!barcodeStream) return;
+      if ('BarcodeDetector' in window) {
+        const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'code_128', 'code_39', 'qr_code', 'upc_a', 'upc_e', 'itf'] });
+        const detect = () => {
+          if (!barcodeStream) return;
+          detector.detect(video).then(codes => {
+            if (codes.length > 0) { handleScannedCode(codes[0].rawValue); }
+            else { requestAnimationFrame(detect); }
+          }).catch(() => requestAnimationFrame(detect));
+        };
+        requestAnimationFrame(detect);
+      } else {
+        setTimeout(() => {
+          if (barcodeStream) {
+            const code = prompt('Barcode scanner not supported in this browser. Enter barcode manually:');
+            if (code) handleScannedCode(code);
+            else stopBarcodeScanner();
+          }
+        }, 500);
+      }
+    }
+
+    function handleScannedCode(code) {
+      stopBarcodeScanner();
+      const prod = appState.products.find(p => p.barcode === code || p.sku === code || p.qrCode === code || p.id === code);
+      if (prod) {
+        addToPosCart(prod.id);
+        toast('Product Found', `${prod.name} added to cart.`, 'success');
+      } else {
+        toast('Product Not Found', `No product matches code: ${code}`, 'warning');
+      }
+    }
+
+    function stopBarcodeScanner() {
+      const container = document.getElementById('barcode-scanner-container');
+      const video = document.getElementById('scanner-video');
+      container.classList.add('hidden');
+      if (barcodeStream) { barcodeStream.getTracks().forEach(t => t.stop()); barcodeStream = null; }
+      if (video) video.srcObject = null;
+    }
+
+    function renderSalesHistory(container) {
+      const sales = appState.sales.slice(0, 50);
+      container.innerHTML = `
+        <div class="module-header">
+          <h2>Sales History</h2>
+          <div class="module-actions">
+            <button class="btn btn-outline" id="back-to-pos">← Back to POS</button>
+            <button class="btn btn-outline" id="export-sales-csv">📥 Export CSV</button>
+          </div>
+        </div>
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead><tr><th>Sale ID</th><th>Date</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th></tr></thead>
+            <tbody>
+              ${sales.map(s => `
+                <tr><td>${escapeHtml(s.id)}</td><td>${formatDate(s.date)}</td><td>${escapeHtml(s.customerName)}</td><td>${s.items.length} item(s)</td><td>${formatMoney(s.total)}</td><td><span class="status-badge info">${escapeHtml(s.paymentMethod)}</span></td><td><span class="status-badge success">${escapeHtml(s.status)}</span></td></tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+      document.getElementById('back-to-pos').addEventListener('click', () => renderSales(container));
+      document.getElementById('export-sales-csv').addEventListener('click', () => {
+        const headers = ['Sale ID', 'Date', 'Customer', 'Total', 'Payment Method', 'Status'];
+        const rows = sales.map(s => [s.id, formatDate(s.date), s.customerName, s.total, s.paymentMethod, s.status]);
+        exportCSV(headers, rows, 'viora_sales.csv');
+      });
+    }
+
+    // ==================== 11. INVENTORY ====================
+    function renderInventory(container) {
+      const products = appState.products;
+      container.innerHTML = `
+        <div class="module-header">
+          <h2>Inventory & Stock</h2>
+          <div class="module-actions">
+            <button class="btn btn-primary-sm" id="add-product-btn">+ Add Product</button>
+            <button class="btn btn-outline" id="export-inventory-csv">📥 Export CSV</button>
+          </div>
+        </div>
+        <div class="filter-bar">
+          <input type="text" id="inv-search" placeholder="Search products by name, SKU, or barcode..." style="flex:1;">
+          <select id="inv-category-filter">
+            <option value="">All Categories</option>
+            ${[...new Set(products.map(p => p.category))].map(c => `<option value="${c}">${c}</option>`).join('')}
+          </select>
+        </div>
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead><tr><th>SKU</th><th>Barcode</th><th>Product</th><th>Category</th><th>Qty</th><th>Min Stock</th><th>Purchase</th><th>Selling</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="inventory-tbody"></tbody>
+          </table>
+        </div>
+      `;
+
+      function renderInvTable() {
+        const search = (document.getElementById('inv-search')?.value || '').toLowerCase();
+        const cat = document.getElementById('inv-category-filter')?.value || '';
+        const filtered = products.filter(p =>
+          (!search || p.name.toLowerCase().includes(search) || p.sku.toLowerCase().includes(search) || (p.barcode && p.barcode.toLowerCase().includes(search))) &&
+          (!cat || p.category === cat)
+        );
+        const tbody = document.getElementById('inventory-tbody');
+        if (!tbody) return;
+        tbody.innerHTML = filtered.map(p => {
+          const lowStock = p.quantity <= p.minStock;
+          return `
+            <tr>
+              <td>${escapeHtml(p.sku)}</td>
+              <td style="font-size:0.75rem;color:var(--text-secondary);">${escapeHtml(p.barcode || '-')}</td>
+              <td>${escapeHtml(p.name)}</td>
+              <td>${escapeHtml(p.category)}</td>
+              <td style="color:${lowStock ? 'var(--warning)' : 'var(--text-primary)'}; font-weight:${lowStock ? '700' : '400'}">${p.quantity}</td>
+              <td>${p.minStock}</td>
+              <td>${formatMoney(p.purchasePrice)}</td>
+              <td>${formatMoney(p.sellingPrice)}</td>
+              <td><span class="status-badge ${lowStock ? 'warning' : 'success'}">${lowStock ? 'Low Stock' : 'In Stock'}</span></td>
+              <td><button class="btn btn-outline" style="padding:0.3rem 0.6rem;font-size:0.7rem;" data-edit="${p.id}">Edit</button></td>
+            </tr>
+          `;
+        }).join('');
+        tbody.querySelectorAll('[data-edit]').forEach(btn => {
+          btn.addEventListener('click', () => openProductModal(btn.dataset.edit));
+        });
+      }
+
+      renderInvTable();
+      document.getElementById('inv-search').addEventListener('input', renderInvTable);
+      document.getElementById('inv-category-filter').addEventListener('change', renderInvTable);
+      document.getElementById('add-product-btn').addEventListener('click', () => openProductModal(null));
+      document.getElementById('export-inventory-csv').addEventListener('click', () => {
+        const headers = ['SKU', 'Barcode', 'Product', 'Category', 'Qty', 'Min Stock', 'Purchase Price', 'Selling Price', 'Status'];
+        const rows = products.map(p => [p.sku, p.barcode || '', p.name, p.category, p.quantity, p.minStock, p.purchasePrice, p.sellingPrice, p.quantity <= p.minStock ? 'Low Stock' : 'In Stock']);
+        exportCSV(headers, rows, 'viora_inventory.csv');
+      });
+    }
+
+    function openProductModal(productId) {
+      if (!requirePermission(productId ? 'inventory_edit' : 'inventory_create')) return;
+      const prod = productId ? appState.products.find(p => p.id === productId) : null;
+      const isEdit = !!prod;
+      const modal = document.getElementById('modal-container');
+      modal.innerHTML = `
+        <div class="modal-overlay">
+          <div class="modal-content">
+            <div class="modal-header"><h3>${isEdit ? 'Edit Product' : 'Add Product'}</h3><button class="modal-close" id="modal-close-btn">✕</button></div>
+            <div class="form-row">
+              <div class="form-field"><label>Product Name</label><input type="text" id="prod-name" value="${prod ? escapeHtml(prod.name) : ''}"></div>
+              <div class="form-field"><label>SKU</label><input type="text" id="prod-sku" value="${prod ? escapeHtml(prod.sku) : ''}"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-field"><label>Barcode</label><input type="text" id="prod-barcode" value="${prod ? escapeHtml(prod.barcode || '') : ''}"></div>
+              <div class="form-field"><label>QR Code</label><input type="text" id="prod-qr" value="${prod ? escapeHtml(prod.qrCode || '') : ''}"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-field"><label>Category</label><input type="text" id="prod-category" value="${prod ? escapeHtml(prod.category) : ''}"></div>
+              <div class="form-field"><label>Supplier</label>
+                <select id="prod-supplier">${appState.suppliers.map(s => `<option value="${s.id}" ${prod && prod.supplierId === s.id ? 'selected' : ''}>${escapeHtml(s.name)}</option>`).join('')}</select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-field"><label>Purchase Price (KES)</label><input type="number" id="prod-purchase" value="${prod ? prod.purchasePrice : 0}"></div>
+              <div class="form-field"><label>Selling Price (KES)</label><input type="number" id="prod-selling" value="${prod ? prod.sellingPrice : 0}"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-field"><label>Quantity</label><input type="number" id="prod-qty" value="${prod ? prod.quantity : 0}"></div>
+              <div class="form-field"><label>Min Stock Level</label><input type="number" id="prod-minstock" value="${prod ? prod.minStock : 5}"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-field"><label>Warehouse</label>
+                <select id="prod-warehouse">${['Nairobi Main', 'Mombasa Branch', 'Kisumu Branch'].map(w => `<option ${prod && prod.warehouse === w ? 'selected' : ''}>${w}</option>`).join('')}</select>
+              </div>
+              <div class="form-field"><label>Status</label>
+                <select id="prod-status"><option ${prod && prod.status === 'Active' ? 'selected' : ''}>Active</option><option ${prod && prod.status === 'Inactive' ? 'selected' : ''}>Inactive</option></select>
+              </div>
+            </div>
+            <div class="modal-actions mt-2">
+              ${isEdit ? '<button class="btn btn-danger-sm" id="modal-delete-btn" style="flex:0;">🗑 Delete</button>' : ''}
+              <button class="btn-secondary" id="modal-cancel-btn">Cancel</button>
+              <button class="btn-primary" id="modal-save-btn" style="flex:1;">${isEdit ? 'Save Changes' : 'Create Product'}</button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.getElementById('modal-close-btn').addEventListener('click', () => modal.innerHTML = '');
+      document.getElementById('modal-cancel-btn').addEventListener('click', () => modal.innerHTML = '');
+      document.getElementById('modal-save-btn').addEventListener('click', () => {
+        const name = document.getElementById('prod-name').value.trim();
+        const sku = document.getElementById('prod-sku').value.trim();
+        if (!name || !sku) { toast('Validation Error', 'Name and SKU are required.', 'danger'); return; }
+        const data = {
+          name, sku,
+          barcode: document.getElementById('prod-barcode').value.trim(),
+          qrCode: document.getElementById('prod-qr').value.trim(),
+          category: document.getElementById('prod-category').value.trim() || 'General',
+          supplierId: document.getElementById('prod-supplier').value,
+          purchasePrice: parseFloat(document.getElementById('prod-purchase').value) || 0,
+          sellingPrice: parseFloat(document.getElementById('prod-selling').value) || 0,
+          quantity: parseInt(document.getElementById('prod-qty').value) || 0,
+          minStock: parseInt(document.getElementById('prod-minstock').value) || 5,
+          warehouse: document.getElementById('prod-warehouse').value,
+          status: document.getElementById('prod-status').value
+        };
+        if (isEdit) {
+          Object.assign(prod, data);
+          writeAuditLog(currentUser.id, currentUser.name, 'PRODUCT_UPDATED', 'Inventory', prod.id, `Updated product ${prod.name}`);
+          toast('Product Updated', `${name} has been updated.`, 'success');
+        } else {
+          const newProd = { id: uid('PRD'), ...data, expiryDate: null };
+          appState.products.push(newProd);
+          writeAuditLog(currentUser.id, currentUser.name, 'PRODUCT_CREATED', 'Inventory', newProd.id, `Created product ${newProd.name}`);
+          toast('Product Created', `${name} has been added.`, 'success');
+        }
+        saveState();
+        modal.innerHTML = '';
+        renderInventory(document.getElementById('content-area'));
+      });
+      if (isEdit) {
+        document.getElementById('modal-delete-btn').addEventListener('click', () => {
+          if (!confirm(`Delete ${prod.name}? This cannot be undone.`)) return;
+          appState.products = appState.products.filter(p => p.id !== prod.id);
+          writeAuditLog(currentUser.id, currentUser.name, 'PRODUCT_DELETED', 'Inventory', prod.id, `Deleted product ${prod.name}`);
+          saveState();
+          modal.innerHTML = '';
+          toast('Product Deleted', `${prod.name} has been removed.`, 'warning');
+          renderInventory(document.getElementById('content-area'));
+        });
+      }
+    }
+
+    // ==================== 12. ACCOUNTING ====================
+    function renderAccounting(container) {
+      const totalRevenue = appState.sales.reduce((s, x) => s + x.total, 0);
+      const totalExpenses = appState.expenses.reduce((s, x) => s + x.amount, 0);
+      const netProfit = totalRevenue - totalExpenses;
+      const receivables = appState.invoices.filter(i => i.status !== 'Paid' && i.status !== 'Cancelled').reduce((s, i) => s + i.balance, 0);
+      const payables = appState.purchaseOrders.filter(p => p.status !== 'Received').reduce((s, p) => s + p.total, 0);
+
+      container.innerHTML = `
+        <div class="module-header"><h2>Accounting & Finance</h2></div>
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-label">Total Revenue</div><div class="kpi-value">${formatMoney(totalRevenue)}</div></div>
+          <div class="kpi-card"><div class="kpi-label">Total Expenses</div><div class="kpi-value">${formatMoney(totalExpenses)}</div></div>
+          <div class="kpi-card"><div class="kpi-label">Net Profit</div><div class="kpi-value" style="color:${netProfit >= 0 ? 'var(--success)' : 'var(--danger)'}">${formatMoney(netProfit)}</div></div>
+          <div class="kpi-card"><div class="kpi-label">Accounts Receivable</div><div class="kpi-value">${formatMoney(receivables)}</div></div>
+          <div class="kpi-card"><div class="kpi-label">Accounts Payable</div><div class="kpi-value">${formatMoney(payables)}</div></div>
+        </div>
+
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h4>Profit & Loss Statement</h4>
+            <div class="data-table-wrapper">
+              <table class="data-table">
+                <thead><tr><th>Item</th><th>Amount</th></tr></thead>
+                <tbody>
+                  <tr><td>Revenue (Sales)</td><td>${formatMoney(totalRevenue)}</td></tr>
+                  <tr><td>Cost of Goods Sold</td><td>${formatMoney(appState.sales.reduce((s, x) => s + x.items.reduce((a, i) => { const p = appState.products.find(pr => pr.id === i.productId); return a + (p ? p.purchasePrice * i.qty : 0); }, 0), 0))}</td></tr>
+                  <tr><td>Gross Profit</td><td>${formatMoney(totalRevenue - appState.sales.reduce((s, x) => s + x.items.reduce((a, i) => { const p = appState.products.find(pr => pr.id === i.productId); return a + (p ? p.purchasePrice * i.qty : 0); }, 0), 0))}</td></tr>
+                  <tr><td>Operating Expenses</td><td>${formatMoney(totalExpenses)}</td></tr>
+                  <tr style="font-weight:700; border-top: 2px solid var(--card-border);"><td>Net Profit</td><td style="color:${netProfit >= 0 ? 'var(--success)' : 'var(--danger)'}">${formatMoney(netProfit)}</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h4>Recent Invoices</h4>
+            <div class="data-table-wrapper">
+              <table class="data-table">
+                <thead><tr><th>Invoice</th><th>Customer</th><th>Amount</th><th>Balance</th><th>Status</th></tr></thead>
+                <tbody>
+                  ${appState.invoices.slice(0, 8).map(inv => `
+                    <tr><td>${escapeHtml(inv.invoiceNumber)}</td><td>${escapeHtml(inv.customerName)}</td><td>${formatMoney(inv.amount)}</td><td>${formatMoney(inv.balance)}</td><td><span class="status-badge ${inv.status === 'Paid' ? 'success' : inv.status === 'Overdue' ? 'danger' : inv.status === 'Partially Paid' ? 'warning' : 'info'}">${escapeHtml(inv.status)}</span></td></tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card mt-2">
+          <h4>Recent Expenses</h4>
+          <div class="data-table-wrapper">
+            <table class="data-table">
+              <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Status</th></tr></thead>
+              <tbody>
+                ${appState.expenses.slice(0, 10).map(e => `
+                  <tr><td>${formatDate(e.date)}</td><td>${escapeHtml(e.category)}</td><td>${escapeHtml(e.description)}</td><td>${formatMoney(e.amount)}</td><td><span class="status-badge success">${escapeHtml(e.status)}</span></td></tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // ==================== 13. HR ====================
+    function renderHR(container) {
+      container.innerHTML = `
+        <div class="module-header"><h2>Human Resources</h2></div>
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead><tr><th>ID</th><th>Name</th><th>Department</th><th>Job Title</th><th>Status</th><th>Basic Salary</th><th>Allowances</th><th>Deductions</th><th>Net Pay</th></tr></thead>
+            <tbody>
+              ${appState.employees.map(e => {
+                const net = e.basicSalary + e.allowances - e.deductions;
+                return `<tr><td>${escapeHtml(e.id)}</td><td>${escapeHtml(e.name)}</td><td>${escapeHtml(e.department)}</td><td>${escapeHtml(e.jobTitle)}</td><td><span class="status-badge success">${escapeHtml(e.employmentStatus)}</span></td><td>${formatMoney(e.basicSalary)}</td><td>${formatMoney(e.allowances)}</td><td>${formatMoney(e.deductions)}</td><td style="font-weight:700;color:var(--primary-cyan)">${formatMoney(net)}</td></tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // ==================== 14. CRM ====================
+    function renderCRM(container) {
+      container.innerHTML = `
+        <div class="module-header"><h2>CRM & Customers</h2></div>
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Category</th><th>Loyalty Points</th><th>Total Purchases</th><th>Status</th></tr></thead>
+            <tbody>
+              ${appState.customers.map(c => `
+                <tr><td>${escapeHtml(c.id)}</td><td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.email)}</td><td>${escapeHtml(c.phone)}</td><td><span class="status-badge info">${escapeHtml(c.category)}</span></td><td>${c.loyaltyPoints}</td><td>${formatMoney(c.totalPurchases)}</td><td><span class="status-badge success">${escapeHtml(c.status)}</span></td></tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // ==================== 15. PURCHASING ====================
+    function renderPurchasing(container) {
+      container.innerHTML = `
+        <div class="module-header"><h2>Purchasing & Suppliers</h2></div>
+        <div class="data-table-wrapper mb-2">
+          <table class="data-table">
+            <thead><tr><th>PO #</th><th>Supplier</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th></tr></thead>
+            <tbody>
+              ${appState.purchaseOrders.map(po => `
+                <tr><td>${escapeHtml(po.orderNumber)}</td><td>${escapeHtml(po.supplierName)}</td><td>${formatDate(po.date)}</td><td>${po.items.length}</td><td>${formatMoney(po.total)}</td><td><span class="status-badge ${po.status === 'Received' ? 'success' : po.status === 'Approved' ? 'info' : po.status === 'Pending' ? 'warning' : 'purple'}">${escapeHtml(po.status)}</span></td></tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        <h4 style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.5px;">Suppliers</h4>
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead><tr><th>ID</th><th>Name</th><th>Contact</th><th>Phone</th><th>Balance</th><th>Status</th></tr></thead>
+            <tbody>
+              ${appState.suppliers.map(s => `
+                <tr><td>${escapeHtml(s.id)}</td><td>${escapeHtml(s.name)}</td><td>${escapeHtml(s.contactPerson)}</td><td>${escapeHtml(s.phone)}</td><td>${formatMoney(s.balance)}</td><td><span class="status-badge success">${escapeHtml(s.status)}</span></td></tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // ==================== 16. PROJECTS ====================
+    function renderProjects(container) {
+      container.innerHTML = `
+        <div class="module-header"><h2>Projects & Tasks</h2></div>
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead><tr><th>ID</th><th>Project</th><th>Owner</th><th>Budget</th><th>Progress</th><th>Deadline</th><th>Status</th><th>Priority</th></tr></thead>
+            <tbody>
+              ${appState.projects.map(p => `
+                <tr>
+                  <td>${escapeHtml(p.id)}</td>
+                  <td>${escapeHtml(p.name)}</td>
+                  <td>${escapeHtml(p.owner)}</td>
+                  <td>${formatMoney(p.budget)}</td>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:0.4rem;">
+                      <div style="width:60px;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;"><div style="width:${p.progress}%;height:100%;background:linear-gradient(90deg,var(--primary-blue),var(--primary-cyan));border-radius:3px;"></div></div>
+                      <span style="font-size:0.75rem;">${p.progress}%</span>
+                    </div>
+                  </td>
+                  <td>${formatDate(p.deadline)}</td>
+                  <td><span class="status-badge ${p.status === 'Active' ? 'success' : p.status === 'Completed' ? 'info' : p.status === 'On Hold' ? 'warning' : 'purple'}">${escapeHtml(p.status)}</span></td>
+                  <td><span class="status-badge ${p.priority === 'High' ? 'danger' : p.priority === 'Medium' ? 'warning' : 'info'}">${escapeHtml(p.priority)}</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // ==================== 17. REPORTS ====================
+    function renderReports(container) {
+      container.innerHTML = `
+        <div class="module-header">
+          <h2>Reports & Analytics</h2>
+          <div class="module-actions"><button class="btn btn-outline" id="export-full-report">📥 Export Full Report</button></div>
+        </div>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h4>Sales Report</h4>
+            <div class="data-table-wrapper">
+              <table class="data-table">
+                <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+                <tbody>
+                  <tr><td>Total Sales</td><td>${appState.sales.length}</td></tr>
+                  <tr><td>Total Revenue</td><td>${formatMoney(appState.sales.reduce((s, x) => s + x.total, 0))}</td></tr>
+                  <tr><td>Average Sale Value</td><td>${formatMoney(appState.sales.length > 0 ? appState.sales.reduce((s, x) => s + x.total, 0) / appState.sales.length : 0)}</td></tr>
+                  <tr><td>Top Payment Method</td><td>${(() => { const m = {}; appState.sales.forEach(s => { m[s.paymentMethod] = (m[s.paymentMethod] || 0) + 1; }); return Object.entries(m).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A'; })()}</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h4>Inventory Report</h4>
+            <div class="data-table-wrapper">
+              <table class="data-table">
+                <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+                <tbody>
+                  <tr><td>Total Products</td><td>${appState.products.length}</td></tr>
+                  <tr><td>Inventory Value</td><td>${formatMoney(appState.products.reduce((s, p) => s + p.quantity * p.purchasePrice, 0))}</td></tr>
+                  <tr><td>Low Stock Items</td><td>${appState.products.filter(p => p.quantity <= p.minStock).length}</td></tr>
+                  <tr><td>Out of Stock</td><td>${appState.products.filter(p => p.quantity <= 0).length}</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="chart-grid mt-2">
+          <div class="chart-card">
+            <h4>Financial Summary</h4>
+            <div class="data-table-wrapper">
+              <table class="data-table">
+                <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+                <tbody>
+                  <tr><td>Total Revenue</td><td>${formatMoney(appState.sales.reduce((s, x) => s + x.total, 0))}</td></tr>
+                  <tr><td>Total Expenses</td><td>${formatMoney(appState.expenses.reduce((s, x) => s + x.amount, 0))}</td></tr>
+                  <tr><td>Net Profit</td><td>${formatMoney(appState.sales.reduce((s, x) => s + x.total, 0) - appState.expenses.reduce((s, x) => s + x.amount, 0))}</td></tr>
+                  <tr><td>Outstanding Receivables</td><td>${formatMoney(appState.invoices.filter(i => i.status !== 'Paid').reduce((s, i) => s + i.balance, 0))}</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h4>Top Customers</h4>
+            <div class="data-table-wrapper">
+              <table class="data-table">
+                <thead><tr><th>Customer</th><th>Total Purchases</th></tr></thead>
+                <tbody>
+                  ${appState.customers.filter(c => c.totalPurchases > 0).sort((a, b) => b.totalPurchases - a.totalPurchases).slice(0, 5).map(c => `<tr><td>${escapeHtml(c.name)}</td><td>${formatMoney(c.totalPurchases)}</td></tr>`).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+      document.getElementById('export-full-report').addEventListener('click', () => {
+        const headers = ['Metric', 'Value'];
+        const rows = [
+          ['Total Sales', appState.sales.length],
+          ['Total Revenue', appState.sales.reduce((s, x) => s + x.total, 0)],
+          ['Total Expenses', appState.expenses.reduce((s, x) => s + x.amount, 0)],
+          ['Net Profit', appState.sales.reduce((s, x) => s + x.total, 0) - appState.expenses.reduce((s, x) => s + x.amount, 0)],
+          ['Total Products', appState.products.length],
+          ['Inventory Value', appState.products.reduce((s, p) => s + p.quantity * p.purchasePrice, 0)],
+          ['Active Customers', appState.customers.filter(c => c.status === 'Active').length],
+          ['Outstanding Invoices', appState.invoices.filter(i => i.status !== 'Paid').reduce((s, i) => s + i.balance, 0)]
+        ];
+        exportCSV(headers, rows, 'viora_full_report.csv');
+      });
+    }
+
+    // ==================== 18. ASSETS ====================
+    function renderAssets(container) {
+      container.innerHTML = `
+        <div class="module-header"><h2>Asset Management</h2></div>
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead><tr><th>ID</th><th>Asset</th><th>Category</th><th>Purchase Date</th><th>Cost</th><th>Assigned To</th><th>Condition</th><th>Location</th><th>Status</th></tr></thead>
+            <tbody>
+              ${appState.assets.map(a => `
+                <tr><td>${escapeHtml(a.id)}</td><td>${escapeHtml(a.name)}</td><td>${escapeHtml(a.category)}</td><td>${formatDate(a.purchaseDate)}</td><td>${formatMoney(a.purchaseCost)}</td><td>${escapeHtml(a.assignedTo)}</td><td><span class="status-badge ${a.condition === 'Excellent' ? 'success' : a.condition === 'Good' ? 'info' : a.condition === 'Fair' ? 'warning' : 'danger'}">${escapeHtml(a.condition)}</span></td><td>${escapeHtml(a.location)}</td><td><span class="status-badge success">${escapeHtml(a.status)}</span></td></tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // ==================== 19. ECOMMERCE ====================
+    function renderEcommerce(container) {
+      container.innerHTML = `
+        <div class="module-header"><h2>E-commerce</h2></div>
+        <div class="chart-card">
+          <h4>Storefront Preview</h4>
+          <div class="pos-product-grid" style="max-height:none;">
+            ${appState.products.filter(p => p.status === 'Active').slice(0, 8).map(p => `
+              <div class="pos-product-card" style="cursor:default;">
+                <div class="prod-name">${escapeHtml(p.name)}</div>
+                <div class="prod-price">${formatMoney(p.sellingPrice)}</div>
+                <div class="prod-stock">${escapeHtml(p.category)}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        <div class="chart-card mt-2">
+          <h4>Recent E-commerce Orders</h4>
+          <div class="data-table-wrapper">
+            <table class="data-table">
+              <thead><tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead>
+              <tbody>
+                ${appState.sales.slice(0, 5).map(s => `<tr><td>${escapeHtml(s.id)}</td><td>${escapeHtml(s.customerName)}</td><td>${formatMoney(s.total)}</td><td><span class="status-badge success">Completed</span></td></tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // ==================== 20. MARKETING ====================
+    function renderMarketing(container) {
+      container.innerHTML = `
+        <div class="module-header"><h2>Marketing</h2></div>
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-label">Active Campaigns</div><div class="kpi-value">3</div></div>
+          <div class="kpi-card"><div class="kpi-label">Total Reach</div><div class="kpi-value">12,450</div></div>
+          <div class="kpi-card"><div class="kpi-label">Conversion Rate</div><div class="kpi-value">4.2%</div></div>
+          <div class="kpi-card"><div class="kpi-label">Marketing Spend</div><div class="kpi-value">${formatMoney(85000)}</div></div>
+        </div>
+        <div class="chart-card">
+          <h4>Campaign Performance</h4>
+          <div class="data-table-wrapper">
+            <table class="data-table">
+              <thead><tr><th>Campaign</th><th>Status</th><th>Reach</th><th>Conversions</th><th>Budget</th></tr></thead>
+              <tbody>
+                <tr><td>Q2 Product Launch</td><td><span class="status-badge success">Active</span></td><td>5,200</td><td>218</td><td>KES 45,000</td></tr>
+                <tr><td>Social Media Blitz</td><td><span class="status-badge success">Active</span></td><td>4,100</td><td>164</td><td>KES 25,000</td></tr>
+                <tr><td>Email Newsletter</td><td><span class="status-badge info">Scheduled</span></td><td>3,150</td><td>132</td><td>KES 15,000</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // ==================== 21. DOCUMENTS ====================
+    function renderDocuments(container) {
+      container.innerHTML = `
+        <div class="module-header"><h2>Document Management</h2></div>
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead><tr><th>Document</th><th>Type</th><th>Date</th><th>Size</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr><td>Invoice INV-2001</td><td>Invoice</td><td>${formatDate(daysAgo(5))}</td><td>245 KB</td><td><button class="btn btn-outline" style="padding:0.2rem 0.5rem;font-size:0.7rem;">View</button></td></tr>
+              <tr><td>Purchase Order PO-3001</td><td>Purchase Order</td><td>${formatDate(daysAgo(10))}</td><td>180 KB</td><td><button class="btn btn-outline" style="padding:0.2rem 0.5rem;font-size:0.7rem;">View</button></td></tr>
+              <tr><td>Employee Contract - Grace W.</td><td>HR Document</td><td>${formatDate(daysAgo(30))}</td><td>520 KB</td><td><button class="btn btn-outline" style="padding:0.2rem 0.5rem;font-size:0.7rem;">View</button></td></tr>
+              <tr><td>Financial Report Q1</td><td>Report</td><td>${formatDate(daysAgo(45))}</td><td>1.2 MB</td><td><button class="btn btn-outline" style="padding:0.2rem 0.5rem;font-size:0.7rem;">View</button></td></tr>
+              <tr><td>Asset Register 2025</td><td>Asset</td><td>${formatDate(daysAgo(60))}</td><td>890 KB</td><td><button class="btn btn-outline" style="padding:0.2rem 0.5rem;font-size:0.7rem;">View</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // ==================== 22. M-PESA ====================
+    function renderMpesa(container) {
+      container.innerHTML = `
+        <div class="module-header">
+          <h2>M-Pesa Integration</h2>
+          <span class="status-badge warning" style="font-size:0.7rem;">⚠️ Simulation Only — No real payments</span>
+        </div>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h4>STK Push Request</h4>
+            <div class="form-field"><label>Phone Number</label><input type="text" id="mpesa-phone" placeholder="+254712345678" value="+254712345678"></div>
+            <div class="form-field"><label>Amount (KES)</label><input type="number" id="mpesa-amount" placeholder="1000" value="1000"></div>
+            <div class="form-field"><label>Reference</label><input type="text" id="mpesa-ref" placeholder="INV-2001" value="INV-2001"></div>
+            <button class="btn btn-primary-sm w-full mt-1" id="mpesa-push-btn">📱 Send STK Push (Demo)</button>
+            <div id="mpesa-status" class="mt-1 text-sm" style="color:var(--text-secondary);min-height:1.5rem;"></div>
+          </div>
+          <div class="chart-card">
+            <h4>Recent M-Pesa Transactions</h4>
+            <div class="data-table-wrapper">
+              <table class="data-table">
+                <thead><tr><th>Ref</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+                <tbody>
+                  ${appState.payments.filter(p => p.method === 'M-Pesa').slice(0, 6).map(p => `
+                    <tr><td>${escapeHtml(p.reference)}</td><td>${formatMoney(p.amount)}</td><td><span class="status-badge success">Completed</span></td><td>${formatDate(p.date)}</td></tr>
+                  `).join('')}
+                  ${appState.payments.filter(p => p.method === 'M-Pesa').length === 0 ? '<tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">No M-Pesa transactions yet</td></tr>' : ''}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+      document.getElementById('mpesa-push-btn').addEventListener('click', function() {
+        const phone = document.getElementById('mpesa-phone').value;
+        const amount = parseFloat(document.getElementById('mpesa-amount').value);
+        const ref = document.getElementById('mpesa-ref').value;
+        const statusEl = document.getElementById('mpesa-status');
+        if (!phone || !amount) { statusEl.textContent = '⚠️ Phone and amount required.'; statusEl.style.color = 'var(--warning)'; return; }
+        statusEl.textContent = '⏳ Sending STK Push simulation...';
+        statusEl.style.color = 'var(--primary-cyan)';
+        this.disabled = true;
+        setTimeout(() => {
+          statusEl.textContent = '✅ Demo STK Push sent successfully! (Simulation — no real payment)';
+          statusEl.style.color = 'var(--success)';
+          this.disabled = false;
+          appState.payments.unshift({
+            id: uid('PAY'), date: now(),
+            invoiceId: ref, invoiceNumber: ref,
+            amount: amount, method: 'M-Pesa',
+            reference: 'MPESA-' + Date.now().toString(36).toUpperCase(), status: 'Completed'
+          });
+          writeAuditLog(currentUser.id, currentUser.name, 'MPESA_PAYMENT', 'M-Pesa', ref, `Simulated M-Pesa payment of ${formatMoney(amount)}`);
+          saveState();
+          toast('M-Pesa Simulation', `Demo payment of ${formatMoney(amount)} recorded.`, 'success');
+          renderMpesa(container);
+        }, 1500);
+      });
+    }
+
+    // ==================== 23. eTIMS ====================
+    function renderEtims(container) {
+      container.innerHTML = `
+        <div class="module-header">
+          <h2>eTIMS Integration</h2>
+          <span class="status-badge warning" style="font-size:0.7rem;">⚠️ Simulation Only — Not connected to KRA</span>
+        </div>
+        <div class="chart-card">
+          <h4>Invoice Queue</h4>
+          <div class="data-table-wrapper">
+            <table class="data-table">
+              <thead><tr><th>Invoice</th><th>Customer</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>
+                ${appState.invoices.slice(0, 8).map(inv => `
+                  <tr>
+                    <td>${escapeHtml(inv.invoiceNumber)}</td>
+                    <td>${escapeHtml(inv.customerName)}</td>
+                    <td>${formatMoney(inv.amount)}</td>
+                    <td><span class="status-badge ${inv.status === 'Paid' ? 'success' : 'warning'}">${inv.status === 'Paid' ? 'Submitted' : 'Pending'}</span></td>
+                    <td><button class="btn btn-outline" style="padding:0.2rem 0.5rem;font-size:0.7rem;" onclick="simulateEtimsSubmit('${inv.id}')">Submit</button></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <p class="text-secondary text-sm mt-2">This is a simulation. Real eTIMS integration requires authorised KRA API credentials and a backend service.</p>
+      `;
+    }
+
+    window.simulateEtimsSubmit = function(invId) {
+      toast('eTIMS Simulation', `Invoice ${invId} submitted to eTIMS (demo). No real submission occurred.`, 'info');
+      writeAuditLog(currentUser?.id, currentUser?.name, 'ETIMS_SUBMIT', 'eTIMS', invId, `Simulated eTIMS submission for ${invId}`);
+      saveState();
+    };
+
+    // ==================== 24. AI ASSISTANT ====================
+    function renderAI(container) {
+      container.innerHTML = `
+        <div class="module-header">
+          <h2>AI Assistant</h2>
+          <span class="status-badge info" style="font-size:0.7rem;">Beta — Local Demo</span>
+        </div>
+        <div class="ai-chat-container">
+          <div class="ai-chat-header">
+            <div class="ai-avatar">🤖</div>
+            <div>
+              <div class="ai-title">VIORA AI Assistant</div>
+              <div class="ai-status">● Online — Ready to help</div>
+            </div>
+          </div>
+          <div class="ai-chat-messages" id="ai-messages">
+            <div class="ai-message bot">
+              Hello ${escapeHtml(currentUser.name.split(' ')[0])}! I'm your VIORA AI assistant. I can help you with:
+              <ul style="margin-top:0.5rem;padding-left:1.2rem;font-size:0.8rem;">
+                <li>Sales & inventory insights</li>
+                <li>Financial summaries</li>
+                <li>Product recommendations</li>
+                <li>Business analytics</li>
+              </ul>
+              <div class="ai-msg-time">${formatDateTime(now())}</div>
+            </div>
+          </div>
+          <div class="ai-quick-actions">
+            <button data-ai="Show me today's sales summary">📊 Today's sales</button>
+            <button data-ai="What products are low on stock?">📦 Low stock</button>
+            <button data-ai="What is my total revenue this month?">💰 Revenue</button>
+            <button data-ai="Who are my top customers?">🏆 Top customers</button>
+            <button data-ai="How many pending orders do I have?">📋 Pending orders</button>
+          </div>
+          <div class="ai-chat-input">
+            <input type="text" id="ai-input" placeholder="Ask me anything about your business...">
+            <button id="ai-send-btn">Send</button>
+          </div>
+        </div>
+      `;
+
+      const messagesEl = document.getElementById('ai-messages');
+      const inputEl = document.getElementById('ai-input');
+
+      function addMessage(text, sender) {
+        const msg = document.createElement('div');
+        msg.className = `ai-message ${sender}`;
+        msg.innerHTML = `${text}<div class="ai-msg-time">${formatDateTime(now())}</div>`;
+        messagesEl.appendChild(msg);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }
+
+      function generateAIResponse(query) {
+        const q = query.toLowerCase();
+        
+        if (q.includes('sale') && (q.includes('today') || q.includes('summary'))) {
+          const today = new Date().toDateString();
+          const todaySales = appState.sales.filter(s => new Date(s.date).toDateString() === today);
+          const total = todaySales.reduce((s, x) => s + x.total, 0);
+          return `📊 **Today's Sales Summary**<br><br>Transactions: <strong>${todaySales.length}</strong><br>Total revenue: <strong>${formatMoney(total)}</strong><br>Average sale: <strong>${formatMoney(todaySales.length > 0 ? total / todaySales.length : 0)}</strong>`;
+        }
+        
+        if (q.includes('low') && q.includes('stock')) {
+          const low = appState.products.filter(p => p.quantity <= p.minStock);
+          if (low.length === 0) return '✅ Great news! No products are currently low on stock.';
+          return `📦 **Low Stock Alert**<br><br>${low.length} product(s) need restocking:<br>${low.slice(0, 5).map(p => `• ${escapeHtml(p.name)} — ${p.quantity} left (min: ${p.minStock})`).join('<br>')}`;
+        }
+        
+        if (q.includes('revenue') || q.includes('profit')) {
+          const rev = appState.sales.reduce((s, x) => s + x.total, 0);
+          const exp = appState.expenses.reduce((s, x) => s + x.amount, 0);
+          return `💰 **Financial Summary**<br><br>Total Revenue: <strong>${formatMoney(rev)}</strong><br>Total Expenses: <strong>${formatMoney(exp)}</strong><br>Net Profit: <strong>${formatMoney(rev - exp)}</strong><br>Margin: <strong>${rev > 0 ? ((rev - exp) / rev * 100).toFixed(1) : 0}%</strong>`;
+        }
+        
+        if (q.includes('top') && q.includes('customer')) {
+          const top = appState.customers.filter(c => c.totalPurchases > 0).sort((a, b) => b.totalPurchases - a.totalPurchases).slice(0, 5);
+          return `🏆 **Top Customers**<br><br>${top.map((c, i) => `${i+1}. ${escapeHtml(c.name)} — ${formatMoney(c.totalPurchases)}`).join('<br>')}`;
+        }
+        
+        if (q.includes('pending') || q.includes('order')) {
+          const pending = appState.purchaseOrders.filter(p => p.status === 'Pending' || p.status === 'Approved');
+          return `📋 **Pending Orders**<br><br>${pending.length} order(s) require attention:<br>${pending.slice(0, 5).map(p => `• ${escapeHtml(p.orderNumber)} — ${escapeHtml(p.supplierName)} (${formatMoney(p.total)})`).join('<br>')}`;
+        }
+        
+        if (q.includes('product') || q.includes('inventory')) {
+          const totalValue = appState.products.reduce((s, p) => s + p.quantity * p.purchasePrice, 0);
+          return `📦 **Inventory Summary**<br><br>Total Products: <strong>${appState.products.length}</strong><br>Inventory Value: <strong>${formatMoney(totalValue)}</strong><br>Low Stock: <strong>${appState.products.filter(p => p.quantity <= p.minStock).length}</strong><br>Out of Stock: <strong>${appState.products.filter(p => p.quantity <= 0).length}</strong>`;
+        }
+        
+        if (q.includes('hello') || q.includes('hi') || q.includes('hey')) {
+          return `Hello ${escapeHtml(currentUser.name.split(' ')[0])}! 👋 How can I assist you today? Try asking about sales, inventory, or customers.`;
+        }
+        
+        return `I understand you're asking about "<em>${escapeHtml(query)}</em>". As a demo AI assistant, I can help with:<br><br>• <strong>Sales summaries</strong> — try "today's sales"<br>• <strong>Low stock alerts</strong> — try "low stock"<br>• <strong>Revenue reports</strong> — try "revenue"<br>• <strong>Top customers</strong> — try "top customers"<br>• <strong>Pending orders</strong> — try "pending orders"<br><br>What would you like to know?`;
+      }
+
+      function sendMessage() {
+        const text = inputEl.value.trim();
+        if (!text) return;
+        addMessage(escapeHtml(text), 'user');
+        inputEl.value = '';
+        setTimeout(() => {
+          addMessage(generateAIResponse(text), 'bot');
+        }, 600);
+      }
+
+      document.getElementById('ai-send-btn').addEventListener('click', sendMessage);
+      inputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
+      
+      container.querySelectorAll('[data-ai]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const query = btn.dataset.ai;
+          addMessage(escapeHtml(query), 'user');
+          setTimeout(() => { addMessage(generateAIResponse(query), 'bot'); }, 600);
+        });
+      });
+    }
+
+    // ==================== 25. USERS & ROLES ====================
+    function renderUsers(container) {
+      if (!requirePermission('users')) { renderDashboard(container); return; }
+      container.innerHTML = `
+        <div class="module-header">
+          <h2>Users & Roles</h2>
+          <button class="btn btn-primary-sm" id="add-user-btn">+ Add User</button>
+        </div>
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead>
+            <tbody>
+              ${appState.users.map(u => `
+                <tr>
+                  <td>${escapeHtml(u.id)}</td>
+                  <td>${escapeHtml(u.name)}</td>
+                  <td>${escapeHtml(u.email)}</td>
+                  <td><span class="status-badge info">${escapeHtml(u.role)}</span></td>
+                  <td><span class="status-badge ${u.active ? 'success' : 'danger'}">${u.active ? 'Active' : 'Inactive'}</span></td>
+                  <td>${u.lastLogin ? formatDateTime(u.lastLogin) : 'Never'}</td>
+                  <td><button class="btn btn-outline" style="padding:0.2rem 0.5rem;font-size:0.7rem;" data-toggle-user="${u.id}">${u.active ? 'Deactivate' : 'Activate'}</button></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+      document.getElementById('add-user-btn').addEventListener('click', () => {
+        toast('Demo Feature', 'User creation is available in the full version.', 'info');
+      });
+      container.querySelectorAll('[data-toggle-user]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const u = appState.users.find(x => x.id === btn.dataset.toggleUser);
+          if (u && u.id !== currentUser.id) {
+            u.active = !u.active;
+            writeAuditLog(currentUser.id, currentUser.name, 'USER_UPDATED', 'Users', u.id, `${u.active ? 'Activated' : 'Deactivated'} user ${u.email}`);
+            saveState();
+            renderUsers(container);
+            toast('User Updated', `${u.name} is now ${u.active ? 'active' : 'inactive'}.`, 'info');
+          } else {
+            toast('Action Denied', 'You cannot deactivate your own account.', 'warning');
+          }
+        });
+      });
+    }
+
+    // ==================== 26. AUDIT LOGS ====================
+    function renderAudit(container) {
+      if (!requirePermission('audit')) { renderDashboard(container); return; }
+      container.innerHTML = `
+        <div class="module-header"><h2>Audit Logs</h2></div>
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead><tr><th>Timestamp</th><th>User</th><th>Action</th><th>Module</th><th>Record</th><th>Description</th></tr></thead>
+            <tbody>
+              ${appState.auditLogs.slice(0, 50).map(log => `
+                <tr>
+                  <td>${formatDateTime(log.timestamp)}</td>
+                  <td>${escapeHtml(log.username)}</td>
+                  <td><span class="status-badge info">${escapeHtml(log.action)}</span></td>
+                  <td>${escapeHtml(log.module)}</td>
+                  <td>${escapeHtml(log.recordRef)}</td>
+                  <td>${escapeHtml(log.description)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // ==================== 27. SETTINGS ====================
+    function renderSettings(container) {
+      if (!requirePermission('settings')) { renderDashboard(container); return; }
+      container.innerHTML = `
+        <div class="module-header"><h2>System Settings</h2></div>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h4>Business Configuration</h4>
+            <div class="form-field"><label>Business Name</label><input type="text" id="set-biz-name" value="${escapeHtml(appState.settings.businessName)}"></div>
+            <div class="form-field"><label>Currency</label><input type="text" value="${escapeHtml(appState.settings.currency)}" disabled></div>
+            <div class="form-field"><label>Tax Rate (%)</label><input type="number" id="set-tax-rate" value="${appState.settings.taxRate}"></div>
+            <div class="form-field"><label>Low Stock Threshold</label><input type="number" id="set-low-stock" value="${appState.settings.lowStockThreshold}"></div>
+            <button class="btn btn-primary-sm mt-1" id="save-settings-btn">Save Settings</button>
+          </div>
+          <div class="chart-card">
+            <h4>Security & Data</h4>
+            <div class="form-field"><label><input type="checkbox" id="set-2fa" ${appState.settings.twoFactorEnabled ? 'checked' : ''}> Enable Two-Factor Authentication (Demo)</label></div>
+            <div class="form-field"><label>Session Timeout (minutes)</label><input type="number" id="set-session-timeout" value="${appState.settings.sessionTimeout}"></div>
+            <div class="mt-2" style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <button class="btn btn-outline" id="export-backup-btn">📤 Export Backup</button>
+              <button class="btn btn-outline" id="import-backup-btn">📥 Import Backup</button>
+              <button class="btn btn-danger-sm" id="reset-data-btn">🔄 Reset Demo Data</button>
+            </div>
+            <input type="file" id="import-file-input" accept=".json" class="hidden">
+          </div>
+        </div>
+        <p class="text-secondary text-sm mt-2">⚠️ Security Disclaimer: Authentication in this standalone HTML file is a local demonstration only. Real authentication, password hashing, and enforceable permissions require a backend server.</p>
+      `;
+      document.getElementById('save-settings-btn').addEventListener('click', () => {
+        appState.settings.businessName = document.getElementById('set-biz-name').value;
+        appState.settings.taxRate = parseFloat(document.getElementById('set-tax-rate').value) || 16;
+        appState.settings.lowStockThreshold = parseInt(document.getElementById('set-low-stock').value) || 10;
+        appState.settings.sessionTimeout = parseInt(document.getElementById('set-session-timeout').value) || 30;
+        appState.settings.twoFactorEnabled = document.getElementById('set-2fa').checked;
+        writeAuditLog(currentUser.id, currentUser.name, 'SETTINGS_CHANGED', 'Settings', '-', 'Updated system settings');
+        saveState();
+        toast('Settings Saved', 'Your configuration has been updated.', 'success');
+      });
+      document.getElementById('export-backup-btn').addEventListener('click', exportBackup);
+      document.getElementById('import-backup-btn').addEventListener('click', () => document.getElementById('import-file-input').click());
+      document.getElementById('import-file-input').addEventListener('change', importBackup);
+      document.getElementById('reset-data-btn').addEventListener('click', () => {
+        if (!confirm('⚠️ Reset all demo data? This will erase all changes and restore the original sample data.')) return;
+        localStorage.removeItem(STORAGE_KEY);
+        seedDemoData();
+        toast('Data Reset', 'Demo data has been restored.', 'warning');
+        renderSidebar();
+        renderMobileBottomNav();
+        renderPage('dashboard');
+      });
+    }
+
+    // ==================== 28. HELP ====================
+    function renderHelp(container) {
+      container.innerHTML = `
+        <div class="module-header"><h2>Help & Support</h2></div>
+        <div class="chart-card">
+          <h4>About VIORA ERP</h4>
+          <p class="text-secondary text-sm mt-1">VIORA is a comprehensive Business Operating System demo built as a single HTML file. It demonstrates authentication, role-based access, sales, inventory, accounting, HR, CRM, and more.</p>
+          <p class="text-secondary text-sm mt-1">All data is stored locally in your browser's localStorage. No data is sent to any server.</p>
+        </div>
+        <div class="chart-card mt-2">
+          <h4>Demo Accounts</h4>
+          <div class="data-table-wrapper">
+            <table class="data-table">
+              <thead><tr><th>Role</th><th>Email</th><th>Password</th><th>Access Level</th></tr></thead>
+              <tbody>
+                <tr><td>Admin</td><td>admin@viora.demo</td><td>Admin@123</td><td>Full access</td></tr>
+                <tr><td>Manager</td><td>manager@viora.demo</td><td>Manager@123</td><td>Operations (no settings)</td></tr>
+                <tr><td>Accountant</td><td>accountant@viora.demo</td><td>Account@123</td><td>Finance & reporting</td></tr>
+                <tr><td>Staff</td><td>staff@viora.demo</td><td>Staff@123</td><td>POS & basic CRM</td></tr>
+                <tr><td>Customer</td><td>customer@viora.demo</td><td>Customer@123</td><td>Self-service only (no dashboard)</td></tr>
+                <tr><td>Partner</td><td>partner@viora.demo</td><td>Partner@123</td><td>Projects & reports (no dashboard)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="chart-card mt-2">
+          <h4>Important Disclaimers</h4>
+          <ul class="text-secondary text-sm" style="padding-left:1.2rem; line-height:1.8;">
+            <li>This is a demonstration ERP. Do not use with real business data.</li>
+            <li>Authentication is simulated and not secure for production use.</li>
+            <li>M-Pesa and eTIMS integrations are simulations only.</li>
+            <li>Payroll and tax calculations are illustrative and not compliant with current Kenyan law.</li>
+            <li>All data is stored in your browser and can be inspected by anyone with access to the device.</li>
+            <li>Barcode scanning uses the device camera and requires browser permissions.</li>
+            <li>The AI Assistant is a local scripted demo, not a real AI model.</li>
+          </ul>
+        </div>
+      `;
+    }
+
+    // ==================== 29. EXPORT / IMPORT ====================
+    function exportCSV(headers, rows, filename) {
+      const csv = [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      toast('Export Complete', `${filename} has been downloaded.`, 'success');
+    }
+
+    function exportBackup() {
+      const data = { version: DATA_VERSION, exportedAt: now(), data: appState };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `viora_backup_${formatDate(new Date()).replace(/\//g, '-')}.json`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      toast('Backup Exported', 'Your data has been saved as JSON.', 'success');
+    }
+
+    function importBackup(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const parsed = JSON.parse(ev.target.result);
+          if (!parsed.data || !parsed.version) throw new Error('Invalid backup format');
+          if (!confirm('⚠️ This will replace all current data. Continue?')) return;
+          appState = { ...appState, ...parsed.data };
+          appState.settings = { ...DEFAULT_SETTINGS, ...(appState.settings || {}) };
+          saveState();
+          toast('Backup Restored', 'Your data has been imported successfully.', 'success');
+          renderSidebar();
+          renderMobileBottomNav();
+          renderPage(currentPage);
+        } catch (err) {
+          toast('Import Failed', 'The file is not a valid VIORA backup.', 'danger');
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    }
+
+    // ==================== 30. NOTIFICATIONS ====================
+    function updateNotificationBadge() {
+      const unread = appState.notifications.filter(n => !n.read).length;
+      const badge = document.getElementById('notification-badge');
+      if (badge) { badge.textContent = unread; badge.style.display = unread > 0 ? 'flex' : 'none'; }
+    }
+
+    function renderNotifications() {
+      const unread = appState.notifications.filter(n => !n.read);
+      const container = document.getElementById('modal-container');
+      container.innerHTML = `
+        <div class="modal-overlay">
+          <div class="modal-content" style="max-width:420px;">
+            <div class="modal-header">
+              <h3>🔔 Notifications (${unread.length} unread)</h3>
+              <button class="modal-close" id="close-notif">✕</button>
+            </div>
+            ${appState.notifications.length === 0 ? '<p class="text-secondary text-sm">No notifications.</p>' :
+              appState.notifications.slice(0, 20).map(n => `
+                <div style="padding:0.6rem 0;border-bottom:1px solid rgba(30,58,95,0.3);display:flex;gap:0.5rem;align-items:flex-start;">
+                  <span style="font-size:1.1rem;">${n.type === 'success' ? '✅' : n.type === 'warning' ? '⚠️' : n.type === 'danger' ? '🚨' : 'ℹ️'}</span>
+                  <div style="flex:1;">
+                    <div style="font-weight:${n.read ? '400' : '700'};font-size:0.85rem;">${escapeHtml(n.title)}</div>
+                    <div class="text-secondary text-xs">${escapeHtml(n.msg)}</div>
+                    <div class="text-xs" style="color:var(--text-secondary);opacity:0.6;">${formatDateTime(n.date)}</div>
+                  </div>
+                  ${!n.read ? '<button class="btn btn-outline" style="padding:0.15rem 0.4rem;font-size:0.6rem;" data-mark-read="' + n.id + '">Mark read</button>' : ''}
+                </div>
+              `).join('')
+            }
+          </div>
+        </div>
+      `;
+      document.getElementById('close-notif').addEventListener('click', () => container.innerHTML = '');
+      container.querySelectorAll('[data-mark-read]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const n = appState.notifications.find(x => x.id === btn.dataset.markRead);
+          if (n) { n.read = true; saveState(); updateNotificationBadge(); renderNotifications(); }
+        });
+      });
+    }
+
+    // ==================== 31. INITIALIZATION ====================
+    function init() {
+      if (!loadState()) { seedDemoData(); }
+
+      const loginForm = document.getElementById('login-form');
+      const loginError = document.getElementById('login-error');
+      const loginBtn = document.getElementById('login-btn');
+      const loginBtnText = document.getElementById('login-btn-text');
+
+      document.querySelectorAll('.demo-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.getElementById('login-email').value = btn.dataset.email;
+          document.getElementById('login-password').value = btn.dataset.pass;
+        });
+      });
+
+      document.getElementById('toggle-password').addEventListener('click', function() {
+        const pw = document.getElementById('login-password');
+        pw.type = pw.type === 'password' ? 'text' : 'password';
+        this.textContent = pw.type === 'password' ? '👁' : '🙈';
+      });
+
+      loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+        loginError.textContent = '';
+        if (!email || !password) { loginError.textContent = 'Please fill in all fields.'; return; }
+
+        loginBtn.disabled = true;
+        loginBtnText.innerHTML = '<span class="spinner"></span>';
+
+        setTimeout(() => {
+          const result = authenticateUser(email, password);
+          if (!result.success) {
+            loginError.textContent = result.error;
+            loginBtn.disabled = false;
+            loginBtnText.textContent = 'Sign In';
+            writeAuditLog('SYSTEM', email, 'LOGIN_FAILED', 'Auth', email, 'Failed login attempt');
+            return;
+          }
+
+          if (appState.settings.twoFactorEnabled) {
+            loginBtn.disabled = false;
+            loginBtnText.textContent = 'Sign In';
+            showTwoFactor(result.user);
+          } else {
+            startSession(result.user);
+            showApp();
+          }
+        }, 600);
+      });
+
+      document.getElementById('twofa-cancel').addEventListener('click', () => {
+        document.getElementById('twofa-modal').classList.add('hidden');
+        document.getElementById('twofa-input').value = '';
+      });
+      document.getElementById('twofa-verify').addEventListener('click', () => {
+        const code = document.getElementById('twofa-input').value;
+        if (code === '123456') {
+          document.getElementById('twofa-modal').classList.add('hidden');
+          const user = appState.users.find(u => u.email === document.getElementById('login-email').value.trim());
+          if (user) { startSession(user); showApp(); }
+        } else {
+          toast('Invalid Code', 'The 2FA code is incorrect. Use 123456 for demo.', 'danger');
+        }
+      });
+
+      document.getElementById('scanner-close-btn').addEventListener('click', stopBarcodeScanner);
+
+      // Mobile menu overlay
+      document.getElementById('mobile-menu-overlay').addEventListener('click', () => {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('mobile-menu-overlay').classList.remove('active');
+      });
+
+      if (restoreSession()) { showApp(); }
+    }
+
+    function showTwoFactor(user) {
+      const modal = document.getElementById('twofa-modal');
+      modal.classList.remove('hidden');
+      document.getElementById('twofa-input').value = '';
+      document.getElementById('twofa-input').focus();
+      window._pending2FAUser = user;
+    }
+
+    function showApp() {
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('app-shell').style.display = 'block';
+
+      document.getElementById('user-name').textContent = currentUser.name;
+      document.getElementById('user-role').textContent = currentUser.role;
+      document.getElementById('user-avatar').textContent = currentUser.avatar || currentUser.name.charAt(0);
+
+      renderSidebar();
+      renderMobileBottomNav();
+      
+      // Navigate to first available page for restricted users
+      const isRestricted = currentUser.role === 'Customer' || currentUser.role === 'Partner';
+      if (isRestricted) {
+        const firstPage = NAV_ITEMS.find(n => hasPermission(n.permission));
+        if (firstPage) navigateTo(firstPage.id);
+        else renderPage('dashboard');
+      } else {
+        renderPage('dashboard');
+      }
+      
+      updateNotificationBadge();
+      updateClock();
+
+      if (window._clockInterval) clearInterval(window._clockInterval);
+      window._clockInterval = setInterval(updateClock, 1000);
+
+      if (sessionTimer) clearTimeout(sessionTimer);
+      const timeoutMs = (appState.settings.sessionTimeout || 30) * 60000;
+      sessionTimer = setTimeout(() => {
+        toast('Session Expired', 'You have been logged out due to inactivity.', 'warning');
+        logout();
+      }, timeoutMs);
+
+      document.getElementById('mobile-toggle').addEventListener('click', () => {
+        document.getElementById('sidebar').classList.toggle('open');
+        document.getElementById('mobile-menu-overlay').classList.toggle('active');
+      });
+
+      document.getElementById('notification-btn').addEventListener('click', renderNotifications);
+
+      const profile = document.getElementById('user-profile');
+      const dropdown = document.getElementById('profile-dropdown');
+      profile.addEventListener('click', (e) => { e.stopPropagation(); dropdown.classList.toggle('hidden'); });
+      document.addEventListener('click', () => dropdown.classList.add('hidden'));
+
+      document.querySelectorAll('#profile-dropdown .dropdown-item').forEach(item => {
+        item.addEventListener('click', function() {
+          const action = this.dataset.action;
+          if (action === 'logout') { logout(); }
+          else if (action === 'settings') { navigateTo('settings'); }
+          else if (action === 'profile') { toast('Profile', 'Profile management coming soon.', 'info'); }
+          dropdown.classList.add('hidden');
+        });
+      });
+
+      document.getElementById('global-search-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const q = e.target.value.trim();
+          if (q) toast('Search', `Searching for "${q}" — feature demo only.`, 'info');
+        }
+      });
+    }
+
+    function updateClock() {
+      const el = document.getElementById('header-time');
+      if (el) {
+        const d = new Date();
+        el.textContent = d.toLocaleDateString('en-GB') + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      }
+    }
+
+    function logout() {
+      endSession();
+      document.getElementById('app-shell').style.display = 'none';
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('login-email').value = '';
+      document.getElementById('login-password').value = '';
+      document.getElementById('login-error').textContent = '';
+      if (window._clockInterval) clearInterval(window._clockInterval);
+    }
+
+    // ==================== START ====================
+    document.addEventListener('DOMContentLoaded', init);
+
+  </script>
+</body>
+</html>

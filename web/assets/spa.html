@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#A76B83">
+<title>Salon &amp; Spa — Studio Manager</title>
+<style>
+:root{--primary:#A76B83;--accent:#D8BFA7;--success:#718B78;--warning:#D59A43;--danger:#C65361;--bg:#F8F4F1;--card:#FFFFFF;--border:#E8DDE2;--text:#30262D;--muted:#6E6169;--shadow:0 8px 28px rgba(70,42,57,.08);--radius:18px}
+[data-theme="dark"]{--primary:#CE8EAA;--accent:#BCA187;--success:#91B49A;--warning:#E9B965;--danger:#EB8792;--bg:#191619;--card:#262126;--border:#403640;--text:#F5EDF2;--muted:#C4B6BF;--shadow:0 8px 28px rgba(0,0,0,.28)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer;min-height:44px;border:1px solid var(--border);border-radius:12px;padding:9px 14px;background:var(--card);color:var(--text)}
+button:active{transform:scale(.98)}
+button.primary{background:var(--primary);border-color:var(--primary);color:#fff;font-weight:700}
+button.danger{color:var(--danger)}
+input,select,textarea{width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--border);border-radius:11px;background:var(--card);color:var(--text);font-size:16px}
+label{display:grid;gap:5px;color:var(--muted);font-size:13px}
+h1,h2,h3,p{margin-top:0}h1{font-size:26px;margin-bottom:5px}h2{font-size:20px}h3{font-size:16px}
+.muted{color:var(--muted)}.small{font-size:12px}.hidden{display:none!important}
+.app{display:none;min-height:100vh}
+.sidebar{width:248px;position:fixed;inset:0 auto 0 0;background:var(--card);border-right:1px solid var(--border);padding:20px 14px;z-index:20;overflow:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:6px 8px 22px;font-weight:800;font-size:18px}
+.brandmark{display:grid;place-items:center;background:var(--primary);color:#fff;width:38px;height:38px;border-radius:14px;font-size:20px}
+.nav{display:grid;gap:5px}
+.nav button{text-align:left;border:0;background:transparent;display:flex;align-items:center;gap:12px;width:100%;font-weight:600}
+.nav button.active{background:var(--primary);color:#fff;border-radius:14px}
+.nav .navicon{width:24px;text-align:center;font-size:18px}
+.sidefoot{margin-top:24px;border-top:1px solid var(--border);padding-top:14px}
+.main{margin-left:248px;min-height:100vh}
+.topbar{height:72px;position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:12px;padding:12px 26px;background:var(--bg);border-bottom:1px solid var(--border)}
+.topbar h2{margin:0;flex:1}
+.pill{display:inline-flex;align-items:center;gap:5px;background:color-mix(in srgb,var(--primary) 14%,var(--card));color:var(--primary);border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700}
+.content{padding:26px;max-width:1500px;margin:auto}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);min-width:0;position:relative}
+.stat{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.stat strong{font-size:25px;display:block;margin-top:8px;overflow-wrap:anywhere}
+.stat .ico{font-size:24px;background:color-mix(in srgb,var(--primary) 12%,var(--card));border-radius:13px;padding:10px;flex-shrink:0}
+.hero{background:linear-gradient(125deg,var(--primary),color-mix(in srgb,var(--primary) 55%,var(--accent)));color:#fff;border:0;padding:24px;border-radius:24px;margin-bottom:18px}
+.hero strong{font-size:32px;display:block;margin:8px 0}
+.hero .pill{background:#ffffff2b;color:#fff}
+.sectionhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:24px 0 12px}
+.sectionhead h2{margin:0}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.tile{min-height:118px;text-align:left;display:flex;flex-direction:column;align-items:flex-start;gap:8px;border-radius:18px;padding:16px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow)}
+.tile .ico{font-size:25px}.tile strong{font-size:15px}.tile small{color:var(--muted)}
+.tile.img{background-size:cover;background-position:center;color:#fff;position:relative;overflow:hidden}
+.tile.img::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.1),rgba(0,0,0,.6))}
+.tile.img>*{position:relative;z-index:1}
+.tablewrap{width:100%}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--border);vertical-align:top;overflow-wrap:anywhere}
+th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+td .actions{display:flex;flex-wrap:wrap;gap:6px}
+td button{min-height:34px;padding:5px 9px;font-size:12px}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800;background:color-mix(in srgb,var(--success) 15%,var(--card));color:var(--success)}
+.badge.warn{background:color-mix(in srgb,var(--warning) 16%,var(--card));color:var(--warning)}
+.badge.bad{background:color-mix(in srgb,var(--danger) 13%,var(--card));color:var(--danger)}
+.badge.gold{background:#C9A227;color:#3a2f00}
+.avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid var(--card);vertical-align:middle;margin-right:8px;background:var(--bg)}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.toolbar input{max-width:320px}
+.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.formgrid .wide{grid-column:1/-1}
+.login{min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(ellipse at 20% 15%,color-mix(in srgb,var(--primary) 35%,transparent),transparent 45%),var(--bg)}
+.loginbox{width:min(440px,100%);background:var(--card);border:1px solid var(--border);padding:28px;border-radius:26px;box-shadow:var(--shadow)}
+.loginbox .brand{padding:0 0 20px}
+.loginbox form{display:grid;gap:14px}
+.notice{padding:12px 14px;border-radius:12px;background:color-mix(in srgb,var(--warning) 13%,var(--card));border:1px solid color-mix(in srgb,var(--warning) 40%,var(--border));margin:14px 0}
+.empty{padding:30px;text-align:center;color:var(--muted)}
+.bottomnav{display:none}.menuBtn{display:none}
+.modalroot{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;background:#120d12a6;padding:20px}
+.modalroot.open{display:flex}
+.modal{width:min(650px,100%);max-height:90vh;overflow:auto;background:var(--card);border:1px solid var(--border);border-radius:22px;padding:22px;box-shadow:var(--shadow)}
+.modalhead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.modalfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.toasts{position:fixed;right:18px;bottom:18px;z-index:100;display:grid;gap:8px}
+.toast{padding:12px 16px;background:var(--text);color:var(--card);border-radius:12px;box-shadow:var(--shadow);max-width:340px}
+.alertrow{display:flex;gap:10px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border)}
+.alertdot{width:9px;height:9px;border-radius:50%;background:var(--warning);margin-top:7px;flex-shrink:0}
+.mono{font-family:ui-monospace,SFMono-Regular,monospace}
+.chart3d{display:flex;align-items:flex-end;gap:14px;height:220px;padding:24px 8px 28px}
+.bar3d{flex:1;position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}
+.bar3d .front{width:100%;background:linear-gradient(180deg,var(--primary),color-mix(in srgb,var(--primary) 60%,#000));border-radius:6px 6px 0 0;box-shadow:0 6px 14px rgba(167,107,131,.4)}
+.bar3d .val{font-size:11px;font-weight:800;margin-bottom:4px}
+.bar3d .lbl{position:absolute;bottom:-22px;font-size:11px;color:var(--muted);white-space:nowrap}
+.donut{width:170px;height:170px;border-radius:50%;margin:0 auto;position:relative;box-shadow:inset 0 0 0 12px var(--card),0 8px 20px rgba(0,0,0,.15)}
+.donut::after{content:"";position:absolute;inset:26px;background:var(--card);border-radius:50%}
+.donut .center{position:absolute;inset:0;display:grid;place-items:center;font-weight:800;font-size:15px;z-index:2;text-align:center;padding:30px}
+.legend{display:grid;gap:6px;margin-top:14px;font-size:13px}
+.legend .row{display:flex;align-items:center;gap:8px}
+.legend .sw{width:12px;height:12px;border-radius:3px}
+.spark{width:100%;height:70px;overflow:visible}
+.spark .line{fill:none;stroke:var(--primary);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.spark .area{fill:var(--primary);opacity:.18}
+.room3d{height:260px;perspective:900px;display:grid;place-items:center;margin:10px 0}
+.floor{position:relative;width:260px;height:200px;transform:rotateX(60deg) rotateZ(-20deg);background:repeating-linear-gradient(90deg,color-mix(in srgb,var(--accent) 40%,var(--card)) 0 20px,color-mix(in srgb,var(--accent) 25%,var(--card)) 20px 40px);border-radius:14px;box-shadow:0 30px 40px -20px rgba(0,0,0,.4)}
+.chair{position:absolute;width:52px;height:52px}
+.chair .seat{position:absolute;inset:0;background:linear-gradient(135deg,var(--primary),color-mix(in srgb,var(--primary) 55%,#000));border-radius:14px;transform:translateZ(4px);box-shadow:0 6px 12px rgba(0,0,0,.3),inset 0 2px 3px rgba(255,255,255,.3)}
+.chair.busy .seat{background:linear-gradient(135deg,var(--warning),#8a5a12)}
+.cal{display:grid;grid-template-columns:60px repeat(7,minmax(0,1fr));gap:2px;font-size:12px}
+.cal .hdr{padding:8px;font-weight:700;text-align:center;background:color-mix(in srgb,var(--primary) 8%,var(--card));border-radius:8px}
+.cal .hr{padding:6px;text-align:right;color:var(--muted);font-weight:600}
+.cal .slot{min-height:46px;border:1px dashed var(--border);border-radius:8px;padding:3px;position:relative;background:var(--card);cursor:pointer}
+.cal .appt{position:absolute;left:2px;right:2px;top:2px;bottom:2px;border-radius:6px;padding:3px 6px;font-size:11px;overflow:hidden;color:#fff;background:linear-gradient(135deg,var(--primary),color-mix(in srgb,var(--primary) 55%,#000))}
+.cal .appt.arrived{background:linear-gradient(135deg,var(--warning),#8a5a12)}
+.cal .appt.done{background:linear-gradient(135deg,var(--success),#3f5a48)}
+#errorBanner{display:none;background:#C65361;color:#fff;padding:12px 16px;font:14px/1.4 system-ui;position:sticky;top:0;z-index:9999}
+@media(max-width:1000px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.sidebar{transform:translateX(-105%);transition:transform .2s;width:min(290px,86vw);box-shadow:var(--shadow)}.sidebar.open{transform:translateX(0)}.backdrop{display:none;position:fixed;inset:0;background:#120d126b;z-index:19}.backdrop.open{display:block}.main{margin-left:0;padding-bottom:calc(80px + env(safe-area-inset-bottom))}.topbar{height:62px;padding:8px 12px}.menuBtn{display:inline-block;padding:8px 12px}.topbar h2{font-size:17px}.content{padding:15px 12px}.grid,.grid.two,.grid.three{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.stat strong{font-size:21px}.hero{padding:20px}.hero strong{font-size:28px}.tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.tile{min-height:110px;padding:13px}.bottomnav{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;position:fixed;bottom:0;left:0;right:0;z-index:15;background:var(--card);border-top:1px solid var(--border);padding:8px 8px calc(8px + env(safe-area-inset-bottom))}.bottomnav button{border:0;background:transparent;display:grid;place-items:center;gap:2px;min-height:52px;padding:5px;font-size:11px;color:var(--muted)}.bottomnav button.active{background:color-mix(in srgb,var(--primary) 16%,var(--card));color:var(--primary);border-radius:15px;font-weight:800}.bottomnav .navicon{font-size:19px}.tablewrap{overflow:visible}table,tbody,tr,td{display:block;width:100%}thead{display:none}tbody{display:grid;gap:10px}tr{border:1px solid var(--border);border-radius:14px;padding:8px 12px;background:var(--card);box-shadow:var(--shadow)}td{display:flex;justify-content:space-between;gap:12px;text-align:right;padding:8px 0;border-bottom:1px dashed var(--border);font-size:13px}td:last-child{border-bottom:0}td:before{content:attr(data-label);font-weight:700;color:var(--muted);text-align:left;flex:0 0 38%;max-width:38%}td>*{min-width:0;max-width:62%}td .actions{justify-content:flex-end;max-width:62%}.formgrid{grid-template-columns:1fr}.formgrid .wide{grid-column:auto}.modalroot{align-items:flex-end;padding:0}.modal{width:100%;max-height:92vh;border-radius:22px 22px 0 0;padding:20px 15px calc(20px + env(safe-area-inset-bottom))}.modalfoot{display:grid;grid-template-columns:1fr}.modalfoot button{width:100%}.toasts{left:12px;right:12px;bottom:calc(82px + env(safe-area-inset-bottom))}.toast{max-width:none}.hide-mobile{display:none!important}.cal{font-size:10px;grid-template-columns:40px repeat(7,minmax(0,1fr))}}
+@media print{body{background:#fff!important;color:#000!important}.sidebar,.topbar,.bottomnav,.toolbar,.no-print,button{display:none!important}.main{margin:0}.content{padding:0}.card{box-shadow:none;border:1px solid #ddd}}
+</style>
+</head>
+<body>
+<div id="errorBanner"></div>
+<div id="loginScreen" class="login">
+  <div class="loginbox">
+    <div class="brand"><span class="brandmark">✿</span><span>Salon &amp; Spa<small style="display:block;color:var(--muted);font-size:12px;font-weight:500">Studio management</small></span></div>
+    <h1>Karibu back.</h1><p class="muted">Your beauty business, beautifully organised.</p>
+    <form id="loginForm">
+      <label>Demo account
+        <select id="loginRole">
+          <option value="owner">Owner — Amina</option>
+          <option value="manager">Manager — Wanjiku</option>
+          <option value="receptionist">Receptionist — Njeri</option>
+          <option value="stylist">Stylist — Faith</option>
+          <option value="cashier">Cashier — Brian</option>
+          <option value="storekeeper">Storekeeper — Mercy</option>
+          <option value="developer">Developer — Demo</option>
+        </select>
+      </label>
+      <label>Demo PIN<input id="loginPin" type="password" inputmode="numeric" value="1234" autocomplete="off" required></label>
+      <button class="primary" type="submit">Enter workspace →</button>
+    </form>
+    <div class="notice">Demo authentication only. PIN is <b>1234</b>.</div>
+  </div>
+</div>
+<div id="app" class="app">
+  <aside id="sidebar" class="sidebar">
+    <div class="brand"><span class="brandmark">✿</span><span>Salon &amp; Spa<small style="display:block;color:var(--muted);font-size:11px;font-weight:500">STUDIO MANAGER</small></span></div>
+    <div class="nav" id="sideNav"></div>
+    <div class="sidefoot">
+      <button style="width:100%;text-align:left" data-go="settings">⚙️ Settings</button>
+      <button style="width:100%;text-align:left;margin-top:6px" id="logoutBtn">↪ Log out</button>
+    </div>
+  </aside>
+  <div id="backdrop" class="backdrop"></div>
+  <div class="main">
+    <header class="topbar">
+      <button class="menuBtn" id="menuBtn" aria-label="Open menu">☰</button>
+      <h2 id="pageTitle">Overview</h2>
+      <span id="storageBadge" class="pill">● Local</span>
+      <span class="pill hide-mobile">Local mode</span>
+      <button id="notifBtn" aria-label="Notifications">🔔 <span id="notifCount"></span></button>
+    </header>
+    <main id="view" class="content"></main>
+  </div>
+  <nav id="bottomNav" class="bottomnav"></nav>
+</div>
+<div id="modalRoot" class="modalroot" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <div class="modalhead"><h2 id="modalTitle">Details</h2><button id="modalClose" aria-label="Close">✕</button></div>
+    <div id="modalBody"></div>
+    <div id="modalFoot" class="modalfoot"></div>
+  </div>
+</div>
+<div id="toasts" class="toasts" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- Global safety net ---------- */
+function showError(msg){
+  var b=document.getElementById('errorBanner');
+  if(b){b.style.display='block';b.textContent='App error: '+msg+'. Reload the page.';}
+  console.error('[Salon]',msg);
+}
+window.addEventListener('error',function(e){showError(e.message||'unknown');});
+
+/* ---------- Utilities ---------- */
+var $=function(s){return document.querySelector(s)};
+var $$=function(s){return [].slice.call(document.querySelectorAll(s))};
+function money(cents){return new Intl.NumberFormat('en-KE',{style:'currency',currency:'KES',maximumFractionDigits:2}).format((Number(cents)||0)/100);}
+function moneyShort(cents){return new Intl.NumberFormat('en-KE',{style:'currency',currency:'KES',maximumFractionDigits:0}).format((Number(cents)||0)/100);}
+function today(){return new Date().toLocaleDateString('en-CA',{timeZone:'Africa/Nairobi'});}
+function nowText(){return new Date().toLocaleString('en-KE',{timeZone:'Africa/Nairobi'});}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function uid(p){return p+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,6);}
+function clone(x){return JSON.parse(JSON.stringify(x));}
+function toMin(t){var a=String(t||'00:00').split(':');return (Number(a[0])||0)*60+(Number(a[1])||0);}
+function fromMin(n){var h=Math.floor(n/60),m=n%60;return (h<10?'0':'')+h+':'+(m<10?'0':'')+m;}
+function weekDays(){var d=new Date();var day=(d.getDay()+6)%7;var mon=new Date(d);mon.setDate(d.getDate()-day);var out=[];for(var i=0;i<7;i++){var x=new Date(mon);x.setDate(mon.getDate()+i);out.push(x.toLocaleDateString('en-CA'));}return out;}
+
+/* ---------- Image helper (CDN) ---------- */
+var IMG=(function(){
+  function service(cat,name){
+    var k=((name||'')+' '+(cat||'')).toLowerCase();
+    if(k.indexOf('braid')>=0)return 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&q=70&auto=format&fit=crop';
+    if(k.indexOf('wash')>=0||k.indexOf('blow')>=0)return 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&q=70&auto=format&fit=crop';
+    if(k.indexOf('nail')>=0||k.indexOf('mani')>=0||k.indexOf('gel')>=0)return 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&q=70&auto=format&fit=crop';
+    if(k.indexOf('massage')>=0)return 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400&q=70&auto=format&fit=crop';
+    if(k.indexOf('facial')>=0||k.indexOf('spa')>=0)return 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=400&q=70&auto=format&fit=crop';
+    if(k.indexOf('kid')>=0||k.indexOf('trim')>=0)return 'https://images.unsplash.com/photo-1512690459411-b9245aed614b?w=400&q=70&auto=format&fit=crop';
+    if(cat==='Hair')return 'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=400&q=70&auto=format&fit=crop';
+    if(cat==='Nails')return 'https://images.unsplash.com/photo-1632345031435-8727f6897d53?w=400&q=70&auto=format&fit=crop';
+    return 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400&q=70&auto=format&fit=crop';
+  }
+  function product(cat){
+    if(cat==='Haircare')return 'https://images.unsplash.com/photo-1571875257727-256c39da42af?w=300&q=70&auto=format&fit=crop';
+    if(cat==='Nails')return 'https://images.unsplash.com/photo-1610992235683-e39abc5e4fcf?w=300&q=70&auto=format&fit=crop';
+    if(cat==='Spa')return 'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=300&q=70&auto=format&fit=crop';
+    return 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=300&q=70&auto=format&fit=crop';
+  }
+  function avatar(name){
+    return 'https://api.dicebear.com/7.x/notionists/svg?seed='+encodeURIComponent(name||'x')+'&backgroundColor=a76b83,d8bfa7,718b78';
+  }
+  return {service:service,product:product,avatar:avatar};
+})();
+
+/* ---------- Sample data (IMG is defined above — safe) ---------- */
+function makeSample(){
+  return {
+    schemaVersion:2,
+    services:[
+      {id:'s1',name:'Wash & Blow-dry',category:'Hair',duration:45,price:180000,cost:45000,vat:true,active:true,img:IMG.service('Hair','Wash'),consume:[{productId:'p1',qty:1}]},
+      {id:'s2',name:'Knotless Braids',category:'Braiding',duration:180,price:450000,cost:120000,vat:true,active:true,img:IMG.service('Braiding','Braids'),consume:[{productId:'p2',qty:1}]},
+      {id:'s3',name:'Gel Manicure',category:'Nails',duration:60,price:220000,cost:60000,vat:true,active:true,img:IMG.service('Nails','Gel'),consume:[{productId:'p3',qty:1}]},
+      {id:'s4',name:'Relaxing Facial',category:'Spa',duration:50,price:300000,cost:85000,vat:true,active:true,img:IMG.service('Spa','Facial'),consume:[{productId:'p5',qty:1}]},
+      {id:'s5',name:'Deep Tissue Massage',category:'Spa',duration:60,price:400000,cost:100000,vat:true,active:true,img:IMG.service('Spa','Massage'),consume:[]},
+      {id:'s6',name:'Kids Trim',category:'Hair',duration:30,price:80000,cost:20000,vat:true,active:true,img:IMG.service('Hair','Kids'),consume:[]}
+    ],
+    products:[
+      {id:'p1',name:'Shea Moisture Shampoo',sku:'HAIR-001',barcode:'616110123456',category:'Haircare',qty:4,min:5,cost:65000,price:110000,supplier:'Nairobi Beauty Supplies',img:IMG.product('Haircare'),batches:[]},
+      {id:'p2',name:'Argan Hair Oil 100ml',sku:'HAIR-002',barcode:'616110123457',category:'Haircare',qty:12,min:4,cost:45000,price:85000,supplier:'Beauty World Kenya',img:IMG.product('Haircare'),batches:[]},
+      {id:'p3',name:'Gel Polish Rose',sku:'NAIL-001',barcode:'616110123458',category:'Nails',qty:3,min:5,cost:30000,price:60000,supplier:'Nairobi Beauty Supplies',img:IMG.product('Nails'),batches:[]},
+      {id:'p4',name:'Body Butter 250ml',sku:'SPA-001',barcode:'616110123459',category:'Spa',qty:8,min:3,cost:55000,price:95000,supplier:'Afya Organics',img:IMG.product('Spa'),batches:[]},
+      {id:'p5',name:'Disposable Face Towels',sku:'SPA-002',barcode:'616110123460',category:'Spa',qty:2,min:6,cost:12000,price:25000,supplier:'Beauty World Kenya',img:IMG.product('Spa'),batches:[]}
+    ],
+    clients:[
+      {id:'c1',name:'Akinyi Otieno',phone:'0712345678',points:120,visits:8,notes:'Prefers Faith',tier:'silver',referredBy:''},
+      {id:'c2',name:'Wanjiru Kamau',phone:'0723456789',points:65,visits:4,notes:'Weekends',tier:'basic',referredBy:''},
+      {id:'c3',name:'Mercy Naliaka',phone:'0701234567',points:240,visits:12,notes:'VIP',tier:'gold',referredBy:''},
+      {id:'c4',name:'Zawadi Muthoni',phone:'0112345678',points:30,visits:2,notes:'',tier:'basic',referredBy:'c1'}
+    ],
+    staff:[
+      {id:'st1',name:'Faith Wambui',role:'stylist',skill:'Hair, Braiding',barcode:'STAFF-1001',active:true,commissionPct:10,img:IMG.avatar('Faith Wambui')},
+      {id:'st2',name:'Njeri Mwende',role:'stylist',skill:'Nails, Facial',barcode:'STAFF-1002',active:true,commissionPct:12,img:IMG.avatar('Njeri Mwende')},
+      {id:'st3',name:'Brian Kiptoo',role:'cashier',skill:'Till',barcode:'STAFF-1003',active:true,commissionPct:0,img:IMG.avatar('Brian Kiptoo')},
+      {id:'st4',name:'Mercy Achieng',role:'storekeeper',skill:'Stock',barcode:'STAFF-1004',active:true,commissionPct:0,img:IMG.avatar('Mercy Achieng')}
+    ],
+    bookings:[
+      {id:'b1',clientId:'c1',serviceId:'s2',staffId:'st1',date:today(),time:'09:00',status:'Booked',source:'Phone',deposit:0},
+      {id:'b2',clientId:'c2',serviceId:'s3',staffId:'st2',date:today(),time:'10:30',status:'Arrived',source:'Walk-in',deposit:0},
+      {id:'b3',clientId:'c3',serviceId:'s5',staffId:'st1',date:today(),time:'13:00',status:'Booked',source:'WhatsApp',deposit:100000},
+      {id:'b4',clientId:'c4',serviceId:'s1',staffId:'st2',date:today(),time:'15:00',status:'Booked',source:'Phone',deposit:0}
+    ],
+    packages:[
+      {id:'pk1',name:'Glow Monthly',price:900000,services:['s3','s4'],uses:4,active:true},
+      {id:'pk2',name:'Hair Care Trio',price:500000,services:['s1'],uses:3,active:true}
+    ],
+    clientPackages:[{id:'cp1',clientId:'c1',packageId:'pk1',usesLeft:3,expiresAt:'2026-12-31'}],
+    promos:[{id:'promo1',code:'GLOW10',type:'pct',value:10,expiresAt:'2026-12-31',minSpend:100000,maxUses:100,used:0,active:true}],
+    sales:[],expenses:[],stockMoves:[],attendance:[],audit:[],automationHistory:[],dismissed:{},
+    settings:{vat:16,theme:'light',dataMode:'Local',flags:{}},
+    shift:null
+  };
+}
+
+/* ---------- State ---------- */
+var State={db:null,session:null,cart:[],page:'dashboard',posCategory:'All',promoApplied:0,promoCode:null};
+function loadDB(){
+  try{
+    var raw=localStorage.getItem('salonSpaDB');
+    if(raw){State.db=JSON.parse(raw);return;}
+  }catch(e){}
+  State.db=makeSample();saveDB();
+}
+function saveDB(){
+  try{localStorage.setItem('salonSpaDB',JSON.stringify(State.db));var b=$('#storageBadge');if(b)b.textContent='● Saved locally';}
+  catch(e){var b2=$('#storageBadge');if(b2)b2.textContent='● Session only';}
+}
+
+/* ---------- Audit (simple, sync-safe) ---------- */
+function log(type,message){
+  State.db.audit.unshift({id:uid('log'),time:nowText(),type:type,message:message,by:State.session?State.session.name:'System'});
+  State.db.audit=State.db.audit.slice(0,200);
+  saveDB();
+}
+
+/* ---------- Domain helpers ---------- */
+function serviceById(id){return State.db.services.find(function(s){return s.id===id;});}
+function productById(id){return State.db.products.find(function(p){return p.id===id;});}
+function clientById(id){return State.db.clients.find(function(c){return c.id===id;});}
+function staffById(id){return State.db.staff.find(function(s){return s.id===id;});}
+function clientName(id){var c=clientById(id);return c?c.name:'Unknown';}
+function serviceName(id){var s=serviceById(id);return s?s.name:'Unknown';}
+function staffName(id){var s=staffById(id);return s?s.name:'Unassigned';}
+function productName(id){var p=productById(id);return p?p.name:'Unknown';}
+function serviceDur(id){var s=serviceById(id);return s?s.duration:0;}
+function todayBookings(){return State.db.bookings.filter(function(b){return b.date===today();});}
+function todaySales(){return State.db.sales.filter(function(s){return s.date===today();});}
+function tierFor(points){if(points>=200)return 'gold';if(points>=100)return 'silver';return 'basic';}
+function hasOverlap(staffId,date,startMin,duration,excludeId){
+  return State.db.bookings.some(function(b){
+    if(b.id===excludeId)return false;
+    if(b.staffId!==staffId||b.date!==date)return false;
+    if(b.status!=='Booked'&&b.status!=='Arrived')return false;
+    var bStart=toMin(b.time),bDur=serviceDur(b.serviceId);
+    return startMin<bStart+bDur&&bStart<startMin+duration;
+  });
+}
+
+/* ---------- Rules ---------- */
+function firingRules(){
+  var rules=[];
+  var low=State.db.products.filter(function(p){return p.qty<=p.min;});
+  if(low.length)rules.push({id:'lowstock',name:'Retail stock running low',desc:low.length+' product(s) at/below reorder',records:low.map(function(p){return p.name;}),action:'Review retail stock',page:'inventory',level:'warn'});
+  var noShows=todayBookings().filter(function(b){return b.status==='No-show';});
+  if(noShows.length)rules.push({id:'noshow',name:'Appointment no-show',desc:noShows.length+' client(s) marked no-show today',records:noShows.map(function(b){return clientName(b.clientId);}),action:'Review bookings',page:'bookings',level:'bad'});
+  var credit=State.db.clients.filter(function(c){return (c.credit||0)>0;});
+  if(credit.length)rules.push({id:'credit',name:'Outstanding client balances',desc:credit.length+' client balance(s) need review',records:credit.map(function(c){return c.name;}),action:'Review clients',page:'clients',level:'warn'});
+  if(!State.db.shift||!State.db.shift.open)rules.push({id:'shift',name:'Till shift not open',desc:'Open a shift before taking payments',records:['Current till'],action:'Open till shift',page:'pos',level:'warn'});
+  rules.push({id:'backup',name:'Backup reminder',desc:'Export a JSON backup at the end of the day',records:['Local data'],action:'Open settings',page:'settings',level:'idle'});
+  rules.push({id:'daily',name:'Daily sales summary',desc:todaySales().length+' completed transaction(s) today',records:[money(todaySales().reduce(function(n,s){return n+s.total;},0))],action:'View reports',page:'reports',level:'idle'});
+  return rules.filter(function(r){return !State.db.dismissed[r.id]||State.db.dismissed[r.id]!==today();});
+}
+
+/* ---------- Permissions ---------- */
+var PERMS={
+  owner:{dashboard:1,bookings:1,calendar:1,checkin:1,pos:1,services:1,packages:1,clients:1,inventory:1,staff:1,automations:1,reports:1,settings:1},
+  manager:{dashboard:1,bookings:1,calendar:1,checkin:1,pos:1,services:1,packages:1,clients:1,inventory:1,staff:1,automations:1,reports:1,settings:1},
+  receptionist:{dashboard:1,bookings:1,calendar:1,checkin:1,pos:1,services:1,packages:1,clients:1,inventory:1,staff:1,automations:1,settings:1},
+  stylist:{dashboard:1,bookings:1,calendar:1,checkin:1,services:1,clients:1,settings:1},
+  cashier:{dashboard:1,pos:1,services:1,clients:1,inventory:1,automations:1,settings:1},
+  storekeeper:{dashboard:1,inventory:1,automations:1,settings:1},
+  developer:{dashboard:1,bookings:1,checkin:1,pos:1,services:1,packages:1,clients:1,inventory:1,staff:1,automations:1,reports:1,settings:1,developer:1}
+};
+function can(page){return !!(State.session&&PERMS[State.session.role]&&PERMS[State.session.role][page]);}
+
+/* ---------- NAV ---------- */
+var NAV=[
+  ['dashboard','🏡','Home'],
+  ['bookings','🗓️','Bookings'],
+  ['calendar','📅','Calendar'],
+  ['checkin','👋','Client check-in'],
+  ['pos','🧾','POS / Till'],
+  ['services','💆','Treatments'],
+  ['packages','🎁','Packages'],
+  ['clients','💗','Clients & loyalty'],
+  ['inventory','🧴','Retail stock'],
+  ['staff','👩🏽‍💼','Staff & attendance'],
+  ['automations','⚡','Automations'],
+  ['reports','📊','Reports'],
+  ['settings','⚙️','Settings'],
+  ['developer','🛠️','Developer tools']
+];
+
+/* ---------- UI primitives ---------- */
+function toast(msg){var el=document.createElement('div');el.className='toast';el.textContent=msg;$('#toasts').appendChild(el);setTimeout(function(){el.remove();},3500);}
+function openModal(title,body,foot){
+  $('#modalTitle').textContent=title;
+  $('#modalBody').innerHTML=body||'';
+  $('#modalFoot').innerHTML=foot||'';
+  $('#modalRoot').classList.add('open');
+}
+function closeModal(){$('#modalRoot').classList.remove('open');}
+function statCard(label,value,ico,meta){
+  return '<div class="card stat"><div><div class="muted">'+esc(label)+'</div><strong>'+value+'</strong><div class="small muted">'+esc(meta||'')+'</div></div><span class="ico">'+ico+'</span></div>';
+}
+function table(headers,rows){
+  var h='<div class="tablewrap"><table><thead><tr>'+headers.map(function(x){return '<th>'+esc(x)+'</th>';}).join('')+'</tr></thead><tbody>';
+  if(!rows.length){h+='<tr><td colspan="'+headers.length+'"><div class="empty">Nothing to show yet.</div></td></tr>';}
+  else{h+=rows.map(function(r){return '<tr>'+r.map(function(v){return '<td>'+v+'</td>';}).join('')+'</tr>';}).join('');}
+  return h+'</tbody></table></div>';
+}
+function pageHead(title,desc,actions){
+  return '<div class="sectionhead" style="margin-top:0"><div><h1>'+title+'</h1><div class="muted">'+desc+'</div></div><div class="toolbar no-print">'+(actions||'')+'</div></div>';
+}
+function barChart3D(series){
+  if(!series.length)return '<div class="empty">No data.</div>';
+  var max=1;series.forEach(function(s){if(s.value>max)max=s.value;});
+  return '<div class="chart3d">'+series.map(function(s){
+    var h=Math.max(4,(s.value/max)*170);
+    return '<div class="bar3d"><div class="val">'+esc(s.display||s.value)+'</div><div class="front" style="height:'+h+'px"></div><div class="lbl">'+esc(s.label)+'</div></div>';
+  }).join('')+'</div>';
+}
+function donutChart(items,centerLabel){
+  if(!items.length)return '<div class="empty">No data.</div>';
+  var total=0;items.forEach(function(i){total+=i.value;});
+  if(!total)total=1;
+  var colors=['#A76B83','#D8BFA7','#718B78','#D59A43','#C65361','#8E7CC3'];
+  var angle=0;var stops=[];
+  items.forEach(function(it,i){var start=angle;var end=angle+(it.value/total)*360;stops.push(colors[i%colors.length]+' '+start+'deg '+end+'deg');angle=end;});
+  var legend=items.map(function(it,i){return '<div class="row"><span class="sw" style="background:'+colors[i%colors.length]+'"></span><span style="flex:1">'+esc(it.label)+'</span><b>'+esc(it.display||money(it.value))+'</b></div>';}).join('');
+  return '<div class="donut" style="background:conic-gradient('+stops.join(',')+')"><div class="center">'+esc(centerLabel||'')+'</div></div><div class="legend">'+legend+'</div>';
+}
+function sparkChart(values){
+  if(!values.length)return '';
+  var max=1;values.forEach(function(v){if(v>max)max=v;});
+  var w=300,h=70;
+  var pts=values.map(function(v,i){return [(i/(values.length-1||1))*w,h-(v/max)*(h-10)-5];});
+  var line=pts.map(function(p,i){return (i?'L':'M')+p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ');
+  var area='M0,'+h+' L'+pts.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' L')+' L'+w+','+h+' Z';
+  return '<svg class="spark" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none"><path class="area" d="'+area+'"/><path class="line" d="'+line+'"/></svg>';
+}
+function chairsView(){
+  var stylists=State.db.staff.filter(function(s){return s.role==='stylist'&&s.active;});
+  var busy=todayBookings().filter(function(b){return b.status==='Arrived';}).map(function(b){return b.staffId;});
+  var pos=[{x:20,y:30},{x:110,y:20},{x:180,y:70},{x:60,y:130}];
+  var chairs=stylists.slice(0,4).map(function(s,i){
+    var cls=busy.indexOf(s.id)>=0?'busy':'';
+    return '<div class="chair '+cls+'" style="left:'+pos[i].x+'px;top:'+pos[i].y+'px"><div class="seat"></div></div>';
+  }).join('');
+  return '<div class="room3d"><div class="floor">'+chairs+'</div></div><div class="small muted" style="text-align:center">'+stylists.length+' chairs · '+busy.length+' occupied</div>';
+}
+
+/* ---------- Router ---------- */
+function navigate(page){
+  if(!State.session)return;
+  if(!can(page)){toast('Your role does not have access to that section.');return;}
+  stopScanner();
+  State.page=page;
+  $('#pageTitle').textContent=(NAV.find(function(n){return n[0]===page;})||[])[2]||'Workspace';
+  closeDrawer();
+  renderShell();
+  renderPage();
+  window.scrollTo(0,0);
+}
+function renderShell(){
+  var items=NAV.filter(function(n){return can(n[0]);});
+  $('#sideNav').innerHTML=items.map(function(n){
+    return '<button data-nav="'+n[0]+'" class="'+(State.page===n[0]?'active':'')+'"><span class="navicon">'+n[1]+'</span><span>'+n[2]+'</span></button>';
+  }).join('');
+  $$('#sideNav [data-nav]').forEach(function(b){b.onclick=function(){navigate(b.getAttribute('data-nav'));};});
+  var bottom=['dashboard','pos','calendar','reports'].filter(function(p){return can(p);});
+  $('#bottomNav').innerHTML=bottom.map(function(p){
+    var n=NAV.find(function(x){return x[0]===p;});
+    return '<button data-nav="'+p+'" class="'+(State.page===p?'active':'')+'"><span class="navicon">'+n[1]+'</span><span>'+n[2]+'</span></button>';
+  }).join('');
+  $$('#bottomNav [data-nav]').forEach(function(b){b.onclick=function(){navigate(b.getAttribute('data-nav'));};});
+  $('#notifCount').textContent=firingRules().filter(function(r){return r.level!=='idle';}).length||'';
+}
+function renderPage(){
+  var map={
+    dashboard:pageDashboard,bookings:pageBookings,calendar:pageCalendar,checkin:pageCheckin,
+    pos:pagePOS,services:pageServices,packages:pagePackages,clients:pageClients,
+    inventory:pageInventory,staff:pageStaff,automations:pageAutomations,reports:pageReports,
+    settings:pageSettings,developer:pageDeveloper
+  };
+  var fn=map[State.page];
+  var view=$('#view');
+  view.innerHTML='';
+  if(fn)fn();
+  // stamp data-labels
+  $$('#view table').forEach(function(t){
+    var hs=[];t.querySelectorAll('thead th').forEach(function(x){hs.push(x.textContent.trim());});
+    t.querySelectorAll('tbody tr').forEach(function(tr){[].slice.call(tr.children).forEach(function(td,i){td.setAttribute('data-label',hs[i]||'Details');});});
+  });
+}
+
+/* =====================================================================
+   PAGES
+   ===================================================================== */
+
+/* ---------- Dashboard ---------- */
+function pageDashboard(){
+  var revenue=todaySales().reduce(function(n,s){return n+s.total;},0);
+  var b=todayBookings();
+  var low=State.db.products.filter(function(p){return p.qty<=p.min;}).length;
+  var quick=[
+    ['bookings','🗓️','Bookings',b.length+' today'],
+    ['pos','🧾','New transaction','Services & retail'],
+    ['calendar','📅','Calendar','Week view'],
+    ['services','💆','Treatments',State.db.services.length+' services'],
+    ['clients','💗','Clients & loyalty',State.db.clients.length+' profiles'],
+    ['inventory','🧴','Retail stock',low+' low stock'],
+    ['staff','👩🏽‍💼','Staff & attendance',State.db.staff.length+' team'],
+    ['automations','⚡','Automations',firingRules().filter(function(r){return r.level!=='idle';}).length+' alerts']
+  ].filter(function(x){return can(x[0]);});
+  var days=[];for(var i=6;i>=0;i--){var d=new Date();d.setDate(d.getDate()-i);days.push(d.toLocaleDateString('en-CA'));}
+  var weekSales=days.map(function(d){return State.db.sales.filter(function(s){return s.date===d;}).reduce(function(n,s){return n+s.total;},0);});
+  var topServices=State.db.services.map(function(s){
+    var units=0;State.db.sales.forEach(function(sale){sale.items.forEach(function(it){if(it.type==='service'&&it.id===s.id)units+=it.qty;});});
+    return {label:s.name.split(' ')[0],value:units,display:units+'x'};
+  }).sort(function(a,b){return b.value-a.value;}).slice(0,5);
+  var byMethod={};State.db.sales.forEach(function(s){s.payments.forEach(function(p){byMethod[p.method]=(byMethod[p.method]||0)+p.amount;});});
+  var mix=Object.keys(byMethod).map(function(m){return {label:m,value:byMethod[m]};});
+  var util=function(){
+    var booked=todayBookings().filter(function(x){return x.status==='Booked'||x.status==='Arrived'||x.status==='Completed';}).reduce(function(n,x){return n+serviceDur(x.serviceId);},0);
+    var chairs=Math.max(1,State.db.staff.filter(function(s){return s.role==='stylist'&&s.active;}).length);
+    return Math.min(100,Math.round(booked/(chairs*8*60)*100));
+  }();
+
+  var html='<div class="muted small">'+new Date().toLocaleDateString('en-KE',{weekday:'long',year:'numeric',month:'long',day:'numeric',timeZone:'Africa/Nairobi'})+'</div>';
+  html+='<h1>Habari, '+esc(State.session.name)+' 👋</h1>';
+  html+='<p class="muted">Here\'s how your studio is doing today.</p>';
+  html+='<div class="hero" role="button" tabindex="0"><div class="small" style="text-transform:uppercase;letter-spacing:.1em">Today\'s revenue · demo</div><strong>'+money(revenue)+'</strong><div class="toolbar"><span class="pill">'+todaySales().length+' sales</span></div></div>';
+  html+='<div class="sectionhead"><h2>Quick access</h2></div>';
+  html+='<div class="tiles">'+quick.map(function(q){return '<button class="tile" data-nav="'+q[0]+'"><span class="ico">'+q[1]+'</span><strong>'+q[2]+'</strong><small>'+q[3]+'</small></button>';}).join('')+'</div>';
+  html+='<div class="sectionhead"><h2>At a glance</h2></div>';
+  html+='<div class="grid three">'+statCard('Appointments today',b.length,'🗓️',b.filter(function(x){return x.status==='Arrived';}).length+' arrived')+statCard('Chair utilisation',util+'%','🪑','Booked / capacity')+statCard('Low-stock products',low,'🧴','At reorder')+'</div>';
+  html+='<div class="grid two" style="margin-top:16px"><div class="card"><h2>Weekly revenue</h2>'+sparkChart(weekSales)+'<div class="small muted" style="text-align:center">Last 7 days</div></div><div class="card"><h2>Chair room · 3D</h2>'+chairsView()+'</div></div>';
+  html+='<div class="grid two" style="margin-top:16px"><div class="card"><h2>Top treatments (units)</h2>'+barChart3D(topServices)+'</div><div class="card"><h2>Payment mix</h2>'+(mix.length?donutChart(mix,moneyShort(mix.reduce(function(n,i){return n+i.value;},0))):'<div class="empty">No sales yet.</div>')+'</div></div>';
+  html+='<div class="sectionhead"><h2>Alerts</h2></div><div class="card">';
+  var alerts=firingRules().filter(function(r){return r.level!=='idle';}).slice(0,3);
+  if(alerts.length){html+=alerts.map(function(r){return '<div class="alertrow"><span class="alertdot"></span><div><b>'+esc(r.name)+'</b><div class="muted small">'+esc(r.desc)+'</div></div><span class="badge '+(r.level==='bad'?'bad':'warn')+'">'+(r.level==='bad'?'Review':'Action')+'</span></div>';}).join('');}
+  else{html+='<div class="empty">All clear for now.</div>';}
+  html+='<button style="margin-top:12px" data-nav="automations">Manage alerts →</button></div>';
+  html+='<div class="sectionhead"><h2>Account</h2></div><div class="tiles"><button class="tile" data-nav="settings"><span class="ico">⚙️</span><strong>Settings</strong><small>Theme, backup</small></button><button class="tile" id="logoutTile"><span class="ico">↪</span><strong>Log out</strong><small>End session</small></button></div>';
+  $('#view').innerHTML=html;
+  $$('#view [data-nav]').forEach(function(b){b.onclick=function(){navigate(b.getAttribute('data-nav'));};});
+  var lt=$('#logoutTile');if(lt)lt.onclick=logout;
+}
+
+/* ---------- Bookings ---------- */
+function pageBookings(){
+  var rows=State.db.bookings.slice().sort(function(a,b){return (a.date+a.time).localeCompare(b.date+b.time);}).map(function(b){
+    return [
+      esc(b.date),esc(b.time),esc(clientName(b.clientId)),esc(serviceName(b.serviceId)),esc(staffName(b.staffId)),
+      money(b.deposit||0),
+      '<span class="badge '+(b.status==='No-show'?'bad':b.status==='Arrived'?'warn':'')+'">'+esc(b.status)+'</span>',
+      '<div class="actions"><button data-edit="'+b.id+'">Edit</button><button data-status="'+b.id+':Arrived">Arrived</button><button data-status="'+b.id+':Completed">Done</button><button data-status="'+b.id+':No-show">No-show</button></div>'
+    ];
+  });
+  var html=pageHead('Bookings','Manage appointments, deposits and arrivals.','<button class="primary" id="newBooking">＋ New booking</button><button id="scanAppt">📷 Scan client</button>');
+  html+='<div class="grid three">'+statCard('Today',todayBookings().length,'🗓️','Appointments')+statCard('Arrived',todayBookings().filter(function(b){return b.status==='Arrived';}).length,'👋','Checked in')+statCard('Deposits',moneyShort(State.db.bookings.reduce(function(n,b){return n+(b.deposit||0);},0)),'💳','Held')+'</div>';
+  html+='<div class="card" style="margin-top:16px">'+table(['Date','Time','Client','Treatment','Stylist','Deposit','Status','Actions'],rows)+'</div>';
+  $('#view').innerHTML=html;
+  $('#newBooking').onclick=function(){bookingForm();};
+  $('#scanAppt').onclick=function(){scanOpen('appointment');};
+  $$('#view [data-edit]').forEach(function(b){b.onclick=function(){bookingForm(b.getAttribute('data-edit'));};});
+  $$('#view [data-status]').forEach(function(b){b.onclick=function(){var p=b.getAttribute('data-status').split(':');setBookingStatus(p[0],p[1]);};});
+}
+function bookingForm(existing){
+  var b=existing?State.db.bookings.find(function(x){return x.id===existing;}):{};
+  var clientOpts=State.db.clients.map(function(c){return '<option value="'+c.id+'"'+(b.clientId===c.id?' selected':'')+'>'+esc(c.name)+' · '+esc(c.phone)+'</option>';}).join('');
+  var svcOpts=State.db.services.filter(function(s){return s.active;}).map(function(s){return '<option value="'+s.id+'"'+(b.serviceId===s.id?' selected':'')+'>'+esc(s.name)+' — '+money(s.price)+'</option>';}).join('');
+  var staffOpts=State.db.staff.filter(function(s){return s.active&&s.role==='stylist';}).map(function(s){return '<option value="'+s.id+'"'+(b.staffId===s.id?' selected':'')+'>'+esc(s.name)+'</option>';}).join('');
+  var body='<form id="bookingForm" class="formgrid">'
+    +'<label>Client<select name="clientId" required>'+clientOpts+'</select></label>'
+    +'<label>Treatment<select name="serviceId" required>'+svcOpts+'</select></label>'
+    +'<label>Stylist<select name="staffId">'+staffOpts+'</select></label>'
+    +'<label>Date<input name="date" type="date" required value="'+(b.date||today())+'"></label>'
+    +'<label>Time<input name="time" type="time" required value="'+(b.time||'09:00')+'"></label>'
+    +'<label>Deposit (Ksh)<input name="deposit" type="number" min="0" step="1" value="'+((b.deposit||0)/100)+'"></label>'
+    +'<label>Recurrence<select name="recurrence"><option value="">None</option><option value="weekly">Weekly</option><option value="fortnightly">Fortnightly</option></select></label>'
+    +'<label>Source<select name="source"><option'+(b.source==='Walk-in'?' selected':'')+'>Walk-in</option><option'+(b.source==='Phone'?' selected':'')+'>Phone</option><option'+(b.source==='WhatsApp'?' selected':'')+'>WhatsApp</option></select></label>'
+    +'</form>';
+  openModal(existing?'Edit booking':'New booking',body,'<button id="cancelBooking">Cancel</button><button class="primary" id="saveBooking">Save booking</button>');
+  $('#cancelBooking').onclick=closeModal;
+  $('#saveBooking').onclick=function(){saveBooking(existing);};
+}
+function saveBooking(existing){
+  var f=$('#bookingForm');
+  if(!f.reportValidity())return;
+  var d={};[].slice.call(f.elements).forEach(function(el){if(el.name)d[el.name]=el.value;});
+  var startMin=toMin(d.time),dur=serviceDur(d.serviceId);
+  if(hasOverlap(d.staffId,d.date,startMin,dur,existing)){toast('That stylist already has a booking at this time.');return;}
+  var payload={clientId:d.clientId,serviceId:d.serviceId,staffId:d.staffId,date:d.date,time:d.time,source:d.source,deposit:Math.round((Number(d.deposit)||0)*100),recurrence:d.recurrence||''};
+  if(existing){
+    var b=State.db.bookings.find(function(x){return x.id===existing;});
+    Object.assign(b,payload);
+    log('booking','Updated appointment');
+  }else{
+    var newId=uid('b');
+    State.db.bookings.push(Object.assign({id:newId,status:'Booked'},payload));
+    if(d.recurrence==='weekly'||d.recurrence==='fortnightly'){
+      var weeks=d.recurrence==='fortnightly'?2:1;
+      var base=new Date(d.date);
+      for(var i=1;i<12;i++){
+        var dt=new Date(base);dt.setDate(dt.getDate()+i*7*weeks);
+        State.db.bookings.push(Object.assign({},payload,{id:uid('b'),status:'Booked',date:dt.toLocaleDateString('en-CA'),recurrence:''}));
+      }
+    }
+    log('booking','Created appointment');
+  }
+  saveDB();closeModal();renderPage();toast('Booking saved.');
+}
+function setBookingStatus(bid,status){
+  var b=State.db.bookings.find(function(x){return x.id===bid;});
+  if(!b)return;
+  b.status=status;
+  if(status==='No-show'&&b.deposit>0){State.db.expenses.push({id:uid('ex'),category:'No-show fee',amount:b.deposit,date:today()});b.deposit=0;}
+  log('booking','Appointment marked '+status);
+  saveDB();renderPage();toast('Appointment marked '+status+'.');
+}
+
+/* ---------- Calendar ---------- */
+function pageCalendar(){
+  var days=weekDays();
+  var stylists=State.db.staff.filter(function(s){return s.role==='stylist'&&s.active;});
+  var sel=State.calStaff||(stylists[0]&&stylists[0].id);
+  var html=pageHead('Week calendar','Visual booking grid by staff.','<label style="display:inline-block">Staff<select id="calStaff">'+stylists.map(function(s){return '<option value="'+s.id+'"'+(sel===s.id?' selected':'')+'>'+esc(s.name)+'</option>';}).join('')+'</select></label>');
+  html+='<div class="card"><div class="cal"><div class="hdr">Time</div>';
+  days.forEach(function(d){html+='<div class="hdr">'+new Date(d).toLocaleDateString('en-KE',{weekday:'short',day:'numeric'})+'</div>';});
+  for(var h=8;h<20;h++){
+    html+='<div class="hr">'+(h<10?'0':'')+h+':00</div>';
+    days.forEach(function(d){
+      var appts=State.db.bookings.filter(function(b){return b.date===d&&b.staffId===sel&&toMin(b.time)>=h*60&&toMin(b.time)<(h+1)*60;});
+      html+='<div class="slot" data-slot="'+d+'|'+fromMin(h*60)+'">';
+      appts.forEach(function(b){
+        var cls=b.status==='Arrived'?'arrived':(b.status==='Completed'?'done':'');
+        html+='<div class="appt '+cls+'">'+esc(b.time)+' '+esc(clientName(b.clientId).split(' ')[0])+'</div>';
+      });
+      html+='</div>';
+    });
+  }
+  html+='</div></div>';
+  $('#view').innerHTML=html;
+  $('#calStaff').onchange=function(){State.calStaff=this.value;renderPage();};
+  $$('#view [data-slot]').forEach(function(el){el.onclick=function(){var p=el.getAttribute('data-slot').split('|');calSlot(p[0],p[1],sel);};});
+}
+function calSlot(date,time,staffId){
+  bookingForm();
+  setTimeout(function(){
+    var f=$('#bookingForm');if(!f)return;
+    if(f.elements.date)f.elements.date.value=date;
+    if(f.elements.time)f.elements.time.value=time;
+    if(f.elements.staffId&&staffId)f.elements.staffId.value=staffId;
+  },10);
+}
+
+/* ---------- Check-in ---------- */
+function pageCheckin(){
+  var rows=State.db.clients.map(function(c){
+    return [
+      '<img class="avatar" src="'+IMG.avatar(c.name)+'" alt="">'+esc(c.name),
+      esc(c.phone),
+      '<span class="badge '+(c.tier==='gold'?'gold':c.tier==='silver'?'':'warn')+'">'+esc(c.tier||'basic')+'</span>',
+      (c.points||0)+' pts',
+      '<div class="actions"><button data-checkin="'+c.id+'" class="primary">Check in</button><button data-edit-client="'+c.id+'">Profile</button></div>'
+    ];
+  });
+  var html=pageHead('Client check-in','Welcome clients and record loyalty visits.','<button class="primary" id="scanClient">📷 Scan loyalty card</button><button id="manualLookup">Manual lookup</button>');
+  html+='<div class="notice">Camera needs HTTPS/localhost. Local file? Use manual lookup.</div>';
+  html+='<div class="card"><label>Search client<input id="checkinSearch" placeholder="Name or phone…"></label><div style="margin-top:14px">'+table(['Client','Phone','Tier','Loyalty','Actions'],rows)+'</div></div>';
+  html+='<div class="sectionhead"><h2>Staff attendance</h2><button id="scanStaff">Scan staff badge</button></div>';
+  var srows=State.db.staff.map(function(s){
+    return ['<img class="avatar" src="'+(s.img||IMG.avatar(s.name))+'" alt="">'+esc(s.name),esc(s.role),'<span class="mono">'+esc(s.barcode)+'</span>','<button data-att="'+s.id+'">'+(isClocked(s.id)?'Clock out':'Clock in')+'</button>'];
+  });
+  html+='<div class="card">'+table(['Staff','Role','Badge','Attendance'],srows)+'</div>';
+  $('#view').innerHTML=html;
+  $('#scanClient').onclick=function(){scanOpen('client');};
+  $('#scanStaff').onclick=function(){scanOpen('staff');};
+  $('#manualLookup').onclick=function(){openLookup();};
+  $('#checkinSearch').oninput=function(){var q=this.value.toLowerCase();$$('#view tbody tr').forEach(function(tr){tr.style.display=tr.textContent.toLowerCase().indexOf(q)>=0?'':'none';});};
+  $$('#view [data-checkin]').forEach(function(b){b.onclick=function(){checkinClient(b.getAttribute('data-checkin'));};});
+  $$('#view [data-edit-client]').forEach(function(b){b.onclick=function(){clientForm(b.getAttribute('data-edit-client'));};});
+  $$('#view [data-att]').forEach(function(b){b.onclick=function(){toggleAttendance(b.getAttribute('data-att'));};});
+}
+function isClocked(sid){return State.db.attendance.some(function(a){return a.staffId===sid&&!a.out;});}
+function checkinClient(cid){
+  var c=clientById(cid);if(!c)return;
+  c.visits=(c.visits||0)+1;c.points=(c.points||0)+10;
+  var nt=tierFor(c.points);if(nt!==c.tier){toast(c.name+' upgraded to '+nt+' tier!');c.tier=nt;}
+  var b=State.db.bookings.find(function(x){return x.clientId===cid&&x.date===today()&&x.status==='Booked';});
+  if(b)b.status='Arrived';
+  log('checkin','Checked in '+c.name);
+  saveDB();toast(c.name+' checked in · +10 points');renderPage();
+}
+function toggleAttendance(sid){
+  var s=staffById(sid);if(!s)return;
+  if(isClocked(sid)){
+    var a=State.db.attendance.find(function(x){return x.staffId===sid&&!x.out;});
+    a.out=nowText();log('attendance',s.name+' clocked out');
+  }else{
+    State.db.attendance.push({id:uid('att'),staffId:sid,in:nowText(),out:null});
+    log('attendance',s.name+' clocked in');
+  }
+  saveDB();renderPage();
+}
+
+/* ---------- POS ---------- */
+function pagePOS(){
+  var services=State.db.services.filter(function(s){return s.active;});
+  var cats={};services.forEach(function(s){cats[s.category]=1;});State.db.products.forEach(function(p){cats[p.category]=1;});
+  var catList=Object.keys(cats);
+  var html=pageHead('Salon till','Create a service or retail sale. Demo payments simulated.','<button id="scanPos">📷 Scan item</button><button id="lookupPos">Lookup</button>');
+  if(!State.db.shift||!State.db.shift.open){html+='<div class="notice">Till shift closed. <button class="primary" id="openShiftBtn">Open shift</button></div>';}
+  else{html+='<div class="notice">Shift open · float '+money(State.db.shift.opening)+' <button id="closeShiftBtn">Close shift</button></div>';}
+  html+='<div class="grid two"><div class="card">';
+  html+='<label>Search<input id="posSearch" placeholder="Search…"></label>';
+  html+='<div class="toolbar"><button data-cat="All">All</button>'+catList.map(function(c){return '<button data-cat="'+esc(c)+'">'+esc(c)+'</button>';}).join('')+'</div>';
+  html+='<div id="posItems" class="tiles" style="grid-template-columns:repeat(2,minmax(0,1fr))"></div></div>';
+  html+='<div class="card" id="cartPanel"><div class="sectionhead" style="margin-top:0"><h2>Current sale</h2><button id="holdBtn">Hold</button></div>';
+  html+='<div id="cartItems"></div>';
+  html+='<div class="formgrid" style="margin-top:14px"><label>Discount (Ksh)<input id="discountInput" type="number" min="0" value="0" step="1"></label><label>Promo code<input id="promoInput" placeholder="e.g. GLOW10"></label><label class="wide">Client<select id="saleClient"><option value="">Walk-in</option>'+State.db.clients.map(function(c){return '<option value="'+c.id+'">'+esc(c.name)+'</option>';}).join('')+'</select></label></div>';
+  html+='<div class="sectionhead"><span>Subtotal</span><b id="cartSubtotal">Ksh 0.00</b></div>';
+  html+='<div class="sectionhead"><span>VAT ('+State.db.settings.vat+'%)</span><b id="cartVat">Ksh 0.00</b></div>';
+  html+='<div class="sectionhead"><span>Total</span><h2 id="cartTotal">Ksh 0.00</h2></div>';
+  html+='<button class="primary" style="width:100%" id="checkoutBtn">Take payment →</button>';
+  html+='<div class="toolbar"><button id="clearCartBtn">Clear</button><button id="resumeCartBtn">Resume held</button><button id="redeemPkgBtn">Redeem package</button></div>';
+  html+='<div id="aiSuggest" style="margin-top:12px"></div>';
+  html+='</div></div>';
+  html+='<div class="sectionhead"><h2>Recent transactions</h2></div><div class="card">';
+  var recent=State.db.sales.slice(-8).reverse();
+  if(recent.length){
+    html+=table(['Receipt','Time','Items','Total','Payment','Action'],recent.map(function(s){
+      return [esc(s.ref),esc(s.time),s.items.length,money(s.total),esc(s.payments.map(function(p){return p.method;}).join(' + ')),'<button data-receipt="'+s.id+'">Receipt</button> <button data-refund="'+s.id+'">Refund</button>'];
+    }));
+  }else{html+='<div class="empty">No transactions yet.</div>';}
+  html+='</div>';
+  $('#view').innerHTML=html;
+  $('#scanPos').onclick=function(){scanOpen('pos');};
+  $('#lookupPos').onclick=function(){openLookup();};
+  var osb=$('#openShiftBtn');if(osb)osb.onclick=openShift;
+  var csb=$('#closeShiftBtn');if(csb)csb.onclick=closeShift;
+  $('#holdBtn').onclick=holdCart;
+  $('#checkoutBtn').onclick=checkout;
+  $('#clearCartBtn').onclick=clearCart;
+  $('#resumeCartBtn').onclick=resumeCart;
+  $('#redeemPkgBtn').onclick=redeemPackage;
+  $('#discountInput').oninput=updateCartUI;
+  $('#promoInput').oninput=applyPromo;
+  $('#posSearch').oninput=renderPOSItems;
+  $$('#view [data-cat]').forEach(function(b){b.onclick=function(){State.posCategory=b.getAttribute('data-cat');renderPOSItems();};});
+  $$('#view [data-receipt]').forEach(function(b){b.onclick=function(){printReceipt(b.getAttribute('data-receipt'));};});
+  $$('#view [data-refund]').forEach(function(b){b.onclick=function(){refundSale(b.getAttribute('data-refund'));};});
+  renderPOSItems();updateCartUI();
+}
+function renderPOSItems(){
+  var q=($('#posSearch')&&$('#posSearch').value||'').toLowerCase();
+  var items=[];
+  State.db.services.filter(function(s){return s.active;}).forEach(function(s){items.push({type:'service',id:s.id,name:s.name,category:s.category,price:s.price,duration:s.duration,img:s.img});});
+  State.db.products.forEach(function(p){items.push({type:'product',id:p.id,name:p.name,category:p.category,price:p.price,sku:p.sku,barcode:p.barcode,qty:p.qty,img:p.img});});
+  items=items.filter(function(x){
+    if(State.posCategory!=='All'&&x.category!==State.posCategory)return false;
+    if(q&&[x.name,x.sku,x.barcode,x.category].join(' ').toLowerCase().indexOf(q)<0)return false;
+    return true;
+  });
+  var el=$('#posItems');if(!el)return;
+  if(!items.length){el.innerHTML='<div class="empty">No matching items.</div>';return;}
+  el.innerHTML=items.map(function(x){
+    var img=x.type==='service'?x.img:IMG.product(x.category);
+    var sub=x.type==='product'?(x.qty+' in stock'):(x.duration+' min');
+    return '<button class="tile img" style="background-image:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.55)),url(\''+img+'\')" data-add="'+x.type+':'+x.id+'"><strong>'+esc(x.name)+'</strong><small>'+money(x.price)+' · '+sub+'</small></button>';
+  }).join('');
+  $$('#posItems [data-add]').forEach(function(b){b.onclick=function(){var p=b.getAttribute('data-add').split(':');addCart(p[0],p[1]);};});
+}
+function addCart(type,itemId){
+  var item=type==='service'?serviceById(itemId):productById(itemId);
+  if(!item)return;
+  if(type==='product'&&item.qty<1){toast('Out of stock.');return;}
+  var found=State.cart.find(function(x){return x.type===type&&x.id===itemId;});
+  if(found){
+    if(type==='product'&&found.qty>=item.qty){toast('Not enough stock.');return;}
+    found.qty++;
+  }else{
+    State.cart.push({type:type,id:itemId,name:item.name,price:item.price,qty:1});
+  }
+  updateCartUI();
+}
+function updateCartUI(){
+  var el=$('#cartItems');if(!el)return;
+  if(!State.cart.length){el.innerHTML='<div class="empty">Add a treatment or product to begin.</div>';}
+  else{
+    el.innerHTML=State.cart.map(function(i,n){
+      return '<div class="alertrow"><div style="flex:1"><b>'+esc(i.name)+'</b><div class="muted small">'+money(i.price)+' each</div></div><button data-qty="'+n+':-1">−</button><b style="padding:10px 2px">'+i.qty+'</b><button data-qty="'+n+':1">+</button><button class="danger" data-remove="'+n+'">×</button></div>';
+    }).join('');
+    $$('#cartItems [data-qty]').forEach(function(b){b.onclick=function(){var p=b.getAttribute('data-qty').split(':');changeQty(Number(p[0]),Number(p[1]));};});
+    $$('#cartItems [data-remove]').forEach(function(b){b.onclick=function(){removeCart(Number(b.getAttribute('data-remove')));};});
+  }
+  var gross=State.cart.reduce(function(n,i){return n+i.price*i.qty;},0);
+  var disc=Math.min(gross,Math.max(0,Math.round((Number($('#discountInput')&&$('#discountInput').value||0))*100)));
+  var promo=State.promoApplied||0;
+  var total=Math.max(0,gross-disc-promo);
+  var vat=Math.round(total*State.db.settings.vat/(100+State.db.settings.vat));
+  if($('#cartSubtotal'))$('#cartSubtotal').textContent=money(gross-disc-promo);
+  if($('#cartVat'))$('#cartVat').textContent=money(vat);
+  if($('#cartTotal'))$('#cartTotal').textContent=money(total);
+  var aiEl=$('#aiSuggest');
+  if(aiEl){
+    var sug=aiSuggestions();
+    if(sug.length){
+      aiEl.innerHTML='<div class="small muted" style="margin-bottom:6px">💡 Clients who buy this also add:</div>'+sug.map(function(s){return '<button data-sug="'+s.type+':'+s.id+'" style="margin:2px">+ '+esc(s.name)+'</button>';}).join('');
+      $$('#aiSuggest [data-sug]').forEach(function(b){b.onclick=function(){var p=b.getAttribute('data-sug').split(':');addCart(p[0],p[1]);};});
+    }else{aiEl.innerHTML='';}
+  }
+}
+function aiSuggestions(){
+  var want=State.cart.filter(function(i){return i.type==='service';}).map(function(i){return i.id;});
+  if(!want.length)return [];
+  var counts={};
+  State.db.sales.forEach(function(s){
+    var has=want.some(function(id){return s.items.some(function(it){return it.type==='service'&&it.id===id;});});
+    if(!has)return;
+    s.items.forEach(function(it){
+      if(want.indexOf(it.id)>=0)return;
+      counts[it.type+':'+it.id]=(counts[it.type+':'+it.id]||0)+1;
+    });
+  });
+  return Object.keys(counts).map(function(k){
+    var p=k.split(':');
+    var item=p[0]==='service'?serviceById(p[1]):productById(p[1]);
+    return {type:p[0],id:p[1],name:item?item.name:'?',n:counts[k]};
+  }).sort(function(a,b){return b.n-a.n;}).slice(0,3);
+}
+function changeQty(n,d){
+  if(!State.cart[n])return;
+  State.cart[n].qty+=d;
+  if(State.cart[n].qty<=0)State.cart.splice(n,1);
+  else if(State.cart[n].type==='product'){
+    var p=productById(State.cart[n].id);
+    if(State.cart[n].qty>p.qty){State.cart[n].qty=p.qty;toast('Limited to current stock.');}
+  }
+  updateCartUI();
+}
+function removeCart(n){State.cart.splice(n,1);updateCartUI();}
+function clearCart(){if(State.cart.length&&!confirm('Clear current sale?'))return;State.cart=[];State.promoApplied=0;State.promoCode=null;updateCartUI();}
+function holdCart(){if(!State.cart.length){toast('Nothing to hold.');return;}State.db.heldCart=clone(State.cart);State.cart=[];saveDB();updateCartUI();toast('Sale held.');}
+function resumeCart(){if(!State.db.heldCart||!State.db.heldCart.length){toast('No held sale.');return;}if(State.cart.length&&!confirm('Replace current cart?'))return;State.cart=clone(State.db.heldCart);State.db.heldCart=[];saveDB();updateCartUI();}
+function applyPromo(){
+  var code=($('#promoInput')&&$('#promoInput').value||'').trim().toUpperCase();
+  if(!code){State.promoApplied=0;State.promoCode=null;updateCartUI();return;}
+  var p=State.db.promos.find(function(x){return x.code===code&&x.active&&new Date(x.expiresAt)>new Date()&&x.used<x.maxUses;});
+  if(!p){State.promoApplied=0;State.promoCode=null;updateCartUI();return;}
+  var gross=State.cart.reduce(function(n,i){return n+i.price*i.qty;},0);
+  if(gross<p.minSpend){State.promoApplied=0;State.promoCode=null;updateCartUI();return;}
+  State.promoApplied=p.type==='pct'?Math.round(gross*p.value/100):p.value;
+  State.promoCode=p.code;
+  updateCartUI();
+}
+function openShift(){
+  openModal('Open till shift','<form id="shiftForm"><label>Opening float (Ksh)<input name="opening" type="number" min="0" step="1" value="2000" required></label></form>','<button id="cancelShift">Cancel</button><button class="primary" id="saveShift">Open shift</button>');
+  $('#cancelShift').onclick=closeModal;
+  $('#saveShift').onclick=function(){
+    var v=Math.max(0,Math.round(Number(new FormData($('#shiftForm')).get('opening'))*100));
+    State.db.shift={open:true,opening:v,openedAt:nowText(),openedBy:State.session.name};
+    log('shift','Till shift opened');saveDB();closeModal();renderPage();toast('Shift opened.');
+  };
+}
+function closeShift(){
+  var expected=State.db.shift.opening+todaySales().reduce(function(n,s){return n+s.payments.filter(function(p){return p.method==='Cash';}).reduce(function(a,p){return a+p.amount;},0);},0);
+  openModal('Close till shift','<p>Expected cash: <b>'+money(expected)+'</b></p><form id="closeShiftForm"><label>Counted cash (Ksh)<input name="counted" type="number" min="0" step="1" value="'+(expected/100).toFixed(2)+'" required></label><label>Note<textarea name="note" rows="2"></textarea></label></form>','<button id="cancelCloseShift">Cancel</button><button class="primary" id="saveCloseShift">Reconcile & close</button>');
+  $('#cancelCloseShift').onclick=closeModal;
+  $('#saveCloseShift').onclick=function(){
+    var fd=new FormData($('#closeShiftForm'));
+    var counted=Math.round(Number(fd.get('counted'))*100);
+    State.db.shift=Object.assign({},State.db.shift,{open:false,closedAt:nowText(),counted:counted,expected:expected,variance:counted-expected,note:fd.get('note')});
+    log('shift','Till closed; variance '+money(counted-expected));
+    saveDB();closeModal();renderPage();toast('Shift closed.');
+  };
+}
+function checkout(){
+  if(!State.cart.length){toast('Add at least one item.');return;}
+  var gross=State.cart.reduce(function(n,i){return n+i.price*i.qty;},0);
+  var disc=Math.min(gross,Math.max(0,Math.round((Number($('#discountInput')&&$('#discountInput').value||0))*100)));
+  var promo=State.promoApplied||0;
+  var total=Math.max(0,gross-disc-promo);
+  var body='<form id="payForm" class="formgrid">'
+    +'<label>Method<select name="method" id="payMethod"><option>Cash</option><option>M-Pesa</option></select></label>'
+    +'<label>Amount tendered (Ksh)<input name="tendered" type="number" min="0" step="1" value="'+(total/100).toFixed(2)+'"></label>'
+    +'<label class="wide" id="mpesaWrap" style="display:none">M-Pesa reference<input name="mpesa" placeholder="e.g. QAB12CD34"></label>'
+    +'<p class="wide muted small">Total due: <b>'+money(total)+'</b>. Demo only — no real M-Pesa request.</p>'
+    +'</form>';
+  openModal('Take payment',body,'<button id="cancelPay">Cancel</button><button class="primary" id="completeSaleBtn">Complete sale</button>');
+  $('#payMethod').onchange=function(){var w=$('#mpesaWrap');if(w)w.style.display=this.value==='M-Pesa'?'grid':'none';};
+  $('#cancelPay').onclick=closeModal;
+  $('#completeSaleBtn').onclick=function(){completeSale(gross,disc,promo,total);};
+}
+function completeSale(gross,disc,promo,total){
+  var f=$('#payForm');
+  if(!f.reportValidity())return;
+  var fd=new FormData(f);
+  var method=fd.get('method');
+  var tender=Math.round(Number(fd.get('tendered'))*100);
+  if(method==='Cash'&&tender<total){toast('Cash tendered is less than total.');return;}
+  var payments=[{method:method,amount:total}];
+  if(method==='M-Pesa')payments[0].ref=fd.get('mpesa')||('DEMO-'+Date.now().toString().slice(-6));
+  for(var i=0;i<State.cart.length;i++){
+    var it=State.cart[i];
+    if(it.type==='product'){
+      var p=productById(it.id);
+      if(!p||p.qty<it.qty){toast('Stock changed for '+it.name+'; sale not completed.');return;}
+    }
+  }
+  var items=clone(State.cart);
+  items.forEach(function(i){
+    if(i.type==='product'){
+      var p=productById(i.id);
+      p.qty-=i.qty;
+      State.db.stockMoves.push({id:uid('sm'),productId:p.id,qty:-i.qty,reason:'Sale',time:nowText()});
+    }else{
+      var svc=serviceById(i.id);
+      (svc&&svc.consume||[]).forEach(function(c){
+        var pr=productById(c.productId);
+        if(pr){pr.qty=Math.max(0,pr.qty-c.qty*i.qty);State.db.stockMoves.push({id:uid('sm'),productId:pr.id,qty:-c.qty*i.qty,reason:'Recipe: '+svc.name,time:nowText()});}
+      });
+    }
+  });
+  var clientId=$('#saleClient')&&$('#saleClient').value||'';
+  var vat=Math.round(total*State.db.settings.vat/(100+State.db.settings.vat));
+  var sale={id:uid('sale'),ref:'SS-'+Date.now().toString().slice(-8),date:today(),time:nowText(),items:items,gross:gross,discount:disc+promo,total:total,vat:vat,payments:payments,clientId:clientId,by:State.session.name,refunded:false};
+  State.db.sales.push(sale);
+  if(State.promoCode){
+    var pr=State.db.promos.find(function(x){return x.code===State.promoCode;});
+    if(pr)pr.used++;
+  }
+  if(clientId){
+    var c=clientById(clientId);
+    if(c){c.points=(c.points||0)+Math.floor(total/10000);var nt=tierFor(c.points);if(nt!==c.tier){c.tier=nt;toast(c.name+' upgraded to '+nt+' tier!');}}
+  }
+  log('sale','Completed '+sale.ref+' for '+money(total));
+  saveDB();
+  State.cart=[];State.promoApplied=0;State.promoCode=null;
+  closeModal();renderPage();
+  var change=method==='Cash'?Math.max(0,tender-total):0;
+  toast('Sale completed.'+(change?' Change: '+money(change):''));
+  if(confirm('Sale complete. Print receipt now?'))printReceipt(sale.id);
+}
+function printReceipt(sid){
+  var s=State.db.sales.find(function(x){return x.id===sid;});
+  if(!s)return;
+  var w=window.open('','_blank','width=420,height=700');
+  if(!w){toast('Pop-up blocked. Allow pop-ups to print.');return;}
+  var doc=w.document;
+  doc.write('<!doctype html><html><head><title>Receipt</title><style>body{font:14px system-ui;max-width:360px;margin:20px auto;color:#000}h2,p{text-align:center}table{width:100%;border-collapse:collapse}td{padding:7px 0;border-bottom:1px dashed #aaa}.total{font-weight:bold;font-size:18px}</style></head><body></body></html>');
+  doc.close();
+  var body=doc.body;
+  var h=doc.createElement('h2');h.textContent='Salon & Spa';body.appendChild(h);
+  var p=doc.createElement('p');p.innerHTML='Beauty Studio · Nairobi<br>Phone: 0712 345 678';body.appendChild(p);
+  var hr=doc.createElement('hr');body.appendChild(hr);
+  var info=doc.createElement('p');info.innerHTML='Receipt: '+esc(s.ref)+'<br>'+esc(s.time)+'<br>Served by '+esc(s.by);body.appendChild(info);
+  var tbl=doc.createElement('table');
+  s.items.forEach(function(i){
+    var tr=doc.createElement('tr');
+    var td1=doc.createElement('td');td1.textContent=i.name+' × '+i.qty;
+    var td2=doc.createElement('td');td2.style.textAlign='right';td2.textContent=money(i.price*i.qty);
+    tr.appendChild(td1);tr.appendChild(td2);tbl.appendChild(tr);
+  });
+  body.appendChild(tbl);
+  var totals=doc.createElement('p');
+  totals.innerHTML='Subtotal: '+money(s.gross)+'<br>Discount: '+money(s.discount)+'<br>VAT included: '+money(s.vat);
+  body.appendChild(totals);
+  var total=doc.createElement('p');total.className='total';total.textContent='TOTAL '+money(s.total);body.appendChild(total);
+  var pay=doc.createElement('p');pay.textContent='Payment: '+s.payments.map(function(p){return p.method+(p.ref?' ('+p.ref+')':'');}).join(', ');body.appendChild(pay);
+  var h2=doc.createElement('hr');body.appendChild(h2);
+  var thanks=doc.createElement('p');thanks.textContent='Asante! Karibu tena';body.appendChild(thanks);
+  setTimeout(function(){w.print();},250);
+}
+function refundSale(sid){
+  var s=State.db.sales.find(function(x){return x.id===sid;});
+  if(!s||s.refunded){toast('Already refunded or missing.');return;}
+  if(!confirm('Refund '+s.ref+' for '+money(s.total)+'? Retail items returned to stock.'))return;
+  s.items.forEach(function(i){
+    if(i.type==='product'){
+      var p=productById(i.id);
+      if(p){p.qty+=i.qty;State.db.stockMoves.push({id:uid('sm'),productId:p.id,qty:i.qty,reason:'Refund',time:nowText()});}
+    }
+  });
+  s.refunded=true;s.refundedAt=nowText();
+  log('refund','Refunded '+s.ref);
+  saveDB();renderPage();toast('Refunded; stock restored.');
+}
+function redeemPackage(){
+  var cid=$('#saleClient')&&$('#saleClient').value;
+  if(!cid){toast('Select a client first.');return;}
+  var cps=State.db.clientPackages.filter(function(cp){return cp.clientId===cid&&cp.usesLeft>0&&new Date(cp.expiresAt)>new Date();});
+  if(!cps.length){toast('No active packages for this client.');return;}
+  var opts=cps.map(function(cp){
+    var p=State.db.packages.find(function(x){return x.id===cp.packageId;});
+    return '<option value="'+cp.id+'">'+esc(p&&p.name||'Package')+' · '+cp.usesLeft+' uses</option>';
+  }).join('');
+  openModal('Redeem package','<form id="redeemForm"><label>Package<select name="cpId">'+opts+'</select></label></form>','<button id="cancelRedeem">Cancel</button><button class="primary" id="doRedeem">Redeem</button>');
+  $('#cancelRedeem').onclick=closeModal;
+  $('#doRedeem').onclick=function(){
+    var fd=new FormData($('#redeemForm'));
+    var cp=State.db.clientPackages.find(function(x){return x.id===fd.get('cpId');});
+    if(!cp)return;
+    cp.usesLeft--;
+    log('package','Package redeemed for '+cid);
+    saveDB();closeModal();toast('Package redeemed.');renderPage();
+  };
+}
+
+/* ---------- Services ---------- */
+function pageServices(){
+  var rows=State.db.services.map(function(s){
+    return [
+      '<img class="avatar" src="'+(s.img||IMG.service(s.category,s.name))+'" alt="">'+esc(s.name),
+      esc(s.category),s.duration+' min',money(s.price),money(s.cost),
+      s.active?'<span class="badge">Active</span>':'<span class="badge bad">Inactive</span>',
+      '<div class="actions"><button data-edit-svc="'+s.id+'">Edit</button><button data-toggle-svc="'+s.id+'">'+(s.active?'Disable':'Enable')+'</button></div>'
+    ];
+  });
+  $('#view').innerHTML=pageHead('Treatments & services','Maintain your service menu.','<button class="primary" id="addSvc">＋ Add treatment</button>')+'<div class="card">'+table(['Treatment','Category','Duration','Price','Cost','Status','Actions'],rows)+'</div>';
+  $('#addSvc').onclick=function(){serviceForm();};
+  $$('#view [data-edit-svc]').forEach(function(b){b.onclick=function(){serviceForm(b.getAttribute('data-edit-svc'));};});
+  $$('#view [data-toggle-svc]').forEach(function(b){b.onclick=function(){toggleService(b.getAttribute('data-toggle-svc'));};});
+}
+function serviceForm(sid){
+  var s=sid?serviceById(sid):{};
+  var body='<form id="serviceForm" class="formgrid">'
+    +'<label class="wide">Treatment name<input name="name" required value="'+esc(s.name||'')+'"></label>'
+    +'<label>Category<input name="category" required value="'+esc(s.category||'Hair')+'"></label>'
+    +'<label>Duration (min)<input name="duration" type="number" min="5" value="'+(s.duration||30)+'" required></label>'
+    +'<label>Price (Ksh)<input name="price" type="number" min="0" step="1" value="'+(s.price!=null?s.price/100:'')+'" required></label>'
+    +'<label>Cost (Ksh)<input name="cost" type="number" min="0" step="1" value="'+(s.cost!=null?s.cost/100:0)+'" required></label>'
+    +'</form>';
+  openModal(sid?'Edit treatment':'Add treatment',body,'<button id="cancelSvc">Cancel</button><button class="primary" id="saveSvc">Save</button>');
+  $('#cancelSvc').onclick=closeModal;
+  $('#saveSvc').onclick=function(){
+    var f=$('#serviceForm');if(!f.reportValidity())return;
+    var fd=new FormData(f);
+    var x={name:String(fd.get('name')).trim(),category:String(fd.get('category')).trim(),duration:Number(fd.get('duration')),price:Math.round(Number(fd.get('price'))*100),cost:Math.round(Number(fd.get('cost'))*100),vat:true,active:true,img:IMG.service(fd.get('category'),fd.get('name')),consume:s.consume||[]};
+    if(sid){Object.assign(serviceById(sid),x);log('catalogue','Updated service '+x.name);}
+    else{State.db.services.push(Object.assign({id:uid('s')},x));log('catalogue','Added service '+x.name);}
+    saveDB();closeModal();renderPage();toast('Treatment saved.');
+  };
+}
+function toggleService(sid){var s=serviceById(sid);s.active=!s.active;saveDB();renderPage();}
+
+/* ---------- Packages ---------- */
+function pagePackages(){
+  var rows=State.db.packages.map(function(p){
+    return [esc(p.name),p.services.map(function(id){return esc(serviceName(id));}).join(', '),money(p.price),p.uses,'<button data-edit-pkg="'+p.id+'">Edit</button>'];
+  });
+  var cps=State.db.clientPackages.map(function(cp){
+    var c=clientById(cp.clientId),p=State.db.packages.find(function(x){return x.id===cp.packageId;});
+    return [esc(c?c.name:'?'),esc(p?p.name:'?'),cp.usesLeft,cp.expiresAt];
+  });
+  $('#view').innerHTML=pageHead('Service packages','Bundle treatments and track redemption.','<button class="primary" id="addPkg">＋ New package</button>')
+    +'<div class="card">'+table(['Package','Included','Price','Uses','Actions'],rows)+'</div>'
+    +'<div class="sectionhead"><h2>Client packages</h2></div><div class="card">'+table(['Client','Package','Uses left','Expires'],cps)+'</div>';
+  $('#addPkg').onclick=function(){packageForm();};
+  $$('#view [data-edit-pkg]').forEach(function(b){b.onclick=function(){packageForm(b.getAttribute('data-edit-pkg'));};});
+}
+function packageForm(pid){
+  var p=pid?State.db.packages.find(function(x){return x.id===pid;}):{};
+  var svcOpts=State.db.services.map(function(s){return '<option value="'+s.id+'"'+((p.services||[]).indexOf(s.id)>=0?' selected':'')+'>'+esc(s.name)+'</option>';}).join('');
+  var body='<form id="packageForm" class="formgrid">'
+    +'<label class="wide">Name<input name="name" required value="'+esc(p.name||'')+'"></label>'
+    +'<label>Price (Ksh)<input name="price" type="number" min="0" step="1" value="'+(p.price!=null?p.price/100:'')+'" required></label>'
+    +'<label>Uses<input name="uses" type="number" min="1" value="'+(p.uses||3)+'" required></label>'
+    +'<label class="wide">Services<select name="services" multiple size="5">'+svcOpts+'</select></label>'
+    +'</form>';
+  openModal(pid?'Edit package':'New package',body,'<button id="cancelPkg">Cancel</button><button class="primary" id="savePkg">Save</button>');
+  $('#cancelPkg').onclick=closeModal;
+  $('#savePkg').onclick=function(){
+    var f=$('#packageForm');if(!f.reportValidity())return;
+    var fd=new FormData(f);
+    var sel=[];[].slice.call(f.elements.services.selectedOptions).forEach(function(o){sel.push(o.value);});
+    var x={name:fd.get('name'),price:Math.round(Number(fd.get('price'))*100),uses:Number(fd.get('uses')),services:sel,active:true};
+    if(pid)Object.assign(State.db.packages.find(function(p){return p.id===pid;}),x);
+    else State.db.packages.push(Object.assign({id:uid('pk')},x));
+    saveDB();closeModal();renderPage();toast('Package saved.');
+  };
+}
+
+/* ---------- Clients ---------- */
+function pageClients(){
+  var rows=State.db.clients.map(function(c){
+    return [
+      '<img class="avatar" src="'+IMG.avatar(c.name)+'" alt="">'+esc(c.name),
+      esc(c.phone),c.visits||0,(c.points||0)+' pts',
+      '<span class="badge '+(c.tier==='gold'?'gold':c.tier==='silver'?'':'warn')+'">'+esc(c.tier||'basic')+'</span>',
+      '<div class="actions"><button data-edit-client="'+c.id+'">Edit</button><button data-hist="'+c.id+'">History</button><button data-card="'+c.id+'">Card</button></div>'
+    ];
+  });
+  $('#view').innerHTML=pageHead('Clients & loyalty','Profiles, tiers and history.','<button class="primary" id="addClient">＋ Add client</button><button id="scanClient2">📷 Scan</button>')
+    +'<div class="grid three">'+statCard('Clients',State.db.clients.length,'💗','Saved locally')+statCard('Points',State.db.clients.reduce(function(n,c){return n+(c.points||0);},0),'✨','All clients')+statCard('Gold tier',State.db.clients.filter(function(c){return c.tier==='gold';}).length,'👑','VIPs')+'</div>'
+    +'<div class="card" style="margin-top:16px">'+table(['Client','Phone','Visits','Points','Tier','Actions'],rows)+'</div>';
+  $('#addClient').onclick=function(){clientForm();};
+  $('#scanClient2').onclick=function(){scanOpen('client');};
+  $$('#view [data-edit-client]').forEach(function(b){b.onclick=function(){clientForm(b.getAttribute('data-edit-client'));};});
+  $$('#view [data-hist]').forEach(function(b){b.onclick=function(){showClientHistory(b.getAttribute('data-hist'));};});
+  $$('#view [data-card]').forEach(function(b){b.onclick=function(){clientCard(b.getAttribute('data-card'));};});
+}
+function clientForm(cid){
+  var c=cid?clientById(cid):{};
+  var body='<form id="clientForm" class="formgrid">'
+    +'<label>Name<input name="name" required value="'+esc(c.name||'')+'"></label>'
+    +'<label>Phone<input name="phone" required value="'+esc(c.phone||'')+'" placeholder="0712345678"></label>'
+    +'<label>Points<input name="points" type="number" min="0" value="'+(c.points||0)+'"></label>'
+    +'<label>Balance (Ksh)<input name="credit" type="number" min="0" step="1" value="'+((c.credit||0)/100)+'"></label>'
+    +'<label class="wide">Notes<textarea name="notes" rows="3">'+esc(c.notes||'')+'</textarea></label>'
+    +'</form>';
+  openModal(cid?'Edit client':'Add client',body,'<button id="cancelClient">Cancel</button><button class="primary" id="saveClient">Save</button>');
+  $('#cancelClient').onclick=closeModal;
+  $('#saveClient').onclick=function(){
+    var f=$('#clientForm');if(!f.reportValidity())return;
+    var fd=new FormData(f);
+    var x={name:String(fd.get('name')).trim(),phone:String(fd.get('phone')).trim(),points:Number(fd.get('points'))||0,credit:Math.round((Number(fd.get('credit'))||0)*100),notes:fd.get('notes')||'',tier:tierFor(Number(fd.get('points'))||0)};
+    if(cid)Object.assign(clientById(cid),x);
+    else State.db.clients.push(Object.assign({id:uid('c'),visits:0,referredBy:''},x));
+    log('client',(cid?'Updated':'Added')+' client '+x.name);
+    saveDB();closeModal();renderPage();toast('Client saved.');
+  };
+}
+function showClientHistory(cid){
+  var c=clientById(cid);
+  var bookings=State.db.bookings.filter(function(b){return b.clientId===cid;});
+  var sales=State.db.sales.filter(function(s){return s.clientId===cid;});
+  var body='<p><b>Phone:</b> '+esc(c.phone)+'<br><b>Visits:</b> '+(c.visits||0)+'<br><b>Loyalty:</b> '+(c.points||0)+' pts · '+esc(c.tier)+'<br><b>Notes:</b> '+esc(c.notes||'—')+'</p>';
+  body+='<h3>Bookings</h3>'+table(['Date','Treatment','Status'],bookings.map(function(b){return [esc(b.date),esc(serviceName(b.serviceId)),esc(b.status)];}));
+  body+='<h3 style="margin-top:16px">Sales</h3>'+table(['Receipt','Total','Time'],sales.map(function(s){return [esc(s.ref),money(s.total),esc(s.time)];}));
+  openModal(c.name+' · History',body,'<button id="closeHist">Close</button>');
+  $('#closeHist').onclick=closeModal;
+}
+function clientCard(cid){
+  var c=clientById(cid);
+  var qr='https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent('CLIENT:'+c.id);
+  var body='<div style="text-align:center"><img src="'+IMG.avatar(c.name)+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover" alt=""><h2>'+esc(c.name)+'</h2><p>'+esc(c.phone)+'</p><div class="pill">'+(c.points||0)+' pts · '+esc(c.tier)+'</div><p><img src="'+qr+'" alt="QR"></p><p class="mono small">'+esc('CLIENT-'+c.id.toUpperCase())+'</p></div>';
+  openModal('Client loyalty card',body,'<button id="closeCard">Done</button>');
+  $('#closeCard').onclick=closeModal;
+}
+
+/* ---------- Inventory ---------- */
+function pageInventory(){
+  var rows=State.db.products.map(function(p){
+    return [
+      '<img class="avatar" src="'+(p.img||IMG.product(p.category))+'" alt="">'+esc(p.name),
+      '<span class="mono">'+esc(p.sku)+'</span>',
+      esc(p.category),p.qty,p.min,money(p.price),
+      p.qty<=p.min?'<span class="badge bad">Reorder</span>':'<span class="badge">In stock</span>',
+      '<div class="actions"><button data-edit-prod="'+p.id+'">Edit</button><button data-adjust="'+p.id+'">Adjust</button></div>'
+    ];
+  });
+  $('#view').innerHTML=pageHead('Retail stock','Products, barcodes, movements.','<button class="primary" id="addProd">＋ Add product</button><button id="scanStock">📷 Stock take</button>')
+    +'<div class="grid three">'+statCard('SKUs',State.db.products.length,'🧴','Catalogue')+statCard('Low stock',State.db.products.filter(function(p){return p.qty<=p.min;}).length,'⚠️','At reorder')+statCard('Stock value',money(State.db.products.reduce(function(n,p){return n+p.qty*p.cost;},0)),'📦','At cost')+'</div>'
+    +'<div class="card" style="margin-top:16px">'+table(['Product','SKU','Category','Qty','Min','Price','Status','Actions'],rows)+'</div>'
+    +'<div class="sectionhead"><h2>Recent movements</h2></div><div class="card">'+table(['Time','Product','Δ','Reason'],State.db.stockMoves.slice(-12).reverse().map(function(m){return [esc(m.time),esc(productName(m.productId)),m.qty>0?'+'+m.qty:m.qty,esc(m.reason)];}))+'</div>';
+  $('#addProd').onclick=function(){productForm();};
+  $('#scanStock').onclick=function(){scanOpen('stocktake');};
+  $$('#view [data-edit-prod]').forEach(function(b){b.onclick=function(){productForm(b.getAttribute('data-edit-prod'));};});
+  $$('#view [data-adjust]').forEach(function(b){b.onclick=function(){stockAdjust(b.getAttribute('data-adjust'));};});
+}
+function productForm(pid){
+  var p=pid?productById(pid):{};
+  var body='<form id="productForm" class="formgrid">'
+    +'<label class="wide">Name<input name="name" required value="'+esc(p.name||'')+'"></label>'
+    +'<label>SKU<input name="sku" required value="'+esc(p.sku||'')+'"></label>'
+    +'<label>Barcode<input name="barcode" value="'+esc(p.barcode||'')+'"></label>'
+    +'<label>Category<input name="category" required value="'+esc(p.category||'Haircare')+'"></label>'
+    +'<label>Qty<input name="qty" type="number" min="0" step="1" value="'+(p.qty!=null?p.qty:0)+'" required></label>'
+    +'<label>Min<input name="min" type="number" min="0" step="1" value="'+(p.min!=null?p.min:3)+'" required></label>'
+    +'<label>Cost (Ksh)<input name="cost" type="number" min="0" step="1" value="'+(p.cost!=null?p.cost/100:'')+'" required></label>'
+    +'<label>Price (Ksh)<input name="price" type="number" min="0" step="1" value="'+(p.price!=null?p.price/100:'')+'" required></label>'
+    +'<label class="wide">Supplier<input name="supplier" value="'+esc(p.supplier||'')+'"></label>'
+    +'</form>';
+  openModal(pid?'Edit product':'Add product',body,'<button id="cancelProd">Cancel</button><button class="primary" id="saveProd">Save</button>');
+  $('#cancelProd').onclick=closeModal;
+  $('#saveProd').onclick=function(){
+    var f=$('#productForm');if(!f.reportValidity())return;
+    var fd=new FormData(f);
+    var x={name:String(fd.get('name')).trim(),sku:String(fd.get('sku')).trim(),barcode:String(fd.get('barcode')).trim(),category:String(fd.get('category')).trim(),qty:Number(fd.get('qty')),min:Number(fd.get('min')),cost:Math.round(Number(fd.get('cost'))*100),price:Math.round(Number(fd.get('price'))*100),supplier:String(fd.get('supplier')).trim(),img:IMG.product(fd.get('category'))};
+    if(State.db.products.some(function(p){return p.id!==pid&&p.sku.toLowerCase()===x.sku.toLowerCase();})){toast('SKU already exists.');return;}
+    if(x.barcode&&State.db.products.some(function(p){return p.id!==pid&&p.barcode===x.barcode;})){toast('Barcode already assigned.');return;}
+    if(pid){
+      var p=productById(pid);
+      if(p.qty!==x.qty)State.db.stockMoves.push({id:uid('sm'),productId:pid,qty:x.qty-p.qty,reason:'Catalogue adjustment',time:nowText()});
+      Object.assign(p,x);
+    }else{
+      var nid=uid('p');
+      State.db.products.push(Object.assign({id:nid,batches:[]},x));
+      State.db.stockMoves.push({id:uid('sm'),productId:nid,qty:x.qty,reason:'Opening stock',time:nowText()});
+    }
+    log('inventory',(pid?'Updated':'Added')+' product '+x.name);
+    saveDB();closeModal();renderPage();toast('Product saved.');
+  };
+}
+function stockAdjust(pid){
+  var p=productById(pid);
+  var body='<p>'+esc(p.name)+' · current <b>'+p.qty+'</b></p><form id="stockForm" class="formgrid"><label>Type<select name="type"><option value="add">Receive stock</option><option value="remove">Wastage / loss</option><option value="count">Set counted qty</option></select></label><label>Qty<input name="qty" type="number" min="0" step="1" required value="1"></label><label class="wide">Reason<input name="reason" required value="Stock count"></label></form>';
+  openModal('Stock adjustment',body,'<button id="cancelAdj">Cancel</button><button class="primary" id="saveAdj">Save</button>');
+  $('#cancelAdj').onclick=closeModal;
+  $('#saveAdj').onclick=function(){
+    var fd=new FormData($('#stockForm'));
+    var type=fd.get('type'),q=Number(fd.get('qty')),reason=fd.get('reason');
+    var delta=type==='add'?q:(type==='remove'?-q:q-p.qty);
+    if(p.qty+delta<0){toast('Stock cannot be negative.');return;}
+    p.qty+=delta;
+    State.db.stockMoves.push({id:uid('sm'),productId:pid,qty:delta,reason:reason,time:nowText()});
+    log('inventory',p.name+': '+delta);
+    saveDB();closeModal();renderPage();toast('Stock updated.');
+  };
+}
+
+/* ---------- Staff ---------- */
+function pageStaff(){
+  var rows=State.db.staff.map(function(s){
+    return [
+      '<img class="avatar" src="'+(s.img||IMG.avatar(s.name))+'" alt="">'+esc(s.name),
+      esc(s.role),esc(s.skill),(s.commissionPct||0)+'%',
+      isClocked(s.id)?'<span class="badge">Clocked in</span>':'<span class="badge warn">Off shift</span>',
+      '<button data-att2="'+s.id+'">'+(isClocked(s.id)?'Clock out':'Clock in')+'</button>'
+    ];
+  });
+  $('#view').innerHTML=pageHead('Staff & attendance','Team roles, skills, clock-in/out.','<button class="primary" id="addStaff">＋ Add staff</button><button id="scanStaff2">📷 Scan badge</button>')
+    +'<div class="card">'+table(['Team','Role','Skills','Commission','Status','Action'],rows)+'</div>'
+    +'<div class="sectionhead"><h2>Attendance log</h2></div><div class="card">'+table(['Staff','Clock in','Clock out'],State.db.attendance.slice(-15).reverse().map(function(a){return [esc(staffName(a.staffId)),esc(a.in),esc(a.out||'Still on shift')];}))+'</div>';
+  $('#addStaff').onclick=staffForm;
+  $('#scanStaff2').onclick=function(){scanOpen('staff');};
+  $$('#view [data-att2]').forEach(function(b){b.onclick=function(){toggleAttendance(b.getAttribute('data-att2'));};});
+}
+function staffForm(){
+  var body='<form id="staffForm" class="formgrid">'
+    +'<label>Name<input name="name" required></label>'
+    +'<label>Role<select name="role"><option value="stylist">Stylist</option><option value="receptionist">Receptionist</option><option value="cashier">Cashier</option><option value="storekeeper">Storekeeper</option><option value="manager">Manager</option></select></label>'
+    +'<label>Commission %<input name="commissionPct" type="number" min="0" max="50" value="10"></label>'
+    +'<label>Skills<input name="skill" placeholder="Hair, braiding"></label>'
+    +'<label class="wide">Barcode<input name="barcode" required value="STAFF-'+Math.floor(1000+Math.random()*8999)+'"></label>'
+    +'</form>';
+  openModal('Add staff',body,'<button id="cancelStaff">Cancel</button><button class="primary" id="saveStaff">Save</button>');
+  $('#cancelStaff').onclick=closeModal;
+  $('#saveStaff').onclick=function(){
+    var f=$('#staffForm');if(!f.reportValidity())return;
+    var fd=new FormData(f);
+    if(State.db.staff.some(function(s){return s.barcode===fd.get('barcode');})){toast('Badge exists.');return;}
+    State.db.staff.push({id:uid('st'),name:fd.get('name'),role:fd.get('role'),skill:fd.get('skill'),commissionPct:Number(fd.get('commissionPct'))||0,barcode:fd.get('barcode'),active:true,img:IMG.avatar(fd.get('name'))});
+    saveDB();closeModal();renderPage();toast('Staff added.');
+  };
+}
+
+/* ---------- Automations ---------- */
+function pageAutomations(){
+  var rules=firingRules();
+  var html=pageHead('Automation Centre','Local rules and matched records.','<button id="refreshRules">↻ Refresh</button>')
+    +'<div class="notice">Rules run on-device. Dispatch is simulated.</div>'
+    +'<div class="grid three">'+statCard('Firing',rules.filter(function(r){return r.level!=='idle';}).length,'⚡','Attention')+statCard('Idle',rules.filter(function(r){return r.level==='idle';}).length,'✓','Monitoring')+statCard('History',State.db.automationHistory.length,'🕘','Events')+'</div>'
+    +'<div class="sectionhead"><h2>Rules</h2></div>';
+  rules.forEach(function(r){
+    html+='<div class="card" style="margin-bottom:12px"><div class="sectionhead" style="margin-top:0"><div><h3>'+esc(r.name)+'</h3><div class="muted">'+esc(r.desc)+'</div></div><span class="badge '+(r.level==='bad'?'bad':r.level==='warn'?'warn':'')+'">'+(r.level==='idle'?'Idle':'Firing')+'</span></div><p class="small"><b>Records:</b> '+r.records.map(esc).join(' · ')+'</p><p class="small"><b>Suggested:</b> '+esc(r.action)+'</p><div class="toolbar"><button class="primary" data-open-page="'+r.page+'">Open action →</button><button data-snooze="'+r.id+'">Dismiss today</button></div></div>';
+  });
+  html+='<div class="sectionhead"><h2>Recent history</h2></div><div class="card">'+table(['Time','Rule','Event'],State.db.automationHistory.slice(-10).reverse().map(function(h){return [esc(h.time),esc(h.name),esc(h.event)];}))+'</div>';
+  $('#view').innerHTML=html;
+  $('#refreshRules').onclick=function(){
+    rules.filter(function(r){return r.level!=='idle';}).forEach(function(r){
+      if(!State.db.automationHistory.some(function(h){return h.rule===r.id&&h.date===today();})){
+        State.db.automationHistory.push({id:uid('ah'),rule:r.id,name:r.name,event:'Rule matched',time:nowText(),date:today()});
+      }
+    });
+    saveDB();renderPage();toast('Rules refreshed.');
+  };
+  $$('#view [data-open-page]').forEach(function(b){b.onclick=function(){navigate(b.getAttribute('data-open-page'));};});
+  $$('#view [data-snooze]').forEach(function(b){b.onclick=function(){
+    var rid=b.getAttribute('data-snooze');
+    State.db.dismissed[rid]=today();
+    State.db.automationHistory.push({id:uid('ah'),rule:rid,name:rid,event:'Dismissed',time:nowText(),date:today()});
+    saveDB();renderPage();toast('Dismissed for today.');
+  };});
+}
+
+/* ---------- Reports ---------- */
+function pageReports(){
+  var sales=State.db.sales;
+  var rev=0,vat=0,cogs=0;
+  sales.forEach(function(s){
+    rev+=s.total;vat+=s.vat;
+    s.items.forEach(function(i){
+      var c=i.type==='product'?(productById(i.id)&&productById(i.id).cost||0):(serviceById(i.id)&&serviceById(i.id).cost||0);
+      cogs+=c*i.qty;
+    });
+  });
+  var byMethod={};sales.forEach(function(s){s.payments.forEach(function(p){byMethod[p.method]=(byMethod[p.method]||0)+p.amount;});});
+  var mix=Object.keys(byMethod).map(function(m){return {label:m,value:byMethod[m]};});
+  var days=[];for(var i=13;i>=0;i--){var d=new Date();d.setDate(d.getDate()-i);days.push(d.toLocaleDateString('en-CA'));}
+  var daily=days.map(function(d){return sales.filter(function(s){return s.date===d;}).reduce(function(n,s){return n+s.total;},0);});
+  var staffRev=State.db.staff.filter(function(s){return s.role==='stylist';}).map(function(s){
+    var r=State.db.bookings.filter(function(b){return b.staffId===s.id&&b.status==='Completed';}).reduce(function(n,b){var sv=serviceById(b.serviceId);return n+(sv?sv.price:0);},0);
+    return {label:s.name.split(' ')[0],value:Math.round(r/100),display:moneyShort(r)};
+  }).filter(function(x){return x.value>0;});
+  var svcPop=State.db.services.map(function(s){
+    var units=0,gross=0;
+    sales.forEach(function(sale){sale.items.forEach(function(it){if(it.type==='service'&&it.id===s.id){units+=it.qty;gross+=it.price*it.qty;}});});
+    return [esc(s.name),units,money(gross)];
+  });
+  $('#view').innerHTML=pageHead('Reports','Business reports from local records.','<button id="printReport">Print</button>')
+    +'<div class="notice">SAMPLE / LOCAL DATA — demo records only. Not a tax filing system.</div>'
+    +'<div class="grid">'+statCard('Recorded sales',money(rev),'💳',sales.length+' transactions')+statCard('VAT included',money(vat),'🧾',State.db.settings.vat+'%')+statCard('Est. COGS',money(cogs),'📦','At recorded costs')+statCard('Gross estimate',money(rev-cogs),'📈','Before overheads')+'</div>'
+    +'<div class="grid two" style="margin-top:16px"><div class="card"><h2>Revenue trend</h2>'+sparkChart(daily)+'<div class="small muted" style="text-align:center">Last 14 days</div></div><div class="card"><h2>Payment mix</h2>'+(mix.length?donutChart(mix,moneyShort(mix.reduce(function(n,i){return n+i.value;},0))):'<div class="empty">No sales.</div>')+'</div></div>'
+    +'<div class="card" style="margin-top:16px"><h2>Staff revenue</h2>'+(staffRev.length?barChart3D(staffRev):'<div class="empty">No completed appointments.</div>')+'</div>'
+    +'<div class="sectionhead"><h2>Sales ledger</h2></div><div class="card">'+table(['Receipt','Date','Total','Payment','Status'],sales.slice().reverse().map(function(s){return [esc(s.ref),esc(s.date),money(s.total),esc(s.payments.map(function(p){return p.method;}).join(' + ')),s.refunded?'<span class="badge bad">Refunded</span>':'<span class="badge">Completed</span>'];}))
+    +'</div><div class="sectionhead"><h2>Service popularity</h2></div><div class="card">'+table(['Treatment','Units','Gross'],svcPop)+'</div>';
+  $('#printReport').onclick=function(){window.print();};
+}
+
+/* ---------- Settings ---------- */
+function pageSettings(){
+  var s=State.db.settings;
+  $('#view').innerHTML=pageHead('Settings','Personalise this device and manage local data.')
+    +'<div class="grid two"><div class="card"><h2>Appearance</h2><button class="primary" id="themeBtn">Switch to '+(s.theme==='dark'?'light':'dark')+'</button><hr style="border:0;border-top:1px solid var(--border);margin:14px 0"><label>VAT rate (%)<input id="vatRate" type="number" min="0" max="100" value="'+s.vat+'"></label><button style="margin-top:10px" id="saveVat">Save VAT</button></div>'
+    +'<div class="card"><h2>Data & backup</h2><div class="toolbar"><button class="primary" id="backupBtn">⬇ Download JSON</button><button id="restoreBtn">⬆ Restore</button><input id="restoreFile" class="hidden" type="file" accept="application/json"></div><button class="danger" id="resetBtn">Reset demo data</button></div></div>'
+    +'<div class="sectionhead"><h2>Session</h2></div><div class="card"><p>Signed in as <b>'+esc(State.session.name)+'</b> · '+esc(State.session.role)+'</p><button id="logoutBtn2">Log out</button></div>';
+  $('#themeBtn').onclick=function(){State.db.settings.theme=s.theme==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',State.db.settings.theme);saveDB();renderPage();};
+  $('#saveVat').onclick=function(){var v=Number($('#vatRate').value);if(!isFinite(v)||v<0||v>100){toast('VAT 0–100.');return;}State.db.settings.vat=v;saveDB();renderPage();toast('VAT saved.');};
+  $('#backupBtn').onclick=function(){
+    var blob=new Blob([JSON.stringify({app:'Salon & Spa',version:2,exportedAt:nowText(),data:State.db},null,2)],{type:'application/json'});
+    downloadBlob(blob,'salon-spa-backup-'+today()+'.json');
+    toast('Backup downloaded.');
+  };
+  $('#restoreBtn').onclick=function(){$('#restoreFile').click();};
+  $('#restoreFile').onchange=function(e){
+    var file=e.target.files&&e.target.files[0];if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(){
+      try{
+        var obj=JSON.parse(reader.result);
+        var incoming=obj.data||obj;
+        if(!incoming.services||!incoming.products||!incoming.clients||!incoming.bookings||!incoming.sales)throw new Error('Missing collections');
+        if(!confirm('Replace current data with backup?'))return;
+        State.db=incoming;saveDB();renderPage();toast('Backup restored.');
+      }catch(err){toast('Restore failed: invalid backup.');}
+      finally{e.target.value='';}
+    };
+    reader.readAsText(file);
+  };
+  $('#resetBtn').onclick=function(){if(!confirm('Reset demo data?'))return;State.db=makeSample();saveDB();State.cart=[];renderPage();toast('Reset.');};
+  $('#logoutBtn2').onclick=logout;
+}
+function downloadBlob(blob,name){
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;a.download=name;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(url);},1000);
+}
+
+/* ---------- Developer ---------- */
+function pageDeveloper(){
+  if(!State.session||State.session.role!=='developer'){navigate('dashboard');return;}
+  $('#view').innerHTML=pageHead('Developer tools','Diagnostics and integration stubs.')
+    +'<div class="notice">Sample build — no network calls wired.</div>'
+    +'<div class="grid two"><div class="card"><h2>Adapter</h2><p>kind: <b>local</b><br>configured: <b>false</b><br>queue: <b>0</b></p><button id="testAdapter">Test</button></div>'
+    +'<div class="card"><h2>Event console</h2>'+table(['Time','Type','User','Event'],State.db.audit.slice(0,20).map(function(a){return [esc(a.time),esc(a.type),esc(a.by),esc(a.message)];}))+'</div></div>';
+  $('#testAdapter').onclick=function(){log('sync','Adapter test attempted; not configured');toast("Adapter stub throws 'not configured'.");};
+}
+
+/* ---------- Shared lookup / scanner ---------- */
+function openLookup(){
+  openModal('Quick lookup','<form id="lookupForm"><label>Barcode, SKU, phone or name<input name="query" id="lookupQuery" placeholder="Type or scan…" autocomplete="off"></label></form><div id="lookupResults" style="margin-top:12px"></div>','<button id="closeLookup">Close</button><button class="primary" id="runLookup">Find</button>');
+  $('#closeLookup').onclick=closeModal;
+  $('#runLookup').onclick=doLookup;
+  $('#lookupQuery').oninput=doLookup;
+}
+function doLookup(){
+  var q=($('#lookupQuery')&&$('#lookupQuery').value||'').trim().toLowerCase();
+  var el=$('#lookupResults');if(!el)return;
+  if(!q){el.innerHTML='<p class="muted">Enter a code or term.</p>';return;}
+  var hits=[];
+  State.db.products.forEach(function(p){
+    if([p.name,p.sku,p.barcode].join(' ').toLowerCase().indexOf(q)>=0){
+      hits.push('<div class="alertrow"><div style="flex:1"><b>🧴 '+esc(p.name)+'</b><div class="small muted">SKU '+esc(p.sku)+' · Stock '+p.qty+' · '+money(p.price)+'</div></div><button data-lookup-add="'+p.id+'">Add to sale</button></div>');
+    }
+  });
+  State.db.clients.forEach(function(c){
+    if([c.name,c.phone,('CLIENT-'+c.id).toLowerCase()].join(' ').toLowerCase().indexOf(q)>=0){
+      hits.push('<div class="alertrow"><div style="flex:1"><b>💗 '+esc(c.name)+'</b><div class="small muted">'+esc(c.phone)+' · '+(c.points||0)+' pts</div></div><button data-lookup-checkin="'+c.id+'">Check in</button></div>');
+    }
+  });
+  el.innerHTML=hits.length?hits.join(''):'<p class="muted">No matches.</p>';
+  $$('#lookupResults [data-lookup-add]').forEach(function(b){b.onclick=function(){closeModal();addCart('product',b.getAttribute('data-lookup-add'));navigate('pos');};});
+  $$('#lookupResults [data-lookup-checkin]').forEach(function(b){b.onclick=function(){closeModal();checkinClient(b.getAttribute('data-lookup-checkin'));};});
+}
+function scanOpen(mode){
+  var labels={pos:'Scan into sale',client:'Scan client card',staff:'Scan staff badge',stocktake:'Stock-take scan',appointment:'Arrival scan',lookup:'Lookup'};
+  var body='<div class="notice">Camera needs HTTPS/localhost. Local file? Use manual entry.</div>'
+    +'<form id="scanForm"><label>Code<input name="code" id="scanCode" autocomplete="off" placeholder="Scan or type…" autofocus required></label></form>'
+    +'<div class="small muted" id="scanStatus" style="margin-top:8px">Ready for manual or keyboard-wedge scanning.</div>';
+  openModal(labels[mode]||'Scanner',body,'<button id="cancelScan">Cancel</button><button class="primary" id="processScan">Process</button>');
+  $('#cancelScan').onclick=function(){stopScanner();closeModal();};
+  $('#processScan').onclick=function(){processScan(mode);};
+  $('#scanCode').onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();processScan(mode);}};
+}
+function processScan(mode){
+  var code=($('#scanCode')&&$('#scanCode').value||'').trim();
+  if(!code){toast('Enter a code.');return;}
+  var p=null,c=null,s=null;
+  State.db.products.forEach(function(x){if(x.barcode===code||(x.sku&&x.sku.toLowerCase()===code.toLowerCase()))p=x;});
+  State.db.clients.forEach(function(x){if(('CLIENT-'+x.id).toLowerCase()===code.toLowerCase()||x.phone===code)c=x;});
+  State.db.staff.forEach(function(x){if(x.barcode&&x.barcode.toLowerCase()===code.toLowerCase())s=x;});
+  stopScanner();closeModal();
+  if(mode==='pos'){
+    if(p){addCart('product',p.id);navigate('pos');toast(p.name+' added.');}
+    else{toast('No product matched.');}
+    return;
+  }
+  if(mode==='client'||mode==='appointment'){
+    if(c){checkinClient(c.id);navigate('checkin');}
+    else{toast('No client matched.');}
+    return;
+  }
+  if(mode==='staff'){
+    if(s){toggleAttendance(s.id);navigate('staff');}
+    else{toast('No staff matched.');}
+    return;
+  }
+  if(mode==='stocktake'){
+    if(p){openStockTake(p.id);}
+    else{toast('No product matched.');}
+    return;
+  }
+  doLookup();
+}
+function openStockTake(pid){
+  var p=productById(pid);
+  openModal('Stock-take','<p>'+esc(p.name)+' · current <b>'+p.qty+'</b></p><form id="stockTakeForm"><label>Counted qty<input name="qty" type="number" min="0" step="1" value="'+p.qty+'" required></label></form>','<button id="cancelTake">Cancel</button><button class="primary" id="saveTake">Save</button>');
+  $('#cancelTake').onclick=closeModal;
+  $('#saveTake').onclick=function(){
+    var q=Number(new FormData($('#stockTakeForm')).get('qty'));
+    if(!isFinite(q)||q<0){toast('Invalid qty.');return;}
+    var delta=q-p.qty;p.qty=q;
+    State.db.stockMoves.push({id:uid('sm'),productId:pid,qty:delta,reason:'Stock take',time:nowText()});
+    log('stocktake',p.name+' counted at '+q);
+    saveDB();closeModal();renderPage();toast('Stock count saved.');
+  };
+}
+function stopScanner(){
+  if(scanInterval){clearInterval(scanInterval);scanInterval=null;}
+  if(scanStream){scanStream.getTracks().forEach(function(t){t.stop();});scanStream=null;}
+}
+var scanStream=null,scanInterval=null;
+
+/* ---------- Drawer / modal / keyboard ---------- */
+function openDrawer(){var s=$('#sidebar');if(s)s.classList.add('open');var b=$('#backdrop');if(b)b.classList.add('open');}
+function closeDrawer(){var s=$('#sidebar');if(s)s.classList.remove('open');var b=$('#backdrop');if(b)b.classList.remove('open');}
+
+/* ---------- Auth ---------- */
+function login(role,pin,cb){
+  if(pin!=='1234'){cb('Incorrect PIN. Try 1234.');return;}
+  var names={owner:'Amina',manager:'Wanjiku',receptionist:'Njeri',stylist:'Faith',cashier:'Brian',storekeeper:'Mercy',developer:'Developer'};
+  State.session={role:role,name:names[role]||role,at:Date.now()};
+  try{sessionStorage.setItem('salonSession',JSON.stringify(State.session));}catch(e){}
+  log('auth','Signed in as '+role);
+  cb(null);
+}
+function logout(){
+  stopScanner();
+  State.session=null;State.cart=[];
+  try{sessionStorage.removeItem('salonSession');}catch(e){}
+  $('#app').style.display='none';
+  $('#loginScreen').style.display='grid';
+  toast('Logged out.');
+}
+
+/* ---------- Notifications ---------- */
+function showNotifications(){
+  var rules=firingRules();
+  var body=rules.length?rules.map(function(r){
+    return '<div class="alertrow"><span class="alertdot"></span><div><b>'+esc(r.name)+'</b><div class="muted small">'+esc(r.desc)+'</div><button style="margin-top:8px" data-notif-page="'+r.page+'">Open</button></div></div>';
+  }).join(''):'<p class="empty">No alerts.</p>';
+  openModal('Notifications',body,'<button id="closeNotif">Close</button>');
+  $('#closeNotif').onclick=closeModal;
+  $$('#modalBody [data-notif-page]').forEach(function(b){b.onclick=function(){closeModal();navigate(b.getAttribute('data-notif-page'));};});
+}
+
+/* ---------- Wire global buttons once ---------- */
+function wireShell(){
+  var menuBtn=$('#menuBtn');if(menuBtn)menuBtn.onclick=function(){var s=$('#sidebar');if(s.classList.contains('open'))closeDrawer();else openDrawer();};
+  var bd=$('#backdrop');if(bd)bd.onclick=closeDrawer;
+  var lb=$('#logoutBtn');if(lb)lb.onclick=logout;
+  var mc=$('#modalClose');if(mc)mc.onclick=closeModal;
+  var mr=$('#modalRoot');if(mr)mr.onclick=function(e){if(e.target===mr)closeModal();};
+  var nb=$('#notifBtn');if(nb)nb.onclick=showNotifications;
+  // sidefoot settings buttons use data-go
+  $$('.sidefoot [data-go]').forEach(function(b){b.onclick=function(){navigate(b.getAttribute('data-go'));};});
+  // modal escape & focus trap
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){closeModal();closeDrawer();stopScanner();}
+    if(e.key==='Tab'&&mr&&mr.classList.contains('open')){
+      var els=[].slice.call(mr.querySelectorAll('button,input,select,textarea')).filter(function(x){return !x.disabled;});
+      if(!els.length)return;
+      var first=els[0],last=els[els.length-1];
+      if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+      else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+    }
+    // shortcuts
+    if(State.session&&e.altKey){
+      var map={n:'bookings',t:'pos',c:'calendar',i:'inventory',r:'reports',d:'dashboard'};
+      if(map[e.key]){e.preventDefault();navigate(map[e.key]);}
+    }
+    if(e.key==='F2'&&State.page==='pos'){e.preventDefault();openLookup();}
+  });
+}
+
+/* ---------- Boot ---------- */
+function boot(){
+  try{
+    loadDB();
+    document.documentElement.setAttribute('data-theme',(State.db.settings&&State.db.settings.theme)||'light');
+    wireShell();
+    // Restore session?
+    try{
+      var s=sessionStorage.getItem('salonSession');
+      if(s){
+        State.session=JSON.parse(s);
+        $('#loginScreen').style.display='none';
+        $('#app').style.display='block';
+        renderShell();renderPage();
+      }
+    }catch(e){}
+    // Login form
+    var lf=$('#loginForm');
+    if(lf)lf.addEventListener('submit',function(e){
+      e.preventDefault();
+      var role=$('#loginRole').value;
+      var pin=$('#loginPin').value;
+      login(role,pin,function(err){
+        if(err){toast(err);return;}
+        $('#loginScreen').style.display='none';
+        $('#app').style.display='block';
+        navigate('dashboard');
+      });
+    });
+  }catch(err){
+    showError(err.message||String(err));
+  }
+}
+
+// Kick off
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',boot);
+}else{
+  boot();
+}
+
+})();
+</script>
+</body>
+</html>

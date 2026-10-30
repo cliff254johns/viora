@@ -1,0 +1,1785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f172a" />
+    <title>Legal Document Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* ===== RESET & VARIABLES ===== */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #eff6ff;
+            --bg: #f6f8fc;
+            --bg-dark: #0f172a;
+            --card-bg: #ffffff;
+            --card-bg-dark: #1e293b;
+            --text: #0f172a;
+            --text-dark: #f1f5f9;
+            --border: #e2e8f0;
+            --border-dark: #334155;
+            --shadow: 0 4px 24px rgba(0,0,0,0.06);
+            --shadow-dark: 0 4px 24px rgba(0,0,0,0.3);
+            --radius: 1.25rem;
+            --radius-sm: 0.75rem;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        .dark-mode {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f1f5f9;
+            --border: #334155;
+            --shadow: 0 4px 24px rgba(0,0,0,0.3);
+        }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            transition: background 0.3s, color 0.3s;
+            overflow-x: hidden;
+            touch-action: manipulation;
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
+        h1, h2, h3, .brand { font-family: 'Space Grotesk', system-ui, sans-serif; }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 8px; }
+
+        /* ===== 3D CANVAS ===== */
+        #bg-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        /* ===== GLASS ===== */
+        .glass {
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .dark-mode .glass { background: rgba(15,23,42,0.6); border-color: rgba(255,255,255,0.06); }
+
+        /* ===== CARDS ===== */
+        .doc-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            transform-style: preserve-3d;
+            will-change: transform;
+        }
+        .doc-card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px -8px rgba(0,0,0,0.1); }
+        .dark-mode .doc-card:hover { box-shadow: 0 12px 40px -8px rgba(0,0,0,0.4); }
+        .doc-card:active { transform: perspective(600px) rotateX(1deg) rotateY(1deg) scale(0.99); }
+
+        /* ===== FORM ===== */
+        .form-input {
+            width: 100%;
+            padding: 0.7rem 0.9rem;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            background: var(--bg);
+            color: var(--text);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(37,99,235,0.08); }
+        .form-input::placeholder { color: #94a3b8; }
+        .form-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #94a3b8;
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+        .field-hint { font-size: 0.65rem; color: #94a3b8; margin-top: 0.2rem; font-style: italic; }
+
+        /* ===== BUTTONS ===== */
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+            width: 100%;
+        }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 10px 25px -6px rgba(37,99,235,0.3); }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            padding: 0.6rem 1.2rem;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .btn-secondary:hover { background: var(--border); border-color: #94a3b8; }
+        .btn-secondary:active { transform: scale(0.97); }
+        .btn-success {
+            background: #059669;
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .btn-success:hover { background: #047857; transform: translateY(-1px); box-shadow: 0 8px 20px -4px rgba(5,150,105,0.3); }
+        .btn-success:active { transform: scale(0.97); }
+        .btn-outline {
+            background: transparent;
+            color: var(--text);
+            padding: 0.6rem 1.2rem;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            border: 1.5px solid var(--border);
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .btn-outline:hover { border-color: var(--primary); background: var(--primary-light); }
+        .dark-mode .btn-outline:hover { background: rgba(37,99,235,0.1); }
+        .btn-outline:active { transform: scale(0.97); }
+        .btn-danger {
+            background: var(--primary);
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .btn-danger:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .btn-danger:active { transform: scale(0.97); }
+        .btn-warning {
+            background: #d97706;
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .btn-warning:hover { background: #b45309; transform: translateY(-1px); box-shadow: 0 8px 20px -4px rgba(217,119,6,0.3); }
+        .btn-warning:active { transform: scale(0.97); }
+        .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.7rem; border-radius: 0.6rem; }
+
+        /* ===== DOC PREVIEW ===== */
+        .doc-preview {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            min-height: 300px;
+            max-height: 60vh;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            line-height: 1.7;
+            color: var(--text);
+        }
+        .doc-preview h1 { font-size: 1.3rem; font-weight: 700; text-align: center; margin-bottom: 1.2rem; }
+        .doc-preview h2 { font-size: 1.05rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; }
+        .doc-preview h3 { font-size: 0.95rem; font-weight: 600; margin-top: 0.8rem; margin-bottom: 0.3rem; }
+        .doc-preview p { margin-bottom: 0.6rem; }
+        .doc-preview ul, .doc-preview ol { padding-left: 1.3rem; margin-bottom: 0.6rem; }
+        .doc-preview .signature-block { margin-top: 1.8rem; border-top: 2px solid var(--border); padding-top: 1.2rem; }
+        .doc-preview .signature-block .sig-line { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 0.6rem; }
+        .doc-preview .signature-block .sig-line > div { flex: 1 1 180px; }
+        .doc-preview .signature-block .sig-label { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; display: block; margin-bottom: 0.2rem; }
+        .doc-preview .signature-block .sig-placeholder { border-bottom: 1px solid var(--border); padding: 0.25rem 0; min-height: 1.8rem; font-family: 'Courier New', monospace; color: var(--text); }
+        .doc-preview .declaration-box { background: var(--primary-light); border-left: 4px solid var(--primary); padding: 0.8rem 1.2rem; margin: 1rem 0; border-radius: 0.5rem; font-style: italic; }
+        .dark-mode .doc-preview .declaration-box { background: rgba(37,99,235,0.1); }
+
+        /* ===== TOGGLE ===== */
+        .toggle-checkbox { left: 0; transition: all 0.3s; }
+        .toggle-checkbox:checked { left: auto; right: 0; border-color: var(--primary); }
+        .toggle-checkbox:checked + .toggle-label { background-color: var(--primary); }
+
+        /* ===== SELECT ===== */
+        .select-wrapper { position: relative; }
+        .select-wrapper::after {
+            content: '\f078';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 0.65rem;
+            pointer-events: none;
+        }
+        select.form-input { appearance: none; cursor: pointer; padding-right: 2.2rem; }
+
+        /* ===== BADGES ===== */
+        .doc-type-badge {
+            display: inline-block;
+            padding: 0.2rem 0.8rem;
+            border-radius: 999px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .doc-type-badge.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* ===== SEARCH ===== */
+        #doc-search:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(37,99,235,0.08); }
+        .no-results { color: #94a3b8; font-size: 0.85rem; padding: 0.4rem 0; display: none; }
+
+        /* ===== COURT SUGGESTIONS ===== */
+        .court-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin-top: 4px;
+            max-height: 180px;
+            overflow-y: auto;
+            z-index: 50;
+            box-shadow: var(--shadow);
+            display: none;
+        }
+        .court-suggestions .suggestion-item { padding: 0.5rem 0.9rem; cursor: pointer; font-size: 0.85rem; transition: background 0.2s; border-bottom: 1px solid var(--border); }
+        .court-suggestions .suggestion-item:hover { background: var(--bg); }
+        .court-suggestions .suggestion-item:last-child { border-bottom: none; }
+        .court-wrapper { position: relative; }
+
+        /* ===== ACTION TOOLBAR ===== */
+        .action-toolbar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem; padding-top: 0.4rem; border-top: 1px solid var(--border); }
+        .draft-status { font-size: 0.7rem; color: #94a3b8; display: flex; align-items: center; gap: 0.3rem; }
+
+        /* ===== LOADING ===== */
+        .loading-dots::after { content: ''; animation: dots 1.2s infinite steps(4); }
+        @keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } 100% { content: ''; } }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ===== MODAL ===== */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; animation: fadeIn 0.2s ease-out; }
+        .modal-content { background: var(--card-bg); max-width: 700px; width: 100%; max-height: 80vh; border-radius: var(--radius); padding: 1.2rem; overflow-y: auto; box-shadow: 0 30px 60px -20px rgba(0,0,0,0.4); color: var(--text); }
+        .modal-content .close-btn { float: right; font-size: 1.4rem; cursor: pointer; color: #94a3b8; transition: color 0.2s; }
+        .modal-content .close-btn:hover { color: var(--text); }
+        .history-item { border-bottom: 1px solid var(--border); padding: 0.7rem 0; cursor: pointer; transition: background 0.2s; }
+        .history-item:hover { background: var(--bg); }
+        .history-item .meta { display: flex; justify-content: space-between; flex-wrap: wrap; font-size: 0.8rem; color: #94a3b8; }
+        .history-item .title { font-weight: 600; color: var(--text); }
+        .category-tag { font-size: 0.55rem; background: var(--bg); padding: 0.1rem 0.4rem; border-radius: 999px; color: #94a3b8; border: 1px solid var(--border); }
+        .word-count-badge { background: var(--bg); padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.65rem; color: #94a3b8; border: 1px solid var(--border); }
+
+        /* ===== STATS ===== */
+        .stat-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.8rem; text-align: center; transition: transform 0.2s, box-shadow 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+        .stat-card .stat-number { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
+        .stat-card .stat-label { font-size: 0.6rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* ===== CHAT ===== */
+        .chat-container { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); max-height: 260px; overflow-y: auto; padding: 0.8rem; }
+        .chat-message { padding: 0.6rem 0.9rem; margin-bottom: 0.4rem; border-radius: var(--radius-sm); max-width: 85%; font-size: 0.85rem; }
+        .chat-message.user { background: var(--primary); color: white; margin-left: auto; }
+        .chat-message.ai { background: var(--bg); border: 1px solid var(--border); }
+        .chat-input-group { display: flex; gap: 0.4rem; margin-top: 0.4rem; }
+        .chat-input-group input { flex: 1; }
+
+        /* ===== MOBILE NAV ===== */
+        .bottom-nav {
+            display: flex;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+            padding: 6px 12px calc(6px + var(--safe-bottom));
+            justify-content: space-around;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            z-index: 60;
+            backdrop-filter: blur(12px);
+            background: rgba(255,255,255,0.92);
+        }
+        .dark-mode .bottom-nav { background: rgba(30,41,59,0.92); }
+        .bottom-nav button { background: none; border: none; color: #64748b; font-size: 10px; font-weight: 700; padding: 6px 12px; display: flex; flex-direction: column; align-items: center; gap: 2px; transition: color 0.2s; cursor: pointer; border-radius: 10px; }
+        .bottom-nav button.active { color: var(--primary); }
+        .bottom-nav button .nav-icon { font-size: 18px; }
+
+        /* ===== SLIDE PANELS ===== */
+        .slide-panel {
+            position: fixed;
+            top: 0; bottom: 0;
+            width: 88%;
+            max-width: 340px;
+            background: var(--card-bg);
+            z-index: 100;
+            transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+            overflow-y: auto;
+            box-shadow: 0 0 60px rgba(0,0,0,0.7);
+            border-right: 1px solid var(--border);
+            padding: 1rem;
+        }
+        .slide-panel.left { left: 0; transform: translateX(-100%); }
+        .slide-panel.right { right: 0; transform: translateX(100%); border-left: 1px solid var(--border); border-right: none; }
+        .slide-panel.open { transform: translateX(0); }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .desktop-only { display: none !important; }
+            .doc-preview { padding: 1rem; max-height: 50vh; }
+        }
+        @media (min-width: 769px) {
+            .mobile-only { display: none !important; }
+            .bottom-nav { display: none !important; }
+            .slide-panel { position: static; transform: none !important; width: auto; max-width: none; box-shadow: none; border: none; padding: 0; }
+        }
+
+        /* ===== PRINT ===== */
+        @media print {
+            body * { visibility: hidden; }
+            #doc-print-area, #doc-print-area * { visibility: visible; }
+            #doc-print-area { position: absolute; left: 0; top: 0; width: 100%; padding: 2rem; background: white; border-radius: 0; box-shadow: none; max-height: none; overflow: visible; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D Background Canvas -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Toast Container -->
+    <div id="toast-anchor" class="fixed bottom-20 right-3 z-[70] space-y-2 pointer-events-none max-w-xs w-full"></div>
+
+    <!-- ===== HEADER ===== -->
+    <header class="border-b border-slate-200 dark:border-slate-700 sticky top-0 z-50 backdrop-blur-md bg-white/90 dark:bg-slate-900/90 transition-colors">
+        <div class="max-w-7xl mx-auto px-3 md:px-6 h-14 md:h-16 flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <button id="mobileMenuBtn" class="mobile-only text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800">
+                    <i class="fas fa-bars text-sm"></i>
+                </button>
+                <div class="w-8 h-8 md:w-10 md:h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-blue-900/30">
+                    <i class="fas fa-scale-balanced text-white text-xs md:text-base"></i>
+                </div>
+                <div>
+                    <h1 class="text-sm md:text-xl font-bold tracking-tight brand text-slate-900 dark:text-white">Legal <span class="text-blue-600">Document</span> Generator</h1>
+                    <p class="text-[9px] md:text-[10px] text-slate-400 font-mono hidden sm:block">Kenyan Law · AI-Powered</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-1.5 md:gap-3">
+                <button id="dark-mode-toggle" class="btn-secondary btn-sm !p-1.5 md:!p-2" title="Toggle Dark Mode">
+                    <i id="dark-mode-icon" class="fas fa-moon text-xs"></i>
+                </button>
+                <button id="history-btn" class="btn-secondary btn-sm !p-1.5 md:!px-3">
+                    <i class="fas fa-clock-rotate-left text-xs"></i> <span class="hidden sm:inline text-xs">History</span>
+                </button>
+                <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-full px-2 border border-slate-200 dark:border-slate-700">
+                    <span id="label-en" class="text-[9px] font-bold text-slate-900 dark:text-white">EN</span>
+                    <div class="relative inline-block w-8 align-middle select-none">
+                        <input type="checkbox" id="translate-toggle" class="toggle-checkbox absolute block w-4 h-4 rounded-full bg-white border-2 border-slate-300 dark:border-slate-600 appearance-none cursor-pointer z-10" />
+                        <label for="translate-toggle" class="toggle-label block overflow-hidden h-4 rounded-full bg-slate-300 dark:bg-slate-600 cursor-pointer"></label>
+                    </div>
+                    <span id="label-sw" class="text-[9px] font-bold text-slate-400 dark:text-slate-500">SW</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== MAIN LAYOUT ===== -->
+    <main class="max-w-7xl mx-auto px-3 md:px-6 py-4 md:py-8 grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-8 pb-24 md:pb-8">
+
+        <!-- ===== LEFT SIDEBAR (slide-out on mobile) ===== -->
+        <aside id="leftSidebarPanel" class="slide-panel left lg:col-span-5 space-y-4 pb-20 md:pb-0">
+            <!-- Document Form -->
+            <div class="doc-card p-4 md:p-5">
+                <h2 class="text-base font-bold flex items-center gap-2 mb-4">
+                    <i class="fas fa-pen-to-square text-blue-600"></i>
+                    <span data-en="Document Details" data-sw="Maelezo ya Hati">Document Details</span>
+                </h2>
+                <form id="doc-form" class="space-y-3">
+                    <div>
+                        <label class="form-label" data-en="Document Type" data-sw="Aina ya Hati">Document Type</label>
+                        <input type="text" id="doc-search" class="form-input" placeholder="Search document type..." data-en-placeholder="Search document type..." data-sw-placeholder="Tafuta aina ya hati..." />
+                        <div class="select-wrapper mt-1">
+                            <select id="doc-type" class="form-input" required></select>
+                        </div>
+                        <div id="no-results-message" class="no-results" data-en="No matching document found." data-sw="Hakuna hati inayolingana.">No matching document found.</div>
+                    </div>
+                    <div id="dynamic-fields" class="space-y-3"></div>
+                    <div>
+                        <label class="form-label" data-en="Additional Instructions" data-sw="Maelekezo ya Ziada">Additional Instructions</label>
+                        <textarea id="extra-instructions" rows="2" class="form-input resize-y" placeholder="Any specific details or clauses..." data-en-placeholder="Any specific details or clauses..." data-sw-placeholder="Maelezo maalum au vifungu..."></textarea>
+                    </div>
+                    <button type="submit" id="generate-btn" class="btn-primary">
+                        <i class="fas fa-wand-magic-sparkles"></i>
+                        <span data-en="Generate Document" data-sw="Tengeneza Hati">Generate Document</span>
+                    </button>
+                    <div class="action-toolbar">
+                        <button type="button" id="save-draft-btn" class="btn-secondary btn-sm"><i class="fas fa-save"></i> <span data-en="Save" data-sw="Hifadhi">Save</span></button>
+                        <button type="button" id="load-draft-btn" class="btn-secondary btn-sm" style="display:none;"><i class="fas fa-upload"></i> <span data-en="Load" data-sw="Pakia">Load</span></button>
+                        <button type="button" id="clear-form-btn" class="btn-danger btn-sm"><i class="fas fa-eraser"></i> <span data-en="Clear" data-sw="Futa">Clear</span></button>
+                        <button type="button" id="sample-data-btn" class="btn-warning btn-sm"><i class="fas fa-flask"></i> <span data-en="Sample" data-sw="Mfano">Sample</span></button>
+                        <span id="draft-status" class="draft-status ml-auto"><i class="fas fa-circle text-slate-300 text-[7px]"></i> <span data-en="Auto-saved" data-sw="Imehifadhiwa">Auto-saved</span></span>
+                    </div>
+                </form>
+            </div>
+
+            <!-- AI Chat Assistant -->
+            <div class="doc-card p-4">
+                <h3 class="text-sm font-bold flex items-center gap-2 mb-2">
+                    <i class="fas fa-robot text-blue-600"></i>
+                    <span data-en="AI Legal Assistant" data-sw="Msaidizi wa Kisheria">AI Legal Assistant</span>
+                </h3>
+                <div id="chat-container" class="chat-container">
+                    <div class="chat-message ai">👋 Hello! Ask me about Kenyan law, document clauses, or legal requirements.</div>
+                </div>
+                <div class="chat-input-group">
+                    <input id="chat-input" class="form-input" placeholder="Ask a legal question..." />
+                    <button id="chat-send" class="btn-primary btn-sm !w-auto !px-3"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+
+            <!-- Info -->
+            <div class="doc-card p-3 bg-slate-50 dark:bg-slate-800/50 border-slate-200/60 dark:border-slate-700/60">
+                <div class="flex items-start gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+                    <i class="fas fa-circle-info text-slate-400 mt-0.5"></i>
+                    <p data-en="Documents are generated based on Kenyan statutes. Always consult a qualified advocate." data-sw="Hati zinatokana na sheria za Kenya. Daima wasiliana na wakili aliyehitimu.">
+                        Documents are generated based on Kenyan statutes. Always consult a qualified advocate.
+                    </p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ===== CENTER PANEL ===== -->
+        <section class="lg:col-span-7 space-y-4">
+
+            <!-- Stats Row -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
+                <div class="stat-card"><div class="stat-number" id="stat-documents">0</div><div class="stat-label" data-en="Generated" data-sw="Zilizotengenezwa">Generated</div></div>
+                <div class="stat-card"><div class="stat-number" id="stat-categories">0</div><div class="stat-label" data-en="Categories" data-sw="Makundi">Categories</div></div>
+                <div class="stat-card"><div class="stat-number" id="stat-words">0</div><div class="stat-label" data-en="Total Words" data-sw="Jumla ya Maneno">Total Words</div></div>
+                <div class="stat-card"><div class="stat-number" id="stat-history">0</div><div class="stat-label" data-en="History" data-sw="Historia">History</div></div>
+            </div>
+
+            <!-- 3D Canvas Panel -->
+            <div class="relative doc-card p-2 overflow-hidden">
+                <canvas id="three-canvas" class="w-full h-20 md:h-24 rounded-xl block" style="background: radial-gradient(circle at 30% 40%, #12131a, #06070a);"></canvas>
+                <div class="absolute top-2 right-3 text-[8px] font-mono bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/30">✦ 3D</div>
+                <div class="absolute bottom-2 left-3 text-[8px] font-mono text-slate-500">Live particle field</div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="doc-card p-6 md:p-10 text-center min-h-[280px] flex flex-col items-center justify-center border-dashed border-2">
+                <div class="w-14 h-14 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-4">
+                    <i class="fas fa-file-lines text-2xl text-slate-300 dark:text-slate-600"></i>
+                </div>
+                <h3 class="text-base font-bold text-slate-400 dark:text-slate-500" data-en="No Document Generated" data-sw="Hakuna Hati Iliyotengenezwa">No Document Generated</h3>
+                <p class="text-xs text-slate-400 dark:text-slate-500 max-w-sm mt-1" data-en="Fill in the form and click 'Generate Document' to create a legally-drafted document." data-sw="Jaza fomu na ubofye 'Tengeneza Hati' kuunda hati iliyoandaliwa kisheria.">
+                    Fill in the form and click 'Generate Document' to create a legally-drafted document.
+                </p>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading-state" class="hidden doc-card p-6 md:p-10 min-h-[280px] flex flex-col items-center justify-center">
+                <div class="relative w-14 h-14 mb-4">
+                    <div class="absolute inset-0 border-4 border-slate-200 dark:border-slate-700 rounded-full"></div>
+                    <div class="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+                </div>
+                <p class="text-sm font-semibold text-slate-600 dark:text-slate-400 loading-dots" data-en="Drafting your document" data-sw="Inaandaa hati yako">Drafting your document</p>
+                <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1" data-en="This may take a few moments..." data-sw="Hii inaweza kuchukua muda kidogo...">This may take a few moments...</p>
+            </div>
+
+            <!-- Result State -->
+            <div id="result-state" class="hidden fade-in space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span id="doc-type-badge" class="doc-type-badge active">Document</span>
+                        <span id="doc-date" class="text-[10px] text-slate-400"></span>
+                        <span class="word-count-badge"><i class="fas fa-file-lines"></i> <span id="word-count">0</span> words</span>
+                        <span id="doc-category-badge" class="category-tag">Category</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        <button onclick="regenerateDocument()" class="btn-secondary btn-sm" title="Regenerate"><i class="fas fa-rotate"></i></button>
+                        <button onclick="downloadPDF()" class="btn-success btn-sm"><i class="fas fa-file-pdf"></i> PDF</button>
+                        <button onclick="downloadDOCX()" class="btn-secondary btn-sm"><i class="fas fa-file-word"></i></button>
+                        <button onclick="downloadTXT()" class="btn-secondary btn-sm"><i class="fas fa-file-lines"></i></button>
+                        <button onclick="copyDocument()" class="btn-outline btn-sm"><i class="fas fa-copy"></i></button>
+                        <button onclick="printDocument()" class="btn-outline btn-sm"><i class="fas fa-print"></i></button>
+                        <button onclick="clearDocument()" class="btn-danger btn-sm"><i class="fas fa-trash-can"></i></button>
+                    </div>
+                </div>
+                <div id="doc-print-area" class="doc-preview">
+                    <div id="doc-content"></div>
+                </div>
+                <div class="text-center text-[9px] text-slate-400 border-t border-slate-100 dark:border-slate-800 pt-3">
+                    <i class="fas fa-scale-balanced mr-1"></i>
+                    <span data-en="Generated under Kenyan law. For informational purposes only." data-sw="Imetengenezwa chini ya sheria za Kenya. Kwa madhumuni ya taarifa tu.">
+                        Generated under Kenyan law. For informational purposes only.
+                    </span>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div id="error-state" class="hidden doc-card p-6 md:p-10 text-center min-h-[280px] flex flex-col items-center justify-center border-blue-200 border-2 bg-blue-50/30 dark:bg-blue-900/10 dark:border-blue-800">
+                <div class="w-14 h-14 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mb-4">
+                    <i class="fas fa-triangle-exclamation text-2xl text-blue-400"></i>
+                </div>
+                <h3 class="text-base font-bold text-blue-600 dark:text-blue-400 mb-1" data-en="Generation Failed" data-sw="Uundaji Umeshindwa">Generation Failed</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 max-w-md" id="error-message" data-en="Please check your connection and try again." data-sw="Tafadhali angalia muunganisho wako na ujaribu tena.">
+                    Please check your connection and try again.
+                </p>
+                <button onclick="retryGeneration()" class="btn-secondary mt-3 text-xs"><i class="fas fa-rotate-right"></i> Try Again</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="border-t border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 py-4 text-center text-[10px] text-slate-400 dark:text-slate-500 mb-20 md:mb-0">
+        <div class="max-w-7xl mx-auto px-3 flex flex-col md:flex-row items-center justify-between gap-2">
+            <span class="brand font-bold text-slate-700 dark:text-slate-300">Legal Document Generator</span>
+            <span>Powered by Gemini AI · Kenyan Law · v4.0</span>
+        </div>
+    </footer>
+
+    <!-- ===== MOBILE BOTTOM NAV ===== -->
+    <nav class="bottom-nav mobile-only">
+        <button class="active" data-tab="form" onclick="mobileNavAction('form')"><span class="nav-icon">📝</span> Form</button>
+        <button data-tab="preview" onclick="mobileNavAction('preview')"><span class="nav-icon">📄</span> Preview</button>
+        <button data-tab="chat" onclick="mobileNavAction('chat')"><span class="nav-icon">🤖</span> AI Chat</button>
+        <button data-tab="history" onclick="mobileNavAction('history')"><span class="nav-icon">📊</span> History</button>
+    </nav>
+
+    <!-- ===== MOBILE OVERLAY ===== -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black/60 z-[90] hidden md:hidden" onclick="closeAllSlidePanels()"></div>
+
+    <!-- ===== HISTORY MODAL ===== -->
+    <div id="history-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeHistory()">&times;</span>
+            <h2 class="text-lg font-bold mb-3" data-en="Document History" data-sw="Historia ya Hati">Document History</h2>
+            <div id="history-list">
+                <p class="text-slate-400 text-sm" data-en="No documents generated yet." data-sw="Hakuna hati iliyotengenezwa bado.">No documents generated yet.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==============================================
+        // CONFIG
+        // ==============================================
+        const API_KEY = "AQ.Ab8RN6L_SlYJ_dMI3LFw6H0n21vfLp19J8hc7P5N8hmdwSlaMg";
+        const MODEL = "gemini-flash-latest";
+        const STORAGE_KEY = 'ldg_draft';
+        const HISTORY_KEY = 'ldg_history';
+        const SETTINGS_KEY = 'ldg_settings';
+
+        // ==============================================
+        // DOCUMENT TYPES (expanded)
+        // ==============================================
+        const DOC_TYPES = [
+            { id:'demand-letter', label:'Demand Letter', label_sw:'Barua ya Madai', template:'two-party', category:'Demand Letters' },
+            { id:'final-demand', label:'Final Demand Letter', label_sw:'Barua ya Madai ya Mwisho', template:'two-party', category:'Demand Letters' },
+            { id:'demand-payment', label:'Demand for Payment', label_sw:'Madai ya Malipo', template:'two-party', category:'Demand Letters' },
+            { id:'affidavit', label:'Affidavit', label_sw:'Hati ya Kiapo', template:'affidavit', category:'Affidavits & Declarations' },
+            { id:'statutory-declaration', label:'Statutory Declaration', label_sw:'Tamko la Kisheria', template:'one-party', category:'Affidavits & Declarations' },
+            { id:'sworn-statement', label:'Sworn Statement', label_sw:'Taarifa ya Kiapo', template:'affidavit', category:'Affidavits & Declarations' },
+            { id:'plaint', label:'Plaint (Civil Suit)', label_sw:'Malalamishi (Kesi ya Madai)', template:'plaint', category:'Pleadings' },
+            { id:'statement-defense', label:'Statement of Defense', label_sw:'Taarifa ya Utetezi', template:'pleading', category:'Pleadings' },
+            { id:'chamber-summons', label:'Chamber Summons', label_sw:'Wito wa Chumba', template:'pleading', category:'Pleadings' },
+            { id:'petition', label:'Petition', label_sw:'Ombi', template:'pleading', category:'Pleadings' },
+            { id:'notice-motion', label:'Notice of Motion', label_sw:'Notisi ya Hoja', template:'pleading', category:'Pleadings' },
+            { id:'legal-opinion', label:'Legal Opinion', label_sw:'Maoni ya Kisheria', template:'opinion', category:'Legal Opinions' },
+            { id:'brief-advice', label:'Brief Legal Advice', label_sw:'Ushauri Mfupi wa Kisheria', template:'opinion', category:'Legal Opinions' },
+            { id:'agreement-sale-land', label:'Agreement for Sale of Land', label_sw:'Mkataba wa Uuzaji wa Ardhi', template:'conveyancing', category:'Conveyancing & Property' },
+            { id:'transfer-property', label:'Transfer of Property', label_sw:'Uhamisho wa Mali', template:'conveyancing', category:'Conveyancing & Property' },
+            { id:'lease-agreement', label:'Lease Agreement', label_sw:'Mkataba wa Kukodisha', template:'lease', category:'Conveyancing & Property' },
+            { id:'tenancy-agreement', label:'Tenancy Agreement', label_sw:'Mkataba wa Upangaji', template:'tenancy', category:'Conveyancing & Property' },
+            { id:'charge-mortgage', label:'Charge / Mortgage', label_sw:'Rehani', template:'mortgage', category:'Conveyancing & Property' },
+            { id:'memorandum-association', label:'Memorandum of Association', label_sw:'Hati ya Makubaliano', template:'corporate', category:'Corporate & Commercial' },
+            { id:'articles-association', label:'Articles of Association', label_sw:'Kanuni za Ushirika', template:'corporate', category:'Corporate & Commercial' },
+            { id:'shareholders-agreement', label:'Shareholders Agreement', label_sw:'Mkataba wa Wanahisa', template:'partnership', category:'Corporate & Commercial' },
+            { id:'power-of-attorney', label:'Power of Attorney', label_sw:'Hati ya Wakili', template:'power-of-attorney', category:'Corporate & Commercial' },
+            { id:'partnership-agreement', label:'Partnership Agreement', label_sw:'Mkataba wa Ushirikiano', template:'partnership', category:'Corporate & Commercial' },
+            { id:'non-disclosure', label:'Non-Disclosure Agreement (NDA)', label_sw:'Mkataba wa Kutofichua (NDA)', template:'nda', category:'Corporate & Commercial' },
+            { id:'employment-contract', label:'Employment Contract', label_sw:'Mkataba wa Ajira', template:'employment', category:'Employment' },
+            { id:'offer-letter', label:'Offer Letter', label_sw:'Barua ya Ofa', template:'employment', category:'Employment' },
+            { id:'service-contract', label:'Service Contract', label_sw:'Mkataba wa Huduma', template:'two-party', category:'Employment' },
+            { id:'consulting-agreement', label:'Consulting Agreement', label_sw:'Mkataba wa Ushauri', template:'two-party', category:'Employment' },
+            { id:'will', label:'Simple Will', label_sw:'Wosia Rahisi', template:'will', category:'Family & Succession' },
+            { id:'grant-probate', label:'Grant of Probate Application', label_sw:'Ombi la Uthibitisho wa Wosia', template:'probate', category:'Family & Succession' },
+            { id:'letters-administration', label:'Letters of Administration', label_sw:'Barua za Usimamizi', template:'probate', category:'Family & Succession' },
+            { id:'prenuptial-agreement', label:'Prenuptial Agreement', label_sw:'Mkataba wa Kabla ya Ndoa', template:'two-party', category:'Family & Succession' },
+            { id:'loan-agreement', label:'Loan Agreement', label_sw:'Mkataba wa Mkopo', template:'loan', category:'Loans & Finance' },
+            { id:'promissory-note', label:'Promissory Note', label_sw:'Hati ya Ahadi', template:'two-party', category:'Loans & Finance' },
+            { id:'guarantee-agreement', label:'Guarantee Agreement', label_sw:'Mkataba wa Dhamana', template:'guarantee', category:'Loans & Finance' },
+            { id:'settlement-agreement', label:'Settlement Agreement', label_sw:'Mkataba wa Suluhu', template:'settlement', category:'Loans & Finance' },
+            { id:'sale-goods', label:'Sale of Goods Agreement', label_sw:'Mkataba wa Uuzaji wa Bidhaa', template:'sale-goods', category:'Commercial Contracts' },
+            { id:'supply-agreement', label:'Supply Agreement', label_sw:'Mkataba wa Ugavi', template:'two-party', category:'Commercial Contracts' },
+            { id:'memorandum-understanding', label:'Memorandum of Understanding (MOU)', label_sw:'Mkataba wa Mwelekeo (MOU)', template:'mou', category:'Commercial Contracts' },
+            { id:'notice-vacate', label:'Notice to Vacate', label_sw:'Notisi ya Kuondoka', template:'two-party', category:'Notices' },
+            { id:'eviction-notice', label:'Eviction Notice', label_sw:'Notisi ya Kufukuzwa', template:'two-party', category:'Notices' },
+            { id:'notice-intention-sue', label:'Notice of Intention to Sue', label_sw:'Notisi ya Nia ya Kushtaki', template:'two-party', category:'Notices' },
+            { id:'consent-medical', label:'Consent to Medical Treatment', label_sw:'Idhini ya Matibabu', template:'one-party', category:'Miscellaneous' },
+            { id:'character-reference', label:'Character Reference Letter', label_sw:'Barua ya Sifa', template:'one-party', category:'Miscellaneous' },
+            { id:'parental-consent', label:'Parental Consent Form', label_sw:'Fomu ya Idhini ya Mzazi', template:'one-party', category:'Miscellaneous' }
+        ];
+
+        // ==============================================
+        // TEMPLATES (field definitions)
+        // ==============================================
+        const TEMPLATES = {
+            'plaint': { fields: [
+                { id:'court', label:'Court Name', label_sw:'Jina la Mahakama', placeholder:'e.g. High Court of Kenya at Nairobi', placeholder_sw:'mf. Mahakama Kuu ya Kenya Nairobi' },
+                { id:'plaintiff', label:'Plaintiff (Full name, address, ID)', label_sw:'Mdadai (Jina, anwani, ID)', placeholder:'Full name, address, ID/Reg no.' },
+                { id:'defendant', label:'Defendant (Full name, address, ID)', label_sw:'Mdadaiwa (Jina, anwani, ID)', placeholder:'Full name, address, ID/Reg no.' },
+                { id:'facts', label:'Statement of Facts', label_sw:'Maelezo ya Ukweli', placeholder:'Describe the facts...', type:'textarea', rows:4 },
+                { id:'remedy', label:'Remedy Sought', label_sw:'Suluhisho Inayotafutwa', placeholder:'e.g. Payment of KES 500,000, Injunction...', type:'textarea', rows:2 },
+                { id:'date', label:'Date of Filing', label_sw:'Tarehe ya Kufungua', placeholder:'e.g. 15th July 2026' },
+                { id:'place', label:'Place of Filing', label_sw:'Mahali pa Kufungua', placeholder:'e.g. Nairobi, Kenya' }
+            ]},
+            'pleading': { fields: [
+                { id:'court', label:'Court Name', label_sw:'Jina la Mahakama', placeholder:'e.g. High Court of Kenya at Nairobi' },
+                { id:'party_a', label:'Applicant / Plaintiff', label_sw:'Mdadai / Mwombaji', placeholder:'Full name, address, ID' },
+                { id:'party_b', label:'Respondent / Defendant', label_sw:'Mdadaiwa / Mjibu', placeholder:'Full name, address, ID' },
+                { id:'subject', label:'Subject Matter', label_sw:'Mada', placeholder:'Brief description', type:'textarea' },
+                { id:'date', label:'Date', label_sw:'Tarehe', placeholder:'e.g. 15th July 2026' },
+                { id:'place', label:'Place', label_sw:'Mahali', placeholder:'e.g. Nairobi, Kenya' }
+            ]},
+            'opinion': { fields: [
+                { id:'client', label:'Client Name', label_sw:'Jina la Mteja', placeholder:'Full name or company' },
+                { id:'subject', label:'Subject / Matter', label_sw:'Mada / Jambo', placeholder:'Brief description', type:'textarea' },
+                { id:'facts', label:'Key Facts', label_sw:'Mambo Muhimu', placeholder:'List relevant facts', type:'textarea' },
+                { id:'issue', label:'Legal Issue(s)', label_sw:'Masuala ya Kisheria', placeholder:'Legal questions to answer', type:'textarea' },
+                { id:'date', label:'Date', label_sw:'Tarehe', placeholder:'e.g. 15th July 2026' }
+            ]},
+            'conveyancing': { fields: [
+                { id:'party_a', label:'Vendor / Transferor', label_sw:'Muuzaji / Mhamishaji', placeholder:'Full name, address, ID' },
+                { id:'party_b', label:'Purchaser / Transferee', label_sw:'Mnunuzi / Mpokeaji', placeholder:'Full name, address, ID' },
+                { id:'property', label:'Property Description', label_sw:'Maelezo ya Mali', placeholder:'Full property address, title no.' },
+                { id:'purchase_price', label:'Purchase Price (KES)', label_sw:'Bei (KES)', placeholder:'e.g. 5,000,000' },
+                { id:'deposit', label:'Deposit Amount (KES)', label_sw:'Amana (KES)', placeholder:'e.g. 500,000' },
+                { id:'completion_date', label:'Completion Date', label_sw:'Tarehe ya Kukamilisha', placeholder:'e.g. 30th September 2026' }
+            ]},
+            'corporate': { fields: [
+                { id:'company_name', label:'Company Name', label_sw:'Jina la Kampuni', placeholder:'e.g. ABC Enterprises Ltd' },
+                { id:'registered_office', label:'Registered Office Address', label_sw:'Anwani ya Ofisi', placeholder:'Full address' },
+                { id:'directors', label:'Directors / Founders', label_sw:'Wakurugenzi', placeholder:'List names, addresses, IDs', type:'textarea' },
+                { id:'share_capital', label:'Share Capital (KES)', label_sw:'Mtaji wa Hisa (KES)', placeholder:'e.g. 1,000,000' },
+                { id:'objectives', label:'Main Business Objectives', label_sw:'Malengo ya Biashara', placeholder:'Describe business activities', type:'textarea' },
+                { id:'date', label:'Date', label_sw:'Tarehe', placeholder:'e.g. 15th July 2026' }
+            ]},
+            'probate': { fields: [
+                { id:'deceased', label:'Deceased Full Name', label_sw:'Jina la Marehemu', placeholder:'Full name and ID' },
+                { id:'date_death', label:'Date of Death', label_sw:'Tarehe ya Kifo', placeholder:'e.g. 1st January 2026' },
+                { id:'applicant', label:'Applicant (Full name, address, ID)', label_sw:'Mwombaji (Jina, anwani, ID)', placeholder:'Full name, address, ID' },
+                { id:'relationship', label:'Relationship to Deceased', label_sw:'Uhusiano na Marehemu', placeholder:'e.g. Spouse, Child, Parent' },
+                { id:'estate', label:'Estate Assets', label_sw:'Mali ya Marehemu', placeholder:'List assets', type:'textarea' },
+                { id:'beneficiaries', label:'Beneficiaries', label_sw:'Wanufaika', placeholder:'List names and shares', type:'textarea' },
+                { id:'place', label:'Place of Filing', label_sw:'Mahali pa Kufungua', placeholder:'e.g. Nairobi, Kenya' },
+                { id:'date', label:'Date', label_sw:'Tarehe', placeholder:'e.g. 15th July 2026' }
+            ]},
+            'two-party': { fields: [
+                { id:'party_a', label:'Party A (Full name & address)', label_sw:'Mhusika A (Jina, anwani)', placeholder:'Full name, address, ID' },
+                { id:'party_b', label:'Party B (Full name & address)', label_sw:'Mhusika B (Jina, anwani)', placeholder:'Full name, address, ID' },
+                { id:'subject', label:'Subject / Description', label_sw:'Mada / Maelezo', placeholder:'Brief description', type:'textarea' },
+                { id:'effective_date', label:'Effective Date', label_sw:'Tarehe ya Kuanza', placeholder:'e.g. 1st July 2026' },
+                { id:'term', label:'Term / Duration', label_sw:'Muda', placeholder:'e.g. 12 months' },
+                { id:'consideration', label:'Consideration (KES)', label_sw:'Thamani (KES)', placeholder:'e.g. 100,000' }
+            ]},
+            'one-party': { fields: [
+                { id:'party_a', label:'Full Name & Address', label_sw:'Jina Kamili na Anwani', placeholder:'Full name, address, ID' },
+                { id:'subject', label:'Statement / Details', label_sw:'Taarifa / Maelezo', placeholder:'Describe purpose', type:'textarea' },
+                { id:'date', label:'Date', label_sw:'Tarehe', placeholder:'e.g. 15th July 2026' },
+                { id:'place', label:'Place', label_sw:'Mahali', placeholder:'e.g. Nairobi, Kenya' }
+            ]},
+            'employment': { fields: [
+                { id:'party_a', label:'Employer', label_sw:'Mwajiri', placeholder:'Company name & address' },
+                { id:'party_b', label:'Employee', label_sw:'Mfanyakazi', placeholder:'Full name & ID/Passport' },
+                { id:'position', label:'Job Title / Position', label_sw:'Cheo', placeholder:'e.g. Senior Accountant' },
+                { id:'salary', label:'Salary (KES/month)', label_sw:'Mshahara (KES/mwezi)', placeholder:'e.g. 80,000' },
+                { id:'start_date', label:'Start Date', label_sw:'Tarehe ya Kuanza', placeholder:'e.g. 1st July 2026' },
+                { id:'duration', label:'Contract Duration', label_sw:'Muda wa Mkataba', placeholder:'e.g. 2 years' }
+            ]},
+            'lease': { fields: [
+                { id:'party_a', label:'Landlord', label_sw:'Mwenye Nyumba', placeholder:'Full name & address' },
+                { id:'party_b', label:'Tenant', label_sw:'Mpanga', placeholder:'Full name & address' },
+                { id:'property', label:'Property Address', label_sw:'Anwani ya Mali', placeholder:'Full property description' },
+                { id:'rent', label:'Monthly Rent (KES)', label_sw:'Kodi ya Mwezi (KES)', placeholder:'e.g. 45,000' },
+                { id:'deposit', label:'Deposit (KES)', label_sw:'Amana (KES)', placeholder:'e.g. 90,000' },
+                { id:'duration', label:'Lease Duration', label_sw:'Muda wa Kukodisha', placeholder:'e.g. 12 months' }
+            ]},
+            'sale-goods': { fields: [
+                { id:'party_a', label:'Seller', label_sw:'Muuzaji', placeholder:'Full name & address' },
+                { id:'party_b', label:'Buyer', label_sw:'Mnunuzi', placeholder:'Full name & address' },
+                { id:'goods', label:'Description of Goods', label_sw:'Maelezo ya Bidhaa', placeholder:'e.g. 50 bags of maize', type:'textarea' },
+                { id:'price', label:'Total Price (KES)', label_sw:'Bei Jumla (KES)', placeholder:'e.g. 500,000' },
+                { id:'delivery', label:'Delivery Terms', label_sw:'Masharti ya Uwasilishaji', placeholder:'e.g. within 14 days' }
+            ]},
+            'power-of-attorney': { fields: [
+                { id:'party_a', label:'Grantor (Principal)', label_sw:'Mtoaji (Mkuu)', placeholder:'Full name & ID' },
+                { id:'party_b', label:'Attorney (Agent)', label_sw:'Wakili (Mwakilishi)', placeholder:'Full name & ID' },
+                { id:'powers', label:'Powers Granted', label_sw:'Mamlaka', placeholder:'e.g. sell property, sign contracts', type:'textarea' },
+                { id:'duration', label:'Duration / Validity', label_sw:'Muda', placeholder:'e.g. 1 year' }
+            ]},
+            'nda': { fields: [
+                { id:'party_a', label:'Disclosing Party', label_sw:'Mtoa Taarifa', placeholder:'Full name & address' },
+                { id:'party_b', label:'Receiving Party', label_sw:'Mpokeaji', placeholder:'Full name & address' },
+                { id:'purpose', label:'Purpose of Disclosure', label_sw:'Madhumuni', placeholder:'e.g. business partnership' },
+                { id:'duration', label:'Confidentiality Period', label_sw:'Muda wa Usiri', placeholder:'e.g. 3 years' }
+            ]},
+            'partnership': { fields: [
+                { id:'party_a', label:'Partner 1', label_sw:'Mshirika 1', placeholder:'Full name & address' },
+                { id:'party_b', label:'Partner 2', label_sw:'Mshirika 2', placeholder:'Full name & address' },
+                { id:'business', label:'Business Name', label_sw:'Jina la Biashara', placeholder:'e.g. Greenfield Ventures' },
+                { id:'contribution', label:'Capital Contribution', label_sw:'Mchango wa Mtaji', placeholder:'e.g. 200,000 KES each' },
+                { id:'profit_share', label:'Profit Sharing Ratio', label_sw:'Uwiano wa Faida', placeholder:'e.g. 50:50' }
+            ]},
+            'loan': { fields: [
+                { id:'party_a', label:'Lender', label_sw:'Mkopeshaji', placeholder:'Full name & address' },
+                { id:'party_b', label:'Borrower', label_sw:'Mkopaji', placeholder:'Full name & address' },
+                { id:'amount', label:'Loan Amount (KES)', label_sw:'Kiasi cha Mkopo (KES)', placeholder:'e.g. 1,000,000' },
+                { id:'interest', label:'Interest Rate (%)', label_sw:'Kiwango cha Riba (%)', placeholder:'e.g. 12% per annum' },
+                { id:'repayment', label:'Repayment Terms', label_sw:'Masharti ya Marejesho', placeholder:'e.g. monthly instalments' }
+            ]},
+            'tenancy': { fields: [
+                { id:'party_a', label:'Landlord', label_sw:'Mwenye Nyumba', placeholder:'Full name & address' },
+                { id:'party_b', label:'Tenant', label_sw:'Mpanga', placeholder:'Full name & address' },
+                { id:'property', label:'Property Address', label_sw:'Anwani ya Mali', placeholder:'Full property description' },
+                { id:'rent', label:'Monthly Rent (KES)', label_sw:'Kodi ya Mwezi (KES)', placeholder:'e.g. 30,000' },
+                { id:'deposit', label:'Deposit (KES)', label_sw:'Amana (KES)', placeholder:'e.g. 60,000' },
+                { id:'duration', label:'Tenancy Period', label_sw:'Muda', placeholder:'e.g. 6 months' }
+            ]},
+            'will': { fields: [
+                { id:'party_a', label:'Testator (Your Full Name)', label_sw:'Mtoa Wosia', placeholder:'Full name & ID' },
+                { id:'executor', label:'Executor Name', label_sw:'Mtekelezaji', placeholder:'Person to execute the will' },
+                { id:'beneficiaries', label:'Beneficiaries & Assets', label_sw:'Wanufaika na Mali', placeholder:'List beneficiaries and assets', type:'textarea' },
+                { id:'guardian', label:'Guardian for Minor Children', label_sw:'Mlezi wa Watoto', placeholder:'Name & address' },
+                { id:'date', label:'Date', label_sw:'Tarehe', placeholder:'e.g. 15th July 2026' },
+                { id:'place', label:'Place', label_sw:'Mahali', placeholder:'e.g. Nairobi, Kenya' }
+            ]},
+            'mou': { fields: [
+                { id:'party_a', label:'Party A', label_sw:'Mhusika A', placeholder:'Full name & address' },
+                { id:'party_b', label:'Party B', label_sw:'Mhusika B', placeholder:'Full name & address' },
+                { id:'purpose', label:'Purpose of MOU', label_sw:'Madhumuni', placeholder:'e.g. joint research project' },
+                { id:'terms', label:'Key Terms / Scope', label_sw:'Masharti Muhimu', placeholder:'Describe main terms', type:'textarea' },
+                { id:'duration', label:'Duration', label_sw:'Muda', placeholder:'e.g. 6 months' }
+            ]},
+            'affidavit': { fields: [
+                { id:'party_a', label:'Deponent (Your Full Name)', label_sw:'Mtoa Kiapo', placeholder:'Full name & ID' },
+                { id:'statement', label:'Statement of Facts', label_sw:'Maelezo ya Ukweli', placeholder:'Write your sworn statement', type:'textarea' },
+                { id:'place', label:'Place of Swearing', label_sw:'Mahali pa Kiapo', placeholder:'e.g. Nairobi, Kenya' },
+                { id:'date', label:'Date', label_sw:'Tarehe', placeholder:'e.g. 15th July 2026' }
+            ]},
+            'settlement': { fields: [
+                { id:'party_a', label:'Party A', label_sw:'Mhusika A', placeholder:'Full name & address' },
+                { id:'party_b', label:'Party B', label_sw:'Mhusika B', placeholder:'Full name & address' },
+                { id:'dispute', label:'Nature of Dispute', label_sw:'Aina ya Mzozo', placeholder:'Brief description', type:'textarea' },
+                { id:'settlement_amount', label:'Settlement Amount (KES)', label_sw:'Kiasi cha Suluhu (KES)', placeholder:'e.g. 500,000' },
+                { id:'release', label:'Release Terms', label_sw:'Masharti ya Kuachilia', placeholder:'e.g. full and final release' }
+            ]},
+            'guarantee': { fields: [
+                { id:'party_a', label:'Guarantor', label_sw:'Mdhamini', placeholder:'Full name & address' },
+                { id:'party_b', label:'Beneficiary', label_sw:'Mnufaika', placeholder:'Full name & address' },
+                { id:'obligation', label:'Obligation / Debt', label_sw:'Wajibu / Deni', placeholder:'Describe the obligation' },
+                { id:'amount', label:'Guaranteed Amount (KES)', label_sw:'Kiasi cha Dhamana (KES)', placeholder:'e.g. 1,000,000' },
+                { id:'term', label:'Term', label_sw:'Muda', placeholder:'e.g. until full repayment' }
+            ]},
+            'mortgage': { fields: [
+                { id:'party_a', label:'Mortgagor (Borrower)', label_sw:'Mkopaji', placeholder:'Full name & address' },
+                { id:'party_b', label:'Mortgagee (Lender)', label_sw:'Mkopeshaji', placeholder:'Full name & address' },
+                { id:'property', label:'Property Address', label_sw:'Anwani ya Mali', placeholder:'Full property description' },
+                { id:'loan_amount', label:'Loan Amount (KES)', label_sw:'Kiasi cha Mkopo (KES)', placeholder:'e.g. 5,000,000' },
+                { id:'interest', label:'Interest Rate (%)', label_sw:'Kiwango cha Riba (%)', placeholder:'e.g. 10% per annum' },
+                { id:'term', label:'Loan Term', label_sw:'Muda wa Mkopo', placeholder:'e.g. 20 years' }
+            ]}
+        };
+
+        // ==============================================
+        // COURTS
+        // ==============================================
+        const KENYAN_COURTS = [
+            'Supreme Court of Kenya','Court of Appeal of Kenya','High Court of Kenya at Nairobi','High Court of Kenya at Mombasa',
+            'High Court of Kenya at Kisumu','High Court of Kenya at Nakuru','High Court of Kenya at Eldoret','High Court of Kenya at Nyeri',
+            'High Court of Kenya at Meru','High Court of Kenya at Kakamega','High Court of Kenya at Machakos','High Court of Kenya at Garissa',
+            'High Court of Kenya at Malindi','High Court of Kenya at Bungoma','High Court of Kenya at Kitale','High Court of Kenya at Kericho',
+            'High Court of Kenya at Siaya','High Court of Kenya at Vihiga','High Court of Kenya at Busia','High Court of Kenya at Homa Bay',
+            'Chief Magistrate\'s Court at Nairobi','Chief Magistrate\'s Court at Mombasa','Chief Magistrate\'s Court at Kisumu',
+            'Senior Principal Magistrate\'s Court at Nakuru','Senior Principal Magistrate\'s Court at Eldoret',
+            'Principal Magistrate\'s Court at Nyeri','Principal Magistrate\'s Court at Meru',
+            'Magistrate\'s Court at Kakamega','Magistrate\'s Court at Machakos','Magistrate\'s Court at Garissa',
+            'Employment and Labour Relations Court at Nairobi','Environment and Land Court at Nairobi',
+            'Environment and Land Court at Mombasa','Environment and Land Court at Kisumu'
+        ];
+
+        // ==============================================
+        // STATE
+        // ==============================================
+        let currentDocType = DOC_TYPES[0].id;
+        let generatedDocument = '';
+        let isSwahili = false;
+        let lastFormData = {};
+        let history = [];
+        let isDarkMode = false;
+
+        // ==============================================
+        // DOM REFS
+        // ==============================================
+        const $ = id => document.getElementById(id);
+        const form = $('doc-form');
+        const docSearch = $('doc-search');
+        const docTypeSelect = $('doc-type');
+        const dynamicFields = $('dynamic-fields');
+        const extraInstructions = $('extra-instructions');
+        const generateBtn = $('generate-btn');
+        const emptyState = $('empty-state');
+        const loadingState = $('loading-state');
+        const resultState = $('result-state');
+        const errorState = $('error-state');
+        const errorMessage = $('error-message');
+        const docContent = $('doc-content');
+        const docTypeBadge = $('doc-type-badge');
+        const docCategoryBadge = $('doc-category-badge');
+        const docDate = $('doc-date');
+        const wordCountSpan = $('word-count');
+        const translateToggle = $('translate-toggle');
+        const noResultsMsg = $('no-results-message');
+        const saveDraftBtn = $('save-draft-btn');
+        const loadDraftBtn = $('load-draft-btn');
+        const clearFormBtn = $('clear-form-btn');
+        const sampleDataBtn = $('sample-data-btn');
+        const draftStatus = $('draft-status');
+        const historyBtn = $('history-btn');
+        const historyModal = $('history-modal');
+        const historyList = $('history-list');
+        const darkModeToggle = $('dark-mode-toggle');
+        const darkModeIcon = $('dark-mode-icon');
+        const chatSend = $('chat-send');
+        const chatInput = $('chat-input');
+        const chatContainer = $('chat-container');
+        const statDocuments = $('stat-documents');
+        const statCategories = $('stat-categories');
+        const statWords = $('stat-words');
+        const statHistory = $('stat-history');
+
+        // ==============================================
+        // TOAST
+        // ==============================================
+        function toast(msg, type='info') {
+            const anchor = $('toast-anchor');
+            const el = document.createElement('div');
+            const cls = type==='success' ? 'bg-emerald-900 border-emerald-500 text-emerald-300' : type==='error' ? 'bg-rose-900 border-rose-500 text-rose-300' : 'bg-slate-900 border-blue-500 text-blue-300';
+            el.className = `p-2.5 rounded-xl shadow-2xl border-l-4 flex items-start gap-2 pointer-events-auto transition-all duration-300 transform translate-y-3 opacity-0 text-[11px] font-semibold ${cls}`;
+            el.innerHTML = `<div class="mt-0.5"><i class="fa-solid ${type==='success'?'fa-circle-check':type==='error'?'fa-triangle-exclamation':'fa-circle-info'}"></i></div><div class="flex-1">${msg}</div>`;
+            anchor.appendChild(el);
+            setTimeout(()=>el.classList.remove('translate-y-3','opacity-0'), 50);
+            setTimeout(()=>{ el.classList.add('opacity-0','scale-95'); setTimeout(()=>el.remove(),300); }, 3500);
+        }
+
+        // ==============================================
+        // 3D BACKGROUND CANVAS
+        // ==============================================
+        let bgCanvas, bgCtx, bgParticles = [], bgAnimId;
+        function init3DBackground() {
+            bgCanvas = $('bg-canvas');
+            bgCtx = bgCanvas.getContext('2d');
+            resizeBG();
+            window.addEventListener('resize', resizeBG);
+            for (let i=0;i<50;i++) bgParticles.push(createBGParticle());
+            bgAnimId = requestAnimationFrame(loopBG);
+        }
+        function resizeBG() {
+            if (!bgCanvas) return;
+            const dpr = window.devicePixelRatio || 1;
+            bgCanvas.width = window.innerWidth * dpr;
+            bgCanvas.height = window.innerHeight * dpr;
+            bgCanvas.style.width = window.innerWidth + 'px';
+            bgCanvas.style.height = window.innerHeight + 'px';
+            bgCtx.scale(dpr, dpr);
+        }
+        function createBGParticle() {
+            return {
+                x: Math.random()*window.innerWidth,
+                y: Math.random()*window.innerHeight,
+                vx: (Math.random()-0.5)*0.3,
+                vy: (Math.random()-0.5)*0.3,
+                r: Math.random()*1.8+0.5,
+                alpha: Math.random()*0.4+0.1,
+                color: Math.random()>0.5 ? '#3b82f6' : '#6366f1'
+            };
+        }
+        function loopBG() {
+            const w = window.innerWidth, h = window.innerHeight;
+            bgCtx.clearRect(0,0,w,h);
+            for (const p of bgParticles) {
+                p.x += p.vx; p.y += p.vy;
+                if (p.x<0||p.x>w) p.vx*=-1;
+                if (p.y<0||p.y>h) p.vy*=-1;
+                bgCtx.globalAlpha = p.alpha;
+                bgCtx.fillStyle = p.color;
+                bgCtx.shadowBlur = 8;
+                bgCtx.shadowColor = p.color;
+                bgCtx.beginPath(); bgCtx.arc(p.x,p.y,p.r,0,Math.PI*2); bgCtx.fill();
+            }
+            bgCtx.globalAlpha = 1; bgCtx.shadowBlur = 0;
+            bgAnimId = requestAnimationFrame(loopBG);
+        }
+
+        // 3D preview canvas
+        let threeCanvas, threeCtx, threeParticles = [], threeAnimId;
+        function init3DPreview() {
+            threeCanvas = $('three-canvas');
+            if (!threeCanvas) return;
+            threeCtx = threeCanvas.getContext('2d');
+            resize3D();
+            window.addEventListener('resize', resize3D);
+            for (let i=0;i<40;i++) threeParticles.push(create3DParticle());
+            threeAnimId = requestAnimationFrame(loop3D);
+        }
+        function resize3D() {
+            if (!threeCanvas) return;
+            const rect = threeCanvas.parentElement.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            threeCanvas.width = rect.width * dpr;
+            threeCanvas.height = rect.height * dpr;
+            threeCanvas.style.width = rect.width + 'px';
+            threeCanvas.style.height = rect.height + 'px';
+            threeCtx.scale(dpr, dpr);
+        }
+        function create3DParticle() {
+            const w = threeCanvas.width/(window.devicePixelRatio||1);
+            const h = threeCanvas.height/(window.devicePixelRatio||1);
+            return {
+                x: Math.random()*w, y: Math.random()*h,
+                vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5,
+                r: Math.random()*2+1,
+                alpha: Math.random()*0.7+0.2,
+                color: Math.random()>0.5 ? '#2563eb' : '#6366f1'
+            };
+        }
+        function loop3D() {
+            const w = threeCanvas.width/(window.devicePixelRatio||1);
+            const h = threeCanvas.height/(window.devicePixelRatio||1);
+            threeCtx.clearRect(0,0,w,h);
+            threeCtx.strokeStyle = 'rgba(99,102,241,0.08)';
+            threeCtx.lineWidth = 0.5;
+            for (let x=0;x<w;x+=30){threeCtx.beginPath();threeCtx.moveTo(x,0);threeCtx.lineTo(x,h);threeCtx.stroke();}
+            for (let y=0;y<h;y+=30){threeCtx.beginPath();threeCtx.moveTo(0,y);threeCtx.lineTo(w,y);threeCtx.stroke();}
+            for (const p of threeParticles) {
+                p.x+=p.vx; p.y+=p.vy;
+                if (p.x<0||p.x>w) p.vx*=-1;
+                if (p.y<0||p.y>h) p.vy*=-1;
+                threeCtx.globalAlpha = p.alpha;
+                threeCtx.fillStyle = p.color;
+                threeCtx.shadowBlur = 10;
+                threeCtx.shadowColor = p.color;
+                threeCtx.beginPath(); threeCtx.arc(p.x,p.y,p.r,0,Math.PI*2); threeCtx.fill();
+            }
+            threeCtx.globalAlpha = 1; threeCtx.shadowBlur = 0;
+            threeAnimId = requestAnimationFrame(loop3D);
+        }
+
+        // ==============================================
+        // UTILS
+        // ==============================================
+        function t(en, sw) { return isSwahili ? sw : en; }
+        function getLang() { return isSwahili ? 'Swahili' : 'English'; }
+
+        function updateStaticLanguage() {
+            isSwahili = translateToggle.checked;
+            document.querySelectorAll('[data-en]').forEach(el => {
+                const sw = el.getAttribute('data-sw'), en = el.getAttribute('data-en');
+                if (sw && en) el.textContent = isSwahili ? sw : en;
+            });
+            document.querySelectorAll('[data-en-placeholder]').forEach(el => {
+                const sw = el.getAttribute('data-sw-placeholder'), en = el.getAttribute('data-en-placeholder');
+                if (sw && en) el.placeholder = isSwahili ? sw : en;
+            });
+            $('label-en').className = `text-[9px] font-bold ${isSwahili?'text-slate-400 dark:text-slate-500':'text-slate-900 dark:text-white'}`;
+            $('label-sw').className = `text-[9px] font-bold ${isSwahili?'text-slate-900 dark:text-white':'text-slate-400 dark:text-slate-500'}`;
+            document.querySelectorAll('#doc-type option').forEach(opt => {
+                const doc = DOC_TYPES.find(d => d.id===opt.value);
+                if (doc) {
+                    const label = isSwahili ? (doc.label_sw||doc.label) : doc.label;
+                    opt.textContent = doc.category ? `[${doc.category}] ${label}` : label;
+                }
+            });
+            filterDocOptions();
+            renderFields(currentDocType);
+        }
+
+        function showError(msg) {
+            emptyState.classList.add('hidden');
+            loadingState.classList.add('hidden');
+            resultState.classList.add('hidden');
+            errorState.classList.remove('hidden');
+            errorMessage.textContent = msg || 'An error occurred.';
+        }
+        function showLoading() {
+            emptyState.classList.add('hidden');
+            resultState.classList.add('hidden');
+            errorState.classList.add('hidden');
+            loadingState.classList.remove('hidden');
+            generateBtn.disabled = true;
+        }
+        function showResult(docHtml, docType) {
+            loadingState.classList.add('hidden');
+            errorState.classList.add('hidden');
+            emptyState.classList.add('hidden');
+            resultState.classList.remove('hidden');
+            docHtml = ensureSignatureBlock(docHtml, docType);
+            docContent.innerHTML = docHtml;
+            const doc = DOC_TYPES.find(d => d.id===docType);
+            docTypeBadge.textContent = doc?.label || docType;
+            docCategoryBadge.textContent = doc?.category || 'General';
+            docDate.textContent = new Date().toLocaleDateString('en-KE',{day:'numeric',month:'long',year:'numeric'});
+            generatedDocument = docHtml;
+            generateBtn.disabled = false;
+            updateWordCount();
+            saveToHistory(docHtml, docType);
+            updateStats();
+            resultState.scrollIntoView({behavior:'smooth', block:'start'});
+        }
+        function clearDocument() {
+            resultState.classList.add('hidden');
+            emptyState.classList.remove('hidden');
+            generatedDocument = '';
+            docContent.innerHTML = '';
+            wordCountSpan.textContent = '0';
+        }
+
+        // ==============================================
+        // SIGNATURE BLOCK
+        // ==============================================
+        function ensureSignatureBlock(html, docType) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            const hasSig = tempDiv.querySelector('.signature-block') ||
+                tempDiv.innerHTML.toLowerCase().includes('signature') ||
+                tempDiv.innerHTML.toLowerCase().includes('signed');
+            if (hasSig) return html;
+            const docLabel = DOC_TYPES.find(d => d.id===docType)?.label || docType;
+            const date = new Date().toLocaleDateString('en-KE',{day:'numeric',month:'long',year:'numeric'});
+            const sigHTML = `
+                <div class="signature-block">
+                    <h3>EXECUTION</h3>
+                    <p><strong>IN WITNESS WHEREOF</strong> the parties have executed this ${docLabel} on the date first written above.</p>
+                    <div class="sig-line">
+                        <div>
+                            <span class="sig-label">SIGNED by the Plaintiff / Party A</span>
+                            <div class="sig-placeholder">_________________________</div>
+                            <div style="font-size:0.75rem;color:#94a3b8;">Name: _________________________</div>
+                            <div style="font-size:0.75rem;color:#94a3b8;">Date: _________________________</div>
+                        </div>
+                        <div>
+                            <span class="sig-label">SIGNED by the Defendant / Party B</span>
+                            <div class="sig-placeholder">_________________________</div>
+                            <div style="font-size:0.75rem;color:#94a3b8;">Name: _________________________</div>
+                            <div style="font-size:0.75rem;color:#94a3b8;">Date: _________________________</div>
+                        </div>
+                    </div>
+                    <div style="margin-top:1rem;">
+                        <span class="sig-label">WITNESSED BY:</span>
+                        <div style="display:flex;flex-wrap:wrap;gap:1.5rem;margin-top:0.5rem;">
+                            <div style="flex:1;">
+                                <div class="sig-placeholder">_________________________</div>
+                                <div style="font-size:0.75rem;color:#94a3b8;">Name: _________________________</div>
+                                <div style="font-size:0.75rem;color:#94a3b8;">ID/Passport: _________________</div>
+                            </div>
+                            <div style="flex:1;">
+                                <div class="sig-placeholder">_________________________</div>
+                                <div style="font-size:0.75rem;color:#94a3b8;">Name: _________________________</div>
+                                <div style="font-size:0.75rem;color:#94a3b8;">ID/Passport: _________________</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top:1rem;font-size:0.75rem;color:#94a3b8;border-top:1px dashed var(--border);padding-top:0.5rem;">
+                        <i class="fas fa-scale-balanced"></i> Executed at _________________ on this ${date}.
+                    </div>
+                </div>`;
+            const wrapper = tempDiv.querySelector('.doc-content-wrapper') || tempDiv;
+            wrapper.innerHTML += sigHTML;
+            return wrapper.innerHTML;
+        }
+
+        // ==============================================
+        // WORD COUNT / STATS
+        // ==============================================
+        function updateWordCount() {
+            const text = docContent.textContent || docContent.innerText || '';
+            const words = text.trim().split(/\s+/).filter(w=>w.length>0).length;
+            wordCountSpan.textContent = words;
+            return words;
+        }
+        function updateStats() {
+            history = loadHistory();
+            const categories = new Set(DOC_TYPES.map(d=>d.category));
+            const wordCount = history.reduce((sum,h) => {
+                const text = h.content.replace(/<[^>]*>/g,'');
+                return sum + text.trim().split(/\s+/).filter(w=>w.length>0).length;
+            }, 0);
+            statDocuments.textContent = history.length;
+            statCategories.textContent = categories.size;
+            statWords.textContent = wordCount.toLocaleString();
+            statHistory.textContent = history.length;
+        }
+
+        // ==============================================
+        // HISTORY
+        // ==============================================
+        function loadHistory() {
+            try {
+                const stored = localStorage.getItem(HISTORY_KEY);
+                history = stored ? JSON.parse(stored) : [];
+            } catch(e) { history = []; }
+            return history;
+        }
+        function saveToHistory(content, docType) {
+            const doc = DOC_TYPES.find(d => d.id===docType);
+            const entry = {
+                id: Date.now(),
+                docType,
+                docLabel: doc?.label || docType,
+                category: doc?.category || 'General',
+                timestamp: new Date().toISOString(),
+                content
+            };
+            history = loadHistory();
+            history.unshift(entry);
+            if (history.length>50) history = history.slice(0,50);
+            try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch(e){}
+        }
+        function renderHistory() {
+            history = loadHistory();
+            if (!history.length) {
+                historyList.innerHTML = `<p class="text-slate-400 dark:text-slate-500 text-sm" data-en="No documents generated yet." data-sw="Hakuna hati iliyotengenezwa bado.">No documents generated yet.</p>`;
+                return;
+            }
+            let html = '';
+            history.forEach((entry,index) => {
+                const date = new Date(entry.timestamp).toLocaleString('en-KE',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+                html += `<div class="history-item" onclick="viewHistoryItem(${index})">
+                    <div class="meta">
+                        <span class="title">${entry.docLabel}</span>
+                        <span><span class="category-tag">${entry.category}</span> <span class="text-slate-400 text-[10px] ml-2">${date}</span></span>
+                    </div>
+                    <div class="text-[10px] text-slate-400 mt-1">${entry.content.replace(/<[^>]*>/g,'').substring(0,100)}...</div>
+                </div>`;
+            });
+            historyList.innerHTML = html;
+        }
+        function viewHistoryItem(index) {
+            const entry = history[index];
+            if (!entry) return;
+            docContent.innerHTML = entry.content;
+            generatedDocument = entry.content;
+            docTypeBadge.textContent = entry.docLabel;
+            docCategoryBadge.textContent = entry.category;
+            docDate.textContent = new Date(entry.timestamp).toLocaleDateString('en-KE',{day:'numeric',month:'long',year:'numeric'});
+            emptyState.classList.add('hidden');
+            loadingState.classList.add('hidden');
+            errorState.classList.add('hidden');
+            resultState.classList.remove('hidden');
+            updateWordCount();
+            closeHistory();
+            resultState.scrollIntoView({behavior:'smooth', block:'start'});
+        }
+        function openHistory() { renderHistory(); historyModal.style.display = 'flex'; }
+        function closeHistory() { historyModal.style.display = 'none'; }
+        historyModal.addEventListener('click', function(e) { if (e.target===this) closeHistory(); });
+        historyBtn.addEventListener('click', openHistory);
+
+        // ==============================================
+        // DARK MODE
+        // ==============================================
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode', isDarkMode);
+            darkModeIcon.className = isDarkMode ? 'fas fa-sun text-xs' : 'fas fa-moon text-xs';
+            try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({darkMode:isDarkMode})); } catch(e){}
+        }
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+        try {
+            const settings = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+            if (settings?.darkMode) { isDarkMode = true; document.body.classList.add('dark-mode'); darkModeIcon.className = 'fas fa-sun text-xs'; }
+        } catch(e){}
+
+        // ==============================================
+        // AI CHAT
+        // ==============================================
+        async function sendChatMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+            chatInput.value = '';
+            const userMsg = document.createElement('div');
+            userMsg.className = 'chat-message user';
+            userMsg.textContent = message;
+            chatContainer.appendChild(userMsg);
+            const typing = document.createElement('div');
+            typing.className = 'chat-message ai';
+            typing.textContent = '...';
+            chatContainer.appendChild(typing);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
+                    method:'POST',
+                    headers:{'Content-Type':'application/json','X-goog-api-key':API_KEY},
+                    body:JSON.stringify({
+                        contents:[{parts:[{text:`You are a legal assistant specializing in Kenyan law. Answer concisely and helpfully, citing relevant Kenyan statutes where applicable:\n\n${message}`}]}],
+                        generationConfig:{temperature:0.3,maxOutputTokens:500}
+                    })
+                });
+                if (!response.ok) throw new Error('Chat API error');
+                const result = await response.json();
+                const reply = result.candidates?.[0]?.content?.parts?.[0]?.text || 'I apologize, I could not generate a response.';
+                typing.textContent = reply;
+            } catch(err) {
+                typing.textContent = "I'm sorry, I encountered an error. Please try again.";
+            }
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        chatSend.addEventListener('click', sendChatMessage);
+        chatInput.addEventListener('keydown', e => { if (e.key==='Enter') sendChatMessage(); });
+
+        // ==============================================
+        // DYNAMIC FIELDS
+        // ==============================================
+        function getTemplateForDoc(docId) {
+            const doc = DOC_TYPES.find(d=>d.id===docId);
+            if (!doc) return null;
+            return TEMPLATES[doc.template] || null;
+        }
+        function renderFields(docType) {
+            const template = getTemplateForDoc(docType);
+            if (!template) { dynamicFields.innerHTML = '<p class="text-sm text-red-500">No field template defined.</p>'; return; }
+            let html = '';
+            template.fields.forEach(f => {
+                const isTextarea = f.type==='textarea';
+                const label = isSwahili ? (f.label_sw||f.label) : f.label;
+                const placeholder = isSwahili ? (f.placeholder_sw||f.placeholder) : f.placeholder;
+                const val = lastFormData[f.id] || '';
+                const rows = f.rows || 2;
+                if (f.id==='court') {
+                    html += `<div class="court-wrapper">
+                        <label class="form-label" for="field_${f.id}">${label}</label>
+                        <input id="field_${f.id}" class="form-input" type="text" placeholder="${placeholder||''}" value="${val}" autocomplete="off" />
+                        <div id="court-suggestions-${f.id}" class="court-suggestions"></div>
+                    </div>`;
+                } else {
+                    html += `<div>
+                        <label class="form-label" for="field_${f.id}">${label}</label>
+                        ${isTextarea
+                            ? `<textarea id="field_${f.id}" class="form-input resize-y" rows="${rows}" placeholder="${placeholder||''}">${val}</textarea>`
+                            : `<input id="field_${f.id}" class="form-input" type="text" placeholder="${placeholder||''}" value="${val}">`
+                        }
+                    </div>`;
+                }
+            });
+            dynamicFields.innerHTML = html;
+            template.fields.forEach(f => {
+                const el = document.getElementById(`field_${f.id}`);
+                if (el && lastFormData[f.id]!==undefined) el.value = lastFormData[f.id];
+            });
+            const courtInput = document.getElementById('field_court');
+            if (courtInput) {
+                const sugDiv = document.getElementById('court-suggestions-court');
+                if (sugDiv) {
+                    courtInput.addEventListener('input', function() {
+                        const val = this.value.toLowerCase().trim();
+                        if (!val) { sugDiv.style.display='none'; return; }
+                        const matches = KENYAN_COURTS.filter(c=>c.toLowerCase().includes(val));
+                        if (!matches.length) { sugDiv.style.display='none'; return; }
+                        sugDiv.innerHTML = '';
+                        matches.slice(0,8).forEach(m => {
+                            const item = document.createElement('div');
+                            item.className = 'suggestion-item';
+                            item.textContent = m;
+                            item.addEventListener('mousedown', function(e) {
+                                e.preventDefault();
+                                courtInput.value = m;
+                                sugDiv.style.display='none';
+                                lastFormData['court'] = m;
+                                courtInput.dispatchEvent(new Event('change'));
+                                autoSaveDraft();
+                            });
+                            sugDiv.appendChild(item);
+                        });
+                        sugDiv.style.display = 'block';
+                    });
+                    document.addEventListener('click', function(e) {
+                        if (!courtInput.contains(e.target) && !sugDiv.contains(e.target)) sugDiv.style.display='none';
+                    });
+                    courtInput.addEventListener('blur', ()=>{ setTimeout(()=>sugDiv.style.display='none',200); });
+                }
+            }
+        }
+        function collectFormData() {
+            const template = getTemplateForDoc(currentDocType);
+            const data = {};
+            if (template) template.fields.forEach(f => {
+                const el = document.getElementById(`field_${f.id}`);
+                if (el) data[f.id] = el.value.trim();
+            });
+            data.extra = extraInstructions.value.trim();
+            data.docType = currentDocType;
+            data.lang = getLang();
+            lastFormData = {...data};
+            return data;
+        }
+        function setFormData(data) {
+            const template = getTemplateForDoc(data.docType || currentDocType);
+            if (template) template.fields.forEach(f => {
+                const el = document.getElementById(`field_${f.id}`);
+                if (el && data[f.id]!==undefined) el.value = data[f.id];
+            });
+            if (data.extra!==undefined) extraInstructions.value = data.extra;
+            lastFormData = {...data};
+        }
+
+        // ==============================================
+        // DRAFT MANAGEMENT
+        // ==============================================
+        function autoSaveDraft() {
+            const data = collectFormData();
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                draftStatus.innerHTML = `<i class="fas fa-circle text-green-500 text-[7px]"></i> <span data-en="Auto-saved" data-sw="Imehifadhiwa">Auto-saved</span>`;
+                loadDraftBtn.style.display = 'inline-flex';
+            } catch(e){}
+        }
+        function loadDraft() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) { alert(t('No draft found.','Hakuna rasimu.')); return; }
+                const data = JSON.parse(raw);
+                if (data.docType) {
+                    docTypeSelect.value = data.docType;
+                    currentDocType = data.docType;
+                    renderFields(currentDocType);
+                    setTimeout(()=>{ setFormData(data); draftStatus.innerHTML = `<i class="fas fa-circle text-green-500 text-[7px]"></i> <span data-en="Draft loaded" data-sw="Rasimu imepakiwa">Draft loaded</span>`; },50);
+                }
+            } catch(e) { alert(t('Error loading draft.','Hitilafu kupakia rasimu.')); }
+        }
+        function clearDraft() {
+            localStorage.removeItem(STORAGE_KEY);
+            draftStatus.innerHTML = `<i class="fas fa-circle text-slate-300 text-[7px]"></i> <span data-en="No draft" data-sw="Hakuna rasimu">No draft</span>`;
+            loadDraftBtn.style.display = 'none';
+        }
+        function clearForm() {
+            const template = getTemplateForDoc(currentDocType);
+            if (template) template.fields.forEach(f => {
+                const el = document.getElementById(`field_${f.id}`);
+                if (el) el.value = '';
+                lastFormData[f.id] = '';
+            });
+            extraInstructions.value = '';
+            lastFormData.extra = '';
+            clearDraft();
+            clearDocument();
+        }
+
+        // ==============================================
+        // SAMPLE DATA
+        // ==============================================
+        function loadSampleData() {
+            const template = getTemplateForDoc(currentDocType);
+            if (!template) return;
+            const samples = {
+                'court':'High Court of Kenya at Nairobi',
+                'plaintiff':'John Mwangi, P.O. Box 12345, Nairobi, ID 12345678',
+                'defendant':'Jane Akinyi, P.O. Box 67890, Kisumu, ID 87654321',
+                'facts':'1. The Plaintiff and Defendant entered into a contract on 1st January 2025.\n2. The Plaintiff performed all obligations.\n3. The Defendant failed to pay KES 500,000 despite demand.\n4. As a result, the Plaintiff has suffered loss.',
+                'remedy':'a) Payment of KES 500,000.00\nb) Interest at court rates\nc) Costs of this suit',
+                'date':'15th July 2026','place':'Nairobi, Kenya',
+                'party_a':'ABC Enterprises Ltd, P.O. Box 100, Nairobi, Reg. No. 123456',
+                'party_b':'XYZ Suppliers, P.O. Box 200, Mombasa, Reg. No. 654321',
+                'subject':'Supply of office stationery','effective_date':'1st August 2026','term':'12 months','consideration':'KES 250,000',
+                'position':'Senior Software Developer','salary':'KES 120,000','start_date':'1st September 2026','duration':'2 years',
+                'property':'Plot No. 123, Nairobi, along Moi Avenue','rent':'KES 45,000','deposit':'KES 90,000',
+                'executor':'David Ochieng, P.O. Box 300, Eldoret',
+                'beneficiaries':'My children: Alice (50%), Bob (50%). House in Nairobi to Alice.',
+                'guardian':'Mary Wanjiru, P.O. Box 400, Nakuru',
+                'purpose':'Joint research and development of renewable energy solutions',
+                'terms':'Parties agree to share resources and intellectual property equally.',
+                'statement':'I, John Mwangi, do hereby swear that the facts stated herein are true.',
+                'dispute':'Breach of contract regarding delivery of goods.','settlement_amount':'KES 300,000','release':'Full and final settlement of all claims.',
+                'obligation':'Repayment of a loan of KES 1,000,000.','amount':'KES 1,000,000','loan_amount':'KES 5,000,000',
+                'interest':'10% per annum','repayment':'Monthly instalments of KES 50,000 over 10 years.',
+                'goods':'100 bags of premium coffee beans.','price':'KES 2,000,000','delivery':'Within 30 days of order confirmation.',
+                'powers':'To sell property, sign contracts, and manage bank accounts.','business':'Green Valley Farms Ltd',
+                'contribution':'KES 300,000 each','profit_share':'50:50','company_name':'Innovate Solutions Ltd',
+                'registered_office':'P.O. Box 4567, Nairobi, Kenya','directors':'1. John Mwangi (ID 12345678)\n2. Mary Wanjiru (ID 87654321)',
+                'share_capital':'KES 1,000,000','objectives':'Software development, IT consulting, and technology solutions.',
+                'deceased':'Peter Ochieng, ID 98765432','date_death':'1st June 2026',
+                'applicant':'Mary Ochieng, P.O. Box 789, Nairobi, ID 87654321','relationship':'Spouse',
+                'estate':'1. Plot No. 456, Nairobi\n2. Bank Account KCB 1234567890\n3. Vehicle KCA 123X',
+                'client':'John Mwangi','issue':'Whether the contract was breached and what remedies are available.',
+                'purchase_price':'KES 5,000,000','completion_date':'30th October 2026'
+            };
+            const sample = {};
+            template.fields.forEach(f => sample[f.id] = samples[f.id] || `Sample ${f.id}`);
+            sample.extra = 'Please include all standard clauses and ensure compliance with Kenyan law.';
+            setFormData(sample);
+            template.fields.forEach(f => {
+                const el = document.getElementById(`field_${f.id}`);
+                if (el && sample[f.id]!==undefined) el.value = sample[f.id];
+            });
+            extraInstructions.value = sample.extra;
+            draftStatus.innerHTML = `<i class="fas fa-circle text-amber-500 text-[7px]"></i> <span data-en="Sample loaded" data-sw="Mfano umepakiwa">Sample loaded</span>`;
+            autoSaveDraft();
+            toast('Sample data loaded!', 'info');
+        }
+
+        // ==============================================
+        // DROPDOWN
+        // ==============================================
+        function populateDropdown() {
+            docTypeSelect.innerHTML = '';
+            DOC_TYPES.forEach(doc => {
+                const opt = document.createElement('option');
+                opt.value = doc.id;
+                opt.textContent = doc.category ? `[${doc.category}] ${doc.label}` : doc.label;
+                opt.setAttribute('data-en', doc.label);
+                opt.setAttribute('data-sw', doc.label_sw||doc.label);
+                opt.setAttribute('data-category', doc.category||'');
+                docTypeSelect.appendChild(opt);
+            });
+            docTypeSelect.value = currentDocType;
+            filterDocOptions();
+        }
+        function filterDocOptions() {
+            const searchTerm = docSearch.value.toLowerCase().trim();
+            const options = docTypeSelect.options;
+            let hasVisible = false;
+            for (let i=0;i<options.length;i++) {
+                const opt = options[i];
+                const text = opt.textContent.toLowerCase();
+                const match = text.includes(searchTerm);
+                opt.style.display = match ? '' : 'none';
+                if (match) hasVisible = true;
+            }
+            noResultsMsg.style.display = (searchTerm && !hasVisible) ? 'block' : 'none';
+        }
+        docSearch.addEventListener('input', filterDocOptions);
+        docTypeSelect.addEventListener('change', function() {
+            currentDocType = this.value;
+            renderFields(currentDocType);
+            if (!resultState.classList.contains('hidden')) {
+                resultState.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                generatedDocument = '';
+            }
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                loadDraftBtn.style.display = 'inline-flex';
+                draftStatus.innerHTML = `<i class="fas fa-circle text-green-500 text-[7px]"></i> <span data-en="Draft exists" data-sw="Rasimu ipo">Draft exists</span>`;
+            } else {
+                loadDraftBtn.style.display = 'none';
+                draftStatus.innerHTML = `<i class="fas fa-circle text-slate-300 text-[7px]"></i> <span data-en="No draft" data-sw="Hakuna rasimu">No draft</span>`;
+            }
+        });
+
+        // ==============================================
+        // GEMINI API
+        // ==============================================
+        async function generateDocument(formData) {
+            const docType = formData.docType;
+            const docLabel = DOC_TYPES.find(d=>d.id===docType)?.label || docType;
+            const lang = formData.lang;
+            const category = DOC_TYPES.find(d=>d.id===docType)?.category || 'General';
+            const template = getTemplateForDoc(docType);
+            let fieldSummary = '';
+            if (template) template.fields.forEach(f => {
+                const val = formData[f.id] || '(not provided)';
+                const label = isSwahili ? (f.label_sw||f.label) : f.label;
+                fieldSummary += `- ${label}: ${val}\n`;
+            });
+            if (formData.extra) fieldSummary += `\nAdditional instructions: ${formData.extra}`;
+            const catInstructions = {
+                'Pleadings': 'Draft a court pleading under Kenyan law. Include proper court heading, parties, numbered facts, legal basis, prayers, and verification.',
+                'Affidavits & Declarations': 'Draft a sworn statement under Kenyan law. Include deponent details, statement of truth, numbered facts, and Commissioner for Oaths section.',
+                'Conveyancing & Property': 'Draft a property document under Kenyan law. Include full property description, parties, consideration, terms, and reference to Land Registration Act 2012.',
+                'Corporate & Commercial': 'Draft a corporate document under Kenyan law. Include compliance with Companies Act 2015, parties, obligations, governing law, and execution clause.',
+                'Employment': 'Draft an employment document under Kenyan law. Include compliance with Employment Act 2007, job details, remuneration, termination provisions.',
+                'Family & Succession': 'Draft a family/succession document under Kenyan law. Include compliance with Law of Succession Act CAP 160, parties, asset disposition, execution formalities.',
+                'Loans & Finance': 'Draft a loan document under Kenyan law. Include loan amount, interest, repayment, security, default clauses, and governing law.',
+                'Commercial Contracts': 'Draft a commercial contract under Kenyan law. Include parties, goods/services, pricing, delivery, force majeure, and dispute resolution.',
+                'Notices': 'Draft a formal legal notice under Kenyan law. Include identification, matter, required action, deadline, and consequences.',
+                'Legal Opinions': 'Draft a legal opinion under Kenyan law. Include client, analysis, statutes, conclusion, and disclaimer.',
+                'Demand Letters': 'Draft a formal demand letter under Kenyan law. Include statement of debt, reference to agreement, amount, deadline, consequences, and statutes.',
+                'Miscellaneous': 'Draft a legal document under Kenyan law. Include parties, purpose, compliance, execution formalities, and governing law.'
+            };
+            const specific = catInstructions[category] || catInstructions['Miscellaneous'];
+            const systemPrompt = `You are a professional Kenyan legal document drafter.
+Generate a legally-sound, professionally formatted document in ${lang}.
+CATEGORY: ${category}
+${specific}
+DOCUMENT TYPE: ${docLabel}
+At the end, include a detailed signature block with signature lines for all parties (with names and dates), witness lines (at least two witnesses), and execution date.
+Use HTML classes like "signature-block", "sig-line", "sig-label", "sig-placeholder" for styling.
+Return clean HTML with proper formatting (h1, h2, h3, p, ul, ol, div.declaration-box). No meta-commentary. Only the document HTML.`;
+            const userPrompt = `Generate a ${docLabel} under Kenyan law with the following details:\n${fieldSummary}`;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
+            const payload = {
+                contents:[{parts:[{text:userPrompt}]}],
+                systemInstruction:{parts:[{text:systemPrompt}]},
+                generationConfig:{temperature:0.2,maxOutputTokens:4096}
+            };
+            const response = await fetch(url, {
+                method:'POST',
+                headers:{'Content-Type':'application/json','X-goog-api-key':API_KEY},
+                body:JSON.stringify(payload)
+            });
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(`API Error ${response.status}: ${errText.slice(0,200)}`);
+            }
+            const result = await response.json();
+            const raw = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            return raw.replace(/```html/g,'').replace(/```/g,'').trim();
+        }
+
+        // ==============================================
+        // FORM SUBMIT
+        // ==============================================
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const data = collectFormData();
+            const template = getTemplateForDoc(currentDocType);
+            let missing = [];
+            if (template) {
+                const ids = template.fields.map(f=>f.id);
+                const critical = ['court','plaintiff','defendant','party_a','party_b','client','company_name','deceased','applicant','statement','subject','issue','property','amount','facts','remedy'];
+                critical.forEach(c => { if (ids.includes(c) && !data[c]) missing.push(c); });
+            }
+            if (missing.length) {
+                const labels = {court:'Court',plaintiff:'Plaintiff',defendant:'Defendant',party_a:'Party A',party_b:'Party B',client:'Client Name',company_name:'Company Name',deceased:'Deceased Name',applicant:'Applicant Name',statement:'Statement',subject:'Subject',issue:'Legal Issue',property:'Property',amount:'Amount',facts:'Facts',remedy:'Remedy'};
+                alert(t(`Please fill in: ${missing.map(m=>labels[m]||m).join(', ')}`, `Tafadhali jaza: ${missing.map(m=>labels[m]||m).join(', ')}`));
+                return;
+            }
+            showLoading();
+            try {
+                const docHtml = await generateDocument(data);
+                if (!docHtml || docHtml.length < 50) throw new Error('Generated document is too short.');
+                const styled = `<div class="doc-content-wrapper">${docHtml}</div>`;
+                showResult(styled, currentDocType);
+                autoSaveDraft();
+                updateStats();
+            } catch(err) {
+                console.error(err);
+                showError(err.message || 'Failed to generate document.');
+                generateBtn.disabled = false;
+            }
+        });
+
+        // ==============================================
+        // DOWNLOADS
+        // ==============================================
+        function getPlainText() {
+            const el = document.createElement('div');
+            el.innerHTML = docContent.innerHTML;
+            return el.textContent || el.innerText || '';
+        }
+        function downloadPDF() {
+            const element = document.getElementById('doc-print-area');
+            const opt = {
+                margin:[15,15,15,15],
+                filename:`LegalDoc_${currentDocType}_${new Date().toISOString().slice(0,10)}.pdf`,
+                image:{type:'jpeg',quality:0.98},
+                html2canvas:{scale:2,useCORS:true,logging:false},
+                jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+                pagebreak:{mode:['avoid-all','css','legacy']}
+            };
+            const btn = document.querySelector('.btn-success');
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+            html2pdf().set(opt).from(element).save().then(()=>{ btn.innerHTML = orig; btn.disabled = false; toast('PDF downloaded!','success'); }).catch(err=>{
+                console.warn('PDF error, falling back to print...', err);
+                window.print();
+                btn.innerHTML = orig; btn.disabled = false;
+            });
+        }
+        function downloadTXT() {
+            const text = getPlainText();
+            const blob = new Blob([text],{type:'text/plain;charset=utf-8'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `LegalDoc_${currentDocType}_${new Date().toISOString().slice(0,10)}.txt`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            toast('TXT downloaded!','success');
+        }
+        function downloadDOCX() {
+            const htmlContent = docContent.innerHTML;
+            const styles = `<style>
+                body{font-family:'Times New Roman',serif;margin:2cm;}
+                h1{font-size:18pt;text-align:center;}
+                h2{font-size:14pt;margin-top:12pt;}
+                p{font-size:12pt;line-height:1.5;}
+                .declaration-box{background:#f8fafc;border-left:4px solid #2563eb;padding:10pt 15pt;}
+                .signature-block{margin-top:20pt;border-top:2px solid #000;padding-top:12pt;}
+                .sig-line{display:flex;flex-wrap:wrap;gap:20pt;}
+                .sig-label{font-size:9pt;font-weight:bold;text-transform:uppercase;color:#64748b;}
+                .sig-placeholder{border-bottom:1px solid #94a3b8;padding:4pt 0;min-height:20pt;}
+            </style>`;
+            const fullDoc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head><meta charset="utf-8"><title>Legal Document</title>${styles}</head><body>${htmlContent}</body></html>`;
+            const blob = new Blob([fullDoc],{type:'application/msword;charset=utf-8'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `LegalDoc_${currentDocType}_${new Date().toISOString().slice(0,10)}.doc`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            toast('DOCX downloaded!','success');
+        }
+        function copyDocument() {
+            const text = getPlainText();
+            navigator.clipboard.writeText(text).then(()=>toast('Copied to clipboard!','success')).catch(()=>{
+                const ta = document.createElement('textarea');
+                ta.value = text; document.body.appendChild(ta); ta.select();
+                document.execCommand('copy'); document.body.removeChild(ta);
+                toast('Copied to clipboard!','success');
+            });
+        }
+        function printDocument() { window.print(); }
+        function regenerateDocument() { form.dispatchEvent(new Event('submit')); }
+        function retryGeneration() { errorState.classList.add('hidden'); form.dispatchEvent(new Event('submit')); }
+
+        // ==============================================
+        // MOBILE PANELS
+        // ==============================================
+        function openSlidePanel(side) {
+            const ov = $('mobileOverlay');
+            ov.classList.remove('hidden');
+            if (side==='left') $('leftSidebarPanel').classList.add('open');
+            if (side==='right') $('rightSidebarPanel').classList.add('open');
+        }
+        function closeAllSlidePanels() {
+            $('leftSidebarPanel')?.classList.remove('open');
+            $('rightSidebarPanel')?.classList.remove('open');
+            $('mobileOverlay').classList.add('hidden');
+        }
+        function mobileNavAction(tab) {
+            document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.remove('active'));
+            document.querySelector(`.bottom-nav button[data-tab="${tab}"]`).classList.add('active');
+            if (tab==='form') { openSlidePanel('left'); }
+            if (tab==='preview') { closeAllSlidePanels(); if (!resultState.classList.contains('hidden')) resultState.scrollIntoView({behavior:'smooth'}); else toast('Generate a document first.','info'); }
+            if (tab==='chat') { openSlidePanel('left'); setTimeout(()=>{ $('chat-input')?.focus(); $('chat-container')?.scrollIntoView({behavior:'smooth'}); }, 300); }
+            if (tab==='history') { openHistory(); }
+        }
+        $('mobileMenuBtn')?.addEventListener('click', ()=>openSlidePanel('left'));
+
+        // ==============================================
+        // INIT
+        // ==============================================
+        function init() {
+            init3DBackground();
+            init3DPreview();
+            populateDropdown();
+            currentDocType = docTypeSelect.value;
+            renderFields(currentDocType);
+            updateStaticLanguage();
+
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.docType) {
+                        docTypeSelect.value = data.docType;
+                        currentDocType = data.docType;
+                        renderFields(currentDocType);
+                        setTimeout(()=>{ setFormData(data); draftStatus.innerHTML = `<i class="fas fa-circle text-green-500 text-[7px]"></i> <span data-en="Draft loaded" data-sw="Rasimu imepakiwa">Draft loaded</span>`; loadDraftBtn.style.display='inline-flex'; },50);
+                    }
+                } catch(e){}
+            } else {
+                loadDraftBtn.style.display = 'none';
+                draftStatus.innerHTML = `<i class="fas fa-circle text-slate-300 text-[7px]"></i> <span data-en="No draft" data-sw="Hakuna rasimu">No draft</span>`;
+            }
+
+            let saveTimeout;
+            document.addEventListener('input', e => {
+                if (e.target.closest('#doc-form')) {
+                    clearTimeout(saveTimeout);
+                    saveTimeout = setTimeout(autoSaveDraft, 500);
+                }
+            });
+
+            saveDraftBtn.addEventListener('click', ()=>{ autoSaveDraft(); toast('Draft saved!','success'); });
+            loadDraftBtn.addEventListener('click', loadDraft);
+            clearFormBtn.addEventListener('click', ()=>{ if (confirm(t('Clear all form data?','Futa data yote ya fomu?'))) clearForm(); });
+            sampleDataBtn.addEventListener('click', loadSampleData);
+            translateToggle.addEventListener('change', ()=>{
+                const data = collectFormData();
+                lastFormData = {...data};
+                updateStaticLanguage();
+                const tpl = getTemplateForDoc(currentDocType);
+                if (tpl) tpl.fields.forEach(f => { const el = document.getElementById(`field_${f.id}`); if (el && lastFormData[f.id]!==undefined) el.value = lastFormData[f.id]; });
+            });
+
+            loadHistory();
+            filterDocOptions();
+            updateStats();
+
+            // Keyboard shortcut
+            document.addEventListener('keydown', e => {
+                if ((e.ctrlKey||e.metaKey) && e.key==='Enter') { e.preventDefault(); form.dispatchEvent(new Event('submit')); }
+            });
+
+            // Close slide panels on resize to desktop
+            window.addEventListener('resize', ()=>{ if (window.innerWidth>=769) closeAllSlidePanels(); });
+
+            console.log(`⚖️ Legal Document Generator loaded with ${DOC_TYPES.length} document types.`);
+        }
+        init();
+    </script>
+</body>
+</html>

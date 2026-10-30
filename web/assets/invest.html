@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <title>VectaFunds | Premium Global Investments</title>
+  <!-- Force HTTPS -->
+  <script>
+    (function() {
+      if (window.location.protocol === 'http:' && 
+          window.location.hostname !== 'localhost' && 
+          !window.location.hostname.includes('127.0.0.1') &&
+          !window.location.hostname.includes('::1')) {
+        window.location.href = 'https://' + window.location.hostname + window.location.pathname + window.location.search;
+      }
+    })();
+  </script>
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0A0F1A;
+      color: #EFF3F8;
+      line-height: 1.5;
+      scroll-behavior: smooth;
+      font-weight: 400;
+    }
+
+    h1, h2, h3, h4, .logo h1, .plan-title, .section-header h3 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .app-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: #0F1725;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
+      min-height: 100vh;
+      width: 100%;
+    }
+
+    :root {
+      --primary-dark: #0A0F1A;
+      --card-bg: #16202E;
+      --accent-gold: #F5B041;
+      --accent-teal: #2DD4BF;
+      --accent-blue: #3B82F6;
+      --hover-glow: 0 20px 35px -12px rgba(45, 212, 191, 0.25);
+      --border-subtle: rgba(45, 212, 191, 0.2);
+    }
+
+    a, button { -webkit-tap-highlight-color: transparent; text-decoration: none; }
+    button { cursor: pointer; background: none; border: none; }
+
+    /* WhatsApp float */
+    .whatsapp-float {
+      position: fixed;
+      bottom: 24px;
+      right: 20px;
+      background: #25D366;
+      width: 56px;
+      height: 56px;
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 20px rgba(37, 211, 102, 0.3);
+      z-index: 1000;
+      transition: all 0.25s ease;
+      cursor: pointer;
+      color: white;
+      font-size: 28px;
+    }
+    .whatsapp-float:hover { transform: scale(1.08); background: #20b859; }
+
+    /* Navbar: logo on top, nav links in a row below */
+    .navbar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem 2rem;
+      background: rgba(15, 23, 37, 0.96);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(45, 212, 191, 0.25);
+      position: sticky;
+      top: 0;
+      z-index: 99;
+      gap: 0.8rem;
+    }
+    .logo {
+      text-align: center;
+    }
+    .logo h1 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: linear-gradient(130deg, #F5B041 20%, #2DD4BF 90%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      letter-spacing: -0.03em;
+      white-space: nowrap;
+    }
+    .logo span { 
+      font-size: 0.7rem; 
+      font-weight: 500; 
+      color: #94A3B8; 
+      display: block; 
+      letter-spacing: 0;
+      font-family: 'Inter', sans-serif;
+    }
+    .nav-links { 
+      display: flex; 
+      gap: 1.2rem; 
+      align-items: center; 
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .nav-links a { 
+      font-weight: 600; 
+      font-size: 0.95rem; 
+      color: #CBD5E1; 
+      transition: 0.2s;
+      font-family: 'Inter', sans-serif;
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      white-space: nowrap;
+    }
+    .nav-links a:hover { color: var(--accent-teal); background: rgba(45,212,191,0.1); }
+    .nav-deposit {
+      background: rgba(245, 176, 65, 0.15);
+      border: 1px solid rgba(245, 176, 65, 0.5);
+      color: #F5B041 !important;
+    }
+    .nav-withdraw {
+      background: rgba(45, 212, 191, 0.1);
+      border: 1px solid rgba(45, 212, 191, 0.5);
+      color: #2DD4BF !important;
+    }
+    .get-started-btn {
+      background: linear-gradient(105deg, #2DD4BF, #3B82F6);
+      color: white !important;
+      padding: 0.5rem 1.4rem;
+      border-radius: 40px;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(45, 212, 191, 0.4);
+      transition: all 0.2s;
+    }
+    .get-started-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 18px rgba(45, 212, 191, 0.5);
+    }
+
+    /* Mobile: slightly smaller */
+    @media (max-width: 640px) {
+      .navbar {
+        padding: 0.8rem 1rem;
+      }
+      .logo h1 {
+        font-size: 1.3rem;
+      }
+      .logo span {
+        font-size: 0.55rem;
+      }
+      .nav-links {
+        gap: 0.8rem;
+      }
+      .nav-links a {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.9rem;
+      }
+    }
+
+    .hero-premium {
+      padding: 2.5rem 2rem;
+      background: radial-gradient(circle at 20% 30%, #1A2A3F, #0F1725);
+      border-bottom-left-radius: 32px;
+      border-bottom-right-radius: 32px;
+    }
+    .hero-badge {
+      background: rgba(245, 176, 65, 0.15);
+      padding: 0.3rem 1.2rem;
+      border-radius: 60px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #F5B041;
+      margin-bottom: 1rem;
+    }
+    .hero-premium h2 { 
+      font-size: 2.8rem; 
+      font-weight: 800; 
+      line-height: 1.2; 
+      color: #FFFFFF; 
+      margin-bottom: 0.5rem; 
+      text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .hero-tagline { 
+      font-size: 1.05rem; 
+      color: #B9C8E8; 
+      font-weight: 500; 
+      margin: 0.5rem 0 1rem; 
+      border-left: 3px solid var(--accent-gold); 
+      padding-left: 0.8rem; 
+    }
+    .trust-badge { display: flex; gap: 1.8rem; flex-wrap: wrap; margin: 1rem 0 1.4rem; font-size: 0.85rem; font-weight: 600; color: #CBD5E1; }
+    .trust-badge i { color: var(--accent-gold); margin-right: 6px; }
+    .btn-group { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.8rem; }
+    .btn-primary {
+      background: linear-gradient(95deg, #2DD4BF, #3B82F6);
+      padding: 0.85rem 1.8rem;
+      border-radius: 60px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: white;
+      transition: 0.2s;
+      box-shadow: 0 8px 18px rgba(45,212,191,0.3);
+    }
+    .btn-outline {
+      border: 1.5px solid #2DD4BF;
+      padding: 0.85rem 1.8rem;
+      border-radius: 60px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #2DD4BF;
+      background: transparent;
+    }
+    .section-header { padding: 0 2rem; margin: 2rem 0 1rem; }
+    .section-header h3 { 
+      font-size: 2rem; 
+      font-weight: 800; 
+      letter-spacing: -0.02em; 
+      color: #FFFFFF;
+    }
+    .section-header p { color: #94A3B8; font-size: 1rem; margin-top: 0.3rem; font-weight: 400; }
+
+    .plans-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      padding: 0 2rem;
+      margin-bottom: 2rem;
+    }
+    .fund-card {
+      background: #16202E;
+      border-radius: 32px;
+      padding: 1.6rem;
+      transition: all 0.3s ease;
+      border: 1px solid rgba(45,212,191,0.2);
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+    }
+    .fund-card:hover { transform: translateY(-5px); border-color: #2DD4BF; box-shadow: var(--hover-glow); }
+    .plan-title { 
+      font-size: 1.6rem; 
+      font-weight: 800; 
+      font-family: 'Outfit', sans-serif; 
+      color: #F5B041; 
+    }
+    .plan-badge { background: rgba(45,212,191,0.15); display: inline-block; padding: 0.2rem 0.8rem; border-radius: 40px; font-size: 0.7rem; font-weight: 700; margin: 0.5rem 0 0.8rem; color: #2DD4BF; }
+    .feature-list-modern { list-style: none; margin: 1rem 0 1.2rem; }
+    .feature-list-modern li { font-size: 0.9rem; margin-bottom: 0.7rem; display: flex; align-items: center; gap: 10px; color: #CBD5E1; font-weight: 400; }
+    .feature-list-modern li i { color: var(--accent-gold); width: 1.2rem; }
+    .invest-now-btn {
+      width: 100%;
+      background: rgba(45,212,191,0.1);
+      border: 1px solid rgba(45,212,191,0.4);
+      padding: 0.75rem;
+      border-radius: 50px;
+      font-weight: 700;
+      color: #2DD4BF;
+      transition: 0.2s;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .invest-now-btn:hover { background: #2DD4BF; color: #0F1725; }
+
+    .investor-feed {
+      background: #0F1725;
+      border-radius: 32px;
+      margin: 0 2rem 2rem;
+      padding: 1.2rem;
+      border: 1px solid rgba(45,212,191,0.2);
+      box-shadow: 0 15px 30px -10px rgba(0,0,0,0.4);
+    }
+    .feed-header { font-weight: 800; margin-bottom: 1rem; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; color: #F5B041; border-left: 4px solid #2DD4BF; padding-left: 12px; font-family: 'Outfit', sans-serif; }
+    .feed-items { max-height: 320px; overflow-y: auto; font-size: 0.85rem; scrollbar-width: thin; }
+    .feed-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(45,212,191,0.1); flex-wrap: wrap; gap: 8px; }
+    .investor-info { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .flag-icon { font-size: 1.2rem; }
+    .investment-amount { font-weight: 700; color: #2DD4BF; }
+    .live-badge { background: rgba(245,176,65,0.2); padding: 2px 8px; border-radius: 40px; font-size: 0.7rem; color: #F5B041; }
+
+    .keyfacts-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.2rem;
+      background: #0A0F1A;
+      margin: 0 2rem 2rem;
+      border-radius: 32px;
+      padding: 1.5rem;
+      border: 1px solid rgba(45,212,191,0.2);
+      justify-content: space-between;
+    }
+    .fact-item { flex: 1; min-width: 140px; }
+    .fact-item h4 { font-size: 0.85rem; opacity: 0.7; font-weight: 500; color: #94A3B8; }
+    .fact-item p { font-size: 1.2rem; font-weight: 700; margin-top: 6px; color: #F5B041; font-family: 'Outfit', sans-serif; }
+
+    .reg-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      justify-content: center;
+      margin: 1rem 2rem;
+    }
+    .reg-badge { background: rgba(45,212,191,0.1); padding: 0.3rem 1rem; border-radius: 60px; font-size: 0.75rem; font-weight: 600; color: #2DD4BF; }
+
+    .chart-card {
+      background: #16202E;
+      margin: 0 2rem 2rem;
+      padding: 1.2rem;
+      border-radius: 32px;
+      border: 1px solid rgba(45,212,191,0.2);
+    }
+    canvas { max-height: 260px; width: 100%; }
+
+    .commodity-row {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+    .commodity-card {
+      background: #0F1725;
+      border-radius: 24px;
+      flex: 1;
+      padding: 1rem;
+      text-align: center;
+      border: 1px solid rgba(245,176,65,0.3);
+    }
+    .calc-card { background: #16202E; margin: 0 2rem 2rem; border-radius: 32px; padding: 1.2rem; border: 1px solid rgba(45,212,191,0.2); }
+    .calc-select, .calc-input { background: #0F1725; border: 1px solid #2DD4BF; color: white; padding: 0.7rem; border-radius: 60px; font-family: 'Inter', sans-serif; }
+    .faq-item {
+      background: #16202E;
+      border-radius: 24px;
+      margin: 0 2rem 0.8rem;
+      padding: 1rem 1.5rem;
+      border: 1px solid rgba(45,212,191,0.2);
+    }
+    .faq-question { 
+      color: #F5B041; 
+      font-weight: 700;
+      font-family: 'Outfit', sans-serif;
+      cursor: pointer;
+    }
+    .contact-premium {
+      background: linear-gradient(135deg, #0F1725, #1A2A3F);
+      border-radius: 32px;
+      margin: 1rem 2rem;
+      padding: 1.8rem;
+      border: 1px solid #2DD4BF40;
+    }
+    .footer-modern {
+      background: #0A0F1A;
+      padding: 2rem;
+      color: #94A3B8;
+      text-align: center;
+      border-top: 1px solid #2DD4BF20;
+      font-size: 0.85rem;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+    .modal-content {
+      background: #16202E;
+      border: 1px solid #2DD4BF;
+      max-width: 500px;
+      width: 90%;
+      border-radius: 40px;
+      padding: 1.8rem;
+      color: white;
+      font-family: 'Inter', sans-serif;
+    }
+    .modal-content input, .modal-content select { background: #0F1725; border: 1px solid #2DD4BF; color: white; padding: 0.7rem; border-radius: 40px; width: 100%; margin-bottom: 12px; }
+    .address-card {
+      background: #0F1725;
+      border-radius: 24px;
+      padding: 1rem;
+      margin-top: 1rem;
+      font-family: monospace;
+      word-break: break-all;
+      font-size: 0.9rem;
+    }
+    .copy-icon {
+      cursor: pointer;
+      margin-left: 10px;
+      color: var(--accent-teal);
+    }
+    @media (min-width: 768px) {
+      .plans-grid { grid-template-columns: repeat(2, 1fr); }
+      .hero-premium h2 { font-size: 3.2rem; }
+    }
+    @media (min-width: 1024px) {
+      .plans-grid { grid-template-columns: repeat(4, 1fr); gap: 1.8rem; }
+      .app-container { border-radius: 32px; margin: 1.5rem auto; }
+    }
+    @media (max-width: 640px) {
+      .hero-premium { padding: 1.5rem; }
+      .section-header h3 { font-size: 1.5rem; }
+      .hero-premium h2 { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-container">
+  <!-- Navbar: logo on top, nav links below -->
+  <div class="navbar">
+    <div class="logo"><h1>VECTAFUNDS<span>Global Investment House</span></h1></div>
+    <div class="nav-links">
+      <a href="#deposit-section" class="nav-deposit"><i class="fas fa-coins"></i> Deposit</a>
+      <a href="#" id="withdrawNavBtn" class="nav-withdraw"><i class="fas fa-money-bill-wave"></i> Withdraw</a>
+      <a href="#" class="get-started-btn" id="navGetStarted">Open Account</a>
+    </div>
+  </div>
+
+  <div class="hero-premium">
+    <div class="hero-badge"><i class="fas fa-shield-alt"></i> FCA · SEC · FSCA · CMA Licensed</div>
+    <h2>Intelligent wealth<br>for global citizens</h2>
+    <div class="hero-tagline">Leveraged asset allocation • Sharia-compliant options • Institutional grade</div>
+    <div class="trust-badge"><span><i class="fas fa-building"></i> AUM $480M+</span><span><i class="fas fa-users"></i> 21,500+ investors</span><span><i class="fas fa-globe"></i> 15+ jurisdictions</span></div>
+    <div class="btn-group"><button class="btn-primary" id="heroInvestBtn"><i class="fas fa-chart-line"></i> Start Investing</button><button class="btn-outline" id="heroViewBtn"><i class="fas fa-chart-simple"></i> Fund Facts</button></div>
+  </div>
+
+  <!-- Investment plans -->
+  <div id="plans"><div class="section-header"><h3>Investment Funds</h3><p>Diversified solutions managed by Legal & General, HSBC Asset Management</p></div>
+  <div class="plans-grid">
+    <div class="fund-card"><div class="plan-title">7 Days Plan</div><div class="plan-badge">Quick returns</div><ul class="feature-list-modern"><li><i class="fas fa-dollar-sign"></i> Minimum: $100</li><li><i class="fas fa-chart-simple"></i> Daily profit calculation</li><li><i class="fas fa-sync-alt"></i> Automatic reinvestment</li></ul><button class="invest-now-btn" data-plan="7 Days Plan">Invest Now →</button></div>
+    <div class="fund-card"><div class="plan-title">30 Days Plan</div><div class="plan-badge">Steady growth</div><ul class="feature-list-modern"><li><i class="fas fa-dollar-sign"></i> Minimum: $500</li><li><i class="fas fa-calendar-week"></i> Weekly profit distribution</li><li><i class="fas fa-hand-holding-usd"></i> Partial withdrawal allowed</li></ul><button class="invest-now-btn" data-plan="30 Days Plan">Invest Now →</button></div>
+    <div class="fund-card"><div class="plan-title">6 Months Plan</div><div class="plan-badge">Term wealth</div><ul class="feature-list-modern"><li><i class="fas fa-dollar-sign"></i> Minimum: $1,000</li><li><i class="fas fa-chart-line"></i> Monthly profit payouts</li><li><i class="fas fa-gift"></i> Bonus incentives</li></ul><button class="invest-now-btn" data-plan="6 Months Plan">Invest Now →</button></div>
+    <div class="fund-card"><div class="plan-title">Special Fund</div><div class="plan-badge">Multi-asset alpha</div><ul class="feature-list-modern"><li><i class="fas fa-globe"></i> Global forex & commodities</li><li><i class="fas fa-building"></i> Real estate & equities</li><li><i class="fas fa-briefcase"></i> Professional management</li></ul><button class="invest-now-btn" data-plan="Special Fund">Invest Now →</button></div>
+  </div></div>
+
+  <!-- Live investor activity -->
+  <div class="investor-feed">
+    <div class="feed-header"><i class="fas fa-globe-africa"></i> Live investor activity · real-time updates</div>
+    <div class="feed-items" id="globalInvestorFeed"></div>
+    <div style="font-size:0.7rem; text-align:right; margin-top:8px; color:#94A3B8;"><i class="fas fa-sync-alt"></i> updating every 5 sec · dynamic names & amounts</div>
+  </div>
+
+  <!-- Key Facts & Regulation -->
+  <div class="keyfacts-grid">
+    <div class="fact-item"><h4>Inception</h4><p>March 2010</p></div>
+    <div class="fact-item"><h4>Base Currency</h4><p>USD</p></div>
+    <div class="fact-item"><h4>Min Investment</h4><p>$100</p></div>
+    <div class="fact-item"><h4>Lock-in Period</h4><p>6 months (flex options)</p></div>
+    <div class="fact-item"><h4>Fund Manager</h4><p>Legal & General</p></div>
+  </div>
+  <div class="reg-badges"><span class="reg-badge"><i class="fas fa-check-circle"></i> FCA Regulated (UK)</span><span class="reg-badge"><i class="fas fa-check-circle"></i> SEC Registered (USA)</span><span class="reg-badge"><i class="fas fa-check-circle"></i> FSCA Approved (SA)</span><span class="reg-badge"><i class="fas fa-check-circle"></i> CMA Licensed (Kenya)</span></div>
+
+  <!-- 15-YEAR HISTORICAL PERFORMANCE -->
+  <div class="section-header"><h3>15-Year Track Record</h3><p>VectaFunds Global Balanced Fund (net returns) since 2010</p></div>
+  <div class="chart-card"><canvas id="fifteenYearChart" width="400" height="200"></canvas></div>
+
+  <!-- Commodities weekly chart -->
+  <div class="section-header"><h3>Commodities Weekly Outlook</h3><p>Gold & Silver – last 8 weeks performance</p></div>
+  <div class="chart-card">
+    <canvas id="commoditiesWeeklyChart" width="400" height="220"></canvas>
+    <div class="commodity-row" style="margin-top: 1rem;">
+      <div class="commodity-card"><i class="fas fa-coins" style="font-size: 1.8rem; color:#F5B041;"></i><h4>Gold Spot</h4><p id="goldSpotPrice">$2,345.80</p><span style="font-size:0.7rem;">+1.2% (week)</span></div>
+      <div class="commodity-card"><i class="fas fa-gem" style="font-size: 1.8rem; color:#2DD4BF;"></i><h4>Silver Spot</h4><p id="silverSpotPrice">$28.42</p><span style="font-size:0.7rem;">+0.8% (wk)</span></div>
+    </div>
+  </div>
+
+  <!-- projection calculator -->
+  <div class="calc-card">
+    <div><i class="fas fa-calculator" style="color:#F5B041;"></i> <strong>Investment projection tool</strong></div>
+    <div class="calc-row" style="display:flex; gap:0.8rem; flex-wrap:wrap; margin-top:10px;">
+      <select id="calcPlanSelect" class="calc-select" style="flex:1;">
+        <option value="7d">7 Days Plan (est 1.8% per term)</option><option value="30d">30 Days Plan (est 5.2% per term)</option><option value="6m">6 Months Plan (est 11% total)</option><option value="special">Special Fund (target 15% p.a.)</option>
+      </select>
+      <input type="number" id="calcAmount" class="calc-input" placeholder="Amount USD" value="2000" style="flex:1;">
+    </div>
+    <div id="calcResultDisplay" style="margin-top:0.8rem; background:#0F1725; padding:0.7rem; border-radius:60px; text-align:center; border:1px solid #2DD4BF40;">💎 Estimated return: —</div>
+  </div>
+
+  <!-- Withdraw Button (body) -->
+  <div style="padding: 0 2rem; margin-bottom: 1.5rem; text-align: center;">
+    <button id="withdrawButton" class="btn-primary" style="background: linear-gradient(95deg, #F5B041, #D35400); box-shadow: 0 8px 18px rgba(245,176,65,0.3);"><i class="fas fa-money-bill-wave"></i> Request Withdrawal</button>
+  </div>
+
+  <!-- FAQ & contact -->
+  <div class="section-header"><h3>Investor FAQ</h3></div>
+  <div class="faq-item"><div class="faq-question">How do I open an account? <i class="fas fa-plus faq-icon"></i></div><div class="faq-answer">Complete digital KYC, verify identity, and fund your wallet. Our team assists within 2 hours.</div></div>
+  <div class="faq-item"><div class="faq-question">Are my funds protected? <i class="fas fa-plus faq-icon"></i></div><div class="faq-answer">Segregated accounts with BNY Mellon & HSBC. FCA / SEC regulation ensures institutional safekeeping.</div></div>
+  <div class="faq-item"><div class="faq-question">What are the fees? <i class="fas fa-plus faq-icon"></i></div><div class="faq-answer">Management fee 1.2% p.a., performance fee 10% above hurdle. Full transparency in KIID.</div></div>
+
+  <div id="about" class="contact-premium">
+    <h4><i class="fas fa-building"></i> VectaFunds (formerly Emirates Special Funds)</h4>
+    <p>Leveraged Asset Allocation Fund domiciled in United Kingdom. Offering unique access to global markets through Aviva Investors, Investec, HSBC, and Capital Group. Licensed as a Special Collective Investment Scheme (CIS).</p>
+    <button id="openAccountBtn" style="background:#F5B041; border:none; width:100%; padding:0.8rem; border-radius:60px; color:#0A0F1A; font-weight:800; margin-top:1rem;"><i class="fas fa-user-check"></i> Open Account (Digital KYC)</button>
+  </div>
+  
+  <!-- Deposit Section -->
+  <div id="deposit-section" class="contact-premium" style="background: #0F1725; border-color: #F5B041; scroll-margin-top: 80px;">
+    <h4><i class="fas fa-coins"></i> Digital Asset Deposit Addresses</h4>
+    <p>Fund your account via secure crypto transfer. Minimum deposit $100 equivalent.</p>
+    <div class="address-card">
+      <strong>TRC20 (USDT):</strong> <span id="trc20Addr">TEeqT1SGvNU6jGJUAix8oi7ipYCWF6Tjbo</span>
+      <i class="fas fa-copy copy-icon" onclick="copyToClipboard('trc20Addr')" style="cursor: pointer;"></i>
+    </div>
+    <div class="address-card">
+      <strong>BTC (Bitcoin):</strong> <span id="btcAddr">15Eb6p5EjUAVBMen9hYEEzyxWE1STHGwZZ</span>
+      <i class="fas fa-copy copy-icon" onclick="copyToClipboard('btcAddr')" style="cursor: pointer;"></i>
+    </div>
+  </div>
+
+  <div id="contact" class="contact-premium" style="background:#0A0F1A; border-color:#2DD4BF;">
+    <h4><i class="fas fa-headset"></i> Global Investor Desk</h4>
+    <p>Speak to relationship manager: fund prospectus, wealth planning, institutional onboarding.</p>
+    <button id="whatsappContactBtn" style="background:#25D366; display:inline-flex; align-items:center; gap:12px; padding:0.7rem 1.5rem; border-radius:60px; font-weight:700; margin-top:0.5rem; color:#0A0F1A;"><i class="fab fa-whatsapp"></i> +44 7347 992131</button>
+  </div>
+  
+  <div class="risk-warning" style="background:rgba(245,176,65,0.1); margin:0 2rem 1.2rem; border-radius:28px; padding:1rem; text-align:center; font-size:0.7rem; color:#F5B041;">⚠️ Investments carry risk. Past performance not indicative of future results. Please read the Key Investment Information Document.</div>
+  <div class="footer-modern"><div style="display:flex; justify-content:center; gap:1.5rem; margin-bottom:1rem;"><a href="#" style="color:#94A3B8;">Privacy</a><a href="#" style="color:#94A3B8;">Terms</a><a href="#" style="color:#94A3B8;">Complaints</a></div><div>© 2025 VectaFunds. Authorised and Regulated by FCA (UK).</div></div>
+</div>
+<a id="floatWhatsapp" class="whatsapp-float"><i class="fab fa-whatsapp"></i></a>
+
+<!-- Investment Modal -->
+<div id="investModal" class="modal"><div class="modal-content"><h3 style="color:#F5B041;">Start with VectaFunds</h3><input type="text" id="modalName" placeholder="Full name"><input type="email" id="modalEmail" placeholder="Email"><input type="tel" id="modalPhone" placeholder="WhatsApp"><select id="modalPlanSelect"><option>7 Days Plan</option><option>30 Days Plan</option><option>6 Months Plan</option><option>Special Fund</option></select><input type="number" id="modalAmount" placeholder="Amount (USD)"><div style="display:flex; gap:10px; margin-top:15px;"><button id="submitModalBtn" style="background:#2DD4BF; color:#0A0F1A; padding:10px; border-radius:60px; flex:1; font-weight:bold;">Submit</button><button id="closeModalBtn" style="background:#334155; color:white;">Cancel</button></div></div></div>
+
+<!-- Withdrawal Modal -->
+<div id="withdrawModal" class="modal">
+  <div class="modal-content">
+    <h3 style="color:#F5B041;"><i class="fas fa-hand-holding-usd"></i> Withdrawal Request</h3>
+    <input type="number" id="withdrawAmount" placeholder="Amount" style="width:100%; margin-bottom:12px; padding:10px; border-radius:40px;">
+    <select id="withdrawCurrency" style="width:100%; margin-bottom:12px; padding:10px; border-radius:40px; background:#0F1725; border:1px solid #2DD4BF; color:white;">
+      <option value="USD">USD (Wire)</option>
+      <option value="EUR">EUR (SEPA)</option>
+      <option value="GBP">GBP (Faster Payments)</option>
+      <option value="USDT (TRC20)">USDT (TRC20)</option>
+      <option value="BTC">Bitcoin (BTC)</option>
+    </select>
+    <input type="text" id="withdrawWallet" placeholder="Wallet address / Bank account details" style="width:100%; margin-bottom:12px; padding:10px; border-radius:40px;">
+    <div style="display:flex; gap:10px; margin-top:8px;">
+      <button id="submitWithdrawBtn" style="background:#F5B041; color:#0A0F1A; padding:10px; border-radius:60px; flex:1; font-weight:bold;">Submit Request</button>
+      <button id="closeWithdrawModalBtn" style="background:#334155; color:white; padding:10px; border-radius:60px; flex:1;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // WhatsApp +44 7347 992131
+  const WA_NEW = "447347992131";
+  function openWhatsApp(msg) { window.open(`https://wa.me/${WA_NEW}?text=${encodeURIComponent(msg)}`, '_blank'); }
+  
+  const modal = document.getElementById('investModal');
+  function showModal(plan) { if(plan) document.getElementById('modalPlanSelect').value = plan; modal.style.display = 'flex'; }
+  document.getElementById('closeModalBtn')?.addEventListener('click', () => modal.style.display = 'none');
+  document.getElementById('submitModalBtn')?.addEventListener('click', () => {
+    let name = document.getElementById('modalName').value.trim() || "Investor";
+    let plan = document.getElementById('modalPlanSelect').value;
+    let amount = document.getElementById('modalAmount').value.trim();
+    openWhatsApp(`Hi VectaFunds, I'm ${name}, interested in ${plan} ($${amount || '?'}). Please contact me.`);
+    modal.style.display = 'none';
+  });
+  document.querySelectorAll('.invest-now-btn').forEach(btn => btn.addEventListener('click', (e) => { let plan = btn.getAttribute('data-plan'); showModal(plan); }));
+  document.getElementById('heroInvestBtn')?.addEventListener('click', () => showModal("7 Days Plan"));
+  document.getElementById('navGetStarted')?.addEventListener('click', (e) => { e.preventDefault(); showModal(); });
+  document.getElementById('openAccountBtn')?.addEventListener('click', () => showModal());
+  document.getElementById('heroViewBtn')?.addEventListener('click', () => document.getElementById('plans').scrollIntoView({ behavior: 'smooth' }));
+  document.getElementById('whatsappContactBtn')?.addEventListener('click', () => openWhatsApp("Investment consultation needed for VectaFunds."));
+  document.getElementById('floatWhatsapp')?.addEventListener('click', () => openWhatsApp("Hello, I'm interested in VectaFunds."));
+
+  // Deposit smooth scroll
+  document.querySelector('.nav-deposit')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('deposit-section').scrollIntoView({ behavior: 'smooth' });
+  });
+
+  // Withdrawal modal (both nav and body button)
+  const withdrawModal = document.getElementById('withdrawModal');
+  const withdrawButton = document.getElementById('withdrawButton');
+  const withdrawNavBtn = document.getElementById('withdrawNavBtn');
+  const closeWithdrawBtn = document.getElementById('closeWithdrawModalBtn');
+  const submitWithdrawBtn = document.getElementById('submitWithdrawBtn');
+
+  function openWithdrawModal() { withdrawModal.style.display = 'flex'; }
+  withdrawButton?.addEventListener('click', openWithdrawModal);
+  withdrawNavBtn?.addEventListener('click', (e) => { e.preventDefault(); openWithdrawModal(); });
+  closeWithdrawBtn?.addEventListener('click', () => { withdrawModal.style.display = 'none'; });
+  submitWithdrawBtn?.addEventListener('click', () => {
+    const amount = document.getElementById('withdrawAmount').value.trim();
+    const wallet = document.getElementById('withdrawWallet').value.trim();
+    if (!amount || !wallet) { alert("Please fill in both amount and wallet address / bank details."); return; }
+    alert("Withdrawal request is processing. Our team will review and contact you shortly.");
+    withdrawModal.style.display = 'none';
+    document.getElementById('withdrawAmount').value = '';
+    document.getElementById('withdrawWallet').value = '';
+  });
+  window.addEventListener('click', (e) => {
+    if (e.target === withdrawModal) withdrawModal.style.display = 'none';
+    if (e.target === modal) modal.style.display = 'none';
+  });
+
+  window.copyToClipboard = function(elementId) {
+    const text = document.getElementById(elementId).innerText;
+    navigator.clipboard.writeText(text).then(() => alert("Address copied: " + text)).catch(() => alert("Manual copy: " + text));
+  };
+
+  // Calculator
+  const calcPlan = document.getElementById('calcPlanSelect');
+  const calcAmount = document.getElementById('calcAmount');
+  const calcResult = document.getElementById('calcResultDisplay');
+  function updateCalc() {
+    let plan = calcPlan.value;
+    let amt = parseFloat(calcAmount.value);
+    if (isNaN(amt) || amt <= 0) { calcResult.innerText = "💰 Enter valid amount"; return; }
+    if (plan === '7d') calcResult.innerHTML = `📈 7-day estimated return: $${(amt*0.018).toFixed(2)} profit → total $${(amt*1.018).toFixed(2)}`;
+    else if (plan === '30d') calcResult.innerHTML = `📊 30-day projection: +5.2% → $${(amt*1.052).toFixed(2)}`;
+    else if (plan === '6m') calcResult.innerHTML = `🏦 6 months target: +11% → $${(amt*1.11).toFixed(2)} (incl. bonus potential)`;
+    else calcResult.innerHTML = `⚡ Special Fund (annual est 15%): $${(amt*0.15).toFixed(2)} p.a. projection`;
+  }
+  calcPlan.addEventListener('change', updateCalc);
+  calcAmount.addEventListener('input', updateCalc);
+  updateCalc();
+
+  // 15-Year Chart
+  const fifteenCtx = document.getElementById('fifteenYearChart').getContext('2d');
+  new Chart(fifteenCtx, {
+    type: 'line', data: { labels: ['2010','2012','2014','2016','2018','2020','2022','2023','2024','2025'], datasets: [{ label: 'VectaFunds Balanced Fund (Cumulative Return %)', data: [100, 135, 178, 210, 245, 298, 365, 412, 478, 542], borderColor: '#F5B041', backgroundColor: 'rgba(245,176,65,0.1)', borderWidth: 3, fill: true, tension: 0.3 }] },
+    options: { responsive: true, maintainAspectRatio: true, plugins: { tooltip: { callbacks: { label: (ctx) => `Return: ${ctx.raw}%` } } } }
+  });
+
+  // Commodities chart
+  const weeks = ['Week -8', 'Week -7', 'Week -6', 'Week -5', 'Week -4', 'Week -3', 'Week -2', 'Last Week'];
+  const goldPrices = [2320, 2345, 2338, 2360, 2385, 2402, 2420, 2448];
+  const silverPrices = [26.8, 27.1, 27.0, 27.6, 27.9, 28.1, 28.3, 28.7];
+  const commCtx = document.getElementById('commoditiesWeeklyChart').getContext('2d');
+  new Chart(commCtx, {
+    type: 'line', data: { labels: weeks, datasets: [{ label: 'Gold (USD/oz)', data: goldPrices, borderColor: '#F5B041', backgroundColor: 'rgba(245,176,65,0.05)', yAxisID: 'y', tension: 0.2 }, { label: 'Silver (USD/oz)', data: silverPrices, borderColor: '#2DD4BF', borderWidth: 2, yAxisID: 'y1', tension: 0.2 }] },
+    options: { responsive: true, maintainAspectRatio: true, plugins: { tooltip: { mode: 'index' } }, scales: { y: { title: { display: true, text: 'Gold ($)', color: '#94A3B8' } }, y1: { position: 'right', title: { text: 'Silver ($)', color: '#94A3B8' }, grid: { drawOnChartArea: false } } } }
+  });
+  document.getElementById('goldSpotPrice').innerHTML = `$${goldPrices[goldPrices.length-1].toFixed(2)}`;
+  document.getElementById('silverSpotPrice').innerHTML = `$${silverPrices[silverPrices.length-1].toFixed(2)}`;
+
+  // Investor Feed
+  const countriesList = [
+    { name: "Kenya", flag: "🇰🇪", names: ["Achieng Otieno", "Wanjiku Mwangi", "Kipruto Cheruiyot", "Fatuma Hassan", "James Omondi", "Grace Akinyi", "Mwangi Ndegwa", "Lydia Njeri"] },
+    { name: "Nigeria", flag: "🇳🇬", names: ["Amara Diallo", "Chidi Okonkwo", "Ngozi Eze", "Oluwaseun Adeyemi", "Tunde Bakare", "Ifeanyi Obi"] },
+    { name: "South Africa", flag: "🇿🇦", names: ["Liam van der Merwe", "Thabo Nkosi", "Priya Naidoo", "Elon Botha", "Zanele Dlamini"] },
+    { name: "India", flag: "🇮🇳", names: ["Priya Kapoor", "Rahul Sharma", "Ananya Desai", "Vikram Singh", "Neha Gupta"] },
+    { name: "UK", flag: "🇬🇧", names: ["Oliver Smith", "Amelia Brown", "James Wilson", "Eleanor Clarke", "Thomas Knight"] },
+    { name: "USA", flag: "🇺🇸", names: ["Michael Johnson", "Sophia Williams", "Ethan Martinez", "Isabella Garcia", "Liam Rodriguez"] },
+    { name: "UAE", flag: "🇦🇪", names: ["Fatima Al-Mansoori", "Ahmed Al-Hashemi", "Layla Khalid", "Omar Rashid"] },
+    { name: "Germany", flag: "🇩🇪", names: ["Lukas Schmidt", "Hannah Weber", "Felix Bauer", "Emma Wagner"] },
+    { name: "China", flag: "🇨🇳", names: ["Chen Wei", "Li Na", "Wang Jun", "Zhang Min"] },
+    { name: "Brazil", flag: "🇧🇷", names: ["Lucas Silva", "Mariana Costa", "Rafael Alves", "Camila Souza"] }
+  ];
+  const plansList = ["7 Days Plan", "30 Days Plan", "6 Months Plan", "Special Fund"];
+  const feedContainer = document.getElementById('globalInvestorFeed');
+  let feedItems = [];
+  function getRandomCountry() { return countriesList[Math.floor(Math.random() * countriesList.length)]; }
+  function getRandomName(countryObj) { return countryObj.names[Math.floor(Math.random() * countryObj.names.length)]; }
+  function randomAmount() { return (Math.random() * 15000 + 200).toFixed(0); }
+  function randomPlan() { return plansList[Math.floor(Math.random() * plansList.length)]; }
+  function randomTime() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute:'2-digit', second:'2-digit' }); }
+  function createFullyRandomFeedItem() {
+    const country = getRandomCountry();
+    return { id: Date.now() + Math.random(), name: getRandomName(country), flag: country.flag, countryName: country.name, amount: `$${randomAmount()}`, plan: randomPlan(), time: randomTime() };
+  }
+  function renderFeed() {
+    feedContainer.innerHTML = '';
+    feedItems.slice(0, 18).forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'feed-item';
+      div.innerHTML = `<div class="investor-info"><span class="flag-icon">${item.flag}</span><strong>${item.name}</strong> <span style="color:#94A3B8;">${item.countryName}</span> <span class="live-badge"><i class="fas fa-bolt"></i> just invested</span></div><div><span class="investment-amount">${item.amount}</span> in ${item.plan}</div><div style="font-size:0.7rem;">${item.time}</div>`;
+      feedContainer.appendChild(div);
+    });
+  }
+  function addNewInvestment() { const newItem = createFullyRandomFeedItem(); feedItems.unshift(newItem); if (feedItems.length > 25) feedItems.pop(); renderFeed(); }
+  function refreshRandomItems() { if (feedItems.length === 0) return; const replaceCount = Math.min(3, feedItems.length); for (let i = 0; i < replaceCount; i++) { const idx = Math.floor(Math.random() * feedItems.length); feedItems[idx] = createFullyRandomFeedItem(); } renderFeed(); }
+  for (let i = 0; i < 15; i++) feedItems.push(createFullyRandomFeedItem());
+  renderFeed();
+  setInterval(addNewInvestment, 5500);
+  setInterval(refreshRandomItems, 14000);
+  document.querySelectorAll('.faq-item').forEach(item => { const q = item.querySelector('.faq-question'); q.addEventListener('click', () => item.classList.toggle('active')); });
+  function updateCommoditiesPrices() {
+    let newGold = parseFloat(document.getElementById('goldSpotPrice').innerText.replace('$','')) + (Math.random() - 0.5) * 5;
+    newGold = Math.max(2200, newGold);
+    let newSilver = parseFloat(document.getElementById('silverSpotPrice').innerText.replace('$','')) + (Math.random() - 0.5) * 0.25;
+    newSilver = Math.max(25, newSilver);
+    document.getElementById('goldSpotPrice').innerHTML = `$${newGold.toFixed(2)}`;
+    document.getElementById('silverSpotPrice').innerHTML = `$${newSilver.toFixed(2)}`;
+  }
+  setInterval(updateCommoditiesPrices, 35000);
+</script>
+</body>
+</html>

@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f7f7fb"><title>GlowCart — Cosmetics Shop Manager + POS</title>
+<style>
+:root{--bg:#f5f6fa;--panel:#fff;--ink:#202334;--muted:#777d91;--line:#e9eaf1;--blue:#536dfe;--pink:#ed70a5;--purple:#8c6cf0;--green:#20b486;--orange:#f2a34a;--red:#e35d6a;--shadow:0 10px 35px #26345a0d}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body.dark{--bg:#11131b;--panel:#1b1e29;--ink:#f4f5fb;--muted:#a3a8bb;--line:#303443;--shadow:0 10px 35px #0003}
+button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:12px;padding:10px 14px;background:var(--blue);color:white;font-weight:650}button.secondary{background:var(--bg);color:var(--ink);border:1px solid var(--line)}button.danger{background:#fff0f1;color:var(--red)}button.small{padding:7px 10px;font-size:12px}button.green{background:var(--green)}button.orange{background:var(--orange)}button.wa{background:#25d366}button:disabled{opacity:.5;cursor:not-allowed}
+.shell{display:flex;min-height:100vh}.side{width:245px;background:var(--panel);border-right:1px solid var(--line);padding:24px 16px;position:fixed;inset:0 auto 0 0;overflow:auto;z-index:4}.brand{display:flex;gap:11px;align-items:center;padding:4px 8px 25px}.logo{width:40px;height:40px;border-radius:14px;background:linear-gradient(135deg,var(--pink),var(--purple));display:grid;place-items:center;color:white;font-size:20px}.brand b{font-size:17px}.brand small{display:block;color:var(--muted)}.navlabel{font-size:10px;color:var(--muted);font-weight:800;letter-spacing:1.2px;padding:13px 10px 7px}.nav button{width:100%;text-align:left;background:transparent;color:var(--muted);margin:2px 0;font-weight:600}.nav button.active,.nav button:hover{background:#f0efff;color:var(--blue)}body.dark .nav button.active{background:#292641}
+.main{margin-left:245px;width:calc(100% - 245px);padding:25px 30px 55px;max-width:1600px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;gap:15px}.top h1{font-size:25px;margin:0}.top p{margin:3px 0;color:var(--muted)}.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.page{display:none}.page.active{display:block}
+.grid{display:grid;gap:15px}.stats{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:17px}.card{background:var(--panel);border:1px solid var(--line);border-radius:19px;padding:18px;box-shadow:var(--shadow);min-width:0}.stat .label{color:var(--muted);font-weight:600}.stat strong{display:block;font-size:25px;margin:8px 0 2px}.stat small{color:var(--muted)}.dot{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:12px;background:#f2efff;color:var(--purple);float:right;font-size:17px}
+.two{grid-template-columns:1.4fr 1fr}.three{grid-template-columns:repeat(3,1fr)}h2{font-size:16px;margin:0 0 14px}h3{font-size:14px;margin:0 0 8px}.muted{color:var(--muted)}
+.toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:14px}.toolbar input,.toolbar select{max-width:260px}.field{display:flex;flex-direction:column;gap:5px;margin:9px 0}.field label{font-size:12px;color:var(--muted);font-weight:700}.field input,.field select,.field textarea,.toolbar input,.toolbar select{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:11px;color:var(--ink);width:100%;outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue)}
+.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;white-space:nowrap}th,td{text-align:left;padding:11px 9px;border-bottom:1px solid var(--line)}th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}td{font-size:13px}.pill{display:inline-block;padding:4px 8px;border-radius:20px;background:#edfbf6;color:#168b68;font-size:11px;font-weight:700}
+.products{grid-template-columns:repeat(4,minmax(0,1fr))}.product{overflow:hidden;padding:0}.product img{width:100%;height:145px;object-fit:cover;background:var(--bg)}.product .body{padding:13px}.product .body strong{display:block}.product .price{color:var(--purple);font-weight:800;margin-top:6px}.product .body small{color:var(--muted)}.empty{padding:30px;text-align:center;color:var(--muted)}
+.bars{display:flex;align-items:end;gap:10px;height:150px;padding:15px 5px 0}.barcol{flex:1;text-align:center;font-size:10px;color:var(--muted)}.bar{background:linear-gradient(180deg,var(--purple),var(--pink));border-radius:8px 8px 2px 2px;min-height:3px;margin-bottom:7px}
+.preview{width:100%;max-height:190px;object-fit:cover;border-radius:12px;margin-top:8px}.thumb{width:38px;height:38px;border-radius:9px;object-fit:cover;vertical-align:middle;margin-right:8px}.photoGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.photoGrid img{width:100%;height:120px;object-fit:cover;border-radius:12px}.photoGrid .card{padding:8px}
+.hidden{display:none!important}.overlay{position:fixed;inset:0;background:#11182788;z-index:10;display:none;align-items:center;justify-content:center;padding:15px}.overlay.show{display:flex}.modal{width:min(560px,100%);max-height:90vh;overflow:auto;background:var(--panel);border-radius:20px;padding:22px;box-shadow:0 25px 80px #0003}.modalhead{display:flex;justify-content:space-between;align-items:center}.modalhead h2{margin:0}.modalfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}
+.login{min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 15% 15%,#f9d8e8,transparent 35%),radial-gradient(circle at 85% 80%,#dcd8ff,transparent 35%),var(--bg)}.loginbox{width:min(420px,100%);background:var(--panel);padding:30px;border-radius:25px;box-shadow:var(--shadow)}.loginbox h1{margin:5px 0}.loginbox p{color:var(--muted)}.loginbox button{width:100%;margin-top:12px}.toast{position:fixed;bottom:22px;right:22px;background:#242638;color:white;padding:12px 18px;border-radius:12px;z-index:20;display:none}.bottom{display:none}
+.hint{font-size:12px;color:var(--muted)}.hero{background:linear-gradient(115deg,#fbe1ed,#e9e5ff);border-radius:20px;padding:22px;margin-bottom:16px;color:#333}.hero h2{font-size:22px;margin-bottom:4px}
+/* POS styles */
+.posgrid{display:grid;grid-template-columns:1.6fr 1fr;gap:15px}.pos-items{max-height:380px;overflow:auto}.pos-item{display:flex;justify-content:space-between;align-items:center;padding:10px 8px;border-bottom:1px solid var(--line);gap:8px}.pos-item .name{flex:1;font-weight:600}.pos-item .qty{display:flex;align-items:center;gap:6px}.pos-item .qty button{padding:4px 8px;font-size:12px;border-radius:8px}.pos-total{font-size:22px;font-weight:800;text-align:right;margin:12px 0}
+.scanner-box{background:#111;border-radius:16px;overflow:hidden;position:relative;margin-bottom:10px}.scanner-box video{width:100%;display:block;max-height:280px;object-fit:cover}.scanner-box .scanline{position:absolute;top:50%;left:5%;right:5%;height:2px;background:var(--pink);box-shadow:0 0 12px var(--pink);animation:scan 1.6s infinite}
+@keyframes scan{0%{top:20%}50%{top:80%}100%{top:20%}}.barcode-result{font-family:monospace;font-size:13px;background:var(--bg);padding:8px;border-radius:8px;margin:6px 0;word-break:break-all}
+/* Slim receipt */
+.receipt-wrap{display:flex;justify-content:center;margin-top:10px}
+.receipt{font-family:'Courier New',monospace;font-size:11px;line-height:1.35;background:#fff;color:#000;padding:10px 8px;width:200px;border-radius:4px;border:1px solid #ddd;box-shadow:0 2px 10px rgba(0,0,0,.08);white-space:pre-wrap;word-break:break-word}
+.receipt .r-head{text-align:center;font-weight:800;font-size:13px;letter-spacing:.5px;margin-bottom:2px}
+.receipt .r-sub{text-align:center;font-size:9px;color:#555;margin-bottom:6px}
+.receipt .r-line{border-top:1px dashed #999;margin:5px 0}
+.receipt .r-item{display:flex;justify-content:space-between;gap:6px}
+.receipt .r-item span:first-child{flex:1;word-break:break-word}
+.receipt .r-total{display:flex;justify-content:space-between;font-weight:800;font-size:12px;margin-top:3px}
+.receipt .r-thanks{text-align:center;font-size:9px;margin-top:6px;color:#666}
+.chart-container{position:relative;height:180px;margin-top:10px}.chart-svg{width:100%;height:100%}
+.search-pos{position:relative;margin-bottom:10px}.search-pos input{padding-left:34px}.search-pos::before{content:'🔍';position:absolute;left:10px;top:11px;font-size:14px;opacity:.6}
+.pos-quickpick{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:340px;overflow:auto;padding-right:2px}
+.qpick{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:6px;text-align:left;cursor:pointer;display:flex;gap:8px;align-items:center;min-width:0}.qpick:hover{border-color:var(--blue)}.qpick img{width:42px;height:42px;object-fit:cover;border-radius:8px;flex:none;background:#fff}.qpick .q-info{min-width:0;overflow:hidden}.qpick .q-info b{display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.qpick .q-info small{font-size:10px;color:var(--muted)}.qpick .q-price{font-size:11px;font-weight:800;color:var(--purple)}
+/* dashboard tiles */
+.tile-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px;min-height:92px;justify-content:center}
+.tile:hover{transform:translateY(-3px);box-shadow:0 14px 40px #26345a18;border-color:var(--purple)}
+.tile .t-ico{font-size:22px}.tile b{font-size:13px}.tile small{color:var(--muted);font-size:11px}
+.tile.accent{background:linear-gradient(135deg,#fbe1ed,#e9e5ff);border:0}
+.tile.accent b{color:#333}.tile.accent small{color:#6b5c8a}
+/* share sheet */
+.share-sheet{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.share-sheet button{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;border-radius:14px;font-size:11px;font-weight:650;background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+.share-sheet button .s-ico{font-size:22px}
+.share-sheet button:hover{border-color:var(--purple);color:var(--purple)}
+.share-sheet button.wa{background:#e7fbf0;color:#128c4a;border-color:#b8eed0}
+.share-sheet button.wa:hover{background:#d5f7e5;border-color:#25d366}
+.share-sheet button.sms{background:#eaf3ff;color:#2563eb;border-color:#bfdbfe}
+.share-sheet button.email{background:#fef2f2;color:#dc2626;border-color:#fecaca}
+.share-sheet button.copy{background:#f5f3ff;color:#7c3aed;border-color:#ddd6fe}
+.share-sheet button.download{background:#ecfdf5;color:#059669;border-color:#a7f3d0}
+.share-sheet button.print{background:#f3f4f6;color:#374151;border-color:#d1d5db}
+/* Print receipt page — only the bill */
+@media print{
+  body *{visibility:hidden!important}
+  #printReceiptArea, #printReceiptArea *{visibility:visible!important}
+  #printReceiptArea{position:absolute;left:0;top:0;width:80mm;margin:0;padding:0;background:#fff}
+  @page{margin:4mm;size:80mm auto}
+}
+@media(max-width:1050px){.stats{grid-template-columns:repeat(2,1fr)}.products{grid-template-columns:repeat(3,1fr)}.two,.posgrid{grid-template-columns:1fr}.tile-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.side{display:none}.main{margin:0;width:100%;padding:18px 14px 90px}.top{align-items:flex-start}.top h1{font-size:21px}.actions .wide{display:none}.stats{gap:9px}.stat strong{font-size:20px}.card{padding:14px;border-radius:16px}.products{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.product img{height:115px}.three{grid-template-columns:1fr}.photoGrid{grid-template-columns:repeat(2,1fr)}.bottom{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--line);z-index:5;justify-content:space-around;padding:7px 2px calc(7px + env(safe-area-inset-bottom))}.bottom button{background:none;color:var(--muted);padding:6px 4px;font-size:10px}.bottom button.active{color:var(--blue)}.tile-grid{grid-template-columns:repeat(2,1fr)}}
+</style></head>
+<body>
+<div id="login" class="login"><div class="loginbox"><div class="brand"><div class="logo">✿</div><div><b>GlowCart</b><small>Cosmetics Shop Manager + POS</small></div></div><h1 id="loginTitle">Welcome back</h1><p id="loginDesc">Sign in to manage your cosmetics business.</p><div class="field"><label>Your name</label><input id="loginName" autocomplete="username" placeholder="Enter your name"></div><div class="field"><label>Password</label><input id="loginPass" type="password" autocomplete="current-password" placeholder="Enter password"></div><button id="loginBtn" onclick="auth()">Sign in</button><button class="secondary" id="setupBtn" onclick="setupMode()" style="width:100%;margin-top:8px">Create first account</button><p class="hint">Your account and shop data are stored on this device. This is a local offline login, not cloud authentication.</p></div></div>
+<div id="app" class="shell hidden">
+<aside class="side"><div class="brand"><div class="logo">✿</div><div><b>GlowCart</b><small>Beauty retail + POS</small></div></div><div class="nav" id="sideNav"></div><div style="padding:12px 8px"><button class="secondary" style="width:100%" onclick="logout()">↪ Log out</button></div></aside>
+<main class="main"><header class="top"><div><h1 id="pageTitle">Overview</h1><p id="welcome">Good day — here's your shop today.</p></div><div class="actions"><button class="secondary wide" onclick="toggleTheme()">◐ Theme</button><button class="secondary wide" onclick="backup()">↓ Backup</button><button class="green" onclick="openPOS()">🛒 POS / Checkout</button><button onclick="openSale()">＋ Quick sale</button></div></header>
+
+<section id="dashboard" class="page active">
+<div class="hero"><h2>Beauty business, beautifully organised.</h2><div>POS checkout, barcode scanning, stock, sales, expenses and customers — all in one place.</div></div>
+<div class="tile-grid" id="dashTiles"></div>
+<div class="grid stats" id="stats"></div>
+<div class="grid two">
+  <div class="card"><h2>Sales trend · recent months</h2><div class="bars" id="salesBars"></div><div class="chart-container" id="salesChart"></div></div>
+  <div class="card"><h2>Stock watch</h2><div id="stockWatch"></div></div>
+</div>
+<div class="grid two" style="margin-top:15px">
+  <div class="card"><h2>Recent sales</h2><div id="recentSales"></div></div>
+  <div class="card"><h2>Top selling products</h2><div id="topProducts"></div></div>
+</div>
+</section>
+
+<section id="pos" class="page">
+<div class="posgrid">
+  <div class="card">
+    <div class="toolbar" style="margin-bottom:10px">
+      <h2 style="margin:0">🛒 Point of Sale</h2>
+      <span class="pill" id="posStatus">Ready</span>
+    </div>
+    <div class="toolbar">
+      <button onclick="openScanner('pos')">📷 Scan to add to cart</button>
+      <button class="secondary" onclick="openScanner('product')">📷 Scan product (add/update)</button>
+      <button class="secondary small" onclick="clearCart()">Clear cart</button>
+    </div>
+    <div class="search-pos"><input id="posSearch" placeholder="Search products to add…" oninput="renderPosQuickPick()"></div>
+    <div class="pos-items" id="cartItems"><p class="muted">Cart is empty. Scan a barcode, search above, or tap a product below.</p></div>
+    <div class="pos-total" id="cartTotal">KSh 0</div>
+    <div class="grid two">
+      <div class="field"><label>Amount paid (KSh)</label><input id="posPaid" type="number" min="0" placeholder="0" oninput="calcChange()"></div>
+      <div class="field"><label>Payment method</label><select id="posPay"><option>Cash</option><option>M-Pesa</option><option>Card</option><option>Bank</option></select></div>
+    </div>
+    <div class="card" style="margin-top:8px;background:var(--bg)"><b>Change to return:</b> <span id="posChange" style="font-size:20px;font-weight:800;color:var(--green)">KSh 0</span></div>
+    <button class="green" style="width:100%;margin-top:12px;padding:14px" onclick="completePOS()">✅ Complete sale & issue receipt</button>
+    <div id="receiptArea" style="margin-top:14px"></div>
+  </div>
+  <div class="card">
+    <h2>Product quick pick</h2>
+    <div class="pos-quickpick" id="posQuickPick"></div>
+    <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
+    <h2>Saved receipts</h2>
+    <div id="receiptList" style="max-height:230px;overflow:auto"></div>
+  </div>
+</div>
+</section>
+
+<section id="products" class="page"><div class="toolbar"><input id="productSearch" placeholder="Search products…" oninput="renderProducts()"><select id="categoryFilter" onchange="renderProducts()"><option value="">All categories</option><option>Skincare</option><option>Makeup</option><option>Haircare</option><option>Fragrance</option><option>Body care</option><option>Beauty tools</option><option>Other</option></select><button onclick="openProduct()">＋ Add product</button><button class="secondary" onclick="openScanner('product')">📷 Scan barcode to add</button></div><div class="grid products" id="productGrid"></div></section>
+
+<section id="sales" class="page"><div class="toolbar"><input id="salesSearch" placeholder="Search sales…" oninput="renderSales()"><input type="date" id="salesFrom" onchange="renderSales()"><input type="date" id="salesTo" onchange="renderSales()"><button onclick="openSale()">＋ Record sale</button></div><div class="card tablewrap" id="salesTable"></div></section>
+
+<section id="expenses" class="page"><div class="toolbar"><button onclick="openExpense()">＋ Add expense</button><select id="expenseYear" onchange="renderExpenses()"><option value="">All years</option></select></div><div class="card tablewrap" id="expenseTable"></div></section>
+
+<section id="customers" class="page"><div class="toolbar"><button onclick="openCustomer()">＋ Add customer</button></div><div class="card tablewrap" id="customerTable"></div></section>
+
+<section id="suppliers" class="page"><div class="toolbar"><button onclick="openSupplier()">＋ Add supplier</button></div><div class="card tablewrap" id="supplierTable"></div></section>
+
+<section id="inventory" class="page"><div class="toolbar"><button onclick="openStock()">＋ Stock adjustment</button><button class="secondary" onclick="exportCSV()">Export CSV</button></div><div class="card tablewrap" id="inventoryTable"></div></section>
+
+<section id="gallery" class="page"><div class="hero"><h2>Your shop gallery</h2><div>Save shop, shelf, product, packaging and promotional photos with notes and dates.</div></div><div class="toolbar"><button onclick="openPhoto()">＋ Add image</button></div><div class="photoGrid" id="photoGrid"></div></section>
+
+<section id="receipts" class="page"><div class="toolbar"><h2 style="margin:0">Saved receipts</h2><input id="receiptSearch" placeholder="Search receipts…" oninput="renderReceipts()"></div><div class="card tablewrap" id="receiptTable"></div></section>
+
+<section id="reports" class="page">
+  <div class="toolbar">
+    <select id="reportYear" onchange="renderReports()"><option value="">All years</option></select>
+    <input type="date" id="reportFrom" onchange="renderReports()">
+    <input type="date" id="reportTo" onchange="renderReports()">
+    <button class="secondary" onclick="printReport()">🖨 Print report</button>
+    <button class="secondary" onclick="backup()">↓ Full backup</button>
+    <button class="secondary" onclick="exportCSV()">Export CSV</button>
+  </div>
+  <div class="grid stats" id="reportStats"></div>
+  <div class="card"><h2>Year-by-year business history</h2><div class="tablewrap" id="yearTable"></div></div>
+  <div class="card" style="margin-top:15px"><h2>Sales chart (period)</h2><div class="chart-container" id="reportChart" style="height:220px"></div></div>
+  <p class="hint">All-time means every record stored on this device. Back up regularly to protect your history and move it to another device.</p>
+</section>
+
+<section id="settings" class="page"><div class="grid two"><div class="card"><h2>Shop profile</h2><div class="field"><label>Shop name</label><input id="shopName" placeholder="Your cosmetics shop"></div><div class="field"><label>Phone number</label><input id="shopPhone" placeholder="+254…"></div><div class="field"><label>Location</label><input id="shopLocation" placeholder="Town / estate"></div><button onclick="saveSettings()">Save profile</button></div><div class="card"><h2>Data protection</h2><p>GlowCart stores records locally in your browser. Keep regular backups on another device or cloud drive.</p><button onclick="backup()">Download full JSON backup</button><div class="field"><label>Restore a previous backup</label><input type="file" id="restoreFile" accept=".json,application/json"></div><button class="secondary" onclick="restoreBackup()">Restore backup</button><hr style="border:0;border-top:1px solid var(--line);margin:20px 0"><button class="secondary" onclick="changePassword()">Change password</button></div></div></section>
+
+<nav class="bottom" id="bottomNav"></nav></main></div>
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()"><div class="modal"><div class="modalhead"><h2 id="modalTitle">Add</h2><button class="secondary small" onclick="closeModal()">✕</button></div><div id="modalBody"></div><div class="modalfoot"><button class="secondary" onclick="closeModal()">Cancel</button><button id="modalSave" onclick="saveModal()">Save</button></div></div></div><div class="toast" id="toast"></div>
+<div id="printReceiptArea" class="hidden"></div>
+
+<script>
+/* -------------------- CORE -------------------- */
+const $=id=>document.getElementById(id), money=n=>'KSh '+(Number(n)||0).toLocaleString('en-KE',{maximumFractionDigits:2}), today=()=>new Date().toISOString().slice(0,10), uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+let db={products:[],sales:[],expenses:[],customers:[],suppliers:[],photos:[],stockMoves:[],receipts:[],settings:{shopName:'GlowCart Cosmetics',shopPhone:'+254 712 345 678',shopLocation:'Nairobi, Kenya'}},mode='signin',formSave=null;
+const nav=[['dashboard','⌂','Overview'],['pos','🛒','POS / Checkout'],['products','▦','Products'],['sales','↗','Sales'],['expenses','−','Expenses'],['inventory','▤','Inventory'],['customers','♙','Customers'],['suppliers','♧','Suppliers'],['gallery','▧','Photo gallery'],['receipts','🧾','Receipts'],['reports','▥','Reports'],['settings','⚙','Settings']];
+function persist(){try{localStorage.setItem('glowcart_data',JSON.stringify(db))}catch(e){toast('Storage is full. Export a backup and remove large images.')}}
+function load(){try{let x=localStorage.getItem('glowcart_data');if(x){let d=JSON.parse(x);db={...db,...d};db.settings={...db.settings,...(d.settings||{})}}}catch(e){}}
+function toast(s){let t=$('toast');t.textContent=s;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',2800)}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function val(id){return $(id)?.value?.trim()||''}
+
+/* -------------------- SAMPLE DATA (real cosmetic images via Unsplash) -------------------- */
+const IMG={
+  serum:'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400&q=70&auto=format&fit=crop',
+  lipstick:'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=400&q=70&auto=format&fit=crop',
+  moisturizer:'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=400&q=70&auto=format&fit=crop',
+  foundation:'https://images.unsplash.com/photo-1631214524020-7e18db9a8f92?w=400&q=70&auto=format&fit=crop',
+  perfume:'https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&q=70&auto=format&fit=crop',
+  shampoo:'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=400&q=70&auto=format&fit=crop',
+  brush:'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&q=70&auto=format&fit=crop',
+  bodylotion:'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=400&q=70&auto=format&fit=crop',
+  eyeshadow:'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=400&q=70&auto=format&fit=crop',
+  cleanser:'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&q=70&auto=format&fit=crop',
+  lipgloss:'https://images.unsplash.com/photo-1631214540553-ff044a3ff1d4?w=400&q=70&auto=format&fit=crop',
+  sunscreen:'https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=400&q=70&auto=format&fit=crop'
+};
+function sampleData(){
+  let products=[
+    {id:'p1',name:'Vitamin C Glow Serum',category:'Skincare',cost:850,price:1450,qty:24,min:5,sku:'GLW-SER-001',image:IMG.serum,updated:today()},
+    {id:'p2',name:'Velvet Matte Lipstick',category:'Makeup',cost:320,price:690,qty:38,min:8,sku:'GLW-LIP-002',image:IMG.lipstick,updated:today()},
+    {id:'p3',name:'Hydra Boost Moisturizer',category:'Skincare',cost:640,price:1150,qty:16,min:5,sku:'GLW-MOI-003',image:IMG.moisturizer,updated:today()},
+    {id:'p4',name:'Silk Finish Foundation',category:'Makeup',cost:720,price:1290,qty:12,min:4,sku:'GLW-FOU-004',image:IMG.foundation,updated:today()},
+    {id:'p5',name:'Bloom Eau de Parfum',category:'Fragrance',cost:1500,price:2650,qty:9,min:3,sku:'GLW-PRF-005',image:IMG.perfume,updated:today()},
+    {id:'p6',name:'Argan Repair Shampoo',category:'Haircare',cost:480,price:890,qty:30,min:6,sku:'GLW-SHM-006',image:IMG.shampoo,updated:today()},
+    {id:'p7',name:'Pro Blending Brush Set',category:'Beauty tools',cost:560,price:1050,qty:14,min:4,sku:'GLW-BRS-007',image:IMG.brush,updated:today()},
+    {id:'p8',name:'Shea Body Lotion',category:'Body care',cost:380,price:720,qty:42,min:10,sku:'GLW-LOT-008',image:IMG.bodylotion,updated:today()},
+    {id:'p9',name:'Nude Eyeshadow Palette',category:'Makeup',cost:690,price:1250,qty:11,min:3,sku:'GLW-EYE-009',image:IMG.eyeshadow,updated:today()},
+    {id:'p10',name:'Gentle Foam Cleanser',category:'Skincare',cost:450,price:850,qty:22,min:5,sku:'GLW-CLN-010',image:IMG.cleanser,updated:today()},
+    {id:'p11',name:'Glass Shine Lip Gloss',category:'Makeup',cost:260,price:550,qty:35,min:8,sku:'GLW-GLS-011',image:IMG.lipgloss,updated:today()},
+    {id:'p12',name:'SPF 50 Sunscreen',category:'Skincare',cost:530,price:990,qty:18,min:5,sku:'GLW-SUN-012',image:IMG.sunscreen,updated:today()}
+  ];
+  let sales=[
+    {id:'s1',date:'2026-10-27',productId:'p1',product:'Vitamin C Glow Serum',qty:2,price:1450,total:2900,cost:1700,customer:'Amina W.',pay:'M-Pesa',note:'POS'},
+    {id:'s2',date:'2026-10-26',productId:'p2',product:'Velvet Matte Lipstick',qty:3,price:690,total:2070,cost:960,customer:'Grace M.',pay:'Cash',note:'POS'},
+    {id:'s3',date:'2026-10-25',productId:'p5',product:'Bloom Eau de Parfum',qty:1,price:2650,total:2650,cost:1500,customer:'Zara K.',pay:'Card',note:'POS'},
+    {id:'s4',date:'2026-10-24',productId:'p3',product:'Hydra Boost Moisturizer',qty:2,price:1150,total:2300,cost:1280,customer:'',pay:'M-Pesa',note:'POS'},
+    {id:'s5',date:'2026-10-22',productId:'p8',product:'Shea Body Lotion',qty:4,price:720,total:2880,cost:1520,customer:'Fatuma A.',pay:'Cash',note:'POS'},
+    {id:'s6',date:'2026-10-20',productId:'p10',product:'Gentle Foam Cleanser',qty:2,price:850,total:1700,cost:900,customer:'',pay:'M-Pesa',note:'POS'},
+    {id:'s7',date:'2026-10-18',productId:'p9',product:'Nude Eyeshadow Palette',qty:1,price:1250,total:1250,cost:690,customer:'Nia T.',pay:'Card',note:'POS'},
+    {id:'s8',date:'2026-10-15',productId:'p12',product:'SPF 50 Sunscreen',qty:3,price:990,total:2970,cost:1590,customer:'',pay:'Cash',note:'POS'},
+    {id:'s9',date:'2026-09-28',productId:'p4',product:'Silk Finish Foundation',qty:2,price:1290,total:2580,cost:1440,customer:'Wanjiru P.',pay:'M-Pesa',note:'POS'},
+    {id:'s10',date:'2026-09-14',productId:'p6',product:'Argan Repair Shampoo',qty:2,price:890,total:1780,cost:960,customer:'',pay:'Cash',note:'POS'},
+    {id:'s11',date:'2026-08-30',productId:'p2',product:'Velvet Matte Lipstick',qty:2,price:690,total:1380,cost:640,customer:'Aisha R.',pay:'M-Pesa',note:'POS'},
+    {id:'s12',date:'2026-08-12',productId:'p1',product:'Vitamin C Glow Serum',qty:1,price:1450,total:1450,cost:850,customer:'',pay:'Card',note:'POS'},
+    {id:'s13',date:'2026-07-19',productId:'p7',product:'Pro Blending Brush Set',qty:1,price:1050,total:1050,cost:560,customer:'Joy K.',pay:'Cash',note:'POS'},
+    {id:'s14',date:'2026-07-05',productId:'p11',product:'Glass Shine Lip Gloss',qty:3,price:550,total:1650,cost:780,customer:'',pay:'M-Pesa',note:'POS'}
+  ];
+  let expenses=[
+    {id:'e1',date:'2026-10-01',name:'Shop rent — October',amount:25000,category:'Rent',note:'Monthly'},
+    {id:'e2',date:'2026-10-03',name:'Electricity & water',amount:3400,category:'Utilities',note:''},
+    {id:'e3',date:'2026-09-15',name:'Packaging bags & labels',amount:5200,category:'Packaging',note:'Restock'},
+    {id:'e4',date:'2026-09-01',name:'Shop rent — September',amount:25000,category:'Rent',note:'Monthly'},
+    {id:'e5',date:'2026-08-20',name:'Instagram ads',amount:4000,category:'Marketing',note:'Campaign'},
+    {id:'e6',date:'2026-07-10',name:'Transport — supplier delivery',amount:1800,category:'Transport',note:''}
+  ];
+  let customers=[
+    {id:'c1',name:'Amina Wanjiku',phone:'+254 712 111 222',email:'amina@example.com',note:'Loves serums'},
+    {id:'c2',name:'Grace Muthoni',phone:'+254 733 333 444',email:'grace@example.com',note:'Regular makeup buyer'},
+    {id:'c3',name:'Zara Khan',phone:'+254 700 555 666',email:'zara@example.com',note:'Fragrance collector'},
+    {id:'c4',name:'Fatuma Ali',phone:'+254 722 777 888',email:'fatuma@example.com',note:'Body care'}
+  ];
+  let suppliers=[
+    {id:'sp1',name:'BeautySource Ltd',contact:'Peter Njoroge',phone:'+254 720 100 200',note:'Skincare & serums'},
+    {id:'sp2',name:'Glam Importers',contact:'Susan Achieng',phone:'+254 711 300 400',note:'Makeup & tools'},
+    {id:'sp3',name:'Aroma House',contact:'Daniel Otieno',phone:'+254 733 500 600',note:'Fragrance & body care'}
+  ];
+  let photos=[
+    {id:'ph1',name:'Main display shelf',date:'2026-10-20',image:IMG.serum,note:'New serum range on display'},
+    {id:'ph2',name:'Lipstick launch',date:'2026-10-12',image:IMG.lipstick,note:'Velvet matte launch day'},
+    {id:'ph3',name:'Fragrance corner',date:'2026-09-30',image:IMG.perfume,note:'Perfume shelf arrangement'}
+  ];
+  let receipts=[];
+  sales.slice(0,6).forEach(s=>{
+    receipts.push({id:'GC-'+s.id.toUpperCase().slice(-4),date:s.date,time:'10:24 AM',items:[{product:s.product,qty:s.qty,price:s.price,total:s.total}],total:s.total,paid:s.total+(s.total%50),change:s.total%50,pay:s.pay});
+  });
+  return {products,sales,expenses,customers,suppliers,photos,stockMoves:[],receipts};
+}
+function seedIfEmpty(){
+  if(!localStorage.getItem('glowcart_data')){
+    let s=sampleData();
+    db.products=s.products;db.sales=s.sales;db.expenses=s.expenses;db.customers=s.customers;db.suppliers=s.suppliers;db.photos=s.photos;db.receipts=s.receipts;db.stockMoves=[];
+    persist();
+  }
+}
+
+/* -------------------- AUTH & SHELL -------------------- */
+function setupMode(){mode='setup';$('loginTitle').textContent='Create your shop account';$('loginDesc').textContent='Set your name and password to protect this device.';$('loginBtn').textContent='Create account';$('setupBtn').classList.add('hidden')}
+function auth(){let n=$('loginName').value.trim(),p=$('loginPass').value;if(!n||!p){toast('Enter your name and password');return}let u=localStorage.getItem('glowcart_user');if(mode==='setup'||!u){localStorage.setItem('glowcart_user',JSON.stringify({name:n,pass:p}));enter(n);return}let a=JSON.parse(u);if(a.name.toLowerCase()===n.toLowerCase()&&a.pass===p)enter(a.name);else toast('Incorrect name or password')}
+function enter(n){$('login').classList.add('hidden');$('app').classList.remove('hidden');$('welcome').textContent='Welcome, '+n+' — here is your shop at a glance.';load();seedIfEmpty();renderAll()}
+function logout(){stopScanner();$('app').classList.add('hidden');$('login').classList.remove('hidden');$('loginPass').value=''}
+function boot(){load();seedIfEmpty();let u=localStorage.getItem('glowcart_user');if(!u){setupMode()}else{$('loginTitle').textContent='Welcome back';$('setupBtn').classList.add('hidden');$('loginBtn').textContent='Sign in'}buildNav();if(localStorage.getItem('glowcart_theme')==='dark')document.body.classList.add('dark')}
+function buildNav(){let make=()=>nav.map(([id,ic,label])=>`<button data-page="${id}" onclick="go('${id}')">${ic} &nbsp; ${label}</button>`).join('');$('sideNav').innerHTML=make();$('bottomNav').innerHTML=nav.slice(0,5).map(([id,ic,label])=>`<button data-page="${id}" onclick="go('${id}')">${ic}<br>${label}</button>`).join('')}
+function go(id){if(id!=='pos')stopScanner();document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');document.querySelectorAll('[data-page]').forEach(x=>x.classList.toggle('active',x.dataset.page===id));$('pageTitle').textContent=nav.find(x=>x[0]===id)[2];if(id==='reports')renderReports();if(id==='products')renderProducts();if(id==='sales')renderSales();if(id==='expenses')renderExpenses();if(id==='pos')renderPOS();if(id==='receipts')renderReceipts()}
+function toggleTheme(){document.body.classList.toggle('dark');localStorage.setItem('glowcart_theme',document.body.classList.contains('dark')?'dark':'light')}
+function modal(title,body,fn){$('modalTitle').textContent=title;$('modalBody').innerHTML=body;$('overlay').classList.add('show');$('modalSave').classList.remove('hidden');formSave=fn}
+function closeModal(){stopScanner();$('overlay').classList.remove('show');formSave=null}
+function saveModal(){if(formSave)formSave()}
+function openPOS(){go('pos');renderPOS()}
+
+/* -------------------- IMAGE & HELPERS -------------------- */
+function imgField(){return `<div class="field"><label>Photo (optional)</label><input id="fImage" type="file" accept="image/*" capture="environment"><span class="hint">Choose a photo from your phone or computer. Images are stored with your local records.</span></div>`}
+function readImage(file){return new Promise((resolve,reject)=>{if(!file)return resolve('');let r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)})}
+
+/* -------------------- PRODUCTS -------------------- */
+function openProduct(id){let x=db.products.find(p=>p.id===id)||{};modal(id?'Edit product':'Add product',`<div class="field"><label>Product name *</label><input id="fName" value="${esc(x.name||'')}" placeholder="e.g. Vitamin C serum"></div><div class="field"><label>Category</label><select id="fCat">${['Skincare','Makeup','Haircare','Fragrance','Body care','Beauty tools','Other'].map(c=>`<option ${x.category===c?'selected':''}>${c}</option>`).join('')}</select></div><div class="grid two"><div class="field"><label>Buying price (KSh)</label><input id="fCost" type="number" min="0" value="${x.cost||0}"></div><div class="field"><label>Selling price (KSh)</label><input id="fPrice" type="number" min="0" value="${x.price||0}"></div></div><div class="grid two"><div class="field"><label>Quantity in stock</label><input id="fQty" type="number" value="${x.qty||0}"></div><div class="field"><label>Low stock alert at</label><input id="fMin" type="number" value="${x.min??5}"></div></div><div class="field"><label>SKU / barcode</label><input id="fSku" value="${esc(x.sku||'')}" placeholder="Scan or type barcode"></div><button class="secondary small" onclick="openScanner('productField')">📷 Scan barcode</button>${imgField()}${x.image?`<img class="preview" src="${x.image}">`:''}`,async()=>{let image=await readImage($('fImage').files[0]);if(!val('fName'))return toast('Product name is required');let obj={...x,id:x.id||uid(),name:val('fName'),category:val('fCat'),cost:+val('fCost'),price:+val('fPrice'),qty:+val('fQty'),min:+val('fMin'),sku:val('fSku'),image:image||x.image||'',updated:today()};if(!x.id)db.products.unshift(obj);else Object.assign(x,obj);persist();closeModal();renderAll();toast('Product saved')})}
+function deleteProduct(id){if(confirm('Delete this product? Sales history will remain.')){db.products=db.products.filter(p=>p.id!==id);persist();renderAll()}}
+function renderProducts(){let q=($('productSearch')?.value||'').toLowerCase(),c=$('categoryFilter')?.value||'';let a=db.products.filter(p=>(p.name+' '+p.sku).toLowerCase().includes(q)&&(!c||p.category===c));$('productGrid').innerHTML=a.length?a.map(p=>`<div class="card product">${p.image?`<img src="${p.image}" loading="lazy">`:`<div style="height:145px;display:grid;place-items:center;background:var(--bg);font-size:40px">✿</div>`}<div class="body"><strong>${esc(p.name)}</strong><small>${esc(p.category)} · ${p.qty} in stock</small><div class="price">${money(p.price)}</div><div style="display:flex;gap:5px;margin-top:10px"><button class="small" onclick="openProduct('${p.id}')">Edit</button><button class="small secondary" onclick="deleteProduct('${p.id}')">Delete</button></div></div></div>`).join(''):`<div class="card empty">No products yet. Add your first cosmetics product.</div>`}
+
+/* -------------------- SALES (quick) -------------------- */
+function openSale(){if(!db.products.length)return toast('Add products before recording a sale');modal('Record a sale',`<div class="field"><label>Product</label><select id="fProduct">${db.products.map(p=>`<option value="${p.id}">${esc(p.name)} — ${money(p.price)} (stock ${p.qty})</option>`).join('')}</select></div><div class="grid two"><div class="field"><label>Quantity</label><input id="fQty" type="number" min="1" value="1"></div><div class="field"><label>Unit price (KSh)</label><input id="fPrice" type="number" min="0" value="${db.products[0].price}"></div></div><div class="field"><label>Customer (optional)</label><input id="fCustomer" placeholder="Customer name"></div><div class="grid two"><div class="field"><label>Payment method</label><select id="fPay"><option>Cash</option><option>M-Pesa</option><option>Card</option><option>Bank</option><option>Credit</option></select></div><div class="field"><label>Date</label><input id="fDate" type="date" value="${today()}"></div></div><div class="field"><label>Notes</label><input id="fNote"></div>`,()=>{let p=db.products.find(x=>x.id===val('fProduct')),q=+val('fQty');if(!p||q<1)return toast('Check product and quantity');if(p.qty<q)return toast('Not enough stock');let price=+val('fPrice');p.qty-=q;db.sales.unshift({id:uid(),date:val('fDate'),productId:p.id,product:p.name,qty:q,price,total:q*price,cost:q*p.cost,customer:val('fCustomer'),pay:val('fPay'),note:val('fNote')});db.stockMoves.unshift({id:uid(),date:val('fDate'),product:p.name,change:-q,reason:'Sale'});persist();closeModal();renderAll();toast('Sale recorded')})}
+
+/* -------------------- EXPENSES, CUSTOMERS, SUPPLIERS, STOCK, PHOTOS -------------------- */
+function openExpense(){modal('Add expense',`<div class="field"><label>Expense description</label><input id="fName" placeholder="Rent, transport, packaging…"></div><div class="grid two"><div class="field"><label>Amount (KSh)</label><input id="fAmount" type="number" min="0"></div><div class="field"><label>Category</label><select id="fCat"><option>Rent</option><option>Utilities</option><option>Transport</option><option>Packaging</option><option>Marketing</option><option>Wages</option><option>Other</option></select></div></div><div class="field"><label>Date</label><input id="fDate" type="date" value="${today()}"></div><div class="field"><label>Notes</label><input id="fNote"></div>`,()=>{if(!val('fName')||+val('fAmount')<=0)return toast('Enter description and amount');db.expenses.unshift({id:uid(),name:val('fName'),amount:+val('fAmount'),category:val('fCat'),date:val('fDate'),note:val('fNote')});persist();closeModal();renderAll()})}
+function openCustomer(){modal('Add customer',`<div class="field"><label>Name</label><input id="fName"></div><div class="field"><label>Phone</label><input id="fPhone"></div><div class="field"><label>Email (optional)</label><input id="fEmail"></div><div class="field"><label>Notes</label><textarea id="fNote"></textarea></div>`,()=>{if(!val('fName'))return toast('Enter customer name');db.customers.push({id:uid(),name:val('fName'),phone:val('fPhone'),email:val('fEmail'),note:val('fNote')});persist();closeModal();renderAll()})}
+function openSupplier(){modal('Add supplier',`<div class="field"><label>Supplier / company</label><input id="fName"></div><div class="field"><label>Contact person</label><input id="fContact"></div><div class="field"><label>Phone</label><input id="fPhone"></div><div class="field"><label>Products supplied</label><input id="fNote"></div>`,()=>{if(!val('fName'))return toast('Enter supplier name');db.suppliers.push({id:uid(),name:val('fName'),contact:val('fContact'),phone:val('fPhone'),note:val('fNote')});persist();closeModal();renderAll()})}
+function openStock(){modal('Stock adjustment',`<div class="field"><label>Product</label><select id="fProduct">${db.products.map(p=>`<option value="${p.id}">${esc(p.name)} — ${p.qty} in stock</option>`).join('')}</select></div><div class="field"><label>Quantity change (use negative number to remove)</label><input id="fQty" type="number" placeholder="e.g. 12 or -2"></div><div class="field"><label>Reason</label><select id="fReason"><option>New stock received</option><option>Damaged / expired</option><option>Stock count correction</option><option>Returned item</option></select></div><div class="field"><label>Date</label><input id="fDate" type="date" value="${today()}"></div>`,()=>{let p=db.products.find(x=>x.id===val('fProduct')),q=+val('fQty');if(!p||!q||p.qty+q<0)return toast('Invalid stock adjustment');p.qty+=q;db.stockMoves.unshift({id:uid(),date:val('fDate'),product:p.name,change:q,reason:val('fReason')});persist();closeModal();renderAll()})}
+function openPhoto(){modal('Add shop image',`<div class="field"><label>Image title</label><input id="fName" placeholder="New display shelf / product launch"></div><div class="field"><label>Image date</label><input id="fDate" type="date" value="${today()}"></div>${imgField()}<div class="field"><label>Notes</label><textarea id="fNote"></textarea></div>`,async()=>{let image=await readImage($('fImage').files[0]);if(!image)return toast('Choose an image first');db.photos.unshift({id:uid(),name:val('fName')||'Shop photo',date:val('fDate'),image,note:val('fNote')});persist();closeModal();renderGallery();toast('Image saved')})}
+function deletePhoto(id){if(confirm('Delete this image?')){db.photos=db.photos.filter(x=>x.id!==id);persist();renderGallery()}}
+
+/* -------------------- RENDER TABLES -------------------- */
+function table(headers,rows){return `<table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.length?rows.join(''):`<tr><td colspan="${headers.length}" class="empty">No records yet.</td></tr>`}</tbody></table>`}
+function renderSales(){let q=($('salesSearch')?.value||'').toLowerCase(),from=$('salesFrom')?.value||'',to=$('salesTo')?.value||'';let a=db.sales.filter(s=>(s.product+' '+s.customer).toLowerCase().includes(q)&&(!from||s.date>=from)&&(!to||s.date<=to));$('salesTable').innerHTML=table(['Date','Product','Qty','Unit price','Total','Customer','Payment'],a.map(s=>`<tr><td>${s.date}</td><td>${esc(s.product)}</td><td>${s.qty}</td><td>${money(s.price)}</td><td><b>${money(s.total)}</b></td><td>${esc(s.customer)}</td><td>${s.pay}</td></tr>`))}
+function renderExpenses(){let years=[...new Set(db.expenses.map(x=>(x.date||'').slice(0,4)).filter(Boolean))].sort().reverse();$('expenseYear').innerHTML='<option value="">All years</option>'+years.map(y=>`<option>${y}</option>`).join('');let y=$('expenseYear').value,a=db.expenses.filter(x=>!y||x.date.startsWith(y));$('expenseTable').innerHTML=table(['Date','Description','Category','Amount'],a.map(x=>`<tr><td>${x.date}</td><td>${esc(x.name)}</td><td>${x.category}</td><td>${money(x.amount)}</td></tr>`))}
+function renderCustomers(){$('customerTable').innerHTML=table(['Customer','Phone','Email','Notes'],db.customers.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.phone)}</td><td>${esc(x.email)}</td><td>${esc(x.note)}</td></tr>`))}
+function renderSuppliers(){$('supplierTable').innerHTML=table(['Supplier','Contact','Phone','Products / notes'],db.suppliers.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.contact)}</td><td>${esc(x.phone)}</td><td>${esc(x.note)}</td></tr>`))}
+function renderInventory(){$('inventoryTable').innerHTML=table(['Product','SKU','Category','Qty','Buying price','Selling price','Stock value'],db.products.map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(p.sku)}</td><td>${p.category}</td><td><b>${p.qty}</b></td><td>${money(p.cost)}</td><td>${money(p.price)}</td><td>${money(p.qty*p.cost)}</td></tr>`))}
+function renderGallery(){$('photoGrid').innerHTML=db.photos.length?db.photos.map(x=>`<div class="card"><img src="${x.image}" loading="lazy"><b>${esc(x.name)}</b><div class="hint">${x.date} · ${esc(x.note)}</div><button class="small danger" style="margin-top:7px" onclick="deletePhoto('${x.id}')">Delete</button></div>`).join(''):`<div class="card empty">No saved photos. Add images from your phone or computer.</div>`}
+function renderSettings(){$('shopName').value=db.settings.shopName||'';$('shopPhone').value=db.settings.shopPhone||'';$('shopLocation').value=db.settings.shopLocation||''}
+function saveSettings(){db.settings={shopName:val('shopName'),shopPhone:val('shopPhone'),shopLocation:val('shopLocation')};persist();toast('Shop profile saved')}
+
+/* -------------------- DASHBOARD & CHARTS -------------------- */
+function renderDashTiles(){
+  let tiles=[
+    ['pos','🛒','Open POS','Checkout & scan','accent','openPOS()'],
+    ['products','＋','Add product','New catalogue item','','openProduct()'],
+    ['sales','↗','Quick sale','Record a sale','','openSale()'],
+    ['expenses','−','Add expense','Track spending','','openExpense()'],
+    ['inventory','▤','Stock adjust','Restock / correct','','openStock()'],
+    ['gallery','▧','Add photo','Shop image','','openPhoto()'],
+    ['receipts','🧾','Receipts','View past bills','','go(\'receipts\')'],
+    ['reports','▥','Reports','Print & analyse','','go(\'reports\')']
+  ];
+  $('dashTiles').innerHTML=tiles.map(t=>`<div class="tile ${t[4]}" onclick="${t[5]}"><span class="t-ico">${t[1]}</span><b>${t[2]}</b><small>${t[3]}</small></div>`).join('');
+}
+function renderDashboard(){
+  renderDashTiles();
+  let rev=db.sales.reduce((a,x)=>a+x.total,0),exp=db.expenses.reduce((a,x)=>a+x.amount,0),profit=db.sales.reduce((a,x)=>a+x.total-x.cost,0)-exp,units=db.products.reduce((a,x)=>a+x.qty,0);
+  $('stats').innerHTML=[['Sales · all time',money(rev),'↗'],['Gross profit less expenses',money(profit),'◈'],['Products in catalogue',db.products.length,'▦'],['Units in stock',units,'▤']].map(x=>`<div class="card stat"><span class="dot">${x[2]}</span><div class="label">${x[0]}</div><strong>${x[1]}</strong><small>All saved records</small></div>`).join('');
+  let months=[];for(let i=5;i>=0;i--){let d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);let key=d.toISOString().slice(0,7);months.push({key,label:d.toLocaleString('en',{month:'short'}),v:db.sales.filter(s=>(s.date||'').startsWith(key)).reduce((a,s)=>a+s.total,0)})}
+  let max=Math.max(1,...months.map(x=>x.v));
+  $('salesBars').innerHTML=months.map(x=>`<div class="barcol"><div class="bar" style="height:${Math.max(3,x.v/max*100)}px"></div>${x.label}<br>${x.v?Math.round(x.v/1000)+'k':'—'}</div>`).join('');
+  drawChart('salesChart',months.map(x=>x.label),months.map(x=>x.v),'Sales trend (last 6 months)');
+  let low=db.products.filter(p=>p.qty<=p.min);$('stockWatch').innerHTML=low.length?low.slice(0,7).map(p=>`<p>⚠️ ${esc(p.name)} <b style="float:right">${p.qty} left</b></p>`).join(''):`<p class="muted">All products are above their low-stock alerts.</p>`;
+  $('recentSales').innerHTML=table(['Date','Product','Qty','Total'],db.sales.slice(0,5).map(s=>`<tr><td>${s.date}</td><td>${esc(s.product)}</td><td>${s.qty}</td><td>${money(s.total)}</td></tr>`));
+  let byP={};db.sales.forEach(s=>{byP[s.product]=(byP[s.product]||0)+s.qty});
+  let top=Object.entries(byP).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  $('topProducts').innerHTML=table(['Product','Units sold'],top.map(t=>`<tr><td>${esc(t[0])}</td><td><b>${t[1]}</b></td></tr>`));
+}
+function drawChart(containerId,labels,values,title){
+  let el=$(containerId);if(!el)return;el.innerHTML='';
+  let w=el.clientWidth||400,h=180,pad=30,max=Math.max(1,...values),barW=Math.min(40,(w-pad*2)/Math.max(1,values.length)-8);
+  let svg=`<svg class="chart-svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">`;
+  svg+=`<text x="5" y="14" font-size="11" fill="var(--muted)">${title}</text>`;
+  values.forEach((v,i)=>{let x=pad+i*((w-pad*2)/values.length),bh=(v/max)*(h-pad-20),y=h-pad-bh;svg+=`<rect x="${x}" y="${y}" width="${barW}" height="${bh}" fill="url(#grad)" rx="4"/>`;svg+=`<text x="${x+barW/2}" y="${h-8}" font-size="9" fill="var(--muted)" text-anchor="middle">${labels[i]||''}</text>`;svg+=`<text x="${x+barW/2}" y="${y-3}" font-size="8" fill="var(--muted)" text-anchor="middle">${v>=1000?Math.round(v/1000)+'k':v}</text>`});
+  svg+=`<defs><linearGradient id="grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--purple)"/><stop offset="100%" stop-color="var(--pink)"/></linearGradient></defs></svg>`;
+  el.innerHTML=svg;
+}
+
+/* -------------------- REPORTS -------------------- */
+function renderReports(){let y=$('reportYear').value,from=$('reportFrom')?.value||'',to=$('reportTo')?.value||'';let years=[...new Set([...db.sales,...db.expenses].map(x=>(x.date||'').slice(0,4)).filter(Boolean))].sort().reverse();$('reportYear').innerHTML='<option value="">All years</option>'+years.map(z=>`<option ${z===y?'selected':''}>${z}</option>`).join('');let s=db.sales.filter(x=>(!y||x.date.startsWith(y))&&(!from||x.date>=from)&&(!to||x.date<=to));let e=db.expenses.filter(x=>(!y||x.date.startsWith(y))&&(!from||x.date>=from)&&(!to||x.date<=to));let rev=s.reduce((a,x)=>a+x.total,0),cost=s.reduce((a,x)=>a+x.cost,0),ex=e.reduce((a,x)=>a+x.amount,0);$('reportStats').innerHTML=[['Revenue',money(rev)],['Cost of goods',money(cost)],['Expenses',money(ex)],['Net estimate',money(rev-cost-ex)]].map(x=>`<div class="card stat"><div class="label">${x[0]}</div><strong>${x[1]}</strong></div>`).join('');
+  $('yearTable').innerHTML=table(['Year','Sales','Revenue','Expenses','Net estimate'],years.map(z=>{let ss=db.sales.filter(x=>x.date.startsWith(z)),ee=db.expenses.filter(x=>x.date.startsWith(z)),r=ss.reduce((a,x)=>a+x.total,0),c=ss.reduce((a,x)=>a+x.cost,0),exx=ee.reduce((a,x)=>a+x.amount,0);return `<tr><td>${z}</td><td>${ss.length}</td><td>${money(r)}</td><td>${money(exx)}</td><td>${money(r-c-exx)}</td></tr>`}));
+  let byDay={};s.forEach(x=>{byDay[x.date]=(byDay[x.date]||0)+x.total});let days=Object.keys(byDay).sort();drawChart('reportChart',days.map(d=>d.slice(5)),days.map(d=>byDay[d]),'Sales by day (selected period)');
+}
+function printReport(){let y=$('reportYear').value,from=$('reportFrom')?.value||'',to=$('reportTo')?.value||'';let s=db.sales.filter(x=>(!y||x.date.startsWith(y))&&(!from||x.date>=from)&&(!to||x.date<=to));let e=db.expenses.filter(x=>(!y||x.date.startsWith(y))&&(!from||x.date>=from)&&(!to||x.date<=to));let rev=s.reduce((a,x)=>a+x.total,0),cost=s.reduce((a,x)=>a+x.cost,0),ex=e.reduce((a,x)=>a+x.amount,0);let win=window.open('','_blank');win.document.write(`<html><head><title>GlowCart Report</title><style>body{font-family:sans-serif;padding:30px;max-width:800px;margin:auto}h1{color:#8c6cf0}table{width:100%;border-collapse:collapse;margin:15px 0}th,td{padding:8px;border-bottom:1px solid #ddd;text-align:left}.total{font-weight:bold;background:#f0efff}</style></head><body><h1>${esc(db.settings.shopName||'GlowCart Cosmetics')} — Business Report</h1><p>Period: ${from||y||'All time'} ${to?'to '+to:''}</p><table><tr><th>Metric</th><th>Value</th></tr><tr><td>Revenue</td><td>${money(rev)}</td></tr><tr><td>Cost of goods</td><td>${money(cost)}</td></tr><tr><td>Expenses</td><td>${money(ex)}</td></tr><tr class="total"><td>Net estimate</td><td>${money(rev-cost-ex)}</td></tr></table><h3>Sales (${s.length} records)</h3><table><tr><th>Date</th><th>Product</th><th>Qty</th><th>Total</th></tr>${s.map(x=>`<tr><td>${x.date}</td><td>${esc(x.product)}</td><td>${x.qty}</td><td>${money(x.total)}</td></tr>`).join('')}</table><h3>Expenses (${e.length} records)</h3><table><tr><th>Date</th><th>Description</th><th>Amount</th></tr>${e.map(x=>`<tr><td>${x.date}</td><td>${esc(x.name)}</td><td>${money(x.amount)}</td></tr>`).join('')}</table><p style="color:#777;font-size:12px">Generated ${new Date().toLocaleString()} — GlowCart</p></body></html>`);win.document.close();win.print()}
+
+/* -------------------- BACKUP / EXPORT -------------------- */
+function backup(){let blob=new Blob([JSON.stringify({app:'GlowCart',version:5,exported:new Date().toISOString(),data:db},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='GlowCart-backup-'+today()+'.json';a.click();URL.revokeObjectURL(a.href);toast('Backup export started')}
+function restoreBackup(){let f=$('restoreFile').files[0];if(!f)return toast('Choose a JSON backup');let r=new FileReader();r.onload=()=>{try{let z=JSON.parse(r.result);let d=z.data||z;if(!d.products||!d.sales)throw Error();db={...db,...d};db.settings={...db.settings,...(d.settings||{})};persist();renderAll();toast('Backup restored')}catch(e){toast('Invalid GlowCart backup file')}};r.readAsText(f)}
+function exportCSV(){let rows=[['date','product','quantity','unit_price','total','customer','payment'],...db.sales.map(s=>[s.date,s.product,s.qty,s.price,s.total,s.customer,s.pay])];let csv=rows.map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(',')).join('\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='GlowCart-sales-'+today()+'.csv';a.click()}
+function changePassword(){modal('Change password',`<div class="field"><label>Current password</label><input id="fOld" type="password"></div><div class="field"><label>New password</label><input id="fNew" type="password"></div>`,()=>{let u=JSON.parse(localStorage.getItem('glowcart_user')||'{}');if(val('fOld')!==u.pass)return toast('Current password is incorrect');if(val('fNew').length<4)return toast('Use at least 4 characters');u.pass=val('fNew');localStorage.setItem('glowcart_user',JSON.stringify(u));closeModal();toast('Password changed')})}
+
+/* -------------------- POS SYSTEM -------------------- */
+let cart=[];
+function renderPOS(){
+  renderPosQuickPick();renderCart();renderReceiptList();
+}
+function renderPosQuickPick(){
+  let q=($('posSearch')?.value||'').toLowerCase();
+  let list=db.products.filter(p=>!q||(p.name+' '+p.sku).toLowerCase().includes(q));
+  let qp=$('posQuickPick');if(!qp)return;
+  qp.innerHTML=list.length?list.map(p=>`<div class="qpick" onclick="quickAdd('${p.id}')" style="${p.qty<1?'opacity:.45':''}">${p.image?`<img src="${p.image}" loading="lazy">`:`<div style="width:42px;height:42px;display:grid;place-items:center;background:#fff;border-radius:8px">✿</div>`}<div class="q-info"><b>${esc(p.name)}</b><small>${p.qty} in stock</small><div class="q-price">${money(p.price)}</div></div></div>`).join(''):'<p class="muted">No matching products.</p>';
+}
+function quickAdd(id){let p=db.products.find(x=>x.id===id);if(p&&p.qty>0)addToCart(id);else toast('Out of stock')}
+function addToCart(id){
+  let p=db.products.find(x=>x.id===id);if(!p)return toast('Product not found');
+  if(p.qty<1)return toast('Out of stock');
+  let c=cart.find(x=>x.id===id);if(c){if(c.qty>=p.qty)return toast('Not enough stock');c.qty++}else cart.push({id:p.id,name:p.name,price:p.price,qty:1,cost:p.cost,image:p.image});
+  renderCart();
+}
+function changeQty(id,delta){
+  let c=cart.find(x=>x.id===id);if(!c)return;let p=db.products.find(x=>x.id===id);
+  c.qty+=delta;if(c.qty<=0)cart=cart.filter(x=>x.id!==id);else if(c.qty>p.qty){c.qty=p.qty;toast('Max stock reached')}
+  renderCart();
+}
+function clearCart(){cart=[];renderCart()}
+function renderCart(){
+  let el=$('cartItems');if(!el)return;
+  if(!cart.length){el.innerHTML='<p class="muted">Cart is empty. Scan a barcode, search above, or tap a product below.</p>';$('cartTotal').textContent=money(0);calcChange();return}
+  el.innerHTML=cart.map(c=>`<div class="pos-item">${c.image?`<img src="${c.image}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;flex:none">`:''}<span class="name">${esc(c.name)}<br><small class="muted">${money(c.price)} each</small></span><span class="qty"><button class="small secondary" onclick="changeQty('${c.id}',-1)">−</button><b>${c.qty}</b><button class="small secondary" onclick="changeQty('${c.id}',1)">+</button></span><b>${money(c.price*c.qty)}</b></div>`).join('');
+  $('cartTotal').textContent=money(cart.reduce((a,x)=>a+x.price*x.qty,0));calcChange();
+}
+function calcChange(){
+  let total=cart.reduce((a,x)=>a+x.price*x.qty,0),paid=+val('posPaid')||0,ch=paid-total;
+  let el=$('posChange');if(el){el.textContent=money(Math.max(0,ch));el.style.color=ch<0?'var(--red)':'var(--green)';}
+}
+function receiptHTML(r){
+  return `<div class="receipt-wrap"><div class="receipt">
+<div class="r-head">${esc(db.settings.shopName||'GlowCart Cosmetics')}</div>
+<div class="r-sub">${esc(db.settings.shopPhone||'')}<br>${esc(db.settings.shopLocation||'')}</div>
+<div class="r-line"></div>
+<div>RCPT: ${r.id}</div>
+<div>${r.date} ${r.time||''}</div>
+<div class="r-line"></div>
+${r.items.map(it=>`<div class="r-item"><span>${esc(it.product)} x${it.qty}</span><span>${money(it.total)}</span></div>`).join('')}
+<div class="r-line"></div>
+<div class="r-total"><span>TOTAL</span><span>${money(r.total)}</span></div>
+<div class="r-item"><span>Paid (${r.pay})</span><span>${money(r.paid)}</span></div>
+<div class="r-item"><span>Change</span><span>${money(r.change)}</span></div>
+<div class="r-line"></div>
+<div class="r-thanks">Thank you for shopping with us ✿</div>
+</div></div>`;
+}
+function completePOS(){
+  if(!cart.length)return toast('Cart is empty');
+  let total=cart.reduce((a,x)=>a+x.price*x.qty,0),paid=+val('posPaid')||0;
+  if(paid<total)return toast('Amount paid is less than total');
+  let change=paid-total;
+  let saleDate=new Date().toISOString().slice(0,10);
+  let saleId='GC-'+uid().toUpperCase().slice(-6);
+  let items=cart.map(c=>({productId:c.id,product:c.name,qty:c.qty,price:c.price,total:c.price*c.qty,cost:c.cost}));
+  cart.forEach(c=>{let p=db.products.find(x=>x.id===c.id);if(p){p.qty-=c.qty}});
+  items.forEach(it=>{db.sales.unshift({id:uid(),date:saleDate,productId:it.productId,product:it.product,qty:it.qty,price:it.price,total:it.total,cost:it.cost,customer:'',pay:val('posPay'),note:'POS'});db.stockMoves.unshift({id:uid(),date:saleDate,product:it.product,change:-it.qty,reason:'POS sale'})});
+  let receipt={id:saleId,date:saleDate,time:new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),items,total,paid,change,pay:val('posPay')};
+  db.receipts.unshift(receipt);
+  persist();
+  $('receiptArea').innerHTML=receiptHTML(receipt)+`
+  <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap">
+    <button class="wa small" onclick="shareReceiptWhatsApp('${saleId}')">💬 Share WhatsApp</button>
+    <button class="secondary small" onclick="openShareSheet('${saleId}')">📤 Share receipt</button>
+    <button class="secondary small" onclick="printReceipt('${saleId}')">🖨 Print</button>
+  </div>`;
+  cart=[];renderCart();$('posPaid').value='';renderReceiptList();renderAll();toast('Sale completed — change: '+money(change));
+}
+function renderReceiptList(){
+  let el=$('receiptList');if(!el)return;
+  el.innerHTML=db.receipts.length?db.receipts.slice(0,20).map(r=>`<div class="pos-item"><span><b>${r.id}</b><br><small>${r.date} ${r.time||''} — ${money(r.total)}</small></span><div style="display:flex;gap:4px;flex-wrap:wrap"><button class="small secondary" onclick="viewReceipt('${r.id}')">👁</button><button class="small secondary" onclick="openShareSheet('${r.id}')">📤</button><button class="small secondary" onclick="printReceipt('${r.id}')">🖨</button></div></div>`).join(''):'<p class="muted">No receipts yet.</p>';
+}
+function viewReceipt(id){
+  let r=db.receipts.find(x=>x.id===id);if(!r)return;
+  modal('Receipt '+r.id,receiptHTML(r)+`
+  <div class="share-sheet">
+    <button class="wa" onclick="shareReceiptWhatsApp('${r.id}')"><span class="s-ico">💬</span>WhatsApp</button>
+    <button class="sms" onclick="shareReceiptSMS('${r.id}')"><span class="s-ico">✉️</span>SMS</button>
+    <button class="email" onclick="shareReceiptEmail('${r.id}')"><span class="s-ico">📧</span>Email</button>
+    <button class="copy" onclick="copyReceiptText('${r.id}')"><span class="s-ico">📋</span>Copy</button>
+    <button class="download" onclick="downloadReceiptTxt('${r.id}')"><span class="s-ico">⬇️</span>Download</button>
+    <button class="print" onclick="printReceipt('${r.id}')"><span class="s-ico">🖨</span>Print</button>
+    <button class="print" onclick="nativeShareReceipt('${r.id}')"><span class="s-ico">📤</span>More…</button>
+  </div>`,null);
+  $('modalSave').classList.add('hidden');
+}
+/* -------------------- RECEIPT SHARING -------------------- */
+function receiptPlainText(r){
+  let lines=[];
+  lines.push(db.settings.shopName||'GlowCart Cosmetics');
+  if(db.settings.shopPhone)lines.push(db.settings.shopPhone);
+  if(db.settings.shopLocation)lines.push(db.settings.shopLocation);
+  lines.push('--------------------------------');
+  lines.push('Receipt: '+r.id);
+  lines.push('Date: '+r.date+' '+(r.time||''));
+  lines.push('--------------------------------');
+  r.items.forEach(it=>{lines.push(it.product+' x'+it.qty+'  '+money(it.total))});
+  lines.push('--------------------------------');
+  lines.push('TOTAL: '+money(r.total));
+  lines.push('Paid ('+r.pay+'): '+money(r.paid));
+  lines.push('Change: '+money(r.change));
+  lines.push('--------------------------------');
+  lines.push('Thank you for shopping with us ✿');
+  return lines.join('\n');
+}
+function shareReceiptWhatsApp(id){
+  let r=db.receipts.find(x=>x.id===id);if(!r)return toast('Receipt not found');
+  let txt=receiptPlainText(r);
+  window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
+}
+function shareReceiptSMS(id){
+  let r=db.receipts.find(x=>x.id===id);if(!r)return toast('Receipt not found');
+  let txt=receiptPlainText(r);
+  window.location.href='sms:?&body='+encodeURIComponent(txt);
+}
+function shareReceiptEmail(id){
+  let r=db.receipts.find(x=>x.id===id);if(!r)return toast('Receipt not found');
+  let subject='Receipt '+r.id+' — '+(db.settings.shopName||'GlowCart');
+  let body=receiptPlainText(r);
+  window.location.href='mailto:?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+}
+function copyReceiptText(id){
+  let r=db.receipts.find(x=>x.id===id);if(!r)return toast('Receipt not found');
+  let txt=receiptPlainText(r);
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(()=>toast('Receipt copied to clipboard')).catch(()=>fallbackCopy(txt));
+  }else fallbackCopy(txt);
+}
+function fallbackCopy(txt){
+  let ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Receipt copied')}catch(e){toast('Copy failed')}document.body.removeChild(ta);
+}
+function downloadReceiptTxt(id){
+  let r=db.receipts.find(x=>x.id===id);if(!r)return toast('Receipt not found');
+  let txt=receiptPlainText(r);
+  let blob=new Blob([txt],{type:'text/plain'});
+  let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Receipt-'+r.id+'.txt';a.click();URL.revokeObjectURL(a.href);
+  toast('Receipt downloaded');
+}
+async function nativeShareReceipt(id){
+  let r=db.receipts.find(x=>x.id===id);if(!r)return toast('Receipt not found');
+  let txt=receiptPlainText(r);
+  if(navigator.share){
+    try{
+      // try to share with image if canvas available
+      let img=await receiptToImage(r);
+      if(img&&navigator.canShare&&navigator.canShare({files:[img]})){
+        await navigator.share({title:'Receipt '+r.id,text:txt,files:[img]});
+      }else{
+        await navigator.share({title:'Receipt '+r.id,text:txt});
+      }
+    }catch(e){if(e.name!=='AbortError'){copyReceiptText(id);toast('Share cancelled — copied instead')}}
+  }else{
+    copyReceiptText(id);toast('Native share not supported — copied text instead');
+  }
+}
+function receiptToImage(r){
+  return new Promise(resolve=>{
+    try{
+      let txt=receiptPlainText(r);
+      let lines=txt.split('\n');
+      let w=420,lineH=20,pad=22;
+      let h=pad*2+lines.length*lineH;
+      let c=document.createElement('canvas');c.width=w;c.height=h;
+      let ctx=c.getContext('2d');
+      ctx.fillStyle='#ffffff';ctx.fillRect(0,0,w,h);
+      ctx.fillStyle='#111';ctx.font='14px "Courier New", monospace';ctx.textBaseline='top';
+      lines.forEach((ln,i)=>ctx.fillText(ln,pad,pad+i*lineH));
+      c.toBlob(blob=>{
+        if(!blob)return resolve(null);
+        let file=new File([blob],'Receipt-'+r.id+'.png',{type:'image/png'});
+        resolve(file);
+      },'image/png');
+    }catch(e){resolve(null)}
+  });
+}
+function openShareSheet(id){
+  let r=db.receipts.find(x=>x.id===id);if(!r)return toast('Receipt not found');
+  modal('Share receipt '+r.id,receiptHTML(r)+`
+  <div class="share-sheet">
+    <button class="wa" onclick="shareReceiptWhatsApp('${r.id}')"><span class="s-ico">💬</span>WhatsApp</button>
+    <button class="sms" onclick="shareReceiptSMS('${r.id}')"><span class="s-ico">✉️</span>SMS</button>
+    <button class="email" onclick="shareReceiptEmail('${r.id}')"><span class="s-ico">📧</span>Email</button>
+    <button class="copy" onclick="copyReceiptText('${r.id}')"><span class="s-ico">📋</span>Copy</button>
+    <button class="download" onclick="downloadReceiptTxt('${r.id}')"><span class="s-ico">⬇️</span>Download</button>
+    <button class="print" onclick="printReceipt('${r.id}')"><span class="s-ico">🖨</span>Print</button>
+    <button class="print" onclick="nativeShareReceipt('${r.id}')"><span class="s-ico">📤</span>More…</button>
+  </div>
+  <p class="hint">Tip: On mobile, "More…" uses your device's share menu — perfect for sharing the receipt image to WhatsApp, Telegram, or any app.</p>`,null);
+  $('modalSave').classList.add('hidden');
+}
+function printReceipt(id){
+  let r=db.receipts.find(x=>x.id===id);if(!r)return toast('Receipt not found');
+  $('printReceiptArea').innerHTML=buildPrintReceiptHTML(r);
+  $('printReceiptArea').classList.remove('hidden');
+  window.print();
+  setTimeout(()=>{$('printReceiptArea').classList.add('hidden');$('printReceiptArea').innerHTML=''},500);
+}
+function buildPrintReceiptHTML(r){
+  return `<div class="receipt" style="width:72mm;margin:0 auto;padding:6px 6px;font-size:11px">
+<div class="r-head">${esc(db.settings.shopName||'GlowCart')}</div>
+<div class="r-sub">${esc(db.settings.shopPhone||'')}<br>${esc(db.settings.shopLocation||'')}</div>
+<div class="r-line"></div>
+<div>RCPT: ${r.id}</div>
+<div>${r.date} ${r.time||''}</div>
+<div class="r-line"></div>
+${r.items.map(it=>`<div class="r-item"><span>${esc(it.product)} x${it.qty}</span><span>${money(it.total)}</span></div>`).join('')}
+<div class="r-line"></div>
+<div class="r-total"><span>TOTAL</span><span>${money(r.total)}</span></div>
+<div class="r-item"><span>Paid (${r.pay})</span><span>${money(r.paid)}</span></div>
+<div class="r-item"><span>Change</span><span>${money(r.change)}</span></div>
+<div class="r-line"></div>
+<div class="r-thanks">Thank you ✿</div>
+</div>`;
+}
+function renderReceipts(){
+  let q=($('receiptSearch')?.value||'').toLowerCase();
+  let a=db.receipts.filter(r=>!q||r.id.toLowerCase().includes(q)||r.items.some(it=>it.product.toLowerCase().includes(q)));
+  $('receiptTable').innerHTML=table(['Receipt','Date','Items','Total','Paid','Change','Actions'],a.map(r=>`<tr><td>${r.id}</td><td>${r.date} ${r.time||''}</td><td>${r.items.map(it=>esc(it.product)+' x'+it.qty).join(', ')}</td><td><b>${money(r.total)}</b></td><td>${money(r.paid)}</td><td>${money(r.change)}</td><td><button class="small secondary" onclick="viewReceipt('${r.id}')">View</button> <button class="small secondary" onclick="openShareSheet('${r.id}')">📤 Share</button> <button class="small secondary" onclick="printReceipt('${r.id}')">🖨</button></td></tr>`));
+}
+
+/* -------------------- BARCODE / QR SCANNER -------------------- */
+let scannerStream=null,scannerTarget='pos',scanInterval=null;
+function openScanner(target){
+  scannerTarget=target;
+  modal('Scan barcode / QR code',`<div class="scanner-box"><video id="scanVideo" autoplay playsinline></video><div class="scanline"></div></div><p class="hint">Point camera at a barcode or QR code. If camera not available, type the barcode below.</p><div class="field"><label>Or type barcode / SKU</label><input id="manualBarcode" placeholder="Type barcode and press Add"></div><button class="secondary" onclick="addManualBarcode()">Add barcode</button><div id="scanResult" class="barcode-result hidden"></div>`,()=>{});
+  setTimeout(()=>startScanner(target),300);
+}
+function startScanner(target){
+  let video=$('scanVideo');if(!video)return;
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('Camera not available on this device');return}
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(stream=>{
+    scannerStream=stream;video.srcObject=stream;
+    if('BarcodeDetector' in window){
+      let detector=new BarcodeDetector({formats:['ean_13','ean_8','code_128','code_39','qr_code','upc_a','upc_e']});
+      scanInterval=setInterval(async()=>{
+        try{let codes=await detector.detect(video);if(codes.length){let code=codes[0].rawValue;stopScanner();handleScannedCode(code,target)}}catch(e){}
+      },500);
+    }else{
+      toast('BarcodeDetector not supported — type barcode below');
+    }
+  }).catch(()=>toast('Camera permission denied — type barcode below'));
+}
+function stopScanner(){if(scanInterval){clearInterval(scanInterval);scanInterval=null}if(scannerStream){scannerStream.getTracks().forEach(t=>t.stop());scannerStream=null}let v=$('scanVideo');if(v)v.srcObject=null}
+function addManualBarcode(){let code=val('manualBarcode');if(!code)return toast('Enter barcode');handleScannedCode(code,scannerTarget)}
+function handleScannedCode(code,target){
+  let res=$('scanResult');if(res){res.classList.remove('hidden');res.textContent='Scanned: '+code}
+  if(target==='productField'){
+    let f=$('fSku');if(f)f.value=code;toast('Barcode added to product');return;
+  }
+  let p=db.products.find(x=>x.sku===code);
+  if(target==='pos'){
+    if(p&&p.qty>0){addToCart(p.id);toast('Added: '+p.name)}else toast('No product with barcode '+code+' or out of stock');
+  }else if(target==='product'){
+    if(p){toast('Product exists: '+p.name);openProduct(p.id)}else{openProduct();setTimeout(()=>{let f=$('fSku');if(f)f.value=code},100);toast('New product — barcode filled')}
+  }
+  stopScanner();
+  setTimeout(()=>{closeModal()},200);
+}
+
+/* -------------------- RENDER ALL -------------------- */
+function renderAll(){renderDashboard();renderProducts();renderSales();renderExpenses();renderCustomers();renderSuppliers();renderInventory();renderGallery();renderSettings();renderPOS();renderReceipts();if($('reports').classList.contains('active'))renderReports()}
+boot();
+</script></body></html>

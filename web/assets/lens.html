@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>LocalLens Pro – Advanced Off‑line Assistive Vision</title>
+    <style>
+        :root {
+            --bg: #0a0f0a;
+            --surface: #1a1f1a;
+            --green: #00e676;
+            --green-dark: #00c853;
+            --yellow: #ffeb3b;
+            --text: #e0e0e0;
+            --text-secondary: #9e9e9e;
+            --danger: #ff1744;
+            --radius: 18px;
+            --shadow: 0 8px 24px rgba(0,0,0,0.6);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            padding: 16px 12px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        header {
+            text-align: center;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--green);
+            text-shadow: 0 0 12px rgba(0,230,118,0.5);
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        #camera-container {
+            position: relative;
+            width: 100%;
+            max-width: 480px;
+            aspect-ratio: 4/3;
+            background: #000;
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 3px solid var(--green);
+            box-shadow: var(--shadow), inset 0 0 0 1px rgba(0,230,118,0.3);
+            margin: 10px 0;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .target-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 90px;
+            height: 90px;
+            transform: translate(-50%, -50%);
+            border: 3px dashed var(--green);
+            border-radius: 20px;
+            pointer-events: none;
+            box-shadow: inset 0 0 0 3px rgba(0,0,0,0.5), 0 0 20px rgba(0,230,118,0.3);
+            transition: border-color 0.2s;
+        }
+
+        .target-box.active-scan {
+            border-color: var(--yellow);
+            box-shadow: inset 0 0 0 3px rgba(0,0,0,0.5), 0 0 30px var(--yellow);
+        }
+
+        .result-overlay {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            right: 12px;
+            background: rgba(10,15,10,0.85);
+            backdrop-filter: blur(8px);
+            border-radius: 14px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .color-swatch {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            flex-shrink: 0;
+        }
+
+        .result-text {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #fff;
+            flex: 1;
+        }
+
+        .confidence-bar {
+            height: 6px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--green);
+            border-radius: 3px;
+            transition: width 0.2s;
+        }
+
+        #status {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--green);
+            text-align: center;
+            padding: 12px 10px;
+            background: var(--surface);
+            width: 100%;
+            max-width: 480px;
+            border-radius: var(--radius);
+            margin: 8px 0;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+            min-height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .controls {
+            width: 100%;
+            max-width: 480px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .btn {
+            padding: 18px 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: all 0.1s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            background: #2a2e2a;
+            color: #fff;
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+            filter: brightness(1.2);
+        }
+
+        .btn-icon {
+            font-size: 1.4rem;
+        }
+
+        #btn-currency { background: #ffb300; color: #000; }
+        #btn-color { background: #1e88e5; }
+        #btn-torch { background: #546e7a; }
+        #btn-scan-mode { background: #7b1fa2; }
+        #btn-language { background: #2e7d32; }
+        #btn-switch-cam { background: #5d4037; }
+
+        .secondary-controls {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            max-width: 480px;
+            margin-top: 8px;
+        }
+
+        .btn-small {
+            flex: 1;
+            padding: 14px 6px;
+            font-size: 0.9rem;
+            background: #333;
+            color: #ddd;
+        }
+
+        @media (max-width: 400px) {
+            .btn {
+                padding: 14px 4px;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🔍 LocalLens Pro</h1>
+    <div class="subtitle">Off‑line Visual Intelligence</div>
+</header>
+
+<div id="camera-container">
+    <video id="webcam" autoplay playsinline muted></video>
+    <div class="target-box" id="targetBox"></div>
+    <div class="result-overlay" id="resultOverlay" style="opacity:0;">
+        <div class="color-swatch" id="swatch"></div>
+        <div style="flex:1;">
+            <div class="result-text" id="resultLabel">---</div>
+            <div class="confidence-bar"><div class="confidence-fill" id="confidenceFill"></div></div>
+        </div>
+    </div>
+</div>
+
+<div id="status">⚡ Initializing camera...</div>
+
+<div class="controls">
+    <button class="btn" id="btn-currency">
+        <span class="btn-icon">💵</span> Scan Banknote
+    </button>
+    <button class="btn" id="btn-color">
+        <span class="btn-icon">🎨</span> Identify Color
+    </button>
+    <button class="btn" id="btn-scan-mode">
+        <span class="btn-icon">🔄</span> Live Mode OFF
+    </button>
+</div>
+
+<div class="secondary-controls">
+    <button class="btn btn-small" id="btn-torch">🔦 Flash</button>
+    <button class="btn btn-small" id="btn-language">🌐 EN</button>
+    <button class="btn btn-small" id="btn-switch-cam">📷 Flip</button>
+</div>
+
+<canvas id="capture-canvas" style="display:none;"></canvas>
+
+<script>
+    (function() {
+        // ----- DOM Elements -----
+        const video = document.getElementById('webcam');
+        const canvas = document.getElementById('capture-canvas');
+        const statusDiv = document.getElementById('status');
+        const targetBox = document.getElementById('targetBox');
+        const resultOverlay = document.getElementById('resultOverlay');
+        const swatchEl = document.getElementById('swatch');
+        const resultLabel = document.getElementById('resultLabel');
+        const confidenceFill = document.getElementById('confidenceFill');
+
+        // ----- State -----
+        let streamTrack = null;
+        let torchOn = false;
+        let torchSupported = false;
+        let currentFacingMode = 'environment'; // 'user' for front
+        let liveScanActive = false;
+        let scanInterval = null;
+        let language = 'en'; // 'en' or 'sw'
+        let lastSpokenText = '';
+        let speakCooldown = false;
+
+        // ----- Color & Currency Knowledge Base -----
+        const namedColors = [
+            { name: 'Red', hsl: [0, 70, 45] },
+            { name: 'Orange', hsl: [25, 85, 55] },
+            { name: 'Yellow', hsl: [55, 90, 60] },
+            { name: 'Lime', hsl: [75, 80, 50] },
+            { name: 'Green', hsl: [120, 65, 40] },
+            { name: 'Cyan', hsl: [180, 70, 55] },
+            { name: 'Blue', hsl: [210, 75, 45] },
+            { name: 'Purple', hsl: [275, 70, 40] },
+            { name: 'Magenta', hsl: [310, 75, 50] },
+            { name: 'Pink', hsl: [340, 60, 65] },
+            { name: 'Brown', hsl: [25, 50, 25] },
+            { name: 'White', hsl: [0, 0, 92] },
+            { name: 'Grey', hsl: [0, 0, 50] },
+            { name: 'Black', hsl: [0, 0, 10] }
+        ];
+
+        // KES banknote reference (average HSL from typical note patches)
+        const kesNotes = [
+            { value: '50 Shillings', color: 'Red/Orange', hslRef: [10, 70, 40] },
+            { value: '100 Shillings', color: 'Violet', hslRef: [285, 55, 35] },
+            { value: '200 Shillings', color: 'Blue', hslRef: [215, 60, 40] },
+            { value: '500 Shillings', color: 'Green', hslRef: [135, 55, 35] },
+            { value: '1000 Shillings', color: 'Brown/Gold', hslRef: [35, 65, 30] }
+        ];
+
+        // ----- Multilingual phrases -----
+        const t = (key) => {
+            const dict = {
+                en: {
+                    ready: "System ready. Center object in frame.",
+                    camFail: "Camera access denied or missing.",
+                    torchOn: "Flashlight on",
+                    torchOff: "Flashlight off",
+                    torchUnsupported: "Flashlight not supported",
+                    colorPrefix: "I see ",
+                    unknownColor: "Unknown color",
+                    currencyMatch: (val, conf) => `${val} (${Math.round(conf)}% confidence)`,
+                    currencyLowLight: "Too dark, enable flashlight.",
+                    currencyUnclear: "No banknote recognized. Try adjusting.",
+                    liveOn: "Live scanning activated",
+                    liveOff: "Live scanning stopped",
+                    switchCam: (mode) => `Camera switched to ${mode}`,
+                    langChanged: "Language: English"
+                },
+                sw: {
+                    ready: "Mfumo uko tayari. Weka kitu katikati.",
+                    camFail: "Ruhusa ya kamera imekataliwa.",
+                    torchOn: "Taa imewashwa",
+                    torchOff: "Taa imezimwa",
+                    torchUnsupported: "Taa haitumiki",
+                    colorPrefix: "Naona ",
+                    unknownColor: "Rangi haijulikani",
+                    currencyMatch: (val, conf) => `${val} (uhakika ${Math.round(conf)}%)`,
+                    currencyLowLight: "Giza sana, washa taa.",
+                    currencyUnclear: "Noti haijatambuliwa. Jaribu kurekebisha.",
+                    liveOn: "Uchunguzi wa moja kwa moja umewashwa",
+                    liveOff: "Uchunguzi umesimamishwa",
+                    switchCam: (mode) => `Kamera imebadilishwa kuwa ${mode}`,
+                    langChanged: "Lugha: Kiswahili"
+                }
+            };
+            const langDict = dict[language] || dict.en;
+            return langDict[key] || key;
+        };
+
+        // ----- Helper: speak with cooldown & duplicate prevention -----
+        function speak(text, force = false) {
+            if (!force && (text === lastSpokenText || speakCooldown)) return;
+            lastSpokenText = text;
+            speakCooldown = true;
+            setTimeout(() => { speakCooldown = false; }, 1200);
+            
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.95;
+                utterance.lang = language === 'sw' ? 'sw-KE' : 'en-US';
+                window.speechSynthesis.speak(utterance);
+            }
+            updateStatus(text);
+        }
+
+        function updateStatus(msg) {
+            statusDiv.innerText = msg;
+        }
+
+        function triggerHaptic(pattern = 50) {
+            if (navigator.vibrate) navigator.vibrate(pattern);
+        }
+
+        // ----- Camera initialization with torch capability check -----
+        async function initCamera(facingMode = 'environment') {
+            if (streamTrack) {
+                streamTrack.stop();
+            }
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: { exact: facingMode },
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        advanced: [{ torch: false }]
+                    }
+                });
+                video.srcObject = stream;
+                streamTrack = stream.getVideoTracks()[0];
+                
+                // Check torch capability
+                const capabilities = streamTrack.getCapabilities ? streamTrack.getCapabilities() : null;
+                torchSupported = capabilities && capabilities.torch;
+                torchOn = false;
+                updateStatus(t('ready'));
+                speak(t('ready'), true);
+            } catch (err) {
+                console.error(err);
+                updateStatus(t('camFail'));
+                speak(t('camFail'), true);
+                // fallback without exact facingMode
+                try {
+                    const fallbackStream = await navigator.mediaDevices.getUserMedia({
+                        video: { width: { ideal: 640 }, height: { ideal: 480 } }
+                    });
+                    video.srcObject = fallbackStream;
+                    streamTrack = fallbackStream.getVideoTracks()[0];
+                    const capabilities = streamTrack.getCapabilities ? streamTrack.getCapabilities() : null;
+                    torchSupported = capabilities && capabilities.torch;
+                    updateStatus(t('ready'));
+                    speak(t('ready'), true);
+                } catch (e) {
+                    updateStatus('Camera unavailable.');
+                }
+            }
+        }
+
+        // ----- Torch toggle -----
+        async function toggleTorch() {
+            if (!streamTrack) {
+                speak('Camera not ready.', true);
+                return;
+            }
+            if (!torchSupported) {
+                speak(t('torchUnsupported'), true);
+                return;
+            }
+            try {
+                torchOn = !torchOn;
+                await streamTrack.applyConstraints({
+                    advanced: [{ torch: torchOn }]
+                });
+                speak(torchOn ? t('torchOn') : t('torchOff'));
+                triggerHaptic(30);
+            } catch (err) {
+                speak(t('torchUnsupported'), true);
+                torchSupported = false;
+            }
+        }
+
+        // ----- Switch camera -----
+        async function switchCamera() {
+            currentFacingMode = (currentFacingMode === 'environment') ? 'user' : 'environment';
+            await initCamera(currentFacingMode);
+            const modeName = currentFacingMode === 'environment' ? 'back' : 'front';
+            speak(t('switchCam')(modeName), true);
+            triggerHaptic([20,30,20]);
+        }
+
+        // ----- Computer Vision: average of center patch -----
+        function captureCenterPatch(patchSize = 80) {
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            const vw = video.videoWidth || 640;
+            const vh = video.videoHeight || 480;
+            canvas.width = vw;
+            canvas.height = vh;
+            ctx.drawImage(video, 0, 0, vw, vh);
+            
+            const startX = Math.round((vw - patchSize) / 2);
+            const startY = Math.round((vh - patchSize) / 2);
+            const imageData = ctx.getImageData(startX, startY, patchSize, patchSize).data;
+            
+            let rSum = 0, gSum = 0, bSum = 0;
+            const total = patchSize * patchSize;
+            for (let i = 0; i < imageData.length; i += 4) {
+                rSum += imageData[i];
+                gSum += imageData[i+1];
+                bSum += imageData[i+2];
+            }
+            return {
+                r: Math.round(rSum / total),
+                g: Math.round(gSum / total),
+                b: Math.round(bSum / total)
+            };
+        }
+
+        function rgbToHsl(r, g, b) {
+            r /= 255; g /= 255; b /= 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+
+            if (max === min) {
+                h = s = 0;
+            } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+                    case g: h = ((b - r) / d + 2) / 6; break;
+                    case b: h = ((r - g) / d + 4) / 6; break;
+                }
+            }
+            return { h: h * 360, s: s * 100, l: l * 100 };
+        }
+
+        // Euclidean distance in HSL space (hue is circular, handled separately)
+        function hslDistance(hsl1, hsl2) {
+            let dh = Math.abs(hsl1[0] - hsl2[0]);
+            if (dh > 180) dh = 360 - dh;
+            const ds = hsl1[1] - hsl2[1];
+            const dl = hsl1[2] - hsl2[2];
+            return Math.sqrt(dh*dh + ds*ds + dl*dl);
+        }
+
+        // ----- Color Identification with confidence -----
+        function identifyColor(rgb) {
+            const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+            // Handle achromatic / extremes
+            if (hsl.l < 8) return { name: 'Black', conf: 95, hsl };
+            if (hsl.l > 92) return { name: 'White', conf: 95, hsl };
+            if (hsl.s < 8) return { name: 'Grey', conf: 85, hsl };
+
+            let bestMatch = null;
+            let bestDist = Infinity;
+            for (let c of namedColors) {
+                const dist = hslDistance([hsl.h, hsl.s, hsl.l], c.hsl);
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    bestMatch = c;
+                }
+            }
+            // Convert distance to rough confidence (max distance ~ 200)
+            const conf = Math.max(0, Math.min(100, 100 - (bestDist / 1.8)));
+            return { name: bestMatch ? bestMatch.name : 'Unknown', conf, hsl };
+        }
+
+        // ----- Currency Detection with HSL matching -----
+        function identifyCurrency(rgb) {
+            const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+            if (hsl.l < 12) return { note: null, conf: 0, reason: 'low_light' };
+            if (hsl.s < 12) return { note: null, conf: 0, reason: 'low_saturation' };
+
+            let bestNote = null;
+            let bestDist = Infinity;
+            for (let note of kesNotes) {
+                const dist = hslDistance([hsl.h, hsl.s, hsl.l], note.hslRef);
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    bestNote = note;
+                }
+            }
+            const conf = Math.max(0, Math.min(100, 100 - (bestDist / 1.5)));
+            if (conf > 38 && bestNote) {
+                return { note: bestNote.value, conf, reason: 'match' };
+            }
+            return { note: null, conf: 0, reason: 'no_match' };
+        }
+
+        // ----- UI Update: overlay with color swatch & confidence -----
+        function showOverlay(label, rgb, conf) {
+            resultOverlay.style.opacity = '1';
+            swatchEl.style.backgroundColor = `rgb(${rgb.r},${rgb.g},${rgb.b})`;
+            resultLabel.textContent = label;
+            confidenceFill.style.width = `${Math.round(conf)}%`;
+        }
+
+        function hideOverlay() {
+            resultOverlay.style.opacity = '0';
+        }
+
+        // ----- Processing pipeline for a single scan -----
+        function processScan(mode = 'color') { // 'color' or 'currency'
+            if (!video.videoWidth) {
+                speak('Camera not ready.', true);
+                return;
+            }
+            const rgb = captureCenterPatch(80);
+            if (mode === 'color') {
+                const result = identifyColor(rgb);
+                const text = `${t('colorPrefix')}${result.name}`;
+                showOverlay(result.name, rgb, result.conf);
+                speak(text);
+                triggerHaptic(40);
+            } else if (mode === 'currency') {
+                const result = identifyCurrency(rgb);
+                if (result.reason === 'low_light') {
+                    hideOverlay();
+                    speak(t('currencyLowLight'), true);
+                    triggerHaptic([30,50,30]);
+                } else if (result.note) {
+                    const text = t('currencyMatch')(result.note, result.conf);
+                    showOverlay(result.note, rgb, result.conf);
+                    speak(text);
+                    triggerHaptic([20,40,20,40]);
+                } else {
+                    hideOverlay();
+                    speak(t('currencyUnclear'), true);
+                    triggerHaptic(20);
+                }
+            }
+        }
+
+        // ----- Live Scan Mode (continuous) -----
+        function startLiveScan() {
+            if (liveScanActive) return;
+            liveScanActive = true;
+            targetBox.classList.add('active-scan');
+            document.getElementById('btn-scan-mode').innerHTML = '<span class="btn-icon">⏹️</span> Live Mode ON';
+            speak(t('liveOn'), true);
+            // Scan every 1200ms alternating modes? Or use default color. Let's scan color continuously.
+            scanInterval = setInterval(() => {
+                processScan('color');
+            }, 1500);
+        }
+
+        function stopLiveScan() {
+            if (!liveScanActive) return;
+            liveScanActive = false;
+            targetBox.classList.remove('active-scan');
+            document.getElementById('btn-scan-mode').innerHTML = '<span class="btn-icon">🔄</span> Live Mode OFF';
+            if (scanInterval) clearInterval(scanInterval);
+            scanInterval = null;
+            hideOverlay();
+            speak(t('liveOff'), true);
+            triggerHaptic(20);
+        }
+
+        function toggleLiveScan() {
+            if (liveScanActive) stopLiveScan();
+            else startLiveScan();
+        }
+
+        // ----- Button handlers -----
+        document.getElementById('btn-currency').addEventListener('click', () => {
+            if (liveScanActive) stopLiveScan();
+            processScan('currency');
+        });
+
+        document.getElementById('btn-color').addEventListener('click', () => {
+            if (liveScanActive) stopLiveScan();
+            processScan('color');
+        });
+
+        document.getElementById('btn-scan-mode').addEventListener('click', toggleLiveScan);
+
+        document.getElementById('btn-torch').addEventListener('click', toggleTorch);
+
+        document.getElementById('btn-language').addEventListener('click', () => {
+            if (language === 'en') {
+                language = 'sw';
+                document.getElementById('btn-language').innerHTML = '🌐 SW';
+                speak(t('langChanged'), true);
+            } else {
+                language = 'en';
+                document.getElementById('btn-language').innerHTML = '🌐 EN';
+                speak(t('langChanged'), true);
+            }
+        });
+
+        document.getElementById('btn-switch-cam').addEventListener('click', switchCamera);
+
+        // ----- Start everything -----
+        initCamera(currentFacingMode).then(() => {
+            // Ready
+        });
+    })();
+</script>
+</body>
+</html>

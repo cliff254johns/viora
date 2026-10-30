@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rental management</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;800&display=swap">
+<style>
+:root{--bg:#f2f5f6;--sf:#fff;--ink:#12262b;--mut:#587077;--line:#d7e1e4;--ac:#0e6666;--acs:#dcefee;--ok:#1b7646;--oks:#dff2e7;--warn:#a85108;--warns:#fbead7;--bad:#b3261e;--bads:#f9dfdc;--b1:#e0a252;--b2:#d2692f;--b3:#a82a22;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1a1d;--sf:#14262a;--ink:#e6f0f2;--mut:#95adb3;--line:#26393e;--ac:#55c4c4;--acs:#173b3d;--ok:#5fd08f;--oks:#16372a;--warn:#f0a35c;--warns:#3d2a14;--bad:#ff8d84;--bads:#40201d;--b1:#d9a25a;--b2:#e07a45;--b3:#e5534a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0d1a1d;--sf:#14262a;--ink:#e6f0f2;--mut:#95adb3;--line:#26393e;--ac:#55c4c4;--acs:#173b3d;--ok:#5fd08f;--oks:#16372a;--warn:#f0a35c;--warns:#3d2a14;--bad:#ff8d84;--bads:#40201d;--b1:#d9a25a;--b2:#e07a45;--b3:#e5534a;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.45 "Schibsted Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:720px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:22px;font-weight:800;margin:0 0 14px;letter-spacing:-.01em}
+.tabs{display:flex;gap:4px;background:var(--sf);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:18px}
+.tabs button{flex:1;border:0;background:none;color:var(--mut);font:inherit;font-weight:500;padding:9px 4px;border-radius:9px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--ac);color:var(--sf);font-weight:700}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.hero{padding:6px 2px 18px}
+.hero .big{font-size:clamp(44px,14vw,68px);font-weight:800;letter-spacing:-.03em;line-height:1;color:var(--bad)}
+.hero .big.zero{color:var(--ok)}
+.hero p{margin:6px 0 0;color:var(--mut)}
+.bar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--line);margin:16px 0 8px}
+.bar i{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px;color:var(--mut)}
+.legend b{color:var(--ink);font-weight:700}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0}
+.kpi{background:var(--sf);border:1px solid var(--line);border-radius:12px;padding:12px}
+.kpi b{display:block;font-size:20px;font-weight:800}
+.kpi span{font-size:13px;color:var(--mut)}
+h2{font-size:16px;font-weight:700;margin:22px 0 8px}
+.list{background:var(--sf);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:13px 14px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .main{flex:1;min-width:0}
+.row .t{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .s{font-size:14px;color:var(--mut)}
+.row .amt{text-align:right;font-weight:700;white-space:nowrap}
+.pill{display:inline-block;font-size:12.5px;font-weight:700;padding:2px 9px;border-radius:99px}
+.pill.paid{background:var(--oks);color:var(--ok)}.pill.late{background:var(--bads);color:var(--bad)}.pill.due{background:var(--warns);color:var(--warn)}.pill.soon{background:var(--warns);color:var(--warn)}
+.btn{font:inherit;font-weight:700;border:1px solid var(--ac);background:var(--ac);color:var(--sf);border-radius:10px;padding:9px 14px;cursor:pointer}
+.btn.ghost{background:none;color:var(--ac)}
+.btn.sm{padding:6px 10px;font-size:14px}
+.btn:disabled{opacity:.5;cursor:default}
+.chips{display:flex;gap:6px;margin-bottom:12px}
+.chips button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--sf);color:var(--mut);padding:5px 12px;border-radius:99px;cursor:pointer}
+.chips button[aria-pressed="true"]{border-color:var(--ac);color:var(--ac);font-weight:700}
+.bar-actions{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.empty{padding:22px 16px;color:var(--mut);text-align:center}
+.lnk{font:inherit;font-weight:700;color:inherit;background:none;border:0;padding:0;text-align:left;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+textarea{resize:vertical;line-height:1.4}
+dialog{border:1px solid var(--line);border-radius:16px;background:var(--sf);color:var(--ink);width:min(440px,calc(100% - 24px));padding:20px}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h3{margin:0 0 12px;font-size:18px}
+label{display:block;font-size:14px;color:var(--mut);margin:10px 0 4px}
+input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.acts{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.foot{margin-top:28px;text-align:center}
+.foot button{background:none;border:0;color:var(--mut);font:inherit;font-size:14px;text-decoration:underline;cursor:pointer}
+button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+@media (max-width:640px){
+main{padding:16px 14px 104px}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;margin:0;border-radius:0;border-width:1px 0 0;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
+.tabs button{min-height:46px;font-size:15px}
+.row{flex-wrap:wrap;padding:14px}
+.row .main{flex:1 1 160px}
+.btn.sm,.chips button{min-height:42px}
+.lnk{min-height:32px}
+dialog{width:100%;max-width:100%;margin:auto 0 0;border-radius:18px 18px 0 0;max-height:92dvh;overflow:auto;padding:20px 16px calc(20px + env(safe-area-inset-bottom,0px))}
+.acts .btn{flex:1;min-height:46px}
+}
+@media (max-width:400px){.g2{grid-template-columns:1fr}.kpi{padding:10px}.kpi b{font-size:18px}}
+html{-webkit-text-size-adjust:100%}
+button,.lnk{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.btn.sm,.chips button{min-height:40px}
+.row .s{overflow-wrap:anywhere}
+.row .amt{margin-left:auto}
+@media(max-width:600px){
+main{padding:14px 12px 104px}
+h1{font-size:20px;margin-bottom:12px}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;margin:0;border-radius:0;border-width:1px 0 0;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
+.tabs button{min-height:44px;font-size:15px}
+.row{flex-wrap:wrap;gap:8px 10px;padding:12px}
+.row .main{flex:1 1 55%}
+.kpi{padding:10px}.kpi b{font-size:18px}.kpi span{font-size:12px}
+.chips button{flex:1}
+.bar-actions{flex-wrap:wrap}
+dialog{width:100%;max-width:none;margin:auto 0 0;border-radius:18px 18px 0 0;max-height:92vh;overflow:auto;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
+.g2{grid-template-columns:1fr}
+.acts .btn{flex:1;min-height:44px}
+}
+.doc{background:#fff;color:#161b1d;border:1px solid var(--line);border-radius:10px;padding:20px;font-size:14px}
+.doc h3{margin:0 0 4px;font-size:22px;color:#0e6666}
+.dh{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:2px solid #0e6666;padding-bottom:12px;margin-bottom:14px}
+.dt{text-align:right}
+.doc table{width:100%;border-collapse:collapse;margin:12px 0}
+.doc th,.doc td{padding:7px 4px;border-bottom:1px solid #d7e1e4;text-align:left;font-weight:400}
+.doc th{font-weight:700}
+.doc .r{text-align:right}
+.doc th.r,.doc td.r{text-align:right}
+.doc .tot td{font-weight:700;border-bottom:0}
+.doc .stamp{display:inline-block;border:2px solid #1b7646;color:#1b7646;font-weight:800;padding:2px 10px;border-radius:6px}
+.doc .lnk{color:#0e6666}
+@media print{
+main,.tabs,.noprint{display:none!important}
+body{background:#fff}
+:root{padding:0}
+dialog{position:static!important;display:block;width:auto!important;max-height:none!important;overflow:visible!important;border:0;padding:0!important;margin:0!important;background:#fff}
+.doc{border:0;padding:0}
+}
+</style>
+</head>
+<body>
+<main>
+<h1>Rental management</h1>
+<div class="tabs" role="tablist" id="tabs">
+<button role="tab" data-tab="home">Overview</button>
+<button role="tab" data-tab="inv">Invoices</button>
+<button role="tab" data-tab="ten">Tenants</button>
+<button role="tab" data-tab="lea">Leases</button>
+</div>
+<div id="app"></div>
+<div class="foot"><button data-act="biz">Invoice sender details</button>&nbsp;&nbsp;<button id="reset">Reset sample data</button></div>
+</main>
+<dialog id="dlg"></dialog>
+<script>
+const KEY='rental-mgmt-v1';
+const today=new Date();today.setHours(0,0,0,0);
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parse=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const money=n=>'$'+n.toLocaleString('en-US',{maximumFractionDigits:2});
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,8);
+const dayDiff=(a,b)=>Math.round((a-b)/864e5);
+const fdate=s=>parse(s).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+const mname=d=>d.toLocaleString('en-US',{month:'long'});
+
+function seed(){
+ const y=today.getFullYear(),m=today.getMonth();
+ const rows=[
+  ['Amara Okafor','amara@example.com','A1',1450,1,[1,1,1,1],null],
+  ['Daniel Reyes','daniel@example.com','A2',1380,5,[1,1,0,0],null],
+  ['Priya Nair','priya@example.com','B1',1900,1,[1,1,.5,1],null],
+  ['Tomas Lindqvist','tomas@example.com','B3',1250,15,[1,1,1,1],iso(new Date(y,m,today.getDate()+40))],
+  ['Grace Mwangi','grace@example.com','C2',1675,1,[1,0,0,0],null]];
+ const s={tenants:[],leases:[],invoices:[]};
+ rows.forEach(([name,email,unit,rent,day,pat,end])=>{
+  const tid=uid(),lid=uid();
+  s.tenants.push({id:tid,name,email});
+  s.leases.push({id:lid,tid,unit,rent,day,start:iso(new Date(y-1,m,1)),end,dep:rent});
+  pat.forEach((f,k)=>{const o=k-3,due=new Date(y,m+o,day);
+   const inv={id:uid(),lid,per:iso(new Date(y,m+o,1)).slice(0,7),due:iso(due),amt:rent,pay:[]};
+   if(f>0&&due<=today)inv.pay.push({d:iso(due),a:rent*f});
+   s.invoices.push(inv)});
+ });
+ return s;
+}
+let S=load(),tab='home',filt='open';
+function load(){try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r)}catch(e){}return seed()}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+const paid=i=>i.pay.reduce((a,p)=>a+p.a,0);
+const bal=i=>Math.max(0,i.amt-paid(i));
+const late=i=>bal(i)>0?dayDiff(today,parse(i.due)):0;
+const T=id=>S.tenants.find(t=>t.id===id)||{name:'Unknown'};
+const L=id=>S.leases.find(l=>l.id===id)||{unit:'?',tid:''};
+const who=i=>T(L(i.lid).tid).name;
+const status=i=>bal(i)===0?['paid','Paid']:late(i)>0?['late',paid(i)>0?'Partly paid, overdue':'Overdue']:['due','Due '+fdate(i.due).replace(/, \d+$/,'')];
+const active=(l,d)=>{const e=new Date(d.getFullYear(),d.getMonth()+1,0);return parse(l.start)<=e&&(!l.end||parse(l.end)>=d)};
+
+function target(){
+ for(const o of[0,1]){
+  const d=new Date(today.getFullYear(),today.getMonth()+o,1),p=iso(d).slice(0,7);
+  const miss=S.leases.filter(l=>active(l,d)&&!S.invoices.some(i=>i.lid===l.id&&i.per===p));
+  if(miss.length)return{d,p,miss};
+ }return null;
+}
+
+function home(){
+ const od=S.invoices.filter(i=>bal(i)>0&&late(i)>0);
+ const tot=od.reduce((a,i)=>a+bal(i),0);
+ const bk=[0,0,0];
+ od.forEach(i=>{const d=late(i);bk[d<=30?0:d<=60?1:2]+=bal(i)});
+ const per=iso(today).slice(0,7);
+ const billed=S.invoices.filter(i=>i.per===per).reduce((a,i)=>a+i.amt,0);
+ const coll=S.invoices.flatMap(i=>i.pay).filter(p=>p.d.slice(0,7)===per).reduce((a,p)=>a+p.a,0);
+ const act=S.leases.filter(l=>active(l,today)&&(!l.end||parse(l.end)>=today));
+ const ending=act.filter(l=>l.end&&dayDiff(parse(l.end),today)<=60).length;
+ const byT={};
+ od.forEach(i=>{const t=L(i.lid).tid;(byT[t]=byT[t]||{amt:0,max:0,unit:L(i.lid).unit,ids:[]});byT[t].amt+=bal(i);byT[t].max=Math.max(byT[t].max,late(i));byT[t].ids.push(i.id)});
+ const list=Object.entries(byT).sort((a,b)=>b[1].amt-a[1].amt);
+ const tg=target();
+ const cols=['--b1','--b2','--b3'],names=['1–30 days','31–60 days','Over 60 days'];
+ return `<div class="hero"><div class="big ${tot?'':'zero'}">${money(tot)}</div>
+ <p>${tot?`overdue from ${list.length} tenant${list.length>1?'s':''}`:'No rent is overdue'}</p>
+ ${tot?`<div class="bar">${bk.map((v,k)=>`<i style="width:${v/tot*100}%;background:var(${cols[k]})"></i>`).join('')}</div>
+ <div class="legend">${bk.map((v,k)=>`<span><span class="dot" style="background:var(${cols[k]})"></span>${names[k]} <b>${money(v)}</b></span>`).join('')}</div>`:''}</div>
+ <div class="kpis"><div class="kpi"><b>${billed?Math.round(coll/billed*100):0}%</b><span>${mname(today)} collected</span></div>
+ <div class="kpi"><b>${act.length}</b><span>Active leases</span></div>
+ <div class="kpi"><b>${ending}</b><span>Ending in 60 days</span></div></div>
+ ${tg?`<div class="bar-actions"><span>${tg.miss.length} lease${tg.miss.length>1?'s':''} need a ${mname(tg.d)} invoice</span><button class="btn sm" data-act="gen">Create ${mname(tg.d)} invoices</button></div>`:''}
+ <h2>Tenants in arrears</h2><div class="list">${list.length?list.map(([tid,v])=>`<div class="row"><div class="main"><div class="t">${esc(T(tid).name)}</div><div class="s">Unit ${esc(v.unit)} · ${v.max} days overdue</div></div><div class="amt">${money(v.amt)}</div><button class="btn ghost sm" data-act="rem" data-id="${tid}">Remind</button><button class="btn ghost sm" data-act="pay" data-id="${v.ids[0]}">Pay</button></div>`).join(''):'<div class="empty">Everyone is up to date.</div>'}</div>
+ ${act.some(l=>l.end&&dayDiff(parse(l.end),today)<=60)?`<h2>Renewals due</h2><div class="list">${act.filter(l=>l.end&&dayDiff(parse(l.end),today)<=60).map(l=>`<div class="row"><div class="main"><div class="t">Unit ${esc(l.unit)} · ${esc(T(l.tid).name)}</div><div class="s">Ends ${fdate(l.end)} · ${money(l.rent)}/month</div></div><button class="btn ghost sm" data-act="ren" data-id="${l.id}">Renew</button></div>`).join('')}</div>`:''}`;
+}
+
+function invs(){
+ const f=filt==='open'?i=>bal(i)>0:filt==='paid'?i=>bal(i)===0:()=>true;
+ const rows=S.invoices.filter(f).sort((a,b)=>filt==='open'?a.due.localeCompare(b.due):b.due.localeCompare(a.due));
+ return `<div class="chips">${[['open','Open'],['paid','Paid'],['all','All']].map(([k,l])=>`<button data-filt="${k}" aria-pressed="${filt===k}">${l}</button>`).join('')}</div>
+ <div class="s" style="margin:-2px 0 10px">Tap a name to open, print or save an invoice or receipt.</div>
+ <div class="list">${rows.length?rows.map(i=>{const[k,lab]=status(i);return `<div class="row"><div class="main"><div class="t"><button class="lnk" data-act="doc" data-id="${i.id}">${esc(who(i))}</button></div><div class="s">Unit ${esc(L(i.lid).unit)} · ${i.per} · ${money(i.amt)}</div><span class="pill ${k}">${lab}</span></div>
+ <div class="amt">${bal(i)?money(bal(i)):''}</div>${bal(i)?`<button class="btn ghost sm" data-act="pay" data-id="${i.id}">Pay</button>`:''}</div>`}).join(''):'<div class="empty">No invoices here.</div>'}</div>`;
+}
+
+function tens(){
+ return `<div class="bar-actions"><span>${S.tenants.length} tenants</span><button class="btn sm" data-act="add">Add tenant</button></div>
+ <div class="list">${S.tenants.length?S.tenants.map(t=>{
+  const ls=S.leases.filter(l=>l.tid===t.id),ids=ls.map(l=>l.id);
+  const b=S.invoices.filter(i=>ids.includes(i.lid)&&late(i)>0).reduce((a,i)=>a+bal(i),0);
+  return `<div class="row"><div class="main"><div class="t"><button class="lnk" data-act="ten" data-id="${t.id}">${esc(t.name)}</button></div><div class="s">${ls.map(l=>'Unit '+esc(l.unit)).join(', ')||'No lease'} · ${esc(t.email||'No email')}</div></div>${b?`<span class="pill late">${money(b)} overdue</span>`:'<span class="pill paid">Up to date</span>'}</div>`}).join(''):'<div class="empty">Add your first tenant and lease.</div>'}</div>`;
+}
+
+function leas(){
+ const rows=[...S.leases].sort((a,b)=>(a.end||'9').localeCompare(b.end||'9'));
+ return `<div class="bar-actions"><span>${S.leases.length} leases</span><button class="btn sm" data-act="add">Add tenant</button></div>
+ <div class="list">${rows.map(l=>{
+  const dl=l.end?dayDiff(parse(l.end),today):null;
+  const tag=dl===null?'<span class="s">Open-ended</span>':dl<0?'<span class="pill late">Expired</span>':dl<=60?`<span class="pill soon">Ends in ${dl} days</span>`:`<span class="s">Ends ${fdate(l.end)}</span>`;
+  return `<div class="row"><div class="main"><div class="t"><button class="lnk" data-act="ren" data-id="${l.id}">Unit ${esc(l.unit)} · ${esc(T(l.tid).name)}</button></div><div class="s">${money(l.rent)}/month, due day ${l.day} · deposit ${money(l.dep)}</div></div>${tag}</div>`}).join('')||'<div class="empty">No leases yet.</div>'}</div>`;
+}
+
+function render(){
+ document.getElementById('app').innerHTML={home,inv:invs,ten:tens,lea:leas}[tab]();
+ document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===tab));
+}
+
+const dlg=document.getElementById('dlg');
+function openPay(id){
+ const i=S.invoices.find(x=>x.id===id);if(!i)return;
+ dlg.innerHTML=`<h3>Record payment</h3><div class="s">${esc(who(i))} · Unit ${esc(L(i.lid).unit)} · ${i.per}<br>Balance ${money(bal(i))}</div>
+ <form id="f"><label for="a">Amount received</label><input id="a" type="number" step="0.01" min="0.01" max="${bal(i)}" value="${bal(i)}" required>
+ <label for="d">Date received</label><input id="d" type="date" value="${iso(today)}" required>
+ <div class="acts"><button type="button" class="btn ghost" data-close>Cancel</button><button class="btn">Save payment</button></div></form>`;
+ dlg.showModal();
+ document.getElementById('f').onsubmit=e=>{e.preventDefault();
+  const a=Math.min(parseFloat(document.getElementById('a').value),bal(i));
+  if(!(a>0))return;
+  i.pay.push({d:document.getElementById('d').value,a});save();dlg.close();render();openRct(i.id,i.pay.length-1)};
+}
+function openAdd(){
+ dlg.innerHTML=`<h3>Add tenant and lease</h3><form id="f">
+ <label for="n">Full name</label><input id="n" required>
+ <label for="e">Email</label><input id="e" type="email">
+ <div class="g2"><div><label for="u">Unit</label><input id="u" required></div><div><label for="r">Monthly rent ($)</label><input id="r" type="number" min="1" step="0.01" required></div>
+ <div><label for="dy">Rent due day</label><input id="dy" type="number" min="1" max="28" value="1" required></div><div><label for="dp">Deposit ($)</label><input id="dp" type="number" min="0" step="0.01" value="0"></div>
+ <div><label for="s">Lease start</label><input id="s" type="date" value="${iso(today)}" required></div><div><label for="en">Lease end (optional)</label><input id="en" type="date"></div></div>
+ <div class="acts"><button type="button" class="btn ghost" data-close>Cancel</button><button class="btn">Save tenant</button></div></form>`;
+ dlg.showModal();
+ const v=id=>document.getElementById(id).value;
+ document.getElementById('f').onsubmit=e=>{e.preventDefault();
+  const tid=uid();
+  S.tenants.push({id:tid,name:v('n').trim(),email:v('e').trim()});
+  S.leases.push({id:uid(),tid,unit:v('u').trim(),rent:parseFloat(v('r')),day:parseInt(v('dy'),10),start:v('s'),end:v('en')||null,dep:parseFloat(v('dp'))||0});
+  save();dlg.close();tab='ten';render()};
+}
+function remText(tid){
+ const ids=S.leases.filter(l=>l.tid===tid).map(l=>l.id);
+ const o=S.invoices.filter(i=>ids.includes(i.lid)&&bal(i)>0&&late(i)>0).sort((a,b)=>a.due.localeCompare(b.due));
+ const tot=o.reduce((a,i)=>a+bal(i),0);
+ return 'Hi '+T(tid).name.split(' ')[0]+',\n\nOur records show '+money(tot)+' of rent is overdue:\n'+o.map(i=>'- '+i.per+': '+money(bal(i))+' (due '+fdate(i.due)+')').join('\n')+'\n\nPlease pay as soon as you can, or reply if you’d like to arrange a payment plan.\n\nThank you';
+}
+function openRem(tid){
+ dlg.innerHTML=`<h3>Payment reminder</h3><label for="m">Message to ${esc(T(tid).name)}</label><textarea id="m" rows="10">${esc(remText(tid))}</textarea><div class="acts"><button type="button" class="btn ghost" data-close>Close</button><button type="button" class="btn" id="cp">Copy message</button></div>`;
+ if(!dlg.open)dlg.showModal();
+ const c=document.getElementById('cp'),m=document.getElementById('m');
+ c.onclick=async()=>{m.select();try{await navigator.clipboard.writeText(m.value);c.textContent='Copied'}catch(e){c.textContent='Press and hold to copy'}};
+}
+function openTen(tid){
+ const t=T(tid),ids=S.leases.filter(l=>l.tid===tid).map(l=>l.id);
+ const iv=S.invoices.filter(i=>ids.includes(i.lid)).sort((a,b)=>b.due.localeCompare(a.due));
+ const owed=iv.filter(i=>late(i)>0).reduce((a,i)=>a+bal(i),0);
+ dlg.innerHTML=`<h3>${esc(t.name)}</h3><div class="s">${esc(t.email||'No email')} · ${[...new Set(S.leases.filter(l=>l.tid===tid).map(l=>'Unit '+esc(l.unit)))].join(', ')}</div>
+ <h2>Ledger</h2><div class="list" style="max-height:40vh;overflow:auto">${iv.map(i=>{const[k,lab]=status(i);return `<div class="row"><div class="main"><div class="t">${i.per}</div><div class="s">${money(i.amt)} billed · ${money(paid(i))} paid</div></div><span class="pill ${k}">${lab}</span></div>`}).join('')||'<div class="empty">No invoices yet.</div>'}</div>
+ <div class="acts"><button type="button" class="btn ghost" data-close>Close</button>${owed?`<button type="button" class="btn" data-act="rem" data-id="${tid}">Write reminder</button>`:''}</div>`;
+ dlg.showModal();
+}
+function openRen(id){
+ const l=L(id);if(!l.id)return;
+ const b=l.end&&parse(l.end)>today?parse(l.end):today;
+ const ne=iso(new Date(b.getFullYear()+1,b.getMonth(),b.getDate()));
+ dlg.innerHTML=`<h3>Unit ${esc(l.unit)} · ${esc(T(l.tid).name)}</h3><form id="f"><div class="s">Now ${money(l.rent)}/month, ${l.end?'ends '+fdate(l.end):'open-ended'}. A new rent applies to invoices created from now on.</div>
+ <div class="g2"><div><label for="ne">New end date</label><input id="ne" type="date" value="${ne}" required></div><div><label for="nr">New monthly rent ($)</label><input id="nr" type="number" min="1" step="0.01" value="${l.rent}" required></div></div>
+ <div class="acts"><button type="button" class="btn ghost" data-close>Cancel</button><button class="btn">Renew lease</button></div>
+ <div class="foot"><button type="button" data-act="end" data-id="${l.id}">End lease today</button></div></form>`;
+ dlg.showModal();
+ document.getElementById('f').onsubmit=e=>{e.preventDefault();l.end=document.getElementById('ne').value;l.rent=parseFloat(document.getElementById('nr').value);save();dlg.close();render()};
+}
+const biz=()=>Object.assign({name:'Your property company',addr:'',email:''},S.biz);
+const show=h=>{dlg.innerHTML=h;if(!dlg.open)dlg.showModal()};
+const invNo=i=>'INV-'+i.per.replace('-','')+'-'+L(i.lid).unit;
+const plabel=i=>parse(i.per+'-01').toLocaleString('en-US',{month:'long',year:'numeric'});
+function dHead(title,no,date){const b=biz();return `<div class="dh"><div><b>${esc(b.name)}</b><br>${esc(b.addr).replace(/\n/g,'<br>')}${b.email?'<br>'+esc(b.email):''}</div><div class="dt"><h3>${title}</h3>${esc(no)}<br>${date}</div></div>`}
+const ctl=back=>`<div class="acts noprint"><button type="button" class="btn ghost" data-close>Close</button>${back}<button type="button" class="btn" data-act="print">Print or save PDF</button></div><div class="s noprint" id="pm">In the print screen, choose Save as PDF to keep a copy.</div>`;
+function openDoc(id){
+ const i=S.invoices.find(x=>x.id===id);if(!i)return;
+ const l=L(i.lid),t=T(l.tid),b=bal(i);
+ const rows=i.pay.map((p,n)=>`<tr><td>${fdate(p.d)}</td><td>Payment received</td><td class="r">${money(p.a)}</td><td class="noprint"><button type="button" class="lnk" data-act="rct" data-id="${i.id}" data-n="${n}">Receipt</button></td></tr>`).join('');
+ show(`<div class="doc">${dHead('Invoice',invNo(i),'Issued '+fdate(i.per+'-01'))}
+ <p><b>Bill to</b><br>${esc(t.name)}${t.email?'<br>'+esc(t.email):''}<br>Unit ${esc(l.unit)}</p>
+ <table><tr><th>Description</th><th class="r">Amount</th></tr><tr><td>Rent for ${plabel(i)}, Unit ${esc(l.unit)}</td><td class="r">${money(i.amt)}</td></tr></table>
+ <table><tr class="tot"><td>Payment due</td><td class="r">${fdate(i.due)}</td></tr><tr><td>Paid to date</td><td class="r">${money(paid(i))}</td></tr><tr class="tot"><td>Balance due</td><td class="r">${money(b)}</td></tr></table>
+ ${rows?`<table><tr><th>Date</th><th>Payments</th><th class="r">Amount</th><th class="noprint"></th></tr>${rows}</table>`:''}
+ ${b?'':'<span class="stamp">PAID</span>'}</div>${ctl('')}`);
+}
+function openRct(id,n){
+ const i=S.invoices.find(x=>x.id===id),p=i&&i.pay[n];if(!p)return;
+ const l=L(i.lid),t=T(l.tid),after=i.amt-i.pay.slice(0,n+1).reduce((a,x)=>a+x.a,0);
+ show(`<div class="doc">${dHead('Receipt','RCT-'+p.d.replace(/-/g,'')+'-'+l.unit+'-'+(n+1),'Date '+fdate(p.d))}
+ <p><b>Received from</b><br>${esc(t.name)}<br>Unit ${esc(l.unit)}</p>
+ <table><tr><th>For</th><th class="r">Amount received</th></tr><tr><td>Rent for ${plabel(i)} (invoice ${esc(invNo(i))})</td><td class="r">${money(p.a)}</td></tr></table>
+ <table><tr><td>Invoice total</td><td class="r">${money(i.amt)}</td></tr><tr class="tot"><td>Balance remaining after this payment</td><td class="r">${money(Math.max(0,after))}</td></tr></table>
+ <span class="stamp">PAYMENT RECEIVED</span></div>${ctl(`<button type="button" class="btn ghost" data-act="doc" data-id="${i.id}">View invoice</button>`)}`);
+}
+function openBiz(){
+ const b=biz();
+ show(`<h3>Invoice sender details</h3><form id="f"><label for="bn">Name</label><input id="bn" value="${esc(b.name)}" required><label for="be">Email</label><input id="be" type="email" value="${esc(b.email)}"><label for="ba">Address</label><textarea id="ba" rows="3">${esc(b.addr)}</textarea><div class="acts"><button type="button" class="btn ghost" data-close>Cancel</button><button class="btn">Save details</button></div></form>`);
+ document.getElementById('f').onsubmit=e=>{e.preventDefault();S.biz={name:document.getElementById('bn').value.trim(),email:document.getElementById('be').value.trim(),addr:document.getElementById('ba').value};save();dlg.close()};
+}
+function gen(){
+ const t=target();if(!t)return;
+ t.miss.forEach(l=>S.invoices.push({id:uid(),lid:l.id,per:t.p,due:iso(new Date(t.d.getFullYear(),t.d.getMonth(),Math.min(l.day,28))),amt:l.rent,pay:[]}));
+ save();tab='inv';filt='open';render();
+}
+
+document.addEventListener('click',e=>{
+ const b=e.target.closest('button');if(!b)return;
+ if(b.dataset.tab){tab=b.dataset.tab;render()}
+ else if(b.dataset.filt){filt=b.dataset.filt;render()}
+ else if(b.dataset.act==='pay')openPay(b.dataset.id);
+ else if(b.dataset.act==='add')openAdd();
+ else if(b.dataset.act==='gen')gen();
+ else if(b.dataset.act==='doc')openDoc(b.dataset.id);
+ else if(b.dataset.act==='rct')openRct(b.dataset.id,+b.dataset.n);
+ else if(b.dataset.act==='biz')openBiz();
+ else if(b.dataset.act==='print'){try{window.print()}catch(e){const m=document.getElementById('pm');if(m)m.textContent='Printing is blocked here. Open the page in your browser and try again.'}}
+ else if(b.dataset.act==='ten')openTen(b.dataset.id);
+ else if(b.dataset.act==='rem')openRem(b.dataset.id);
+ else if(b.dataset.act==='ren')openRen(b.dataset.id);
+ else if(b.dataset.act==='end'){const l=L(b.dataset.id);if(l.id){l.end=iso(today);save();dlg.close();render()}}
+ else if(b.hasAttribute('data-close'))dlg.close();
+ else if(b.id==='reset'){S=seed();save();tab='home';render()}
+});
+render();
+</script>
+</body>
+</html>

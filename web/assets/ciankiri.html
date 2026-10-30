@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ciankiri Beekeeping SHG | Pure Honey & Bee Products - Ciakariga, Tharaka Nithi</title>
+    <meta name="description" content="Ciankiri Beekeeping Self Help Group - Pure, raw honey and natural bee products from Ciakariga, Tharaka Nithi County. Buy authentic Kenyan honey directly from local beekeepers.">
+    <style>
+        :root {
+            --gold: #d4a017;
+            --gold-dark: #b8860b;
+            --gold-light: #f0d78c;
+            --honey: #f5c542;
+            --honey-light: #fff8e7;
+            --dark: #1a1a1a;
+            --dark-brown: #3e2723;
+            --brown: #5d4037;
+            --cream: #fdf5e6;
+            --white: #ffffff;
+            --gray: #666;
+            --light-gray: #f9f9f9;
+            --border: #e8e0d5;
+            --success: #4caf50;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.15);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+            color: var(--dark);
+            background: var(--cream);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            transition: var(--transition);
+            padding: 0 2rem;
+        }
+        .navbar.scrolled {
+            box-shadow: var(--shadow);
+        }
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 70px;
+        }
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: var(--dark-brown);
+            letter-spacing: -0.5px;
+        }
+        .nav-logo .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--honey), var(--gold));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            box-shadow: 0 4px 12px rgba(212, 160, 23, 0.4);
+            flex-shrink: 0;
+        }
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            align-items: center;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--dark-brown);
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            position: relative;
+        }
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--gold);
+            transition: var(--transition);
+            border-radius: 2px;
+        }
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+        .nav-links a:hover {
+            color: var(--gold-dark);
+        }
+        .cart-icon-btn {
+            position: relative;
+            background: var(--honey-light);
+            border: 2px solid var(--gold-light);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            cursor: pointer;
+            font-size: 1.3rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .cart-icon-btn:hover {
+            background: var(--gold-light);
+            transform: scale(1.05);
+            box-shadow: 0 4px 16px rgba(212, 160, 23, 0.3);
+        }
+        .cart-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #e74c3c;
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 700;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: popIn 0.3s ease;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            70% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: var(--dark-brown);
+        }
+
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            background: linear-gradient(170deg, #fef9e7 0%, #fdf0d5 30%, #fceabb 60%, #f8d98c 100%);
+            overflow: hidden;
+            padding-top: 70px;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            right: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(245, 197, 66, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float 8s ease-in-out infinite;
+        }
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -15%;
+            left: -8%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(212, 160, 23, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float 10s ease-in-out infinite reverse;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.05); }
+        }
+        .hero-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+            width: 100%;
+        }
+        .hero-text h4 {
+            display: inline-block;
+            background: var(--white);
+            color: var(--gold-dark);
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 1.2rem;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        }
+        .hero-text h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            line-height: 1.15;
+            color: var(--dark-brown);
+            letter-spacing: -1px;
+            margin-bottom: 1rem;
+        }
+        .hero-text h1 span {
+            background: linear-gradient(135deg, #d4a017, #f5c542);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-text p {
+            font-size: 1.15rem;
+            color: var(--brown);
+            margin-bottom: 2rem;
+            max-width: 480px;
+            line-height: 1.7;
+        }
+        .hero-btns {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1rem;
+            text-decoration: none;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            letter-spacing: 0.3px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #d4a017, #f5c542);
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(212, 160, 23, 0.4);
+        }
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 14px 32px rgba(212, 160, 23, 0.5);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--gold);
+            color: var(--dark-brown);
+        }
+        .btn-outline:hover {
+            background: var(--gold);
+            color: #fff;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(212, 160, 23, 0.3);
+        }
+        .hero-image-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .hero-image {
+            width: 100%;
+            max-width: 500px;
+            border-radius: 24px;
+            box-shadow: var(--shadow-lg);
+            object-fit: cover;
+            aspect-ratio: 4/3;
+            border: 6px solid var(--white);
+            transform: rotate(-2deg);
+            transition: var(--transition);
+        }
+        .hero-image:hover {
+            transform: rotate(0deg) scale(1.02);
+        }
+        .hero-badge {
+            position: absolute;
+            bottom: -20px;
+            right: 20px;
+            background: var(--white);
+            padding: 16px 22px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            text-align: center;
+            z-index: 2;
+        }
+        .hero-badge .stars {
+            color: #f5c542;
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+        }
+        .hero-badge span {
+            display: block;
+            font-weight: 700;
+            color: var(--dark-brown);
+            margin-top: 4px;
+            font-size: 0.9rem;
+        }
+
+        section {
+            padding: 5rem 2rem;
+        }
+        .section-header {
+            text-align: center;
+            margin-bottom: 3.5rem;
+        }
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--dark-brown);
+            letter-spacing: -0.5px;
+            margin-bottom: 0.8rem;
+        }
+        .section-header p {
+            color: var(--gray);
+            font-size: 1.1rem;
+            max-width: 550px;
+            margin: 0 auto;
+        }
+        .section-header .divider {
+            width: 60px;
+            height: 4px;
+            background: var(--gold);
+            border-radius: 4px;
+            margin: 1rem auto;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        #products {
+            background: var(--white);
+        }
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+            gap: 2rem;
+        }
+        .product-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            transition: var(--transition);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+        .product-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--gold-light);
+        }
+        .product-image {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            display: block;
+        }
+        .product-info {
+            padding: 1.3rem 1.3rem 0.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .product-category {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--gold-dark);
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+        }
+        .product-name {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--dark-brown);
+            margin-bottom: 0.4rem;
+        }
+        .product-desc {
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-bottom: 0.8rem;
+            flex: 1;
+            line-height: 1.5;
+        }
+        .product-price {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--gold-dark);
+            margin-bottom: 0.8rem;
+        }
+        .product-price small {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--gray);
+        }
+        .add-to-cart-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #d4a017, #e8b830);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: var(--transition);
+            letter-spacing: 0.3px;
+            margin-top: auto;
+        }
+        .add-to-cart-btn:hover {
+            background: linear-gradient(135deg, #b8860b, #d4a017);
+            box-shadow: 0 6px 20px rgba(212, 160, 23, 0.4);
+            transform: translateY(-2px);
+        }
+        .add-to-cart-btn.added {
+            background: #4caf50;
+            animation: pulse 0.5s ease;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        #about {
+            background: var(--cream);
+        }
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+        .about-image {
+            width: 100%;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            aspect-ratio: 4/3;
+            object-fit: cover;
+            border: 5px solid var(--white);
+        }
+        .about-text h3 {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--dark-brown);
+            margin-bottom: 1rem;
+        }
+        .about-text p {
+            color: var(--brown);
+            margin-bottom: 1rem;
+            line-height: 1.8;
+        }
+        .about-highlights {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .highlight-item {
+            background: var(--white);
+            padding: 12px 18px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--dark-brown);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #testimonials {
+            background: var(--white);
+        }
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.8rem;
+        }
+        .testimonial-card {
+            background: var(--honey-light);
+            padding: 2rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            transition: var(--transition);
+            position: relative;
+        }
+        .testimonial-card:hover {
+            box-shadow: var(--shadow);
+            border-color: var(--gold-light);
+        }
+        .testimonial-card .quote {
+            font-size: 3rem;
+            color: var(--gold-light);
+            line-height: 1;
+            margin-bottom: -0.5rem;
+        }
+        .testimonial-card p {
+            color: var(--brown);
+            font-style: italic;
+            line-height: 1.7;
+            margin-bottom: 1rem;
+        }
+        .testimonial-card .author {
+            font-weight: 800;
+            color: var(--dark-brown);
+        }
+        .testimonial-card .stars {
+            color: #f5c542;
+            letter-spacing: 2px;
+        }
+
+        #contact {
+            background: var(--cream);
+        }
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+        }
+        .contact-info h3 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--dark-brown);
+            margin-bottom: 1rem;
+        }
+        .contact-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            margin-bottom: 1.2rem;
+            font-size: 1rem;
+            color: var(--brown);
+        }
+        .contact-item .c-icon {
+            font-size: 1.4rem;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .contact-map {
+            width: 100%;
+            height: 280px;
+            border-radius: var(--radius);
+            border: 4px solid var(--white);
+            box-shadow: var(--shadow);
+            object-fit: cover;
+            background: #e8dcc8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--brown);
+            text-align: center;
+            padding: 1rem;
+        }
+
+        footer {
+            background: var(--dark-brown);
+            color: #d4c5b2;
+            padding: 3rem 2rem 1.5rem;
+            text-align: center;
+        }
+        footer .footer-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        footer h4 {
+            color: var(--honey);
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+        }
+        footer p {
+            margin-bottom: 0.4rem;
+            font-size: 0.9rem;
+        }
+        footer .footer-bottom {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            font-size: 0.8rem;
+            color: #a89880;
+        }
+
+        .whatsapp-float {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            z-index: 9999;
+            background: #25d366;
+            color: #fff;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            box-shadow: 0 8px 28px rgba(37, 211, 102, 0.5);
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            animation: bounce 2s ease-in-out infinite;
+        }
+        .whatsapp-float:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 36px rgba(37, 211, 102, 0.6);
+            background: #20b954;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-12px); }
+            50% { transform: translateY(0); }
+            70% { transform: translateY(-6px); }
+        }
+        .whatsapp-tooltip {
+            position: absolute;
+            right: 70px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #333;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .whatsapp-float:hover .whatsapp-tooltip {
+            opacity: 1;
+        }
+
+        .cart-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: rgba(0, 0, 0, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.35s ease;
+        }
+        .cart-modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .cart-modal {
+            background: #fff;
+            border-radius: var(--radius);
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            transform: translateY(20px);
+            transition: transform 0.35s ease;
+        }
+        .cart-modal-overlay.active .cart-modal {
+            transform: translateY(0);
+        }
+        .cart-modal h3 {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--dark-brown);
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .cart-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            font-size: 1.6rem;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.2s;
+        }
+        .cart-close:hover {
+            color: #e74c3c;
+        }
+        .cart-items-list {
+            list-style: none;
+            margin-bottom: 1.5rem;
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            gap: 1rem;
+        }
+        .cart-item-info {
+            flex: 1;
+        }
+        .cart-item-name {
+            font-weight: 700;
+            color: var(--dark-brown);
+            font-size: 0.95rem;
+        }
+        .cart-item-price {
+            color: var(--gold-dark);
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        .cart-item-qty {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .qty-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            background: #fff;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .qty-btn:hover {
+            background: #f5f5f5;
+            border-color: #ccc;
+        }
+        .cart-item-remove {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 4px;
+        }
+        .cart-total {
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: var(--dark-brown);
+            text-align: right;
+            margin-bottom: 1.2rem;
+            padding-top: 0.8rem;
+            border-top: 2px solid var(--border);
+        }
+        .cart-empty {
+            text-align: center;
+            color: #999;
+            padding: 3rem 1rem;
+            font-size: 1.1rem;
+        }
+        .checkout-btn {
+            width: 100%;
+            padding: 14px;
+            background: #25d366;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .checkout-btn:hover {
+            background: #1da851;
+            box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            z-index: 11000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s, transform 0.3s;
+            white-space: nowrap;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-10px);
+        }
+
+        @media (max-width: 900px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .hero-text h1 {
+                font-size: 2.4rem;
+            }
+            .hero-text p {
+                max-width: 100%;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .hero-btns {
+                justify-content: center;
+            }
+            .hero-image-wrapper {
+                order: -1;
+            }
+            .hero-image {
+                max-width: 320px;
+                transform: rotate(0);
+            }
+            .hero-badge {
+                bottom: -10px;
+                right: 0;
+                padding: 10px 16px;
+            }
+            .about-grid,
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 70px;
+                left: 0;
+                right: 0;
+                background: #fff;
+                flex-direction: column;
+                padding: 1.5rem;
+                gap: 1rem;
+                box-shadow: var(--shadow);
+                border-radius: 0 0 var(--radius) var(--radius);
+            }
+            .nav-links.active {
+                display: flex;
+            }
+            .mobile-menu-toggle {
+                display: block;
+            }
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                gap: 1.2rem;
+            }
+            section {
+                padding: 3rem 1.2rem;
+            }
+            .section-header h2 {
+                font-size: 2rem;
+            }
+            .whatsapp-float {
+                width: 52px;
+                height: 52px;
+                font-size: 1.5rem;
+                bottom: 20px;
+                right: 16px;
+            }
+        }
+        @media (max-width: 480px) {
+            .hero-text h1 {
+                font-size: 2rem;
+            }
+            .hero-image {
+                max-width: 250px;
+            }
+            .products-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.8rem;
+            }
+            .product-image {
+                height: 150px;
+            }
+            .product-info {
+                padding: 0.8rem;
+            }
+            .product-name {
+                font-size: 0.95rem;
+            }
+            .product-price {
+                font-size: 1.2rem;
+            }
+            .add-to-cart-btn {
+                padding: 10px;
+                font-size: 0.8rem;
+            }
+            .btn {
+                padding: 12px 20px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-logo">
+                <div class="logo-icon">🐝</div>
+                Ciankiri Beekeeping
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#products">Products</a></li>
+                <li><a href="#about">About Us</a></li>
+                <li><a href="#testimonials">Reviews</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <button class="cart-icon-btn" id="cartIconBtn" aria-label="Open cart">
+                🛒
+                <span class="cart-badge" id="cartBadge" style="display:none;">0</span>
+            </button>
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Menu">☰</button>
+        </div>
+    </nav>
+
+    <!-- HERO: Banner image changed to Acacia Honey Deluxe -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h4>🌿 Pure & Natural</h4>
+                <h1>Nature's <span>Golden</span> Goodness from Tharaka Nithi</h1>
+                <p>100% raw, unprocessed honey and premium bee products harvested by the Ciankiri Beekeeping Self Help Group in Ciakariga. Taste the purity of Kenyan wildflower honey.</p>
+                <div class="hero-btns">
+                    <a href="#products" class="btn btn-primary">🛍️ Shop Our Products</a>
+                    <a href="#about" class="btn btn-outline">Learn More</a>
+                </div>
+            </div>
+            <div class="hero-image-wrapper">
+                <!-- Banner image now Acacia Honey Deluxe -->
+                <img src="https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=600&h=450&fit=crop&crop=center"
+                alt="Acacia honey jar and dipper"
+                class="hero-image"
+                loading="eager"
+                onerror="this.src='https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=600&h=450&fit=crop';">
+                <div class="hero-badge">
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <span>Pure Raw Honey</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="products">
+        <div class="container">
+            <div class="section-header">
+                <h2>🛍️ Our Premium Products</h2>
+                <div class="divider"></div>
+                <p>Handcrafted by nature, harvested with care. Every product is 100% natural from our hives in Ciakariga.</p>
+            </div>
+            <div class="products-grid" id="productsGrid"></div>
+        </div>
+    </section>
+
+    <section id="about">
+        <div class="container">
+            <div class="section-header">
+                <h2>🐝 About Ciankiri Beekeeping SHG</h2>
+                <div class="divider"></div>
+                <p>Empowering the community through sustainable beekeeping in the heart of Tharaka Nithi County.</p>
+            </div>
+            <div class="about-grid">
+                <img src="https://images.unsplash.com/photo-1626379972419-7e4e5c0a1e2e?w=600&h=450&fit=crop&crop=center"
+                alt="Kenyan beekeeper tending to traditional hives"
+                class="about-image"
+                loading="lazy"
+                onerror="this.src='https://images.unsplash.com/photo-1565688534129-4d5c4e5b5f3f?w=600&h=450&fit=crop';">
+                <div class="about-text">
+                    <h3>Rooted in Community, Nourished by Nature</h3>
+                    <p>Ciankiri Beekeeping Self Help Group is a community-based organization nestled in <strong>Ciakariga, Tharaka Nithi County</strong>. We are passionate beekeepers dedicated to producing the finest raw honey and natural bee products using traditional, sustainable methods.</p>
+                    <p>Our bees forage on the pristine wildflowers of the Tharaka Nithi landscape, giving our honey its unique, rich flavor and exceptional quality. Every jar supports local families and promotes environmental conservation.</p>
+                    <div class="about-highlights">
+                        <span class="highlight-item"><span class="icon">✅</span> 100% Raw & Unprocessed</span>
+                        <span class="highlight-item"><span class="icon">🌍</span> Sustainably Harvested</span>
+                        <span class="highlight-item"><span class="icon">🤝</span> Community-Owned</span>
+                        <span class="highlight-item"><span class="icon">🐝</span> Traditional Methods</span>
+                        <span class="highlight-item"><span class="icon">📍</span> Ciakariga, Tharaka Nithi</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="testimonials">
+        <div class="container">
+            <div class="section-header">
+                <h2>💬 What Our Customers Say</h2>
+                <div class="divider"></div>
+                <p>Trusted by honey lovers across Tharaka Nithi and beyond.</p>
+            </div>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="quote">"</div>
+                    <p>The best honey I've ever tasted! You can tell it's pure and unprocessed. The flavor is rich and floral — a true taste of Tharaka Nithi.</p>
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <span class="author">— Jane M., Chuka</span>
+                </div>
+                <div class="testimonial-card">
+                    <div class="quote">"</div>
+                    <p>I buy their honey regularly. My family loves it, and knowing it supports a local women's group makes it even sweeter!</p>
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <span class="author">— Pastor David K., Ciakariga</span>
+                </div>
+                <div class="testimonial-card">
+                    <div class="quote">"</div>
+                    <p>Excellent quality comb honey. It arrived fresh and perfectly packaged. Fast delivery and very friendly service. Highly recommend!</p>
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <span class="author">— Mercy W., Nairobi</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact">
+        <div class="container">
+            <div class="section-header">
+                <h2>📞 Get In Touch</h2>
+                <div class="divider"></div>
+                <p>Visit us or reach out — we'd love to hear from you!</p>
+            </div>
+            <div class="contact-grid">
+                <div class="contact-info">
+                    <h3>📍 Visit Our Apiary</h3>
+                    <div class="contact-item">
+                        <span class="c-icon">📍</span>
+                        <span><strong>Ciankiri Beekeeping SHG</strong><br>Ciakariga Village, Tharaka Nithi County, Kenya</span>
+                    </div>
+                    <div class="contact-item">
+                        <span class="c-icon">📞</span>
+                        <span><strong>0717 971 323</strong></span>
+                    </div>
+                    <div class="contact-item">
+                        <span class="c-icon">✉️</span>
+                        <span><strong>ciankiribeekeeping@gmail.com</strong></span>
+                    </div>
+                    <div class="contact-item">
+                        <span class="c-icon">🕐</span>
+                        <span><strong>Hours:</strong> Mon–Sat: 8:00 AM – 5:00 PM<br>Sunday: Closed</span>
+                    </div>
+                    <a href="https://wa.me/254717971323?text=Hello%20Ciankiri%20Beekeeping!%20I%20would%20like%20to%20inquire%20about%20your%20products."
+                    target="_blank"
+                    rel="noopener"
+                    class="btn btn-primary"
+                    style="margin-top:1rem;">
+                    💬 Chat on WhatsApp
+                </a>
+            </div>
+            <div class="contact-map">
+                📍 <strong>Ciakariga, Tharaka Nithi County</strong><br>
+                <small>Nestled in the beautiful hills of Eastern Kenya</small>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="footer-content">
+        <h4>🐝 Ciankiri Beekeeping SHG</h4>
+        <p>Ciakariga, Tharaka Nithi County, Kenya</p>
+        <p>Pure Honey • Comb Honey • Acacia Honey</p>
+        <div class="footer-bottom">
+            &copy; <span id="year"></span> Ciankiri Beekeeping Self Help Group. All Rights Reserved. | Made with ❤️ in Tharaka Nithi
+        </div>
+    </div>
+</footer>
+
+<a href="https://wa.me/254717971323?text=Hello%20Ciankiri%20Beekeeping!%20I%20am%20interested%20in%20your%20products."
+target="_blank"
+rel="noopener"
+class="whatsapp-float"
+aria-label="Chat on WhatsApp">
+<span class="whatsapp-tooltip">Chat with us!</span>
+<svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+</a>
+
+<div class="cart-modal-overlay" id="cartModalOverlay">
+    <div class="cart-modal" id="cartModal">
+        <button class="cart-close" id="cartCloseBtn">✕</button>
+        <h3>🛒 Your Cart</h3>
+        <ul class="cart-items-list" id="cartItemsList"></ul>
+        <div class="cart-total" id="cartTotal">Total: KSh 0</div>
+        <button class="checkout-btn" id="checkoutBtn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg>
+            Send Order via WhatsApp
+        </button>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    (function() {
+        // ============ UPDATED PRODUCTS DATA (only 3 honey products) ============
+        const products = [
+            {
+                id: 1,
+                category: 'Raw Honey',
+                name: 'Pure Wildflower Honey',
+                desc: 'Raw, unprocessed honey from Tharaka Nithi wildflowers. Rich, floral, and naturally sweet. Image now Acacia style.',
+                price: 450,
+                unit: '500g jar',
+                // Image changed to Acacia Honey Deluxe as requested
+                image: 'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=400&h=300&fit=crop&crop=center',
+                fallback: 'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=400&h=300&fit=crop'
+            },
+            {
+                id: 2,
+                category: 'Raw Honey',
+                name: 'Acacia Honey Deluxe',
+                desc: 'Light, delicate honey from acacia blossoms. Perfect for tea and drizzling over pastries.',
+                price: 550,
+                unit: '500g jar',
+                image: 'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=400&h=300&fit=crop&crop=center',
+                fallback: 'https://images.unsplash.com/photo-1587049352851-8d4e891839c2?w=400&h=300&fit=crop'
+            },
+            {
+                id: 3,
+                category: 'Raw Honey',
+                name: 'Comb Honey (Mpunga wa Asali)',
+                desc: 'Pure honeycomb straight from the hive — chewable, delicious, and packed with natural enzymes.',
+                price: 650,
+                unit: '400g piece',
+                image: 'https://images.unsplash.com/photo-1622485831287-0f63cf0b3c1e?w=400&h=300&fit=crop&crop=center',
+                fallback: 'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=400&h=300&fit=crop'
+            }
+        ];
+
+        // ============ STATE ============
+        let cart = [];
+
+        function loadCart() {
+            try {
+                const saved = localStorage.getItem('ciankiri_cart');
+                if (saved) cart = JSON.parse(saved);
+            } catch (e) {
+                cart = [];
+            }
+        }
+
+        function saveCart() {
+            localStorage.setItem('ciankiri_cart', JSON.stringify(cart));
+        }
+
+        function getCartCount() {
+            return cart.reduce((sum, item) => sum + item.qty, 0);
+        }
+
+        function getCartTotal() {
+            return cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        }
+
+        function renderProducts() {
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = products.map(p => `
+            <div class="product-card">
+              <img src="${p.image}"
+                   alt="${p.name}"
+                   class="product-image"
+                   loading="lazy"
+                   onerror="this.onerror=null;this.src='${p.fallback}';">
+              <div class="product-info">
+                <span class="product-category">${p.category}</span>
+                <h3 class="product-name">${p.name}</h3>
+                <p class="product-desc">${p.desc}</p>
+                <div class="product-price">KSh ${p.price.toLocaleString()} <small>/ ${p.unit}</small></div>
+                <button class="add-to-cart-btn" data-id="${p.id}">🛒 Add to Cart</button>
+              </div>
+            </div>
+          `).join('');
+
+            grid.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    addToCart(id);
+                    this.classList.add('added');
+                    this.textContent = '✅ Added!';
+                    setTimeout(() => {
+                        this.classList.remove('added');
+                        this.textContent = '🛒 Add to Cart';
+                    }, 1200);
+                });
+            });
+        }
+
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+            const existing = cart.find(item => item.id === productId);
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                cart.push({
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    unit: product.unit,
+                    qty: 1
+                });
+            }
+            saveCart();
+            updateCartUI();
+            showToast(`✅ "${product.name}" added to cart!`);
+        }
+
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            saveCart();
+            updateCartUI();
+            renderCartModal();
+        }
+
+        function updateQty(productId, delta) {
+            const item = cart.find(i => i.id === productId);
+            if (!item) return;
+            item.qty += delta;
+            if (item.qty <= 0) {
+                removeFromCart(productId);
+                return;
+            }
+            saveCart();
+            updateCartUI();
+            renderCartModal();
+        }
+
+        function updateCartUI() {
+            const count = getCartCount();
+            const badge = document.getElementById('cartBadge');
+            if (count > 0) {
+                badge.style.display = 'flex';
+                badge.textContent = count;
+                badge.style.animation = 'none';
+                badge.offsetHeight;
+                badge.style.animation = 'popIn 0.3s ease';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function renderCartModal() {
+            const list = document.getElementById('cartItemsList');
+            const totalEl = document.getElementById('cartTotal');
+            if (cart.length === 0) {
+                list.innerHTML = '<div class="cart-empty">🛒 Your cart is empty.<br><small>Add some delicious honey!</small></div>';
+                totalEl.textContent = 'Total: KSh 0';
+            } else {
+                list.innerHTML = cart.map(item => `
+              <li class="cart-item">
+                <div class="cart-item-info">
+                  <div class="cart-item-name">${item.name}</div>
+                  <div class="cart-item-price">KSh ${item.price.toLocaleString()} / ${item.unit}</div>
+                </div>
+                <div class="cart-item-qty">
+                  <button class="qty-btn" data-action="minus" data-id="${item.id}">−</button>
+                  <span>${item.qty}</span>
+                  <button class="qty-btn" data-action="plus" data-id="${item.id}">+</button>
+                </div>
+                <button class="cart-item-remove" data-action="remove" data-id="${item.id}">🗑️</button>
+              </li>
+            `).join('');
+                totalEl.textContent = `Total: KSh ${getCartTotal().toLocaleString()}`;
+
+                list.querySelectorAll('.qty-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        const action = this.getAttribute('data-action');
+                        updateQty(id, action === 'plus' ? 1 : -1);
+                    });
+                });
+                list.querySelectorAll('.cart-item-remove').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        removeFromCart(id);
+                    });
+                });
+            }
+        }
+
+        function openCartModal() {
+            renderCartModal();
+            document.getElementById('cartModalOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCartModal() {
+            document.getElementById('cartModalOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function checkoutToWhatsApp() {
+            if (cart.length === 0) {
+                showToast('⚠️ Your cart is empty!');
+                return;
+            }
+            const phone = '254717971323'; // Official Ciankiri WhatsApp
+            let message = '🛒 *New Order for Ciankiri Beekeeping SHG*%0A%0A';
+            message += '----------------------------------------%0A';
+            cart.forEach((item, i) => {
+                message += `*${i+1}.* ${item.name}%0A   Qty: ${item.qty} × KSh ${item.price.toLocaleString()} = KSh ${(item.qty * item.price).toLocaleString()}%0A`;
+            });
+            message += '----------------------------------------%0A';
+            message += `*Total: KSh ${getCartTotal().toLocaleString()}*%0A%0A`;
+            message += '📍 Delivery/Pickup: Ciakariga, Tharaka Nithi%0A';
+            message += '📝 Please confirm availability and delivery details. Thank you! 🙏';
+
+            const url = `https://wa.me/${phone}?text=${message}`;
+            window.open(url, '_blank', 'noopener');
+            closeCartModal();
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        function setupNav() {
+            const navbar = document.getElementById('navbar');
+            const mobileToggle = document.getElementById('mobileMenuToggle');
+            const navLinks = document.getElementById('navLinks');
+
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            });
+
+            mobileToggle.addEventListener('click', () => {
+                navLinks.classList.toggle('active');
+            });
+
+            navLinks.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    navLinks.classList.remove('active');
+                });
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!navbar.contains(e.target) && navLinks.classList.contains('active')) {
+                    navLinks.classList.remove('active');
+                }
+            });
+        }
+
+        function init() {
+            loadCart();
+            renderProducts();
+            updateCartUI();
+            setupNav();
+
+            document.getElementById('cartIconBtn').addEventListener('click', openCartModal);
+            document.getElementById('cartCloseBtn').addEventListener('click', closeCartModal);
+            document.getElementById('cartModalOverlay').addEventListener('click', function(e) {
+                if (e.target === this) closeCartModal();
+            });
+            document.getElementById('checkoutBtn').addEventListener('click', checkoutToWhatsApp);
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') closeCartModal();
+            });
+
+            document.getElementById('year').textContent = new Date().getFullYear();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    })();
+</script>
+</body>
+</html>

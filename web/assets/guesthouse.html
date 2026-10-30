@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#173f35">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="StayWise">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href='data:application/manifest+json,{"name":"StayWise Guest House","short_name":"StayWise","start_url":".","display":"standalone","background_color":"#173f35","theme_color":"#173f35","icons":[{"src":"data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 192 192%22><rect width=%22192%22 height=%22192%22 rx=%2240%22 fill=%22%23173f35%22/><text x=%2296%22 y=%22125%22 font-size=%22100%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22>S</text></svg>","sizes":"192x192","type":"image/svg+xml"},{"src":"data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 512 512%22><rect width=%22512%22 height=%22512%22 rx=%22110%22 fill=%22%23173f35%22/><text x=%22256%22 y=%22335%22 font-size=%22260%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22>S</text></svg>","sizes":"512x512","type":"image/svg+xml"}]}'>
+<title>StayWise — Guest House Manager</title>
+<style>
+:root{--bg:#f4f8ff;--panel:#fff;--text:#202747;--muted:#727b98;--line:#e0e7f5;--brand:#3979f6;--brand2:#e8efff;--purple:#7956d8;--orange:#f2a65a;--red:#c94b4b;--shadow:0 8px 28px rgba(56,93,170,.08);--wa:#25D366;--safe-bottom:env(safe-area-inset-bottom,0px);--safe-top:env(safe-area-inset-top,0px)}
+[data-theme="dark"]{--bg:#11182b;--panel:#1a2340;--text:#f0f3ff;--muted:#a4afd0;--line:#303b5d;--brand:#73a0ff;--brand2:#26365f;--purple:#b39aff;--orange:#f4b66f;--red:#ff7777;--shadow:0 8px 28px rgba(0,0,0,.2)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overscroll-behavior-y:contain;-webkit-tap-highlight-color:transparent}button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:100vh;display:grid;grid-template-columns:248px 1fr}.sidebar{background:var(--panel);border-right:1px solid var(--line);padding:calc(22px + var(--safe-top)) 15px 22px;display:flex;flex-direction:column;gap:25px}.brand{display:flex;align-items:center;gap:11px;padding:0 10px}.brand-mark{width:38px;height:38px;background:var(--brand);color:white;border-radius:12px;display:grid;place-items:center;font-size:21px;font-weight:800}.brand strong{display:block;font-size:17px;letter-spacing:-.4px}.brand small{color:var(--muted);font-size:11px}.nav-label{padding:0 12px;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:1.3px;margin-bottom:7px}.nav{display:grid;gap:4px}.nav button{display:flex;align-items:center;gap:12px;width:100%;border:0;background:transparent;color:var(--muted);padding:11px 12px;border-radius:10px;text-align:left;font-weight:600}.nav button .ico{width:21px;text-align:center;font-size:17px}.nav button.active,.nav button:hover{background:var(--brand2);color:var(--brand)}.brand-mark img{width:100%;height:100%;object-fit:contain;border-radius:12px}.photo-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.photo-card{overflow:hidden;border:1px solid var(--line);border-radius:14px;background:var(--panel)}.photo-card img{width:100%;height:145px;object-fit:cover;display:block;background:var(--brand2)}.photo-info{padding:12px}.photo-info strong{display:block;margin:6px 0}.photo-info small{color:var(--muted)}.tile-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.action-tile{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:16px;text-align:left;color:var(--text);box-shadow:var(--shadow)}.action-tile:hover{border-color:var(--brand);transform:translateY(-1px)}.tile-icon{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--brand2);color:var(--brand);font-size:20px;margin-bottom:10px}.action-tile b{display:block}.action-tile small{color:var(--muted)}.login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#e9f2ff,#f4efff);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}.login-screen.show{display:flex}.login-box{width:min(420px,100%);background:#fff;border-radius:22px;padding:28px;box-shadow:0 24px 80px #33447733;color:#202747}.login-box h2{margin:14px 0 5px}.login-box p{color:#727b98}.security-label{font-size:10px;font-weight:800;letter-spacing:.8px;color:#7956d8}.barcode-visual{font-family:monospace;letter-spacing:2px;font-size:24px;overflow-wrap:anywhere}.switch{width:44px;height:25px;border-radius:20px;background:var(--line);position:relative;border:0}.switch:after{content:"";position:absolute;width:19px;height:19px;left:3px;top:3px;border-radius:50%;background:var(--panel)}.switch.on{background:var(--brand)}.switch.on:after{left:22px}.sidebar-bottom{margin-top:auto;border-top:1px solid var(--line);padding:15px 10px 0;color:var(--muted);font-size:12px}.online{display:inline-block;width:7px;height:7px;background:#36b37e;border-radius:50%;margin-right:6px}.main{min-width:0}.topbar{height:76px;border-bottom:1px solid var(--line);background:var(--panel);display:flex;align-items:center;justify-content:space-between;padding:calc(0px + var(--safe-top)) 30px 0;gap:16px;position:sticky;top:0;z-index:10}.crumb{color:var(--muted);font-size:12px}.topbar h1{margin:2px 0 0;font-size:21px;letter-spacing:-.6px}.top-actions{display:flex;align-items:center;gap:10px}.icon-btn{width:39px;height:39px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:11px}.avatar{width:37px;height:37px;border-radius:50%;display:grid;place-items:center;background:var(--brand2);color:var(--brand);font-weight:800}.content{padding:27px 30px calc(40px + var(--safe-bottom));max-width:1500px;margin:auto}.welcome{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:23px}.welcome h2{font-size:23px;margin:0 0 5px;letter-spacing:-.7px}.welcome p{margin:0;color:var(--muted)}.btn{border:1px solid var(--line);background:var(--panel);color:var(--text);padding:10px 14px;border-radius:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:7px}.btn.primary{background:var(--brand);color:#fff;border-color:var(--brand)}.btn.soft{background:var(--brand2);color:var(--brand);border-color:transparent}.btn.wa{background:var(--wa);color:#fff;border-color:var(--wa)}.btn.danger{color:var(--red)}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;margin-bottom:20px}.stat,.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow)}.stat{padding:18px}.stat-top{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px;font-weight:650}.stat-icon{width:35px;height:35px;border-radius:10px;background:var(--brand2);display:grid;place-items:center;color:var(--brand);font-size:17px}.stat-num{font-size:27px;font-weight:800;letter-spacing:-1px;margin:13px 0 3px}.stat-foot{color:var(--muted);font-size:11px}.layout-two{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,.85fr);gap:17px;margin-bottom:18px}.panel{padding:19px;min-width:0}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:17px}.panel-head h3{font-size:15px;margin:0}.sub{font-size:12px;color:var(--muted);margin-top:3px}.text-link{border:0;background:transparent;color:var(--brand);font-weight:750;padding:5px}.room-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.room{border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}.room-top{display:flex;justify-content:space-between;gap:6px;align-items:center}.room-num{font-size:17px;font-weight:800}.room-type{font-size:11px;color:var(--muted);margin:5px 0 12px}.pill{font-size:10px;font-weight:800;border-radius:20px;padding:5px 8px;white-space:nowrap;display:inline-block}.pill.available{background:#e0f5e9;color:#167548}.pill.occupied{background:#e2edff;color:#2859a6}.pill.cleaning{background:#fff0d9;color:#9b5d05}.pill.maintenance{background:#ffe4e4;color:#a52d2d}.pill.confirmed{background:#e0f5e9;color:#167548}.pill.pending{background:#fff0d9;color:#9b5d05}.pill.checked{background:#e2edff;color:#2859a6}.room-price{font-weight:750;font-size:12px}.bar{height:6px;border-radius:10px;background:var(--line);overflow:hidden;margin-top:10px}.bar span{display:block;height:100%;background:var(--brand);border-radius:10px}.activity{display:grid;gap:15px}.activity-item{display:flex;gap:11px;align-items:flex-start}.activity-icon{width:34px;height:34px;border-radius:10px;background:var(--brand2);display:grid;place-items:center;flex-shrink:0}.activity-item strong{display:block;font-size:12px}.activity-item p{margin:3px 0 0;color:var(--muted);font-size:11px}.activity-item time{margin-left:auto;color:var(--muted);font-size:10px;white-space:nowrap}.table-panel{padding:0;overflow:hidden}.table-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 19px;border-bottom:1px solid var(--line)}.table-toolbar h3{margin:0;font-size:15px}.tools{display:flex;gap:8px;align-items:center}.search{border:1px solid var(--line);border-radius:9px;background:var(--bg);padding:9px 11px;color:var(--text);width:190px;outline:none}.search:focus,input:focus,select:focus,textarea:focus{border-color:var(--brand);outline:2px solid color-mix(in srgb,var(--brand) 15%,transparent)}.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}table{width:100%;border-collapse:collapse;white-space:nowrap}th{text-align:left;background:var(--bg);color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.7px;padding:12px 18px}td{padding:14px 18px;border-top:1px solid var(--line);font-size:12px}td strong{font-size:12px}.guest-cell{display:flex;align-items:center;gap:9px}.mini-avatar{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--brand2);color:var(--brand);font-weight:800}.muted{color:var(--muted)}.empty{padding:35px;text-align:center;color:var(--muted)}.page-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}.feature-card{padding:18px;background:var(--panel);border:1px solid var(--line);border-radius:14px}.feature-card h3{font-size:15px;margin:12px 0 5px}.feature-card p{font-size:12px;color:var(--muted);margin:0 0 12px}.feature-card .btn{width:100%}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.field{display:grid;gap:6px}.field.full{grid-column:1/-1}.field label{font-size:12px;font-weight:700}.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:9px;background:var(--bg);padding:10px 11px;color:var(--text);min-width:0}.field textarea{min-height:78px;resize:vertical}.modal-backdrop{position:fixed;inset:0;background:#0b1712a8;display:none;align-items:center;justify-content:center;padding:18px;z-index:20}.modal-backdrop.show{display:flex}.modal{background:var(--panel);border:1px solid var(--line);border-radius:17px;width:min(560px,100%);max-height:92vh;overflow:auto;box-shadow:0 20px 80px #0004}.modal-head{display:flex;align-items:center;justify-content:space-between;padding:20px 22px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel);z-index:1}.modal-head h3{margin:0}.modal-body{padding:22px}.modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px;flex-wrap:wrap}.toast{position:fixed;bottom:calc(20px + var(--safe-bottom));right:20px;background:var(--text);color:var(--panel);padding:12px 17px;border-radius:10px;box-shadow:var(--shadow);display:none;z-index:50;max-width:min(90vw,360px)}.toast.show{display:block}.mobile-menu{display:none}.note{background:var(--brand2);color:var(--brand);border-radius:10px;padding:12px;font-size:12px;margin-bottom:15px}.amount{font-weight:800}.status-select{border:1px solid var(--line);border-radius:8px;padding:6px;background:var(--bg);color:var(--text)}.settings-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--line);gap:15px}.settings-row:last-child{border-bottom:0}.settings-row p{margin:3px 0 0;color:var(--muted);font-size:12px}.doc-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+.receipt{background:#fff;color:#222;padding:22px;border:1px dashed #ccc;border-radius:6px;max-width:420px;margin:auto;font-family:ui-monospace,SFMono-Regular,monospace;font-size:13px}
+.receipt h2{text-align:center;margin:6px 0}
+.receipt .center{text-align:center}
+.receipt hr{border:0;border-top:1px dashed #aaa;margin:14px 0}
+.receipt-row{display:flex;justify-content:space-between;gap:10px;margin:7px 0}
+.bottombar{display:none}
+@media(max-width:1100px){.app{grid-template-columns:210px 1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.room-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.content{padding:22px}.topbar{padding:calc(0px + var(--safe-top)) 22px 0}.page-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){
+ .app{display:block}.sidebar{position:fixed;z-index:30;inset:0 auto 0 0;width:260px;transform:translateX(-105%);transition:transform .22s;box-shadow:var(--shadow);padding-top:calc(22px + var(--safe-top))}.sidebar.open{transform:translateX(0)}
+ .mobile-menu{display:inline-grid;place-items:center}
+ .topbar{height:64px;padding:calc(6px + var(--safe-top)) 14px 6px}
+ .topbar h1{font-size:17px}.crumb{font-size:10px}
+ .content{padding:16px 14px calc(90px + var(--safe-bottom))}
+ .welcome{align-items:flex-start;flex-direction:column;gap:10px}.welcome h2{font-size:19px}.welcome .btn{padding:9px 12px;font-size:12px}
+ .stats{gap:10px}.stat{padding:12px}.stat-num{font-size:21px}
+ .layout-two{grid-template-columns:1fr}
+ .room-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .page-grid{grid-template-columns:1fr}
+ .table-toolbar{align-items:flex-start;flex-direction:column}.tools{width:100%}.search{width:100%;flex:1}
+ .form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}
+ .avatar{display:none}.panel{padding:15px}.table-panel{padding:0}
+ .modal-body{padding:15px}.top-actions{gap:6px}.top-actions .btn.primary{padding:9px 11px;font-size:12px}
+ .btn{padding:10px 12px}
+ /* Bottom app-style tab bar */
+ .bottombar{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--panel);border-top:1px solid var(--line);padding:6px 4px calc(6px + var(--safe-bottom));box-shadow:0 -6px 20px rgba(0,0,0,.05)}
+ .bottombar button{display:grid;gap:3px;place-items:center;background:transparent;border:0;color:var(--muted);font-size:10px;font-weight:600;padding:6px 2px;border-radius:10px;min-width:0}
+ .bottombar button .bi{font-size:20px;line-height:1}
+ .bottombar button.active{color:var(--brand);background:var(--brand2)}
+ .receipt{font-size:12px}
+}
+@media(min-width:761px){.sidebar{transform:none!important}.bottombar{display:none!important}}
+@media print{
+ body{background:#fff}
+ .sidebar,.topbar,.bottombar,.toast,.no-print,.modal-head,.app>.main>.content>.welcome{display:none!important}
+ .app{display:block}.content{padding:0;max-width:none}
+ .modal-backdrop{position:static;display:block;background:#fff;padding:0}
+ .modal{box-shadow:none;border:0;width:100%;max-height:none;padding:0;border-radius:0}
+ .receipt{border:0;max-width:100%}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar" id="sidebar">
+  <div class="brand"><div class="brand-mark" id="brandMark">S</div><div><strong id="brandName">StayWise</strong><small>Guest House Manager</small></div></div>
+  <div><div class="nav-label">WORKSPACE</div><nav class="nav" id="nav">
+    <button class="active" data-page="dashboard"><span class="ico">▦</span>Dashboard</button>
+    <button data-page="bookings"><span class="ico">▣</span>Bookings</button>
+    <button data-page="rooms"><span class="ico">▤</span>Rooms</button>
+    <button data-page="guests"><span class="ico">♙</span>Guests</button>
+    <button data-page="payments"><span class="ico">▤</span>Payments</button>
+    <button data-page="housekeeping"><span class="ico">✧</span>Housekeeping</button>
+    <button data-page="stock"><span class="ico">▧</span>Stock</button>
+    <button data-page="catalog"><span class="ico">✦</span>Services & Products</button>
+    <button data-page="branches"><span class="ico">⌂</span>Branches</button>
+    <button data-page="automations"><span class="ico">⚡</span>Automations</button>
+    <button data-page="security"><span class="ico">♙</span>Security & Users</button>
+    <button data-page="reports"><span class="ico">▥</span>Reports & Expenses</button>
+  </nav></div>
+  <div><div class="nav-label">ADMINISTRATION</div><nav class="nav"><button data-page="settings"><span class="ico">⚙</span>Settings & Staff</button></nav></div>
+  <div class="sidebar-bottom"><div><span class="online"></span>Prototype running locally</div><p>StayWise v0.2 · Demo data</p></div>
+</aside>
+<main class="main">
+<header class="topbar">
+  <div style="display:flex;align-items:center;gap:12px"><button class="icon-btn mobile-menu" id="menuBtn" aria-label="Open menu">☰</button><div><div class="crumb">StayWise / <span id="crumb">Dashboard</span></div><h1 id="pageTitle">Dashboard</h1></div></div>
+  <div class="top-actions"><button class="icon-btn" id="themeBtn" title="Toggle dark mode">☾</button><button class="btn" id="installAppBtn" style="display:none">＋ Install app</button><button class="btn primary" id="quickAdd">＋ <span class="desktop-label">New booking</span></button><button class="icon-btn" id="logoutBtn" title="Log out">⇥</button><div class="avatar" id="userAvatar">AM</div></div>
+</header>
+<div class="content" id="content"></div>
+</main>
+</div>
+
+<!-- Bottom mobile app tab bar -->
+<nav class="bottombar" id="bottombar">
+  <button class="active" data-page="dashboard"><span class="bi">▦</span>Home</button>
+  <button data-page="bookings"><span class="bi">▣</span>Bookings</button>
+  <button data-page="payments"><span class="bi">₵</span>Pay</button>
+  <button data-page="reports"><span class="bi">▥</span>Reports</button>
+  <button data-page="more"><span class="bi">☰</span>More</button>
+</nav>
+
+<div class="login-screen" id="loginScreen"><div class="login-box"><div class="brand"><div class="brand-mark">S</div><div><strong>StayWise</strong><small>Guest House Manager</small></div></div><h2>Welcome back</h2><p>Sign in to the demo workspace.</p><form id="loginForm"><div class="field"><label>Demo account</label><select name="username"><option value="admin">admin — Administrator</option><option value="reception">reception — Front desk</option><option value="housekeeping">housekeeping — Housekeeping</option><option value="cashier">cashier — Cashier</option></select></div><div class="security-label">DEMO LOGIN · NOT PRODUCTION AUTHENTICATION</div><p id="loginError" style="color:#c94b4b;font-size:12px"></p><button class="btn primary" style="width:100%">Enter demo</button></form><p style="font-size:11px">Secure authentication must be added before real deployment.</p></div></div>
+
+<div class="modal-backdrop" id="modalBackdrop"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><h3 id="modalTitle">New booking</h3><button class="icon-btn" id="closeModal" aria-label="Close">✕</button></div><div class="modal-body" id="modalBody"></div></section></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const money=n=>'KSh '+Number(n||0).toLocaleString('en-KE',{maximumFractionDigits:0});
+const today=()=>new Date().toISOString().slice(0,10);
+const plusDays=(n)=>{let d=new Date();d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)};
+const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+let rooms=[
+{id:'101',type:'Standard',price:2500,status:'Occupied'},{id:'102',type:'Standard',price:2500,status:'Available'},{id:'103',type:'Standard',price:2500,status:'Cleaning'},
+{id:'201',type:'Deluxe',price:3800,status:'Occupied'},{id:'202',type:'Deluxe',price:3800,status:'Available'},{id:'203',type:'Deluxe',price:3800,status:'Available'},
+{id:'301',type:'Twin',price:4200,status:'Occupied'},{id:'302',type:'Twin',price:4200,status:'Maintenance'},{id:'401',type:'Family',price:5500,status:'Available'},{id:'402',type:'Family',price:5500,status:'Occupied'},{id:'105',type:'Standard',price:2500,status:'Available'},{id:'204',type:'Deluxe',price:3800,status:'Occupied'}
+];
+let bookings=[
+{id:'BK-1042',guest:'Grace Wanjiku',phone:'0712 345 678',room:'101',checkin:today(),checkout:plusDays(2),amount:5000,paid:2500,payment:'M-Pesa',status:'Checked in'},
+{id:'BK-1043',guest:'Peter Otieno',phone:'0722 410 090',room:'201',checkin:today(),checkout:plusDays(1),amount:3800,paid:3800,payment:'Cash',status:'Checked in'},
+{id:'BK-1044',guest:'Amina Hassan',phone:'0701 222 910',room:'102',checkin:plusDays(1),checkout:plusDays(3),amount:5000,paid:1500,payment:'M-Pesa',status:'Confirmed'},
+{id:'BK-1045',guest:'David Kamau',phone:'0799 008 441',room:'301',checkin:plusDays(2),checkout:plusDays(4),amount:8400,paid:0,payment:'Pending',status:'Confirmed'},
+{id:'BK-1046',guest:'Faith Njeri',phone:'0718 404 220',room:'203',checkin:plusDays(1),checkout:plusDays(2),amount:3800,paid:0,payment:'Pending',status:'Pending'}
+];
+let payments=[
+{id:'PAY-2081',date:today(),guest:'Grace Wanjiku',method:'M-Pesa',ref:'QK7A2B91',amount:2500,booking:'BK-1042'},
+{id:'PAY-2080',date:today(),guest:'Peter Otieno',method:'Cash',ref:'CASH-019',amount:3800,booking:'BK-1043'},
+{id:'PAY-2079',date:plusDays(-1),guest:'John Mwangi',method:'M-Pesa',ref:'QK6D0P31',amount:4200,booking:'BK-1039'}
+];
+let tasks=[
+{id:1,room:'103',task:'Clean room after checkout',assigned:'Housekeeping',status:'Pending'},
+{id:2,room:'201',task:'Refresh towels and amenities',assigned:'Mary',status:'In progress'},
+{id:3,room:'302',task:'Check shower leak',assigned:'Maintenance',status:'Pending'},
+{id:4,room:'101',task:'Daily room refresh',assigned:'Housekeeping',status:'Done'}
+];
+let stock=[
+{id:1,name:'Bath towels',category:'Linen',qty:24,min:10,unit:'pcs'},
+{id:2,name:'Toilet tissue',category:'Amenities',qty:8,min:12,unit:'rolls'},
+{id:3,name:'Shampoo sachets',category:'Amenities',qty:65,min:20,unit:'pcs'},
+{id:4,name:'Cleaning detergent',category:'Cleaning',qty:4,min:6,unit:'bottles'},
+{id:5,name:'Bed sheets',category:'Linen',qty:18,min:8,unit:'pcs'}
+];
+let expenses=[{id:1,date:today(),category:'Cleaning supplies',description:'Detergent restock',amount:1800},{id:2,date:plusDays(-1),category:'Utilities',description:'Electricity tokens',amount:2500}];
+let sales=[]; // item/service sales made from catalog
+let currentPage='dashboard';
+
+/* ===================== DOCUMENT HELPERS ===================== */
+function normalizePhone(p){if(!p)return'';let s=String(p).replace(/[^\d+]/g,'');if(s.startsWith('+'))s=s.slice(1);if(s.startsWith('0'))s='254'+s.slice(1);if(s.startsWith('7')||s.startsWith('1'))s='254'+s;return s}
+function shareWhatsApp(text,phone=''){const num=normalizePhone(phone);const base=num?`https://wa.me/${num}`:'https://wa.me/';window.open(`${base}?text=${encodeURIComponent(text)}`,'_blank','noopener')}
+function buildDocHTML(title,body,opts={}){const css=`body{font:14px/1.5 Arial,sans-serif;color:#222;padding:24px;max-width:820px;margin:auto}h1{font-size:22px;margin:0 0 4px}.head{display:flex;justify-content:space-between;border-bottom:2px solid #3979f6;padding-bottom:12px;margin-bottom:18px}.brand{font-weight:800;font-size:18px}.muted{color:#777;font-size:12px}table{width:100%;border-collapse:collapse;margin:12px 0}th,td{border-bottom:1px solid #ddd;padding:8px;text-align:left;font-size:12px}th{font-size:10px;text-transform:uppercase;color:#777}.receipt-row{display:flex;justify-content:space-between;margin:7px 0}.center{text-align:center}hr{border:0;border-top:1px dashed #aaa;margin:14px 0}@media print{body{padding:0}}`;const head=`<div class="head"><div><div class="brand">${safe(localStorage.getItem('staywise_property')||'StayWise Guest House')}</div><div class="muted">Guest House Manager</div></div><div class="muted" style="text-align:right"><div><b>${safe(title)}</b></div><div>${new Date().toLocaleString()}</div></div></div>`;return`<!doctype html><html><head><meta charset="utf-8"><title>${safe(title)}</title><style>${css}</style></head><body>${head}${body}<p class="muted" style="margin-top:20px;font-size:10px">Generated by StayWise — demo workspace.</p></body></html>`}
+function printHTML(html){const w=window.open('','_blank','width=900,height=1000');if(!w){toast('Allow pop-ups to print');return}w.document.open();w.document.write(html);w.document.close();w.focus();setTimeout(()=>{try{w.print()}catch(e){}},400)}
+function exportFile(name,data,type){const a=document.createElement('a'),url=URL.createObjectURL(new Blob([data],{type}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+function exportCSV(rows,name){const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');exportFile(name,csv,'text/csv;charset=utf-8')}
+function docActionsBar(kind){const wa=kind==='receipt'?'Share receipt':'Share report';return`<div class="doc-actions no-print"><button class="btn primary" data-doc-print>⎙ Print / Save PDF</button><button class="btn" data-doc-csv>⇩ Download CSV</button><button class="btn wa" data-doc-wa>✆ ${wa}</button><button class="btn" onclick="closeModal()">Done</button></div>`}
+
+/* ===================== RECEIPTS ===================== */
+function receiptMarkup(r){
+ const prop=safe(localStorage.getItem('staywise_property')||'StayWise Guest House');
+ const items=(r.items||[{name:r.item||'Charge',qty:r.qty||1,price:r.total}]).map(i=>`<div class="receipt-row"><span>${safe(i.name)} × ${i.qty}</span><span>${money((i.price||0)*i.qty)}</span></div>`).join('');
+ const total=r.total||(r.items||[]).reduce((a,i)=>a+i.price*i.qty,0);
+ return`<div class="receipt"><div class="center"><h2>${prop}</h2><div>Guest House · Kenya</div></div><hr>
+ <div>RECEIPT: ${safe(r.id)}</div><div>DATE: ${safe(r.date||today())}</div>
+ <div>GUEST: ${safe(r.guest||'Walk-in')}</div>${r.room?`<div>ROOM: ${safe(r.room)}</div>`:''}${r.booking?`<div>BOOKING: ${safe(r.booking)}</div>`:''}
+ <div>PAYMENT: ${safe(r.method||r.payment||'Pending')}</div>
+ <hr>${items}<hr>
+ <div class="receipt-row" style="font-size:16px;font-weight:bold"><span>TOTAL</span><span>${money(total)}</span></div>
+ <hr><div class="center">Asante — thank you for staying with us.</div></div>`;
+}
+function receiptText(r){
+ const prop=localStorage.getItem('staywise_property')||'StayWise Guest House';
+ const lines=[`*${prop}*`];
+ lines.push(`Receipt: ${r.id}`);
+ lines.push(`Date: ${r.date||today()}`);
+ lines.push(`Guest: ${r.guest||'Walk-in'}`);
+ if(r.booking)lines.push(`Booking: ${r.booking}`);
+ if(r.room)lines.push(`Room: ${r.room}`);
+ lines.push('');
+ (r.items||[{name:r.item,qty:r.qty,price:r.total}]).forEach(i=>lines.push(`• ${i.name} × ${i.qty} — ${money((i.price||0)*i.qty)}`));
+ const total=r.total||(r.items||[]).reduce((a,i)=>a+i.price*i.qty,0);
+ lines.push('');
+ lines.push(`*TOTAL: ${money(total)}*`);
+ lines.push(`Payment: ${r.method||r.payment||'Pending'}`);
+ lines.push('');
+ lines.push('Asante sana — thank you for staying with us.');
+ return lines.join('\n');
+}
+function openReceipt(r,guestPhone=''){
+ lastReceipt=r;const html=buildDocHTML(`Receipt ${r.id}`,receiptMarkup(r));
+ showModal(`Receipt · ${safe(r.id)}`,receiptMarkup(r)+docActionsBar('receipt'));
+ const host=$('#modalBody');
+ host.querySelector('[data-doc-print]').onclick=()=>printHTML(html);
+ host.querySelector('[data-doc-csv]').onclick=()=>{
+  const rows=[['Item','Qty','Price','Line total']];
+  (r.items||[{name:r.item,qty:r.qty,price:r.total}]).forEach(i=>rows.push([i.name,i.qty,i.price,(i.price||0)*i.qty]));
+  rows.push([],['Total',r.total||0],['Payment',r.method||r.payment||'Pending']);
+  exportCSV(rows,`${r.id}.csv`);toast('Receipt CSV downloaded');
+ };
+ host.querySelector('[data-doc-wa]').onclick=()=>{shareWhatsApp(receiptText(r),guestPhone);toast('Opening WhatsApp…')};
+}
+let lastReceipt=null;
+
+/* Booking stay receipt (full stay bill) */
+function openBookingReceipt(bookingId){
+ const b=bookings.find(x=>x.id===bookingId);if(!b)return;
+ const items=[{name:`Room ${b.room} — stay (${b.checkin} to ${b.checkout})`,qty:1,price:b.amount}];
+ const r={id:'BR-'+b.id.replace(/[^0-9]/g,''),date:today(),guest:b.guest,phone:b.phone,booking:b.id,room:b.room,method:b.payment,status:b.status,items,total:b.amount};
+ openReceipt(r,b.phone);
+}
+
+/* ===================== REPORTS ===================== */
+function openReport(kind){
+ let title,subtitle,headers,rows,csvRows,text;
+ if(kind==='bookings'){
+  title='Bookings report';subtitle='All reservations with balances';
+  headers=['ID','Guest','Phone','Room','Check-in','Check-out','Total','Paid','Balance','Status'];
+  rows=bookings.map(b=>[b.id,b.guest,b.phone,b.room,b.checkin,b.checkout,money(b.amount),money(b.paid),money(Math.max(0,b.amount-b.paid)),b.status]);
+  csvRows=[headers,...bookings.map(b=>[b.id,b.guest,b.phone,b.room,b.checkin,b.checkout,b.amount,b.paid,Math.max(0,b.amount-b.paid),b.status])];
+ }
+ if(kind==='payments'){
+  title='Payments report';subtitle='Recorded collections';
+  headers=['ID','Date','Guest','Method','Reference','Amount'];
+  rows=payments.map(p=>[p.id,p.date,p.guest,p.method,p.ref,money(p.amount)]);
+  csvRows=[headers,...payments.map(p=>[p.id,p.date,p.guest,p.method,p.ref,p.amount])];
+ }
+ if(kind==='expenses'){
+  title='Expenses report';subtitle='Operating costs';
+  headers=['Date','Category','Description','Amount'];
+  rows=expenses.map(e=>[e.date,e.category,e.description,money(e.amount)]);
+  csvRows=[headers,...expenses.map(e=>[e.date,e.category,e.description,e.amount])];
+ }
+ if(kind==='occupancy'){
+  title='Occupancy report';subtitle='Current room status and rates';
+  headers=['Room','Type','Rate','Status'];
+  rows=rooms.map(r=>[r.id,r.type,money(r.price),r.status]);
+  csvRows=[headers,...rooms.map(r=>[r.id,r.type,r.price,r.status])];
+ }
+ if(kind==='stock'){
+  title='Stock report';subtitle='Inventory and low-stock alerts';
+  headers=['Item','Category','Quantity','Unit','Minimum','Status'];
+  rows=stock.map(s=>[s.name,s.category,s.qty,s.unit,s.min,s.qty<=s.min?'LOW STOCK':'OK']);
+  csvRows=[headers,...stock.map(s=>[s.name,s.category,s.qty,s.unit,s.min,s.qty<=s.min?'LOW STOCK':'OK'])];
+ }
+ if(kind==='guests'){
+  title='Guests report';subtitle='Guest directory with balances';
+  const guests=[...new Map(bookings.map(b=>[b.guest,b])).values()];
+  headers=['Guest','Phone','Latest booking','Room','Status','Balance'];
+  rows=guests.map(g=>[g.guest,g.phone,g.id,g.room,g.status,money(Math.max(0,g.amount-g.paid))]);
+  csvRows=[headers,...guests.map(g=>[g.guest,g.phone,g.id,g.room,g.status,Math.max(0,g.amount-g.paid)])];
+ }
+ const table=`<table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+ const html=buildDocHTML(title,`<p class="muted">${subtitle}</p>${table}`);
+ text=`*StayWise — ${title}*\nGenerated: ${new Date().toLocaleString()}\nRows: ${rows.length}\n\nOpen the workspace for details.`;
+ showModal(title,`<p class="muted">${subtitle} · ${rows.length} rows</p><div style="max-height:50vh;overflow:auto">${table}</div>${docActionsBar('report')}`);
+ const host=$('#modalBody');
+ host.querySelector('[data-doc-print]').onclick=()=>printHTML(html);
+ host.querySelector('[data-doc-csv]').onclick=()=>{exportCSV(csvRows,`staywise-${kind}-${today()}.csv`);toast('Report CSV downloaded')};
+ host.querySelector('[data-doc-wa]').onclick=()=>{shareWhatsApp(text);toast('Opening WhatsApp…')};
+}
+
+/* ===================== PERSISTENCE ===================== */
+function persist(){try{localStorage.setItem('staywise_demo',JSON.stringify({rooms,bookings,payments,tasks,stock,expenses,sales}));if(typeof persistExtended==='function')persistExtended()}catch(e){}}
+function load(){try{const x=JSON.parse(localStorage.getItem('staywise_demo'));if(x){rooms=x.rooms||rooms;bookings=x.bookings||bookings;payments=x.payments||payments;tasks=x.tasks||tasks;stock=x.stock||stock;expenses=x.expenses||expenses;sales=x.sales||sales}}catch(e){}}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
+function badgeStatus(s){let c={'Available':'available','Occupied':'occupied','Cleaning':'cleaning','Maintenance':'maintenance','Confirmed':'confirmed','Pending':'pending','Checked in':'checked','Paid':'confirmed','In progress':'pending','Done':'available'}[s]||'pending';return `<span class="pill ${c}">${safe(s)}</span>`}
+function roomCard(r){return `<div class="room"><div class="room-top"><span class="room-num">${safe(r.id)}</span>${badgeStatus(r.status)}</div><div class="room-type">${safe(r.type)} room</div><div class="room-price">${money(r.price)} <span class="muted" style="font-weight:500">/ night</span></div><div class="bar"><span style="width:${r.status==='Occupied'?100:r.status==='Cleaning'?55:r.status==='Maintenance'?20:0}%"></span></div><div style="margin-top:11px"><button class="text-link" style="padding:0;font-size:11px" onclick="cycleRoom('${safe(r.id)}')">Change status ↗</button></div></div>`}
+function bookingRows(list){return list.map(b=>`<tr><td><strong>${safe(b.id)}</strong></td><td><div class="guest-cell"><div class="mini-avatar">${safe(b.guest.split(' ').map(x=>x[0]).slice(0,2).join(''))}</div><div><strong>${safe(b.guest)}</strong><div class="muted">${safe(b.phone)}</div></div></div></td><td>${safe(b.room)}</td><td>${safe(b.checkin)}</td><td>${safe(b.checkout)}</td><td><strong>${money(b.amount)}</strong></td><td>${badgeStatus(b.status)}</td><td><button class="text-link" onclick="bookingAction('${safe(b.id)}')">Manage</button></td></tr>`).join('')}
+function tableBookings(list){return `<div class="panel table-panel"><div class="table-toolbar"><div><h3>Recent bookings</h3><div class="sub">Manage arrivals, stays and booking status</div></div><div class="tools"><input class="search" id="bookingSearch" placeholder="Search guest or room…"><button class="btn" onclick="go('bookings')">View all ↗</button></div></div><div class="table-wrap"><table><thead><tr><th>Booking ID</th><th>Guest</th><th>Room</th><th>Check-in</th><th>Check-out</th><th>Total</th><th>Status</th><th></th></tr></thead><tbody id="bookingTbody">${bookingRows(list)}</tbody></table><div class="empty" id="bookingEmpty" style="display:none">No matching bookings found.</div></div></div>`}
+
+/* ===================== PAGES ===================== */
+function dashboard(){let occupied=rooms.filter(r=>r.status==='Occupied').length,arrivals=bookings.filter(b=>b.checkin===today()&&b.status!=='Cancelled').length,rev=payments.filter(p=>p.date===today()).reduce((s,p)=>s+p.amount,0),clean=tasks.filter(t=>t.status!=='Done').length;return `<div class="welcome"><div><h2>Good day, Admin 👋</h2><p>Here's what's happening at your guest house today.</p></div><button class="btn primary" onclick="openBooking()">＋ New booking</button></div>
+<div class="stats">
+<div class="stat"><div class="stat-top">Room occupancy <span class="stat-icon">▤</span></div><div class="stat-num">${Math.round(occupied/rooms.length*100)}%</div><div class="stat-foot">${occupied} occupied of ${rooms.length} rooms</div></div>
+<div class="stat"><div class="stat-top">Today's arrivals <span class="stat-icon">↘</span></div><div class="stat-num">${arrivals}</div><div class="stat-foot">Guests checking in today</div></div>
+<div class="stat"><div class="stat-top">Payments received <span class="stat-icon">KSh</span></div><div class="stat-num" style="font-size:24px">${money(rev)}</div><div class="stat-foot">Recorded payments today</div></div>
+<div class="stat"><div class="stat-top">Open tasks <span class="stat-icon">✓</span></div><div class="stat-num">${clean}</div><div class="stat-foot">Housekeeping & maintenance</div></div></div>
+<div class="layout-two"><section class="panel"><div class="panel-head"><div><h3>Room status</h3><div class="sub">Quick view of your rooms</div></div><button class="text-link" onclick="go('rooms')">All rooms ↗</button></div><div class="room-grid">${rooms.slice(0,8).map(roomCard).join('')}</div></section>
+<section class="panel"><div class="panel-head"><div><h3>Today's overview</h3><div class="sub">Items needing attention</div></div><span class="pill pending">Live demo</span></div><div class="activity">
+<div class="activity-item"><div class="activity-icon">◷</div><div><strong>${bookings.filter(b=>b.status==='Confirmed').length} confirmed reservations</strong><p>Check upcoming arrivals and room allocations.</p></div></div>
+<div class="activity-item"><div class="activity-icon">₵</div><div><strong>${bookings.filter(b=>b.amount>b.paid&&b.status!=='Cancelled').length} bills with balances</strong><p>Outstanding balance: ${money(bookings.reduce((s,b)=>s+Math.max(0,b.amount-b.paid),0))}</p></div></div>
+<div class="activity-item"><div class="activity-icon">▧</div><div><strong>${stock.filter(s=>s.qty<=s.min).length} low-stock items</strong><p>${stock.filter(s=>s.qty<=s.min).map(s=>s.name).join(', ')||'Stock levels look good'}.</p></div></div>
+<div class="activity-item"><div class="activity-icon">⚒</div><div><strong>${tasks.filter(t=>t.status!=='Done').length} open room tasks</strong><p>Review cleaning and maintenance work.</p></div></div></div>
+<div style="margin-top:14px"><button class="btn soft" onclick="go('reports')">▥ Reports & receipts</button></div></section></div>${tableBookings(bookings.slice().sort((a,b)=>b.id.localeCompare(a.id)).slice(0,5))}`}
+
+function bookingsPage(){return `<div class="welcome"><div><h2>Bookings</h2><p>Manage reservations and guest stays in one place.</p></div><button class="btn primary" onclick="openBooking()">＋ New booking</button></div><div class="stats"><div class="stat"><div class="stat-top">All bookings</div><div class="stat-num">${bookings.filter(b=>b.status!=='Cancelled').length}</div></div><div class="stat"><div class="stat-top">Confirmed</div><div class="stat-num">${bookings.filter(b=>b.status==='Confirmed').length}</div></div><div class="stat"><div class="stat-top">Checked in</div><div class="stat-num">${bookings.filter(b=>b.status==='Checked in').length}</div></div><div class="stat"><div class="stat-top">Outstanding</div><div class="stat-num" style="font-size:22px">${money(bookings.reduce((s,b)=>s+(b.status==='Cancelled'?0:Math.max(0,b.amount-b.paid)),0))}</div></div></div><div class="panel table-panel"><div class="table-toolbar"><div><h3>All reservations</h3><div class="sub">Search, check in, check out or cancel a booking</div></div><input class="search" id="bookingSearch" placeholder="Search guest, ID or room…"></div><div class="table-wrap"><table><thead><tr><th>Booking ID</th><th>Guest</th><th>Room</th><th>Check-in</th><th>Check-out</th><th>Total</th><th>Status</th><th>Action</th></tr></thead><tbody id="bookingTbody">${bookingRows(bookings)}</tbody></table><div class="empty" id="bookingEmpty" style="display:none">No matching bookings found.</div></div></div>`}
+
+function roomsPage(){return `<div class="welcome"><div><h2>Rooms</h2><p>Room availability, rates and operating status.</p></div><button class="btn primary" onclick="openRoom()">＋ Add room</button></div><div class="stats"><div class="stat"><div class="stat-top">Total rooms</div><div class="stat-num">${rooms.length}</div></div><div class="stat"><div class="stat-top">Available</div><div class="stat-num">${rooms.filter(r=>r.status==='Available').length}</div></div><div class="stat"><div class="stat-top">Occupied</div><div class="stat-num">${rooms.filter(r=>r.status==='Occupied').length}</div></div><div class="stat"><div class="stat-top">Needs attention</div><div class="stat-num">${rooms.filter(r=>['Cleaning','Maintenance'].includes(r.status)).length}</div></div></div><div class="panel"><div class="panel-head"><div><h3>All rooms</h3><div class="sub">Tap “Change status” to update a room's state</div></div><select id="roomFilter" class="status-select" onchange="filterRooms()"><option value="">All statuses</option><option>Available</option><option>Occupied</option><option>Cleaning</option><option>Maintenance</option></select></div><div class="room-grid" id="allRooms">${rooms.map(roomCard).join('')}</div></div>`}
+
+function guestsPage(){let guests=[...new Map(bookings.map(b=>[b.guest,b])).values()];return `<div class="welcome"><div><h2>Guests</h2><p>Guest contact records and stay history.</p></div><button class="btn primary" onclick="openBooking()">＋ Register guest</button></div><div class="panel table-panel"><div class="table-toolbar"><div><h3>Guest directory</h3><div class="sub">${guests.length} guest profiles from bookings</div></div><input class="search" id="guestSearch" placeholder="Search name or phone…"></div><div class="table-wrap"><table><thead><tr><th>Guest</th><th>Phone</th><th>Latest booking</th><th>Room</th><th>Stay dates</th><th>Booking status</th><th>Balance</th></tr></thead><tbody id="guestTbody">${guests.map(g=>`<tr><td><div class="guest-cell"><div class="mini-avatar">${safe(g.guest.split(' ').map(x=>x[0]).slice(0,2).join(''))}</div><strong>${safe(g.guest)}</strong></div></td><td>${safe(g.phone)}</td><td>${safe(g.id)}</td><td>${safe(g.room)}</td><td>${safe(g.checkin)} → ${safe(g.checkout)}</td><td>${badgeStatus(g.status)}</td><td>${money(Math.max(0,g.amount-g.paid))}</td></tr>`).join('')}</tbody></table><div class="empty" id="guestEmpty" style="display:none">No guests found.</div></div></div>`}
+
+function paymentsPage(){return `<div class="welcome"><div><h2>Payments</h2><p>Record collections and track unpaid guest balances.</p></div><button class="btn primary" onclick="openPayment()">＋ Record payment</button></div><div class="stats"><div class="stat"><div class="stat-top">Collected today</div><div class="stat-num" style="font-size:22px">${money(payments.filter(p=>p.date===today()).reduce((s,p)=>s+p.amount,0))}</div></div><div class="stat"><div class="stat-top">M-Pesa received</div><div class="stat-num" style="font-size:22px">${money(payments.filter(p=>p.method==='M-Pesa'&&p.date===today()).reduce((s,p)=>s+p.amount,0))}</div></div><div class="stat"><div class="stat-top">Cash received</div><div class="stat-num" style="font-size:22px">${money(payments.filter(p=>p.method==='Cash'&&p.date===today()).reduce((s,p)=>s+p.amount,0))}</div></div><div class="stat"><div class="stat-top">Outstanding bills</div><div class="stat-num" style="font-size:22px">${money(bookings.filter(b=>b.status!=='Cancelled').reduce((s,b)=>s+Math.max(0,b.amount-b.paid),0))}</div></div></div><div class="panel table-panel"><div class="table-toolbar"><div><h3>Payment history</h3><div class="sub">Demo records — M-Pesa is recorded manually</div></div><input class="search" id="paymentSearch" placeholder="Search guest or reference…"></div><div class="table-wrap"><table><thead><tr><th>Payment ID</th><th>Date</th><th>Guest</th><th>Method</th><th>Reference</th><th>Amount</th><th>Receipt</th></tr></thead><tbody id="paymentTbody">${payments.slice().sort((a,b)=>b.id.localeCompare(a.id)).map(p=>`<tr><td><strong>${safe(p.id)}</strong></td><td>${safe(p.date)}</td><td>${safe(p.guest)}</td><td>${safe(p.method)}</td><td>${safe(p.ref||'—')}</td><td class="amount">${money(p.amount)}</td><td><button class="text-link" onclick="receiptFromPayment('${safe(p.id)}')">Receipt</button></td></tr>`).join('')}</tbody></table><div class="empty" id="paymentEmpty" style="display:none">No payments found.</div></div></div><div class="panel" style="margin-top:16px"><h3 style="margin-top:0">Outstanding balances</h3><div class="table-wrap"><table><thead><tr><th>Guest</th><th>Booking</th><th>Total bill</th><th>Paid</th><th>Balance</th><th></th></tr></thead><tbody>${bookings.filter(b=>b.status!=='Cancelled'&&b.amount>b.paid).map(b=>`<tr><td>${safe(b.guest)}</td><td>${safe(b.id)}</td><td>${money(b.amount)}</td><td>${money(b.paid)}</td><td class="amount">${money(b.amount-b.paid)}</td><td><button class="text-link" onclick="openPayment('${safe(b.id)}')">Collect</button></td></tr>`).join('')||'<tr><td colspan="6" class="muted">No outstanding balances.</td></tr>'}</tbody></table></div></div>`}
+
+function receiptFromPayment(pid){
+ const p=payments.find(x=>x.id===pid);if(!p)return;
+ const b=bookings.find(x=>x.id===p.booking);
+ openReceipt({
+  id:p.id,date:p.date,guest:p.guest,phone:b?.phone||'',booking:p.booking,room:b?.room,method:p.method,
+  items:[{name:'Payment received',qty:1,price:p.amount}],total:p.amount
+ },b?.phone||'');
+}
+
+function housekeepingPage(){return `<div class="welcome"><div><h2>Housekeeping</h2><p>Coordinate cleaning, inspections and room repairs.</p></div><button class="btn primary" onclick="openTask()">＋ Add task</button></div><div class="stats"><div class="stat"><div class="stat-top">Open tasks</div><div class="stat-num">${tasks.filter(t=>t.status!=='Done').length}</div></div><div class="stat"><div class="stat-top">Pending</div><div class="stat-num">${tasks.filter(t=>t.status==='Pending').length}</div></div><div class="stat"><div class="stat-top">In progress</div><div class="stat-num">${tasks.filter(t=>t.status==='In progress').length}</div></div><div class="stat"><div class="stat-top">Completed</div><div class="stat-num">${tasks.filter(t=>t.status==='Done').length}</div></div></div><div class="panel table-panel"><div class="table-toolbar"><div><h3>Room task board</h3><div class="sub">Update task status as work progresses</div></div></div><div class="table-wrap"><table><thead><tr><th>Room</th><th>Task</th><th>Assigned to</th><th>Status</th><th>Update</th></tr></thead><tbody>${tasks.map(t=>`<tr><td><strong>${safe(t.room)}</strong></td><td>${safe(t.task)}</td><td>${safe(t.assigned)}</td><td>${badgeStatus(t.status)}</td><td><select class="status-select" onchange="updateTask(${t.id},this.value)">${['Pending','In progress','Done'].map(s=>`<option ${t.status===s?'selected':''}>${s}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div></div><div class="panel" style="margin-top:16px"><h3 style="margin-top:0">Room readiness</h3><div class="room-grid">${rooms.filter(r=>['Cleaning','Maintenance'].includes(r.status)).map(roomCard).join('')||'<p class="muted">All rooms are ready or occupied.</p>'}</div></div>`}
+
+function stockPage(){return `<div class="welcome"><div><h2>Stock</h2><p>Track essential supplies and avoid unexpected shortages.</p></div><button class="btn primary" onclick="openStock()">＋ Add stock item</button></div><div class="stats"><div class="stat"><div class="stat-top">Tracked items</div><div class="stat-num">${stock.length}</div></div><div class="stat"><div class="stat-top">Low stock alerts</div><div class="stat-num">${stock.filter(s=>s.qty<=s.min).length}</div></div><div class="stat"><div class="stat-top">Units in stock</div><div class="stat-num">${stock.reduce((a,s)=>a+s.qty,0)}</div></div><div class="stat"><div class="stat-top">Needs reordering</div><div class="stat-num">${stock.filter(s=>s.qty<=s.min).length}</div></div></div><div class="panel table-panel"><div class="table-toolbar"><div><h3>Inventory list</h3><div class="sub">Use stock adjustments when supplies are received or issued</div></div><input class="search" id="stockSearch" placeholder="Search items…"></div><div class="table-wrap"><table><thead><tr><th>Item</th><th>Category</th><th>Quantity</th><th>Minimum level</th><th>Status</th><th>Quick adjustment</th></tr></thead><tbody>${stock.map(s=>`<tr><td><strong>${safe(s.name)}</strong></td><td>${safe(s.category)}</td><td>${s.qty} ${safe(s.unit)}</td><td>${s.min} ${safe(s.unit)}</td><td>${s.qty<=s.min?'<span class="pill pending">Low stock</span>':'<span class="pill available">In stock</span>'}</td><td><button class="btn" onclick="adjustStock(${s.id},1)">＋</button> <button class="btn" onclick="adjustStock(${s.id},-1)">−</button></td></tr>`).join('')}</tbody></table></div></div>`}
+
+/* ========== REPORTS PAGE ========== */
+function reportsPage(){
+ let revenue=payments.reduce((s,p)=>s+p.amount,0),cost=expenses.reduce((s,e)=>s+e.amount,0),out=bookings.filter(b=>b.status!=='Cancelled').reduce((s,b)=>s+Math.max(0,b.amount-b.paid),0);
+ const cards=[
+  ['Bookings report','Reservations, stays & balances','bookings'],
+  ['Payments report','Collections by method & date','payments'],
+  ['Expenses report','Operating cost register','expenses'],
+  ['Occupancy report','Room status & rates','occupancy'],
+  ['Stock report','Inventory & low-stock alerts','stock'],
+  ['Guests report','Guest directory & balances','guests'],
+ ];
+ return `<div class="welcome"><div><h2>Reports & Expenses</h2><p>Print, download CSV, or share any report via WhatsApp.</p></div><button class="btn" onclick="exportCSV([['Booking ID','Guest','Phone','Room','Check-in','Check-out','Total','Paid','Status'],...bookings.map(b=>[b.id,b.guest,b.phone,b.room,b.checkin,b.checkout,b.amount,b.paid,b.status])],'staywise-bookings.csv');toast('Bookings CSV exported')">⇩ Export bookings CSV</button></div>
+ <div class="note">Figures below use the prototype's demo records. They are not connected to a live accounting system.</div>
+ <div class="stats"><div class="stat"><div class="stat-top">Recorded collections</div><div class="stat-num" style="font-size:22px">${money(revenue)}</div><div class="stat-foot">All payment records</div></div><div class="stat"><div class="stat-top">Recorded expenses</div><div class="stat-num" style="font-size:22px">${money(cost)}</div><div class="stat-foot">All expense entries</div></div><div class="stat"><div class="stat-top">Unpaid balances</div><div class="stat-num" style="font-size:22px">${money(out)}</div><div class="stat-foot">From active bookings</div></div><div class="stat"><div class="stat-top">Rooms occupied</div><div class="stat-num">${rooms.filter(r=>r.status==='Occupied').length}/${rooms.length}</div><div class="stat-foot">Current room status</div></div></div>
+ <div class="grid" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px">
+  ${cards.map(c=>`<button class="action-tile" data-report="${c[2]}"><div class="tile-icon">▥</div><b>${c[0]}</b><small>${c[1]}</small></button>`).join('')}
+ </div>
+ <div class="panel table-panel"><div class="table-toolbar"><div><h3>Expense register</h3><div class="sub">Track operating costs</div></div><button class="btn primary" onclick="openExpense()">＋ Add expense</button></div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th></th></tr></thead><tbody>${expenses.map(e=>`<tr><td>${safe(e.date)}</td><td>${safe(e.category)}</td><td>${safe(e.description)}</td><td class="amount">${money(e.amount)}</td><td><button class="text-link danger" onclick="deleteExpense(${e.id})">Remove</button></td></tr>`).join('')||'<tr><td colspan="5" class="muted">No expenses recorded.</td></tr>'}</tbody></table></div></div>
+ <div class="panel table-panel" style="margin-top:16px"><div class="table-toolbar"><div><h3>Recent receipts</h3><div class="sub">Print or share any stay receipt</div></div></div><div class="table-wrap"><table><thead><tr><th>Booking</th><th>Guest</th><th>Room</th><th>Total</th><th>Paid</th><th>Status</th><th>Receipt</th></tr></thead><tbody>${bookings.map(b=>`<tr><td><b>${safe(b.id)}</b></td><td>${safe(b.guest)}</td><td>${safe(b.room)}</td><td>${money(b.amount)}</td><td>${money(b.paid)}</td><td>${badgeStatus(b.status)}</td><td><button class="text-link" onclick="openBookingReceipt('${safe(b.id)}')">Receipt</button> <button class="btn wa" style="padding:5px 8px;font-size:11px" onclick="shareBookingWhatsApp('${safe(b.id)}')">✆</button></td></tr>`).join('')}</tbody></table></div></div>`;
+}
+function shareBookingWhatsApp(bid){
+ const b=bookings.find(x=>x.id===bid);if(!b)return;
+ const r={id:'BR-'+b.id.replace(/[^0-9]/g,''),date:today(),guest:b.guest,phone:b.phone,booking:b.id,room:b.room,method:b.payment,items:[{name:`Room ${b.room} stay`,qty:1,price:b.amount}],total:b.amount};
+ shareWhatsApp(receiptText(r),b.phone);
+}
+
+function settingsPage(){return `<div class="welcome"><div><h2>Settings & Staff</h2><p>Basic property details and access controls.</p></div></div><div class="layout-two"><div class="panel"><h3 style="margin-top:0">Property settings</h3><form id="propertyForm" class="form-grid"><div class="field full"><label>Guest house name</label><input name="property" value="${safe(localStorage.getItem('staywise_property')||'StayWise Guest House')}" required></div><div class="field"><label>Currency</label><select name="currency"><option selected>KES — Kenyan Shilling</option></select></div><div class="field"><label>Default check-in</label><input name="checkin" type="time" value="14:00"></div><div class="field"><label>Default check-out</label><input name="checkout" type="time" value="10:00"></div><div class="field"><label>Property setup</label><select name="branches"><option>Single property</option><option>Multi-branch (demo only)</option></select></div><div class="field full"><button class="btn primary" type="submit">Save property settings</button></div></form></div><div class="panel"><h3 style="margin-top:0">Staff access (prototype)</h3><div class="settings-row"><div><strong>Administrator</strong><p>All modules and settings</p></div><span class="pill available">Full access</span></div><div class="settings-row"><div><strong>Reception</strong><p>Bookings, guests, room status, payments</p></div><span class="pill checked">Staff role</span></div><div class="settings-row"><div><strong>Housekeeping</strong><p>Room readiness and assigned tasks</p></div><span class="pill checked">Staff role</span></div><div class="settings-row"><div><strong>Cashier</strong><p>Payments and receipts</p></div><span class="pill checked">Staff role</span></div><div class="note" style="margin-top:16px">Role descriptions are illustrative. This standalone demo does not enforce real user authentication or server-side permissions.</div><button class="btn" onclick="downloadBackup()">⇩ Download data backup</button> <button class="btn danger" onclick="resetDemo()">Reset demo data</button></div></div>`}
+
+/* Additional modules below (catalog/branches/automations/security) preserved */
+let catalog=[
+{id:1,name:'Deluxe room — nightly stay',kind:'Room service',category:'Accommodation',price:3800,code:'ROOM-DLX',qty:8,img:'https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=900&q=80'},
+{id:2,name:'Breakfast service',kind:'Service',category:'Food & beverage',price:650,code:'SRV-BREAKFAST',qty:50,img:'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&w=900&q=80'},
+{id:3,name:'Fresh bath towels',kind:'Product',category:'Linen',price:900,code:'PRD-TOWEL',qty:24,img:'https://images.unsplash.com/photo-1600369671236-e74521d4b6ad?auto=format&fit=crop&w=900&q=80'},
+{id:4,name:'Airport transfer',kind:'Service',category:'Transport',price:1800,code:'SRV-TRANSFER',qty:20,img:'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=900&q=80'},
+{id:5,name:'Bottled water',kind:'Product',category:'Guest supplies',price:100,code:'PRD-WATER',qty:40,img:'https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=900&q=80'},
+{id:6,name:'Meeting room — hourly',kind:'Facility',category:'Facilities',price:1500,code:'FAC-MEETING',qty:1,img:'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80'}];
+let branches=[{id:1,name:'Main Guest House',location:'Kisumu',rooms:12,status:'Active'},{id:2,name:'Lake View Annex',location:'Kisumu',rooms:8,status:'Demo branch'}];
+let rules=[{id:1,name:'Low-stock alert',trigger:'Stock reaches minimum level',action:'Flag item on dashboard',enabled:true},{id:2,name:'Checkout housekeeping task',trigger:'Guest checks out',action:'Create room cleaning task',enabled:true},{id:3,name:'Outstanding balance follow-up',trigger:'Booking has unpaid balance',action:'Flag for reception',enabled:true},{id:4,name:'Daily close summary',trigger:'End of business day',action:'Prepare occupancy and collections summary',enabled:false}];
+let users=[{id:1,name:'Admin User',username:'admin',role:'Administrator',active:true},{id:2,name:'Reception Team',username:'reception',role:'Reception',active:true},{id:3,name:'Housekeeping Team',username:'housekeeping',role:'Housekeeping',active:true},{id:4,name:'Cashier Team',username:'cashier',role:'Cashier',active:true}];
+function persistExtended(){try{localStorage.setItem('staywise_extended',JSON.stringify({catalog,branches,rules,users}))}catch(e){}}
+function loadExtended(){try{let x=JSON.parse(localStorage.getItem('staywise_extended'));if(x){catalog=x.catalog||catalog;branches=x.branches||branches;rules=x.rules||rules;users=x.users||users}}catch(e){}}
+function catalogCards(list){return list.map(x=>`<div class="photo-card"><img src="${safe(x.img)}" alt="${safe(x.name)}" loading="lazy" onerror="this.style.display='none'"><div class="photo-info"><span class="pill ${x.kind==='Service'?'checked':'available'}">${safe(x.kind)}</span><strong>${safe(x.name)}</strong><small>${safe(x.category)} · ${safe(x.code)}</small><div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><b>${money(x.price)}</b><button class="btn soft" onclick="sellItem(${x.id})">Add to bill</button></div></div></div>`).join('')}
+function catalogPage(){return `<div class="welcome"><div><h2>Services & products</h2><p>Manage accommodation, guest services, facilities and items for sale.</p></div><button class="btn primary" onclick="addCatalog()">＋ Add item</button></div><div class="tile-grid" style="margin-bottom:18px"><button class="action-tile" onclick="filterCatalog('all')"><div class="tile-icon">✦</div><b>All items</b><small>${catalog.length} items</small></button><button class="action-tile" onclick="filterCatalog('Service')"><div class="tile-icon">♧</div><b>Services</b><small>Breakfast, transport</small></button><button class="action-tile" onclick="filterCatalog('Product')"><div class="tile-icon">▧</div><b>Products</b><small>Guest supplies</small></button><button class="action-tile" onclick="filterCatalog('Facility')"><div class="tile-icon">⌂</div><b>Facilities</b><small>Bookable facilities</small></button></div><div class="panel"><div class="panel-head"><div><h3>Visual catalogue</h3><div class="sub">Product and room photos load online; records and barcode lookup are local.</div></div><input class="search" id="catalogSearch" placeholder="Search items…"></div><div class="photo-grid" id="catalogGrid">${catalogCards(catalog)}</div><div style="margin-top:22px;border-top:1px solid var(--line);padding-top:18px"><h3>Offline barcode lookup</h3><p class="sub">Use a USB/Bluetooth scanner that types into the field, or enter a product code.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><input class="search" style="flex:1" id="barcodeInput" placeholder="Scan or enter code, then Enter"><button class="btn primary" onclick="lookupBarcode()">Find item</button></div><div id="barcodeResult" style="margin-top:12px"></div></div></div>`}
+let catFilter='all';function filterCatalog(k){catFilter=k;let q=($('#catalogSearch')?.value||'').toLowerCase();let a=catalog.filter(x=>(k==='all'||x.kind===k)&&[x.name,x.code,x.category,x.kind].some(v=>v.toLowerCase().includes(q)));$('#catalogGrid').innerHTML=catalogCards(a)||'<p class="muted">No items found.</p>'}
+function addCatalog(){showModal('Add product or service',`<form id="catForm"><div class="form-grid"><div class="field full"><label>Item or service name *</label><input name="name" required></div><div class="field"><label>Type</label><select name="kind"><option>Product</option><option>Service</option><option>Facility</option><option>Room service</option></select></div><div class="field"><label>Category</label><input name="category" value="Guest services" required></div><div class="field"><label>Price (KSh) *</label><input name="price" type="number" min="0" required></div><div class="field"><label>Barcode / item code *</label><input name="code" required></div><div class="field"><label>Quantity</label><input name="qty" type="number" min="0" value="0"></div><div class="field full"><label>Image URL (optional)</label><input name="img" type="url" placeholder="https://…"></div></div><div class="modal-actions"><button type="button" class="btn" onclick="closeModal()">Cancel</button><button class="btn primary">Save item</button></div></form>`);$('#catForm').addEventListener('submit',e=>{e.preventDefault();let f=new FormData(e.target);if(catalog.some(x=>x.code.toLowerCase()===String(f.get('code')).toLowerCase())){toast('Item code already exists');return}catalog.push({id:Date.now(),name:f.get('name'),kind:f.get('kind'),category:f.get('category'),price:+f.get('price'),code:f.get('code').trim(),qty:+f.get('qty'),img:f.get('img')||''});persistExtended();closeModal();go('catalog');toast('Item added')})}
+function lookupBarcode(){let code=$('#barcodeInput').value.trim().toLowerCase(),x=catalog.find(i=>i.code.toLowerCase()===code);$('#barcodeResult').innerHTML=x?`<div class="note"><b>${safe(x.name)}</b> · ${money(x.price)} · ${safe(x.kind)}<div class="barcode-visual">▌▌ ▌ ▌▌▌ ▌ ▌▌ ▌▌</div><button class="btn primary" onclick="sellItem(${x.id})">Add to bill</button></div>`:'<div class="note">No matching item code.</div>'}
+function sellItem(id){
+ let x=catalog.find(i=>i.id===id);
+ showModal('Create sale & receipt',`<div class="note">${safe(x.name)} · ${money(x.price)}</div><form id="saleForm">
+ <div class="field"><label>Guest / booking reference</label><select name="booking"><option value="">Walk-in</option>${bookings.filter(b=>b.status!=='Cancelled').map(b=>`<option value="${safe(b.id)}">${safe(b.id)} · ${safe(b.guest)}</option>`).join('')}</select></div>
+ <div class="field" style="margin-top:12px"><label>Quantity</label><input name="qty" type="number" min="1" value="1" required></div>
+ <div class="field" style="margin-top:12px"><label>Payment method</label><select name="method"><option>Pending</option><option>M-Pesa</option><option>Cash</option><option>Card</option></select></div>
+ <div class="modal-actions"><button type="button" class="btn" onclick="closeModal()">Cancel</button><button class="btn primary">Save & show receipt</button></div></form>`);
+ $('#saleForm').addEventListener('submit',e=>{
+  e.preventDefault();let f=new FormData(e.target),qty=+f.get('qty');
+  if(x.kind==='Product'&&x.qty<qty){toast('Not enough stock');return}
+  if(x.kind==='Product')x.qty-=qty;
+  const bookingId=f.get('booking')||'';
+  const b=bookings.find(b=>b.id===bookingId);
+  const r={id:'RC-'+Date.now().toString().slice(-7),date:today(),guest:b?b.guest:'Walk-in',phone:b?.phone||'',booking:bookingId||'',room:b?.room||'',method:f.get('method'),items:[{name:x.name,qty,price:x.price}],total:x.price*qty};
+  sales.unshift(r);persist();persistExtended();
+  closeModal();openReceipt(r,b?.phone||'');
+  toast('Sale recorded');
+ });
+}
+function branchesPage(){return `<div class="welcome"><div><h2>Branches & properties</h2><p>Keep multiple properties in one workspace concept.</p></div><button class="btn primary" onclick="addBranch()">＋ Add branch</button></div><div class="note">Multi-branch records are a prototype only. Shared live data and branch-level permissions require a backend.</div><div class="page-grid">${branches.map(b=>`<div class="feature-card"><div class="stat-icon">⌂</div><h3>${safe(b.name)}</h3><p>📍 ${safe(b.location)} · ${b.rooms} rooms</p>${badgeStatus(b.status==='Active'?'Available':'Pending')}</div>`).join('')}</div>`}
+function addBranch(){showModal('Add branch',`<form id="branchForm"><div class="field"><label>Branch name</label><input name="name" required></div><div class="field" style="margin-top:12px"><label>Location</label><input name="location" required></div><div class="field" style="margin-top:12px"><label>Rooms</label><input name="rooms" type="number" min="0" value="0"></div><div class="modal-actions"><button type="button" class="btn" onclick="closeModal()">Cancel</button><button class="btn primary">Add branch</button></div></form>`);$('#branchForm').addEventListener('submit',e=>{e.preventDefault();let f=new FormData(e.target);branches.push({id:Date.now(),name:f.get('name'),location:f.get('location'),rooms:+f.get('rooms'),status:'Active'});persistExtended();closeModal();go('branches');toast('Branch added')})}
+function automationsPage(){return `<div class="welcome"><div><h2>Automations & delegation</h2><p>Configure operational rules and team workflows.</p></div><button class="btn primary" onclick="addRule()">＋ New rule</button></div><div class="note">Rule configurations are demo-only. Scheduled jobs and SMS/WhatsApp/email/M-Pesa integrations need server-side services and provider credentials.</div><div class="panel">${rules.map(r=>`<div class="settings-row"><div><strong>⚡ ${safe(r.name)}</strong><p>When: ${safe(r.trigger)}</p><p>Then: ${safe(r.action)}</p></div><button class="btn ${r.enabled?'soft':''}" onclick="toggleRule(${r.id})">${r.enabled?'Enabled':'Paused'}</button></div>`).join('')}</div><div class="panel" style="margin-top:16px"><h3>Delegation queue</h3><p class="sub">Tasks assigned to housekeeping or maintenance.</p><button class="btn" onclick="go('housekeeping')">Open task board ↗</button></div>`}
+function addRule(){showModal('New automation rule',`<form id="ruleForm"><div class="field"><label>Rule name</label><input name="name" required></div><div class="field" style="margin-top:12px"><label>Trigger</label><input name="trigger" required></div><div class="field" style="margin-top:12px"><label>Action / delegated task</label><input name="action" required></div><div class="modal-actions"><button type="button" class="btn" onclick="closeModal()">Cancel</button><button class="btn primary">Save rule</button></div></form>`);$('#ruleForm').addEventListener('submit',e=>{e.preventDefault();let f=new FormData(e.target);rules.push({id:Date.now(),name:f.get('name'),trigger:f.get('trigger'),action:f.get('action'),enabled:true});persistExtended();closeModal();go('automations');toast('Rule saved')})}
+function toggleRule(id){let r=rules.find(x=>x.id===id);r.enabled=!r.enabled;persistExtended();go('automations')}
+function securityPage(){return `<div class="welcome"><div><h2>Security & users</h2><p>Role tiers and user account overview.</p></div><button class="btn primary" onclick="addUser()">＋ Add user</button></div><div class="note"><b>Security tiers:</b> Administrator, Manager, Reception/Cashier, Housekeeping. Demo login is not secure production authentication.</div><div class="panel table-panel"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Action</th></tr></thead><tbody>${users.map(u=>`<tr><td>${safe(u.name)}</td><td>${safe(u.username)}</td><td>${safe(u.role)}</td><td>${u.active?'Active':'Disabled'}</td><td><button class="text-link" onclick="toggleUser(${u.id})">${u.active?'Disable':'Enable'}</button></td></tr>`).join('')}</tbody></table></div></div><div class="panel" style="margin-top:16px"><h3>Security checklist</h3><p>✓ Individual accounts & least privilege</p><p>✓ Regular data backups</p><p>⚠ Add production authentication, audit logs, encryption and server-side validation.</p></div>`}
+function addUser(){showModal('Add demo user',`<form id="userForm"><div class="field"><label>Name</label><input name="name" required></div><div class="field" style="margin-top:12px"><label>Username</label><input name="username" required></div><div class="field" style="margin-top:12px"><label>Role</label><select name="role"><option>Manager</option><option>Reception</option><option>Cashier</option><option>Housekeeping</option><option>Administrator</option></select></div><div class="note">This creates a demo record, not a secure login account.</div><div class="modal-actions"><button type="button" class="btn" onclick="closeModal()">Cancel</button><button class="btn primary">Add user</button></div></form>`);$('#userForm').addEventListener('submit',e=>{e.preventDefault();let f=new FormData(e.target);users.push({id:Date.now(),name:f.get('name'),username:f.get('username'),role:f.get('role'),active:true});persistExtended();closeModal();go('security')})}
+function toggleUser(id){let u=users.find(x=>x.id===id);if(u.id===1){toast('Cannot disable main demo administrator');return}u.active=!u.active;persistExtended();go('security')}
+
+/* ========== LOGIN ========== */
+function showLogin(){if(sessionStorage.getItem('staywise_logged_in')==='yes')return;$('#loginScreen').classList.add('show')}
+function loginDemo(e){e.preventDefault();let f=new FormData(e.target),u=users.find(x=>x.username===f.get('username')&&x.active);if(!u){$('#loginError').textContent='Account unavailable. Select an active demo account.';return}sessionStorage.setItem('staywise_logged_in','yes');$('#loginScreen').classList.remove('show');$('#userAvatar').textContent=u.name.split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase();toast('Demo session: '+u.role)}
+function logout(){sessionStorage.removeItem('staywise_logged_in');showLogin()}
+function applyLogo(){let src=localStorage.getItem('staywise_logo');if(src&&$('#brandMark'))$('#brandMark').innerHTML=`<img alt="Property logo" src="${src}">`}
+function logoSettings(){showModal('Upload property logo',`<div class="field"><label>Logo image</label><input id="logoFile" type="file" accept="image/png,image/jpeg,image/webp"></div><div class="modal-actions"><button class="btn" onclick="closeModal()">Close</button></div>`);$('#logoFile').addEventListener('change',e=>{const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=()=>{try{localStorage.setItem('staywise_logo',r.result);applyLogo();toast('Logo updated')}catch(err){toast('Logo file too large')}};r.readAsDataURL(file);closeModal()})}
+
+/* ========== ROUTER ========== */
+const pages={catalog:catalogPage,branches:branchesPage,automations:automationsPage,security:securityPage,dashboard,bookings:bookingsPage,rooms:roomsPage,guests:guestsPage,payments:paymentsPage,housekeeping:housekeepingPage,stock:stockPage,reports:reportsPage,settings:settingsPage};
+const titles={dashboard:'Dashboard',bookings:'Bookings',rooms:'Rooms',guests:'Guests',payments:'Payments',housekeeping:'Housekeeping',stock:'Stock',catalog:'Services & Products',branches:'Branches',automations:'Automations',security:'Security & Users',reports:'Reports & Expenses',settings:'Settings & Staff'};
+
+function go(page){
+ if(page==='more'){openMoreMenu();return}
+ currentPage=page;
+ $('#pageTitle').textContent=titles[page];
+ $('#crumb').textContent=titles[page];
+ document.querySelectorAll('#nav button,[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
+ $('#content').innerHTML=pages[page]();
+ $('#sidebar').classList.remove('open');
+ wireSearch();
+ if(page==='settings'){const pf=$('#propertyForm');if(pf)pf.addEventListener('submit',saveSettings);if(pf&&!$('#logoSettingsBtn')){let b=document.createElement('button');b.id='logoSettingsBtn';b.className='btn';b.style.marginTop='12px';b.textContent='＋ Upload property logo';b.onclick=logoSettings;pf.parentElement.appendChild(b)}}
+ if(page==='catalog'){let ci=$('#catalogSearch');if(ci)ci.addEventListener('input',()=>filterCatalog(catFilter));let bi=$('#barcodeInput');if(bi)bi.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();lookupBarcode()}})}
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+function openMoreMenu(){showModal('More',`<div style="display:grid;gap:8px">${[
+ ['▦','Dashboard','dashboard'],['▣','Bookings','bookings'],['▤','Rooms','rooms'],['♙','Guests','guests'],
+ ['▤','Payments','payments'],['✧','Housekeeping','housekeeping'],['▧','Stock','stock'],['✦','Services & Products','catalog'],
+ ['⌂','Branches','branches'],['⚡','Automations','automations'],['♙','Security & Users','security'],['▥','Reports & Expenses','reports'],['⚙','Settings & Staff','settings']
+].map(x=>`<button class="btn" style="justify-content:flex-start" onclick="closeModal();go('${x[2]}')"><span style="font-size:18px;width:22px">${x[0]}</span>${x[1]}</button>`).join('')}</div>`)}
+function wireSearch(){
+ const bs=$('#bookingSearch');
+ if(bs)bs.addEventListener('input',()=>{const q=bs.value.toLowerCase();const list=bookings.filter(b=>[b.id,b.guest,b.phone,b.room,b.status].some(x=>String(x).toLowerCase().includes(q)));$('#bookingTbody').innerHTML=bookingRows(list);const e=$('#bookingEmpty');if(e)e.style.display=list.length?'none':'block'});
+ const gs=$('#guestSearch');
+ if(gs)gs.addEventListener('input',()=>{let q=gs.value.toLowerCase(),rows=[...$('#guestTbody').rows];let n=0;rows.forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';if(r.style.display!=='none')n++});$('#guestEmpty').style.display=n?'none':'block'});
+ const ps=$('#paymentSearch');if(ps)ps.addEventListener('input',()=>filterTable(ps,'paymentTbody','paymentEmpty'));
+ const ss=$('#stockSearch');if(ss)ss.addEventListener('input',()=>filterTable(ss,null,null));
+}
+function filterTable(input,id,empty){let q=input.value.toLowerCase(),body=id?$('#'+id):input.closest('.panel').querySelector('tbody');if(!body)return;let n=0;[...body.rows].forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';if(r.style.display!=='none')n++});if(empty&&$('#'+empty))$('#'+empty).style.display=n?'none':'block'}
+function filterRooms(){let v=$('#roomFilter').value;$('#allRooms').innerHTML=rooms.filter(r=>!v||r.status===v).map(roomCard).join('')||'<p class="muted">No rooms match this status.</p>'}
+function cycleRoom(id){let r=rooms.find(r=>r.id===id);if(!r)return;let states=['Available','Occupied','Cleaning','Maintenance'];r.status=states[(states.indexOf(r.status)+1)%states.length];persist();go(currentPage);toast(`Room ${id}: ${r.status}`)}
+function bookingAction(id){
+ let b=bookings.find(x=>x.id===id);if(!b)return;
+ showModal('Manage booking',`<div class="note">${safe(b.guest)} · Room ${safe(b.room)} · Balance ${money(Math.max(0,b.amount-b.paid))}</div>
+ <div class="field"><label>Booking status</label><select id="manageStatus">${['Pending','Confirmed','Checked in','Checked out','Cancelled'].map(s=>`<option ${b.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+ <div class="modal-actions"><button class="btn wa" onclick="closeModal();openBookingReceipt('${safe(id)}')">⎙ Receipt</button><button class="btn wa" onclick="closeModal();shareBookingWhatsApp('${safe(id)}')">✆ Share</button><button class="btn" onclick="closeModal()">Close</button><button class="btn primary" onclick="saveBookingStatus('${safe(id)}')">Save status</button></div>`);
+}
+function saveBookingStatus(id){let b=bookings.find(x=>x.id===id);b.status=$('#manageStatus').value;let r=rooms.find(x=>x.id===b.room);if(r){if(b.status==='Checked in')r.status='Occupied';if(b.status==='Checked out'||b.status==='Cancelled')r.status='Cleaning'}persist();closeModal();go(currentPage);toast('Booking status updated')}
+function openBooking(){
+ let opts=rooms.filter(r=>['Available','Cleaning'].includes(r.status)).map(r=>`<option value="${safe(r.id)}" data-price="${r.price}" ${r.status!=='Available'?'disabled':''}>${safe(r.id)} · ${safe(r.type)} · ${money(r.price)} / night ${r.status!=='Available'?'('+r.status+')':''}</option>`).join('');
+ showModal('Create new booking',`<form id="bookingForm"><div class="form-grid"><div class="field full"><label>Guest full name *</label><input name="guest" required placeholder="e.g. Jane Wanjiku"></div><div class="field"><label>Phone number *</label><input name="phone" required placeholder="07xx xxx xxx"></div><div class="field"><label>Room *</label><select name="room" id="bookingRoom" required>${opts}</select></div><div class="field"><label>Check-in *</label><input type="date" name="checkin" value="${today()}" min="${today()}" required></div><div class="field"><label>Check-out *</label><input type="date" name="checkout" value="${plusDays(1)}" min="${plusDays(1)}" required></div><div class="field"><label>Total amount (KSh) *</label><input type="number" name="amount" id="bookingAmount" min="0" step="1" required></div><div class="field"><label>Deposit paid (KSh)</label><input type="number" name="paid" min="0" step="1" value="0"></div><div class="field"><label>Payment method</label><select name="payment"><option>Pending</option><option>M-Pesa</option><option>Cash</option><option>Card</option><option>Bank</option></select></div><div class="field"><label>Booking status</label><select name="status"><option>Confirmed</option><option>Pending</option><option>Checked in</option></select></div></div><div class="modal-actions"><button type="button" class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" type="submit">Save booking</button></div></form>`);
+ const roomSel=$('#bookingRoom'),amt=$('#bookingAmount');
+ function calc(){let r=rooms.find(x=>x.id===roomSel.value),ci=new Date($('#bookingForm').elements.checkin.value),co=new Date($('#bookingForm').elements.checkout.value),n=Math.max(1,Math.round((co-ci)/86400000)||1);if(r)amt.value=r.price*n}
+ roomSel.addEventListener('change',calc);$('#bookingForm').elements.checkin.addEventListener('change',calc);$('#bookingForm').elements.checkout.addEventListener('change',calc);calc();
+ $('#bookingForm').addEventListener('submit',e=>{e.preventDefault();let f=new FormData(e.target),room=rooms.find(r=>r.id===f.get('room'));if(!room||room.status!=='Available'){toast('Please choose an available room');return}if(f.get('checkout')<=f.get('checkin')){toast('Check-out must be after check-in');return}let ci=f.get('checkin'),co=f.get('checkout');let conflict=bookings.some(b=>b.room===room.id&&!['Cancelled','Checked out'].includes(b.status)&&ci<b.checkout&&co>b.checkin);if(conflict){toast('This room overlaps another active booking');return}let id='BK-'+(1047+bookings.length);let b={id,guest:f.get('guest').trim(),phone:f.get('phone').trim(),room:room.id,checkin:ci,checkout:co,amount:Number(f.get('amount')),paid:Number(f.get('paid')||0),payment:f.get('payment'),status:f.get('status')};if(b.paid>b.amount){toast('Deposit cannot exceed total amount');return}bookings.unshift(b);if(b.status==='Checked in')room.status='Occupied';persist();closeModal();go('bookings');toast('Booking created successfully')});
+}
+function openRoom(){showModal('Add room',`<form id="roomForm"><div class="form-grid"><div class="field"><label>Room number *</label><input name="id" required></div><div class="field"><label>Room type *</label><select name="type"><option>Standard</option><option>Deluxe</option><option>Twin</option><option>Family</option><option>Suite</option></select></div><div class="field"><label>Rate per night (KSh) *</label><input name="price" type="number" min="1" required></div><div class="field"><label>Initial status</label><select name="status"><option>Available</option><option>Cleaning</option><option>Maintenance</option></select></div></div><div class="modal-actions"><button type="button" class="btn" onclick="closeModal()">Cancel</button><button class="btn primary">Add room</button></div></form>`);$('#roomForm').addEventListener('submit',e=>{e.preventDefault();let f=new FormData(e.target);if(rooms.some(r=>r.id===f.get('id').trim())){toast('Room number already exists');return}rooms.push({id:f.get('id').trim(),type:f.get('type'),price:Number(f.get('price')),status:f.get('status')});persist();closeModal();go('rooms');toast('Room added')})}
+function openPayment(bookingId=''){
+ let b=bookings.find(x=>x.id===bookingId)||bookings.find(x=>x.status!=='Cancelled'&&x.amount>x.paid);
+ let opts=bookings.filter(x=>x.status!=='Cancelled').map(x=>`<option value="${safe(x.id)}" ${b&&x.id===b.id?'selected':''}>${safe(x.id)} · ${safe(x.guest)} · balance ${money(Math.max(0,x.amount-x.paid))}</option>`).join('');
+ showModal('Record payment',`<form id="paymentForm"><div class="form-grid"><div class="field full"><label>Booking / guest *</label><select name="booking" required>${opts}</select></div><div class="field"><label>Amount received (KSh) *</label><input name="amount" type="number" min="1" required></div><div class="field"><label>Payment method *</label><select name="method"><option>M-Pesa</option><option>Cash</option><option>Card</option><option>Bank</option></select></div><div class="field full"><label>Transaction reference</label><input name="ref" placeholder="M-Pesa code or receipt reference"></div><div class="field"><label>Date</label><input name="date" type="date" value="${today()}" required></div></div><div class="note">Prototype only: records a payment entry; does not initiate or verify an actual M-Pesa transaction.</div><div class="modal-actions"><button type="button" class="btn" onclick="closeModal()">Cancel</button><button class="btn primary">Save payment</button></div></form>`);
+ $('#paymentForm').addEventListener('submit',e=>{
+  e.preventDefault();let f=new FormData(e.target),b=bookings.find(x=>x.id===f.get('booking')),amount=Number(f.get('amount'));
+  if(!b||amount<=0){toast('Check payment details');return}
+  if(amount>b.amount-b.paid){toast('Payment exceeds outstanding balance');return}
+  b.paid+=amount;b.payment=f.get('method');
+  const pay={id:'PAY-'+(2082+payments.length),date:f.get('date'),guest:b.guest,method:f.get('method'),ref:f.get('ref')||'—',amount,booking:b.id};
+  payments.unshift(pay);persist();closeModal();
+  // Show receipt immediately
+  openReceipt({id:pay.id,date:pay.date,guest:b.guest,phone:b.phone,booking:b.id,room:b.room,method:pay.method,items:[{name:'Payment received',qty:1,price:amount}],total:amount},b.phone);
+  toast('Payment recorded');
+ });
+}
+function openTask(){showModal('Add room task',`<form id="taskForm"><div class="form-grid"><div class="field"><label>Room *</label><select name="room">${rooms.map(r=>`<option>${safe(r.id)}</option>`).join('')}</select></div><div class="field"><label>Assigned to</label><input name="assigned" value="Housekeeping" required></div><div class="field full"><label>Task description *</label><input name="task" required placeholder="e.g. Replace bedside lamp"></div></div><div class="modal-actions"><button type="button" class="btn" onclick="closeModal()">Cancel</button><button class="btn primary">Add task</button></div></form>`);$('#taskForm').addEventListener('submit',e=>{e.preventDefault();let f=new FormData(e.target);tasks.push({id:Date.now(),room:f.get('room'),assigned:f.get('assigned'),task:f.get('task'),status:'Pending'});persist();closeModal();go('housekeeping');toast('Task created')})}
+function updateTask(id,status){let t=tasks.find(x=>x.id===id);if(!t)return;t.status=status;if(status==='Done'){let r=rooms.find(x=>x.id===t.room);if(r&&r.status==='Cleaning')r.status='Available'}persist();go('housekeeping');toast('Task updated')}
+function openStock(){showModal('Add stock item',`<form id="stockForm"><div class="form-grid"><div class="field full"><label>Item name *</label><input name="name" required></div><div class="field"><label>Category</label><select name="category"><option>Amenities</option><option>Linen</option><option>Cleaning</option><option>Food & beverage</option><option>Other</option></select></div><div class="field"><label>Unit</label><input name="unit" value="pcs" required></div><div class="field"><label>Quantity</label><input name="qty" type="number" min="0" value="0" required></div><div class="field"><label>Minimum stock</label><input name="min" type="number" min="0" value="5" required></div></div><div class="modal-actions"><button type="button" class="btn" onclick="closeModal()">Cancel</button><button class="btn primary">Save item</button></div></form>`);$('#stockForm').addEventListener('submit',e=>{e.preventDefault();let f=new FormData(e.target);stock.push({id:Date.now(),name:f.get('name'),category:f.get('category'),unit:f.get('unit'),qty:Number(f.get('qty')),min:Number(f.get('min'))});persist();closeModal();go('stock');toast('Stock item added')})}
+function adjustStock(id,delta){let s=stock.find(x=>x.id===id);if(!s)return;if(s.qty+delta<0){toast('Stock cannot go below zero');return}s.qty+=delta;persist();go('stock');toast(`${s.name}: ${s.qty} ${s.unit}`)}
+function openExpense(){showModal('Add expense',`<form id="expenseForm"><div class="form-grid"><div class="field"><label>Date</label><input name="date" type="date" value="${today()}" required></div><div class="field"><label>Category</label><select name="category"><option>Utilities</option><option>Cleaning supplies</option><option>Repairs</option><option>Staff</option><option>Food & beverage</option><option>Other</option></select></div><div class="field full"><label>Description *</label><input name="description" required></div><div class="field full"><label>Amount (KSh) *</label><input name="amount" type="number" min="1" required></div></div><div class="modal-actions"><button type="button" class="btn" onclick="closeModal()">Cancel</button><button class="btn primary">Save expense</button></div></form>`);$('#expenseForm').addEventListener('submit',e=>{e.preventDefault();let f=new FormData(e.target);expenses.unshift({id:Date.now(),date:f.get('date'),category:f.get('category'),description:f.get('description'),amount:Number(f.get('amount'))});persist();closeModal();go('reports');toast('Expense saved')})}
+function deleteExpense(id){if(!confirm('Remove this expense entry?'))return;expenses=expenses.filter(e=>e.id!==id);persist();go('reports');toast('Expense removed')}
+function showModal(title,body){$('#modalTitle').textContent=title;$('#modalBody').innerHTML=body;$('#modalBackdrop').classList.add('show')}
+function closeModal(){$('#modalBackdrop').classList.remove('show')}
+function saveSettings(e){e.preventDefault();let f=new FormData(e.target);localStorage.setItem('staywise_property',f.get('property'));if($('#brandName'))$('#brandName').textContent=f.get('property');toast('Property settings saved')}
+function downloadBackup(){exportFile('staywise-demo-backup.json',JSON.stringify({rooms,bookings,payments,tasks,stock,expenses,sales,catalog,branches,rules,users},null,2),'application/json');toast('Backup downloaded')}
+function resetDemo(){if(!confirm('Reset all local demo records to the original sample data?'))return;localStorage.removeItem('staywise_demo');localStorage.removeItem('staywise_extended');localStorage.removeItem('staywise_logo');sessionStorage.removeItem('staywise_logged_in');location.reload()}
+
+/* ========== EVENTS ========== */
+$('#loginForm').addEventListener('submit',loginDemo);
+$('#nav').addEventListener('click',e=>{let b=e.target.closest('[data-page]');if(b)go(b.dataset.page)});
+document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));
+$('#bottombar').addEventListener('click',e=>{let b=e.target.closest('[data-page]');if(b)go(b.dataset.page)});
+$('#quickAdd').addEventListener('click',openBooking);
+$('#logoutBtn').addEventListener('click',logout);
+$('#closeModal').addEventListener('click',closeModal);
+$('#modalBackdrop').addEventListener('click',e=>{if(e.target===$('#modalBackdrop'))closeModal()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+$('#menuBtn').addEventListener('click',()=>$('#sidebar').classList.toggle('open'));
+$('#themeBtn').addEventListener('click',()=>{let d=document.documentElement;d.dataset.theme=d.dataset.theme==='dark'?'light':'dark';localStorage.setItem('staywise_theme',d.dataset.theme);$('#themeBtn').textContent=d.dataset.theme==='dark'?'☀':'☾'});
+if(localStorage.getItem('staywise_theme')){document.documentElement.dataset.theme=localStorage.getItem('staywise_theme');$('#themeBtn').textContent=document.documentElement.dataset.theme==='dark'?'☀':'☾'}
+
+/* Global click for report tiles & receipt/share actions */
+document.addEventListener('click',e=>{
+ const rep=e.target.closest('[data-report]');if(rep){openReport(rep.dataset.report);return}
+});
+
+/* ========== PWA (install banner + service worker) ========== */
+let deferredInstallPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;const b=document.getElementById('installAppBtn');if(b)b.style.display='inline-flex'});
+$('#installAppBtn').addEventListener('click',async()=>{
+ if(!deferredInstallPrompt){toast('To install, host over HTTPS and choose "Add to Home screen" in your browser menu.');return}
+ deferredInstallPrompt.prompt();try{const r=await deferredInstallPrompt.userChoice;if(r.outcome==='accepted')toast('Installing StayWise…')}catch(e){}
+ deferredInstallPrompt=null;
+});
+if('serviceWorker'in navigator&&location.protocol.startsWith('http')){
+ navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+/* ========== BOOT ========== */
+load();loadExtended();go('dashboard');applyLogo();showLogin();
+</script>
+</body>
+</html>
