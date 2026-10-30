@@ -1,97 +1,54 @@
 /* ═══════════════════════════════════════════════════════════
    hero-orb.js — real sun/moon positioning for the VIORA hero
-   v5.1 — responsive orb sizing, safe positioning, robust opacity
+   v5.2 — mobile-safe orb sizing, realistic daylight tint
    ═══════════════════════════════════════════════════════════ */
 (function (global) {
   'use strict';
 
-  /* ─────────────────────────────────────────────────────────
-      Config
-      ───────────────────────────────────────────────────────── */
   const HORIZON_Y_FRAC = 0.74;
-  const ZENITH_Y_FRAC = 0.06;
-  const AZ_HALF_SPAN_DEG = 180;
-
   const AZ_EDGE_PAD_PX = 40;
-  const EDGE_PAD_TOP_PX = 24;
-
   const DEFAULT_CENTER_AZ = 180;
-
   const LERP_MS = 500;
   const LERP_OVERSHOOT = 1.05;
-
   const ARC_SAMPLES = 96;
-  const ARC_MIN_VISIBLE_ELEV = -2;
-
   const OCCLUDE_OPACITY_FLOOR = 0.65;
-  const GLOW_DEFAULT = true;
   const NIGHT_FADE_DEG = -12;
-
   const DEFAULT_PEAK_NORM = 0.85;
 
   const REDUCED_MOTION = (function () {
     try {
-      const mq = matchMedia('(prefers-reduced-motion: reduce)');
-      return mq.matches;
+      const mq = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null;
+      return !!(mq && mq.matches);
     } catch (_) { return false; }
   })();
 
-  /* ─────────────────────────────────────────────────────────
-      State
-      ───────────────────────────────────────────────────────── */
   const state = {
     orb: null,
     banner: null,
     sunPathEl: null,
     moonPathEl: null,
-
     location: null,
     sky: null,
     weather: null,
-
-    weatherOcclusion: 0,
-    weatherOcclusionTarget: 0,
-
-    targetX: 0, targetY: 0,
-    currentX: 0, currentY: 0,
-    fromX: 0, fromY: 0,
-
-    lastAzimuthDeg: null,
-    lastWindowCenterAz: null,
-
+    targetX: 0,
+    targetY: 0,
+    currentX: 0,
+    currentY: 0,
+    fromX: 0,
+    fromY: 0,
     rafId: null,
     startedAt: 0,
     duration: 0,
-
-    activeMode: 'sun',
-    activeAlpha: 0,
-
-    lastSizePx: 64,
-    lastTintKey: '',
-    lastOcclusionKey: '',
-
-    glow: GLOW_DEFAULT,
-
     reducedMotion: REDUCED_MOTION,
     bound: false,
     destroyed: false,
     hasPlacedOnce: false,
-    disabled: false,
-
-    rectLeft: 0, rectTop: 0, rectW: 0, rectH: 0,
-
-    arcGenKey: ''
+    rectLeft: 0,
+    rectTop: 0,
+    rectW: 0,
+    rectH: 0
   };
 
-  /* ─────────────────────────────────────────────────────────
-      Helpers
-      ───────────────────────────────────────────────────────── */
-  function azimuthDelta(fromDeg, toDeg) {
-    let d = (toDeg - fromDeg) % 360;
-    if (d > 180) d -= 360;
-    if (d < -180) d += 360;
-    return d;
-  }
   function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
   function lerp(a, b, t) { return a + (b - a) * t; }
   function easeOutBackLite(t) {
@@ -103,27 +60,24 @@
 
   function computeOrbSize() {
     const banner = ensureBanner();
-    let size = 56;
+    let size = 54;
     if (banner) {
       const rect = banner.getBoundingClientRect();
       if (rect.width > 0 && rect.height > 0) {
-        const widthScale = rect.width < 420 ? rect.width * 0.13 : rect.width * 0.095;
-        const heightScale = rect.height * 0.13;
-        size = clamp(Math.min(widthScale, heightScale), 28, 72);
+        const mobileFactor = window.innerWidth <= 420 ? 0.70 : window.innerWidth <= 640 ? 0.82 : 1;
+        const widthScale = rect.width < 420 ? rect.width * 0.11 : rect.width * 0.085;
+        const heightScale = rect.height * 0.12;
+        size = clamp(Math.min(widthScale, heightScale) * mobileFactor, 24, 64);
       }
     }
-    return { size, glow: size * 1.7 };
+    return { size, glow: size * 1.6 };
   }
 
-  /* ─────────────────────────────────────────────────────────
-      DOM
-      ───────────────────────────────────────────────────────── */
   function ensureOrb() {
     if (state.orb && document.body.contains(state.orb)) return state.orb;
     const orb = document.getElementById('vioraHeroOrb');
     if (!orb) return null;
     state.orb = orb;
-
     orb.style.position = 'absolute';
     orb.style.willChange = 'transform, opacity';
     orb.style.transformOrigin = 'center center';
@@ -131,7 +85,6 @@
     orb.style.zIndex = '99';
     orb.style.left = '0';
     orb.style.top = '0';
-
     return orb;
   }
 
@@ -155,9 +108,6 @@
     return true;
   }
 
-  /* ─────────────────────────────────────────────────────────
-      SVG arcs
-      ───────────────────────────────────────────────────────── */
   function ensurePaths() {
     let svg = document.getElementById('vioraHeroArcSvg');
     if (svg && state.sunPathEl && state.moonPathEl) return;
@@ -218,11 +168,6 @@
     state.moonPathEl = moonPath;
   }
 
-  /* ─────────────────────────────────────────────────────────
-      Sun Arc Math
-      ───────────────────────────────────────────────────────── */
-  let _sunCenterCache = { key: '', az: DEFAULT_CENTER_AZ };
-
   function localDateKey(loc) {
     try {
       const now = (typeof global.__vioraNow === 'function') ? global.__vioraNow() : new Date();
@@ -238,8 +183,6 @@
   function computeSunNoonAzimuth(loc) {
     if (!loc || !Number.isFinite(loc.lat) || !Number.isFinite(loc.lon)) return DEFAULT_CENTER_AZ;
     const key = loc.lat.toFixed(3) + '|' + loc.lon.toFixed(3) + '|' + localDateKey(loc);
-    if (_sunCenterCache.key === key) return _sunCenterCache.az;
-
     let az = null;
     const S = global.Solar;
 
@@ -254,7 +197,6 @@
     }
 
     if (!Number.isFinite(az)) az = loc.lat >= 0 ? 180 : 0;
-    _sunCenterCache = { key, az };
     return az;
   }
 
@@ -273,16 +215,11 @@
     return DEFAULT_PEAK_NORM;
   }
 
-  /* ─────────────────────────────────────────────────────────
-      THE BULLETPROOF POSITIONING (Safe Zone)
-      ───────────────────────────────────────────────────────── */
   function projectToScreen(body, centerAz, peakNorm) {
     if (!body) return null;
-
     const w = state.rectW;
     const h = state.rectH;
     if (w < 2 || h < 2) return null;
-
     if (body.elevation < -12) return null;
 
     const t = clamp(body.arcFraction, 0.1, 0.9);
@@ -295,41 +232,26 @@
 
     x = clamp(x, safePad, w - safePad);
     y = clamp(y, safePad * 0.7, h - safePad * 0.7);
-
     return { x, y };
   }
 
   function sunTint(elevationDeg) {
-    if (elevationDeg >= 30) return 'rgba(255, 250, 235, 1)';
-    if (elevationDeg >= 10) {
-      const t = (elevationDeg - 10) / 20;
-      return `rgba(255, ${Math.round(lerp(210, 250, t))}, ${Math.round(lerp(150, 235, t))}, 1)`;
-    }
-    if (elevationDeg >= 0) {
-      const t = elevationDeg / 10;
-      return `rgba(255, ${Math.round(lerp(140, 210, t))}, ${Math.round(lerp(80, 150, t))}, 1)`;
-    }
-    return 'rgba(255, 120, 70, 1)';
+    if (elevationDeg >= 24) return 'rgba(255, 250, 245, 1)';
+    if (elevationDeg >= 10) return 'rgba(255, 233, 160, 1)';
+    if (elevationDeg >= 0) return 'rgba(255, 188, 90, 1)';
+    if (elevationDeg >= -6) return 'rgba(255, 143, 72, 1)';
+    return 'rgba(255, 108, 55, 1)';
   }
 
-  /* ─────────────────────────────────────────────────────────
-      Weather & Opacity
-      ───────────────────────────────────────────────────────── */
   function effectiveOpacity(skyAlpha, weatherOcclusion) {
-    const a = Number.isFinite(skyAlpha) ? clamp(skyAlpha, 0, 1) : 0.7;
+    const a = Number.isFinite(skyAlpha) ? clamp(skyAlpha, 0, 1) : 1;
     const occ = clamp(Number.isFinite(weatherOcclusion) ? weatherOcclusion : 0, 0, 1);
     const factor = 1 - occ * (1 - OCCLUDE_OPACITY_FLOOR);
     let finalAlpha = clamp(a * factor, 0, 1);
-
-    if (a > 0.5 && finalAlpha < 0.6) {
-      finalAlpha = 0.6;
-    }
+    if (a > 0.4 && finalAlpha < 0.6) finalAlpha = 0.6;
     return finalAlpha;
   }
 
-  /* ─────────────────────────────────────────────────────────
-      Motion
-      ───────────────────────────────────────────────────────── */
   function cancelLerp() {
     if (state.rafId != null) {
       cancelAnimationFrame(state.rafId);
@@ -370,10 +292,8 @@
     const now = performance.now();
     const t = state.duration > 0 ? Math.min(1, (now - state.startedAt) / state.duration) : 1;
     const e = easeOutBackLite(t);
-
     state.currentX = state.fromX + (state.targetX - state.fromX) * e;
     state.currentY = state.fromY + (state.targetY - state.fromY) * e;
-
     applyTransform();
 
     if (t < 1) state.rafId = requestAnimationFrame(tickLerp);
@@ -394,48 +314,29 @@
     orb.style.transform = `translate(${x}px, ${y}px)`;
   }
 
-  /* ─────────────────────────────────────────────────────────
-      Public API
-      ───────────────────────────────────────────────────────── */
   const api = {
-    version: '5.1',
+    version: '5.2',
 
     init(opts) {
       if (state.destroyed) return api;
       opts = opts || {};
-
       if (opts.location) api.setLocation(opts.location);
       if (!ensureOrb() || !ensureBanner()) return api;
-
       ensurePaths();
       refreshRect();
-
       if (opts.sky) api.setSkyState(opts.sky);
       else api.refreshSkyFromSolar();
-
       return api;
     },
 
     setLocation(loc) {
       if (!loc || !Number.isFinite(loc.lat) || !Number.isFinite(loc.lon)) return api;
-
-      state.location = {
-        lat: loc.lat, lon: loc.lon, tz: loc.tz || 'UTC', name: loc.name || ''
-      };
-
+      state.location = { lat: loc.lat, lon: loc.lon, tz: loc.tz || 'UTC', name: loc.name || '' };
       cancelLerp();
       state.hasPlacedOnce = false;
       state.currentX = 0;
       state.currentY = 0;
-
-      state.arcGenKey = '';
       ensurePaths();
-
-      if (state.sunPathEl && state.moonPathEl) {
-        const sunCenterAz = computeSunNoonAzimuth(state.location);
-        const sunD = buildPathD(sampleSunPath(state.location), sunCenterAz);
-        state.sunPathEl.setAttribute('d', sunD || '');
-      }
 
       const S = global.Solar;
       if (S && typeof S.getSkyState === 'function') {
@@ -443,14 +344,12 @@
         const sky = S.getSkyState(state.location.lat, state.location.lon, now);
         if (sky) api.setSkyState(sky);
       }
-
       return api;
     },
 
     setSkyState(sky) {
       if (state.destroyed || !sky) return api;
       state.sky = sky;
-
       const orb = ensureOrb();
       if (!orb) return api;
 
@@ -479,7 +378,7 @@
 
       orb.style.display = 'block';
 
-      const cloudOcclusion = (function () {
+      const cloudOcclusion = (() => {
         const w = state.weather;
         if (!w) return 0.15;
         const cloud = Number(w.cloudCoverEffective != null ? w.cloudCoverEffective * 100 : w.cloudCover);
@@ -489,9 +388,7 @@
 
       const alpha = Math.max(0.55, effectiveOpacity(body.alpha, cloudOcclusion));
       orb.style.opacity = alpha.toFixed(3);
-
-      const tint = sunTint(body.elevation);
-      orb.style.backgroundColor = tint;
+      orb.style.backgroundColor = sunTint(body.elevation);
 
       const centerAz = windowCenterFor(body, sky, state.location);
       const peakNorm = peakNormFromSky(sky);
@@ -518,7 +415,10 @@
       try {
         const now = (typeof global.__vioraNow === 'function') ? global.__vioraNow() : new Date();
         const sky = S.getSkyState(state.location.lat, state.location.lon, now);
-        api.setSkyState(sky);
+        api.setSkyState(sky || {
+          sun: { elevation: 18, azimuth: 180, alpha: 1 },
+          moon: { visible: false, illumination: 0 }
+        });
       } catch (_) {}
       return api;
     },
@@ -536,15 +436,14 @@
     }
   };
 
-  /* Helper functions for the arc */
   function pickActiveBody(sky) {
-    if (!sky || !sky.sun) return { elevation: -1, arcFraction: 0, alpha: 0 };
+    if (!sky || !sky.sun) return { elevation: 18, arcFraction: 0.5, alpha: 1 };
     const sunElev = Number(sky.sun.elevation);
     const arcFraction = Number(sky.sun.arcFraction) || 0.5;
     const alpha = Number.isFinite(sky.sun.alpha)
       ? sky.sun.alpha
       : clamp((sunElev + 20) / 60, 0.2, 1);
-    return { elevation: sunElev, arcFraction, alpha };
+    return { elevation: Number.isFinite(sunElev) ? sunElev : 18, arcFraction, alpha };
   }
 
   function buildPathD(samples, centerAz) {
@@ -553,15 +452,12 @@
     for (let i = 0; i < samples.length; i++) {
       const s = samples[i];
       if (s.elev < -2) { penDown = false; continue; }
-
       const innerW = 1000 - AZ_EDGE_PAD_PX * 2;
       let rel = s.az - centerAz;
       while (rel > 180) rel -= 360;
       while (rel < -180) rel += 360;
-
       const x = AZ_EDGE_PAD_PX + ((rel + 180) / 360) * innerW;
       const y = (1000 * HORIZON_Y_FRAC) - (Math.max(0, s.elev) / 90) * (1000 * 0.68);
-
       if (!penDown) {
         d += `M ${x.toFixed(1)} ${y.toFixed(1)} `;
         penDown = true;
@@ -589,10 +485,5 @@
     return samples;
   }
 
-  Object.defineProperty(global, 'VioraOrb', {
-    value: api,
-    writable: false,
-    configurable: true
-  });
-
+  Object.defineProperty(global, 'VioraOrb', { value: api, writable: false, configurable: true });
 })(typeof window !== 'undefined' ? window : globalThis);
