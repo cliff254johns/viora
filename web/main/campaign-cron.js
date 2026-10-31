@@ -100,12 +100,14 @@ async function _refreshAllStats() {
       const result = resultsById[post.id];
       if (!result || result.ok === false) continue;
 
-      const peers = [];
-      for (const cc of campaigns) {
-        for (const p of (cc.posts || [])) {
-          if (p !== post && p.status === 'published' && p.stats) peers.push(p);
-        }
-      }
+      /* Precompute peer pool once — avoid O(n²) rebuild per stale post */
+  const allPublishedWithStats = [];
+  for (const cc of campaigns) {
+    if (!cc || !Array.isArray(cc.posts)) continue;
+    for (const p of cc.posts) {
+      if (p && p.status === 'published' && p.stats) allPublishedWithStats.push(p);
+    }
+  }
 
       post.stats = {
         views:     result.views     ?? null,
@@ -117,6 +119,7 @@ async function _refreshAllStats() {
       post.statsUpdatedAt = new Date().toISOString();
       post.statsSource = result.source || null;
 
+           const peers = allPublishedWithStats.filter(p => p.id !== post.id);
       const a = detectAnomaly(post, peers);
       if (a.type === 'spike') {
         _notify(
