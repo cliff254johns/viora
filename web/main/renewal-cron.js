@@ -66,11 +66,53 @@ export async function runRenewalCron() {
     scanned: 0,
     reminded: 0,
     expired: 0,
+    reconciled: 0,
     errors: 0,
     details: []
   };
 
   if (!D.db) { console.warn("[renewal-cron] no db"); return summary; }
+
+  /* ── Phase 0: reconcile paid-but-stuck subscription invoices ── */
+  try {
+    const invSnap = await D.get(D.ref(D.db, 'viora_data/orgs/viora/invoices'));
+    if (invSnap.exists()) {
+      const invoices = Object.values(invSnap.val());
+      for (const inv of invoices) {
+        if (!inv || !inv.subscriptionId || inv.status !== 'paid') continue;
+        if (inv._activationReconciledAt) continue;
+
+        const subSnap = await D.get(
+          D.ref(D.db, `viora_data/orgs/viora/subscriptions/${inv.subscriptionId}`)
+        );
+        if (!subSnap.exists()) continue;
+        const sub = subSnap.val();
+
+        const stuck =
+          sub.status === 'pending_payment' ||
+          sub.status === 'expired' ||
+          (sub.status === 'active' && sub.endDate && Date.parse(sub.endDate) < Date.now());
+
+        if (stuck) {
+          try {
+            const { handleSubscriptionInvoicePaid } = await import('./finance.js');
+            await handleSubscriptionInvoicePaid(inv);
+            await D.update(D.ref(D.db, `viora_data/orgs/viora/invoices/${inv.id}`), {
+              _activationReconciledAt: new Date().toISOString()
+            });
+            summary.reconciled++;
+            summary.details.push(`Reconciled: ${inv.number} → ${inv.subscriptionId}`);
+            console.log('[renewal-cron] ✓ Reconciled stuck sub from paid invoice', inv.number);
+          } catch (e) {
+            console.warn('[renewal-cron] reconcile failed for', inv.id, e);
+            summary.errors++;
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[renewal-cron] reconciliation pass failed:', e);
+  }
 
   let snap;
   try {
