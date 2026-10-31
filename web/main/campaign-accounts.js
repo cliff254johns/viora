@@ -431,7 +431,7 @@ export function openAccountEditor(platformKey, existingAccount) {
       connectedVia,
       verified,
       notes,
-      followers: a.followers || null,
+           followers: a.followers ?? null,
       followersUpdatedAt: a.followersUpdatedAt || null,
       createdAt: a.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
