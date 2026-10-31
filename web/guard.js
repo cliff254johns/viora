@@ -156,16 +156,40 @@
   setInterval(check, 60000);
 
   /* ── Also re-check on tab focus (catches admin flips fast) ──── */
-  document.addEventListener('visibilitychange', () => {
+   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) check();
   });
+
+  /* Instant re-check when the tab regains focus — makes
+     admin approval feel instant instead of 60 s slow. */
+  window.addEventListener('focus', () => check());
+
+  /* Also re-check when the user clicks anywhere on the overlay —
+     lets them force a refresh without waiting for the timer. */
+  document.addEventListener('click', (e) => {
+    if (e.target.closest && e.target.closest('#viora-guard-overlay')) check();
+  }, true);
 
   /* ── Expose a tiny API for advanced apps ────────────────────── */
   window.VioraGuard = {
     currentSubscription: () => currentSub,
     currentEvaluation:   () => currentEval,
     checkNow:            check,
-    disable:             () => { stopped = true; hideOverlay(); }
+    disable:             () => { stopped = true; hideOverlay(); },
+    /* Add a small "re-check" link to the overlay for stuck users */
+    _showRecheckLink: () => {
+      if (!overlay) return;
+      if (overlay.querySelector('.sg-recheck')) return;
+      const link = document.createElement('button');
+      link.className = 'sg-recheck';
+      link.textContent = '↻ Re-check now';
+      link.style.cssText =
+        'margin-top:14px;padding:8px 18px;background:transparent;' +
+        'border:1px solid rgba(0,212,255,.4);border-radius:40px;' +
+        'color:#7de8ff;font-size:.82rem;cursor:pointer;font-weight:600;';
+      link.onclick = check;
+      overlay.querySelector('div').appendChild(link);
+    }
   };
 
   /* ═══════════════════════════════════════════════════════════
@@ -224,8 +248,11 @@
           </div>
         ` : ''}
       </div>`;
-    document.body.appendChild(overlay);
+     document.body.appendChild(overlay);
     document.documentElement.style.overflow = 'hidden';
+    /* Add a manual re-check button so users can force a refresh
+       if they think the sub has just been approved. */
+    try { window.VioraGuard?._showRecheckLink?.(); } catch (_) {}
   }
 
   function hideOverlay() {
