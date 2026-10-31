@@ -425,6 +425,46 @@ function _notifySubscriptionActivated(sub, licId) {
    ═══════════════════════════════════════════════════════════════ */
 export async function onInvoicePaid(invoice) {
   if (!invoice) return invoice;
+
+  /* ── Safety net: if this is a subscription invoice and the sub is
+     still pending_payment / expired / grace, force-activate it.
+     This catches ANY payment path that forgot to call us directly. ── */
+  if (invoice.subscriptionId) {
+    try {
+      const subSnap = await D.get(D.ref(D.db, `${SUBSCRIPTION_PATH}/${invoice.subscriptionId}`));
+      if (subSnap.exists()) {
+        const sub = subSnap.val();
+        const needsActivation =
+          sub.status === 'pending_payment' ||
+          sub.status === 'expired' ||
+          (sub.status === 'active' && sub.endDate && Date.parse(sub.endDate) < Date.now());
+
+        if (needsActivation) {
+          const durationDays = Number(
+            (invoice.items || [])[0]?.extensionDays
+          ) || _planDays(sub.plan) || 30;
+
+          const newEnd = _extendEndDate(sub.endDate, durationDays);
+          await D.update(D.ref(D.db, `${SUBSCRIPTION_PATH}/${invoice.subscriptionId}`), {
+            status: 'active',
+            endDate: newEnd,
+            pendingInvoiceId: null,
+            pendingExtensionDays: null,
+            _activatedByInvoiceId: invoice.id,
+            _safetyNetActivatedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            renewalCount: invoice.isRenewal
+              ? (Number(sub.renewalCount) || 0) + 1
+              : (Number(sub.renewalCount) || 0)
+          });
+          console.log('[finance] ✓ Safety-net activated sub', invoice.subscriptionId, '→ endDate:', newEnd);
+          toast('✅ Subscription activated.', 'success');
+        }
+      }
+    } catch (e) {
+      console.warn('[finance] safety-net activation failed:', e);
+    }
+  }
   const invoices = liveInvoices();
   const liveInvoice = invoices.find(i => i && i.id === invoice.id) || null;
   if (invoice._paidProcessedAt || (liveInvoice && liveInvoice._paidProcessedAt)) {
