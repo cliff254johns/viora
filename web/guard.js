@@ -59,6 +59,8 @@
     return null;
   }
 
+    let _lastNudgeAt = null;
+
   function evaluate(sub, now) {
     if (!sub) return { allowed: false, reason: 'missing' };
     if (sub.status === 'cancelled') return { allowed: false, reason: 'cancelled' };
@@ -127,7 +129,16 @@
       }
       resolvedId = id;
       const snap = await fetchJson(`${DB_URL}/${SUB_PATH}/${id}.json?cb=${Date.now()}`);
-      currentSub = snap || null;
+         currentSub = snap || null;
+
+      /* If admin bumped the nudge timestamp, shorten the next poll
+         so the client refreshes within ~5 s. */
+      const nudgeAt = currentSub && currentSub._nudgeAt;
+      if (nudgeAt && nudgeAt !== _lastNudgeAt) {
+        _lastNudgeAt = nudgeAt;
+        setTimeout(check, 3000);
+      }
+
       currentEval = evaluate(currentSub, Date.now());
 
       if (currentEval.allowed) {
