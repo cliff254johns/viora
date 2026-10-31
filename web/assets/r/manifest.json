@@ -1,0 +1,23 @@
+{
+  "name": "BodaBiz",
+  "short_name": "BodaBiz",
+  "start_url": "/bodabiz.html",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#1769ff",
+  "background_color": "#f5f6fa",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%231769ff'/%3E%3Ctext x='50%25' y='58%25' font-size='112' font-family='Arial' font-weight='bold' text-anchor='middle' fill='white'%3EB%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%231769ff'/%3E%3Ctext x='50%25' y='58%25' font-size='300' font-family='Arial' font-weight='bold' text-anchor='middle' fill='white'%3EB%3C/text%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
