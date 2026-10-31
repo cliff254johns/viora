@@ -49,7 +49,7 @@
     if (resolvedId) return resolvedId;
 
     // Fetch all subscriptions once, match by key/slug
-    const all = await fetchJson(`${DB_URL}/${SUB_PATH}.json`);
+    const all = await fetchJson(`${DB_URL}/${SUB_PATH}.json?cb=${Date.now()}`);
     if (!all) return null;
     for (const [id, s] of Object.entries(all)) {
       if (!s) continue;
@@ -126,7 +126,7 @@
         return;
       }
       resolvedId = id;
-      const snap = await fetchJson(`${DB_URL}/${SUB_PATH}/${id}.json`);
+      const snap = await fetchJson(`${DB_URL}/${SUB_PATH}/${id}.json?cb=${Date.now()}`);
       currentSub = snap || null;
       currentEval = evaluate(currentSub, Date.now());
 
