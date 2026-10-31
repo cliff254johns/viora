@@ -591,11 +591,11 @@ async function _generateText() {
     if (typeof callFn !== 'function') throw new Error('callFn unavailable');
 
     /* Generate for the FIRST platform; worker returns per-platform variants for all */
-    const primaryPlatform = c.platforms[0];
-
+      /* Send all selected platforms so the worker can tailor variants */
     const res = await callFn(ENDPOINTS.generatePost, {
       brief: c.brief,
-      platform: primaryPlatform,
+      platform: c.platforms[0],
+      platforms: c.platforms.slice(),
       pillar: c.pillar,
       tone: c.tone,
       audience: c.audience,
@@ -609,10 +609,15 @@ async function _generateText() {
       throw new Error(res?.error || 'Worker returned no content');
     }
 
-    /* Fill each selected platform's caption from the worker's variants object */
+     /* Fill each selected platform's caption from the worker's variants object */
+    const missing = [];
     for (const key of c.platforms) {
+      const v = res?.variants && res.variants[key];
       const caption = captionForPlatform(res, key);
       const hashtags = Array.isArray(res.hashtags) ? res.hashtags.slice(0, 15) : [];
+      if (!v && c.platforms.length > 1 && String(res.text || '').trim()) {
+        missing.push(key);
+      }
       c.perPlatform[key] = {
         ...(c.perPlatform[key] || {}),
         caption: caption || '',
@@ -620,11 +625,18 @@ async function _generateText() {
       };
     }
 
-    _renderComposer();
-    SAFE.toast(
-      `Generated for ${c.platforms.length} platform${c.platforms.length === 1 ? '' : 's'}${res.usedTrends ? ' · used current trends' : ''}.`,
-      'success'
-    );
+       _renderComposer();
+    if (missing.length) {
+      SAFE.toast(
+        `Generated — but no tailored variant for: ${missing.map(k => PLATFORMS[k].label).join(', ')}. These reuse the base caption.`,
+        'warning'
+      );
+    } else {
+      SAFE.toast(
+        `Generated for ${c.platforms.length} platform${c.platforms.length === 1 ? '' : 's'}${res.usedTrends ? ' · used current trends' : ''}.`,
+        'success'
+      );
+    }
   } catch (e) {
     console.error('[composer] generate failed', e);
     SAFE.toast('Generation failed: ' + (e.message || 'unknown'), 'error');
@@ -944,8 +956,8 @@ function _renderFanoutLog() {
         <i class="${meta.icon}" style="color:${meta.color};"></i>
         <span style="flex:1;font-size:.82rem;font-weight:600;">${esc(meta.label)}</span>
         ${badge}
-        ${r.ok && r.mode === 'compose-link' && r.composeUrl
-          ? `<a href="${esc(r.composeUrl)}" target="_blank" rel="noopener" class="btn btn-primary btn-xs"><i class="fa-solid fa-arrow-up-right-from-square"></i></button>`
+                ${r.ok && r.mode === 'compose-link' && r.composeUrl
+          ? `<a href="${esc(r.composeUrl)}" target="_blank" rel="noopener" class="btn btn-primary btn-xs"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>`
           : ''}
         ${r.error
           ? `<span style="font-size:.68rem;color:var(--accent-red);">${esc(r.error)}</span>`
