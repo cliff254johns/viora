@@ -17,6 +17,18 @@
 @media(max-width:850px){.nav{gap:12px}.searchbox{grid-template-columns:1fr 1fr}.searchbox input{grid-column:1/-1;border:0}.searchbox .btn{grid-column:1/-1}.filters{grid-template-columns:repeat(2,1fr)}.filters .widefilter{grid-column:1/-1}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.categories{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.shell{padding:0 13px}.top{height:62px}.nav{display:none;position:absolute;top:60px;left:12px;right:12px;z-index:20;background:white;border:1px solid var(--line);border-radius:15px;padding:13px;box-shadow:var(--shadow);flex-direction:column;align-items:stretch}.nav.open{display:flex}.nav a{padding:9px}.menu{display:block}.hero{padding:23px 18px;min-height:370px;border-radius:22px;background-position:62% center}.hero h1{font-size:36px;letter-spacing:-1.5px}.hero p{font-size:13px}.searchbox{grid-template-columns:1fr}.searchbox input,.searchbox .btn{grid-column:auto}.searchbox select{width:100%}.statsline{gap:12px}.section{margin:26px 0}.sectionhead h2{font-size:19px}.cards{grid-template-columns:1fr}.riderphoto{height:190px}.filters{grid-template-columns:1fr 1fr;padding:10px}.filters .widefilter{grid-column:1/-1}.locationbox{grid-template-columns:1fr}.howsteps{grid-template-columns:1fr}.join{align-items:flex-start;flex-direction:column}.modal{border-radius:22px 22px 0 0;padding:18px 15px calc(20px + env(safe-area-inset-bottom));max-height:94vh}.overlay{padding:0;align-items:flex-end}.modalhero{grid-template-columns:105px 1fr;gap:12px}.modalhero img{width:105px;height:120px}.modal h2{font-size:20px}.servicegrid{grid-template-columns:1fr 1fr}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+.experience-strip{display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:12px;margin:25px 0 8px}
+.experience-tile{position:relative;min-height:170px;border-radius:20px;overflow:hidden;background:#dce8dc;box-shadow:var(--shadow)}
+.experience-tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .45s}
+.experience-tile:hover img{transform:scale(1.045)}
+.experience-tile:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#0b2119c9,transparent 72%)}
+.experience-tile div{position:absolute;z-index:1;left:16px;right:12px;bottom:14px;color:white}
+.experience-tile strong{display:block;font-size:15px;letter-spacing:-.3px}
+.experience-tile small{display:block;color:#e4eee5;font-size:11px;margin-top:3px}
+.trustline{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 4px}
+.trustline span{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);padding:8px 11px;border-radius:99px;color:#496052;font-size:11px;font-weight:750}
+@media(max-width:700px){.experience-strip{grid-template-columns:1fr 1fr}.experience-tile:first-child{grid-column:1/-1;min-height:190px}.experience-tile{min-height:145px}}
 </style>
 </head>
 <body>
@@ -29,6 +41,15 @@
 <div class="popular"><b>Try:</b><button class="suggestion" data-query="Parcel delivery">Parcel delivery</button><button class="suggestion" data-query="Passenger transport">Passenger transport</button><button class="suggestion" data-query="Meru town">Meru town</button><button class="suggestion" data-query="Kisumu">Kisumu</button></div>
 </section>
 <div class="statsline" id="stats"><span><strong>—</strong> published riders</span><span><strong>—</strong> currently available</span><span><strong>—</strong> counties represented</span><span id="freshness">Connecting to rider listings…</span></div>
+
+<div class="shell">
+ <div class="experience-strip" aria-label="Explore BodaBiz services">
+  <article class="experience-tile"><img src="https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1100&q=85" alt="Motorcycle ready for a ride" loading="lazy"><div><strong>Your next ride starts here</strong><small>Find local riders and agree your fare directly</small></div></article>
+  <article class="experience-tile"><img src="https://images.unsplash.com/photo-1607082349566-187342175e2f?auto=format&fit=crop&w=800&q=85" alt="Parcel delivery service" loading="lazy"><div><strong>Parcel delivery</strong><small>Local errands and deliveries</small></div></article>
+  <article class="experience-tile"><img src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=85" alt="Shopping and errands" loading="lazy"><div><strong>Everyday errands</strong><small>Discover services near you</small></div></article>
+ </div>
+ <div class="trustline"><span>✓ Browse public rider profiles</span><span>✓ Compare listed services</span><span>✓ Contact riders who share their number</span><span>✓ Explore across Kenya</span></div>
+</div>
 <section class="section" id="services"><div class="sectionhead"><div><h2>What do you need today?</h2><p>Choose a service to find riders who have listed it.</p></div></div><div class="categories" id="categories"></div></section>
 <section class="section" id="riders"><div class="sectionhead"><div><h2>Meet local riders</h2><p>Profiles and services published by riders themselves.</p></div><span class="count" id="count">Loading riders…</span></div>
 <div class="filters"><input id="townFilter" placeholder="Town / shopping centre"><input id="estateFilter" placeholder="Estate / village"><input id="stageFilter" placeholder="Boda stage"><input id="coverageFilter" placeholder="Service coverage area"><select id="availabilityFilter"><option value="">Any availability</option><option value="yes">Available now</option><option value="no">Currently unavailable</option><option value="unknown">Status not provided</option></select><select id="sort"><option value="newest">Recently added</option><option value="name">Name A–Z</option><option value="available">Availability first</option></select><button class="btn soft widefilter" id="clear">Clear filters</button></div>
@@ -49,8 +70,8 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const arr=v=>Array.isArray(v)?v:Object.values(v||{});
 const listServices=r=>[...new Set([...(Array.isArray(r.services)?r.services:[]),...arr(r.serviceCatalog).map(x=>x?.name).filter(Boolean)])];
 const locationText=r=>[r.county,r.subcounty,r.city,r.estate,r.village,r.market,r.stageName,...(r.serviceCoverage||[])].filter(Boolean).join(' · ');
-const phone=r=>{let n=String(r.phone||'').replace(/\D/g,'');if(n.startsWith('0'))n='254'+n.slice(1);if(n.startsWith('7')||n.startsWith('1'))n='254'+n;return /^254[17]\d{8}$/.test(n)?n:''};
-function imageTag(url,name,cls=''){const safe=String(url||'');if(!/^https?:\/\//i.test(safe))return `<div class="fallback ${cls}">🏍️</div>`;return `<img class="${cls}" src="${esc(safe)}" alt="${esc(name||'Rider photo')}" loading="lazy" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'fallback',textContent:'🏍️'}))">`}
+const phone=r=>{if(r.phonePublic!==true)return '';let n=String(r.phone||'').replace(/\D/g,'');if(n.startsWith('0'))n='254'+n.slice(1);if(n.startsWith('7')||n.startsWith('1'))n='254'+n;return /^254[17]\d{8}$/.test(n)?n:''};
+function imageTag(url,name,cls=''){const safe=String(url||'');if(!/^(https?:\/\/|data:image\/(jpeg|png|webp);base64,)/i.test(safe))return `<div class="fallback ${cls}">🏍️</div>`;return `<img class="${cls}" src="${esc(safe)}" alt="${esc(name||'Rider photo')}" loading="lazy" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'fallback',textContent:'🏍️'}))">`}
 function serviceCategory(name){const n=norm(name);if(/parcel|deliver|document|courier/.test(n))return 'Parcel Delivery';if(/passenger|ride|transport|trip/.test(n))return 'Passenger Transport';if(/shop|errand|market|collect/.test(n))return 'Shopping and Errands';if(/business/.test(n))return 'Business Deliveries';if(/private|booking/.test(n))return 'Private Bookings';if(/schedule|school run/.test(n))return 'Scheduled Transport';return 'Custom Services'}
 function serviceList(r){return arr(r.serviceCatalog).filter(x=>x&&typeof x==='object'&&x.name).map(x=>({...x,name:String(x.name).slice(0,100)}))}
 function status(r){return typeof r.available==='boolean'?(r.available?'Available now':'Currently unavailable'):'Status not provided'}
