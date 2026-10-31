@@ -823,7 +823,11 @@ async function approveRequest(requestId) {
       ? null
       : new Date(Date.now() + durationDays * 86400000).toISOString();
 
-    const planModules = modulesFromStorage(plan.modules);
+     const planModules = modulesFromStorage(plan.modules);
+
+    /* Store extensionDays so finance.js can compute the correct endDate
+       regardless of which code path created the invoice. */
+    const _invoiceExtensionDays = Number(plan.durationDays) || 30;
 
     const subscription = {
       id: subId,
