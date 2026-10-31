@@ -1,12 +1,13 @@
 /* ═══════════════════════════════════════════════════════════════
-   VIORA — Universal subscription guard
-   Drop this in every product. It self-boots.
-   ═══════════════════════════════════════════════════════════════ */
+    VIORA — Universal subscription guard
+    Drop this in every product. It self-boots.
+    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
 
   /* ── Config ─────────────────────────────────────────────────── */
   const SUB_PATH = 'viora_data/orgs/viora/subscriptions';
+  const INVOICES_PATH = 'viora_data/orgs/viora/invoices';
   const DB_URL   = 'https://cliffclient-35ec5-default-rtdb.europe-west1.firebasedatabase.app';
   const PORTAL   = 'https://viora.co.ke/client.html';
   const WHATSAPP = '254713428774';
@@ -59,7 +60,47 @@
     return null;
   }
 
-    let _lastNudgeAt = null;
+  async function hydratePaidSubscriptionState(sub) {
+    if (!sub || !sub.id) return sub;
+
+    const statusIsBlocked = sub.status === 'pending_payment' || sub.status === 'expired' || sub.status === 'invalid';
+    if (!statusIsBlocked) return sub;
+
+    try {
+      const allInvoices = await fetchJson(`${DB_URL}/${INVOICES_PATH}.json?cb=${Date.now()}`);
+      if (!allInvoices) return sub;
+
+      const paidMatches = Object.values(allInvoices)
+        .filter((inv) => inv && inv.subscriptionId === sub.id && (inv.status === 'paid' || inv._paidProcessedAt || inv.paidAt))
+        .sort((a, b) => {
+          const ta = Date.parse(a.paidAt || a._paidProcessedAt || a.updatedAt || a.createdAt || 0) || 0;
+          const tb = Date.parse(b.paidAt || b._paidProcessedAt || b.updatedAt || b.createdAt || 0) || 0;
+          return tb - ta;
+        });
+
+      if (!paidMatches.length) return sub;
+
+      const latestPaid = paidMatches[0];
+      const firstItem = Array.isArray(latestPaid.items) ? latestPaid.items[0] : null;
+      const capturedDays = Number(firstItem && firstItem.extensionDays) || Number(sub.pendingExtensionDays) || 30;
+      const baseEnd = Date.parse(sub.endDate || '') || Date.now();
+      const nextEnd = new Date(Math.max(Date.now(), baseEnd) + capturedDays * 86400000).toISOString();
+
+      return {
+        ...sub,
+        status: 'active',
+        endDate: nextEnd,
+        graceHours: Number(sub.graceHours) || DEFAULT_GRACE_HOURS,
+        _paidInvoiceRecoveredAt: new Date().toISOString(),
+        _recoveredFromInvoice: latestPaid.id,
+      };
+    } catch (e) {
+      console.warn('[viora-guard] paid-invoice recovery failed:', e);
+      return sub;
+    }
+  }
+
+  let _lastNudgeAt = null;
 
   function evaluate(sub, now) {
     if (!sub) return { allowed: false, reason: 'missing' };
@@ -129,7 +170,8 @@
       }
       resolvedId = id;
       const snap = await fetchJson(`${DB_URL}/${SUB_PATH}/${id}.json?cb=${Date.now()}`);
-         currentSub = snap || null;
+      currentSub = snap || null;
+      currentSub = await hydratePaidSubscriptionState(currentSub);
 
       /* If admin bumped the nudge timestamp, shorten the next poll
          so the client refreshes within ~5 s. */
@@ -167,7 +209,7 @@
   setInterval(check, 60000);
 
   /* ── Also re-check on tab focus (catches admin flips fast) ──── */
-   document.addEventListener('visibilitychange', () => {
+  document.addEventListener('visibilitychange', () => {
     if (!document.hidden) check();
   });
 
@@ -259,7 +301,7 @@
           </div>
         ` : ''}
       </div>`;
-     document.body.appendChild(overlay);
+      document.body.appendChild(overlay);
     document.documentElement.style.overflow = 'hidden';
     /* Add a manual re-check button so users can force a refresh
        if they think the sub has just been approved. */
