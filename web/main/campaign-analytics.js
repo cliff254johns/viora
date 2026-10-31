@@ -363,10 +363,10 @@ function _renderCompetitors() {
   host.querySelectorAll('[data-comp-remove]').forEach(b => {
     b.addEventListener('click', async () => {
       if (!confirm('Remove this competitor?')) return;
-      const id = b.getAttribute('data-comp-remove');
-      const list = (ctx().state?.data?.competitorBenchmarks || []).filter(x => x.id !== id);
+           const id = b.getAttribute('data-comp-remove');
       try {
-        await ctx().set(ctx().ref(ctx().db, ctx().P('competitorBenchmarks')), list);
+        await ctx().remove(ctx().ref(ctx().db, ctx().P('competitorBenchmarks/' + id)));
+        const list = (ctx().state?.data?.competitorBenchmarks || []).filter(x => x.id !== id);
         ctx().state.data.competitorBenchmarks = list;
         _renderCompetitors();
       } catch (e) { ctx().toast?.('Remove failed: ' + e.message, 'error'); }
