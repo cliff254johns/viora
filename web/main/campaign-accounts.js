@@ -476,15 +476,15 @@ async function verifyAccount(id) {
       videoId: null,
     });
 
-    if (res && res.ok !== false) {
+    if (single && single.ok !== false && single.followers != null) {
       const updated = {
         ...account,
-        followers: res.followers ?? account.followers ?? null,
+        followers: single.followers,
         followersUpdatedAt: new Date().toISOString(),
         verified: true,
       };
       await set(ref(db, P(`socialAccounts/${id}`)), updated);
-      SAFE.toast(`Verified — ${Number(res.followers || 0).toLocaleString()} followers.`, 'success');
+      SAFE.toast(`Verified — ${Number(single.followers).toLocaleString()} followers.`, 'success');
       renderAccountsPanel();
     } else {
       SAFE.toast('Verification returned no data. Check the profile URL.', 'warning');
