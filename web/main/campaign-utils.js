@@ -123,7 +123,7 @@ export function makePost(draft = {}) {
     campaignId: draft.campaignId || '',
     platform: draft.platform || 'tiktok',
     pillar: draft.pillar || 'educational',
-    caption: String(draft.caption || '').slice(0, 2200),
+        caption: String(draft.caption || '').slice(0, (PLATFORMS[draft.platform]?.maxChars) || 2200),
     hashtags: Array.isArray(draft.hashtags) ? draft.hashtags.slice(0, 30) : [],
     imageBase64: draft.imageBase64 || null,
     imageMime: draft.imageMime || 'image/png',
