@@ -5,6 +5,9 @@
 (function () {
   'use strict';
 
+const GUARD_VERSION = 'v2-2026-10-31';
+console.log('%c[viora-guard] version ' + GUARD_VERSION, 'color:#22e6a0;font-weight:bold');
+
   /* ── Config ─────────────────────────────────────────────────── */
   const SUB_PATH = 'viora_data/orgs/viora/subscriptions';
   const INVOICES_PATH = 'viora_data/orgs/viora/invoices';
