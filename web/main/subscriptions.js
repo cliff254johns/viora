@@ -1240,12 +1240,13 @@ async function issueRenewalInvoice(sub) {
         currency: 'KES',
         tax: 0,
         notes: notes || 'Subscription renewal',
-        items: [{
+             items: [{
           description: `Subscription renewal — ${sub.productName} (+${days} days)`,
           amount,
           hours: null, rate: null,
           subscriptionId: sub.id,
-          extensionDays: days
+          extensionDays: days,
+          _planDays: days
         }],
         extraCharges: [],
         status: 'sent',
