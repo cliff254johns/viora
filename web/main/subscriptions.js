@@ -752,7 +752,25 @@ function bindEvents(now) {
 
   on('#subsExportCsvBtn', 'click', () => exportCsv());
 
-  on('#subsNewBtn', 'click', () => openNewSubscriptionModal());
+   on('#subsNewBtn', 'click', () => openNewSubscriptionModal());
+
+  on('#subsForceRefreshBtn', 'click', async () => {
+    try {
+      // Bump a "nudge" counter on each subscription. Guard polls this
+      // and re-evaluates when it changes, so open client tabs refresh fast.
+      const now = new Date().toISOString();
+      const subs = _allSubs();
+      for (const s of subs) {
+        if (!s || !s.id) continue;
+        await D.update(D.ref(D.db, `${SUBSCRIPTION_PATH}/${s.id}`), {
+          _nudgeAt: now
+        });
+      }
+      toast(`Nudged ${subs.length} subscription${subs.length === 1 ? '' : 's'} — clients will refresh within 5 s.`, 'success');
+    } catch (e) {
+      toast('Force refresh failed: ' + (e.message || 'unknown'), 'error');
+    }
+  });
 
   const searchEl = document.getElementById('subsSearch');
   if (searchEl) {
