@@ -172,9 +172,18 @@ console.log('%c[viora-guard] version ' + GUARD_VERSION, 'color:#22e6a0;font-weig
         return;
       }
       resolvedId = id;
-      const snap = await fetchJson(`${DB_URL}/${SUB_PATH}/${id}.json?cb=${Date.now()}`);
+            const snap = await fetchJson(`${DB_URL}/${SUB_PATH}/${id}.json?cb=${Date.now()}`);
       currentSub = snap || null;
       currentSub = await hydratePaidSubscriptionState(currentSub);
+
+      console.log('[viora-guard] fetched:', currentSub && {
+        id: currentSub.id,
+        status: currentSub.status,
+        endDate: currentSub.endDate,
+        endDateParsed: currentSub.endDate ? new Date(currentSub.endDate).toISOString() : 'INVALID',
+        now: new Date().toISOString(),
+        verdict: evaluate(currentSub, Date.now()).reason
+      });
 
       /* If admin bumped the nudge timestamp, shorten the next poll
          so the client refreshes within ~5 s. */
