@@ -472,6 +472,12 @@ function _bindComposerEvents() {
   /* Platform checkboxes */
   document.querySelectorAll('[data-cc-platform-input]').forEach(inp => {
     inp.addEventListener('change', () => {
+      /* Flush all textarea edits into state before re-rendering */
+      document.querySelectorAll('[data-cc-caption]').forEach(ta => {
+        const k = ta.getAttribute('data-cc-caption');
+        if (!c.perPlatform[k]) c.perPlatform[k] = { caption: '', hashtags: [] };
+        c.perPlatform[k].caption = ta.value;
+      });
       const key = inp.getAttribute('data-cc-platform-input');
       const idx = c.platforms.indexOf(key);
       if (inp.checked && idx < 0) c.platforms.push(key);
