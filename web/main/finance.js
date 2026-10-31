@@ -244,10 +244,85 @@ export async function handleSubscriptionInvoicePaid(invoice) {
   } catch (e) {
     console.warn('[finance] subscription fetch failed', e);
   }
+
+  /* ── If the sub record doesn't exist (client-paid-first flow),
+     create it from the invoice data so activation can proceed. ── */
   if (!sub) {
-    console.warn('[finance] subscription not found for invoice', invoice.number, subId);
-    toast('Invoice paid, but subscription record was not found.', 'warning');
-    return;
+    console.warn('[finance] subscription not found — creating from invoice', invoice.number, subId);
+
+    const firstItem = Array.isArray(invoice.items) ? invoice.items[0] : null;
+    const durationDays = Number(firstItem && firstItem.extensionDays) || 30;
+
+    const planType =
+      (firstItem && firstItem.billingCycle === 'quarterly') ? 'quarterly'
+      : (firstItem && firstItem.billingCycle === 'yearly')  ? 'yearly'
+      : (firstItem && firstItem.billingCycle === 'lifetime') ? 'lifetime'
+      : 'monthly';
+
+    const endDate = planType === 'lifetime'
+      ? null
+      : new Date(Date.now() + durationDays * 86400000).toISOString();
+
+    const client = D.getClient ? D.getClient(invoice.clientId) : null;
+
+    const newSub = {
+      id: subId,
+      clientId: invoice.clientId,
+      clientName: (client && client.name) || invoice.clientName || '',
+      clientEmail: (client && client.email) || invoice.clientEmail || '',
+      clientSlug: (client && client.name ? String(client.name).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') : 'client'),
+      productId: invoice.productId || (firstItem && firstItem.productId) || '',
+      productName: invoice.productName || (firstItem && firstItem.productName) || '',
+      plan: planType,
+      status: 'active',
+      startDate: new Date().toISOString(),
+      endDate,
+      graceHours: 72,
+      amountKES: Number(firstItem && firstItem.amount) || 0,
+      modules: (firstItem && firstItem.modules) || [],
+      renewalCount: 0,
+      _createdByInvoiceId: invoice.id,
+      _activatedByInvoiceId: invoice.id,
+      activatedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    try {
+      await D.set(D.ref(D.db, `${SUBSCRIPTION_PATH}/${subId}`), newSub);
+      sub = newSub;
+
+      /* Create the matching license record */
+      const licId = 'lic-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      await D.set(D.ref(D.db, `${LICENSES_PATH}/${licId}`), {
+        licenseKey: licId,
+        subscriptionId: subId,
+        productId: newSub.productId,
+        clientId: newSub.clientId,
+        deviceFingerprint: null,
+        installedAt: null,
+        lastCheckAt: null,
+        status: 'active',
+        issuedAt: new Date().toISOString(),
+        issuedByInvoiceId: invoice.id
+      });
+      await D.update(D.ref(D.db, `${SUBSCRIPTION_PATH}/${subId}`), {
+        licenseId: licId,
+        updatedAt: new Date().toISOString()
+      });
+      sub = { ...newSub, licenseId: licId };
+
+      await logActivity('edit', 'Subscription created from paid invoice',
+        `${newSub.clientName} — ${newSub.productName} (${invoice.number})`);
+
+      console.log('[finance] ✓ Sub + license created from invoice', invoice.id);
+    } catch (e) {
+      console.error('[finance] sub creation from invoice failed', e);
+      toast('Invoice paid, but subscription creation failed: ' + (e.message || e), 'error');
+      return;
+    }
+
+    /* Fall through to normal activation logic below */
   }
 
   const nowIso = new Date().toISOString();
@@ -432,7 +507,13 @@ export async function onInvoicePaid(invoice) {
   if (invoice.subscriptionId) {
     try {
       const subSnap = await D.get(D.ref(D.db, `${SUBSCRIPTION_PATH}/${invoice.subscriptionId}`));
-      if (subSnap.exists()) {
+
+      /* ── If the sub is missing entirely, delegate to
+         handleSubscriptionInvoicePaid — it will create it. ── */
+      if (!subSnap.exists()) {
+        console.warn('[finance] safety net: sub missing — delegating to handler', invoice.subscriptionId);
+        await handleSubscriptionInvoicePaid(invoice);
+      } else {
         const sub = subSnap.val();
         const needsActivation =
           sub.status === 'pending_payment' ||
