@@ -425,7 +425,7 @@ async function ensureSignedIn(){if(!cloudUser)throw new Error('Sign in to join t
 async function cloudAuth(mode){try{const phone=normalizePhone($('#cloudPhone').value),password=$('#cloudPassword').value;if(password.length<6)throw new Error('Cloud password must be at least 6 characters.');const email=emailForPhone(phone);let cred;if(mode==='signup')cred=await fb.createUserWithEmailAndPassword(fb.auth,email,password);else cred=await fb.signInWithEmailAndPassword(fb.auth,email,password);cloudUser=cred.user;const pRef=fb.ref(fb.db,'riders/'+cloudUser.uid+'/profile');const old=await fb.get(pRef);cloudProfile=old.exists()?old.val():{phone,displayName:cloudLocalName(),stageId:'',city:'',createdAt:Date.now()};window.BodaCloudProfile=cloudProfile;if(mode==='signup'||!old.exists())await fb.set(pRef,{...cloudProfile,phone,displayName:cloudLocalName(),createdAt:Date.now()});say('Cloud account connected.');await seedChallenges();await loadCloudFeed();await loadCloudProfile();await updateChallengeProgress();}catch(e){say(e.message||'Cloud sign-in failed. Your local ledger remains available.',true)}}
 $('#cloudSignup')?.addEventListener('click',()=>cloudAuth('signup'));$('#cloudSignin')?.addEventListener('click',()=>cloudAuth('signin'));
 $('#cloudSignout')?.addEventListener('click',async()=>{try{stopCloudListeners();await fb.signOut(fb.auth);cloudUser=null;say('Signed out. Local records remain available.');}catch(e){say(e.message,true)}});
-fb.onAuthStateChanged(fb.auth,async user=>{cloudUser=user;if(user){say('Signed in');try{const s=await fb.get(fb.ref(fb.db,'riders/'+user.uid+'/profile'));cloudProfile=s.val()||{};await seedChallenges();await loadCloudFeed();await loadCloudProfile();await updateChallengeProgress()}catch(e){say('Connected, but cloud data could not be loaded.',true)}}else{say('Sign in to join the community.');stopCloudListeners()}});
+fb.onAuthStateChanged(fb.auth,async user=>{cloudUser=user;if(user){say('Signed in');try{const s=await fb.get(fb.ref(fb.db,'riders/'+user.uid+'/profile'));cloudProfile=s.val()||{};await seedChallenges();await loadCloudFeed();await loadCloudProfile();await updateChallengeProgress();startBadgeSync();await updateChallengeProgress()}catch(e){say('Connected, but cloud data could not be loaded.',true)}}else{say('Sign in to join the community.');stopCloudListeners()}});
 function stopCloudListeners(){if(unsubFeed){unsubFeed();unsubFeed=null}if(unsubChallenges){unsubChallenges();unsubChallenges=null}stopPresence()}
 async function seedChallenges(){const key=wk();$('#challengeWeek').textContent=key;const r=fb.ref(fb.db,'challenges/'+key),s=await fb.get(r);if(s.exists())return;const base={trips:{title:'Trip Builder',description:'Record 20 income trips this week.',type:'trips',target:20,badgeId:'trip-builder'},savings:{title:'Steady Saver',description:'Record KSh 1,000 in savings this week.',type:'savings',target:1000,badgeId:'steady-saver'},days:{title:'Consistent Rider',description:'Record income on 5 different days.',type:'days',target:5,badgeId:'consistent-rider'}};await fb.set(r,base)}
 async function loadCloudFeed(){if(!cloudUser)return;const feed=$('#communityFeed');if(!feed)return;if(unsubFeed)unsubFeed();const stage=cloudProfile.stageId||'';let q=stage?fb.query(fb.ref(fb.db,'posts'),fb.orderByChild('stageId'),fb.equalTo(stage),fb.limitToLast(50)):fb.query(fb.ref(fb.db,'posts'),fb.orderByChild('createdAt'),fb.limitToLast(50));unsubFeed=fb.onValue(q,s=>{const rows=[];s.forEach(c=>{const p=c.val();if(!p.expiresAt||p.expiresAt>Date.now())rows.push({id:c.key,...p})});rows.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));feed.innerHTML=rows.length?rows.map(p=>`<article class="transaction" style="display:block"><strong>${esc(p.authorName||'Rider')}</strong><small class="muted"> · ${new Date(p.createdAt||Date.now()).toLocaleString()}</small><p>${esc(p.text)}</p><div class="hero-actions"><button class="btn ghost small" data-like="${esc(p.id)}">♥ ${Number(p.likeCount)||0}</button><button class="btn light small" data-report-post="${esc(p.id)}">Report</button></div></article>`).join(''):'<div class="empty">No recent posts yet. Start a useful conversation.</div>';feed.querySelectorAll('[data-like]').forEach(b=>b.addEventListener('click',()=>likePost(b.dataset.like)));feed.querySelectorAll('[data-report-post]').forEach(b=>b.addEventListener('click',()=>reportPost('post',b.dataset.reportPost)));},e=>say('Could not load community feed: '+e.message,true))}
@@ -438,16 +438,120 @@ async function loadCloudProfile(){if(!cloudUser)return;try{const s=await fb.get(
 async function syncPublishedServiceCatalogue(){
  if(!cloudUser){say('Sign in to your cloud rider account before publishing services.',true);return false}
  try{
-  const ref=fb.ref(fb.db,'publicProfiles/'+cloudUser.uid),snap=await fb.get(ref),current=snap.val()||{};
-  if(current.profileComplete!==true){say('Complete and publish your rider profile first, then your services will appear in the public directory.',true);return false}
-  const catalogue=(window.BodaGetRiderServices?.()||[]).slice(0,12).map(x=>({id:String(x.id||''),name:String(x.name||'').slice(0,100),price:Number(x.price)||0,description:String(x.description||'').slice(0,500),unit:String(x.unit||'per job').slice(0,40),category:String(x.category||'').slice(0,60),image:String(x.image||''),updatedAt:x.updatedAt||Date.now()}));
-  await fb.update(ref,{serviceCatalog:catalogue,services:catalogue.map(x=>x.name),servicesUpdatedAt:Date.now()});
+  const ref=fb.ref(fb.db,'publicProfiles/'+cloudUser.uid);
+  const snap=await fb.get(ref);
+  const current=snap.val()||{};
+  // Only require profileComplete when publishing the very first time.
+  // After that, allow catalogue updates freely.
+  if(current.profileComplete!==true){
+    say('Complete and publish your rider profile first, then your services will appear in the public directory.',true);
+    return false;
+  }
+  const catalogue=(window.BodaGetRiderServices?.()||[]).slice(0,12).map(x=>({
+    id:String(x.id||''),
+    name:String(x.name||'').slice(0,100),
+    price:Number(x.price)||0,
+    description:String(x.description||'').slice(0,500),
+    unit:String(x.unit||'per job').slice(0,40),
+    category:String(x.category||'').slice(0,60),
+    image:String(x.image||''),               // <-- keep the data URL, do not blank
+    updatedAt:Number(x.updatedAt)||Date.now()
+  }));
+  await fb.update(ref,{
+    serviceCatalog:catalogue,
+    services:catalogue.map(x=>x.name),
+    servicesUpdatedAt:Date.now()
+  });
   return true;
- }catch(e){say('Service saved locally, but cloud publishing failed: '+(e.message||'check database rules'),true);return false}
+ }catch(e){
+   say('Service saved locally, but cloud publishing failed: '+(e.message||'check database rules'),true);
+   return false;
+ }
 }
 window.BodaSyncServices=syncPublishedServiceCatalogue;
-$('#savePublicProfile')?.addEventListener('click',async()=>{try{await ensureSignedIn();const displayName=$('#profileName').value.trim().slice(0,60),city=$('#profileCity').value.trim().slice(0,60),stageName=$('#profileStage').value.trim().slice(0,80),slug=($('#profileSlug').value.trim()||((displayName+'-'+stageName).toLowerCase())).toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-|-$/g,'').slice(0,80);if(!displayName||!city||!stageName||!slug)throw new Error('Display name, city, stage and slug are required.');const services=$('#profileServices').value.split(',').map(x=>x.trim()).filter(Boolean).slice(0,12);let avatarUrl='';const file=$('#profileAvatar').files[0];if(file){if(!file.type.startsWith('image/'))throw new Error('Choose an image file.');avatarUrl=await resizeAvatar(file,40*1024)}const phonePublic=$('#phonePublic').checked;const county=$('#profileCounty').value.trim().slice(0,60),subcounty=$('#profileSubcounty').value.trim().slice(0,60),estate=$('#profileEstate').value.trim().slice(0,80),village=$('#profileVillage').value.trim().slice(0,80),market=$('#profileMarket').value.trim().slice(0,80),serviceCoverage=$('#profileCoverage').value.split(',').map(x=>x.trim()).filter(Boolean).slice(0,20);const privateProfile={...cloudProfile,phone:cloudProfile.phone||normalizePhone($('#cloudPhone').value),displayName,city,county,subcounty,estate,village,market,serviceCoverage,stageId:stageName.toLowerCase().replace(/\s+/g,'-'),presenceConsent:$('#presenceConsent').checked};const publicProfile={displayName,city,county,subcounty,estate,village,market,serviceCoverage,stageName,slug,services,serviceCatalog:(window.BodaGetRiderServices?.()||[]).map(x=>({id:String(x.id||''),name:String(x.name||'').slice(0,100),price:Number(x.price)||0,description:String(x.description||'').slice(0,500),unit:String(x.unit||'per job').slice(0,40),image:String(x.image||'').slice(0,1000),updatedAt:x.updatedAt||null})),available:$('#profileAvailable').checked,weeksActive:Number(cloudProfile.weeksActive)||1,badgeCount:Number(cloudProfile.badgeCount)||0,profileComplete:true,phonePublic,...(phonePublic?{phone:privateProfile.phone}:{}),...(avatarUrl?{avatarUrl}:{}),publishedAt:Date.now()};await fb.set(fb.ref(fb.db,'riders/'+cloudUser.uid+'/profile'),privateProfile);await fb.set(fb.ref(fb.db,'publicProfiles/'+cloudUser.uid),publicProfile);window.BodaCloudProfile=privateProfile;await syncPublishedServiceCatalogue();$('#publicLinkText').textContent='My public link: '+location.origin+'/riders.html?r='+encodeURIComponent(slug)+' · Copy/share it with riders and customers.';say('Profile saved.');if(privateProfile.presenceConsent)startPresence();else stopPresence()}catch(e){say(e.message||'Profile could not be saved.',true)}});
-function resizeAvatar(file,maxBytes){return new Promise((resolve,reject)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{URL.revokeObjectURL(url);const c=document.createElement('canvas'),ctx=c.getContext('2d');let w=img.width,h=img.height;const scale=Math.min(1,400/Math.max(w,h));c.width=Math.round(w*scale);c.height=Math.round(h*scale);ctx.drawImage(img,0,0,c.width,c.height);let q=.82;const next=()=>{const data=c.toDataURL('image/jpeg',q);if(Math.ceil(data.length*.75)<=maxBytes){resolve(data);return}if(q>.35){q-=.1;next()}else reject(new Error('Image is too large. Choose a smaller image.'))};next()};img.onerror=()=>reject(new Error('Could not read that image.'));img.src=url})}
+
+// Live badge sync: whenever admin awards/revokes a badge, mirror the count into the public profile.
+let unsubBadges=null;
+function startBadgeSync(){
+  if(!cloudUser)return;
+  if(unsubBadges){unsubBadges();unsubBadges=null}
+  unsubBadges=fb.onValue(fb.ref(fb.db,'riderBadges/'+cloudUser.uid),async snap=>{
+    const count=snap.exists()?Object.keys(snap.val()||{}).length:0;
+    if((Number(cloudProfile.badgeCount)||0)===count)return;
+    cloudProfile={...cloudProfile,badgeCount:count};
+    window.BodaCloudProfile=cloudProfile;
+    try{
+      await fb.update(fb.ref(fb.db,'publicProfiles/'+cloudUser.uid),{badgeCount:count,badgeUpdatedAt:Date.now()});
+    }catch(e){/* rules may block; admin writes it anyway */}
+  });
+}
+window.BodaStartBadgeSync=startBadgeSync;
+$('#savePublicProfile')?.addEventListener('click',async()=>{
+try{
+ await ensureSignedIn();
+ const displayName=$('#profileName').value.trim().slice(0,60);
+ const city=$('#profileCity').value.trim().slice(0,60);
+ const stageName=$('#profileStage').value.trim().slice(0,80);
+ const slug=($('#profileSlug').value.trim()||((displayName+'-'+stageName).toLowerCase()))
+   .toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-|-$/g,'').slice(0,80);
+ if(!displayName||!city||!stageName||!slug)throw new Error('Display name, city, stage and slug are required.');
+
+ const services=$('#profileServices').value.split(',').map(x=>x.trim()).filter(Boolean).slice(0,12);
+ let avatarUrl='';
+ const file=$('#profileAvatar').files[0];
+ if(file){if(!file.type.startsWith('image/'))throw new Error('Choose an image file.');avatarUrl=await resizeAvatar(file,40*1024);}
+
+ const phonePublic=$('#phonePublic').checked;
+ const county=$('#profileCounty').value.trim().slice(0,60);
+ const subcounty=$('#profileSubcounty').value.trim().slice(0,60);
+ const estate=$('#profileEstate').value.trim().slice(0,80);
+ const village=$('#profileVillage').value.trim().slice(0,80);
+ const market=$('#profileMarket').value.trim().slice(0,80);
+ const serviceCoverage=$('#profileCoverage').value.split(',').map(x=>x.trim()).filter(Boolean).slice(0,20);
+
+ // Build the catalogue from the rider's saved services so it is always in sync.
+ const catalogue=(window.BodaGetRiderServices?.()||[]).slice(0,12).map(x=>({
+   id:String(x.id||''),
+   name:String(x.name||'').slice(0,100),
+   price:Number(x.price)||0,
+   description:String(x.description||'').slice(0,500),
+   unit:String(x.unit||'per job').slice(0,40),
+   category:String(x.category||'').slice(0,60),
+   image:String(x.image||''),          // <-- keep the data URL
+   updatedAt:Number(x.updatedAt)||Date.now()
+ }));
+
+ const privateProfile={
+   ...cloudProfile,
+   phone:cloudProfile.phone||normalizePhone($('#cloudPhone').value),
+   displayName,city,county,subcounty,estate,village,market,serviceCoverage,
+   stageId:stageName.toLowerCase().replace(/\s+/g,'-'),
+   presenceConsent:$('#presenceConsent').checked
+ };
+
+ // IMPORTANT: set profileComplete:true in the SAME write that publishes the profile.
+ const publicProfile={
+   displayName,city,county,subcounty,estate,village,market,serviceCoverage,
+   stageName,slug,services,serviceCatalog:catalogue,
+   available:$('#profileAvailable').checked,
+   weeksActive:Number(cloudProfile.weeksActive)||1,
+   badgeCount:Number(cloudProfile.badgeCount)||0,
+   profileComplete:true,
+   phonePublic,
+   ...(phonePublic?{phone:privateProfile.phone}:{}),
+   ...(avatarUrl?{avatarUrl}:{}),
+   publishedAt:Date.now()
+ };
+
+ await fb.set(fb.ref(fb.db,'riders/'+cloudUser.uid+'/profile'),privateProfile);
+ await fb.set(fb.ref(fb.db,'publicProfiles/'+cloudUser.uid),publicProfile);
+ window.BodaCloudProfile=privateProfile;
+ $('#publicLinkText').textContent='My public link: '+location.origin+'/riders.html?r='+encodeURIComponent(slug);
+ say('Profile and '+catalogue.length+' service(s) published live.');
+if(privateProfile.presenceConsent)startPresence();else stopPresence();
+startBadgeSync();
+}catch(e){say(e.message||'Profile could not be saved.',true)}
+});function resizeAvatar(file,maxBytes){return new Promise((resolve,reject)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{URL.revokeObjectURL(url);const c=document.createElement('canvas'),ctx=c.getContext('2d');let w=img.width,h=img.height;const scale=Math.min(1,400/Math.max(w,h));c.width=Math.round(w*scale);c.height=Math.round(h*scale);ctx.drawImage(img,0,0,c.width,c.height);let q=.82;const next=()=>{const data=c.toDataURL('image/jpeg',q);if(Math.ceil(data.length*.75)<=maxBytes){resolve(data);return}if(q>.35){q-=.1;next()}else reject(new Error('Image is too large. Choose a smaller image.'))};next()};img.onerror=()=>reject(new Error('Could not read that image.'));img.src=url})}
 function encodeGeohash(lat,lon,precision=6){const chars='0123456789bcdefghjkmnpqrstuvwxyz';let latR=[-90,90],lonR=[-180,180],bits=0,ch=0,even=true,out='';while(out.length<precision){const r=even?lonR:latR,mid=(r[0]+r[1])/2,v=even?lon:lat;if(v>=mid){ch=(ch<<1)|1;r[0]=mid}else{ch=(ch<<1);r[1]=mid}even=!even;if(++bits===5){out+=chars[ch];bits=0;ch=0}}return out}
 async function startPresence(){if(!cloudUser||!$('#presenceConsent').checked||document.hidden)return;try{const pos=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:false,timeout:10000,maximumAge:60000}));const geohash=encodeGeohash(pos.coords.latitude,pos.coords.longitude,6),r=fb.ref(fb.db,'presence/'+cloudUser.uid);await fb.set(r,{geohash,updatedAt:Date.now(),visible:true});await fb.onDisconnect(r).remove();if(presenceTimer)clearInterval(presenceTimer);presenceTimer=setInterval(()=>{if(!document.hidden)startPresence()},90000);say('Approximate area sharing is on while the app is open.')}catch(e){say('Location sharing was not enabled: '+(e.message||'permission unavailable'),true)}}
 function stopPresence(){if(presenceTimer)clearInterval(presenceTimer);presenceTimer=null;if(cloudUser)fb.remove(fb.ref(fb.db,'presence/'+cloudUser.uid)).catch(()=>{})}
