@@ -530,18 +530,26 @@ try{
  };
 
  // IMPORTANT: set profileComplete:true in the SAME write that publishes the profile.
- const publicProfile={
-   displayName,city,county,subcounty,estate,village,market,serviceCoverage,
-   stageName,slug,services,serviceCatalog:catalogue,
-   available:$('#profileAvailable').checked,
-   weeksActive:Number(cloudProfile.weeksActive)||1,
-   badgeCount:Number(cloudProfile.badgeCount)||0,
-   profileComplete:true,
-   phonePublic,
-   ...(phonePublic?{phone:privateProfile.phone}:{}),
-   ...(avatarUrl?{avatarUrl}:{}),
-   publishedAt:Date.now()
- };
+// PUBLIC PROFILE: only County, Town, Market/Shopping Centre, Boda Stage are exposed.
+// Sub-county, Estate/Village and serviceCoverage stay PRIVATE in riders/{uid}/profile only.
+const publicProfile={
+  displayName,
+  county,
+  city,          // Town
+  market,        // Market / Shopping Centre
+  stageName,     // Boda Stage
+  slug,
+  services,
+  serviceCatalog:catalogue,
+  available:$('#profileAvailable').checked,
+  weeksActive:Number(cloudProfile.weeksActive)||1,
+  badgeCount:Number(cloudProfile.badgeCount)||0,
+  profileComplete:true,
+  phonePublic,
+  ...(phonePublic?{phone:privateProfile.phone}:{}),
+  ...(avatarUrl?{avatarUrl}:{}),
+  publishedAt:Date.now()
+};
 
  await fb.set(fb.ref(fb.db,'riders/'+cloudUser.uid+'/profile'),privateProfile);
  await fb.set(fb.ref(fb.db,'publicProfiles/'+cloudUser.uid),publicProfile);
