@@ -45,6 +45,23 @@ body.auth-locked .app{display:none!important}.auth-gate{min-height:100vh;display
 .service-upload{border:1.5px dashed var(--line);border-radius:14px;padding:13px;background:var(--surface2)}
 .service-upload img{display:block;max-width:100%;max-height:190px;object-fit:contain;border-radius:10px;margin:10px auto 0}
 @media print{body.print-receipt *{visibility:hidden!important}body.print-receipt #receiptPrintArea,body.print-receipt #receiptPrintArea *{visibility:visible!important}body.print-receipt #receiptPrintArea{position:absolute;inset:0;width:100%;max-width:none;padding:0;border:0;box-shadow:none}}
+.broadcast-banner{
+  background:linear-gradient(100deg,#fff4e0,#ffe9c7);
+  border:1px solid #f0c27a;
+  color:#7a4b00;
+  border-radius:16px;
+  padding:14px 16px;
+  margin:0 0 16px;
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+}
+.broadcast-banner.warning{background:linear-gradient(100deg,#fff1e0,#ffe3c2);border-color:#e8a23a}
+.broadcast-banner.critical{background:linear-gradient(100deg,#ffe5e3,#ffd1cd);border-color:#e07b70;color:#7a1f17}
+.broadcast-banner .bc-icon{font-size:20px;line-height:1}
+.broadcast-banner strong{display:block;font-size:13px;margin-bottom:2px}
+.broadcast-banner p{margin:0;font-size:12px;line-height:1.45}
+.broadcast-banner .bc-close{margin-left:auto;border:0;background:transparent;font-size:16px;cursor:pointer;opacity:.6}
 </style>
 </head>
 <body class="auth-locked">
@@ -88,6 +105,7 @@ body.auth-locked .app{display:none!important}.auth-gate{min-height:100vh;display
 <header class="topbar"><div><div class="eyebrow" id="dateGreeting">YOUR BUSINESS, AT A GLANCE</div><h1 id="pageTitle">Habari, Rider 👋</h1></div><div class="top-actions"><button class="icon-btn" id="installAppBtn" type="button" hidden title="Install BodaBiz">⬇</button><div class="date-chip" id="todayDate"></div><button class="icon-btn" id="themeBtn" aria-label="Toggle dark mode" title="Toggle dark mode">☾</button><div class="profile-dot" id="profileDot">R</div><button class="btn small" id="logoutBtn" type="button">Log out</button></div></header>
 
 <section class="page active" id="page-dashboard">
+<div id="broadcastBanner" class="broadcast-banner" hidden></div>
   <div class="welcome">
     <div class="hero"><div class="eyebrow">YOUR DAILY RIDE</div><h2>Every trip counts.<br>Know your money.</h2><p>Record a fare, track your fuel and see what you really take home — all in one place.</p><div class="hero-actions"><button class="btn lime" data-modal="income">＋ Add fare</button><button class="btn light" data-modal="expense">↘ Add expense</button></div></div>
     <div class="goal-card"><div class="goal-head"><h3>🎯 Daily income target</h3><span class="pill" id="goalPercent">0% reached</span></div><div><div class="goal-amount" id="goalProgressText">KSh 0 <span class="muted" style="font-size:14px;font-weight:600">/ KSh 2,000</span></div><div class="progress"><span id="goalProgressBar"></span></div><div class="muted tiny" id="goalRemaining">Start recording fares to track your target.</div></div><button class="btn ghost small" data-modal="goal">Edit daily target ↗</button></div>
@@ -183,6 +201,7 @@ body.auth-locked .app{display:none!important}.auth-gate{min-height:100vh;display
 </section>
 
 <section class="page" id="page-community">
+<div id="broadcastCommunity" class="broadcast-banner" hidden></div>
  <div class="section-head"><div><h2>Rider community</h2><p>Share useful updates with riders at your stage.</p></div><span class="pill" id="cloudStatus">Offline / not signed in</span></div>
  <div class="grid-2"><div class="card"><h3>Stage noticeboard</h3><p class="card-sub">Posts expire after 14 days. Keep it helpful and respectful.</p><div class="field" style="margin-top:12px"><label for="communityPost">Write a post (280 characters max)</label><textarea id="communityPost" rows="3" maxlength="280" placeholder="Road conditions, safety update, lost property…"></textarea></div><button class="btn" id="publishPost" style="margin-top:10px">Publish update</button><div id="communityFeed" class="transactions" style="margin-top:14px"><div class="empty">Sign in to join the community.</div></div></div>
  <div class="card"><h3>Find riders</h3><p class="card-sub">Open the public directory in a separate page.</p><p class="muted">Only profile details a rider chooses to publish appear in the directory. Phone and WhatsApp buttons appear only when explicitly enabled.</p><a class="btn" href="/riders.html" target="_blank" rel="noopener">Open rider directory ↗</a><div class="callout" style="margin-top:14px">Use first names in community challenges. Never post private customer, income or location details.</div></div></div>
@@ -407,6 +426,37 @@ window.addEventListener('beforeprint',()=>{drawAnalytics()});
 /* First launch uses an empty ledger. Demo records can be loaded from Settings at any time. */
 drawAllAfterLoad();restoreLongTermState();
 })();
+// Live broadcast banner (public read allowed by rules for any auth user)
+function showBroadcast(bc){
+  const el=document.getElementById('broadcastBanner');
+  if(!el)return;
+  if(!bc||!bc.title){el.hidden=true;el.innerHTML='';return}
+  if(bc.expiresAt&&bc.expiresAt<Date.now()){el.hidden=true;el.innerHTML='';return}
+  const dismissed=localStorage.getItem('bodabiz-bc-dismissed')===String(bc.createdAt);
+  if(dismissed){el.hidden=true;el.innerHTML='';return}
+  el.className='broadcast-banner '+(bc.severity||'info');
+  el.innerHTML=`
+    <span class="bc-icon">${bc.severity==='critical'?'⚠️':bc.severity==='warning'?'🔔':'📣'}</span>
+    <div style="flex:1">
+      <strong>${String(bc.title).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}</strong>
+      <p>${String(bc.body||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}</p>
+    </div>
+    <button class="bc-close" aria-label="Dismiss">✕</button>`;
+  el.hidden=false;
+  el.querySelector('.bc-close').onclick=()=>{
+    localStorage.setItem('bodabiz-bc-dismissed',String(bc.createdAt));
+    el.hidden=true;
+  };
+}
+// Reuse the same Firebase module already imported in the *second* script tag,
+// but since this IIFE runs before the module script, we listen after it fires.
+window.addEventListener('bodacloud-ready',()=>{
+  const fb=window.BodaCloud;
+  if(!fb)return;
+  fb.onValue(fb.ref(fb.db,'broadcast/current'),snap=>{
+    showBroadcast(snap.val());
+  });
+});
 </script>
 
 <script type="module">
