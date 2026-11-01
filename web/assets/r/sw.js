@@ -1,6 +1,6 @@
-const VERSION='bodabiz-shell-v3';
+const VERSION='bodabiz-shell-v4';
 const SHELL=[
- './ride.html','./riders.html','./bodabiz.html','./rider.html','./admin.html',
+ './ride.html','./riders.html','./admin.html',
  './manifest-public.json','./manifest-rider.json','./manifest-admin.json',
  './icons/icon.svg'
 ];
