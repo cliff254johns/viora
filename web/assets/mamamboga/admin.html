@@ -71,7 +71,10 @@
                     <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
                 </a>
                 <a href="#users" onclick="switchAdminTab('users')" class="admin-nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold hover:bg-slate-800 text-slate-400 transition">
-                    <i data-lucide="users" class="w-5 h-5"></i> System Users
+                    <i data-lucide="users" class="w-5 h-5"></i> System Users & Stores
+                </a>
+                <a href="#subscriptions" onclick="switchAdminTab('subscriptions')" class="admin-nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold hover:bg-slate-800 text-slate-400 transition">
+                    <i data-lucide="credit-card" class="w-5 h-5"></i> Subscriptions & Billing
                 </a>
             </nav>
             <div class="p-4 border-t border-slate-800">
@@ -118,20 +121,43 @@
 
                 <!-- Users Tab -->
                 <div id="tab-users" class="space-y-4 hidden">
-                    <h3 class="text-base md:text-lg font-bold text-white">Registered Users & Stores</h3>
+                    <h3 class="text-base md:text-lg font-bold text-white">Registered Stores & Users</h3>
                     <div class="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-slate-900 border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase">
-                                    <th class="p-4">User Name</th>
+                                    <th class="p-4">Owner Name</th>
                                     <th class="p-4">Email</th>
                                     <th class="p-4">User ID</th>
+                                    <th class="p-4">Status</th>
                                 </tr>
                             </thead>
                             <tbody id="users-table-body" class="divide-y divide-slate-800 text-xs md:text-sm">
                                 <!-- Dynamic -->
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- Subscriptions Tab -->
+                <div id="tab-subscriptions" class="space-y-4 hidden">
+                    <h3 class="text-base md:text-lg font-bold text-white">SaaS Platform Plans & Revenue</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800">
+                            <span class="text-xs text-leaf-400 font-bold uppercase">Free Trial</span>
+                            <h4 class="text-xl font-black text-white mt-1">14 Days</h4>
+                            <p class="text-xs text-slate-400 mt-2">Basic POS & 50 Products</p>
+                        </div>
+                        <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 border-leaf-500/50">
+                            <span class="text-xs text-emerald-400 font-bold uppercase">Mama Mboga Standard</span>
+                            <h4 class="text-xl font-black text-white mt-1">KES 1,500 / mo</h4>
+                            <p class="text-xs text-slate-400 mt-2">Unlimited Products, Wastage, Expenses & Public Store</p>
+                        </div>
+                        <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800">
+                            <span class="text-xs text-purple-400 font-bold uppercase">Supermarket Enterprise</span>
+                            <h4 class="text-xl font-black text-white mt-1">KES 3,500 / mo</h4>
+                            <p class="text-xs text-slate-400 mt-2">Multi-Branch, Barcode Scanner & Dedicated Support</p>
+                        </div>
                     </div>
                 </div>
             </div>
