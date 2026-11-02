@@ -102,10 +102,25 @@
                     <i data-lucide="shopping-cart" class="w-5 h-5"></i> POS Register
                 </a>
                 <a href="#dashboard" onclick="switchMgmtTab('dashboard')" class="mgmt-nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold hover:bg-slate-800 text-slate-400 transition">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard & Profit
                 </a>
                 <a href="#products" onclick="switchMgmtTab('products')" class="mgmt-nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold hover:bg-slate-800 text-slate-400 transition">
-                    <i data-lucide="package" class="w-5 h-5"></i> Products & Catalog
+                    <i data-lucide="package" class="w-5 h-5"></i> Products & Expiry
+                </a>
+                <a href="#wastage" onclick="switchMgmtTab('wastage')" class="mgmt-nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold hover:bg-slate-800 text-slate-400 transition">
+                    <i data-lucide="trash-2" class="w-5 h-5"></i> Wastage & Spoilage
+                </a>
+                <a href="#purchases" onclick="switchMgmtTab('purchases')" class="mgmt-nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold hover:bg-slate-800 text-slate-400 transition">
+                    <i data-lucide="truck" class="w-5 h-5"></i> Purchases & Suppliers
+                </a>
+                <a href="#expenses" onclick="switchMgmtTab('expenses')" class="mgmt-nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold hover:bg-slate-800 text-slate-400 transition">
+                    <i data-lucide="receipt" class="w-5 h-5"></i> Expenses & Cash
+                </a>
+                <a href="#credit" onclick="switchMgmtTab('credit')" class="mgmt-nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold hover:bg-slate-800 text-slate-400 transition">
+                    <i data-lucide="users" class="w-5 h-5"></i> Customers & Debtors
+                </a>
+                <a href="#orders" onclick="switchMgmtTab('orders')" class="mgmt-nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold hover:bg-slate-800 text-slate-400 transition">
+                    <i data-lucide="shopping-bag" class="w-5 h-5"></i> Store Orders
                 </a>
             </nav>
             <div class="p-4 border-t border-slate-800">
@@ -173,12 +188,151 @@
                 <div id="tab-dashboard" class="space-y-4 hidden">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">My Total Sales</span>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Sales</span>
                             <h3 id="dash-todays-sales" class="text-xl md:text-2xl font-black text-slate-900 mt-1">KES 0</h3>
                         </div>
                         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">My Products</span>
-                            <h3 id="dash-total-products" class="text-xl md:text-2xl font-black text-leaf-600 mt-1">0</h3>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Expenses</span>
+                            <h3 id="dash-todays-expenses" class="text-xl md:text-2xl font-black text-rose-600 mt-1">KES 0</h3>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Est. Net Profit</span>
+                            <h3 id="dash-todays-profit" class="text-xl md:text-2xl font-black text-leaf-600 mt-1">KES 0</h3>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Products</span>
+                            <h3 id="dash-total-products" class="text-xl md:text-2xl font-black text-slate-800 mt-1">0</h3>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase mb-2">Sales Breakdown</h4>
+                            <canvas id="salesChart" class="w-full h-48"></canvas>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase mb-2">Profit vs Expenses</h4>
+                            <canvas id="profitChart" class="w-full h-48"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- WASTAGE TAB -->
+                <div id="tab-wastage" class="space-y-4 hidden">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-base font-bold text-slate-900">Spiled / Rotten / Damaged Produce Log</h3>
+                        <button onclick="openWastageModal()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-2 rounded-xl text-xs font-bold">Record Wastage</button>
+                    </div>
+                    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse min-w-[500px]">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase">
+                                        <th class="p-3">Product</th>
+                                        <th class="p-3">Qty</th>
+                                        <th class="p-3">Reason</th>
+                                        <th class="p-3">Est. Loss</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="wastage-table-body" class="divide-y divide-slate-100 text-xs md:text-sm">
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PURCHASES & SUPPLIERS TAB -->
+                <div id="tab-purchases" class="space-y-4 hidden">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-base font-bold text-slate-900">Supplier Orders & Stock In</h3>
+                        <button onclick="openPurchaseModal()" class="bg-leaf-600 hover:bg-leaf-700 text-white px-3 py-2 rounded-xl text-xs font-bold">Record Restock</button>
+                    </div>
+                    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse min-w-[500px]">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase">
+                                        <th class="p-3">Supplier / Item</th>
+                                        <th class="p-3">Cost</th>
+                                        <th class="p-3">Paid</th>
+                                        <th class="p-3">Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="purchases-table-body" class="divide-y divide-slate-100 text-xs md:text-sm">
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EXPENSES TAB -->
+                <div id="tab-expenses" class="space-y-4 hidden">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-base font-bold text-slate-900">Operating Expenses & Cashbook</h3>
+                        <button onclick="openExpenseModal()" class="bg-slate-800 hover:bg-slate-900 text-white px-3 py-2 rounded-xl text-xs font-bold">Add Expense</button>
+                    </div>
+                    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse min-w-[500px]">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase">
+                                        <th class="p-3">Category</th>
+                                        <th class="p-3">Description</th>
+                                        <th class="p-3">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="expenses-table-body" class="divide-y divide-slate-100 text-xs md:text-sm">
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CUSTOMERS & CREDIT DEBTORS TAB -->
+                <div id="tab-credit" class="space-y-4 hidden">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-base font-bold text-slate-900">Debtors & Credit Accounts</h3>
+                        <button onclick="openCustomerModal()" class="bg-leaf-600 text-white px-3 py-2 rounded-xl text-xs font-bold">New Debtor Profile</button>
+                    </div>
+                    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse min-w-[500px]">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase">
+                                        <th class="p-3">Customer</th>
+                                        <th class="p-3">Phone</th>
+                                        <th class="p-3">Owed Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="credit-table-body" class="divide-y divide-slate-100 text-xs md:text-sm">
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ONLINE STORE ORDERS TAB -->
+                <div id="tab-orders" class="space-y-4 hidden">
+                    <h3 class="text-base font-bold text-slate-900">Incoming Public Store Orders</h3>
+                    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse min-w-[500px]">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase">
+                                        <th class="p-3">Order Ref</th>
+                                        <th class="p-3">Total</th>
+                                        <th class="p-3">Status</th>
+                                        <th class="p-3">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="orders-table-body" class="divide-y divide-slate-100 text-xs md:text-sm">
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -280,7 +434,16 @@
         let cart = [];
         let productsCache = [];
 
-        // Global toggle auth mode function
+        // Attach event listeners explicitly after DOM loads
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginBtn = document.getElementById('tab-login-btn');
+            const regBtn = document.getElementById('tab-register-btn');
+            if (loginBtn && regBtn) {
+                loginBtn.addEventListener('click', () => window.toggleAuthMode('login'));
+                regBtn.addEventListener('click', () => window.toggleAuthMode('register'));
+            }
+        });
+
         window.toggleAuthMode = function(mode) {
             const loginForm = document.getElementById('mgmt-login-form');
             const regForm = document.getElementById('mgmt-register-form');
@@ -293,21 +456,21 @@
             if (mode === 'login') {
                 loginForm.classList.remove('hidden');
                 regForm.classList.add('hidden');
-                loginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm transition';
-                regBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 transition';
+                if (loginBtn) loginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm transition';
+                if (regBtn) regBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 transition';
                 if (subtitle) subtitle.textContent = 'Sign in to manage your grocery stall or store';
             } else {
                 loginForm.classList.add('hidden');
                 regForm.classList.remove('hidden');
-                regBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm transition';
-                loginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 transition';
+                if (regBtn) regBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm transition';
+                if (loginBtn) loginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 transition';
                 if (subtitle) subtitle.textContent = 'Set up your new account and store credentials';
             }
         };
 
-        // Attach direct event listeners to auth tab buttons
-        document.getElementById('tab-login-btn')?.addEventListener('click', () => window.toggleAuthMode('login'));
-        document.getElementById('tab-register-btn')?.addEventListener('click', () => window.toggleAuthMode('register'));
+        // ... existing auth listeners ...
+            }
+        });
 
         // Handle Existing User Login
         document.getElementById('mgmt-login-form').addEventListener('submit', async (e) => {
@@ -379,20 +542,53 @@
             document.getElementById('mgmt-page-title').textContent = tabName.toUpperCase();
             if (tabName === 'pos') loadPosProducts();
             if (tabName === 'products') loadCatalogProducts();
+            if (tabName === 'wastage') loadWastageLog();
+            if (tabName === 'expenses') loadExpensesLog();
+            if (tabName === 'orders') loadStoreOrders();
         };
 
-        async function loadDashboardData() {
+        async function loadWastageLog() {
             if (!currentUser) return;
+            const tbody = document.getElementById('wastage-table-body');
             try {
-                // User-scoped sales data
-                const salesSnap = await getDocs(collection(db, `users/${currentUser.uid}/sales`));
-                let totalSales = 0;
-                salesSnap.forEach(docSnap => { totalSales += docSnap.data().total || 0; });
-                document.getElementById('dash-todays-sales').textContent = formatKES(totalSales);
+                const snap = await getDocs(collection(db, `users/${currentUser.uid}/wastage`));
+                tbody.innerHTML = snap.empty ? '<tr><td colspan="4" class="p-3 text-center text-slate-400">No spoiled items recorded.</td></tr>' : '';
+                snap.forEach(d => {
+                    const data = d.data();
+                    tbody.innerHTML += `
+                        <tr class="border-b border-slate-100"><td class="p-3 font-bold">${data.name}</td><td class="p-3">${data.qty}</td><td class="p-3 text-rose-500">${data.reason}</td><td class="p-3 font-black">${formatKES(data.cost)}</td></tr>
+                    `;
+                });
+            } catch(e){}
+        }
 
-                const prodSnap = await getDocs(collection(db, `users/${currentUser.uid}/products`));
-                document.getElementById('dash-total-products').textContent = prodSnap.size;
-            } catch (e) { console.error(e); }
+        async function loadExpensesLog() {
+            if (!currentUser) return;
+            const tbody = document.getElementById('expenses-table-body');
+            try {
+                const snap = await getDocs(collection(db, `users/${currentUser.uid}/expenses`));
+                tbody.innerHTML = snap.empty ? '<tr><td colspan="3" class="p-3 text-center text-slate-400">No expenses recorded.</td></tr>' : '';
+                snap.forEach(d => {
+                    const data = d.data();
+                    tbody.innerHTML += `
+                        <tr class="border-b border-slate-100"><td class="p-3 font-bold">${data.category}</td><td class="p-3">${data.desc}</td><td class="p-3 font-black text-rose-600">${formatKES(data.amount)}</td></tr>
+                    `;
+                });
+            } catch(e){}
+        }
+
+        async function loadStoreOrders() {
+            const tbody = document.getElementById('orders-table-body');
+            try {
+                const snap = await getDocs(collection(db, 'orders'));
+                tbody.innerHTML = snap.empty ? '<tr><td colspan="4" class="p-3 text-center text-slate-400">No active customer orders.</td></tr>' : '';
+                snap.forEach(d => {
+                    const data = d.data();
+                    tbody.innerHTML += `
+                        <tr class="border-b border-slate-100"><td class="p-3 font-bold">${d.id.slice(0,6)}</td><td class="p-3 font-black">${formatKES(data.total)}</td><td class="p-3"><span class="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded font-bold">${data.status}</span></td><td class="p-3"><button class="text-xs bg-leaf-600 text-white px-2 py-1 rounded">Accept</button></td></tr>
+                    `;
+                });
+            } catch(e){}
         }
 
         async function loadPosProducts() {
