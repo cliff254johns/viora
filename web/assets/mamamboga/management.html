@@ -489,10 +489,10 @@
     </div>
 
     <script type="module">
-        import { 
-    auth, db, showToast, formatKES, deductStock, getUserRole,
+  import { 
+    auth, db, showToast, formatKES, deductStock, deleteProduct,
     signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, 
-    collection, getDocs, addDoc, doc, setDoc, serverTimestamp, query, where, updateDoc
+    collection, getDocs, getDoc, addDoc, doc, setDoc, serverTimestamp, query, where, updateDoc
 } from './firebase.js';
 
         lucide.createIcons();
@@ -623,7 +623,13 @@ function renderPosGrid(list) {
                 currentUser = user;
                 document.getElementById('mgmt-auth-screen').classList.add('hidden');
                 document.getElementById('mgmt-app').classList.remove('hidden');
-                document.getElementById('mgmt-user-display').textContent = user.email;
+               document.getElementById('mgmt-user-display').textContent = user.email;
+const profileSnap = await getDoc(doc(db, 'users', user.uid));
+if (profileSnap.exists()) {
+    const p = profileSnap.data();
+    const nameEl = document.getElementById('sidebar-owner-name');
+    if (nameEl && p.name) nameEl.textContent = p.name;
+}
                 loadDashboardData();
                 loadPosProducts();
             } else {
@@ -637,7 +643,8 @@ function renderPosGrid(list) {
             document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
             const targetTab = document.getElementById(`tab-${tabName}`);
             if (targetTab) targetTab.classList.remove('hidden');
-            document.getElementById('mgmt-page-title').textContent = tabName.toUpperCase();
+const titles = { pos: 'Point of Sale', dashboard: 'Dashboard & Profit', products: 'Products & Expiry', wastage: 'Wastage & Spoilage', purchases: 'Purchases & Suppliers', expenses: 'Expenses & Cash', credit: 'Customers & Debtors', orders: 'Store Orders' };
+document.getElementById('mgmt-page-title').textContent = titles[tabName] || 'Point of Sale';
                       if (tabName === 'pos') loadPosProducts();
             if (tabName === 'dashboard') loadDashboardData();
             if (tabName === 'products') loadCatalogProducts();
