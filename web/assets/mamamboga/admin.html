@@ -165,7 +165,7 @@
     </div>
 
     <script type="module">
-              import { db, showToast, collection, getDocs, doc, updateDoc, deleteDoc, addDoc, serverTimestamp } from './firebase.js';
+          import { db, showToast, collection, getDocs, doc, updateDoc, addDoc, serverTimestamp } from './firebase.js';
 
         lucide.createIcons();
 
@@ -224,6 +224,11 @@ tbody.innerHTML += `
         <td class="p-4 text-slate-400">${esc(u.email || 'N/A')}</td>
         <td class="p-4 text-slate-500 font-mono text-[10px]">${esc(u.uid || docSnap.id)}</td>
         <td class="p-4 ${statusClass} font-bold">${status}</td>
+<td class="p-4">
+    <button onclick="toggleSuspend('${docSnap.id}', ${!!u.suspended})" class="text-xs font-bold ${u.suspended ? 'text-emerald-400' : 'text-rose-400'}">
+        ${u.suspended ? 'Restore' : 'Suspend'}
+    </button>
+</td>
     </tr>
 `;
                 });
@@ -231,6 +236,12 @@ tbody.innerHTML += `
                 console.error(e);
             }
         }
+        window.toggleSuspend = async function(uid, currentlySuspended) {
+    await updateDoc(doc(db, 'users', uid), { suspended: !currentlySuspended });
+    showToast(currentlySuspended ? 'Account restored' : 'Account suspended');
+    loadUsersData();
+    loadPlatformStats();
+};
 
               function adminLogout() {
             sessionStorage.removeItem('admin_auth');
