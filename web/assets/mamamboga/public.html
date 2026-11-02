@@ -103,7 +103,7 @@
     </div>
 
     <script type="module">
-               import { db, showToast, formatKES, collection, getDocs, addDoc, serverTimestamp } from './firebase.js';
+           import { db, showToast, formatKES, collection, getDocs, addDoc, serverTimestamp, query, where } from './firebase.js';
 
         lucide.createIcons();
 
@@ -113,13 +113,20 @@
         async function loadPublicCatalog() {
             const grid = document.getElementById('public-product-grid');
             try {
-                const snap = await getDocs(collection(db, 'public_products'));
-                publicProducts = [];
-                grid.innerHTML = '';
-                            snap.forEach(docSnap => {
-                    const prod = { id: docSnap.id, ...docSnap.data() };
-                    if (prod.publish) publicProducts.push(prod);
-                });
+             // Bind the public site to a single store via URL: public.html?shop=<uid>
+const shopId = new URLSearchParams(location.search).get('shop');
+if (!shopId) {
+    grid.innerHTML = '<p class="text-rose-500 col-span-full text-center py-8 text-xs">No shop specified. Use ?shop=STORE_UID</p>';
+    return;
+}
+const q = query(collection(db, 'public_products'), where('userId', '==', shopId));
+const snap = await getDocs(q);
+publicProducts = [];
+grid.innerHTML = '';
+snap.forEach(docSnap => {
+    const prod = { id: docSnap.id, ...docSnap.data() };
+    if (prod.publish) publicProducts.push(prod);
+});
                 renderPublicGrid(publicProducts);
             } catch (e) {
                 grid.innerHTML = '<p class="text-rose-500 col-span-full text-center py-8 text-xs">Unable to load catalog.</p>';
@@ -214,12 +221,14 @@
             }
             const total = publicCart.reduce((sum, item) => sum + (item.price * item.qty), 0);
             try {
-                await addDoc(collection(db, 'orders'), {
-                    items: publicCart,
-                    total: total,
-                    status: 'New',
-                    createdAt: serverTimestamp()
-                });
+           await addDoc(collection(db, 'orders'), {
+    shopId: shopId,
+    userId: shopId,
+    items: publicCart,
+    total: total,
+    status: 'New',
+    createdAt: serverTimestamp()
+});
                                showToast('Order submitted successfully! Reference: ' + Date.now().toString().slice(-6));
                 publicCart = [];
                 updatePublicCartUI();
