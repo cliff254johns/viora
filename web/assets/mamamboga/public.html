@@ -54,12 +54,17 @@
     </section>
 
     <!-- Public Produce Grid -->
+       <!-- Public Produce Grid -->
     <main class="flex-1 max-w-6xl mx-auto px-4 py-6 w-full">
         <!-- Category Filter -->
-                <button onclick="filterPublic('all', this)" class="cat-btn px-3 py-1.5 rounded-xl bg-leaf-600 text-white text-xs font-bold shrink-0">All Produce</button>
+        <div class="flex gap-2 overflow-x-auto pb-3 mb-4">
+            <button onclick="filterPublic('all', this)" class="cat-btn px-3 py-1.5 rounded-xl bg-leaf-600 text-white text-xs font-bold shrink-0">All Produce</button>
             <button onclick="filterPublic('Sukuma wiki', this)" class="cat-btn px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-600 text-xs font-semibold shrink-0">Sukuma & Greens</button>
             <button onclick="filterPublic('Tomatoes', this)" class="cat-btn px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-600 text-xs font-semibold shrink-0">Tomatoes & Onions</button>
             <button onclick="filterPublic('Fruits', this)" class="cat-btn px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-600 text-xs font-semibold shrink-0">Fresh Fruits</button>
+            <button onclick="filterPublic('Onions', this)" class="cat-btn px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-600 text-xs font-semibold shrink-0">Onions</button>
+<button onclick="filterPublic('Cabbage', this)" class="cat-btn px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-600 text-xs font-semibold shrink-0">Cabbage</button>
+        </div>
 
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-base md:text-xl font-bold text-slate-900">Today's Produce Catalog</h3>
@@ -210,10 +215,15 @@ snap.forEach(docSnap => {
             document.getElementById('mobile-bottom-total').textContent = formatKES(total);
         }
 
-        window.toggleCartDrawer = () => {
-            document.getElementById('cart-drawer').classList.toggle('hidden');
-        };
-
+      window.toggleCartDrawer = () => {
+    const drawer = document.getElementById('cart-drawer');
+    const isOpening = drawer.classList.contains('hidden');
+    drawer.classList.toggle('hidden');
+    document.body.style.overflow = isOpening ? 'hidden' : '';
+};
+document.getElementById('cart-drawer')?.addEventListener('click', (e) => {
+    if (e.target.id === 'cart-drawer') window.toggleCartDrawer();
+});
         window.submitCustomerOrder = async function() {
             if (publicCart.length === 0) {
                 showToast('Your cart is empty', 'error');
