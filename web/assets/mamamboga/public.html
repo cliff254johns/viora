@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mama Shiko Fresh Groceries — Online Store</title>
+    <title> Fresh Groceries — Online Store</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#16a34a">
     <!-- Tailwind CSS CDN -->
@@ -56,12 +56,10 @@
     <!-- Public Produce Grid -->
     <main class="flex-1 max-w-6xl mx-auto px-4 py-6 w-full">
         <!-- Category Filter -->
-        <div class="flex gap-2 overflow-x-auto pb-4 mb-2 no-scrollbar">
-            <button class="px-3 py-1.5 rounded-xl bg-leaf-600 text-white text-xs font-bold shrink-0">All Produce</button>
-            <button class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-600 text-xs font-semibold shrink-0">Sukuma & Greens</button>
-            <button class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-600 text-xs font-semibold shrink-0">Tomatoes & Onions</button>
-            <button class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-600 text-xs font-semibold shrink-0">Fresh Fruits</button>
-        </div>
+                <button onclick="filterPublic('all', this)" class="cat-btn px-3 py-1.5 rounded-xl bg-leaf-600 text-white text-xs font-bold shrink-0">All Produce</button>
+            <button onclick="filterPublic('Sukuma wiki', this)" class="cat-btn px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-600 text-xs font-semibold shrink-0">Sukuma & Greens</button>
+            <button onclick="filterPublic('Tomatoes', this)" class="cat-btn px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-600 text-xs font-semibold shrink-0">Tomatoes & Onions</button>
+            <button onclick="filterPublic('Fruits', this)" class="cat-btn px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-600 text-xs font-semibold shrink-0">Fresh Fruits</button>
 
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-base md:text-xl font-bold text-slate-900">Today's Produce Catalog</h3>
@@ -105,8 +103,7 @@
     </div>
 
     <script type="module">
-        import { db, showToast, formatKES } from './firebase.js';
-        import { collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+               import { db, showToast, formatKES, collection, getDocs, addDoc, serverTimestamp } from './firebase.js';
 
         lucide.createIcons();
 
@@ -119,33 +116,51 @@
                 const snap = await getDocs(collection(db, 'public_products'));
                 publicProducts = [];
                 grid.innerHTML = '';
-                snap.forEach(docSnap => {
+                            snap.forEach(docSnap => {
                     const prod = { id: docSnap.id, ...docSnap.data() };
-                    if (prod.publish) {
-                        publicProducts.push(prod);
-                        grid.innerHTML += `
-                            <div class="bg-white rounded-2xl border border-slate-200 p-3.5 flex flex-col justify-between shadow-sm hover:shadow-md transition">
-                                <div>
-                                    <span class="bg-leaf-50 text-leaf-700 text-[9px] font-black px-2 py-0.5 rounded-full uppercase">${prod.category}</span>
-                                    <h4 class="font-bold text-slate-900 text-xs md:text-sm mt-2 leading-tight">${prod.name}</h4>
-                                </div>
-                                <div class="mt-4 flex items-center justify-between">
-                                    <div>
-                                        <span class="font-black text-leaf-700 text-xs md:text-sm block">${formatKES(prod.price)}</span>
-                                        <span class="text-[10px] text-slate-400 font-semibold">per ${prod.unit}</span>
-                                    </div>
-                                    <button onclick="addToPublicCart('${prod.id}')" class="bg-leaf-600 hover:bg-leaf-700 text-white p-2 rounded-xl shadow-sm">
-                                        <i data-lucide="plus" class="w-4 h-4"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                    }
+                    if (prod.publish) publicProducts.push(prod);
                 });
-                lucide.createIcons();
+                renderPublicGrid(publicProducts);
             } catch (e) {
                 grid.innerHTML = '<p class="text-rose-500 col-span-full text-center py-8 text-xs">Unable to load catalog.</p>';
             }
+        }
+        window.filterPublic = function(category, btn) {
+            document.querySelectorAll('.cat-btn').forEach(b => {
+                b.className = 'cat-btn px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-600 text-xs font-semibold shrink-0';
+            });
+            btn.className = 'cat-btn px-3 py-1.5 rounded-xl bg-leaf-600 text-white text-xs font-bold shrink-0';
+            const filtered = category === 'all' ? publicProducts : publicProducts.filter(p => p.category === category);
+            renderPublicGrid(filtered);
+        };
+
+        function renderPublicGrid(list) {
+            const grid = document.getElementById('public-product-grid');
+            grid.innerHTML = '';
+            if (list.length === 0) {
+                grid.innerHTML = '<p class="text-slate-400 col-span-full text-center py-12 text-xs">No produce in this category.</p>';
+                return;
+            }
+            list.forEach(prod => {
+                grid.innerHTML += `
+                    <div class="bg-white rounded-2xl border border-slate-200 p-3.5 flex flex-col justify-between shadow-sm hover:shadow-md transition">
+                        <div>
+                            <span class="bg-leaf-50 text-leaf-700 text-[9px] font-black px-2 py-0.5 rounded-full uppercase">${prod.category}</span>
+                            <h4 class="font-bold text-slate-900 text-xs md:text-sm mt-2 leading-tight">${prod.name}</h4>
+                        </div>
+                        <div class="mt-4 flex items-center justify-between">
+                            <div>
+                                <span class="font-black text-leaf-700 text-xs md:text-sm block">${formatKES(prod.price)}</span>
+                                <span class="text-[10px] text-slate-400 font-semibold">per ${prod.unit}</span>
+                            </div>
+                            <button onclick="addToPublicCart('${prod.id}')" class="bg-leaf-600 hover:bg-leaf-700 text-white p-2 rounded-xl shadow-sm">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            lucide.createIcons();
         }
 
         window.addToPublicCart = function(prodId) {
@@ -205,10 +220,16 @@
                     status: 'New',
                     createdAt: serverTimestamp()
                 });
-                showToast('Order submitted successfully!');
+                               showToast('Order submitted successfully! Reference: ' + Date.now().toString().slice(-6));
                 publicCart = [];
                 updatePublicCartUI();
                 toggleCartDrawer();
+                // Optionally show the order reference on screen
+                const ref = document.createElement('div');
+                ref.className = 'fixed bottom-24 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs px-4 py-2 rounded-xl z-50';
+                ref.textContent = 'Order ref: ' + Date.now().toString().slice(-6);
+                document.body.appendChild(ref);
+                setTimeout(() => ref.remove(), 6000);
             } catch (e) {
                 showToast(e.message, 'error');
             }
