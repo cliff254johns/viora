@@ -85,11 +85,13 @@ export {
  */
 export async function deductStock(uid, productId, qty) {
     const prodRef = doc(db, `users/${uid}/products`, productId);
-    await runTransaction(db, async (tx) => {
+    return runTransaction(db, async (tx) => {
         const snap = await tx.get(prodRef);
-        if (!snap.exists()) throw new Error('Product not found');
+        if (!snap.exists()) return { ok: false, reason: 'missing' };
         const current = snap.data().stock || 0;
-        tx.update(prodRef, { stock: Math.max(0, current - qty) });
+        if (current < qty) return { ok: false, reason: 'insufficient', available: current };
+        tx.update(prodRef, { stock: current - qty });
+        return { ok: true, remaining: current - qty };
     });
 }
 
