@@ -168,3 +168,8 @@ if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration failed:', err));
     });
 }
+export async function isPlatformAdmin(user) {
+    if (!user) return false;
+    const token = await user.getIdTokenResult();
+    return token.claims.platformAdmin === true;
+}
