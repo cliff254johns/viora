@@ -81,6 +81,19 @@ export {
 // --- COMMON HELPER FUNCTIONS ---
 
 /**
+ * Deduct stock from a product after a sale (transaction-safe)
+ */
+export async function deductStock(uid, productId, qty) {
+    const prodRef = doc(db, `users/${uid}/products`, productId);
+    await runTransaction(db, async (tx) => {
+        const snap = await tx.get(prodRef);
+        if (!snap.exists()) throw new Error('Product not found');
+        const current = snap.data().stock || 0;
+        tx.update(prodRef, { stock: Math.max(0, current - qty) });
+    });
+}
+
+/**
  * Format currency in Kenyan Shillings (KES)
  */
 export function formatKES(amount) {
@@ -139,6 +152,14 @@ export async function uploadImage(file, path) {
     const storageRef = ref(storage, `${path}/${Date.now()}_${file.name}`);
     const snapshot = await uploadBytes(storageRef, file);
     return await getDownloadURL(snapshot.ref);
+}
+
+/**
+ * Fetch the current user's role document (defaults to 'owner')
+ */
+export async function getUserRole(uid) {
+    const snap = await getDoc(doc(db, 'users', uid));
+    return snap.exists() ? (snap.data().role || 'owner') : 'owner';
 }
 
 // Register PWA Service Worker
