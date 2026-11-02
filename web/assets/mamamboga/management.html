@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Management POS — Mama Mboga System</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#16a34a">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        leaf: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 900: '#14532d' },
+                        charcoal: '#0f172a'
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col select-none">
+
+    <!-- Auth Container Screen (Login & Register Tabs) -->
+    <div id="mgmt-auth-screen" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 md:p-8 border border-slate-100">
+            <div class="text-center mb-6">
+                <div class="bg-leaf-50 border border-leaf-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 text-leaf-600">
+                    <i data-lucide="shopping-basket" class="w-8 h-8"></i>
+                </div>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight">Mama Mboga POS</h1>
+                <p class="text-xs text-slate-500 mt-1" id="auth-subtitle">Sign in to manage your grocery stall or store</p>
+            </div>
+
+            <!-- Auth Mode Toggle Switch -->
+            <div class="flex bg-slate-100 p-1 rounded-xl mb-6">
+                <button type="button" id="tab-login-btn" class="flex-1 py-2 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm transition">Sign In</button>
+                <button type="button" id="tab-register-btn" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 transition">First-Time Setup</button>
+            </div>
+
+            <!-- 1. SIGN IN FORM -->
+            <form id="mgmt-login-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Email Address</label>
+                    <input type="email" id="mgmt-login-email" required class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-leaf-500 outline-none" placeholder="owner@mamamboga.co.ke">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Password</label>
+                    <input type="password" id="mgmt-login-password" required class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-leaf-500 outline-none" placeholder="••••••••">
+                </div>
+                <button type="submit" class="w-full bg-leaf-600 hover:bg-leaf-700 active:scale-95 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-leaf-600/20 text-sm">
+                    Open Store Register
+                </button>
+            </form>
+
+            <!-- 2. FIRST-TIME REGISTER FORM -->
+            <form id="mgmt-register-form" class="space-y-3 hidden">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Full Name / Stall Owner</label>
+                    <input type="text" id="mgmt-reg-name" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs md:text-sm focus:ring-2 focus:ring-leaf-500 outline-none" placeholder="e.g. Mary Wanjiku">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Email Address</label>
+                    <input type="email" id="mgmt-reg-email" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs md:text-sm focus:ring-2 focus:ring-leaf-500 outline-none" placeholder="mary@mamamboga.co.ke">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Create Password</label>
+                    <input type="password" id="mgmt-reg-password" required minlength="6" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs md:text-sm focus:ring-2 focus:ring-leaf-500 outline-none" placeholder="At least 6 characters">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Confirm Password</label>
+                    <input type="password" id="mgmt-reg-confirm" required minlength="6" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs md:text-sm focus:ring-2 focus:ring-leaf-500 outline-none" placeholder="Re-enter password">
+                </div>
+                <button type="submit" class="w-full bg-leaf-600 hover:bg-leaf-700 active:scale-95 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-leaf-600/20 text-xs md:text-sm mt-2">
+                    Create My Grocery Account
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Workspace -->
+    <div id="mgmt-app" class="flex flex-col md:flex-row h-screen overflow-hidden hidden">
+        
+        <!-- Desktop Sidebar Navigation -->
+        <aside class="hidden md:flex w-64 bg-slate-900 text-slate-300 flex-col border-r border-slate-800 shrink-0">
+            <div class="p-6 flex items-center gap-3 border-b border-slate-800">
+                <div class="bg-leaf-600 text-white p-2 rounded-xl">
+                    <i data-lucide="store" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h2 id="sidebar-owner-name" class="font-bold text-white text-sm leading-tight">My Mama Mboga</h2>
+                    <span id="sidebar-branch-name" class="text-[10px] bg-leaf-900/60 text-leaf-400 px-2 py-0.5 rounded font-bold uppercase">Personal Register</span>
+                </div>
+            </div>
+            <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+                <a href="#pos" onclick="switchMgmtTab('pos')" class="mgmt-nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold bg-leaf-600 text-white transition">
+                    <i data-lucide="shopping-cart" class="w-5 h-5"></i> POS Register
+                </a>
+                <a href="#dashboard" onclick="switchMgmtTab('dashboard')" class="mgmt-nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold hover:bg-slate-800 text-slate-400 transition">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
+                </a>
+                <a href="#products" onclick="switchMgmtTab('products')" class="mgmt-nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold hover:bg-slate-800 text-slate-400 transition">
+                    <i data-lucide="package" class="w-5 h-5"></i> Products & Catalog
+                </a>
+            </nav>
+            <div class="p-4 border-t border-slate-800">
+                <button id="mgmt-logout-btn" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-rose-400 hover:bg-rose-500/10 transition">
+                    <i data-lucide="log-out" class="w-5 h-5"></i> Sign Out
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Mobile/Desktop App Area -->
+        <main class="flex-1 flex flex-col overflow-hidden bg-slate-100 pb-16 md:pb-0">
+            <!-- Mobile/Desktop Top Header -->
+            <header class="h-14 md:h-16 bg-white border-b border-slate-200 px-4 md:px-8 flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="shopping-basket" class="w-5 h-5 text-leaf-600 md:hidden"></i>
+                    <h1 id="mgmt-page-title" class="text-base md:text-xl font-black text-slate-900 tracking-tight">Point of Sale</h1>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span id="mgmt-user-display" class="text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">Owner</span>
+                    <button id="mgmt-mobile-logout" class="md:hidden text-rose-500 p-1.5"><i data-lucide="log-out" class="w-5 h-5"></i></button>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-3 md:p-6 space-y-4">
+                <!-- POS TAB -->
+                <div id="tab-pos" class="space-y-4 h-full flex flex-col md:flex-row gap-4">
+                    <div class="flex-1 bg-white rounded-2xl border border-slate-200 p-3 md:p-5 flex flex-col overflow-hidden shadow-sm">
+                        <div class="flex gap-2 mb-3">
+                            <input type="text" id="pos-search" placeholder="Search produce..." class="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-xs md:text-sm focus:ring-2 focus:ring-leaf-500 outline-none">
+                            <button onclick="openAddProductModal()" class="bg-leaf-600 hover:bg-leaf-700 text-white px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm">
+                                <i data-lucide="plus" class="w-4 h-4"></i> Add Item
+                            </button>
+                        </div>
+                        <div id="pos-product-grid" class="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-2 md:gap-3 pr-1">
+                            <!-- Dynamic produce items for this logged-in user -->
+                        </div>
+                    </div>
+
+                    <div class="w-full md:w-80 bg-white rounded-2xl border border-slate-200 p-4 flex flex-col shadow-sm shrink-0">
+                        <h3 class="font-bold text-slate-900 text-sm md:text-base mb-3 flex justify-between items-center">
+                            <span>Current Cart</span>
+                            <span id="cart-count" class="bg-leaf-100 text-leaf-800 text-[10px] font-bold px-2 py-0.5 rounded-full">0 items</span>
+                        </h3>
+                        <div id="cart-items-list" class="flex-1 overflow-y-auto divide-y divide-slate-100 min-h-[140px] max-h-[200px] md:max-h-none">
+                            <p class="text-slate-400 text-center py-6 text-xs">Cart is empty. Tap produce to sell.</p>
+                        </div>
+                        <div class="border-t border-slate-200 pt-3 space-y-2 mt-auto">
+                            <div class="flex justify-between text-base md:text-lg font-black text-slate-900">
+                                <span>Total</span>
+                                <span id="cart-total" class="text-leaf-600">KES 0</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 pt-1">
+                                <button onclick="processCheckout('Cash')" class="bg-leaf-600 hover:bg-leaf-700 active:scale-95 text-white font-bold py-3 rounded-xl text-xs shadow-md">
+                                    Pay Cash
+                                </button>
+                                <button onclick="processCheckout('M-Pesa')" class="bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-bold py-3 rounded-xl text-xs shadow-md">
+                                    Pay M-Pesa
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DASHBOARD TAB -->
+                <div id="tab-dashboard" class="space-y-4 hidden">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">My Total Sales</span>
+                            <h3 id="dash-todays-sales" class="text-xl md:text-2xl font-black text-slate-900 mt-1">KES 0</h3>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">My Products</span>
+                            <h3 id="dash-total-products" class="text-xl md:text-2xl font-black text-leaf-600 mt-1">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PRODUCTS TAB -->
+                <div id="tab-products" class="space-y-4 hidden">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-base font-bold text-slate-900">My Stock Catalog</h3>
+                        <button onclick="openAddProductModal()" class="bg-leaf-600 text-white px-3 py-2 rounded-xl text-xs font-bold">Add Produce</button>
+                    </div>
+                    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse min-w-[500px]">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase">
+                                        <th class="p-3">Product</th>
+                                        <th class="p-3">Category</th>
+                                        <th class="p-3">Price</th>
+                                        <th class="p-3">Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="products-table-body" class="divide-y divide-slate-100 text-xs md:text-sm">
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Product Modal -->
+    <div id="product-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-100">
+            <h3 class="text-lg font-bold text-slate-900">Add Grocery Product</h3>
+            <form id="product-form" class="space-y-3">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Produce Name</label>
+                    <input type="text" id="prod-name" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs md:text-sm" placeholder="Fresh Tomatoes">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Category</label>
+                        <select id="prod-category" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                            <option value="Sukuma wiki">Sukuma wiki</option>
+                            <option value="Tomatoes">Tomatoes</option>
+                            <option value="Onions">Onions</option>
+                            <option value="Cabbage">Cabbage</option>
+                            <option value="Fruits">Fruits</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Unit</label>
+                        <select id="prod-unit" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                            <option value="kg">Kilogram (kg)</option>
+                            <option value="bunch">Bunch</option>
+                            <option value="heap">Heap</option>
+                            <option value="piece">Piece</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Cost (KES)</label>
+                        <input type="number" id="prod-cost" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs" placeholder="30">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Retail Price (KES)</label>
+                        <input type="number" id="prod-price" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs" placeholder="50">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Stock Quantity</label>
+                    <input type="number" id="prod-stock" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs" placeholder="100">
+                </div>
+                <div class="flex items-center gap-2 pt-1">
+                    <input type="checkbox" id="prod-publish" checked class="w-4 h-4 accent-leaf-600 rounded">
+                    <label for="prod-publish" class="text-xs font-semibold text-slate-700">Publish to Online Public Catalog</label>
+                </div>
+                <div class="flex justify-end gap-2 pt-3">
+                    <button type="button" onclick="closeAddProductModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold">Cancel</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-leaf-600 text-white text-xs font-bold shadow-md">Save Produce</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { 
+            auth, db, showToast, formatKES, 
+            signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, 
+            collection, getDocs, addDoc, doc, setDoc, serverTimestamp 
+        } from './firebase.js';
+
+        lucide.createIcons();
+
+        let currentUser = null;
+        let cart = [];
+        let productsCache = [];
+
+        // Global toggle auth mode function
+        window.toggleAuthMode = function(mode) {
+            const loginForm = document.getElementById('mgmt-login-form');
+            const regForm = document.getElementById('mgmt-register-form');
+            const loginBtn = document.getElementById('tab-login-btn');
+            const regBtn = document.getElementById('tab-register-btn');
+            const subtitle = document.getElementById('auth-subtitle');
+
+            if (!loginForm || !regForm) return;
+
+            if (mode === 'login') {
+                loginForm.classList.remove('hidden');
+                regForm.classList.add('hidden');
+                loginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm transition';
+                regBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 transition';
+                if (subtitle) subtitle.textContent = 'Sign in to manage your grocery stall or store';
+            } else {
+                loginForm.classList.add('hidden');
+                regForm.classList.remove('hidden');
+                regBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm transition';
+                loginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 transition';
+                if (subtitle) subtitle.textContent = 'Set up your new account and store credentials';
+            }
+        };
+
+        // Attach direct event listeners to auth tab buttons
+        document.getElementById('tab-login-btn')?.addEventListener('click', () => window.toggleAuthMode('login'));
+        document.getElementById('tab-register-btn')?.addEventListener('click', () => window.toggleAuthMode('register'));
+
+        // Handle Existing User Login
+        document.getElementById('mgmt-login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('mgmt-login-email').value;
+            const password = document.getElementById('mgmt-login-password').value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                showToast('Welcome back!');
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        });
+
+        // Handle First-Time User Registration
+        document.getElementById('mgmt-register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('mgmt-reg-name').value;
+            const email = document.getElementById('mgmt-reg-email').value;
+            const password = document.getElementById('mgmt-reg-password').value;
+            const confirm = document.getElementById('mgmt-reg-confirm').value;
+
+            if (password !== confirm) {
+                showToast('Passwords do not match!', 'error');
+                return;
+            }
+
+            try {
+                const userCred = await createUserWithEmailAndPassword(auth, email, password);
+                const uid = userCred.user.uid;
+
+                // Create User Profile in database
+                await setDoc(doc(db, 'users', uid), {
+                    uid, name, email, createdAt: serverTimestamp()
+                });
+
+                showToast('Account created successfully!');
+            } catch (err) {
+                if (err.code === 'auth/email-already-in-use') {
+                    showToast('An account with this email already exists. Please sign in.', 'error');
+                } else {
+                    showToast(err.message, 'error');
+                }
+            }
+        });
+
+        document.getElementById('mgmt-logout-btn').addEventListener('click', () => signOut(auth));
+        document.getElementById('mgmt-mobile-logout').addEventListener('click', () => signOut(auth));
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('mgmt-auth-screen').classList.add('hidden');
+                document.getElementById('mgmt-app').classList.remove('hidden');
+                document.getElementById('mgmt-user-display').textContent = user.email;
+                loadDashboardData();
+                loadPosProducts();
+            } else {
+                currentUser = null;
+                document.getElementById('mgmt-auth-screen').classList.remove('hidden');
+                document.getElementById('mgmt-app').classList.add('hidden');
+            }
+        });
+
+        window.switchMgmtTab = function(tabName) {
+            document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
+            const targetTab = document.getElementById(`tab-${tabName}`);
+            if (targetTab) targetTab.classList.remove('hidden');
+            document.getElementById('mgmt-page-title').textContent = tabName.toUpperCase();
+            if (tabName === 'pos') loadPosProducts();
+            if (tabName === 'products') loadCatalogProducts();
+        };
+
+        async function loadDashboardData() {
+            if (!currentUser) return;
+            try {
+                // User-scoped sales data
+                const salesSnap = await getDocs(collection(db, `users/${currentUser.uid}/sales`));
+                let totalSales = 0;
+                salesSnap.forEach(docSnap => { totalSales += docSnap.data().total || 0; });
+                document.getElementById('dash-todays-sales').textContent = formatKES(totalSales);
+
+                const prodSnap = await getDocs(collection(db, `users/${currentUser.uid}/products`));
+                document.getElementById('dash-total-products').textContent = prodSnap.size;
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadPosProducts() {
+            if (!currentUser) return;
+            const grid = document.getElementById('pos-product-grid');
+            grid.innerHTML = '<p class="text-slate-400 col-span-full text-center py-6 text-xs">Loading produce...</p>';
+            try {
+                // Read from user-isolated products collection
+                const snap = await getDocs(collection(db, `users/${currentUser.uid}/products`));
+                productsCache = [];
+                grid.innerHTML = '';
+                if (snap.empty) {
+                    grid.innerHTML = '<p class="text-slate-400 col-span-full text-center py-6 text-xs">No products found. Tap "Add Item" to add produce.</p>';
+                    return;
+                }
+                snap.forEach(docSnap => {
+                    const prod = { id: docSnap.id, ...docSnap.data() };
+                    productsCache.push(prod);
+                    grid.innerHTML += `
+                        <div onclick="addToCart('${prod.id}')" class="bg-slate-50 hover:bg-leaf-50/50 border border-slate-200 rounded-2xl p-3 cursor-pointer transition flex flex-col justify-between active:scale-95 select-none">
+                            <div>
+                                <span class="bg-leaf-100 text-leaf-800 text-[9px] font-black px-2 py-0.5 rounded-full uppercase">${prod.category}</span>
+                                <h4 class="font-bold text-slate-800 text-xs md:text-sm mt-1.5 leading-tight">${prod.name}</h4>
+                            </div>
+                            <div class="mt-3 flex justify-between items-center">
+                                <span class="font-black text-leaf-700 text-xs md:text-sm">${formatKES(prod.price)}</span>
+                                <span class="text-[10px] text-slate-400 font-semibold">${prod.unit}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (e) {
+                grid.innerHTML = '<p class="text-rose-500 col-span-full text-center py-6 text-xs">Failed loading produce.</p>';
+            }
+        }
+
+        window.addToCart = function(prodId) {
+            const prod = productsCache.find(p => p.id === prodId);
+            if (!prod) return;
+            const existing = cart.find(item => item.id === prodId);
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                cart.push({ id: prod.id, name: prod.name, price: prod.price, unit: prod.unit, qty: 1 });
+            }
+            renderCart();
+        };
+
+        function renderCart() {
+            const list = document.getElementById('cart-items-list');
+            if (cart.length === 0) {
+                list.innerHTML = '<p class="text-slate-400 text-center py-6 text-xs">Cart is empty. Tap produce to sell.</p>';
+                document.getElementById('cart-total').textContent = formatKES(0);
+                document.getElementById('cart-count').textContent = '0 items';
+                return;
+            }
+            list.innerHTML = '';
+            let subtotal = 0;
+            let count = 0;
+            cart.forEach((item, idx) => {
+                subtotal += item.price * item.qty;
+                count += item.qty;
+                list.innerHTML += `
+                    <div class="flex justify-between items-center py-2 text-xs">
+                        <div>
+                            <h5 class="font-bold text-slate-800">${item.name}</h5>
+                            <span class="text-[10px] text-slate-500">${formatKES(item.price)} x ${item.qty} ${item.unit}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-black text-slate-900">${formatKES(item.price * item.qty)}</span>
+                            <button onclick="removeFromCart(${idx})" class="text-rose-500 text-xs font-bold px-1.5">×</button>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('cart-total').textContent = formatKES(subtotal);
+            document.getElementById('cart-count').textContent = `${count} items`;
+        }
+
+        window.removeFromCart = function(idx) {
+            cart.splice(idx, 1);
+            renderCart();
+        };
+
+        window.processCheckout = async function(method) {
+            if (!currentUser) return;
+            if (cart.length === 0) {
+                showToast('Cart is empty', 'error');
+                return;
+            }
+            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            try {
+                // Save under user-isolated path
+                await addDoc(collection(db, `users/${currentUser.uid}/sales`), {
+                    items: cart,
+                    total: total,
+                    paymentMethod: method,
+                    createdAt: serverTimestamp(),
+                    cashier: currentUser.email
+                });
+
+                showToast(`Sale Recorded (${formatKES(total)}) via ${method}`);
+                cart = [];
+                renderCart();
+                loadDashboardData();
+            } catch (e) {
+                showToast(e.message, 'error');
+            }
+        };
+
+        window.openAddProductModal = () => document.getElementById('product-modal').classList.remove('hidden');
+        window.closeAddProductModal = () => document.getElementById('product-modal').classList.add('hidden');
+
+        document.getElementById('product-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const name = document.getElementById('prod-name').value;
+            const category = document.getElementById('prod-category').value;
+            const unit = document.getElementById('prod-unit').value;
+            const cost = Number(document.getElementById('prod-cost').value);
+            const price = Number(document.getElementById('prod-price').value);
+            const stock = Number(document.getElementById('prod-stock').value);
+            const publish = document.getElementById('prod-publish').checked;
+
+            try {
+                // User-isolated product document
+                const prodRef = await addDoc(collection(db, `users/${currentUser.uid}/products`), {
+                    name, category, unit, cost, price, stock, publish, createdAt: serverTimestamp()
+                });
+
+                if (publish) {
+                    await setDoc(doc(db, `public_products`, prodRef.id), {
+                        userId: currentUser.uid,
+                        name, category, unit, price, publish: true, updatedAt: serverTimestamp()
+                    });
+                }
+
+                showToast('Produce added to your catalog!');
+                closeAddProductModal();
+                loadPosProducts();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        });
+
+        async function loadCatalogProducts() {
+            if (!currentUser) return;
+            const tbody = document.getElementById('products-table-body');
+            tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-slate-400 text-xs">Loading...</td></tr>';
+            try {
+                const snap = await getDocs(collection(db, `users/${currentUser.uid}/products`));
+                tbody.innerHTML = '';
+                if (snap.empty) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-slate-400 text-xs">No products saved yet.</td></tr>';
+                    return;
+                }
+                snap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    tbody.innerHTML += `
+                        <tr class="border-b border-slate-100 hover:bg-slate-50">
+                            <td class="p-3 font-bold text-slate-800">${data.name}</td>
+                            <td class="p-3 text-slate-500">${data.category}</td>
+                            <td class="p-3 font-black text-leaf-700">${formatKES(data.price)}</td>
+                            <td class="p-3 text-slate-500">${data.stock} ${data.unit}</td>
+                        </tr>
+                    `;
+                });
+            } catch (e) {
+                tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-rose-500 text-xs">Error loading catalog.</td></tr>';
+            }
+        }
+    </script>
+</body>
+</html>

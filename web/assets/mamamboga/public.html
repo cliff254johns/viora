@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mama Shiko Fresh Groceries — Online Store</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#16a34a">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        leaf: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 900: '#14532d' }
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col select-none pb-20 md:pb-0">
+
+    <!-- App Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="bg-leaf-600 text-white p-2 rounded-xl shadow-md">
+                    <i data-lucide="shopping-basket" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="font-black text-base md:text-lg text-slate-900 leading-tight">Mama Shiko Fresh</h1>
+                    <p class="text-[10px] text-leaf-600 font-bold">Wakulima Market Stall 42</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="https://wa.me/254712345678" target="_blank" class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1">
+                    <i data-lucide="message-circle" class="w-4 h-4"></i> WhatsApp
+                </a>
+                <button onclick="toggleCartDrawer()" class="bg-leaf-600 hover:bg-leaf-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 shadow-md">
+                    <i data-lucide="shopping-cart" class="w-4 h-4"></i> (<span id="public-cart-count">0</span>)
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Hero Banner -->
+    <section class="bg-leaf-900 text-white py-8 md:py-12 px-4 text-center">
+        <span class="bg-leaf-800/80 text-leaf-300 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">Direct Wakulima Market Fresh</span>
+        <h2 class="text-2xl md:text-4xl font-black mt-2 tracking-tight">Fresh Produce Delivered Daily</h2>
+        <p class="text-leaf-200 text-xs md:text-sm mt-1 max-w-md mx-auto">Organic vegetables and fruit delivered directly to your doorstep in Nairobi.</p>
+    </section>
+
+    <!-- Public Produce Grid -->
+    <main class="flex-1 max-w-6xl mx-auto px-4 py-6 w-full">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-base md:text-xl font-bold text-slate-900">Today's Produce Catalog</h3>
+        </div>
+        <div id="public-product-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-6">
+            <p class="text-slate-400 col-span-full text-center py-12 text-xs">Loading published grocery catalog...</p>
+        </div>
+    </main>
+
+    <!-- Cart Drawer Modal -->
+    <div id="cart-drawer" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex justify-end hidden">
+        <div class="bg-white w-full max-w-md h-full shadow-2xl flex flex-col p-5">
+            <div class="flex justify-between items-center border-b border-slate-200 pb-3">
+                <h3 class="font-bold text-slate-900 text-base">Your Grocery Order</h3>
+                <button onclick="toggleCartDrawer()" class="text-slate-400"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <div id="public-cart-items" class="flex-1 overflow-y-auto divide-y divide-slate-100 py-3 space-y-2">
+                <p class="text-slate-400 text-center py-12 text-xs">Your cart is empty.</p>
+            </div>
+            <div class="border-t border-slate-200 pt-3 space-y-3">
+                <div class="flex justify-between text-base font-black text-slate-900">
+                    <span>Total Amount</span>
+                    <span id="public-cart-total" class="text-leaf-600">KES 0</span>
+                </div>
+                <button onclick="submitCustomerOrder()" class="w-full bg-leaf-600 hover:bg-leaf-700 active:scale-95 text-white font-bold py-3.5 rounded-xl shadow-md transition text-xs">
+                    Place WhatsApp / Online Order
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Fixed Action Bar -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 flex justify-between items-center z-40 shadow-xl">
+        <div>
+            <span class="text-[10px] text-slate-400 font-bold block">Cart Total</span>
+            <span id="mobile-bottom-total" class="font-black text-leaf-700 text-sm">KES 0</span>
+        </div>
+        <button onclick="toggleCartDrawer()" class="bg-leaf-600 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md">
+            View Cart
+        </button>
+    </div>
+
+    <script type="module">
+        import { db, showToast, formatKES } from './firebase.js';
+        import { collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        lucide.createIcons();
+
+        let publicCart = [];
+        let publicProducts = [];
+
+        async function loadPublicCatalog() {
+            const grid = document.getElementById('public-product-grid');
+            try {
+                const snap = await getDocs(collection(db, 'public_products'));
+                publicProducts = [];
+                grid.innerHTML = '';
+                snap.forEach(docSnap => {
+                    const prod = { id: docSnap.id, ...docSnap.data() };
+                    if (prod.publish) {
+                        publicProducts.push(prod);
+                        grid.innerHTML += `
+                            <div class="bg-white rounded-2xl border border-slate-200 p-3.5 flex flex-col justify-between shadow-sm hover:shadow-md transition">
+                                <div>
+                                    <span class="bg-leaf-50 text-leaf-700 text-[9px] font-black px-2 py-0.5 rounded-full uppercase">${prod.category}</span>
+                                    <h4 class="font-bold text-slate-900 text-xs md:text-sm mt-2 leading-tight">${prod.name}</h4>
+                                </div>
+                                <div class="mt-4 flex items-center justify-between">
+                                    <div>
+                                        <span class="font-black text-leaf-700 text-xs md:text-sm block">${formatKES(prod.price)}</span>
+                                        <span class="text-[10px] text-slate-400 font-semibold">per ${prod.unit}</span>
+                                    </div>
+                                    <button onclick="addToPublicCart('${prod.id}')" class="bg-leaf-600 hover:bg-leaf-700 text-white p-2 rounded-xl shadow-sm">
+                                        <i data-lucide="plus" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                lucide.createIcons();
+            } catch (e) {
+                grid.innerHTML = '<p class="text-rose-500 col-span-full text-center py-8 text-xs">Unable to load catalog.</p>';
+            }
+        }
+
+        window.addToPublicCart = function(prodId) {
+            const prod = publicProducts.find(p => p.id === prodId);
+            if (!prod) return;
+            const existing = publicCart.find(item => item.id === prodId);
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                publicCart.push({ id: prod.id, name: prod.name, price: prod.price, unit: prod.unit, qty: 1 });
+            }
+            updatePublicCartUI();
+            showToast(`Added ${prod.name}`);
+        };
+
+        function updatePublicCartUI() {
+            document.getElementById('public-cart-count').textContent = publicCart.reduce((sum, item) => sum + item.qty, 0);
+            const list = document.getElementById('public-cart-items');
+            if (publicCart.length === 0) {
+                list.innerHTML = '<p class="text-slate-400 text-center py-12 text-xs">Your cart is empty.</p>';
+                document.getElementById('public-cart-total').textContent = formatKES(0);
+                document.getElementById('mobile-bottom-total').textContent = formatKES(0);
+                return;
+            }
+            list.innerHTML = '';
+            let total = 0;
+            publicCart.forEach(item => {
+                total += item.price * item.qty;
+                list.innerHTML += `
+                    <div class="flex justify-between items-center py-2 text-xs">
+                        <div>
+                            <h5 class="font-bold text-slate-800">${item.name}</h5>
+                            <span class="text-[10px] text-slate-500">${formatKES(item.price)} x ${item.qty} ${item.unit}</span>
+                        </div>
+                        <span class="font-black text-slate-900">${formatKES(item.price * item.qty)}</span>
+                    </div>
+                `;
+            });
+            document.getElementById('public-cart-total').textContent = formatKES(total);
+            document.getElementById('mobile-bottom-total').textContent = formatKES(total);
+        }
+
+        window.toggleCartDrawer = () => {
+            document.getElementById('cart-drawer').classList.toggle('hidden');
+        };
+
+        window.submitCustomerOrder = async function() {
+            if (publicCart.length === 0) {
+                showToast('Your cart is empty', 'error');
+                return;
+            }
+            const total = publicCart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            try {
+                await addDoc(collection(db, 'orders'), {
+                    items: publicCart,
+                    total: total,
+                    status: 'New',
+                    createdAt: serverTimestamp()
+                });
+                showToast('Order submitted successfully!');
+                publicCart = [];
+                updatePublicCartUI();
+                toggleCartDrawer();
+            } catch (e) {
+                showToast(e.message, 'error');
+            }
+        };
+
+        loadPublicCatalog();
+    </script>
+</body>
+</html>
