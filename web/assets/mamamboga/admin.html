@@ -108,7 +108,7 @@
                         </div>
                         <div class="bg-slate-950 p-4 md:p-6 rounded-2xl border border-slate-800">
                             <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Master Access</span>
-                            <h3 class="text-2xl md:text-3xl font-black text-leaf-400 mt-2">Viora254</h3>
+                          <h3 class="text-2xl md:text-3xl font-black text-leaf-400 mt-2">Protected</h3>
                             <p class="text-[10px] md:text-xs text-slate-400 mt-1 font-semibold">Admin Passkey</p>
                         </div>
                         <div class="bg-slate-950 p-4 md:p-6 rounded-2xl border border-slate-800">
@@ -172,7 +172,8 @@
         document.getElementById('admin-login-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const pass = document.getElementById('admin-password').value;
-            if (pass === 'Viora254') {
+            // TODO: replace with Firebase Admin custom-claim check (see firebase.js note below)
+if (pass === sessionStorage.getItem('admin_key') && sessionStorage.getItem('admin_key')) {
                 sessionStorage.setItem('admin_auth', 'true');
                 showToast('Admin Authorized');
                 renderAdminView();
@@ -185,20 +186,23 @@
             if (sessionStorage.getItem('admin_auth') === 'true') {
                 document.getElementById('auth-screen').classList.add('hidden');
                 document.getElementById('admin-app').classList.remove('hidden');
-                loadUsersData();
+               loadUsersData();
+loadPlatformStats();
             }
         }
 
-                async function loadSubscriptionData() {
-            try {
-                const snap = await getDocs(collection(db, 'subscriptions'));
-                let totalRevenue = 0;
-                snap.forEach(d => { totalRevenue += d.data().amount || 0; });
-                const el = document.getElementById('stat-total-users');
-                if (el) el.textContent = snap.size;
-                console.log('Subscription revenue:', totalRevenue);
-            } catch (e) { console.warn(e); }
-        }
+          async function loadPlatformStats() {
+    try {
+        const usersSnap = await getDocs(collection(db, 'users'));
+        let active = 0, suspended = 0;
+        usersSnap.forEach(d => { d.data().suspended ? suspended++ : active++; });
+        document.getElementById('stat-total-users').textContent = usersSnap.size;
+        const activeEl = document.getElementById('stat-active-users');
+        if (activeEl) activeEl.textContent = active;
+        const suspEl = document.getElementById('stat-suspended-users');
+        if (suspEl) suspEl.textContent = suspended;
+    } catch (e) { console.warn(e); }
+}
 
         async function loadUsersData() {
             try {
@@ -231,12 +235,23 @@
         document.getElementById('admin-logout-btn').addEventListener('click', adminLogout);
         document.getElementById('admin-mobile-logout').addEventListener('click', adminLogout);
 
-               window.switchAdminTab = function(tabName) {
-            document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
-            const target = document.getElementById(`tab-${tabName}`);
-            if (target) target.classList.remove('hidden');
-            document.getElementById('admin-page-title').textContent = tabName.toUpperCase();
-        };
+        window.switchAdminTab = function(tabName) {
+    document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
+    const target = document.getElementById(`tab-${tabName}`);
+    if (target) target.classList.remove('hidden');
+
+    const titles = { dashboard: 'Platform Analytics', users: 'System Users & Stores', subscriptions: 'Subscriptions & Billing' };
+    document.getElementById('admin-page-title').textContent = titles[tabName] || 'Platform Analytics';
+
+    document.querySelectorAll('.admin-nav-link').forEach(l => {
+        l.className = 'admin-nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold hover:bg-slate-800 text-slate-400 transition';
+    });
+    const active = document.querySelector(`.admin-nav-link[href="#${tabName}"]`);
+    if (active) active.className = 'admin-nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold bg-leaf-600 text-white transition';
+
+    if (tabName === 'users') loadUsersData();
+    if (tabName === 'subscriptions' || tabName === 'dashboard') loadPlatformStats();
+};
 
         renderAdminView();
     </script>
