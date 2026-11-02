@@ -214,14 +214,15 @@ loadPlatformStats();
                     const u = docSnap.data();
                                        const status = u.suspended ? 'Suspended' : 'Active';
                     const statusClass = u.suspended ? 'text-rose-400' : 'text-emerald-400';
-                    tbody.innerHTML += `
-                        <tr class="border-b border-slate-800 hover:bg-slate-900/50">
-                            <td class="p-4 font-bold text-white">${u.name || 'Vendor'}</td>
-                            <td class="p-4 text-slate-400">${u.email || 'N/A'}</td>
-                            <td class="p-4 text-slate-500 font-mono text-[10px]">${u.uid || docSnap.id}</td>
-                            <td class="p-4 ${statusClass} font-bold">${status}</td>
-                        </tr>
-                    `;
+               const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+tbody.innerHTML += `
+    <tr class="border-b border-slate-800 hover:bg-slate-900/50">
+        <td class="p-4 font-bold text-white">${esc(u.name || 'Vendor')}</td>
+        <td class="p-4 text-slate-400">${esc(u.email || 'N/A')}</td>
+        <td class="p-4 text-slate-500 font-mono text-[10px]">${esc(u.uid || docSnap.id)}</td>
+        <td class="p-4 ${statusClass} font-bold">${status}</td>
+    </tr>
+`;
                 });
             } catch (e) {
                 console.error(e);
