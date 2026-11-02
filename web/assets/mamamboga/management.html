@@ -601,9 +601,9 @@ function renderPosGrid(list) {
                 const uid = userCred.user.uid;
 
                 // Create User Profile in database
-                await setDoc(doc(db, 'users', uid), {
-                    uid, name, email, createdAt: serverTimestamp()
-                });
+              await setDoc(doc(db, 'users', uid), {
+    uid, name, email, role: 'owner', suspended: false, createdAt: serverTimestamp()
+});
 
                 showToast('Account created successfully!');
             } catch (err) {
