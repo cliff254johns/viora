@@ -175,3 +175,7 @@ export async function isPlatformAdmin(user) {
     const token = await user.getIdTokenResult();
     return token.claims.platformAdmin === true;
 }
+export async function deleteProduct(uid, productId) {
+    await deleteDoc(doc(db, `users/${uid}/products`, productId));
+    await deleteDoc(doc(db, 'public_products', productId)).catch(() => {});
+}
