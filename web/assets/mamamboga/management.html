@@ -841,9 +841,17 @@ renderPosGrid(productsCache);
                 });
 
                 // Deduct stock for each cart line
-                for (const item of cart) {
-                    try { await deductStock(currentUser.uid, item.id, item.qty); } catch (e) { console.warn('Stock deduction failed', item.id, e); }
-                }
+              for (const item of cart) {
+    const result = await deductStock(currentUser.uid, item.id, item.qty);
+    if (!result.ok) {
+        showToast(`Stock issue on ${item.name} (${result.reason})`, 'error');
+        return; // abort checkout before sale commit
+    }
+}
+// commit sale AFTER all stock deductions succeed
+await addDoc(collection(db, `users/${currentUser.uid}/sales`), {
+    items: cart, total, paymentMethod: method, createdAt: serverTimestamp(), cashier: currentUser.email
+});
 
                 showToast(`Sale Recorded (${formatKES(total)}) via ${method}`);
                 cart = [];
