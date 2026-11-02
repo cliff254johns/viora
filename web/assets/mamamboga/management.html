@@ -489,11 +489,11 @@
     </div>
 
     <script type="module">
-            import { 
-            auth, db, showToast, formatKES, deductStock, getUserRole,
-            signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, 
-            collection, getDocs, addDoc, doc, setDoc, serverTimestamp 
-        } from './firebase.js';
+        import { 
+    auth, db, showToast, formatKES, deductStock, getUserRole,
+    signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, 
+    collection, getDocs, addDoc, doc, setDoc, serverTimestamp, query, where, updateDoc
+} from './firebase.js';
 
         lucide.createIcons();
 
@@ -701,7 +701,8 @@
         async function loadStoreOrders() {
             const tbody = document.getElementById('orders-table-body');
             try {
-                const snap = await getDocs(collection(db, 'orders'));
+                const q = query(collection(db, 'orders'), where('userId', '==', currentUser.uid));
+const snap = await getDocs(q);
                 tbody.innerHTML = snap.empty ? '<tr><td colspan="4" class="p-3 text-center text-slate-400">No active customer orders.</td></tr>' : '';
                 snap.forEach(d => {
                     const data = d.data();
@@ -712,12 +713,11 @@
             } catch(e){}
         }
 
-            window.acceptOrder = async function(orderId) {
-            const { updateDoc } = await import('./firebase.js');
-            await updateDoc(doc(db, 'orders', orderId), { status: 'Accepted', acceptedAt: serverTimestamp() });
-            showToast('Order accepted');
-            loadStoreOrders();
-        };
+       window.acceptOrder = async function(orderId) {
+    await updateDoc(doc(db, 'orders', orderId), { status: 'Accepted', acceptedAt: serverTimestamp() });
+    showToast('Order accepted');
+    loadStoreOrders();
+};
 
         async function loadPosProducts() {
             if (!currentUser) return;
