@@ -420,10 +420,77 @@
             </form>
         </div>
     </div>
+    <!-- Wastage Modal -->
+    <div id="wastage-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-3 shadow-2xl">
+            <h3 class="text-lg font-bold text-slate-900">Record Wastage</h3>
+            <form id="wastage-form" class="space-y-3">
+                <input type="text" id="w-name" required placeholder="Product name" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
+                <input type="number" id="w-qty" required placeholder="Quantity" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
+                <input type="text" id="w-reason" required placeholder="Reason (rotten, damaged, expired)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
+                <input type="number" id="w-cost" required placeholder="Estimated loss (KES)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="document.getElementById('wastage-modal').classList.add('hidden')" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold">Cancel</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Purchase Modal -->
+    <div id="purchase-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-3 shadow-2xl">
+            <h3 class="text-lg font-bold text-slate-900">Record Restock</h3>
+            <form id="purchase-form" class="space-y-3">
+                <input type="text" id="pu-supplier" required placeholder="Supplier" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
+                <input type="text" id="pu-item" required placeholder="Item" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
+                <input type="number" id="pu-cost" required placeholder="Total cost (KES)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
+                <input type="number" id="pu-paid" required placeholder="Amount paid (KES)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="document.getElementById('purchase-modal').classList.add('hidden')" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold">Cancel</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-leaf-600 text-white text-xs font-bold">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Expense Modal -->
+    <div id="expense-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-3 shadow-2xl">
+            <h3 class="text-lg font-bold text-slate-900">Add Expense</h3>
+            <form id="expense-form" class="space-y-3">
+                <select id="ex-category" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
+                    <option>Rent</option><option>Electricity</option><option>Water</option><option>Transport</option><option>Packaging</option><option>Wages</option><option>Licences</option><option>Repairs</option><option>Other</option>
+                </select>
+                <input type="text" id="ex-desc" required placeholder="Description" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
+                <input type="number" id="ex-amount" required placeholder="Amount (KES)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="document.getElementById('expense-modal').classList.add('hidden')" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold">Cancel</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-slate-800 text-white text-xs font-bold">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Customer Modal -->
+    <div id="customer-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-3 shadow-2xl">
+            <h3 class="text-lg font-bold text-slate-900">New Debtor Profile</h3>
+            <form id="customer-form" class="space-y-3">
+                <input type="text" id="cu-name" required placeholder="Customer name" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
+                <input type="text" id="cu-phone" required placeholder="Phone number" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
+                <input type="number" id="cu-balance" placeholder="Opening balance (KES)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="document.getElementById('customer-modal').classList.add('hidden')" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold">Cancel</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-leaf-600 text-white text-xs font-bold">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script type="module">
-        import { 
-            auth, db, showToast, formatKES, 
+            import { 
+            auth, db, showToast, formatKES, deductStock, getUserRole,
             signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, 
             collection, getDocs, addDoc, doc, setDoc, serverTimestamp 
         } from './firebase.js';
@@ -468,9 +535,6 @@
             }
         };
 
-        // ... existing auth listeners ...
-            }
-        });
 
         // Handle Existing User Login
         document.getElementById('mgmt-login-form').addEventListener('submit', async (e) => {
@@ -540,13 +604,44 @@
             const targetTab = document.getElementById(`tab-${tabName}`);
             if (targetTab) targetTab.classList.remove('hidden');
             document.getElementById('mgmt-page-title').textContent = tabName.toUpperCase();
-            if (tabName === 'pos') loadPosProducts();
+                      if (tabName === 'pos') loadPosProducts();
+            if (tabName === 'dashboard') loadDashboardData();
             if (tabName === 'products') loadCatalogProducts();
             if (tabName === 'wastage') loadWastageLog();
+            if (tabName === 'purchases') loadPurchasesLog();
             if (tabName === 'expenses') loadExpensesLog();
+            if (tabName === 'credit') loadCreditLog();
             if (tabName === 'orders') loadStoreOrders();
         };
 
+        async function loadDashboardData() {
+            if (!currentUser) return;
+            try {
+                const [salesSnap, expSnap, prodSnap] = await Promise.all([
+                    getDocs(collection(db, `users/${currentUser.uid}/sales`)),
+                    getDocs(collection(db, `users/${currentUser.uid}/expenses`)),
+                    getDocs(collection(db, `users/${currentUser.uid}/products`))
+                ]);
+                let totalSales = 0, cashSales = 0, mpesaSales = 0, creditSales = 0;
+                salesSnap.forEach(d => {
+                    const s = d.data();
+                    totalSales += s.total || 0;
+                    if (s.paymentMethod === 'Cash') cashSales += s.total || 0;
+                    else if (s.paymentMethod === 'M-Pesa') mpesaSales += s.total || 0;
+                    else creditSales += s.total || 0;
+                });
+                let totalExpenses = 0;
+                expSnap.forEach(d => { totalExpenses += d.data().amount || 0; });
+                const profit = totalSales - totalExpenses;
+                document.getElementById('dash-todays-sales').textContent = formatKES(totalSales);
+                document.getElementById('dash-todays-expenses').textContent = formatKES(totalExpenses);
+                document.getElementById('dash-todays-profit').textContent = formatKES(profit);
+                document.getElementById('dash-total-products').textContent = prodSnap.size;
+            } catch (e) { console.warn(e); }
+        }
+
+       
+        
         async function loadWastageLog() {
             if (!currentUser) return;
             const tbody = document.getElementById('wastage-table-body');
@@ -558,6 +653,20 @@
                     tbody.innerHTML += `
                         <tr class="border-b border-slate-100"><td class="p-3 font-bold">${data.name}</td><td class="p-3">${data.qty}</td><td class="p-3 text-rose-500">${data.reason}</td><td class="p-3 font-black">${formatKES(data.cost)}</td></tr>
                     `;
+                });
+            } catch(e){}
+        }
+
+
+        async function loadPurchasesLog() {
+            if (!currentUser) return;
+            const tbody = document.getElementById('purchases-table-body');
+            try {
+                const snap = await getDocs(collection(db, `users/${currentUser.uid}/purchases`));
+                tbody.innerHTML = snap.empty ? '<tr><td colspan="4" class="p-3 text-center text-slate-400">No restocks recorded.</td></tr>' : '';
+                snap.forEach(d => {
+                    const p = d.data();
+                    tbody.innerHTML += `<tr class="border-b border-slate-100"><td class="p-3 font-bold">${p.supplier || '—'} / ${p.item || '—'}</td><td class="p-3">${formatKES(p.cost)}</td><td class="p-3">${formatKES(p.paid)}</td><td class="p-3 font-black text-rose-600">${formatKES((p.cost||0)-(p.paid||0))}</td></tr>`;
                 });
             } catch(e){}
         }
@@ -576,6 +685,18 @@
                 });
             } catch(e){}
         }
+        async function loadCreditLog() {
+            if (!currentUser) return;
+            const tbody = document.getElementById('credit-table-body');
+            try {
+                const snap = await getDocs(collection(db, `users/${currentUser.uid}/customers`));
+                tbody.innerHTML = snap.empty ? '<tr><td colspan="3" class="p-3 text-center text-slate-400">No debtors registered.</td></tr>' : '';
+                snap.forEach(d => {
+                    const c = d.data();
+                    tbody.innerHTML += `<tr class="border-b border-slate-100"><td class="p-3 font-bold">${c.name}</td><td class="p-3">${c.phone || '—'}</td><td class="p-3 font-black text-rose-600">${formatKES(c.balance || 0)}</td></tr>`;
+                });
+            } catch(e){}
+        }
 
         async function loadStoreOrders() {
             const tbody = document.getElementById('orders-table-body');
@@ -584,12 +705,19 @@
                 tbody.innerHTML = snap.empty ? '<tr><td colspan="4" class="p-3 text-center text-slate-400">No active customer orders.</td></tr>' : '';
                 snap.forEach(d => {
                     const data = d.data();
-                    tbody.innerHTML += `
-                        <tr class="border-b border-slate-100"><td class="p-3 font-bold">${d.id.slice(0,6)}</td><td class="p-3 font-black">${formatKES(data.total)}</td><td class="p-3"><span class="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded font-bold">${data.status}</span></td><td class="p-3"><button class="text-xs bg-leaf-600 text-white px-2 py-1 rounded">Accept</button></td></tr>
+                                       tbody.innerHTML += `
+                        <tr class="border-b border-slate-100"><td class="p-3 font-bold">${d.id.slice(0,6)}</td><td class="p-3 font-black">${formatKES(data.total)}</td><td class="p-3"><span class="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded font-bold">${data.status}</span></td><td class="p-3"><button onclick="acceptOrder('${d.id}')" class="text-xs bg-leaf-600 text-white px-2 py-1 rounded">Accept</button></td></tr>
                     `;
                 });
             } catch(e){}
         }
+
+            window.acceptOrder = async function(orderId) {
+            const { updateDoc } = await import('./firebase.js');
+            await updateDoc(doc(db, 'orders', orderId), { status: 'Accepted', acceptedAt: serverTimestamp() });
+            showToast('Order accepted');
+            loadStoreOrders();
+        };
 
         async function loadPosProducts() {
             if (!currentUser) return;
@@ -681,14 +809,18 @@
             }
             const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
             try {
-                // Save under user-isolated path
-                await addDoc(collection(db, `users/${currentUser.uid}/sales`), {
+                              await addDoc(collection(db, `users/${currentUser.uid}/sales`), {
                     items: cart,
                     total: total,
                     paymentMethod: method,
                     createdAt: serverTimestamp(),
                     cashier: currentUser.email
                 });
+
+                // Deduct stock for each cart line
+                for (const item of cart) {
+                    try { await deductStock(currentUser.uid, item.id, item.qty); } catch (e) { console.warn('Stock deduction failed', item.id, e); }
+                }
 
                 showToast(`Sale Recorded (${formatKES(total)}) via ${method}`);
                 cart = [];
@@ -698,6 +830,74 @@
                 showToast(e.message, 'error');
             }
         };
+
+               window.openWastageModal  = () => document.getElementById('wastage-modal').classList.remove('hidden');
+        window.openPurchaseModal = () => document.getElementById('purchase-modal').classList.remove('hidden');
+        window.openExpenseModal  = () => document.getElementById('expense-modal').classList.remove('hidden');
+        window.openCustomerModal = () => document.getElementById('customer-modal').classList.remove('hidden');
+
+        document.getElementById('wastage-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+            await addDoc(collection(db, `users/${currentUser.uid}/wastage`), {
+                name: document.getElementById('w-name').value,
+                qty: Number(document.getElementById('w-qty').value),
+                reason: document.getElementById('w-reason').value,
+                cost: Number(document.getElementById('w-cost').value),
+                createdAt: serverTimestamp()
+            });
+            document.getElementById('wastage-modal').classList.add('hidden');
+            document.getElementById('wastage-form').reset();
+            showToast('Wastage recorded');
+            loadWastageLog();
+        });
+
+        document.getElementById('purchase-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+            await addDoc(collection(db, `users/${currentUser.uid}/purchases`), {
+                supplier: document.getElementById('pu-supplier').value,
+                item: document.getElementById('pu-item').value,
+                cost: Number(document.getElementById('pu-cost').value),
+                paid: Number(document.getElementById('pu-paid').value),
+                createdAt: serverTimestamp()
+            });
+            document.getElementById('purchase-modal').classList.add('hidden');
+            document.getElementById('purchase-form').reset();
+            showToast('Restock recorded');
+            loadPurchasesLog();
+        });
+
+        document.getElementById('expense-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+            await addDoc(collection(db, `users/${currentUser.uid}/expenses`), {
+                category: document.getElementById('ex-category').value,
+                desc: document.getElementById('ex-desc').value,
+                amount: Number(document.getElementById('ex-amount').value),
+                createdAt: serverTimestamp()
+            });
+            document.getElementById('expense-modal').classList.add('hidden');
+            document.getElementById('expense-form').reset();
+            showToast('Expense saved');
+            loadExpensesLog();
+            loadDashboardData();
+        });
+
+        document.getElementById('customer-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+            await addDoc(collection(db, `users/${currentUser.uid}/customers`), {
+                name: document.getElementById('cu-name').value,
+                phone: document.getElementById('cu-phone').value,
+                balance: Number(document.getElementById('cu-balance').value || 0),
+                createdAt: serverTimestamp()
+            });
+            document.getElementById('customer-modal').classList.add('hidden');
+            document.getElementById('customer-form').reset();
+            showToast('Debtor registered');
+            loadCreditLog();
+        });
 
         window.openAddProductModal = () => document.getElementById('product-modal').classList.remove('hidden');
         window.closeAddProductModal = () => document.getElementById('product-modal').classList.add('hidden');
