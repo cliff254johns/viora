@@ -176,7 +176,10 @@
 if (pass === sessionStorage.getItem('admin_key') && sessionStorage.getItem('admin_key')) {
                 sessionStorage.setItem('admin_auth', 'true');
                 showToast('Admin Authorized');
-                renderAdminView();
+                window.addEventListener('storage', (e) => {
+    if (e.key === 'admin_auth' && e.newValue !== 'true') location.reload();
+});
+renderAdminView();
             } else {
                 showToast('Invalid Admin Password', 'error');
             }
