@@ -229,16 +229,20 @@ snap.forEach(docSnap => {
     status: 'New',
     createdAt: serverTimestamp()
 });
-                               showToast('Order submitted successfully! Reference: ' + Date.now().toString().slice(-6));
-                publicCart = [];
-                updatePublicCartUI();
-                toggleCartDrawer();
-                // Optionally show the order reference on screen
-                const ref = document.createElement('div');
-                ref.className = 'fixed bottom-24 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs px-4 py-2 rounded-xl z-50';
-                ref.textContent = 'Order ref: ' + Date.now().toString().slice(-6);
-                document.body.appendChild(ref);
-                setTimeout(() => ref.remove(), 6000);
+             const orderRef = Date.now().toString().slice(-6);
+await addDoc(collection(db, 'orders'), {
+    shopId, userId: shopId, items: publicCart, total,
+    status: 'New', reference: orderRef, createdAt: serverTimestamp()
+});
+showToast('Order submitted! Reference: ' + orderRef);
+publicCart = [];
+updatePublicCartUI();
+toggleCartDrawer();
+const banner = document.createElement('div');
+banner.className = 'fixed bottom-24 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs px-4 py-2 rounded-xl z-50';
+banner.textContent = 'Order ref: ' + orderRef;
+document.body.appendChild(banner);
+setTimeout(() => banner.remove(), 6000);
             } catch (e) {
                 showToast(e.message, 'error');
             }
