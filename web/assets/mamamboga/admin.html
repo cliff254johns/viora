@@ -165,7 +165,7 @@
     </div>
 
     <script type="module">
-        import { db, showToast, collection, getDocs } from './firebase.js';
+              import { db, showToast, collection, getDocs, doc, updateDoc, deleteDoc, addDoc, serverTimestamp } from './firebase.js';
 
         lucide.createIcons();
 
@@ -189,6 +189,17 @@
             }
         }
 
+                async function loadSubscriptionData() {
+            try {
+                const snap = await getDocs(collection(db, 'subscriptions'));
+                let totalRevenue = 0;
+                snap.forEach(d => { totalRevenue += d.data().amount || 0; });
+                const el = document.getElementById('stat-total-users');
+                if (el) el.textContent = snap.size;
+                console.log('Subscription revenue:', totalRevenue);
+            } catch (e) { console.warn(e); }
+        }
+
         async function loadUsersData() {
             try {
                 const snap = await getDocs(collection(db, 'users'));
@@ -197,11 +208,14 @@
                 document.getElementById('stat-total-users').textContent = snap.size;
                 snap.forEach(docSnap => {
                     const u = docSnap.data();
+                                       const status = u.suspended ? 'Suspended' : 'Active';
+                    const statusClass = u.suspended ? 'text-rose-400' : 'text-emerald-400';
                     tbody.innerHTML += `
                         <tr class="border-b border-slate-800 hover:bg-slate-900/50">
                             <td class="p-4 font-bold text-white">${u.name || 'Vendor'}</td>
                             <td class="p-4 text-slate-400">${u.email || 'N/A'}</td>
                             <td class="p-4 text-slate-500 font-mono text-[10px]">${u.uid || docSnap.id}</td>
+                            <td class="p-4 ${statusClass} font-bold">${status}</td>
                         </tr>
                     `;
                 });
@@ -210,10 +224,19 @@
             }
         }
 
-        document.getElementById('admin-logout-btn').addEventListener('click', () => {
+              function adminLogout() {
             sessionStorage.removeItem('admin_auth');
             location.reload();
-        });
+        }
+        document.getElementById('admin-logout-btn').addEventListener('click', adminLogout);
+        document.getElementById('admin-mobile-logout').addEventListener('click', adminLogout);
+
+               window.switchAdminTab = function(tabName) {
+            document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(`tab-${tabName}`);
+            if (target) target.classList.remove('hidden');
+            document.getElementById('admin-page-title').textContent = tabName.toUpperCase();
+        };
 
         renderAdminView();
     </script>
