@@ -90,8 +90,13 @@ export async function deductStock(uid, productId, qty) {
         if (!snap.exists()) return { ok: false, reason: 'missing' };
         const current = snap.data().stock || 0;
         if (current < qty) return { ok: false, reason: 'insufficient', available: current };
-        tx.update(prodRef, { stock: current - qty });
-        return { ok: true, remaining: current - qty };
+                   tx.update(prodRef, { stock: current - qty });
+            const publicRef = doc(db, 'public_products', productId);
+            const publicSnap = await tx.get(publicRef);
+            if (publicSnap.exists()) {
+                tx.update(publicRef, { stock: current - qty });
+            }
+            return { ok: true, remaining: current - qty };
     });
 }
 
