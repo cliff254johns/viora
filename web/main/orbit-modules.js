@@ -769,8 +769,8 @@ export function renderPostLibrary(ctx) {
     });
   });
 
-  host.querySelectorAll('[data-plib-action]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+   host.querySelectorAll('[data-plib-action]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
       e.stopPropagation();
       const action = btn.getAttribute('data-plib-action');
       const i = Number(btn.getAttribute('data-plib-card-idx'));
@@ -783,6 +783,21 @@ export function renderPostLibrary(ctx) {
         refreshFanoutStats(ctx, group);
       } else if (action === 'post-now') {
         postFanoutNow(ctx, group);
+      } else if (action === 'delete') {
+        const summary = summarizeFanout(group);
+        const count = group.length;
+        const label = count === 1 ? 'this post' : `all ${count} posts in this fanout`;
+        if (!confirm(`Delete ${label}? This cannot be undone.`)) return;
+        try {
+          const result = await deleteFanoutPosts(ctx, group);
+          if (result.ok) {
+            toast(ctx, `Deleted ${result.deleted} post${result.deleted === 1 ? '' : 's'}.`, 'success');
+          } else {
+            toast(ctx, 'Delete failed: ' + (result.error || 'unknown'), 'error');
+          }
+        } catch (err) {
+          toast(ctx, 'Delete failed: ' + (err.message || 'unknown'), 'error');
+        }
       }
     });
   });
@@ -844,16 +859,22 @@ function renderFanoutCard(group, idx) {
 
   const campaignName = hero?._campaignName || '—';
 
-  const actionsHtml = (() => {
+   const actionsHtml = (() => {
     const buttons = [
       `<button type="button" class="btn soft btn-sm" data-plib-action="view" data-plib-card-idx="${idx}">View</button>`,
     ];
     if (summary.aggregateStatus === 'published') {
-      buttons.push(`<button type="button" class="btn soft btn-sm" data-plib-action="refresh" data-plib-card-idx="${idx}"><i class="fa-solid fa-rotate"></i></button>`);
+      buttons.push(`<button type="button" class="btn soft btn-sm" data-plib-action="refresh" data-plib-card-idx="${idx}" title="Refresh stats"><i class="fa-solid fa-rotate"></i></button>`);
     }
     if (summary.aggregateStatus === 'draft' || summary.aggregateStatus === 'scheduled') {
       buttons.push(`<button type="button" class="btn primary btn-sm" data-plib-action="post-now" data-plib-card-idx="${idx}">Post now →</button>`);
     }
+    /* Delete is always available — user can remove drafts, failed posts,
+       or even published posts (they just won't be deleted from the
+       external platform). */
+    buttons.push(
+      `<button type="button" class="btn danger btn-sm" data-plib-action="delete" data-plib-card-idx="${idx}" title="Delete"><i class="fa-solid fa-trash"></i></button>`
+    );
     return buttons.join('');
   })();
 
@@ -1199,16 +1220,16 @@ function renderFanoutModalBody(ctx, bodyEl, group, summary, activeTab) {
     await postFanoutNow(ctx, group);
   });
 
-  bodyEl.querySelector('[data-plib-delete]')?.addEventListener('click', async () => {
+   bodyEl.querySelector('[data-plib-delete]')?.addEventListener('click', async () => {
     if (!confirm(`Delete ${group.length > 1 ? 'all posts in this fanout' : 'this post'}? This cannot be undone.`)) return;
     try {
-      const c = C(ctx);
-      for (const p of group) {
-        await c.deleteDoc?.('campaigns', p.id, false);
+      const result = await deleteFanoutPosts(ctx, group);
+      if (result.ok) {
+        closeFanoutDetail(ctx);
+        toast(ctx, `Deleted ${result.deleted} post${result.deleted === 1 ? '' : 's'}.`, 'success');
+      } else {
+        toast(ctx, 'Delete failed: ' + (result.error || 'unknown'), 'error');
       }
-      closeFanoutDetail(ctx);
-      toast(ctx, 'Deleted.', 'info');
-      try { renderPostLibrary(ctx); } catch (_) {}
     } catch (e) {
       toast(ctx, 'Delete failed: ' + (e.message || 'unknown'), 'error');
     }
@@ -3263,4 +3284,62 @@ export async function renderAdmin(ctx) {
         <tbody>${counts.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${v}</td></tr>`).join('')}</tbody>
       </table></div>
     </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DELETE FANOUT — correctly removes a group of posts from a campaign
+   ─────────────────────────────────────────────────────────────
+   Removes every post in the group from its parent campaign's
+   posts[] array, saves the campaign, and re-renders the library.
+
+   Handles both cases:
+     • Whole fanout (all posts share the same fanoutId)
+     • Single post (has its own fanoutId, or no fanoutId)
+   ═══════════════════════════════════════════════════════════════ */
+async function deleteFanoutPosts(ctx, group) {
+  if (!Array.isArray(group) || group.length === 0) return { ok: false, error: 'empty group' };
+
+  const c = C(ctx);
+  const state = c.state || { data: {} };
+  const campaigns = state.data?.campaigns || [];
+
+  /* Group posts by their parent campaign so we only save each
+     campaign once. */
+  const byCampaign = new Map();
+  for (const post of group) {
+    const campaignId = post._campaignId || post.campaignId;
+    if (!campaignId) continue;
+    if (!byCampaign.has(campaignId)) byCampaign.set(campaignId, new Set());
+    byCampaign.get(campaignId).add(post.id);
+  }
+
+  let deleted = 0;
+  const errors = [];
+
+  for (const [campaignId, postIds] of byCampaign) {
+    const campaign = campaigns.find(x => x.id === campaignId);
+    if (!campaign) { errors.push('campaign not found: ' + campaignId); continue; }
+
+    const before = Array.isArray(campaign.posts) ? campaign.posts.length : 0;
+    campaign.posts = (campaign.posts || []).filter(p => p && !postIds.has(p.id));
+    const after = campaign.posts.length;
+    deleted += (before - after);
+
+    campaign.updatedAt = new Date().toISOString();
+
+    try {
+      await c.upsertDoc('campaigns', campaign, campaign._rev);
+    } catch (e) {
+      errors.push('save failed for ' + campaignId + ': ' + e.message);
+    }
+  }
+
+  /* Refresh the Post Library */
+  try { renderPostLibrary(ctx); } catch (_) {}
+  try { renderDraftLibrary(); } catch (_) {}
+
+  if (errors.length) {
+    return { ok: false, deleted, error: errors.join(' | ') };
+  }
+  return { ok: true, deleted };
 }
