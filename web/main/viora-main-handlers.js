@@ -170,9 +170,15 @@ export function buildVioraHandlers(d) {
      Kept almost identical to your original; the important fix
      is that this now actually gets installed.
      ═══════════════════════════════════════════════════════════ */
-   Viora.navigate = function (tab, opts = {}) {
+  Viora.navigate = function (tab, opts = {}) {
     try {
       if (tab === 'marketing-campaigns' || tab === 'campaign-analytics') {
+        // ★ v9.8 — Only admins, execs, and marketing can access campaigns.html
+        const role = state?.operator?.role;
+        if (role && role !== 'admin' && role !== 'exec' && role !== 'marketing') {
+          _toast('Campaigns are restricted to admin, exec, and marketing roles.', 'warning');
+          return;
+        }
         window.location.href = '/campaigns.html' + (tab === 'campaign-analytics' ? '#analytics' : '');
         return;
       }
