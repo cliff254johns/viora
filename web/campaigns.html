@@ -1110,6 +1110,32 @@ tr:last-child td{border-bottom:0}
   }
   .formgrid,.form-row{grid-template-columns:1fr}
 }
+   
+/* ═══════════════════════════════════════════════════════════════
+   IMPORT MODAL — preview rows
+   ═══════════════════════════════════════════════════════════════ */
+.plib-import-summary{
+  font-size:11px;
+  padding:6px 10px;
+  background:var(--panel2);
+  border-radius:8px;
+  margin-bottom:4px;
+}
+.plib-import-summary strong{color:var(--accent)}
+.plib-import-row{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 10px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  margin-bottom:4px;
+  background:var(--panel);
+  font-size:11.5px;
+}
+.plib-import-row i{width:16px;text-align:center;flex-shrink:0}
+.plib-import-row-bad{
+  border-color:color-mix(in srgb,var(--warn) 35%,var(--line));
+  background:color-mix(in srgb,var(--warn) 6%,var(--panel));
+}
 </style>
 </head>
 <body>
