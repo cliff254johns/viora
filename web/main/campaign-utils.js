@@ -44,26 +44,32 @@ export const PLATFORMS = Object.freeze({
                canPost: false, supportsImage: true,  imageSize: '1200x900',  imageAR: '4:3',     maxChars: 1500 },
 });
 
-/**
- * Extract the platform-tailored caption from a worker response.
- *
- * The worker can return any of:
- *   • { text: string, hashtags: string[], variants: { platform: string } }
- *   • { variants: [ { text, hashtags, variants: {...} } ] }        (bulk mode)
- *   • { text: string, hashtags: string[] }                          (no variants)
- *   • An empty / fallback object with `_isFallback: true`
- *
- * We prefer a per-platform variant. If none exists we fall back to the
- * base `text` and log a warning so it's not silent.
- */
+/* ═══════════════════════════════════════════════════════════════
+   PLATFORM METADATA
+   ═══════════════════════════════════════════════════════════════ */
+export function platformMeta(key) {
+  return PLATFORMS[key] || {
+    label: key || 'Unknown',
+    icon: 'fa-solid fa-globe',
+    color: '#94a3b8',
+    canPost: false,
+    supportsImage: false,
+    maxChars: 2200,
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CAPTION EXTRACTION
+   Handles every worker response shape.
+   ═══════════════════════════════════════════════════════════════ */
 export function captionForPlatform(workerResponse, platform) {
   if (!workerResponse) return '';
 
-  /* Variant object form (single, non-bulk) */
+  /* Shape 1: { text, hashtags, variants: { platform: string } } */
   const v = workerResponse.variants && workerResponse.variants[platform];
   if (v && typeof v === 'string' && v.trim()) return v.trim();
 
-  /* Variant array form (bulk mode) — grab first item's variant */
+  /* Shape 2: { variants: [ { text, variants: {...} } ] } (bulk) */
   if (Array.isArray(workerResponse.variants) && workerResponse.variants[0]) {
     const first = workerResponse.variants[0];
     const fv = first.variants && first.variants[platform];
@@ -71,7 +77,7 @@ export function captionForPlatform(workerResponse, platform) {
     if (first.text) return String(first.text).trim();
   }
 
-  /* Fallback to base caption */
+  /* Shape 3: { text } fallback */
   const fallback = String(workerResponse.text || '').trim();
   if (fallback) {
     const keys = workerResponse.variants && !Array.isArray(workerResponse.variants)
@@ -79,20 +85,19 @@ export function captionForPlatform(workerResponse, platform) {
       : [];
     console.warn(
       `[captionForPlatform] No variant for "${platform}" — using base caption. ` +
-      `Worker returned variants for: [${keys.join(', ')}]`
+      `Worker returned: [${keys.join(', ')}]`
     );
   }
   return fallback;
 }
 
-export function platformMeta(key) {
-  return PLATFORMS[key] || { label: key, icon: 'fa-solid fa-globe', color: '#94a3b8', canPost: false, supportsImage: false };
-}
-
-/* ── Compose-URL builders (fallback for non-API platforms) ── */
+/* ═══════════════════════════════════════════════════════════════
+   COMPOSE URL BUILDER
+   ═══════════════════════════════════════════════════════════════ */
 export function composeUrlFor(platform, caption, hashtags) {
   const text = encodeURIComponent(
-    [caption || '', (hashtags || []).map(h => h.startsWith('#') ? h : '#' + h).join(' ')].filter(Boolean).join('\n\n')
+    [caption || '', (hashtags || []).map(h => h.startsWith('#') ? h : '#' + h).join(' ')]
+      .filter(Boolean).join('\n\n')
   );
   switch (platform) {
     case 'twitter':   return `https://twitter.com/intent/tweet?text=${text}`;
@@ -107,14 +112,15 @@ export function composeUrlFor(platform, caption, hashtags) {
   }
 }
 
-/* ── Safe escape (HTML) ── */
+/* ═══════════════════════════════════════════════════════════════
+   ESCAPING
+   ═══════════════════════════════════════════════════════════════ */
 export function escHtml(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-/* ── Quote escape for inline onclick="fn('...')" ── */
 export function q(s) {
   return String(s == null ? '' : s)
     .replace(/\\/g, '\\\\')
@@ -123,7 +129,9 @@ export function q(s) {
     .replace(/</g, '\\x3c');
 }
 
-/* ── Formatting ── */
+/* ═══════════════════════════════════════════════════════════════
+   FORMATTING
+   ═══════════════════════════════════════════════════════════════ */
 export function fmtNum(n) {
   const v = Number(n) || 0;
   if (v >= 1e9) return (v / 1e9).toFixed(1) + 'B';
@@ -143,7 +151,9 @@ export function fmtMoney(n) {
   return 'KSh ' + v.toLocaleString('en-KE', { maximumFractionDigits: 0 });
 }
 
-/* ── Engagement rate: (likes + comments + shares) / views ── */
+/* ═══════════════════════════════════════════════════════════════
+   ENGAGEMENT RATE
+   ═══════════════════════════════════════════════════════════════ */
 export function engagementRate(stats) {
   if (!stats) return 0;
   const views = Number(stats.views) || 0;
@@ -154,10 +164,20 @@ export function engagementRate(stats) {
   return (interactions / views) * 100;
 }
 
-/* ── Post schema factory ──
-   A "post" represents a single platform execution.
-   `draft.id` is now honoured, so callers can update-in-place by
-   passing an existing id (used when re-saving a draft/scheduled post). */
+export function engagementRateFor(stats) {
+  if (!stats) return 0;
+  const views = Number(stats.views) || 0;
+  if (views <= 0) return 0;
+  const interactions =
+    (Number(stats.likes) || 0) +
+    (Number(stats.comments) || 0) +
+    (Number(stats.shares) || 0);
+  return Math.round((interactions / views) * 10000) / 100;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   POST + FANOUT FACTORIES
+   ═══════════════════════════════════════════════════════════════ */
 export function makePost(draft = {}) {
   const now = new Date().toISOString();
   return {
@@ -175,12 +195,13 @@ export function makePost(draft = {}) {
     imagePrompt: draft.imagePrompt || null,
     imageModel: draft.imageModel || null,
     imageSeed: draft.imageSeed || null,
+    imageSource: draft.imageSource || null,
     imageSourceUrl: draft.imageSourceUrl || null,
     variants: draft.variants || null,
     utm: draft.utm || {},
     url: draft.url || null,
-    status: draft.status || 'draft',      // draft | scheduled | published | failed | compose-only
-    mode: draft.mode || null,             // 'auto' | 'compose-link'
+    status: draft.status || 'draft',
+    mode: draft.mode || null,
     scheduledFor: draft.scheduledFor || null,
     scheduledForUtc: draft.scheduledForUtc || null,
     publishedAt: draft.publishedAt || null,
@@ -190,6 +211,7 @@ export function makePost(draft = {}) {
     stats: draft.stats || null,
     statsUpdatedAt: draft.statsUpdatedAt || null,
     statsHistory: Array.isArray(draft.statsHistory) ? draft.statsHistory : [],
+    statsSource: draft.statsSource || null,
     accountHandle: draft.accountHandle || null,
     createdAt: draft.createdAt || now,
     updatedAt: now,
@@ -197,9 +219,6 @@ export function makePost(draft = {}) {
   };
 }
 
-/* ── Fanout wrapper ──
-   `fanoutId` is optional. Pass an existing one when re-saving a draft
-   so the whole fanout stays coherent across saves. */
 export function makeFanoutItem({ campaignId, pillar, brief, posts, createdBy, fanoutId: existingFanoutId }) {
   const fanoutId = existingFanoutId
     || ('fan-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
@@ -216,7 +235,9 @@ export function makeFanoutItem({ campaignId, pillar, brief, posts, createdBy, fa
   };
 }
 
-/* ── UTM builder ── */
+/* ═══════════════════════════════════════════════════════════════
+   UTM
+   ═══════════════════════════════════════════════════════════════ */
 export function buildUtmUrl(baseUrl, utm = {}) {
   if (!baseUrl) return '';
   try {
@@ -243,7 +264,9 @@ export function utmFromPost(post) {
   };
 }
 
-/* ── Anomaly detection ── */
+/* ═══════════════════════════════════════════════════════════════
+   ANOMALY DETECTION
+   ═══════════════════════════════════════════════════════════════ */
 export function detectAnomaly(post, allPosts) {
   if (!post || !post.stats || !Array.isArray(allPosts)) return { type: null };
   const mine = engagementRate(post.stats);
@@ -266,7 +289,9 @@ export function detectAnomaly(post, allPosts) {
   return { type: null, multiple, median, current: mine };
 }
 
-/* ── Best-time-to-post heatmap ── */
+/* ═══════════════════════════════════════════════════════════════
+   BEST-TIME HEATMAP
+   ═══════════════════════════════════════════════════════════════ */
 export function buildTimeHeatmap(allPosts) {
   const grid = [];
   for (let d = 0; d < 7; d++) {
@@ -277,7 +302,7 @@ export function buildTimeHeatmap(allPosts) {
     const dt = new Date(p.publishedAt);
     if (isNaN(dt)) continue;
     const day = dt.getDay();
-    const bucket = Math.floor(dt.getHours() / 3);   // 0..7
+    const bucket = Math.floor(dt.getHours() / 3);
     const er = engagementRate(p.stats);
     if (er <= 0) continue;
     grid[day][bucket].sum += er;
@@ -287,7 +312,9 @@ export function buildTimeHeatmap(allPosts) {
   return grid;
 }
 
-/* ── Aggregate stats for a campaign ── */
+/* ═══════════════════════════════════════════════════════════════
+   AGGREGATION
+   ═══════════════════════════════════════════════════════════════ */
 export function summarizeCampaign(campaign) {
   const posts = Array.isArray(campaign && campaign.posts) ? campaign.posts : [];
   const published = posts.filter(p => p && p.status === 'published');
@@ -313,7 +340,6 @@ export function summarizeCampaign(campaign) {
   };
 }
 
-/* ── Best pillar ── */
 export function bestPillar(allPosts) {
   if (!Array.isArray(allPosts) || allPosts.length < 20) return null;
   const byPillar = {};
@@ -333,15 +359,9 @@ export function bestPillar(allPosts) {
   return best;
 }
 
-
 /* ═══════════════════════════════════════════════════════════════
    POST LIBRARY HELPERS
    ═══════════════════════════════════════════════════════════════ */
-
-/**
- * Group a flat posts[] array into fanouts.
- * Posts with the same `fanoutId` are grouped. Others become solo groups.
- */
 export function groupPostsByFanout(posts) {
   if (!Array.isArray(posts) || posts.length === 0) return [];
 
@@ -377,9 +397,6 @@ export function groupPostsByFanout(posts) {
   return groups;
 }
 
-/**
- * Aggregate stats across all posts in a fanout.
- */
 export function summarizeFanout(posts) {
   const empty = {
     heroPost: null,
@@ -470,9 +487,6 @@ export function summarizeFanout(posts) {
   };
 }
 
-/**
- * Filter a post's statsHistory[] to the last `windowMs` milliseconds.
- */
 export function statsHistoryFor(post, windowMs) {
   if (!post || !Array.isArray(post.statsHistory) || post.statsHistory.length === 0) return [];
   const cutoff = Date.now() - (Number(windowMs) || 0);
@@ -487,9 +501,6 @@ export function statsHistoryFor(post, windowMs) {
   return out;
 }
 
-/**
- * Combine multiple posts' statsHistory[] into a single total series.
- */
 export function combineStatsHistory(posts, windowMs) {
   if (!Array.isArray(posts) || posts.length === 0) return [];
 
@@ -544,23 +555,9 @@ export function combineStatsHistory(posts, windowMs) {
   return out;
 }
 
-/**
- * Engagement rate from a stats object, rounded to 2 decimals.
- */
-export function engagementRateFor(stats) {
-  if (!stats) return 0;
-  const views = Number(stats.views) || 0;
-  if (views <= 0) return 0;
-  const interactions =
-    (Number(stats.likes) || 0) +
-    (Number(stats.comments) || 0) +
-    (Number(stats.shares) || 0);
-  return Math.round((interactions / views) * 10000) / 100;
-}
-
-/**
- * Normalize a datetime-local string into UTC ISO.
- */
+/* ═══════════════════════════════════════════════════════════════
+   DATE HELPERS
+   ═══════════════════════════════════════════════════════════════ */
 export function toUtcIso(localDateTimeStr) {
   if (!localDateTimeStr) return null;
   const s = String(localDateTimeStr).trim();
@@ -574,11 +571,9 @@ export function toUtcIso(localDateTimeStr) {
   }
 }
 
-/**
- * Read an image File, downscale it via canvas, and re-encode as base64.
- *
- * Returns Promise<{ b64, mime, width, height, sizeBytes }>
- */
+/* ═══════════════════════════════════════════════════════════════
+   IMAGE UPLOAD
+   ═══════════════════════════════════════════════════════════════ */
 export async function readImageFile(file) {
   const MAX_SOURCE_BYTES = 5 * 1024 * 1024;
   const MAX_STORED_B64_BYTES = 1024 * 1024;
