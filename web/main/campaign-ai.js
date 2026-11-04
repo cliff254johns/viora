@@ -1,9 +1,16 @@
-// main/campaign-ai.js — v2.0 multi-platform composer
+// main/campaign-ai.js — v2.1 (dedupe-safe composer)
 // ═══════════════════════════════════════════════════════════════
 // AI Composer — generate text/images across N platforms at once,
 // preview each platform's tailored variant, and fan out posting
 // via /social/post/fanout. Falls back to compose-link per platform
 // when the worker says manual upload is required.
+//
+// v2.1 changes:
+//   • _postNow correctly interprets worker compose-link responses
+//   • Post-now no longer marks fallbacks as published
+//   • _persistPosts updates in place instead of appending duplicates
+//   • openComposerForDraft preserves post ids and fanoutId
+//   • makeFanoutItem / makePost accept caller-supplied ids
 // ═══════════════════════════════════════════════════════════════
 import {
   PILLARS, pillarByKey, PLATFORMS, platformMeta,
@@ -75,7 +82,6 @@ export function openComposer(opts = {}) {
     SAFE.state._pendingTrendTopic = null;
   }
 
-  // Pre-check platforms that have an account registered
   const connectedPlatforms = [];
   const getAcct = SAFE.getAccountForPlatformSync;
   if (typeof getAcct === 'function') {
@@ -89,7 +95,8 @@ export function openComposer(opts = {}) {
 
   _state.composer = {
     campaignId,
-    fanoutId: opts.fanoutId || null,          // ← new: when set, all posts share this fanout
+    fanoutId: opts.fanoutId || null,
+    _existingPostIds: {},                    // ← new: platform → existing post id
     platforms: initialPlatforms,
     pillar: opts.pillar || 'educational',
     brief,
@@ -101,12 +108,8 @@ export function openComposer(opts = {}) {
     trendGeo: 'KE',
     count: 1,
 
-    /* Per-platform overrides — filled by generation */
-    perPlatform: {
-      // facebook: { caption, hashtags, imageBase64, imageMime, imageWidth, imageHeight }
-    },
+    perPlatform: {},
 
-    /* One hero image shared by all platforms by default */
     heroImageBase64: null,
     heroImageMime: 'image/png',
     heroImageWidth: null,
@@ -114,9 +117,8 @@ export function openComposer(opts = {}) {
     heroImagePrompt: '',
     heroImageModel: '',
     heroImageSeed: null,
-    heroImageSource: null,               // ← 'generated' | 'upload' | null
+    heroImageSource: null,
 
-    /* Per-platform image override */
     perPlatformImage: {},
 
     utm: { source: '', medium: 'social', campaign: '', content: '', term: '' },
@@ -147,7 +149,6 @@ export function openComposerForDraft(post) {
   if (!post) return;
   openComposer({ campaignId: post.campaignId });
 
-  /* If this post came from a fanout, pre-check the fanout's other platforms */
   const campaigns = (SAFE.state?.data?.campaigns) || [];
   const camp = campaigns.find(c => c.id === post.campaignId);
   let siblingPlatforms = [post.platform];
@@ -163,7 +164,6 @@ export function openComposerForDraft(post) {
   _state.composer.status = post.status || 'draft';
   _state.composer.scheduledFor = post.scheduledFor || '';
 
-  /* Fill each sibling's caption */
   const perPlatform = {};
   if (camp && post.fanoutId) {
     for (const p of camp.posts || []) {
@@ -190,6 +190,23 @@ export function openComposerForDraft(post) {
   _state.composer.heroImageMime = post.imageMime || 'image/png';
   _state.composer.heroImagePrompt = post.imagePrompt || '';
   _state.composer.utm = post.utm || { source: '', medium: 'social', campaign: '', content: '', term: '' };
+
+  /* ── Preserve IDs so re-saving updates in place ──────────────────
+     Without this, every "Save Draft" click creates a NEW post on the
+     server, so opening and saving the same draft N times produces
+     N copies in campaign.posts[]. The scheduler then publishes all
+     of them. */
+  _state.composer._existingPostIds = {};
+  if (camp && post.fanoutId) {
+    for (const p of camp.posts || []) {
+      if (p && p.fanoutId === post.fanoutId && p.platform) {
+        _state.composer._existingPostIds[p.platform] = p.id;
+      }
+    }
+    _state.composer.fanoutId = post.fanoutId;
+  } else if (post.id) {
+    _state.composer._existingPostIds[post.platform] = post.id;
+  }
 
   _renderComposer();
 }
@@ -237,7 +254,6 @@ function _renderComposer() {
   const getAcct = SAFE.getAccountForPlatformSync;
   const platformKeys = Object.keys(PLATFORMS);
 
-  /* Platform chip selector */
   const platformChips = platformKeys.map(key => {
     const meta = PLATFORMS[key];
     const checked = c.platforms.includes(key);
@@ -414,7 +430,6 @@ function _renderComposer() {
 
   _bindComposerEvents();
   _renderFanoutLog();
-  _updateUtmPreview?.();
 }
 
 function _renderPlatformPreviews(c) {
@@ -476,10 +491,8 @@ function _bindComposerEvents() {
   const c = _state.composer;
   if (!c) return;
 
-  /* Platform checkboxes */
   document.querySelectorAll('[data-cc-platform-input]').forEach(inp => {
     inp.addEventListener('change', () => {
-      /* Flush all textarea edits into state before re-rendering */
       document.querySelectorAll('[data-cc-caption]').forEach(ta => {
         const k = ta.getAttribute('data-cc-caption');
         if (!c.perPlatform[k]) c.perPlatform[k] = { caption: '', hashtags: [] };
@@ -493,7 +506,6 @@ function _bindComposerEvents() {
     });
   });
 
-  /* Per-platform caption */
   document.querySelectorAll('[data-cc-caption]').forEach(ta => {
     ta.addEventListener('input', () => {
       const key = ta.getAttribute('data-cc-caption');
@@ -512,7 +524,6 @@ function _bindComposerEvents() {
     });
   });
 
-  /* Hashtag removal */
   document.querySelectorAll('[data-cc-tag]').forEach(chip => {
     chip.addEventListener('click', () => {
       const [key, tag] = chip.getAttribute('data-cc-tag').split(':');
@@ -525,7 +536,6 @@ function _bindComposerEvents() {
     });
   });
 
-  /* Form fields */
   const bind = (id, key, transform = v => v) => {
     const el = g(id);
     if (!el) return;
@@ -553,7 +563,6 @@ function _bindComposerEvents() {
   const useTrendsEl = g('ccUseTrends');
   if (useTrendsEl) useTrendsEl.addEventListener('change', () => { c.useTrends = useTrendsEl.checked; });
 
-  /* UTM fields */
   ['ccUtmSource','ccUtmMedium','ccUtmCampaign','ccUtmContent'].forEach((id, i) => {
     const key = ['source','medium','campaign','content'][i];
     const el = g(id);
@@ -563,8 +572,6 @@ function _bindComposerEvents() {
     });
   });
 
-  /* Buttons */
-    /* Buttons */
   g('ccGenerateBtn')?.addEventListener('click', _generateText);
   g('ccGenerateImageBtn')?.addEventListener('click', _generateImage);
   g('ccCancelBtn')?.addEventListener('click', _closeComposer);
@@ -576,7 +583,6 @@ function _bindComposerEvents() {
   g('ccDownloadImageBtn')?.addEventListener('click', _downloadImage);
   g('ccCopyImageBtn')?.addEventListener('click', _copyImage);
 
-  /* Upload own image — replaces hero image with the user's file */
   const uploadBtn = g('ccUploadImageBtn');
   const uploadInput = g('ccUploadImageInput');
   uploadBtn?.addEventListener('click', () => uploadInput?.click());
@@ -604,16 +610,12 @@ function _bindComposerEvents() {
   });
 }
 
-function _updateUtmPreview() { /* optional live preview — skipped for brevity */ }
-
 /* ═══════════════════════════════════════════════════════════════
-   GENERATE TEXT (multi-platform in one call)
+   GENERATE TEXT
    ═══════════════════════════════════════════════════════════════ */
 async function _generateText(evt) {
-  /* Guard against auto-fire on mount. Synthetic events (from .click() or
-     dispatchEvent) have isTrusted: false. Real user clicks have true. */
   if (evt && typeof evt === 'object' && evt.isTrusted === false) {
-    console.warn('[composer] _generateText ignored synthetic event — auto-fire blocked');
+    console.warn('[composer] _generateText ignored synthetic event');
     return;
   }
   const c = _state.composer;
@@ -637,9 +639,6 @@ async function _generateText(evt) {
     const callFn = SAFE.callFn;
     if (typeof callFn !== 'function') throw new Error('callFn unavailable');
 
-    /* Retry helper — handles transient 503s from the worker.
-       Two attempts total. If the worker is really down, we fall through
-       to the catch block which shows the "AI unavailable" message. */
     const callWithRetry = async (fn, args, attempts = 2) => {
       let lastErr = null;
       for (let i = 0; i < attempts; i++) {
@@ -653,15 +652,14 @@ async function _generateText(evt) {
             msg.toLowerCase().includes('unavailable') ||
             msg.toLowerCase().includes('rate limit');
           if (!isTransient || i === attempts - 1) throw err;
-          /* Wait 1.5s then retry — enough for a rate limit to reset */
           await new Promise(r => setTimeout(r, 1500));
         }
       }
       throw lastErr;
     };
 
-    /* Generate for the FIRST platform; worker returns per-platform variants for all */
-      /* Send all selected platforms so the worker can tailor variants */
+    /* Send ALL selected platforms so the worker can tailor a variant
+       for each one. The worker now accepts `platforms: [...]`. */
     const res = await callWithRetry(callFn, [ENDPOINTS.generatePost, {
       brief: c.brief,
       platform: c.platforms[0],
@@ -675,13 +673,12 @@ async function _generateText(evt) {
       trendGeo: c.trendGeo,
     }]);
 
-    if (!res || !res.ok && !res.text) {
+    if (!res || (!res.ok && !res.text && !res.variants)) {
       throw new Error(res?.error || 'Worker returned no content');
     }
 
-      /* The worker now returns variants for every requested platform.
-       If a variant is genuinely missing, captionForPlatform falls
-       back to `res.text` and logs a console warning. */
+    /* captionForPlatform handles all fallback shapes and logs a
+       warning when a variant is missing (instead of silently blank). */
     for (const key of c.platforms) {
       const caption = captionForPlatform(res, key);
       const hashtags = Array.isArray(res.hashtags) ? res.hashtags.slice(0, 15) : [];
@@ -692,24 +689,14 @@ async function _generateText(evt) {
       };
     }
 
-       _renderComposer();
-    if (missing.length) {
-      SAFE.toast(
-        `Generated — but no tailored variant for: ${missing.map(k => PLATFORMS[k].label).join(', ')}. These reuse the base caption.`,
-        'warning'
-      );
-    } else {
-      SAFE.toast(
-        `Generated for ${c.platforms.length} platform${c.platforms.length === 1 ? '' : 's'}${res.usedTrends ? ' · used current trends' : ''}.`,
-        'success'
-      );
-    }
+    _renderComposer();
+    SAFE.toast(
+      `Generated for ${c.platforms.length} platform${c.platforms.length === 1 ? '' : 's'}${res.usedTrends ? ' · used current trends' : ''}.`,
+      'success'
+    );
   } catch (e) {
     console.error('[composer] generate failed', e);
 
-    /* Distinguish user-actionable errors from server config errors.
-       - 503 = no providers configured or all down. Offer retry.
-       - Anything else = generic. */
     const msg = String(e.message || 'unknown');
     const is503 = msg.includes('503') ||
                   msg.toLowerCase().includes('not configured') ||
@@ -720,7 +707,6 @@ async function _generateText(evt) {
         'AI is temporarily unavailable. You can still write the caption manually, or try again in a minute.',
         'warning'
       );
-      /* Focus the caption textarea so the user can type */
       const firstPreview = document.querySelector('.cc-pp-textarea');
       if (firstPreview) firstPreview.focus();
     } else {
@@ -737,14 +723,13 @@ async function _generateText(evt) {
    ═══════════════════════════════════════════════════════════════ */
 async function _generateImage(evt) {
   if (evt && typeof evt === 'object' && evt.isTrusted === false) {
-    console.warn('[composer] _generateImage ignored synthetic event — auto-fire blocked');
+    console.warn('[composer] _generateImage ignored synthetic event');
     return;
   }
   const c = _state.composer;
   if (!c || _state.generatingImage) return;
 
   const primary = c.platforms[0] || 'facebook';
-  const meta = PLATFORMS[primary];
 
   const prompt = [
     c.brief,
@@ -775,7 +760,7 @@ async function _generateImage(evt) {
     const b64 = res?.imageBase64 || res?.base64 || '';
     if (!b64) throw new Error('Worker returned no image');
 
-      c.heroImageBase64 = b64.replace(/^data:[^;]+;base64,/, '');
+    c.heroImageBase64 = b64.replace(/^data:[^;]+;base64,/, '');
     c.heroImageMime = res?.mime || 'image/png';
     c.heroImagePrompt = res?.prompt || prompt;
     c.heroImageModel = res?.model || null;
@@ -785,7 +770,6 @@ async function _generateImage(evt) {
     c.heroImageSource = 'generated';
 
     _renderComposer();
-    
     SAFE.toast(
       `Image generated${c.heroImageWidth ? ' · ' + c.heroImageWidth + '×' + c.heroImageHeight : ''}.`,
       'success'
@@ -854,16 +838,15 @@ async function _persistPosts(status) {
 
   const campaign = (SAFE.state?.data?.campaigns || []).find(x => x.id === c.campaignId);
   if (!campaign) { SAFE.toast('Campaign not found.', 'error'); return; }
-   /* If we're re-saving an existing fanout, preserve each post's id
-     so we UPDATE instead of DUPLICATE. `c.fanoutId` tells us which
-     fanout this composer session belongs to, and `c._existingPostIds`
-     (set by openComposerForDraft) maps platform → existing post id. */
+
+  /* If we're re-saving an existing fanout, preserve each post's id
+     so the DB update modifies rows instead of appending duplicates. */
   const existingIds = c._existingPostIds || {};
 
   const posts = c.platforms.map(key => {
     const variant = c.perPlatform[key] || {};
     return makePost({
-      id: existingIds[key] || undefined,   // makePost honours `id` if supplied
+      id: existingIds[key] || undefined,          // ← preserve id on re-save
       campaignId: c.campaignId,
       fanoutId: c.fanoutId || undefined,
       platform: key,
@@ -876,7 +859,7 @@ async function _persistPosts(status) {
       imageHeight: variant.imageHeight || c.heroImageHeight,
       imagePrompt: c.heroImagePrompt,
       imageModel: c.heroImageModel,
-      imageSource: c.heroImageSource || null,   // ← new: 'generated' | 'upload'
+      imageSource: c.heroImageSource || null,
       imageSeed: c.heroImageSeed,
       utm: { ...c.utm, source: c.utm.source || key },
       url: buildUtmUrl(c.baseUrl, { ...c.utm, source: c.utm.source || key }),
@@ -894,11 +877,21 @@ async function _persistPosts(status) {
     brief: c.brief,
     posts,
     createdBy: SAFE.state?.operator?.name || null,
+    fanoutId: c.fanoutId || undefined,            // ← preserve fanout id on re-save
   });
 
-  /* Flatten posts into the campaign for the existing analytics/cron to see */
+  /* ── Replace-in-place instead of append ──────────────────────────
+     If this save updates an existing fanout (opened via
+     openComposerForDraft), REMOVE the old posts that share the same
+     fanoutId before appending the new ones. Otherwise every save
+     doubles the number of records in campaign.posts[] and the cron
+     publishes the same content multiple times. */
   const existingPosts = Array.isArray(campaign.posts) ? campaign.posts.slice() : [];
-  campaign.posts = [...existingPosts, ...fanout.posts];
+  const filtered = c.fanoutId
+    ? existingPosts.filter(p => !p || p.fanoutId !== c.fanoutId)
+    : existingPosts;
+
+  campaign.posts = [...filtered, ...fanout.posts];
   campaign.updatedAt = new Date().toISOString();
 
   try {
@@ -931,7 +924,6 @@ async function _postNow() {
     const callFn = SAFE.callFn;
     if (typeof callFn !== 'function') throw new Error('callFn unavailable');
 
-    /* Build targets array — one entry per selected platform */
     const targets = c.platforms.map(key => {
       const variant = c.perPlatform[key] || {};
       return {
@@ -950,23 +942,12 @@ async function _postNow() {
       throw new Error('Worker returned no results');
     }
 
-    /* ── Correctly interpret worker results ──────────────────────────
-       Worker returns one of three shapes per target:
-
-         1. Successfully posted:
-            { ok: true, mode: 'auto', postId, url }
-
-         2. Needs manual paste (Facebook/TikTok/IG fallback):
-            { ok: true, fallback: 'compose-link', fallbackUrl }
-            ── or ──
-            { ok: false, error, fallback: 'compose-link', fallbackUrl }
-
-         3. Failed:
-            { ok: false, error }
-
-       We normalise all three into { ok, mode, postId, composeUrl, error }
-       so the rest of this function (and _renderFanoutLog) can read
-       a single, consistent shape. */
+    /* ── Normalise every worker response into one shape ──────────────
+       The worker can return any of:
+         1. { ok: true,  mode: 'auto',        postId, url }     → real post
+         2. { ok: true|false, fallback: 'compose-link', fallbackUrl } → paste
+         3. { ok: false, error }                                → failed
+       We map all three into { ok, mode, postId, composeUrl, error }. */
     _state.fanoutLog = res.results.map(r => {
       const isComposeOnly = r.fallback === 'compose-link';
       const trulyPosted   = !!r.ok && (!!r.postId || !!r.post_id) && !isComposeOnly;
@@ -986,10 +967,13 @@ async function _postNow() {
     /* Persist each platform's post with its real status */
     const campaign = (SAFE.state?.data?.campaigns || []).find(x => x.id === c.campaignId);
     if (campaign) {
+      const existingIds = c._existingPostIds || {};
       const newPosts = _state.fanoutLog.map(r => {
         const variant = c.perPlatform[r.platform] || {};
         return makePost({
+          id: existingIds[r.platform] || undefined,
           campaignId: c.campaignId,
+          fanoutId: c.fanoutId || undefined,
           platform: r.platform,
           pillar: c.pillar,
           caption: variant.caption || '',
@@ -1003,31 +987,36 @@ async function _postNow() {
           imageSeed: c.heroImageSeed,
           utm: { ...c.utm, source: c.utm.source || r.platform },
           url: buildUtmUrl(c.baseUrl, { ...c.utm, source: c.utm.source || r.platform }),
-                 /* ok:true + mode:'auto'     → published (real post)
-             ok:false + mode:'compose' → compose-only (needs paste)
-             ok:false + mode:'failed'  → failed (retry)
-             We never mark a compose-link fallback as 'published'. */
           status: r.mode === 'auto' ? 'published'
                 : r.mode === 'compose-link' ? 'compose-only'
                 : 'failed',
           mode: r.mode,
-          publishedAt: r.ok && r.mode !== 'compose-link' ? new Date().toISOString() : null,
+          publishedAt: r.mode === 'auto' ? new Date().toISOString() : null,
           externalId: r.postId,
           composeUrl: r.composeUrl,
           lastError: r.error,
           createdBy: SAFE.state?.operator?.name || null,
         });
       });
-      campaign.posts = [...(campaign.posts || []), ...newPosts];
+
+      /* Replace any existing posts in this fanout so we don't append
+         duplicates when the user hits "Post now" after a draft save. */
+      const existingPosts = Array.isArray(campaign.posts) ? campaign.posts.slice() : [];
+      const filtered = c.fanoutId
+        ? existingPosts.filter(p => !p || p.fanoutId !== c.fanoutId)
+        : existingPosts;
+
+      campaign.posts = [...filtered, ...newPosts];
       campaign.updatedAt = new Date().toISOString();
       try { await SAFE.upsertDoc('campaigns', campaign, campaign._rev); } catch (_) {}
     }
 
-    
+    /* Open compose windows for platforms requiring manual paste.
+       mode is now correctly 'compose-link' thanks to the normaliser
+       above — previously it was 'auto' due to a shape mismatch. */
     const composeTargets = _state.fanoutLog.filter(r => r.mode === 'compose-link' && r.composeUrl);
     for (const t of composeTargets) {
       try { window.open(t.composeUrl, '_blank', 'noopener,noreferrer'); } catch (_) {}
-      /* Copy caption to clipboard so user can paste */
       try {
         const variant = c.perPlatform[t.platform] || {};
         const captionWithTags = [
@@ -1040,7 +1029,7 @@ async function _postNow() {
 
     _renderFanoutLog();
 
-        const succeeded   = _state.fanoutLog.filter(r => r.mode === 'auto').length;
+    const succeeded   = _state.fanoutLog.filter(r => r.mode === 'auto').length;
     const composeOnly = _state.fanoutLog.filter(r => r.mode === 'compose-link').length;
     const failed      = _state.fanoutLog.filter(r => r.mode === 'failed').length;
 
@@ -1051,7 +1040,6 @@ async function _postNow() {
 
     SAFE.toast(parts.join(' · ') || 'Done.', failed ? 'warning' : 'success');
 
-    /* Don't close if there are compose-only or failed targets — let the user see */
     if (!composeOnly && !failed) {
       setTimeout(_closeComposer, 600);
     }
@@ -1074,8 +1062,8 @@ function _renderFanoutLog() {
   host.innerHTML = _state.fanoutLog.map(r => {
     const meta = PLATFORMS[r.platform] || { label: r.platform, icon: 'fa-solid fa-globe' };
     let badge = '';
-    if (r.ok && r.mode === 'auto') badge = '<span class="badge badge-paid">✓ posted</span>';
-    else if (r.ok && r.mode === 'compose-link') badge = '<span class="badge badge-pending">📋 paste & upload</span>';
+    if (r.mode === 'auto') badge = '<span class="badge badge-paid">✓ posted</span>';
+    else if (r.mode === 'compose-link') badge = '<span class="badge badge-pending">📋 paste & upload</span>';
     else badge = '<span class="badge badge-overdue">✗ failed</span>';
 
     return `
@@ -1083,7 +1071,7 @@ function _renderFanoutLog() {
         <i class="${meta.icon}" style="color:${meta.color};"></i>
         <span style="flex:1;font-size:.82rem;font-weight:600;">${esc(meta.label)}</span>
         ${badge}
-                ${r.ok && r.mode === 'compose-link' && r.composeUrl
+        ${r.mode === 'compose-link' && r.composeUrl
           ? `<a href="${esc(r.composeUrl)}" target="_blank" rel="noopener" class="btn btn-primary btn-xs"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>`
           : ''}
         ${r.error
@@ -1095,7 +1083,7 @@ function _renderFanoutLog() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   DRAFT LIBRARY (unchanged from v1)
+   DRAFT LIBRARY
    ═══════════════════════════════════════════════════════════════ */
 export function renderDraftLibrary() {
   const host = document.getElementById('campaignDraftLibrary');
@@ -1166,7 +1154,7 @@ export function renderDraftLibrary() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   PROMPT LIBRARY (unchanged)
+   PROMPT LIBRARY
    ═══════════════════════════════════════════════════════════════ */
 export function renderPromptLibrary() {
   const host = document.getElementById('campaignPromptLibrary');
