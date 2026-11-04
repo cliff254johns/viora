@@ -679,15 +679,12 @@ async function _generateText(evt) {
       throw new Error(res?.error || 'Worker returned no content');
     }
 
-     /* Fill each selected platform's caption from the worker's variants object */
-    const missing = [];
+      /* The worker now returns variants for every requested platform.
+       If a variant is genuinely missing, captionForPlatform falls
+       back to `res.text` and logs a console warning. */
     for (const key of c.platforms) {
-      const v = res?.variants && res.variants[key];
       const caption = captionForPlatform(res, key);
       const hashtags = Array.isArray(res.hashtags) ? res.hashtags.slice(0, 15) : [];
-      if (!v && c.platforms.length > 1 && String(res.text || '').trim()) {
-        missing.push(key);
-      }
       c.perPlatform[key] = {
         ...(c.perPlatform[key] || {}),
         caption: caption || '',
