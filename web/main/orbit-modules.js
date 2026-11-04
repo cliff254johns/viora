@@ -8,7 +8,16 @@ import {
   renderDraftLibrary,
   renderPromptLibrary,
   openComposer,
+  openComposerForDraft,
 } from './campaign-ai.js';
+import {
+  groupPostsByFanout,
+  summarizeFanout,
+  statsHistoryFor,
+  combineStatsHistory,
+  engagementRateFor,
+  platformMeta as _platformMeta,
+} from './campaign-utils.js';
 import { renderInbox as _renderInboxImpl } from './inbox.js';
 import { runAgent } from './agent-runner.js';
 
@@ -1665,6 +1674,17 @@ async function _verifyAccount(ctx, id) {
 /* ═══════════════════════════════════════════════════════════════
    CAMPAIGNS MODULE — renders into #view
    ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   CAMPAIGNS MODULE — v2
+   ─────────────────────────────────────────────────────────────
+   Layout (top → bottom):
+     1. KPI strip
+     2. Campaigns table
+     3. ★ Post Library  (grouped by fanout, filterable)
+     4. Trend Radar
+     5. Draft Library
+     6. Prompt Library
+   ═══════════════════════════════════════════════════════════════ */
 export async function renderCampaignsModule(ctx) {
   const d = data(ctx);
   const campaigns = Array.isArray(d.campaigns) ? d.campaigns : [];
@@ -1738,6 +1758,9 @@ export async function renderCampaignsModule(ctx) {
       <div class="cardhead"><h3>All campaigns</h3></div>
       ${campaignsTable}
     </div>
+
+    <div id="campaignPostLibrary" style="margin-top:15px;"></div>
+
     <div id="campaignTrendRadar" style="margin-top:15px;"></div>
     <div id="campaignDraftLibrary" style="margin-top:15px;"></div>
     <div id="campaignPromptLibrary" style="margin-top:15px;"></div>`;
@@ -1766,10 +1789,859 @@ export async function renderCampaignsModule(ctx) {
       document.querySelectorAll('[data-camp-refresh]').forEach(b =>
         b.addEventListener('click', () => window.Viora?.refreshCampaignStats?.(b.getAttribute('data-camp-refresh'))));
 
-      // Delegate trend + libraries
+      /* ★ NEW — mount Post Library */
+      try { renderPostLibrary(ctx); } catch (e) { console.warn('[post-library] mount failed', e); }
+
       try { window.Viora?.renderTrendRadar?.(); } catch (_) {}
       try { window.Viora?.renderDraftLibrary?.(); } catch (_) {}
       try { window.Viora?.renderPromptLibrary?.(); } catch (_) {}
     }
   };
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   POST LIBRARY
+   ─────────────────────────────────────────────────────────────
+   Reads every post across every campaign, groups by fanoutId,
+   renders one card per group with:
+     • Hero thumbnail
+     • Fanout hero caption preview
+     • Platform chips with per-platform status
+     • Aggregate stats (or per-platform summary if 1 platform)
+     • Filter toolbar (status / platform / campaign / search)
+   Clicking a card opens the Fanout Detail modal.
+   ═══════════════════════════════════════════════════════════════ */
+
+const _postLibState = {
+  filterStatus: 'all',
+  filterPlatform: 'all',
+  filterCampaign: 'all',
+  search: '',
+  grouped: [],
+};
+
+export function renderPostLibrary(ctx) {
+  const host = document.getElementById('campaignPostLibrary');
+  if (!host) return;
+
+  const c = C(ctx);
+  const state = c.state || { data: {} };
+  const campaigns = Array.isArray(state.data?.campaigns) ? state.data.campaigns : [];
+
+  /* Flatten all posts across campaigns, tagging each with campaign metadata */
+  const allPosts = [];
+  for (const camp of campaigns) {
+    if (!camp || !Array.isArray(camp.posts)) continue;
+    for (const p of camp.posts) {
+      if (!p) continue;
+      allPosts.push({ ...p, _campaignId: camp.id, _campaignName: camp.name });
+    }
+  }
+
+  /* Group into fanouts */
+  const groups = groupPostsByFanout(allPosts);
+
+  /* Apply filters */
+  const filtered = groups.filter(group => {
+    if (!group.length) return false;
+    const summary = summarizeFanout(group);
+
+    if (_postLibState.filterStatus !== 'all') {
+      const agg = summary.aggregateStatus;
+      if (_postLibState.filterStatus === 'scheduled' && agg !== 'scheduled') return false;
+      if (_postLibState.filterStatus === 'draft' && agg !== 'draft') return false;
+      if (_postLibState.filterStatus === 'published' && agg !== 'published') return false;
+      if (_postLibState.filterStatus === 'compose-only' && agg !== 'compose-only') return false;
+      if (_postLibState.filterStatus === 'failed' && agg !== 'failed') return false;
+    }
+
+    if (_postLibState.filterPlatform !== 'all') {
+      if (!summary.platforms.includes(_postLibState.filterPlatform)) return false;
+    }
+
+    if (_postLibState.filterCampaign !== 'all') {
+      if (!group.some(p => p._campaignId === _postLibState.filterCampaign)) return false;
+    }
+
+    if (_postLibState.search) {
+      const q = _postLibState.search.toLowerCase();
+      const hits = group.some(p =>
+        (p.caption || '').toLowerCase().includes(q) ||
+        (p.platform || '').toLowerCase().includes(q) ||
+        (p._campaignName || '').toLowerCase().includes(q)
+      );
+      if (!hits) return false;
+    }
+
+    return true;
+  });
+
+  _postLibState.grouped = filtered;
+
+  /* Aggregated KPI */
+  let totalPosts = 0, totalFanouts = filtered.length;
+  for (const g of filtered) totalPosts += g.length;
+
+  /* Campaign options for filter */
+  const campaignOptions = campaigns
+    .filter(cc => cc && cc.id)
+    .map(cc => `<option value="${esc(cc.id)}" ${_postLibState.filterCampaign === cc.id ? 'selected' : ''}>${esc(cc.name || 'Untitled')}</option>`)
+    .join('');
+
+  /* Platform options (unique platforms across all posts) */
+  const allPlatforms = new Set();
+  for (const p of allPosts) if (p.platform) allPlatforms.add(p.platform);
+  const platformOptions = Array.from(allPlatforms).sort()
+    .map(k => {
+      const m = _platformMeta(k);
+      return `<option value="${esc(k)}" ${_postLibState.filterPlatform === k ? 'selected' : ''}>${esc(m.label || k)}</option>`;
+    }).join('');
+
+  host.innerHTML = `
+    <div class="card">
+      <div class="cardhead">
+        <h3><i class="fa-solid fa-layer-group"></i> Post Library
+          <span class="pill" style="margin-left:6px;">${totalFanouts} fanout${totalFanouts === 1 ? '' : 's'} · ${totalPosts} post${totalPosts === 1 ? '' : 's'}</span>
+        </h3>
+      </div>
+
+      <div class="plib-toolbar">
+        <div class="plib-filters" role="tablist">
+          ${['all','published','scheduled','draft','compose-only','failed'].map(st => `
+            <button type="button" class="plib-filter-btn ${_postLibState.filterStatus === st ? 'active' : ''}"
+                    data-plib-status="${st}" role="tab">
+              ${st === 'all' ? 'All' : st.charAt(0).toUpperCase() + st.slice(1).replace('-', ' ')}
+            </button>
+          `).join('')}
+        </div>
+        <div class="plib-search-row">
+          <input id="plibSearch" type="search" placeholder="Search caption, platform, campaign…" value="${esc(_postLibState.search)}" />
+          <select id="plibFilterPlatform">
+            <option value="all">All platforms</option>
+            ${platformOptions}
+          </select>
+          <select id="plibFilterCampaign">
+            <option value="all">All campaigns</option>
+            ${campaignOptions}
+          </select>
+          ${(_postLibState.filterStatus !== 'all' || _postLibState.filterPlatform !== 'all' || _postLibState.filterCampaign !== 'all' || _postLibState.search)
+            ? `<button type="button" class="btn soft btn-sm" id="plibClear">Clear</button>`
+            : ''}
+        </div>
+      </div>
+
+      <div class="plib-grid">
+        ${filtered.length === 0
+          ? (allPosts.length === 0
+              ? `<div class="plib-empty">
+                   <i class="fa-solid fa-inbox" style="font-size:2rem;opacity:.35;display:block;margin-bottom:10px;"></i>
+                   <div class="plib-empty-title">No posts yet</div>
+                   <div class="plib-empty-sub">Content you generate in Creative Studio or the AI composer appears here once saved.</div>
+                   <button type="button" class="btn primary btn-sm" style="margin-top:12px;"
+                     onclick="window.Orbit && window.Orbit.navigate && window.Orbit.navigate('creative')">
+                     Open Creative Studio →
+                   </button>
+                 </div>`
+              : `<div class="plib-empty">
+                   <i class="fa-solid fa-filter-circle-xmark" style="font-size:2rem;opacity:.35;display:block;margin-bottom:10px;"></i>
+                   <div class="plib-empty-title">No posts match your filters</div>
+                   <div class="plib-empty-sub">${allPosts.length} total post${allPosts.length === 1 ? '' : 's'} exist.</div>
+                   <button type="button" class="btn soft btn-sm" style="margin-top:12px;" id="plibClearEmpty">Clear filters</button>
+                 </div>`)
+          : filtered.map((group, idx) => renderFanoutCard(group, idx)).join('')
+        }
+      </div>
+    </div>
+  `;
+
+  /* ── Wire filter buttons ── */
+  host.querySelectorAll('[data-plib-status]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      _postLibState.filterStatus = btn.getAttribute('data-plib-status');
+      renderPostLibrary(ctx);
+    });
+  });
+
+  const searchEl = host.querySelector('#plibSearch');
+  if (searchEl) {
+    let t = null;
+    searchEl.addEventListener('input', (e) => {
+      clearTimeout(t);
+      t = setTimeout(() => {
+        _postLibState.search = e.target.value || '';
+        renderPostLibrary(ctx);
+      }, 250);
+    });
+  }
+
+  const pfEl = host.querySelector('#plibFilterPlatform');
+  if (pfEl) pfEl.addEventListener('change', (e) => {
+    _postLibState.filterPlatform = e.target.value || 'all';
+    renderPostLibrary(ctx);
+  });
+
+  const cfEl = host.querySelector('#plibFilterCampaign');
+  if (cfEl) cfEl.addEventListener('change', (e) => {
+    _postLibState.filterCampaign = e.target.value || 'all';
+    renderPostLibrary(ctx);
+  });
+
+  const clearBtn = host.querySelector('#plibClear');
+  if (clearBtn) clearBtn.addEventListener('click', () => {
+    _postLibState.filterStatus = 'all';
+    _postLibState.filterPlatform = 'all';
+    _postLibState.filterCampaign = 'all';
+    _postLibState.search = '';
+    renderPostLibrary(ctx);
+  });
+
+  const clearEmpty = host.querySelector('#plibClearEmpty');
+  if (clearEmpty) clearEmpty.addEventListener('click', () => {
+    _postLibState.filterStatus = 'all';
+    _postLibState.filterPlatform = 'all';
+    _postLibState.filterCampaign = 'all';
+    _postLibState.search = '';
+    renderPostLibrary(ctx);
+  });
+
+  /* ── Wire card clicks ── */
+  host.querySelectorAll('[data-plib-card-idx]').forEach(card => {
+    card.addEventListener('click', (e) => {
+      /* Don't open detail if user clicked an inline action */
+      if (e.target.closest('[data-plib-action]')) return;
+      const i = Number(card.getAttribute('data-plib-card-idx'));
+      const group = filtered[i];
+      if (group) openFanoutDetail(ctx, group);
+    });
+  });
+
+  /* ── Wire per-card quick actions ── */
+  host.querySelectorAll('[data-plib-action]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const action = btn.getAttribute('data-plib-action');
+      const i = Number(btn.getAttribute('data-plib-card-idx'));
+      const group = filtered[i];
+      if (!group) return;
+
+      if (action === 'view') {
+        openFanoutDetail(ctx, group);
+      } else if (action === 'refresh') {
+        refreshFanoutStats(ctx, group);
+      } else if (action === 'post-now') {
+        postFanoutNow(ctx, group);
+      }
+    });
+  });
+}
+
+function renderFanoutCard(group, idx) {
+  const summary = summarizeFanout(group);
+  const hero = summary.heroPost || group[0];
+
+  /* Thumbnail */
+  const thumb = hero?.imageBase64
+    ? `<img src="data:${esc(hero.imageMime || 'image/png')};base64,${esc(hero.imageBase64)}" alt="" />`
+    : `<div class="plib-thumb-empty"><i class="fa-solid fa-image"></i></div>`;
+
+  /* Status badge */
+  const statusBadge = (() => {
+    const st = summary.aggregateStatus;
+    const map = {
+      published:     ['plib-badge-good',  '🟢 Published'],
+      scheduled:     ['plib-badge-warn',  '🟡 Scheduled'],
+      draft:         ['plib-badge-gray',  '⚪ Draft'],
+      'compose-only':['plib-badge-info',  '🔵 Compose-only'],
+      failed:        ['plib-badge-bad',   '🔴 Failed'],
+    };
+    const [cls, label] = map[st] || map.draft;
+    return `<span class="plib-badge ${cls}">${label}</span>`;
+  })();
+
+  /* Platform chips */
+  const chips = group.map(p => {
+    const m = _platformMeta(p.platform);
+    const st = p.status || 'draft';
+    const dot = { published: '🟢', scheduled: '🟡', draft: '⚪', 'compose-only': '🔵', failed: '🔴' }[st] || '⚪';
+    return `<span class="plib-chip" title="${esc(p.status || '')}">
+      <i class="${m.icon || 'fa-solid fa-globe'}" style="color:${m.color || 'var(--muted)'};"></i>
+      ${esc(m.label || p.platform)}
+      <span style="margin-left:2px;">${dot}</span>
+    </span>`;
+  }).join('');
+
+  /* Caption preview (longest caption, or first) */
+  const previewPost = group.reduce((best, p) =>
+    (p.caption || '').length > (best.caption || '').length ? p : best, group[0]);
+  const captionPreview = (previewPost?.caption || '').slice(0, 120);
+
+  /* Stats summary */
+  const total = summary.totalStats;
+  const hasAnyStats = group.some(p => p.stats && (p.stats.views != null || p.stats.likes != null));
+  const statsHtml = hasAnyStats
+    ? `<div class="plib-stats">
+         <span title="Total views"><i class="fa-solid fa-eye"></i> ${fmtNumShort(total.views)}</span>
+         <span title="Total likes"><i class="fa-solid fa-heart" style="color:#ff5c7c;"></i> ${fmtNumShort(total.likes)}</span>
+         <span title="Total comments"><i class="fa-solid fa-comment"></i> ${fmtNumShort(total.comments)}</span>
+         <span title="Total shares"><i class="fa-solid fa-retweet"></i> ${fmtNumShort(total.shares)}</span>
+         <span title="Engagement rate" class="plib-er">${summary.overallEngagementRate.toFixed(1)}% ER</span>
+       </div>`
+    : `<div class="plib-stats plib-stats-empty">
+         ${summary.aggregateStatus === 'scheduled'
+           ? `⏰ Scheduled — stats appear after publish`
+           : summary.aggregateStatus === 'draft'
+             ? `📝 Draft — not published yet`
+             : `— no stats yet`}
+       </div>`;
+
+  /* Campaign name */
+  const campaignName = hero?._campaignName || '—';
+
+  /* Inline actions */
+  const actionsHtml = (() => {
+    const buttons = [
+      `<button type="button" class="btn soft btn-sm" data-plib-action="view" data-plib-card-idx="${idx}">View</button>`,
+    ];
+    if (summary.aggregateStatus === 'published') {
+      buttons.push(`<button type="button" class="btn soft btn-sm" data-plib-action="refresh" data-plib-card-idx="${idx}"><i class="fa-solid fa-rotate"></i></button>`);
+    }
+    if (summary.aggregateStatus === 'draft' || summary.aggregateStatus === 'scheduled') {
+      buttons.push(`<button type="button" class="btn primary btn-sm" data-plib-action="post-now" data-plib-card-idx="${idx}">Post now →</button>`);
+    }
+    return buttons.join('');
+  })();
+
+  /* Scheduled banner (if applicable) */
+  const schedPost = group.find(p => p.status === 'scheduled');
+  const scheduledHtml = schedPost?.scheduledFor
+    ? `<div class="plib-scheduled">
+         <i class="fa-solid fa-clock"></i>
+         Scheduled for ${esc(fmtSchedDate(schedPost.scheduledFor))}
+       </div>`
+    : '';
+
+  return `
+    <div class="plib-card" data-plib-card-idx="${idx}" role="button" tabindex="0">
+      <div class="plib-thumb">${thumb}</div>
+      <div class="plib-body">
+        <div class="plib-head">
+          ${statusBadge}
+          <span class="plib-campaign">${esc(campaignName)}</span>
+        </div>
+        <div class="plib-caption">${esc(captionPreview || '(no caption)')}${(previewPost?.caption || '').length > 120 ? '…' : ''}</div>
+        <div class="plib-chips">${chips}</div>
+        ${scheduledHtml}
+        ${statsHtml}
+        <div class="plib-actions">${actionsHtml}</div>
+      </div>
+    </div>
+  `;
+}
+
+/* ── Helper: short number format (1.2K, 3.4M) ── */
+function fmtNumShort(n) {
+  const v = Number(n) || 0;
+  if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
+  if (v >= 1e3) return (v / 1e3).toFixed(1) + 'K';
+  return String(v);
+}
+
+/* ── Helper: schedule date format ── */
+function fmtSchedDate(iso) {
+  if (!iso) return '—';
+  try {
+    const d = new Date(iso);
+    if (isNaN(d)) return String(iso);
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) +
+      ' · ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  } catch (_) {
+    return String(iso);
+  }
+}
+
+/* ── Helper: refresh every published post's stats in a group ── */
+async function refreshFanoutStats(ctx, group) {
+  const c = C(ctx);
+  const published = group.filter(p => p.status === 'published' && p.media?.url || p.url);
+  if (!published.length) { toast(ctx, 'No published posts to refresh.', 'info'); return; }
+
+  toast(ctx, `Refreshing ${published.length} post${published.length === 1 ? '' : 's'}…`, 'info');
+  let ok = 0, fail = 0;
+  for (const p of published) {
+    try {
+      const url = p.url || p.media?.url;
+      const type = p.platform || p.media?.type;
+      if (!url || !type) continue;
+      await c.fetchCampaignStats?.(p.campaignId || p._campaignId, type, url);
+      ok++;
+    } catch (_) { fail++; }
+  }
+  if (ok > 0) toast(ctx, `Refreshed ${ok} post${ok === 1 ? '' : 's'}${fail ? ` · ${fail} failed` : ''}.`, 'success');
+  else toast(ctx, 'Refresh failed for all posts.', 'error');
+  try { renderPostLibrary(ctx); } catch (_) {}
+}
+
+/* ── Helper: post a whole group now (all drafts/scheduled in it) ── */
+async function postFanoutNow(ctx, group) {
+  const c = C(ctx);
+  const toPost = group.filter(p => (p.status === 'draft' || p.status === 'scheduled'));
+  if (!toPost.length) { toast(ctx, 'Nothing in this group to post.', 'info'); return; }
+
+  if (!confirm(`Post ${toPost.length} platform${toPost.length === 1 ? '' : 's'} now?`)) return;
+
+  const targets = toPost.map(p => ({
+    platform: p.platform,
+    caption: p.caption || '',
+    hashtags: p.hashtags || [],
+    imageBase64: p.imageBase64 || null,
+    imageMime: p.imageMime || 'image/png',
+    utmUrl: p.url || '',
+  }));
+
+  try {
+    const res = await c.callFn('social/post/fanout', { targets });
+    if (res && Array.isArray(res.results)) {
+      const ok = res.results.filter(r => r.ok).length;
+      toast(ctx, `Posted ${ok} of ${res.results.length} platform${res.results.length === 1 ? '' : 's'}.`, ok === res.results.length ? 'success' : 'warning');
+      try { renderPostLibrary(ctx); } catch (_) {}
+    }
+  } catch (e) {
+    toast(ctx, 'Post failed: ' + (e.message || 'unknown'), 'error');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FANOUT DETAIL MODAL
+   ─────────────────────────────────────────────────────────────
+   Platform tabs at the top. Each tab shows that platform's
+   content + stats + history chart. Bottom panel compares across
+   platforms with a Per-platform / Combined toggle.
+   ═══════════════════════════════════════════════════════════════ */
+export function openFanoutDetail(ctx, group) {
+  if (!Array.isArray(group) || group.length === 0) return;
+
+  const c = C(ctx);
+  const state = c.state || { data: {} };
+  const summary = summarizeFanout(group);
+
+  /* Build modal once, then re-populate on tab switch */
+  let modal = document.getElementById('plibDetailModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'plibDetailModal';
+    modal.innerHTML = `
+      <div class="modal xl" style="max-width:1100px;max-height:94vh;overflow-y:auto;">
+        <div class="plib-modal-head">
+          <h3 id="plibModalTitle">Post detail</h3>
+          <button type="button" class="close" data-plib-close>×</button>
+        </div>
+        <div id="plibModalBody"></div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal || e.target.closest('[data-plib-close]')) {
+        closeFanoutDetail(ctx);
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('active')) closeFanoutDetail(ctx);
+    });
+  }
+
+  /* Store current group so refresh actions can find it */
+  modal._currentGroup = group;
+  modal._currentTab = summary.platforms[0] || group[0]?.platform || null;
+
+  /* Title */
+  const campaignName = group[0]?._campaignName || '';
+  const titleEl = document.getElementById('plibModalTitle');
+  if (titleEl) {
+    titleEl.innerHTML = `Post detail <span class="small muted" style="font-weight:400;margin-left:8px;">${esc(campaignName)} · ${group.length} platform${group.length === 1 ? '' : 's'}</span>`;
+  }
+
+  /* Body */
+  const bodyEl = document.getElementById('plibModalBody');
+  if (!bodyEl) return;
+
+  renderFanoutModalBody(ctx, bodyEl, group, summary, modal._currentTab);
+
+  if (typeof c.openModal === 'function') c.openModal('plibDetailModal');
+  else modal.classList.add('active');
+}
+
+export function closeFanoutDetail(ctx) {
+  const c = C(ctx);
+  if (typeof c.closeModal === 'function') c.closeModal('plibDetailModal');
+  else {
+    const modal = document.getElementById('plibDetailModal');
+    if (modal) modal.classList.remove('active');
+  }
+}
+
+function renderFanoutModalBody(ctx, bodyEl, group, summary, activeTab) {
+  const activePost = group.find(p => p.platform === activeTab) || group[0];
+
+  /* Platform tabs */
+  const tabsHtml = group.map(p => {
+    const m = _platformMeta(p.platform);
+    const isActive = p.platform === activeTab;
+    const stDot = { published: '🟢', scheduled: '🟡', draft: '⚪', 'compose-only': '🔵', failed: '🔴' }[p.status || 'draft'] || '⚪';
+    return `<button type="button" class="plib-tab ${isActive ? 'active' : ''}" data-plib-tab="${esc(p.platform)}">
+      <i class="${m.icon || 'fa-solid fa-globe'}" style="color:${m.color || 'var(--muted)'};"></i>
+      <span>${esc(m.label || p.platform)}</span>
+      <span style="font-size:10px;">${stDot}</span>
+    </button>`;
+  }).join('');
+
+  /* Left column — image */
+  const img = activePost?.imageBase64
+    ? `<div class="plib-detail-img">
+         <img src="data:${esc(activePost.imageMime || 'image/png')};base64,${esc(activePost.imageBase64)}" alt="" />
+       </div>
+       <div class="plib-detail-img-meta">
+         ${activePost.imageWidth && activePost.imageHeight ? `<span>${activePost.imageWidth}×${activePost.imageHeight}</span>` : ''}
+         ${activePost.imageMime ? `<span>${esc(activePost.imageMime.split('/')[1]?.toUpperCase() || 'IMG')}</span>` : ''}
+       </div>
+       <div class="plib-detail-img-actions">
+         <button type="button" class="btn soft btn-sm" data-plib-dl>Download</button>
+       </div>`
+    : `<div class="plib-detail-img-empty"><i class="fa-solid fa-image" style="font-size:2rem;opacity:.35;display:block;margin-bottom:8px;"></i>No image</div>`;
+
+  /* Right column — content */
+  const contentHtml = `
+    <div class="plib-detail-section">
+      <h4>Content</h4>
+      <div class="plib-detail-row"><span class="plib-detail-label">Campaign:</span><strong>${esc(activePost?._campaignName || '—')}</strong></div>
+      <div class="plib-detail-row"><span class="plib-detail-label">Pillar:</span><span>${esc(activePost?.pillar || '—')}</span></div>
+      <div class="plib-detail-row"><span class="plib-detail-label">Platform:</span><span>${esc(activePost?.platform || '—')}</span></div>
+      <div class="plib-detail-row"><span class="plib-detail-label">Status:</span><span>${esc(activePost?.status || '—')}</span></div>
+      ${activePost?.publishedAt ? `<div class="plib-detail-row"><span class="plib-detail-label">Published:</span><span>${esc(fmtSchedDate(activePost.publishedAt))}</span></div>` : ''}
+      ${activePost?.scheduledFor ? `<div class="plib-detail-row"><span class="plib-detail-label">Scheduled:</span><span>${esc(fmtSchedDate(activePost.scheduledFor))}</span></div>` : ''}
+      ${activePost?.externalId ? `<div class="plib-detail-row"><span class="plib-detail-label">External:</span><a href="${esc(activePost.url || '#')}" target="_blank" rel="noopener">${esc(activePost.externalId)}</a></div>` : ''}
+    </div>
+    <div class="plib-detail-section">
+      <h4>Caption</h4>
+      <div class="plib-detail-caption">${esc(activePost?.caption || '(no caption)')}</div>
+      ${(activePost?.hashtags && activePost.hashtags.length)
+        ? `<div class="plib-detail-hashtags">${activePost.hashtags.map(h => `<span class="badge">#${esc(String(h).replace(/^#+/, ''))}</span>`).join(' ')}</div>`
+        : ''}
+    </div>
+    ${activePost?.url ? `
+      <div class="plib-detail-section">
+        <h4>UTM link</h4>
+        <div class="plib-detail-utm"><code>${esc(activePost.url)}</code></div>
+      </div>
+    ` : ''}
+  `;
+
+  /* Stats block for active tab */
+  const st = activePost?.stats;
+  const er = engagementRateFor(st);
+  const hasStats = st && (st.views != null || st.likes != null || st.comments != null || st.shares != null);
+  const statsHtml = hasStats
+    ? `<div class="plib-stat-grid">
+         <div class="plib-stat"><div class="plib-stat-num">${fmtNumShort(st.views)}</div><div class="plib-stat-lbl">Views</div></div>
+         <div class="plib-stat"><div class="plib-stat-num">${fmtNumShort(st.likes)}</div><div class="plib-stat-lbl">Likes</div></div>
+         <div class="plib-stat"><div class="plib-stat-num">${fmtNumShort(st.comments)}</div><div class="plib-stat-lbl">Comments</div></div>
+         <div class="plib-stat"><div class="plib-stat-num">${fmtNumShort(st.shares)}</div><div class="plib-stat-lbl">Shares</div></div>
+         <div class="plib-stat"><div class="plib-stat-num">${er.toFixed(1)}%</div><div class="plib-stat-lbl">Engagement</div></div>
+       </div>
+       <div class="plib-stat-updated">Updated ${activePost.statsUpdatedAt ? fmtSchedDate(activePost.statsUpdatedAt) : '—'}</div>`
+    : `<div class="plib-detail-empty">${activePost?.status === 'scheduled'
+        ? '⏰ Stats will appear after this post publishes.'
+        : activePost?.status === 'draft'
+          ? '📝 Draft — no stats yet.'
+          : activePost?.status === 'compose-only'
+            ? '🔵 Awaiting manual paste — no stats.'
+            : activePost?.status === 'failed'
+              ? '🔴 Last attempt failed: ' + esc(activePost.lastError || 'unknown')
+              : '— No stats yet.'}</div>`;
+
+  /* History chart container */
+  const historyHtml = `<div class="plib-history" id="plibHistory"></div>`;
+
+  /* Compare panel */
+  const compareHtml = group.length > 1
+    ? `<div class="plib-compare">
+         <div class="plib-compare-head">
+           <h4>Compare across platforms</h4>
+           <div class="plib-compare-toggle">
+             <button type="button" class="plib-cmp-btn active" data-plib-cmp="per">Per platform</button>
+             <button type="button" class="plib-cmp-btn" data-plib-cmp="combined">Combined</button>
+           </div>
+         </div>
+         <div id="plibCompareChart" class="plib-compare-chart"></div>
+       </div>`
+    : '';
+
+  /* Scheduled banner */
+  const scheduledPost = group.find(p => p.status === 'scheduled');
+  const schedBanner = scheduledPost
+    ? `<div class="plib-sched-banner">
+         <i class="fa-solid fa-clock"></i>
+         <div>
+           <strong>Scheduled for ${esc(fmtSchedDate(scheduledPost.scheduledFor))}</strong>
+           <div class="small muted">This post will publish automatically once the worker scheduler is deployed. Until then, click "Post now" to publish immediately.</div>
+         </div>
+       </div>`
+    : '';
+
+  bodyEl.innerHTML = `
+    ${schedBanner}
+
+    <div class="plib-tabs">${tabsHtml}</div>
+
+    <div class="plib-detail-grid">
+      <div class="plib-detail-left">${img}</div>
+      <div class="plib-detail-right">${contentHtml}</div>
+    </div>
+
+    <div class="plib-stats-section">
+      <div class="plib-stats-head">
+        <h4>Live stats · ${esc(_platformMeta(activePost?.platform || 'unknown').label || activePost?.platform)}</h4>
+        ${hasStats && activePost?.url
+          ? `<button type="button" class="btn soft btn-sm" data-plib-refresh>Refresh</button>`
+          : ''}
+      </div>
+      ${statsHtml}
+    </div>
+
+    ${historyHtml}
+
+    ${compareHtml}
+
+    <div class="plib-modal-actions">
+      ${activePost?.status === 'published' && activePost?.caption
+        ? `<button type="button" class="btn soft btn-sm" data-plib-edit><i class="fa-solid fa-pen"></i> Duplicate in composer</button>`
+        : ''}
+      ${(activePost?.status === 'draft' || activePost?.status === 'scheduled')
+        ? `<button type="button" class="btn primary btn-sm" data-plib-post-now><i class="fa-solid fa-paper-plane"></i> Post now</button>`
+        : ''}
+      ${activePost?.status === 'failed' && activePost?.composeUrl
+        ? `<a href="${esc(activePost.composeUrl)}" target="_blank" rel="noopener" class="btn primary btn-sm"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open & paste</a>`
+        : ''}
+      <button type="button" class="btn danger btn-sm" data-plib-delete><i class="fa-solid fa-trash"></i> Delete ${group.length > 1 ? 'entire fanout' : 'post'}</button>
+    </div>
+  `;
+
+  /* ── Wire modal events ── */
+  bodyEl.querySelectorAll('[data-plib-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.getAttribute('data-plib-tab');
+      const modal = document.getElementById('plibDetailModal');
+      if (modal) modal._currentTab = tab;
+      renderFanoutModalBody(ctx, bodyEl, group, summary, tab);
+    });
+  });
+
+  bodyEl.querySelector('[data-plib-close]')?.addEventListener('click', () => closeFanoutDetail(ctx));
+
+  bodyEl.querySelector('[data-plib-dl]')?.addEventListener('click', () => {
+    if (!activePost?.imageBase64) return;
+    const a = document.createElement('a');
+    a.href = `data:${activePost.imageMime || 'image/png'};base64,${activePost.imageBase64}`;
+    a.download = `viora-${activePost.id || Date.now()}.png`;
+    a.click();
+  });
+
+  bodyEl.querySelector('[data-plib-refresh]')?.addEventListener('click', async () => {
+    try {
+      const c = C(ctx);
+      if (activePost?.url) {
+        await c.fetchCampaignStats?.(activePost.campaignId || activePost._campaignId, activePost.platform, activePost.url);
+        toast(ctx, 'Refreshed.', 'success');
+      }
+    } catch (e) {
+      toast(ctx, 'Refresh failed: ' + (e.message || 'unknown'), 'error');
+    }
+  });
+
+  bodyEl.querySelector('[data-plib-edit]')?.addEventListener('click', () => {
+    closeFanoutDetail(ctx);
+    openComposerForDraft(activePost);
+  });
+
+  bodyEl.querySelector('[data-plib-post-now]')?.addEventListener('click', async () => {
+    closeFanoutDetail(ctx);
+    await postFanoutNow(ctx, group);
+  });
+
+  bodyEl.querySelector('[data-plib-delete]')?.addEventListener('click', async () => {
+    if (!confirm(`Delete ${group.length > 1 ? 'all posts in this fanout' : 'this post'}? This cannot be undone.`)) return;
+    try {
+      const c = C(ctx);
+      for (const p of group) {
+        await c.deleteDoc?.('campaigns', p.id, false);
+      }
+      closeFanoutDetail(ctx);
+      toast(ctx, 'Deleted.', 'info');
+      try { renderPostLibrary(ctx); } catch (_) {}
+    } catch (e) {
+      toast(ctx, 'Delete failed: ' + (e.message || 'unknown'), 'error');
+    }
+  });
+
+  /* ── Draw history chart ── */
+  drawHistoryChart(ctx, bodyEl, activePost);
+
+  /* ── Draw compare chart ── */
+  const compareToggle = bodyEl.querySelectorAll('[data-plib-cmp]');
+  if (compareToggle.length) {
+    compareToggle.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mode = btn.getAttribute('data-plib-cmp');
+        bodyEl.querySelectorAll('[data-plib-cmp]').forEach(b =>
+          b.classList.toggle('active', b === btn)
+        );
+        drawCompareChart(ctx, bodyEl, group, mode);
+      });
+    });
+    drawCompareChart(ctx, bodyEl, group, 'per');
+  }
+}
+
+/* ── Draw per-post history chart ── */
+function drawHistoryChart(ctx, bodyEl, post) {
+  const host = bodyEl.querySelector('#plibHistory');
+  if (!host) return;
+
+  if (typeof Chart === 'undefined') {
+    host.innerHTML = '<div class="small muted">Chart.js not loaded — chart unavailable.</div>';
+    return;
+  }
+
+  /* Destroy previous instance if it exists */
+  const c = C(ctx);
+  const state = c.state || {};
+  if (!state.charts) state.charts = {};
+  if (state.charts['plibHistoryChart']) {
+    try { state.charts['plibHistoryChart'].destroy(); } catch (_) {}
+    delete state.charts['plibHistoryChart'];
+  }
+
+  const history = statsHistoryFor(post, 24 * 60 * 60 * 1000);
+  if (history.length < 2) {
+    host.innerHTML = `<div class="small muted" style="padding:16px;text-align:center;">Not enough history yet — chart appears after 2+ cron cycles (~6 min).</div>`;
+    return;
+  }
+
+  host.innerHTML = `
+    <div class="plib-history-head"><h4>Stats over time (last 24h)</h4></div>
+    <div style="height:220px;"><canvas id="plibHistoryCanvas"></canvas></div>
+  `;
+  const canvas = host.querySelector('#plibHistoryCanvas');
+  if (!canvas) return;
+
+  const tc = (() => { try { return getComputedStyle(document.documentElement).getPropertyValue('--chart-text').trim() || '#94a3b8'; } catch (_) { return '#94a3b8'; } })();
+
+  state.charts['plibHistoryChart'] = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: history.map(s => {
+        const d = new Date(s.ts);
+        return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      }),
+      datasets: [
+        { label: 'Views',    data: history.map(s => s.views ?? null),    borderColor: '#00d4ff', backgroundColor: 'rgba(0,212,255,0.12)', fill: true, tension: 0.4, borderWidth: 2 },
+        { label: 'Likes',    data: history.map(s => s.likes ?? null),    borderColor: '#ff5c7c', tension: 0.4, borderWidth: 2 },
+        { label: 'Comments', data: history.map(s => s.comments ?? null), borderColor: '#22e6a0', tension: 0.4, borderWidth: 2 },
+        { label: 'Shares',   data: history.map(s => s.shares ?? null),   borderColor: '#ffc857', tension: 0.4, borderWidth: 2 },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: tc, font: { size: 11 } } } },
+      scales: {
+        y: { beginAtZero: true, ticks: { color: tc }, grid: { color: 'rgba(148,163,184,0.15)' } },
+        x: { ticks: { color: tc, font: { size: 10 } }, grid: { display: false } },
+      },
+    },
+  });
+}
+
+/* ── Draw compare chart ── */
+function drawCompareChart(ctx, bodyEl, group, mode) {
+  const host = bodyEl.querySelector('#plibCompareChart');
+  if (!host) return;
+
+  if (typeof Chart === 'undefined') {
+    host.innerHTML = '<div class="small muted">Chart.js not loaded.</div>';
+    return;
+  }
+
+  const c = C(ctx);
+  const state = c.state || {};
+  if (!state.charts) state.charts = {};
+  if (state.charts['plibCompareChart']) {
+    try { state.charts['plibCompareChart'].destroy(); } catch (_) {}
+    delete state.charts['plibCompareChart'];
+  }
+
+  const tc = (() => { try { return getComputedStyle(document.documentElement).getPropertyValue('--chart-text').trim() || '#94a3b8'; } catch (_) { return '#94a3b8'; } })();
+
+  host.innerHTML = `<div style="height:220px;"><canvas id="plibCompareCanvas"></canvas></div>`;
+  const canvas = host.querySelector('#plibCompareCanvas');
+  if (!canvas) return;
+
+  if (mode === 'per') {
+    /* One bar per platform */
+    const platforms = group.map(p => ({
+      label: _platformMeta(p.platform).label || p.platform,
+      views: Number(p.stats?.views) || 0,
+      likes: Number(p.stats?.likes) || 0,
+      comments: Number(p.stats?.comments) || 0,
+      shares: Number(p.stats?.shares) || 0,
+    }));
+
+    state.charts['plibCompareChart'] = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: platforms.map(p => p.label),
+        datasets: [
+          { label: 'Views',    data: platforms.map(p => p.views),    backgroundColor: 'rgba(0,212,255,0.75)',  borderRadius: 6 },
+          { label: 'Likes',    data: platforms.map(p => p.likes),    backgroundColor: 'rgba(255,92,124,0.75)', borderRadius: 6 },
+          { label: 'Comments', data: platforms.map(p => p.comments), backgroundColor: 'rgba(34,230,160,0.75)', borderRadius: 6 },
+          { label: 'Shares',   data: platforms.map(p => p.shares),   backgroundColor: 'rgba(255,200,87,0.75)', borderRadius: 6 },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: tc, font: { size: 11 } } } },
+        scales: {
+          y: { beginAtZero: true, ticks: { color: tc }, grid: { color: 'rgba(148,163,184,0.15)' } },
+          x: { ticks: { color: tc }, grid: { display: false } },
+        },
+      },
+    });
+  } else {
+    /* Combined total over time */
+    const combined = combineStatsHistory(group, 24 * 60 * 60 * 1000);
+    if (combined.length < 2) {
+      host.innerHTML = `<div class="small muted" style="padding:16px;text-align:center;">Not enough combined history yet.</div>`;
+      return;
+    }
+    state.charts['plibCompareChart'] = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: combined.map(s => new Date(s.ts).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })),
+        datasets: [
+          { label: 'Total views',    data: combined.map(s => s.views),    borderColor: '#00d4ff', backgroundColor: 'rgba(0,212,255,0.15)', fill: true, tension: 0.4, borderWidth: 2 },
+          { label: 'Total likes',    data: combined.map(s => s.likes),    borderColor: '#ff5c7c', tension: 0.4, borderWidth: 2 },
+          { label: 'Total comments', data: combined.map(s => s.comments), borderColor: '#22e6a0', tension: 0.4, borderWidth: 2 },
+          { label: 'Total shares',   data: combineStatsHistory(group, 24 * 60 * 60 * 1000).map(s => s.shares), borderColor: '#ffc857', tension: 0.4, borderWidth: 2 },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: tc, font: { size: 11 } } } },
+        scales: {
+          y: { beginAtZero: true, ticks: { color: tc }, grid: { color: 'rgba(148,163,184,0.15)' } },
+          x: { ticks: { color: tc, font: { size: 10 } }, display: false },
+        },
+      },
+    });
+  }
 }
