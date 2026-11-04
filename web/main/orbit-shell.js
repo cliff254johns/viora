@@ -135,7 +135,7 @@ function renderSidebar() {
 
   host.innerHTML = `
     <div class="brand">
-      <div class="logo"><img src="/viora.png"></div>
+      <div class="logo"><img src="/viora.png"/></div>
       <div><strong>Viora</strong><small>Social Media Manager</small></div>
     </div>
   
