@@ -718,10 +718,20 @@ function openComposerFromCreative(ctx, opts) {
    INBOX — delegates to ./inbox.js
    ═══════════════════════════════════════════════════════════════ */
 export async function renderInbox(ctx) {
-  // The inbox module owns its own DOM rendering (into #view)
-  _renderInboxImpl();
-  // Return empty string so orbit-shell doesn't overwrite
-  return { html: '', mount: () => {} };
+  /* inbox.js writes into #view itself. We must await the async render
+     so the shell's "view.innerHTML = html" happens AFTER inbox has
+     finished painting. Otherwise the shell wipes the freshly-painted
+     content by setting innerHTML = '' (from a stale empty return). */
+  try {
+    await _renderInboxImpl();
+  } catch (e) {
+    console.warn('[orbit] inbox render failed:', e);
+  }
+  const view = document.getElementById('view');
+  return {
+    html: view ? view.innerHTML : '',
+    mount: () => {},
+  };
 }
 
 /* ═══════════════════════════════════════════════════════════════
