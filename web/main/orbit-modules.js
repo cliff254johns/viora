@@ -1148,10 +1148,7 @@ export async function renderSettings(ctx) {
    ═══════════════════════════════════════════════════════════════ */
 export async function renderAdmin(ctx) {
   const d = data(ctx);
-  const counts = Object.entries(d)
-    .map(([k, v]) => [k, Array.isArray(v) ? v.length : (typeof v === 'object' && v ? Object.keys(v).length : 1)])
-    .sort((a, b) => b[1] - a[1]);
-
+  const counts = Object.entries(d).map(([k, v]) => [k, Array.isArray(v) ? v.length : (typeof v === 'object' && v ? Object.keys(v).length : 1)]);
   return head('Platform administration', 'Read-only health check of your workspace.', '') +
     `<div class="card" style="margin-top:15px;">
       <div class="cardhead"><h3>Collections</h3></div>
@@ -1160,4 +1157,292 @@ export async function renderAdmin(ctx) {
         <tbody>${counts.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${v}</td></tr>`).join('')}</tbody>
       </table></div>
     </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ACCOUNTS MODULE — renders into #view
+   ═══════════════════════════════════════════════════════════════ */
+export async function renderAccountsModule(ctx) {
+  const accounts = Array.isArray(data(ctx).socialAccounts) ? data(ctx).socialAccounts : [];
+  const byPlatform = Object.fromEntries(accounts.map(a => [a.platform, a]));
+
+  const PLATFORMS = [
+    { key: 'facebook',  label: 'Facebook',          icon: 'fa-facebook',  color: '#1877f2' },
+    { key: 'instagram', label: 'Instagram',         icon: 'fa-instagram', color: '#e1306c' },
+    { key: 'tiktok',    label: 'TikTok',            icon: 'fa-tiktok',    color: '#ff0050' },
+    { key: 'youtube',   label: 'YouTube',           icon: 'fa-youtube',   color: '#ff0033' },
+    { key: 'linkedin',  label: 'LinkedIn',          icon: 'fa-linkedin',  color: '#0a66c2' },
+    { key: 'x',         label: 'X / Twitter',       icon: 'fa-x-twitter', color: '#000000' },
+    { key: 'threads',   label: 'Threads',           icon: 'fa-threads',   color: '#000000' },
+    { key: 'pinterest', label: 'Pinterest',         icon: 'fa-pinterest', color: '#e60023' },
+    { key: 'whatsapp',  label: 'WhatsApp Business', icon: 'fa-whatsapp',  color: '#25d366' },
+    { key: 'gbp',       label: 'Google Business',   icon: 'fa-google',    color: '#4285f4' },
+  ];
+
+  const html = head('Social accounts', 'Register each platform once. The composer and stats pull from here.',
+    '<button class="btn primary" id="orbitAddAccount"><i class="fa-solid fa-plus"></i> Add account</button>') +
+    `<div class="accounts-grid" style="margin-top:15px;">
+      ${PLATFORMS.map(p => {
+        const a = byPlatform[p.key];
+        const isRegistered = !!a;
+        const followers = a && a.followers != null ? Number(a.followers).toLocaleString() : null;
+        return `
+          <div class="account-card" style="--platform-color:${p.color};">
+            <div class="account-head">
+              <div class="account-ico"><i class="fa-brands ${p.icon}"></i></div>
+              <div class="account-body">
+                <div class="account-name">
+                  ${esc(p.label)}
+                  ${a && a.verified ? '<i class="fa-solid fa-circle-check" style="color:var(--accent);font-size:11px"></i>' : ''}
+                </div>
+                <div class="account-handle">${a ? esc(a.handle || '—') : '<em>Not registered</em>'}</div>
+              </div>
+            </div>
+            <div class="account-meta">
+              ${a
+                ? `<span>${a.connectedVia === 'api' ? '<i class="fa-solid fa-bolt" style="color:var(--good)"></i> API' : '<i class="fa-solid fa-link"></i> Manual'}</span>
+                   <span>${followers || '—'}${followers ? ' followers' : ''}</span>`
+                : `<span style="color:var(--muted)">Not connected</span>`}
+            </div>
+            <div class="account-actions">
+              <button class="btn ${isRegistered ? 'primary' : ''}" data-acc-edit="${esc(p.key)}">
+                <i class="fa-solid fa-${isRegistered ? 'pen' : 'plus'}"></i>
+                ${isRegistered ? 'Edit' : 'Connect'}
+              </button>
+              ${isRegistered ? `
+                <button class="btn" data-acc-verify="${esc(a.id)}" title="Verify"><i class="fa-solid fa-satellite-dish"></i></button>
+                <button class="btn danger" data-acc-remove="${esc(a.id)}" title="Remove"><i class="fa-solid fa-trash"></i></button>` : ''}
+            </div>
+          </div>`;
+      }).join('')}
+    </div>`;
+
+  return {
+    html,
+    mount(view) {
+      view.querySelectorAll('[data-acc-edit]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const key = btn.getAttribute('data-acc-edit');
+          _openAccountEditor(ctx, key, byPlatform[key] || null, PLATFORMS);
+        });
+      });
+      view.querySelectorAll('[data-acc-verify]').forEach(btn => {
+        btn.addEventListener('click', () => _verifyAccount(ctx, btn.getAttribute('data-acc-verify')));
+      });
+      view.querySelectorAll('[data-acc-remove]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Remove this account?')) return;
+          try {
+            const db = C(ctx).db, ref = C(ctx).ref, remove = C(ctx).remove, P = C(ctx).P;
+            await remove(ref(db, P('socialAccounts/' + btn.getAttribute('data-acc-remove'))));
+            toast(ctx, 'Account removed.', 'info');
+            window.Orbit?.navigate?.('accounts', { skipHash: true });
+          } catch (e) { toast(ctx, 'Remove failed: ' + e.message, 'error'); }
+        });
+      });
+      view.querySelector('#orbitAddAccount')?.addEventListener('click', () => {
+        const key = prompt('Platform? (facebook/instagram/tiktok/youtube/linkedin/x/threads/pinterest/whatsapp/gbp)', 'facebook');
+        if (key) _openAccountEditor(ctx, key, null, PLATFORMS);
+      });
+    }
+  };
+}
+
+function _openAccountEditor(ctx, platformKey, existing, PLATFORMS) {
+  const platform = PLATFORMS.find(p => p.key === platformKey) || PLATFORMS[0];
+  const a = existing || {};
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay active';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal" style="max-width:560px;">
+      <div class="modalhead">
+        <h3>${esc(platform.label)} — ${a.id ? 'Edit' : 'Connect'}</h3>
+        <button class="close" data-close type="button">×</button>
+      </div>
+      <div class="field"><label>Handle *</label><input id="accHandle" value="${esc(a.handle || '')}" placeholder="@yourhandle" /></div>
+      <div class="field"><label>Display name</label><input id="accName" value="${esc(a.displayName || '')}" /></div>
+      <div class="field"><label>Profile URL *</label><input id="accUrl" type="url" value="${esc(a.profileUrl || '')}" placeholder="https://..." /></div>
+      <div class="field"><label>Platform ID</label><input id="accPid" value="${esc(a.platformId || '')}" placeholder="optional" /></div>
+      <div class="field"><label>Connection type</label>
+        <select id="accVia">
+          <option value="manual" ${a.connectedVia !== 'api' ? 'selected' : ''}>Manual (compose-link)</option>
+          <option value="api" ${a.connectedVia === 'api' ? 'selected' : ''}>API (worker can post)</option>
+        </select></div>
+      <div class="field"><label style="display:flex;align-items:center;gap:8px;font-weight:400;cursor:pointer;">
+        <input type="checkbox" id="accVerified" ${a.verified ? 'checked' : ''} style="width:auto;" /><span>Verified / official</span>
+      </label></div>
+      <div class="field"><label>Notes</label><textarea id="accNotes" rows="2">${esc(a.notes || '')}</textarea></div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
+        <button type="button" class="btn" data-close>Cancel</button>
+        <button type="button" class="btn primary" id="accSave">Save</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  const close = () => modal.remove();
+  modal.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', close));
+  modal.querySelector('#accSave').addEventListener('click', async () => {
+    const handle = modal.querySelector('#accHandle').value.trim();
+    const profileUrl = modal.querySelector('#accUrl').value.trim();
+    if (!handle)     { toast(ctx, 'Handle is required.', 'error'); return; }
+    if (!profileUrl) { toast(ctx, 'Profile URL is required.', 'error'); return; }
+    const payload = {
+      id: a.id || ('sa-' + platformKey + '-' + Date.now().toString(36)),
+      platform: platformKey,
+      handle,
+      displayName: modal.querySelector('#accName').value.trim(),
+      profileUrl,
+      platformId: modal.querySelector('#accPid').value.trim(),
+      connectedVia: modal.querySelector('#accVia').value,
+      verified: modal.querySelector('#accVerified').checked,
+      notes: modal.querySelector('#accNotes').value.trim(),
+      followers: a.followers ?? null,
+      followersUpdatedAt: a.followersUpdatedAt || null,
+      createdAt: a.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    try {
+      const db = C(ctx).db, ref = C(ctx).ref, set = C(ctx).set, P = C(ctx).P;
+      await set(ref(db, P('socialAccounts/' + payload.id)), payload);
+      toast(ctx, a.id ? 'Account updated.' : 'Account saved.', 'success');
+      close();
+      window.Orbit?.navigate?.('accounts', { skipHash: true });
+    } catch (e) { toast(ctx, 'Save failed: ' + e.message, 'error'); }
+  });
+}
+
+async function _verifyAccount(ctx, id) {
+  const db = C(ctx).db, ref = C(ctx).ref, get = C(ctx).get, set = C(ctx).set, P = C(ctx).P;
+  const callFn = C(ctx).callFn;
+  if (typeof callFn !== 'function') { toast(ctx, 'Worker not available.', 'warning'); return; }
+  try {
+    const snap = await get(ref(db, P('socialAccounts/' + id)));
+    if (!snap.exists()) { toast(ctx, 'Account not found.', 'error'); return; }
+    const account = snap.val();
+    const res = await callFn('socialStats', { platform: account.platform, url: account.profileUrl });
+    if (res && res.ok !== false && res.followers != null) {
+      await set(ref(db, P('socialAccounts/' + id)), {
+        ...account,
+        followers: res.followers,
+        followersUpdatedAt: new Date().toISOString(),
+        verified: true,
+      });
+      toast(ctx, `Verified — ${Number(res.followers).toLocaleString()} followers.`, 'success');
+      window.Orbit?.navigate?.('accounts', { skipHash: true });
+    } else {
+      toast(ctx, 'Verification returned no data.', 'warning');
+    }
+  } catch (e) { toast(ctx, 'Verify failed: ' + e.message, 'error'); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CAMPAIGNS MODULE — renders into #view
+   ═══════════════════════════════════════════════════════════════ */
+export async function renderCampaignsModule(ctx) {
+  const d = data(ctx);
+  const campaigns = Array.isArray(d.campaigns) ? d.campaigns : [];
+  const leads = Array.isArray(d.leads) ? d.leads : [];
+
+  let totalBudget = 0, totalSpend = 0, activeCount = 0, totalLeads = 0;
+  for (const c of campaigns) {
+    if (!c) continue;
+    totalBudget += Number(c.budget) || 0;
+    totalSpend  += Number(c.spend)  || 0;
+    if (c.status === 'Active') activeCount++;
+    totalLeads += leads.filter(l => l && l.campaignId === c.id).length;
+  }
+
+  const leadsByCampaign = new Map();
+  for (const l of leads) if (l && l.campaignId) leadsByCampaign.set(l.campaignId, (leadsByCampaign.get(l.campaignId) || 0) + 1);
+  const STATUS_MAP = { Active: 'good', Planned: 'warn', Paused: '', Completed: 'good' };
+
+  const campaignsTable = campaigns.length === 0
+    ? `<div class="empty">No campaigns yet. Click <b>New Campaign</b> above.</div>`
+    : `<div class="tablewrap"><table>
+        <thead><tr>
+          <th>Campaign</th><th>Budget</th><th>Spent</th><th>Leads</th>
+          <th>Live Stats</th><th>Dates</th><th>Status</th>
+          <th style="text-align:right">Actions</th>
+        </tr></thead>
+        <tbody>${campaigns.map(c => {
+          const lc = leadsByCampaign.get(c.id) || 0;
+          const s = c.stats;
+          const platformIcon = c.media?.type === 'youtube'
+            ? '<i class="fa-brands fa-youtube" style="color:#ff0033"></i>'
+            : c.media?.type === 'tiktok'
+              ? '<i class="fa-brands fa-tiktok"></i>'
+              : '';
+          const statsCell = s
+            ? `<div style="font-size:11px;line-height:1.6;white-space:nowrap;">
+                ${s.views    != null ? `<div>${platformIcon} <i class="fa-solid fa-eye"></i> ${Number(s.views).toLocaleString()}</div>` : ''}
+                ${s.likes    != null ? `<div><i class="fa-solid fa-heart" style="color:#ff5c7c"></i> ${Number(s.likes).toLocaleString()}</div>` : ''}
+                ${s.comments != null ? `<div><i class="fa-solid fa-comment"></i> ${Number(s.comments).toLocaleString()}</div>` : ''}
+              </div>`
+            : c.media?.url
+              ? `<span class="small muted"><i class="fa-solid fa-clock"></i> Not fetched</span>`
+              : `<span class="small muted">—</span>`;
+          return `<tr>
+            <td><b>${esc(c.name || '')}</b>${c.media?.type && c.media.type !== 'none' ? `<br><small class="muted">${platformIcon} ${esc(c.media.type)}</small>` : ''}</td>
+            <td>KSh ${(Number(c.budget) || 0).toLocaleString()}</td>
+            <td>KSh ${(Number(c.spend)  || 0).toLocaleString()}</td>
+            <td><span class="pill">${lc}</span></td>
+            <td>${statsCell}</td>
+            <td class="small">${esc(c.startDate || '—')} → ${esc(c.endDate || '—')}</td>
+            <td><span class="status ${STATUS_MAP[c.status] || ''}">${esc(c.status || '—')}</span></td>
+            <td style="text-align:right;white-space:nowrap;">
+              ${c.media?.url ? `<button class="btn soft btn-xs" data-camp-refresh="${esc(c.id)}" title="Refresh stats"><i class="fa-solid fa-rotate"></i></button>` : ''}
+              <button class="btn soft btn-xs" data-camp-edit="${esc(c.id)}"><i class="fa-solid fa-pen"></i></button>
+              <button class="btn danger btn-xs" data-camp-del="${esc(c.id)}"><i class="fa-solid fa-trash"></i></button>
+            </td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>`;
+
+  const html = head('Campaigns', 'Real campaigns, budgets, live stats and leads in one table.',
+    `<button class="btn" id="orbitRefreshAllStats"><i class="fa-solid fa-rotate"></i> Refresh All Stats</button>
+     <button class="btn primary" id="orbitNewCampaign"><i class="fa-solid fa-plus"></i> New Campaign</button>`) +
+    `<div class="grid kpis">
+      ${kpi('Campaigns', campaigns.length, activeCount + ' active', '<i class="fa-solid fa-bullhorn"></i>')}
+      ${kpi('Budget', 'KSh ' + totalBudget.toLocaleString(), 'Spent KSh ' + totalSpend.toLocaleString(), '<i class="fa-solid fa-coins"></i>')}
+      ${kpi('Leads', totalLeads, leads.length + ' in system', '<i class="fa-solid fa-user-group"></i>')}
+      ${kpi('Active', activeCount, 'currently running', '<i class="fa-solid fa-bolt"></i>')}
+    </div>
+    <div class="card" style="margin-top:15px;">
+      <div class="cardhead"><h3>All campaigns</h3></div>
+      ${campaignsTable}
+    </div>
+    <div id="campaignTrendRadar" style="margin-top:15px;"></div>
+    <div id="campaignDraftLibrary" style="margin-top:15px;"></div>
+    <div id="campaignPromptLibrary" style="margin-top:15px;"></div>`;
+
+  return {
+    html,
+    mount() {
+      document.getElementById('orbitNewCampaign')?.addEventListener('click', () => window.Viora?.addCampaign?.());
+      document.getElementById('orbitRefreshAllStats')?.addEventListener('click', async (e) => {
+        const btn = e.currentTarget;
+        const prev = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Refreshing…';
+        try { await window.Viora?.refreshAllCampaignStats?.(); toast(ctx, 'Refreshed.', 'success'); }
+        catch (err) { toast(ctx, 'Refresh failed: ' + err.message, 'error'); }
+        finally { btn.disabled = false; btn.innerHTML = prev; }
+      });
+      document.querySelectorAll('[data-camp-edit]').forEach(b =>
+        b.addEventListener('click', () => window.Viora?.editCampaign?.(b.getAttribute('data-camp-edit'))));
+      document.querySelectorAll('[data-camp-del]').forEach(b =>
+        b.addEventListener('click', async () => {
+          if (!confirm('Delete this campaign?')) return;
+          try { await C(ctx).deleteDoc('campaigns', b.getAttribute('data-camp-del')); toast(ctx, 'Deleted.', 'info'); }
+          catch (e) { toast(ctx, 'Delete failed: ' + e.message, 'error'); }
+        }));
+      document.querySelectorAll('[data-camp-refresh]').forEach(b =>
+        b.addEventListener('click', () => window.Viora?.refreshCampaignStats?.(b.getAttribute('data-camp-refresh'))));
+
+      // Delegate trend + libraries
+      try { window.Viora?.renderTrendRadar?.(); } catch (_) {}
+      try { window.Viora?.renderDraftLibrary?.(); } catch (_) {}
+      try { window.Viora?.renderPromptLibrary?.(); } catch (_) {}
+    }
+  };
 }
