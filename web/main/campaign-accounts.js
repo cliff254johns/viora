@@ -458,22 +458,21 @@ async function verifyAccount(id) {
 
     SAFE.toast('Checking ' + account.handle + '…', 'info');
 
-    // Call the worker's competitor/stats or socialStats endpoint with the profile URL
     const res = await callFn('socialStats', {
       platform: account.platform,
       url: account.profileUrl,
       videoId: null,
     });
 
-    if (single && single.ok !== false && single.followers != null) {
+    if (res && res.ok !== false && res.followers != null) {
       const updated = {
         ...account,
-        followers: single.followers,
+        followers: res.followers,
         followersUpdatedAt: new Date().toISOString(),
         verified: true,
       };
       await set(ref(db, P(`socialAccounts/${id}`)), updated);
-      SAFE.toast(`Verified — ${Number(single.followers).toLocaleString()} followers.`, 'success');
+      SAFE.toast(`Verified — ${Number(res.followers).toLocaleString()} followers.`, 'success');
       renderAccountsPanel();
     } else {
       SAFE.toast('Verification returned no data. Check the profile URL.', 'warning');
@@ -482,7 +481,6 @@ async function verifyAccount(id) {
     SAFE.toast('Verify failed: ' + (e.message || 'unknown'), 'error');
   }
 }
-
 /* ═══════════════════════════════════════════════════════════════
    HELPERS FOR OTHER MODULES
    ═══════════════════════════════════════════════════════════════ */
