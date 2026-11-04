@@ -109,6 +109,32 @@ async function _refreshAllStats() {
     }
   }
 
+            /* ── statsHistory append (capped at 30 snapshots ≈ 90 min at 3-min tick) ──
+         Powers the per-post trend chart in the Post Library / Fanout Detail modal.
+         Before overwriting post.stats, we push the *current* values onto a
+         rolling history array. Only push if this batch actually returned data
+         for at least one of the four tracked metrics. */
+      const hasValues =
+        result.views    != null ||
+        result.likes    != null ||
+        result.comments != null ||
+        result.shares   != null;
+
+      if (hasValues) {
+        if (!Array.isArray(post.statsHistory)) post.statsHistory = [];
+        post.statsHistory.push({
+          ts:       new Date().toISOString(),
+          views:    result.views    ?? null,
+          likes:    result.likes    ?? null,
+          comments: result.comments ?? null,
+          shares:   result.shares   ?? null,
+        });
+        /* Cap at last 30 snapshots — drop oldest */
+        if (post.statsHistory.length > 30) {
+          post.statsHistory.splice(0, post.statsHistory.length - 30);
+        }
+      }
+
       post.stats = {
         views:     result.views     ?? null,
         likes:     result.likes     ?? null,
