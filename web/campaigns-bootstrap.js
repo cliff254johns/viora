@@ -737,21 +737,32 @@ function _ceForm() {
 }
 
 function _ceUpdateMediaUI() {
-  const type = document.getElementById('campMediaType').value;
+  const typeEl = document.getElementById('campMediaType');
   const urlInp = document.getElementById('campMediaUrl');
-  const urlWrap = urlInp.closest('.form-row');
-  const tiktokWrap = document.getElementById('campTikTokAuthWrap');
-  const hint = document.getElementById('campMediaUrl');
+  if (!typeEl || !urlInp) return;   // modal not in DOM — safe to bail
 
-  // Toggle the URL field visibility + enabled state
+  const type = typeEl.value;
+  const tiktokWrap = document.getElementById('campTikTokAuthWrap');
+  const hint = urlInp;
+
+  /* The URL input lives inside a `.field` (not a `.form-row`) in
+     campaigns.html. Use closest('.field') with a fallback to the
+     parent element so we never crash on a null reference. */
+  const urlWrap = urlInp.closest('.field') || urlInp.parentElement || null;
+
   const isLive = type === 'youtube' || type === 'tiktok';
   urlInp.disabled = !isLive;
-  urlWrap.style.opacity = isLive ? '1' : '.45';
 
-  // Show TikTok auth block only for TikTok
+  if (urlWrap) {
+    urlWrap.style.opacity = isLive ? '1' : '.45';
+    /* Also grey out the label a bit */
+    const lbl = urlWrap.querySelector('label');
+    if (lbl) lbl.style.opacity = isLive ? '1' : '.6';
+  }
+
   if (tiktokWrap) tiktokWrap.style.display = type === 'tiktok' ? 'block' : 'none';
 
-  // Update placeholder
+  /* Placeholder text */
   if (type === 'youtube') {
     hint.placeholder = 'https://www.youtube.com/watch?v=…';
   } else if (type === 'tiktok') {
@@ -761,7 +772,7 @@ function _ceUpdateMediaUI() {
     urlInp.value = '';
   }
 
-  // Refresh TikTok auth status when opened
+  /* Refresh TikTok auth status when opened */
   if (type === 'tiktok') {
     const status = document.getElementById('campTikTokAuthStatus');
     if (status) {
@@ -775,7 +786,6 @@ function _ceUpdateMediaUI() {
     }
   }
 }
-
 function _ceReset() {
   _campEditor.editingId = null;
   _campEditor.isOpen = true;
