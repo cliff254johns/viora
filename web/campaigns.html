@@ -510,7 +510,8 @@ tr:last-child td{border-bottom:0}
 </div>
 
 <!-- ═══════════════ APP SHELL ═══════════════ -->
-<div class="app" id="App" style="display:none"></div>
+<!-- ═══════════════ APP SHELL ═══════════════ -->
+<div class="app" id="App" style="display:none">
   <aside class="sidebar" id="sidebar">
     <!-- populated by -shell.js -->
   </aside>
@@ -691,7 +692,69 @@ tr:last-child td{border-bottom:0}
 </script>
 
 <!-- ═══════════════ BOOTSTRAP ═══════════════ -->
-<script type="module" src="/campaigns-bootstrap.js"></script>
+<script type="module">
+  /* ═══════════════════════════════════════════════════════════
+     CAMPAIGNS.HTML — AUTH GATE
+     Only signed-in admin/exec/marketing users should reach this page.
+     Visitors hitting this URL directly are redirected to the login.
+     ═══════════════════════════════════════════════════════════ */
+  import { getAuth, onAuthStateChanged } from "firebase/auth";
+  import { getDatabase, ref, get } from "firebase/database";
+  import { initializeApp, getApps, getApp } from "firebase/app";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC9gCBt-xR8t9n6rTGNvDZ5usUGiW-Dqxc",
+    authDomain: "cliffclient-35ec5.firebaseapp.com",
+    databaseURL: "https://cliffclient-35ec5-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "cliffclient-35ec5",
+    storageBucket: "cliffclient-35ec5.firebasestorage.app",
+    messagingSenderId: "519782791696",
+    appId: "1:519782791696:web:6e1a654ddeed14b72b2895",
+  };
+
+  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+  const ROOT = 'viora_data';
+  const ORG = 'orgs/viora';
+
+  const ALLOWED_ROLES = new Set(['admin', 'exec', 'marketing']);
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.replace('/main.html#login');
+      return;
+    }
+    try {
+      const snap = await get(ref(db, `${ROOT}/${ORG}/users/${user.uid}`));
+      const role = snap.exists() ? (snap.val()?.role || 'member') : 'member';
+      if (!ALLOWED_ROLES.has(role)) {
+        document.body.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;
+                      background:#0a0a0f;color:#f0f4ff;font-family:Inter,sans-serif;padding:24px;text-align:center;">
+            <div style="max-width:420px;">
+              <h1 style="font-family:'Space Grotesk',sans-serif;font-size:1.4rem;margin-bottom:8px;">Access Restricted</h1>
+              <p style="color:#94a3b8;font-size:.9rem;line-height:1.6;">
+                Campaigns are available to <strong>admin</strong>, <strong>exec</strong>, and
+                <strong>marketing</strong> roles only.
+              </p>
+              <a href="/main.html" style="display:inline-block;margin-top:20px;padding:11px 22px;
+                  background:#00d4ff;color:#0a0a0f;text-decoration:none;border-radius:10px;
+                  font-weight:700;font-size:.85rem;">← Back to Dashboard</a>
+            </div>
+          </div>`;
+        return;
+      }
+          // Authorized — load the campaigns bootstrap (which wires everything)
+      import('/campaigns-bootstrap.js').catch(err => {
+        console.error('[campaigns] bootstrap load failed:', err);
+      });
+    } catch (e) {
+      console.warn('[campaigns] auth check failed, redirecting:', e);
+      window.location.replace('/main.html');
+    }
+  });
+</script>
 
 <!-- ═══════════════ THEME + TOPBAR WIRING ═══════════════ -->
 <script>
