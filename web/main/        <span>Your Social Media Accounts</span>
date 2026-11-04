@@ -196,30 +196,24 @@ export async function renderAccountsPanel() {
   for (const a of list) byPlatform[a.platform] = a;
 
   host.innerHTML = `
-    <div class="chart-box" style="border-left:4px solid var(--accent-blue);">
-      <h4 style="margin:0 0 12px;display:flex;align-items:center;gap:10px;">
-        <i class="fa-solid fa-share-nodes"></i>
-        <span>Your Social Media Accounts</span>
-        <span style="font-size:.72rem;color:var(--text-secondary);font-weight:400;">
-          — register each channel once. Every campaign and post uses these.
-        </span>
-        <button type="button" class="btn btn-outline btn-sm" id="saRefreshBtn" style="margin-left:auto;">
-          <i class="fa-solid fa-rotate"></i> Refresh
-        </button>
-      </h4>
+    <div class="card">
+      <div class="cardhead">
+        <h3><i class="fa-solid fa-share-nodes"></i> Your social media accounts</h3>
+        <span class="pill">${Object.keys(byPlatform).length} of ${PLATFORMS.length} connected</span>
+      </div>
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:14px;">
+      <div class="accounts-grid">
         ${PLATFORMS.map(p => renderAccountCard(p, byPlatform[p.key])).join('')}
       </div>
 
-      <div style="margin-top:16px;padding:12px;background:var(--bg-input);border-radius:10px;border:1px dashed var(--border-color);font-size:.78rem;color:var(--text-secondary);">
-        <i class="fa-solid fa-circle-info" style="color:var(--accent-blue);"></i>
-        <strong>Why register here?</strong>
-        The composer uses these handles to prefill the caption with @mentions. The analytics dashboard uses the platform IDs to fetch live stats. Facebook and TikTok post directly through your Cloudflare worker — the other platforms open a compose window with everything prefilled.
+      <div class="notice" style="margin-top:14px;margin-bottom:0">
+        <b>Why register here?</b>
+        The composer uses these handles to prefill captions with @mentions.
+        Facebook and TikTok post directly through the VIORA Cloudflare worker —
+        the other platforms open a compose window with everything prefilled.
       </div>
     </div>
   `;
-
   host.querySelectorAll('[data-sa-edit]').forEach(btn => {
     btn.addEventListener('click', () => {
       const platform = btn.getAttribute('data-sa-edit');
@@ -271,67 +265,46 @@ function renderAccountCard(platform, account) {
   const verified = account && account.verified;
 
   return `
-    <div style="padding:14px;background:var(--bg-card-solid);border:1.5px solid ${isRegistered ? platform.color + '55' : 'var(--border-color)'};border-radius:12px;">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-        <div style="width:38px;height:38px;border-radius:10px;background:${platform.color}22;color:${platform.color};display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;">
+    <div class="account-card" style="--platform-color:${platform.color};">
+      <div class="account-head">
+        <div class="account-ico">
           <i class="${platform.icon}"></i>
         </div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-weight:700;font-size:.9rem;display:flex;align-items:center;gap:6px;">
+        <div class="account-body">
+          <div class="account-name">
             ${esc(platform.label)}
-            ${verified ? '<i class="fa-solid fa-circle-check" style="color:var(--accent-blue);font-size:.75rem;" title="Verified"></i>' : ''}
+            ${verified ? '<i class="fa-solid fa-circle-check" style="color:var(--accent);font-size:11px" title="Verified"></i>' : ''}
           </div>
-          ${account
-            ? `<div style="font-size:.75rem;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                 ${esc(account.handle || '—')}${account.displayName ? ' · ' + esc(account.displayName) : ''}
-               </div>`
-            : `<div style="font-size:.75rem;color:var(--text-light);">Not registered</div>`}
+          <div class="account-handle">
+            ${account
+              ? esc(account.handle || '—') + (account.displayName ? ' · ' + esc(account.displayName) : '')
+              : '<em>Not registered</em>'}
+          </div>
         </div>
       </div>
 
       ${isRegistered ? `
-        <div style="display:flex;flex-direction:column;gap:4px;font-size:.75rem;margin-bottom:10px;padding:8px;background:var(--bg-input);border-radius:8px;">
-          ${account.profileUrl ? `
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="color:var(--text-secondary);">Profile</span>
-              <a href="${esc(account.profileUrl)}" target="_blank" rel="noopener noreferrer"
-                 style="color:var(--accent-blue);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">
-                Open <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.65rem;"></i>
-              </a>
-            </div>
-          ` : ''}
-          ${account.platformId ? `
-            <div style="display:flex;justify-content:space-between;gap:8px;">
-              <span style="color:var(--text-secondary);">ID</span>
-              <code style="font-size:.7rem;color:var(--accent-purple);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(account.platformId.slice(0, 20))}${account.platformId.length > 20 ? '…' : ''}</code>
-            </div>
-          ` : ''}
-          ${followersText ? `
-            <div style="display:flex;justify-content:space-between;">
-              <span style="color:var(--text-secondary);">Followers</span>
-              <strong style="color:var(--accent-green);">${followersText}</strong>
-            </div>
-          ` : ''}
-          <div style="display:flex;justify-content:space-between;">
-            <span style="color:var(--text-secondary);">API posting</span>
-            <span class="badge ${connected ? 'badge-paid' : 'badge-gray'}" style="font-size:.6rem;">
-              ${connected ? 'Enabled' : 'Compose-link'}
-            </span>
-          </div>
+        <div class="account-meta">
+          <span>${connected ? '<i class="fa-solid fa-bolt" style="color:var(--good)"></i> API posting' : '<i class="fa-solid fa-link" style="color:var(--muted)"></i> Compose-link'}</span>
+          ${followersText ? `<span>${followersText} followers</span>` : '<span>—</span>'}
         </div>
-      ` : ''}
+      ` : `
+        <div class="account-meta">
+          <span style="color:var(--muted)">Connect this channel to post and track stats.</span>
+        </div>
+      `}
 
-      <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <button type="button" class="btn btn-${isRegistered ? 'primary' : 'success'} btn-sm"
-                data-sa-edit="${esc(platform.key)}" style="flex:1;">
+      <div class="account-actions">
+        <button type="button" class="btn ${isRegistered ? 'primary' : ''}"
+                data-sa-edit="${esc(platform.key)}">
           <i class="fa-solid fa-${isRegistered ? 'pen' : 'plus'}"></i>
-          ${isRegistered ? 'Edit' : 'Add Account'}
+          ${isRegistered ? 'Edit' : 'Connect'}
         </button>
         ${isRegistered ? `
-          <button type="button" class="btn btn-outline btn-sm" data-sa-verify="${esc(account.id)}" title="Verify by calling the worker">
+          <button type="button" class="btn" data-sa-verify="${esc(account.id)}" title="Verify by calling the worker">
             <i class="fa-solid fa-satellite-dish"></i>
           </button>
-          <button type="button" class="btn btn-danger btn-sm" data-sa-remove="${esc(account.id)}" title="Remove">
+          <button type="button" class="btn danger" data-sa-remove="${esc(account.id)}" title="Remove">
             <i class="fa-solid fa-trash"></i>
           </button>
         ` : ''}
