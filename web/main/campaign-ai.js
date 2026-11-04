@@ -1217,8 +1217,11 @@ export function renderDraftLibrary() {
                       ${esc(p.caption || '')}
                     </div>
                   </div>
-                  <button type="button" class="btn btn-primary btn-xs" data-draft-open="${esc(p.id)}" data-draft-camp="${esc(p.campaignId)}">
+                               <button type="button" class="btn btn-primary btn-xs" data-draft-open="${esc(p.id)}" data-draft-camp="${esc(p.campaignId)}" title="Edit">
                     <i class="fa-solid fa-pen"></i>
+                  </button>
+                  <button type="button" class="btn danger btn-xs" data-draft-delete="${esc(p.id)}" data-draft-delete-camp="${esc(p.campaignId)}" title="Delete">
+                    <i class="fa-solid fa-trash"></i>
                   </button>
                 </div>
               `;
@@ -1234,6 +1237,33 @@ export function renderDraftLibrary() {
       const camp = campaigns.find(c => c.id === campId);
       const post = camp && (camp.posts || []).find(p => p.id === postId);
       if (post) openComposerForDraft(post);
+    });
+  });
+
+  host.querySelectorAll('[data-draft-delete]').forEach(b => {
+    b.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const postId = b.getAttribute('data-draft-delete');
+      const campId = b.getAttribute('data-draft-delete-camp');
+      if (!confirm('Delete this draft? This cannot be undone.')) return;
+
+      const camp = campaigns.find(c => c.id === campId);
+      if (!camp) { SAFE.toast('Campaign not found.', 'error'); return; }
+
+      const before = Array.isArray(camp.posts) ? camp.posts.length : 0;
+      camp.posts = (camp.posts || []).filter(p => p && p.id !== postId);
+      const after = camp.posts.length;
+      camp.updatedAt = new Date().toISOString();
+
+      try {
+        if (typeof SAFE.upsertDoc !== 'function') throw new Error('upsertDoc unavailable');
+        await SAFE.upsertDoc('campaigns', camp, camp._rev);
+        SAFE.toast(`Deleted. ${before - after} post removed.`, 'success');
+        renderDraftLibrary();
+        try { ctx().renderCampaigns?.(); } catch (_) {}
+      } catch (err) {
+        SAFE.toast('Delete failed: ' + (err.message || 'unknown'), 'error');
+      }
     });
   });
 }
