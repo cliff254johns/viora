@@ -166,6 +166,12 @@ function wireNav() {
     document.getElementById('sidebar')?.classList.remove('open');
     document.getElementById('overlay')?.classList.remove('show');
   });
+    /* data-orbit-goto buttons inside modules (e.g. Overview "Details →") */
+  document.getElementById('view')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-orbit-goto]');
+    if (!btn) return;
+    navigate(btn.getAttribute('data-orbit-goto'));
+  });
 }
 
 function wireMobileNav() {
