@@ -344,12 +344,43 @@ function _renderCompetitors() {
     return;
   }
 
-  host.innerHTML =
+    host.innerHTML =
     '<div style="display:flex;flex-direction:column;gap:6px;">' +
     competitors.map((c) => {
       const pm = platformMeta(c.platform);
-      const followers = fmtNum((c.stats && c.stats.followers) || 0);
-      const er = fmtPercent((c.stats && c.stats.engagementRate) || 0, 2);
+
+      /* Determine what we actually know about this competitor.
+         Three possible states:
+           1. Real stats → show followers, views, ER
+           2. Fetch error → show the error, don't show zeros
+           3. Never fetched → prompt to click Refresh */
+      const hasStats = c.stats && typeof c.stats === 'object' && (
+        c.stats.followers != null ||
+        c.stats.views != null ||
+        c.stats.engagementRate != null
+      );
+
+      let statsLine;
+      if (hasStats) {
+        const parts = [];
+        if (c.stats.followers != null) parts.push(fmtNum(c.stats.followers) + ' followers');
+        if (c.stats.views != null) parts.push(fmtNum(c.stats.views) + ' views');
+        if (c.stats.engagementRate != null) parts.push(fmtPercent(c.stats.engagementRate, 2) + ' ER');
+        statsLine = parts.join(' · ');
+      } else if (c.lastError) {
+        /* Recent fetch attempt failed — show why */
+        statsLine =
+          '<em style="color:var(--accent-gold);">⚠ ' +
+          esc(String(c.lastError).slice(0, 100)) +
+          '</em>';
+      } else {
+        /* Never tried, or platform doesn't support auto-fetch */
+        const unsupported = ['tiktok', 'facebook', 'instagram'].includes(c.platform);
+        statsLine = unsupported
+          ? '<em style="color:var(--text-light);">Auto-fetch not supported for ' + esc(pm.label) + '</em>'
+          : '<em style="color:var(--text-light);">Not fetched yet — click Refresh</em>';
+      }
+
       return (
         '<div style="display:flex;gap:10px;align-items:center;padding:8px 12px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:8px;">' +
           '<div style="width:32px;height:32px;border-radius:8px;background:' + pm.color + '22;color:' + pm.color + ';display:flex;align-items:center;justify-content:center;">' +
@@ -358,11 +389,11 @@ function _renderCompetitors() {
           '<div style="flex:1;min-width:0;">' +
             '<div style="font-size:.85rem;font-weight:600;">' + esc(c.handle || '') + '</div>' +
             '<div style="font-size:.7rem;color:var(--text-secondary);">' +
-              esc(pm.label) + ' · Followers: ' + followers + ' · ER: ' + er +
+              esc(pm.label) + ' · ' + statsLine +
             '</div>' +
           '</div>' +
-          '<button type="button" class="btn btn-outline btn-xs" data-comp-refresh="' + esc(c.id) + '"><i class="fa-solid fa-rotate"></i></button>' +
-          '<button type="button" class="btn btn-danger btn-xs" data-comp-remove="' + esc(c.id) + '"><i class="fa-solid fa-trash"></i></button>' +
+          '<button type="button" class="btn btn-outline btn-xs" data-comp-refresh="' + esc(c.id) + '" title="Refresh"><i class="fa-solid fa-rotate"></i></button>' +
+          '<button type="button" class="btn btn-danger btn-xs" data-comp-remove="' + esc(c.id) + '" title="Remove"><i class="fa-solid fa-trash"></i></button>' +
         '</div>'
       );
     }).join('') +
@@ -421,8 +452,51 @@ async function _refreshCompetitor(id) {
   try {
     const callFn = ctx().callFn;
     const res = await callFn('competitor/stats', { platform: entry.platform, handle: entry.handle });
+
+    /* The worker returns { ok: false, error } for platforms it can't
+       auto-fetch (TikTok, Facebook, Instagram) and for YouTube handles
+       that don't resolve. Do NOT save that as stats — it would paint
+       "0 followers · 0.00% ER" in the UI for every failed competitor. */
+    if (!res || res.ok === false) {
+      ctx().toast?.(
+        (res?.error || 'Competitor stats unavailable for this platform.'),
+        'warning'
+      );
+      /* Save only the error string, never touch existing good stats */
+      const next = list.map(x => x.id === id
+        ? { ...x, lastError: res?.error || 'unknown', lastAttemptAt: new Date().toISOString() }
+        : x
+      );
+      await ctx().set(ctx().ref(ctx().db, ctx().P('competitorBenchmarks')), next);
+      ctx().state.data.competitorBenchmarks = next;
+      _renderCompetitors();
+      return;
+    }
+
+    /* Strip the `ok` flag — the UI only wants the actual metrics */
+    const { ok, ...cleanStats } = res;
+
+    /* If the worker didn't return engagementRate but we have enough
+       metrics to compute it, do that here. */
+    if (cleanStats.engagementRate == null &&
+        Number(cleanStats.views) > 0 &&
+        (cleanStats.likes != null || cleanStats.comments != null || cleanStats.shares != null)) {
+      const interactions =
+        (Number(cleanStats.likes) || 0) +
+        (Number(cleanStats.comments) || 0) +
+        (Number(cleanStats.shares) || 0);
+      cleanStats.engagementRate =
+        Math.round((interactions / Number(cleanStats.views)) * 10000) / 100;
+    }
+
     const next = list.map(x => x.id === id
-      ? { ...x, stats: res, updatedAt: new Date().toISOString() }
+      ? {
+          ...x,
+          stats: cleanStats,
+          updatedAt: new Date().toISOString(),
+          lastError: null,
+          lastAttemptAt: new Date().toISOString(),
+        }
       : x
     );
     await ctx().set(ctx().ref(ctx().db, ctx().P('competitorBenchmarks')), next);
