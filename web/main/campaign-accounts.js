@@ -16,6 +16,12 @@
 //     connectedVia (api | manual), notes,
 //     createdAt, updatedAt
 //   }
+//
+// v1.1 changes:
+//   • subscribeToAccounts() triggers a full module re-render when the
+//     current module reads socialAccounts (accounts/overview/analytics)
+//   • deleteAccount() helper does optimistic removal + rollback
+//   • Followers auto-fetch on save for YouTube/TikTok
 // ═══════════════════════════════════════════════════════════════
 
 let _ctx = null;
@@ -107,7 +113,6 @@ export function allPlatforms() { return PLATFORMS.slice(); }
    DATA LAYER
    ═══════════════════════════════════════════════════════════════ */
 
-/** Fetch all accounts from Firebase (with in-memory cache). */
 export async function loadAccounts(force = false) {
   const now = Date.now();
   if (!force && _accountsCache && (now - _accountsCacheTs) < CACHE_TTL_MS) {
@@ -134,13 +139,11 @@ export async function loadAccounts(force = false) {
   }
 }
 
-/** Find the account object for a specific platform. */
 export async function getAccountForPlatform(platformKey) {
   const list = await loadAccounts();
   return list.find(a => a.platform === platformKey) || null;
 }
 
-/** Sync — reads whatever is in state (populated by the live listener below). */
 export function getAccountForPlatformSync(platformKey) {
   const raw = SAFE.state?.data?.socialAccounts;
   if (!raw) return null;
@@ -149,7 +152,7 @@ export function getAccountForPlatformSync(platformKey) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   LIVE LISTENER — populates state.data.socialAccounts
+   LIVE LISTENER
    ═══════════════════════════════════════════════════════════════ */
 let _unsub = null;
 
@@ -162,14 +165,32 @@ export function subscribeToAccounts() {
     _unsub = onValue(ref(db, P('socialAccounts')), (snap) => {
       const raw = snap.exists() ? snap.val() : {};
       const list = Object.entries(raw).map(([id, v]) => ({ id, ...v }));
+
+      /* Only act if the data actually changed — Firebase sometimes fires
+         duplicate events for the same snapshot. */
+      const prevJson = JSON.stringify(state?.data?.socialAccounts || []);
+      const nextJson = JSON.stringify(list);
+      const changed = prevJson !== nextJson;
+
       if (state) {
         if (!state.data) state.data = {};
         state.data.socialAccounts = list;
       }
       _accountsCache = list;
       _accountsCacheTs = Date.now();
-      // Re-render any panel that's currently open
+
+      /* Repaint the embedded accounts panel (on the Campaigns page) */
       try { renderAccountsPanel(); } catch (_) {}
+
+      /* Repaint the current orbit module if it reads socialAccounts */
+      if (changed) {
+        try {
+          const current = window.Orbit?.currentModule?.();
+          if (current === 'accounts' || current === 'overview' || current === 'analytics') {
+            window.Orbit.renderActiveOrbitModule?.();
+          }
+        } catch (_) {}
+      }
     }, (err) => {
       if (err && err.code !== 'PERMISSION_DENIED') {
         console.warn('[accounts] subscribe failed', err);
@@ -182,6 +203,54 @@ export function subscribeToAccounts() {
 
 export function unsubscribeAccounts() {
   if (_unsub) { try { _unsub(); } catch (_) {} _unsub = null; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DELETE ACCOUNT — single source of truth
+   ═══════════════════════════════════════════════════════════════ */
+export async function deleteAccount(accountId) {
+  const { db, ref, remove, P, state } = SAFE;
+  if (!db || !ref || !remove || !P) {
+    SAFE.toast('Firebase not ready.', 'error');
+    return false;
+  }
+  if (!accountId) {
+    SAFE.toast('Account id missing.', 'error');
+    return false;
+  }
+
+  const current = Array.isArray(state?.data?.socialAccounts) ? state.data.socialAccounts : [];
+  const removed = current.find(a => a && a.id === accountId);
+  if (!removed) {
+    SAFE.toast('Account not found.', 'warning');
+    return false;
+  }
+
+  /* Optimistic: remove from state.data.socialAccounts immediately */
+  state.data.socialAccounts = current.filter(a => !a || a.id !== accountId);
+  _repaintAccountViews();
+
+  try {
+    await remove(ref(db, P(`socialAccounts/${accountId}`)));
+    SAFE.toast(`Removed ${removed.handle || removed.platform}.`, 'success');
+    return true;
+  } catch (e) {
+    /* Rollback */
+    state.data.socialAccounts = current;
+    _repaintAccountViews();
+    SAFE.toast('Delete failed: ' + (e.message || 'unknown'), 'error');
+    return false;
+  }
+}
+
+function _repaintAccountViews() {
+  try { renderAccountsPanel(); } catch (_) {}
+  try {
+    const current = window.Orbit?.currentModule?.();
+    if (current === 'accounts' || current === 'overview' || current === 'analytics') {
+      window.Orbit.renderActiveOrbitModule?.();
+    }
+  } catch (_) {}
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -214,6 +283,7 @@ export async function renderAccountsPanel() {
       </div>
     </div>
   `;
+
   host.querySelectorAll('[data-sa-edit]').forEach(btn => {
     btn.addEventListener('click', () => {
       const platform = btn.getAttribute('data-sa-edit');
@@ -226,14 +296,7 @@ export async function renderAccountsPanel() {
       const id = btn.getAttribute('data-sa-remove');
       if (!id) return;
       if (!confirm('Remove this account? Campaigns that reference it will fall back to raw handle text.')) return;
-      try {
-        const { db, ref, remove, P } = SAFE;
-        await remove(ref(db, P(`socialAccounts/${id}`)));
-        SAFE.toast('Account removed.', 'info');
-        renderAccountsPanel();
-      } catch (e) {
-        SAFE.toast('Remove failed: ' + (e.message || 'unknown'), 'error');
-      }
+      await deleteAccount(id);
     });
   });
 
@@ -259,9 +322,15 @@ export async function renderAccountsPanel() {
 function renderAccountCard(platform, account) {
   const isRegistered = !!account;
   const connected = account && account.connectedVia === 'api';
-  const followersText = account && account.followers != null
-    ? Number(account.followers).toLocaleString()
-    : null;
+
+  /* Followers can live in followers, stats.followers, or followersCache */
+  const followerCount =
+    account && account.followers       != null ? Number(account.followers) :
+    account && account.stats?.followers != null ? Number(account.stats.followers) :
+    account && account.followersCache  != null ? Number(account.followersCache) :
+    null;
+
+  const followersText = followerCount != null ? followerCount.toLocaleString() : null;
   const verified = account && account.verified;
 
   return `
@@ -420,7 +489,7 @@ export function openAccountEditor(platformKey, existingAccount) {
       connectedVia,
       verified,
       notes,
-           followers: a.followers ?? null,
+      followers: a.followers ?? null,
       followersUpdatedAt: a.followersUpdatedAt || null,
       createdAt: a.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -434,6 +503,12 @@ export function openAccountEditor(platformKey, existingAccount) {
       _accountsCache = null;
       _accountsCacheTs = 0;
       renderAccountsPanel();
+
+      /* Auto-fetch followers for platforms the worker supports */
+      if (payload.connectedVia === 'api'
+          && ['youtube', 'tiktok'].includes(payload.platform)) {
+        setTimeout(() => verifyAccount(payload.id).catch(() => {}), 400);
+      }
     } catch (e) {
       SAFE.toast('Save failed: ' + (e.message || 'unknown'), 'error');
     }
@@ -441,7 +516,7 @@ export function openAccountEditor(platformKey, existingAccount) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   VERIFY ACCOUNT — calls the worker to fetch live follower count
+   VERIFY — fetch live follower count via worker
    ═══════════════════════════════════════════════════════════════ */
 async function verifyAccount(id) {
   const { db, ref, get, set, P, callFn } = SAFE;
@@ -475,20 +550,16 @@ async function verifyAccount(id) {
       SAFE.toast(`Verified — ${Number(res.followers).toLocaleString()} followers.`, 'success');
       renderAccountsPanel();
     } else {
-      SAFE.toast('Verification returned no data. Check the profile URL.', 'warning');
+      SAFE.toast(res?.error || 'Verification returned no follower data.', 'warning');
     }
   } catch (e) {
     SAFE.toast('Verify failed: ' + (e.message || 'unknown'), 'error');
   }
 }
+
 /* ═══════════════════════════════════════════════════════════════
    HELPERS FOR OTHER MODULES
    ═══════════════════════════════════════════════════════════════ */
-
-/**
- * Enrich a caption with the handle mention for a given platform.
- * e.g. for TikTok, prepend "@viora " if not already there.
- */
 export function mentionForPlatform(platformKey, caption) {
   const account = getAccountForPlatformSync(platformKey);
   if (!account || !account.handle) return caption;
@@ -497,9 +568,6 @@ export function mentionForPlatform(platformKey, caption) {
   return handle + ' ' + (caption || '');
 }
 
-/**
- * Return a small "post as @handle" badge for the composer preview.
- */
 export function postingAsLabel(platformKey) {
   const account = getAccountForPlatformSync(platformKey);
   if (!account) return null;
