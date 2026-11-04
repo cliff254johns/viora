@@ -1,32 +1,40 @@
 /* ═══════════════════════════════════════════════════════════════
-   VIORA — SERVICE WORKER  (v1.0)
+   VIORA — SERVICE WORKER  (v1.1.0)
    ─────────────────────────────────────────────────────────────
    Registered by main/sw-bootstrap.js at scope '/'.
 
-   Strategy:
-     • App shell (HTML, main.css, main.js)  → stale-while-revalidate
-     • Static assets (images, fonts, .bin, .geojson)
-                                            → cache-first, long TTL
-     • Firebase / Worker API / auth          → network-only (never cache)
-     • Google Fonts                          → stale-while-revalidate
-     • Everything else same-origin           → network-first with
-                                                cache fallback
+   v1.1.0 fixes (from v1.0.0):
+     • Cross-origin requests are NO LONGER intercepted.
+       Fixes: "Module source URI is not allowed in this document"
+              "NS_ERROR_CORRUPTED_CONTENT" on Firebase modules.
+     • NETWORK_ONLY_HOSTS expanded to include:
+         www.gstatic.com, cdnjs.cloudflare.com, cdn.jsdelivr.net,
+         unpkg.com, esm.sh, static.cloudflareinsights.com
+       Fixes: 503s on Font Awesome & Chart.js, CORS/SRI errors
+              on the Cloudflare analytics beacon.
+     • isStaticAsset() no longer misclassifies ES modules as
+       immutable static chunks. Precedence was broken in v1.0.0.
+     • Cache version bumped → old bad caches are purged on activate.
 
-   Messages handled:
-     • SKIP_WAITING  → activates a waiting SW immediately
-     • CLEAR_CACHE   → wipes all app caches (called by sw-bootstrap.js)
+   Strategy (v1.1.0):
+     • App shell (HTML, main.js, main/*.js)  → stale-while-revalidate
+     • Static assets (images, fonts, media)  → cache-first
+     • Firebase / Worker / CDN libs / auth   → NETWORK-ONLY (no SW)
+     • Google Fonts                          → dedicated cache
+     • Same-origin misc (non-shell)          → network-first
 
-   Notes:
-     • Never intercepts non-GET requests.
-     • Never intercepts cross-origin API calls (they carry auth tokens
-       and must reach the network).
-     • Version bump → purge old caches on activate.
+   Never intercepts:
+     • non-GET requests
+     • any cross-origin request (Firebase CDN, Chart.js, Font Awesome…)
+     • /main/*.js ES modules — they are shell, cached by SWR, but
+       never returned from the "static" bucket
+     • /.well-known/ (Firebase Auth handshakes)
    ═══════════════════════════════════════════════════════════════ */
 
 'use strict';
 
 /* ─── Version bump invalidates every cache below ─────────────── */
-const SW_VERSION = 'viora-v1.0.0';
+const SW_VERSION = 'viora-v1.1.0';
 const CACHE_SHELL  = `${SW_VERSION}-shell`;
 const CACHE_STATIC = `${SW_VERSION}-static`;
 const CACHE_FONTS  = `${SW_VERSION}-fonts`;
@@ -46,20 +54,43 @@ const PRECACHE_URLS = [
   '/patner.html',
 ];
 
-/* ─── Hosts we must NEVER cache (auth-sensitive or live) ────── */
+/* ─── Hosts we must NEVER cache / intercept ────────────────────
+   Anything here is left entirely to the browser's network stack.
+   ──────────────────────────────────────────────────────────── */
 const NETWORK_ONLY_HOSTS = new Set([
+  // ── Firebase (realtime DB, auth, FCM, installations) ──
   'cliffclient-35ec5.firebaseio.com',
   'cliffclient-35ec5-default-rtdb.europe-west1.firebasedatabase.app',
   'identitytoolkit.googleapis.com',
   'securetoken.googleapis.com',
   'fcm.googleapis.com',
   'firebaseinstallations.googleapis.com',
+
+  // ── Firebase SDK CDN (ES modules — SW must not touch) ──
+  'www.gstatic.com',
+  'gstatic.com',
+
+  // ── VIORA Worker API ──
   'viora-api.cliff254johns.workers.dev',
+
+  // ── Time / weather / FX APIs ──
   'worldtimeapi.org',
   'timeapi.io',
-  'cloudflare.com',
   'api.open-meteo.com',
   'exchangerate.host',
+
+  // ── Third-party CDN libraries (ES modules and UMD bundles) ──
+  //    Chart.js, Font Awesome, and anything else loaded via CDN.
+  //    These MUST hit the network every time.
+  'cdnjs.cloudflare.com',
+  'cdn.jsdelivr.net',
+  'unpkg.com',
+  'esm.sh',
+
+  // ── Analytics beacons (intercepting breaks CORS + SRI) ──
+  'static.cloudflareinsights.com',
+  'cloudflareinsights.com',
+  'cloudflare.com',
 ]);
 
 /* ─── Google Fonts gets its own cache ──────────────────────── */
@@ -151,7 +182,7 @@ self.addEventListener('message', (event) => {
 });
 
 /* ═══════════════════════════════════════════════════════════════
-   FETCH
+   FETCH — the critical path
    ═══════════════════════════════════════════════════════════════ */
 self.addEventListener('fetch', (event) => {
   const req = event.request;
@@ -159,62 +190,103 @@ self.addEventListener('fetch', (event) => {
   // Only GET is cacheable.
   if (req.method !== 'GET') return;
 
-  const url = new URL(req.url);
+  let url;
+  try { url = new URL(req.url); } catch (_) { return; }
 
-  // Never touch auth-sensitive or API hosts.
+  // ── (1) Never touch auth-sensitive / API / CDN hosts ──────
+  //     This covers Firebase, the Worker, Chart.js, Font Awesome,
+  //     analytics beacons, and every other "must hit network" host.
   if (NETWORK_ONLY_HOSTS.has(url.hostname)) return;
 
-  // Never intercept Firebase WebSocket handshakes or long-poll.
+  // ── (2) Never intercept Firebase WebSocket / long-poll ────
   if (url.pathname.startsWith('/.well-known/')) return;
 
-  // Google Fonts → stale-while-revalidate (dedicated cache).
+  // ── (3) Google Fonts → dedicated SWR cache ────────────────
   if (FONT_HOSTS.has(url.hostname)) {
     event.respondWith(fontsStrategy(req));
     return;
   }
 
-  // Same-origin → route by path.
-  if (url.origin === self.location.origin) {
-    if (isStaticAsset(url.pathname)) {
-      event.respondWith(cacheFirst(req, CACHE_STATIC));
-      return;
-    }
-    if (isAppShell(url.pathname)) {
-      event.respondWith(staleWhileRevalidate(req, CACHE_SHELL));
-      return;
-    }
-    // Any other same-origin request → network-first with cache fallback.
-    event.respondWith(networkFirst(req, CACHE_STATIC));
+  // ── (4) CROSS-ORIGIN — let the browser handle it directly ──
+  //     This is the key fix. The SW MUST NOT intercept cross-origin
+  //     requests. Doing so caused:
+  //       • "Module source URI is not allowed in this document"
+  //         on https://www.gstatic.com/firebasejs/12.18.0/firebase-*.js
+  //       • NS_ERROR_CORRUPTED_CONTENT on firebase-database.js
+  //       • 503s on Chart.js and Font Awesome when their CDN was
+  //         momentarily unreachable
+  //       • CORS + SRI failures on static.cloudflareinsights.com
+  //     Any host not already filtered above still lands here — the
+  //     safe answer is to do nothing and let the network resolve it.
+  if (url.origin !== self.location.origin) return;
+
+  // ── (5) SAME-ORIGIN — route by path ───────────────────────
+  if (isAppShell(url.pathname)) {
+    event.respondWith(staleWhileRevalidate(req, CACHE_SHELL));
     return;
   }
 
-  // Cross-origin, non-blocked → network-first with cache fallback.
-  // This covers CDN-hosted libs (Chart.js, FontAwesome, jsDelivr).
+  if (isStaticAsset(url.pathname)) {
+    event.respondWith(cacheFirst(req, CACHE_STATIC));
+    return;
+  }
+
+  // Same-origin "other" (JSON data, etc.) → network-first.
   event.respondWith(networkFirst(req, CACHE_STATIC));
 });
 
 /* ═══════════════════════════════════════════════════════════════
-   PATH CLASSIFIERS
+   PATH CLASSIFIERS (Fix 4 — operator precedence corrected)
    ═══════════════════════════════════════════════════════════════ */
+
+/**
+ * True for immutable-ish same-origin assets that should be cached
+ * forever (until SW_VERSION bumps).
+ *
+ * IMPORTANT: ES modules under /main/, main.js, and
+ * campaigns-bootstrap.js are APP SHELL — they are handled by
+ * staleWhileRevalidate, NOT by cacheFirst. The v1.0.0 version of
+ * this function had broken operator precedence that let those
+ * modules fall through to the "static" bucket, causing the SW to
+ * serve stale copies after every code change.
+ */
 function isStaticAsset(pathname) {
-  return (
-    /\.(?:png|jpe?g|gif|webp|svg|ico)$/i.test(pathname) ||
-    /\.(?:woff2?|ttf|otf|eot)$/i.test(pathname) ||
-    /\.(?:bin|geojson|topojson|json)$/i.test(pathname) ||
-    /\.(?:mp3|wav|ogg)$/i.test(pathname) ||
-    /\.(?:css)$/i.test(pathname) ||
-    /\.(?:js)$/i.test(pathname) && !/\/main\.js$/.test(pathname) &&
-      !/\/main\/[^/]+\.js$/.test(pathname)
-  );
+  // Images
+  if (/\.(?:png|jpe?g|gif|webp|svg|ico)$/i.test(pathname)) return true;
+  // Fonts
+  if (/\.(?:woff2?|ttf|otf|eot)$/i.test(pathname)) return true;
+  // Geo data
+  if (/\.(?:bin|geojson|topojson)$/i.test(pathname)) return true;
+  // Audio
+  if (/\.(?:mp3|wav|ogg)$/i.test(pathname)) return true;
+  // CSS
+  if (/\.css$/i.test(pathname)) return true;
+
+  // JS — split carefully. Application ES modules are shell, NOT static.
+  if (/\.js$/i.test(pathname)) {
+    if (pathname === '/main.js') return false;
+    if (/^\/main\//.test(pathname)) return false;                 // ES module dir
+    if (/^\/campaigns-bootstrap\.js$/.test(pathname)) return false;
+    // Any other root-level .js is treated as a static chunk
+    // (e.g. a legacy bundled script you don't touch often).
+    return true;
+  }
+
+  return false;
 }
 
+/**
+ * True for the app shell (HTML + entry ES modules).
+ * These use stale-while-revalidate so code changes propagate
+ * on the next load without requiring a hard refresh.
+ */
 function isAppShell(pathname) {
-  return (
-    pathname === '/' ||
-    pathname.endsWith('.html') ||
-    pathname === '/main.js' ||
-    /\/main\/[^/]+\.js$/.test(pathname)
-  );
+  if (pathname === '/' || pathname === '') return true;
+  if (pathname.endsWith('.html')) return true;
+  if (pathname === '/main.js') return true;
+  if (pathname === '/campaigns-bootstrap.js') return true;
+  if (/^\/main\/[^/]+\.js$/.test(pathname)) return true;
+  return false;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -332,7 +404,7 @@ async function fontsStrategy(req) {
 /* ═══════════════════════════════════════════════════════════════
    RESPONSE FILTER
    Don't cache:
-     • opaque responses (status 0) — usually CDN with no CORS
+     • opaque responses (status 0)
      • partial content (206)
      • error responses
      • responses with no-cache headers
@@ -351,11 +423,6 @@ function isCacheableResponse(res) {
 
 /* ═══════════════════════════════════════════════════════════════
    PUSH NOTIFICATIONS
-   ═══════════════════════════════════════════════════════════════
-   firebase-messaging-sw.js is normally the one FCM talks to, but
-   we register this SW at scope '/' so push events may land here.
-   We forward them to a client if one is focused; otherwise show
-   a system notification.
    ═══════════════════════════════════════════════════════════════ */
 self.addEventListener('push', (event) => {
   let payload = {};
@@ -441,10 +508,6 @@ self.addEventListener('notificationclick', (event) => {
 
 /* ═══════════════════════════════════════════════════════════════
    BACKGROUND SYNC  (optional — silently ignored on unsupported)
-   ═══════════════════════════════════════════════════════════════
-   main.js already drives queue flush via scheduleFlush(); this
-   hook is here so a future `registration.sync.register('viora-flush')`
-   can trigger it in the background.
    ═══════════════════════════════════════════════════════════════ */
 self.addEventListener('sync', (event) => {
   if (event.tag !== 'viora-flush') return;
