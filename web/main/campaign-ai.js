@@ -4,13 +4,6 @@
 // preview each platform's tailored variant, and fan out posting
 // via /social/post/fanout. Falls back to compose-link per platform
 // when the worker says manual upload is required.
-//
-// v2.1 changes:
-//   • _postNow correctly interprets worker compose-link responses
-//   • Post-now no longer marks fallbacks as published
-//   • _persistPosts updates in place instead of appending duplicates
-//   • openComposerForDraft preserves post ids and fanoutId
-//   • makeFanoutItem / makePost accept caller-supplied ids
 // ═══════════════════════════════════════════════════════════════
 import {
   PILLARS, pillarByKey, PLATFORMS, platformMeta,
@@ -23,9 +16,6 @@ import {
 
 let _ctx = null;
 
-/* ═══════════════════════════════════════════════════════════════
-   WORKER ENDPOINTS
-   ═══════════════════════════════════════════════════════════════ */
 const ENDPOINTS = {
   generatePost:     'ai/generatePost',
   generateImage:    'ai/generateImage',
@@ -96,7 +86,7 @@ export function openComposer(opts = {}) {
   _state.composer = {
     campaignId,
     fanoutId: opts.fanoutId || null,
-    _existingPostIds: {},                    // ← new: platform → existing post id
+    _existingPostIds: {},
     platforms: initialPlatforms,
     pillar: opts.pillar || 'educational',
     brief,
@@ -191,11 +181,7 @@ export function openComposerForDraft(post) {
   _state.composer.heroImagePrompt = post.imagePrompt || '';
   _state.composer.utm = post.utm || { source: '', medium: 'social', campaign: '', content: '', term: '' };
 
-  /* ── Preserve IDs so re-saving updates in place ──────────────────
-     Without this, every "Save Draft" click creates a NEW post on the
-     server, so opening and saving the same draft N times produces
-     N copies in campaign.posts[]. The scheduler then publishes all
-     of them. */
+  /* Preserve IDs so re-saving updates in place instead of duplicating */
   _state.composer._existingPostIds = {};
   if (camp && post.fanoutId) {
     for (const p of camp.posts || []) {
@@ -277,7 +263,6 @@ function _renderComposer() {
   host.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:20px;">
 
-      <!-- ════════════ LEFT: BRIEF ════════════ -->
       <div>
         <h4 class="form-section" style="margin-top:0;">Brief</h4>
 
@@ -369,7 +354,6 @@ function _renderComposer() {
         </div>
       </div>
 
-      <!-- ════════════ RIGHT: PREVIEW ════════════ -->
       <div>
         <h4 class="form-section" style="margin-top:0;">
           Preview per Platform
@@ -484,7 +468,7 @@ function _renderPlatformPreviews(c) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   BIND
+   BIND EVENTS
    ═══════════════════════════════════════════════════════════════ */
 function _bindComposerEvents() {
   const g = (id) => document.getElementById(id);
@@ -658,8 +642,6 @@ async function _generateText(evt) {
       throw lastErr;
     };
 
-    /* Send ALL selected platforms so the worker can tailor a variant
-       for each one. The worker now accepts `platforms: [...]`. */
     const res = await callWithRetry(callFn, [ENDPOINTS.generatePost, {
       brief: c.brief,
       platform: c.platforms[0],
@@ -677,8 +659,6 @@ async function _generateText(evt) {
       throw new Error(res?.error || 'Worker returned no content');
     }
 
-    /* captionForPlatform handles all fallback shapes and logs a
-       warning when a variant is missing (instead of silently blank). */
     for (const key of c.platforms) {
       const caption = captionForPlatform(res, key);
       const hashtags = Array.isArray(res.hashtags) ? res.hashtags.slice(0, 15) : [];
@@ -839,14 +819,12 @@ async function _persistPosts(status) {
   const campaign = (SAFE.state?.data?.campaigns || []).find(x => x.id === c.campaignId);
   if (!campaign) { SAFE.toast('Campaign not found.', 'error'); return; }
 
-  /* If we're re-saving an existing fanout, preserve each post's id
-     so the DB update modifies rows instead of appending duplicates. */
   const existingIds = c._existingPostIds || {};
 
   const posts = c.platforms.map(key => {
     const variant = c.perPlatform[key] || {};
     return makePost({
-      id: existingIds[key] || undefined,          // ← preserve id on re-save
+      id: existingIds[key] || undefined,
       campaignId: c.campaignId,
       fanoutId: c.fanoutId || undefined,
       platform: key,
@@ -877,15 +855,9 @@ async function _persistPosts(status) {
     brief: c.brief,
     posts,
     createdBy: SAFE.state?.operator?.name || null,
-    fanoutId: c.fanoutId || undefined,            // ← preserve fanout id on re-save
+    fanoutId: c.fanoutId || undefined,
   });
 
-  /* ── Replace-in-place instead of append ──────────────────────────
-     If this save updates an existing fanout (opened via
-     openComposerForDraft), REMOVE the old posts that share the same
-     fanoutId before appending the new ones. Otherwise every save
-     doubles the number of records in campaign.posts[] and the cron
-     publishes the same content multiple times. */
   const existingPosts = Array.isArray(campaign.posts) ? campaign.posts.slice() : [];
   const filtered = c.fanoutId
     ? existingPosts.filter(p => !p || p.fanoutId !== c.fanoutId)
@@ -942,12 +914,6 @@ async function _postNow() {
       throw new Error('Worker returned no results');
     }
 
-    /* ── Normalise every worker response into one shape ──────────────
-       The worker can return any of:
-         1. { ok: true,  mode: 'auto',        postId, url }     → real post
-         2. { ok: true|false, fallback: 'compose-link', fallbackUrl } → paste
-         3. { ok: false, error }                                → failed
-       We map all three into { ok, mode, postId, composeUrl, error }. */
     _state.fanoutLog = res.results.map(r => {
       const isComposeOnly = r.fallback === 'compose-link';
       const trulyPosted   = !!r.ok && (!!r.postId || !!r.post_id) && !isComposeOnly;
@@ -964,7 +930,6 @@ async function _postNow() {
       };
     });
 
-    /* Persist each platform's post with its real status */
     const campaign = (SAFE.state?.data?.campaigns || []).find(x => x.id === c.campaignId);
     if (campaign) {
       const existingIds = c._existingPostIds || {};
@@ -999,8 +964,6 @@ async function _postNow() {
         });
       });
 
-      /* Replace any existing posts in this fanout so we don't append
-         duplicates when the user hits "Post now" after a draft save. */
       const existingPosts = Array.isArray(campaign.posts) ? campaign.posts.slice() : [];
       const filtered = c.fanoutId
         ? existingPosts.filter(p => !p || p.fanoutId !== c.fanoutId)
@@ -1011,9 +974,6 @@ async function _postNow() {
       try { await SAFE.upsertDoc('campaigns', campaign, campaign._rev); } catch (_) {}
     }
 
-    /* Open compose windows for platforms requiring manual paste.
-       mode is now correctly 'compose-link' thanks to the normaliser
-       above — previously it was 'auto' due to a shape mismatch. */
     const composeTargets = _state.fanoutLog.filter(r => r.mode === 'compose-link' && r.composeUrl);
     for (const t of composeTargets) {
       try { window.open(t.composeUrl, '_blank', 'noopener,noreferrer'); } catch (_) {}
