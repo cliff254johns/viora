@@ -45,8 +45,9 @@ export function buildVioraHandlers(d) {
     escapeHtml, normalizePhone, normalizeEmail, simpleHash, emailToId,
     generateLicenseKey, isMobile, debounce, pickFile, pickFileMobileSplit,
 
-    // ── Write layer ──
+     // ── Write layer ──
     upsertDoc, deleteDoc, queueOfflineMutation,
+    convertLeadToClientDeal,                    // ← ADD THIS LINE
     upsertPersonal, upsertTrackFlat, deletePersonal, deleteTrackFlat,
 
     // ── Events / orchestration ──
@@ -898,9 +899,11 @@ export function buildVioraHandlers(d) {
     _toast(id ? 'Lead updated.' : 'Lead created.', 'success');
     _closeModal('leadModal');
 
-    const shouldConvert = p.status === 'Qualified' && !alreadyConverted && p.source !== 'Marketplace';
+     const shouldConvert = p.status === 'Qualified' && !alreadyConverted && p.source !== 'Marketplace';
     if (shouldConvert) {
-      const client = await d.convertLeadToClientDeal?.(p);
+      const client = await (typeof convertLeadToClientDeal === 'function'
+        ? convertLeadToClientDeal(p)
+        : (d.convertLeadToClientDeal ? d.convertLeadToClientDeal(p) : null));
       if (client) {
         const fresh = getLead(p.id) || p;
         await upsertDoc('leads', { ...fresh, status: 'Converted' }, fresh._rev);
@@ -911,6 +914,11 @@ export function buildVioraHandlers(d) {
           title: `Kickoff meeting — ${p.fullName}`,
           type: 'Discovery Call'
         }), 350);
+      } else {
+        // Conversion was requested but the function returned null
+        console.warn('[lead-conversion] shouldConvert=true but client is null',
+          { leadId: p.id, status: p.status, source: p.source, alreadyConverted });
+        _toast('Lead qualified but client creation failed — check console.', 'warning');
       }
     } else {
       if (typeof renderAll === 'function') renderAll();
@@ -3710,14 +3718,100 @@ export function buildVioraHandlers(d) {
     d.publishClientsToPublicSite?.();
   };
 
-  /* ═══════════════════════════════════════════════════════════
-     WORKLOGS — disabled stubs (kept for compatibility)
+   /* ═══════════════════════════════════════════════════════════
+     WORKLOGS
      ═══════════════════════════════════════════════════════════ */
-  Viora.addWorklog = () => { console.info('[worklogs] disabled'); _toast('Worklogs removed — use Tasks.', 'info'); };
-  Viora.editWorklog = () => { console.info('[worklogs] disabled'); _toast('Worklogs removed.', 'info'); };
-  Viora.deleteWorklog = () => { console.info('[worklogs] disabled'); };
-  Viora.saveWorklog = () => { console.info('[worklogs] disabled'); _toast('Worklogs removed — use Tasks.', 'info'); };
+  Viora.addWorklog = function () {
+    $('worklogModalTitle').textContent = 'Log Work';
+    $('editWorklogId').value = '';
+    $('worklogForm').reset();
+    $('worklogDate').value = todayStr();
+    $('worklogBilled').checked = false;
+    $('worklogProject').innerHTML =
+      '<option value="">— Select a project —</option>' +
+      (state?.data?.projects || [])
+        .filter(p => p && p.status !== 'closed')
+        .map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.projectNumber || p.title || '')} — ${escapeHtml(getClientName(p.clientId))}</option>`)
+        .join('');
+    _openModal('worklogModal');
+  };
 
+  Viora.editWorklog = function (id) {
+    const w = (state?.data?.worklogs || []).find(x => x.id === id);
+    if (!w) { _toast('Worklog not found.', 'error'); return; }
+    $('worklogModalTitle').textContent = 'Edit Work Log';
+    $('editWorklogId').value = id;
+    $('worklogProject').innerHTML =
+      '<option value="">— Select a project —</option>' +
+      (state?.data?.projects || [])
+        .filter(p => p && p.status !== 'closed')
+        .map(p => `<option value="${escapeHtml(p.id)}" ${p.id === w.projectId ? 'selected' : ''}>${escapeHtml(p.projectNumber || p.title || '')} — ${escapeHtml(getClientName(p.clientId))}</option>`)
+        .join('');
+    $('worklogDate').value = w.date || todayStr();
+    $('worklogActivity').value = w.activity || 'Development';
+    $('worklogHours').value = w.hours || 0;
+    $('worklogRate').value = w.rate || 0;
+    $('worklogDesc').value = w.description || '';
+    $('worklogBilled').checked = !!w.isBilled;
+    _openModal('worklogModal');
+  };
+
+  Viora.saveWorklog = async function (f) {
+    const id = $('editWorklogId').value;
+    const existing = id ? (state?.data?.worklogs || []).find(x => x.id === id) : null;
+    const projectId = f.projectId || $('worklogProject').value;
+    if (!projectId) { _toast('Select a project.', 'error'); return; }
+
+    const hours = parseFloat(f.hours) || 0;
+    const rate = parseFloat(f.rate) || 0;
+    if (hours <= 0) { _toast('Hours must be > 0.', 'error'); return; }
+    if (rate < 0) { _toast('Rate cannot be negative.', 'error'); return; }
+
+    const record = {
+      id: id || uid(),
+      projectId,
+      clientId: (state?.data?.projects || []).find(p => p.id === projectId)?.clientId || null,
+      date: f.date || todayStr(),
+      activity: f.activity || 'Development',
+      hours,
+      rate,
+      amount: Math.round(hours * rate * 100) / 100,
+      description: f.description || '',
+      isBilled: !!f.isBilled,
+      createdAt: existing?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    try {
+      await upsertDoc('worklogs', record, existing?._rev);
+    } catch (e) {
+      if (e.message === 'CONFLICT_ABORTED') return;
+      _toast('Save failed: ' + e.message, 'error');
+      return;
+    }
+
+    await _logAct(id ? 'edit' : 'add', id ? 'Work log updated' : 'Work log added',
+      `${record.activity} — ${hours}h @ ${fmtKES(rate)}/h`);
+
+    if (state) state.pendingWorklog = null;
+    _toast('Work log saved.', 'success');
+    _closeModal('worklogModal');
+    if (typeof renderActiveTab === 'function') renderActiveTab();
+  };
+
+  Viora.deleteWorklog = async function (id) {
+    const w = (state?.data?.worklogs || []).find(x => x.id === id);
+    if (!w) return;
+    if (!confirm(`Delete work log "${w.activity}" from ${fmtDate(w.date)}?`)) return;
+    try {
+      await deleteDoc('worklogs', id);
+      await _logAct('delete', 'Work log deleted', `${w.activity} — ${w.hours}h`);
+      _toast('Work log deleted.', 'info');
+      if (typeof renderActiveTab === 'function') renderActiveTab();
+    } catch (e) {
+      _toast('Delete failed: ' + (e.message || 'unknown'), 'error');
+    }
+  };
   /* ═══════════════════════════════════════════════════════════
      TASKS
      ═══════════════════════════════════════════════════════════ */
