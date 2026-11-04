@@ -328,61 +328,62 @@ function _renderCompetitors() {
   const host = document.getElementById('caCompetitors');
   if (!host) return;
 
-  const competitors = (ctx().state?.data?.competitorBenchmarks) || [];
-  if (!competitors.length) {
-    host.innerHTML = '<div class="empty-state" style="padding:20px;font-size:.82rem;">No competitors tracked yet. Click "Add Competitor" to start benchmarking.</div>';
-    return;
-  }
-function _renderCompetitors() {
-  const host = document.getElementById('caCompetitors');
-  if (!host) return;
-
   let competitors = (ctx().state?.data?.competitorBenchmarks) || [];
-  // Firebase returns this node as an object {id: {...}}, not an array.
-  // Normalize so .map / .filter work below.
+
+  // Firebase stores this node as an object { id: { ...fields } }, not an array.
+  // Normalize so .map / .filter / .length work below.
   if (!Array.isArray(competitors)) {
     competitors = Object.entries(competitors).map(([id, v]) => ({ id, ...(v || {}) }));
   }
+
   if (!competitors.length) {
-    host.innerHTML = '<div class="empty-state" style="padding:20px;font-size:.82rem;">No competitors tracked yet. Click "Add Competitor" to start benchmarking.</div>';
+    host.innerHTML =
+      '<div class="empty-state" style="padding:20px;font-size:.82rem;">' +
+      'No competitors tracked yet. Click "Add Competitor" to start benchmarking.' +
+      '</div>';
     return;
   }
-  host.innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:6px;">
-      ${competitors.map(c => {
-        const pm = platformMeta(c.platform);
-        return `
-          <div style="display:flex;gap:10px;align-items:center;padding:8px 12px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:8px;">
-            <div style="width:32px;height:32px;border-radius:8px;background:${pm.color}22;color:${pm.color};display:flex;align-items:center;justify-content:center;">
-              <i class="${pm.icon}"></i>
-            </div>
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:.85rem;font-weight:600;">${esc(c.handle || '')}</div>
-              <div style="font-size:.7rem;color:var(--text-secondary);">
-                ${esc(pm.label)} · Followers: ${fmtNum(c.stats?.followers || 0)} · ER: ${fmtPercent(c.stats?.engagementRate || 0, 2)}
-              </div>
-            </div>
-            <button type="button" class="btn btn-outline btn-xs" data-comp-refresh="${esc(c.id)}"><i class="fa-solid fa-rotate"></i></button>
-            <button type="button" class="btn btn-danger btn-xs" data-comp-remove="${esc(c.id)}"><i class="fa-solid fa-trash"></i></button>
-          </div>
-        `;
-      }).join('')}
-    </div>
-  `;
 
-  host.querySelectorAll('[data-comp-refresh]').forEach(b => {
+  host.innerHTML =
+    '<div style="display:flex;flex-direction:column;gap:6px;">' +
+    competitors.map((c) => {
+      const pm = platformMeta(c.platform);
+      const followers = fmtNum((c.stats && c.stats.followers) || 0);
+      const er = fmtPercent((c.stats && c.stats.engagementRate) || 0, 2);
+      return (
+        '<div style="display:flex;gap:10px;align-items:center;padding:8px 12px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:8px;">' +
+          '<div style="width:32px;height:32px;border-radius:8px;background:' + pm.color + '22;color:' + pm.color + ';display:flex;align-items:center;justify-content:center;">' +
+            '<i class="' + pm.icon + '"></i>' +
+          '</div>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-size:.85rem;font-weight:600;">' + esc(c.handle || '') + '</div>' +
+            '<div style="font-size:.7rem;color:var(--text-secondary);">' +
+              esc(pm.label) + ' · Followers: ' + followers + ' · ER: ' + er +
+            '</div>' +
+          '</div>' +
+          '<button type="button" class="btn btn-outline btn-xs" data-comp-refresh="' + esc(c.id) + '"><i class="fa-solid fa-rotate"></i></button>' +
+          '<button type="button" class="btn btn-danger btn-xs" data-comp-remove="' + esc(c.id) + '"><i class="fa-solid fa-trash"></i></button>' +
+        '</div>'
+      );
+    }).join('') +
+    '</div>';
+
+  host.querySelectorAll('[data-comp-refresh]').forEach((b) => {
     b.addEventListener('click', () => _refreshCompetitor(b.getAttribute('data-comp-refresh')));
   });
-  host.querySelectorAll('[data-comp-remove]').forEach(b => {
+
+  host.querySelectorAll('[data-comp-remove]').forEach((b) => {
     b.addEventListener('click', async () => {
       if (!confirm('Remove this competitor?')) return;
-           const id = b.getAttribute('data-comp-remove');
+      const id = b.getAttribute('data-comp-remove');
       try {
         await ctx().remove(ctx().ref(ctx().db, ctx().P('competitorBenchmarks/' + id)));
-        const list = (ctx().state?.data?.competitorBenchmarks || []).filter(x => x.id !== id);
+        const list = (ctx().state?.data?.competitorBenchmarks || []).filter((x) => x.id !== id);
         ctx().state.data.competitorBenchmarks = list;
         _renderCompetitors();
-      } catch (e) { ctx().toast?.('Remove failed: ' + e.message, 'error'); }
+      } catch (e) {
+        ctx().toast?.('Remove failed: ' + e.message, 'error');
+      }
     });
   });
 }
