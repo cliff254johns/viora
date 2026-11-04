@@ -437,8 +437,8 @@ tr:last-child td{border-bottom:0}
 }
 </style>
 
-<!-- Font Awesome for the platform icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -471,142 +471,6 @@ tr:last-child td{border-bottom:0}
 
 <!-- ═══════════════ APP SHELL ═══════════════ -->
 <div class="app" id="orbitApp" style="display:none">
-  <aside class="sidebar" id="sidebar">
-    <div class="brand">
-      <div class="logo">O</div>
-      <div><strong>VIORA</strong><small>campaigns</small></div>
-    </div>
-    <div class="workspace">
-      <div class="avatar">NW</div>
-      <div><b>Northwind Studio</b><small>Business workspace ▾</small></div>
-      <span>⌄</span>
-    </div>
-
-    <div class="nav-label">Campaigns</div>
-    <nav class="nav" id="nav">
-      <button class="active" data-page="campaigns"><span class="ico">◉</span>Campaigns</button>
-      <button data-page="analytics"><span class="ico">▥</span>Campaign Analytics</button>
-    </nav>
-
-    <div class="nav-label">Workspace</div>
-    <nav class="nav" id="navWorkspace">
-      <button data-page="overview"><span class="ico">◫</span>Back to Overview</button>
-    </nav>
-
-    <div class="sidebar-bottom">
-      <div class="planbox">
-        <b>VIORA Campaigns</b>
-        <p>Included in your workspace plan</p>
-        <button data-go="billing">View plan →</button>
-      </div>
-      <div class="muted small">● Campaigns module · Production integrations pending</div>
-    </div>
-  </aside>
-
-  <div class="mobile-overlay" id="overlay"></div>
-
-  <main class="main">
-    <header class="topbar">
-      <div class="top-left">
-        <button class="iconbtn hamb" id="hamb">☰</button>
-        <div class="crumb">Campaigns / <b id="crumb">Campaigns</b></div>
-      </div>
-      <div class="top-actions">
-        <div class="search"><span>⌕</span><input id="globalSearch" placeholder="Search campaigns..."></div>
-        <button class="iconbtn" id="themeBtn" title="Toggle theme">◐</button>
-        <button class="iconbtn" id="helpBtn" title="Help">?</button>
-        <button class="iconbtn" id="notifBtn" title="Notifications">♧<i class="dot"></i></button>
-        <button class="userpic" id="logoutBtn" title="Sign out">JD</button>
-      </div>
-    </header>
-
-    <!-- ═══ TAB: CAMPAIGNS ═══ -->
-    <section class="content" id="viewCampaigns" style="display:none">
-      <div class="pagehead">
-        <div>
-          <div class="eyebrow">VIORA · CAMPAIGNS</div>
-          <h1>Campaign command centre</h1>
-          <div class="sub">Plan, coordinate, approve and measure your marketing campaigns.</div>
-        </div>
-        <div class="actions">
-          <button class="btn" id="refreshAllCampaignStatsBtn">
-            <i class="fa-solid fa-rotate"></i> Refresh All
-          </button>
-          <button class="btn primary" id="campaignNewBtn">
-            <i class="fa-solid fa-plus"></i> New Campaign
-          </button>
-        </div>
-      </div>
-
-      <!-- Hero -->
-      <div class="orbit-hero">
-        <div>
-          <div class="hero-tag">EVERY CAMPAIGN. ONE COMMAND CENTRE.</div>
-          <h2>Make every campaign count.</h2>
-          <p>Budgets, spend, leads, live stats and AI drafting — all in one workspace.</p>
-        </div>
-      </div>
-
-      <!-- ═════════ SOCIAL ACCOUNTS (ALL 10 PLATFORMS) ═════════ -->
-      <div id="campaignSocialAccounts" style="margin-bottom:15px"></div>
-
-      <!-- Trend radar -->
-      <div id="campaignTrendRadar" style="margin-bottom:15px"></div>
-
-      <!-- KPI grid -->
-      <div class="grid kpis" id="campaignKpiGrid"></div>
-
-      <!-- Campaigns table -->
-      <div class="card">
-        <div class="cardhead">
-          <h3>All campaigns</h3>
-          <span class="pill">Live · auto-refreshing</span>
-        </div>
-        <div class="tablewrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Campaign</th>
-                <th>Budget</th>
-                <th>Spent</th>
-                <th>Leads</th>
-                <th>Live Stats</th>
-                <th>Dates</th>
-                <th>Status</th>
-                <th style="text-align:right">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="campaignsBody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Draft library -->
-      <div id="campaignDraftLibrary" style="margin-top:15px"></div>
-
-      <!-- Prompt library -->
-      <div id="campaignPromptLibrary" style="margin-top:15px"></div>
-    </section>
-
-    <!-- ═══ TAB: ANALYTICS ═══ -->
-    <section class="content" id="viewAnalytics" style="display:none">
-      <div class="pagehead">
-        <div>
-          <div class="eyebrow">VIORA · CAMPAIGNS</div>
-          <h1>Campaign analytics</h1>
-          <div class="sub">Performance over time, engagement by platform and best posting times.</div>
-        </div>
-        <div class="actions">
-          <button class="btn" id="campaignAnalyticsRefreshBtn">
-            <i class="fa-solid fa-rotate"></i> Refresh
-          </button>
-        </div>
-      </div>
-
-      <div id="campaignAnalyticsDashboard"></div>
-    </section>
-  </main>
-</div>
 
 <!-- ═══════════════ MOBILE BOTTOM NAV ═══════════════ -->
 <nav class="mobile-nav" id="mobileNav" aria-label="Campaigns mobile navigation">
@@ -634,6 +498,7 @@ tr:last-child td{border-bottom:0}
 
 <!-- ═══════════════ TOAST ═══════════════ -->
 <div class="toast" id="toast"></div>
+<div id="toastContainer" style="position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;"></div>
 
 <!-- ═══════════════ CAMPAIGN EDITOR MODAL ═══════════════ -->
 <div class="modalback" id="campaignEditorModal">
@@ -765,172 +630,39 @@ tr:last-child td{border-bottom:0}
 <script type="module" src="campaigns-bootstrap.js"></script>
 
 <script>
-/* ═══════════════ SHELL NAVIGATION + THEME ═══════════════ */
 (function () {
   const $  = (id) => document.getElementById(id);
   const $$ = (sel) => [...document.querySelectorAll(sel)];
 
-  function showTab(tab) {
-    $('viewCampaigns').style.display = tab === 'campaigns' ? 'block' : 'none';
-    $('viewAnalytics').style.display = tab === 'analytics' ? 'block' : 'none';
-    $('crumb').textContent = tab === 'campaigns' ? 'Campaigns' : 'Campaign Analytics';
-
-    $$('#nav button').forEach(b => b.classList.toggle('active', b.dataset.page === tab));
-
-    try { history.replaceState(null, '', tab === 'analytics' ? '#analytics' : '#campaigns'); } catch (_) {}
-
-    if (tab === 'analytics') {
-      try { window.renderAnalyticsDashboard?.(); } catch (_) {}
-    } else {
-      try { window.renderCampaigns?.(); } catch (_) {}
-    }
-
-    $('sidebar')?.classList.remove('open');
-    $('overlay')?.classList.remove('show');
-  }
-
-  $$('#nav button').forEach(btn => btn.addEventListener('click', () => showTab(btn.dataset.page)));
-  $$('#navWorkspace button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (btn.dataset.page === 'overview') location.href = '/main.html';
-    });
-  });
-
-  $('hamb')?.addEventListener('click', () => {
-    $('sidebar').classList.toggle('open');
-    $('overlay').classList.toggle('show');
-  });
-  $('overlay')?.addEventListener('click', () => {
-    $('sidebar').classList.remove('open');
-    $('overlay').classList.remove('show');
-  });
-
-  const saved = localStorage.getItem('orbit-theme') || 'light';
+  /* Theme toggle — one handler, one storage key */
+  const saved = localStorage.getItem('viora-theme') || 'dark';
   document.documentElement.dataset.theme = saved;
   $('themeBtn')?.addEventListener('click', () => {
-    const cur = document.documentElement.dataset.theme;
-    const next = cur === 'dark' ? 'light' : 'dark';
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
     document.documentElement.dataset.theme = next;
-    localStorage.setItem('orbit-theme', next);
+    localStorage.setItem('viora-theme', next);
+    // Charts need to restyle
     setTimeout(() => {
-      try { window.renderCampaigns?.(); } catch (_) {}
-      try { window.renderAnalyticsDashboard?.(); } catch (_) {}
-    }, 80);
+      try { window.renderActiveOrbitModule?.(); } catch (_) {}
+    }, 60);
   });
 
   $('helpBtn')?.addEventListener('click', () => {
-    alert('Campaigns command centre.\n\nUse the sidebar to switch between Campaigns and Campaign Analytics.\n\nClick "New Campaign" to add one — data saves to Firebase.');
+    alert('Use the sidebar to navigate between modules. Data saves to Firebase.');
   });
   $('notifBtn')?.addEventListener('click', () => {
     alert('Notifications are managed on the main VIORA dashboard.');
   });
 
-  /* Logout is owned by campaigns-bootstrap.js */
-
   $('globalSearch')?.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter') return;
     const q = e.target.value.trim().toLowerCase();
     if (!q) return;
-    const camp = (window.state?.data?.campaigns || []).find(c =>
-      String(c.name || '').toLowerCase().includes(q)
-    );
-    if (camp && window.Viora?.editCampaign) window.Viora.editCampaign(camp.id);
-    else alert('No campaign found matching "' + q + '"');
+    const module = window.Orbit?.findModuleByName?.(q);
+    if (module) window.Orbit.navigate(module);
   });
 
-  /* Expose showTab so the mobile nav can trigger it */
-  window.__orbitShowTab = showTab;
-
-  /* ═══════════════ MOBILE BOTTOM NAV ═══════════════ */
-  function bindMobileNav() {
-    const mobileNav = document.getElementById('mobileNav');
-    if (!mobileNav) return;
-
-    const buttons = mobileNav.querySelectorAll('button[data-mnav]');
-
-    const setActive = (key) => {
-      buttons.forEach(b => b.classList.toggle('active', b.dataset.mnav === key));
-    };
-
-    buttons.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const key = btn.dataset.mnav;
-
-        switch (key) {
-          case 'campaigns':
-            setActive('campaigns');
-            showTab('campaigns');
-            break;
-          case 'analytics':
-            setActive('analytics');
-            showTab('analytics');
-            break;
-          case 'new':
-            btn.classList.add('active');
-            setTimeout(() => setActive(
-              document.getElementById('viewAnalytics').style.display === 'block'
-                ? 'analytics' : 'campaigns'
-            ), 220);
-            if (window.Viora?.addCampaign) window.Viora.addCampaign();
-            else alert('Campaign editor is still loading — try again in a moment.');
-            break;
-          case 'refresh':
-            btn.classList.add('active');
-            setTimeout(() => setActive(
-              document.getElementById('viewAnalytics').style.display === 'block'
-                ? 'analytics' : 'campaigns'
-            ), 400);
-            try {
-              if (window.refreshAllCampaignStats) {
-                window.refreshAllCampaignStats().then(() => {
-                  try { window.renderCampaigns?.(); } catch (_) {}
-                  try { window.renderAnalyticsDashboard?.(); } catch (_) {}
-                });
-              } else {
-                try { window.renderCampaigns?.(); } catch (_) {}
-                try { window.renderAnalyticsDashboard?.(); } catch (_) {}
-              }
-            } catch (_) {}
-            break;
-          case 'more':
-            document.getElementById('sidebar')?.classList.add('open');
-            document.getElementById('overlay')?.classList.add('show');
-            break;
-        }
-      });
-    });
-
-    /* Keep the bar in sync when showTab() runs from elsewhere */
-    const origShowTab = window.__orbitShowTab;
-    if (typeof origShowTab === 'function') {
-      window.__orbitShowTab = function (tab) {
-        origShowTab(tab);
-        setActive(tab === 'analytics' ? 'analytics' : 'campaigns');
-      };
-    }
-
-    /* Belt-and-braces: watch the two view containers */
-    const syncActive = () => {
-      const analyticsVisible = document.getElementById('viewAnalytics')?.style.display === 'block';
-      setActive(analyticsVisible ? 'analytics' : 'campaigns');
-    };
-    const mo = new MutationObserver(syncActive);
-    const vc = document.getElementById('viewCampaigns');
-    const va = document.getElementById('viewAnalytics');
-    if (vc) mo.observe(vc, { attributes: true, attributeFilter: ['style'] });
-    if (va) mo.observe(va, { attributes: true, attributeFilter: ['style'] });
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bindMobileNav);
-  } else {
-    bindMobileNav();
-  }
-
-  /* Initial tab */
-  const hash = (location.hash || '').toLowerCase();
-  showTab(hash === '#analytics' ? 'analytics' : 'campaigns');
+  /* Logout is owned by campaigns-bootstrap.js */
 })();
 </script>
 </body>
