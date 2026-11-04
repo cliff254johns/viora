@@ -582,3 +582,27 @@ export function engagementRateFor(stats) {
     (Number(stats.shares) || 0);
   return Math.round((interactions / views) * 10000) / 100;
 }
+
+/**
+ * Normalize a datetime-local value ("2026-11-12T09:00") into an ISO UTC
+ * string ("2026-11-12T06:00:00.000Z") based on the browser's timezone.
+ *
+ * The composer's schedule field is a `datetime-local` input, which emits
+ * a timezone-less string. The worker scheduler will need a UTC ISO string
+ * to compare against `Date.now()`. This helper does that conversion
+ * without assuming any particular timezone.
+ *
+ * Returns null if the input is empty or unparseable.
+ */
+export function toUtcIso(localDateTimeStr) {
+  if (!localDateTimeStr) return null;
+  const s = String(localDateTimeStr).trim();
+  if (!s) return null;
+  try {
+    const d = new Date(s);
+    if (!Number.isFinite(d.getTime())) return null;
+    return d.toISOString();
+  } catch (_) {
+    return null;
+  }
+}
