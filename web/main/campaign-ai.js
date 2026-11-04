@@ -10,6 +10,8 @@ import {
   composeUrlFor, escHtml as esc, q,
   makePost, makeFanoutItem, buildUtmUrl, utmFromPost,
   captionForPlatform,
+  toUtcIso,
+  readImageFile,
 } from './campaign-utils.js';
 
 let _ctx = null;
@@ -87,6 +89,7 @@ export function openComposer(opts = {}) {
 
   _state.composer = {
     campaignId,
+    fanoutId: opts.fanoutId || null,          // ← new: when set, all posts share this fanout
     platforms: initialPlatforms,
     pillar: opts.pillar || 'educational',
     brief,
@@ -111,6 +114,7 @@ export function openComposer(opts = {}) {
     heroImagePrompt: '',
     heroImageModel: '',
     heroImageSeed: null,
+    heroImageSource: null,               // ← 'generated' | 'upload' | null
 
     /* Per-platform image override */
     perPlatformImage: {},
@@ -388,9 +392,12 @@ function _renderComposer() {
           <label>Schedule for</label>
           <input type="datetime-local" id="ccScheduledFor" value="${esc(c.scheduledFor)}" />
         </div>
-
         <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
+          <input type="file" id="ccUploadImageInput" accept="image/jpeg,image/png,image/webp" style="display:none;" />
           <button type="button" class="btn btn-outline" id="ccCancelBtn">Cancel</button>
+          <button type="button" class="btn btn-outline" id="ccUploadImageBtn" title="Replace with your own image">
+            <i class="fa-solid fa-upload"></i> Upload own
+          </button>
           <button type="button" class="btn btn-outline" id="ccSaveDraftBtn">
             <i class="fa-solid fa-floppy-disk"></i> Save Draft
           </button>
@@ -557,6 +564,7 @@ function _bindComposerEvents() {
   });
 
   /* Buttons */
+    /* Buttons */
   g('ccGenerateBtn')?.addEventListener('click', _generateText);
   g('ccGenerateImageBtn')?.addEventListener('click', _generateImage);
   g('ccCancelBtn')?.addEventListener('click', _closeComposer);
@@ -567,6 +575,33 @@ function _bindComposerEvents() {
   });
   g('ccDownloadImageBtn')?.addEventListener('click', _downloadImage);
   g('ccCopyImageBtn')?.addEventListener('click', _copyImage);
+
+  /* Upload own image — replaces hero image with the user's file */
+  const uploadBtn = g('ccUploadImageBtn');
+  const uploadInput = g('ccUploadImageInput');
+  uploadBtn?.addEventListener('click', () => uploadInput?.click());
+  uploadInput?.addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const img = await readImageFile(file);
+      const c = _state.composer;
+      if (!c) return;
+      c.heroImageBase64 = img.b64;
+      c.heroImageMime = img.mime;
+      c.heroImageWidth = img.width;
+      c.heroImageHeight = img.height;
+      c.heroImagePrompt = '';
+      c.heroImageModel = 'upload';
+      c.heroImageSeed = null;
+      c.heroImageSource = 'upload';
+      _renderComposer();
+      SAFE.toast('Image uploaded.', 'success');
+    } catch (err) {
+      SAFE.toast('Upload failed: ' + (err.message || 'unknown'), 'error');
+    }
+  });
 }
 
 function _updateUtmPreview() { /* optional live preview — skipped for brevity */ }
@@ -691,15 +726,17 @@ async function _generateImage() {
     const b64 = res?.imageBase64 || res?.base64 || '';
     if (!b64) throw new Error('Worker returned no image');
 
-    c.heroImageBase64 = b64.replace(/^data:[^;]+;base64,/, '');
+      c.heroImageBase64 = b64.replace(/^data:[^;]+;base64,/, '');
     c.heroImageMime = res?.mime || 'image/png';
     c.heroImagePrompt = res?.prompt || prompt;
     c.heroImageModel = res?.model || null;
     c.heroImageWidth = res?.width || null;
     c.heroImageHeight = res?.height || null;
     c.heroImageSeed = res?.seed || null;
+    c.heroImageSource = 'generated';
 
     _renderComposer();
+    
     SAFE.toast(
       `Image generated${c.heroImageWidth ? ' · ' + c.heroImageWidth + '×' + c.heroImageHeight : ''}.`,
       'success'
@@ -768,11 +805,11 @@ async function _persistPosts(status) {
 
   const campaign = (SAFE.state?.data?.campaigns || []).find(x => x.id === c.campaignId);
   if (!campaign) { SAFE.toast('Campaign not found.', 'error'); return; }
-
   const posts = c.platforms.map(key => {
     const variant = c.perPlatform[key] || {};
     return makePost({
       campaignId: c.campaignId,
+      fanoutId: c.fanoutId || undefined,        // ← new: pass through to makePost
       platform: key,
       pillar: c.pillar,
       caption: variant.caption || '',
@@ -783,12 +820,14 @@ async function _persistPosts(status) {
       imageHeight: variant.imageHeight || c.heroImageHeight,
       imagePrompt: c.heroImagePrompt,
       imageModel: c.heroImageModel,
+      imageSource: c.heroImageSource || null,   // ← new: 'generated' | 'upload'
       imageSeed: c.heroImageSeed,
       utm: { ...c.utm, source: c.utm.source || key },
       url: buildUtmUrl(c.baseUrl, { ...c.utm, source: c.utm.source || key }),
       status,
       mode: PLATFORMS[key].canPost ? 'auto' : 'compose-link',
       scheduledFor: status === 'scheduled' ? c.scheduledFor : null,
+      scheduledForUtc: status === 'scheduled' && c.scheduledFor ? toUtcIso(c.scheduledFor) : null,
       createdBy: SAFE.state?.operator?.name || null,
     });
   });
