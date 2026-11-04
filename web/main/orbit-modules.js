@@ -576,18 +576,40 @@ export async function renderCreativeStudio(ctx) {
 
           renderResultImage(currentImage);
           toast(ctx, 'Image generated.', 'success');
-        } catch (e) {
+              } catch (e) {
           console.warn('[creative] image gen failed', e);
+          const msg = String(e.message || 'unknown');
+          const isConfig = msg.toLowerCase().includes('not configured') ||
+                           msg.toLowerCase().includes('unavailable') ||
+                           msg.includes('503');
           if (resultEl) {
             resultEl.innerHTML = `
               <div class="cs-error">
-                <div class="cs-error-head"><i class="fa-solid fa-triangle-exclamation"></i> Generation failed</div>
-                <div class="cs-error-body">${esc(e.message || 'unknown error')}</div>
-                <button type="button" class="btn soft btn-sm" id="csRetryImg">Try again</button>
+                <div class="cs-error-head">
+                  <i class="fa-solid fa-triangle-exclamation"></i>
+                  ${isConfig ? 'AI service unavailable' : 'Generation failed'}
+                </div>
+                <div class="cs-error-body">
+                  ${isConfig
+                    ? 'The AI service is temporarily unavailable. You can still upload your own image or write the caption manually.'
+                    : esc(msg)}
+                </div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                  <button type="button" class="btn soft btn-sm" id="csRetryImg">Try again</button>
+                  ${isConfig
+                    ? '<button type="button" class="btn soft btn-sm" id="csUploadInstead"><i class="fa-solid fa-upload"></i> Upload own image</button>'
+                    : ''}
+                </div>
               </div>`;
             resultEl.querySelector('#csRetryImg')?.addEventListener('click', () => genImgBtn.click());
+            resultEl.querySelector('#csUploadInstead')?.addEventListener('click', () => {
+              view.querySelector('#csUploadImage')?.click();
+            });
           }
-          toast(ctx, 'Generation failed: ' + (e.message || 'unknown'), 'error');
+          toast(
+            isConfig ? 'AI service unavailable — try uploading your own image.' : 'Generation failed: ' + msg,
+            isConfig ? 'warning' : 'error'
+          );
         } finally {
           btn.disabled = false;
           btn.innerHTML = prev;
