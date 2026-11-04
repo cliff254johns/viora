@@ -5,7 +5,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { initializeApp, getApp, getApps } from 'firebase/app';
-import { getDatabase, ref, onValue, get, set, update, remove, push, query, limitToLast } from "firebase/database";
+import { getDatabase, ref, onValue, get, set, update, remove, push, query, limitToLast, forceLongPolling } from "firebase/database";
 import {
   getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut
 } from 'firebase/auth';
@@ -106,6 +106,7 @@ const firebaseConfig = {
 
 const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db   = getDatabase(app);
+forceLongPolling(db);
 const auth = getAuth(app);
 
 /* ═══════════════════════════════════════════════════════════════
