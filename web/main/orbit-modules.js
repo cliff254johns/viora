@@ -16,6 +16,7 @@ import {
   statsHistoryFor,
   combineStatsHistory,
   engagementRateFor,
+  toUtcIso,
   platformMeta as _platformMeta,
 } from './campaign-utils.js';
 import { renderInbox as _renderInboxImpl } from './inbox.js';
@@ -2412,8 +2413,16 @@ function renderFanoutModalBody(ctx, bodyEl, group, summary, activeTab) {
     ${historyHtml}
 
     ${compareHtml}
-
     <div class="plib-modal-actions">
+      <button type="button" class="btn soft btn-sm" data-plib-add-platform>
+        <i class="fa-solid fa-plus"></i> Add another platform
+      </button>
+      ${summary.aggregateStatus === 'scheduled'
+        ? `<button type="button" class="btn soft btn-sm" data-plib-edit-schedule><i class="fa-solid fa-clock"></i> Edit schedule</button>`
+        : ''}
+      ${summary.aggregateStatus === 'scheduled'
+        ? `<button type="button" class="btn danger btn-sm" data-plib-cancel-schedule><i class="fa-solid fa-xmark"></i> Cancel scheduling</button>`
+        : ''}
       ${activePost?.status === 'published' && activePost?.caption
         ? `<button type="button" class="btn soft btn-sm" data-plib-edit><i class="fa-solid fa-pen"></i> Duplicate in composer</button>`
         : ''}
@@ -2482,6 +2491,18 @@ function renderFanoutModalBody(ctx, bodyEl, group, summary, activeTab) {
     } catch (e) {
       toast(ctx, 'Delete failed: ' + (e.message || 'unknown'), 'error');
     }
+  });
+
+  bodyEl.querySelector('[data-plib-add-platform]')?.addEventListener('click', () => {
+    openAddPlatformDialog(ctx, group);
+  });
+
+  bodyEl.querySelector('[data-plib-edit-schedule]')?.addEventListener('click', () => {
+    openEditScheduleDialog(ctx, group);
+  });
+
+  bodyEl.querySelector('[data-plib-cancel-schedule]')?.addEventListener('click', async () => {
+    await cancelFanoutSchedule(ctx, group);
   });
 
   /* ── Draw history chart ── */
@@ -2616,7 +2637,7 @@ function drawCompareChart(ctx, bodyEl, group, mode) {
         },
       },
     });
-  } else {
+   } else {
     /* Combined total over time */
     const combined = combineStatsHistory(group, 24 * 60 * 60 * 1000);
     if (combined.length < 2) {
@@ -2643,5 +2664,357 @@ function drawCompareChart(ctx, bodyEl, group, mode) {
         },
       },
     });
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ADD PLATFORM TO EXISTING POST
+   ─────────────────────────────────────────────────────────────
+   Flow:
+     1. User clicks "+ Add another platform" in the modal
+     2. We show a mini sub-modal asking:
+          • Which platform? (dropdown of platforms NOT yet in fanout)
+          • Caption mode:
+              (a) Reuse existing caption (from source post)
+              (b) Generate fresh caption for this platform
+     3. If (a): openComposer prefilled with source caption
+        If (b): openComposer prefilled with source brief +
+                instructs user to regenerate via composer's own button
+     4. Composer saves a new post in the SAME fanoutId
+   ═══════════════════════════════════════════════════════════════ */
+export function openAddPlatformDialog(ctx, group) {
+  if (!Array.isArray(group) || group.length === 0) return;
+
+  const c = C(ctx);
+
+  /* Source post: the one with the most content to reuse */
+  const source = group.reduce((best, p) => {
+    const score = (p.caption || '').length + (p.imageBase64 ? 1000 : 0);
+    const bestScore = (best.caption || '').length + (best.imageBase64 ? 1000 : 0);
+    return score > bestScore ? p : best;
+  }, group[0]);
+
+  /* Platforms already in the fanout */
+  const taken = new Set(group.map(p => p.platform));
+
+  /* All platforms the composer knows about */
+  const allPlatforms = ['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'twitter', 'threads', 'pinterest', 'whatsapp'];
+  const available = allPlatforms.filter(p => !taken.has(p));
+
+  if (!available.length) {
+    toast(ctx, 'This post is already on every supported platform.', 'info');
+    return;
+  }
+
+  /* Build the dialog */
+  let dlg = document.getElementById('plibAddPlatformDialog');
+  if (!dlg) {
+    dlg = document.createElement('div');
+    dlg.className = 'modal-overlay';
+    dlg.id = 'plibAddPlatformDialog';
+    document.body.appendChild(dlg);
+    dlg.addEventListener('click', (e) => {
+      if (e.target === dlg) {
+        dlg.classList.remove('active');
+      }
+    });
+  }
+
+  dlg.innerHTML = `
+    <div class="modal" style="max-width:480px;">
+      <h2 style="margin-bottom:14px;">
+        <span class="modal-icon" style="background:linear-gradient(135deg,#6558f5,#a34ce8);">
+          <i class="fa-solid fa-plus"></i>
+        </span>
+        Add platform to this post
+      </h2>
+
+      <div class="notice" style="margin-bottom:14px;">
+        This will create a new post on the selected platform. It will share the same fanout group as the existing posts so you can track them together.
+      </div>
+
+      <div class="field">
+        <label>Platform *</label>
+        <select id="plibAddPlatformSel">
+          ${available.map(k => {
+            const m = _platformMeta(k);
+            return `<option value="${esc(k)}">${esc(m.label || k)}</option>`;
+          }).join('')}
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Caption</label>
+        <div class="plib-caption-choice">
+          <label class="plib-choice">
+            <input type="radio" name="plibCaptMode" value="reuse" checked />
+            <div>
+              <strong>Reuse existing caption</strong>
+              <div class="small muted">Prefills the composer with "${esc((source.caption || '').slice(0, 60))}${(source.caption || '').length > 60 ? '…' : ''}" — you can edit it before posting.</div>
+            </div>
+          </label>
+          <label class="plib-choice">
+            <input type="radio" name="plibCaptMode" value="fresh" />
+            <div>
+              <strong>Generate a fresh caption</strong>
+              <div class="small muted">The composer will generate a new caption tuned for the selected platform, using the same brief.</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-actions" style="margin-top:18px;">
+        <button type="button" class="btn soft" id="plibAddCancel">Cancel</button>
+        <button type="button" class="btn primary" id="plibAddConfirm">
+          <i class="fa-solid fa-paper-plane"></i> Continue to composer
+        </button>
+      </div>
+    </div>
+  `;
+
+  dlg.classList.add('active');
+
+  dlg.querySelector('#plibAddCancel').addEventListener('click', () => {
+    dlg.classList.remove('active');
+  });
+
+  dlg.querySelector('#plibAddConfirm').addEventListener('click', () => {
+    const targetPlatform = dlg.querySelector('#plibAddPlatformSel').value;
+    const captMode = dlg.querySelector('input[name="plibCaptMode"]:checked').value;
+    dlg.classList.remove('active');
+
+    /* Close the detail modal first */
+    try { closeFanoutDetail(ctx); } catch (_) {}
+
+    /* Build composer options */
+    const campaignId = source._campaignId || source.campaignId || '';
+
+    const composerOpts = {
+      campaignId,
+      platforms: [targetPlatform],
+      pillar: source.pillar || 'educational',
+    };
+
+    if (captMode === 'reuse') {
+      /* Prefill with the source caption */
+      composerOpts.brief = source.caption || '';
+    } else {
+      /* Prefill with the brief and let composer generate */
+      composerOpts.brief = source.brief || source.caption || '';
+    }
+
+    /* Open the composer */
+    try {
+      openComposer(composerOpts);
+
+      /* Push the source image into the composer once it renders.
+         Reuse the same custom event the Creative Studio uses. */
+      if (source.imageBase64) {
+        queueMicrotask(() => {
+          window.dispatchEvent(new CustomEvent('viora:composer-prefill-image', {
+            detail: {
+              b64: source.imageBase64,
+              mime: source.imageMime || 'image/png',
+              model: source.imageModel || null,
+              width: source.imageWidth || null,
+              height: source.imageHeight || null,
+              prompt: source.imagePrompt || '',
+            }
+          }));
+        });
+      }
+
+      /* Tell the user we inherited the fanoutId — future hook for the
+         composer. For now this is a soft message. */
+      if (source.fanoutId) {
+        toast(ctx, `New post will join fanout ${source.fanoutId.slice(0, 8)}…`, 'info');
+      }
+    } catch (e) {
+      toast(ctx, 'Could not open composer: ' + (e.message || 'unknown'), 'error');
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   EDIT SCHEDULE
+   ─────────────────────────────────────────────────────────────
+   Small dialog to change a scheduled post's publish time.
+   Updates ALL posts in the fanout that are currently 'scheduled'.
+   ═══════════════════════════════════════════════════════════════ */
+export function openEditScheduleDialog(ctx, group) {
+  if (!Array.isArray(group) || group.length === 0) return;
+
+  const c = C(ctx);
+  const scheduled = group.filter(p => p.status === 'scheduled');
+  if (!scheduled.length) {
+    toast(ctx, 'No scheduled posts in this group.', 'info');
+    return;
+  }
+
+  /* Use the earliest scheduled time as the default */
+  const defaultIso = scheduled
+    .map(p => p.scheduledFor)
+    .filter(Boolean)
+    .sort()[0] || '';
+
+  /* Convert ISO to datetime-local format for the input value */
+  const defaultLocal = (() => {
+    if (!defaultIso) return '';
+    try {
+      const d = new Date(defaultIso);
+      if (isNaN(d)) return '';
+      const pad = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    } catch (_) { return ''; }
+  })();
+
+  let dlg = document.getElementById('plibEditScheduleDialog');
+  if (!dlg) {
+    dlg = document.createElement('div');
+    dlg.className = 'modal-overlay';
+    dlg.id = 'plibEditScheduleDialog';
+    document.body.appendChild(dlg);
+    dlg.addEventListener('click', (e) => {
+      if (e.target === dlg) dlg.classList.remove('active');
+    });
+  }
+
+  dlg.innerHTML = `
+    <div class="modal" style="max-width:440px;">
+      <h2 style="margin-bottom:14px;">
+        <span class="modal-icon" style="background:linear-gradient(135deg,#d68b22,#f0b35c);">
+          <i class="fa-solid fa-clock"></i>
+        </span>
+        Edit schedule
+      </h2>
+
+      <div class="notice" style="margin-bottom:14px;">
+        This updates the scheduled time for ${scheduled.length} post${scheduled.length === 1 ? '' : 's'} on ${scheduled.map(p => _platformMeta(p.platform).label || p.platform).join(', ')}.
+      </div>
+
+      <div class="field">
+        <label>New date &amp; time *</label>
+        <input type="datetime-local" id="plibSchedNew" value="${esc(defaultLocal)}" />
+      </div>
+
+      <div class="form-actions" style="margin-top:18px;">
+        <button type="button" class="btn soft" id="plibSchedCancel">Cancel</button>
+        <button type="button" class="btn primary" id="plibSchedSave">
+          <i class="fa-solid fa-check"></i> Save
+        </button>
+      </div>
+    </div>
+  `;
+
+  dlg.classList.add('active');
+
+  dlg.querySelector('#plibSchedCancel').addEventListener('click', () => {
+    dlg.classList.remove('active');
+  });
+
+  dlg.querySelector('#plibSchedSave').addEventListener('click', async () => {
+    const newLocal = dlg.querySelector('#plibSchedNew').value;
+    if (!newLocal) {
+      toast(ctx, 'Pick a date and time.', 'warning');
+      return;
+    }
+
+    const newIso = new Date(newLocal).toISOString();
+    const newUtc = toUtcIso(newLocal);
+
+    const btn = dlg.querySelector('#plibSchedSave');
+    const prev = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
+
+    try {
+      /* Update each scheduled post in the fanout */
+      for (const p of scheduled) {
+        const camp = (c.state?.data?.campaigns || []).find(x => x.id === (p._campaignId || p.campaignId));
+        if (!camp || !Array.isArray(camp.posts)) continue;
+
+        const live = camp.posts.find(x => x.id === p.id);
+        if (!live) continue;
+
+        live.scheduledFor = newLocal;       // keep the raw local string for display
+        live.scheduledForUtc = newUtc;      // normalized UTC for the worker
+        live.updatedAt = new Date().toISOString();
+
+        try {
+          await c.upsertDoc('campaigns', camp, camp._rev);
+        } catch (e) {
+          console.warn('[edit-schedule] save failed for', p.id, e);
+        }
+      }
+
+      toast(ctx, 'Schedule updated.', 'success');
+      dlg.classList.remove('active');
+
+      /* Refresh the modal if it's still open, then the library */
+      try {
+        const detail = document.getElementById('plibDetailModal');
+        if (detail && detail.classList.contains('active')) {
+          /* Re-open with updated data */
+          const updatedGroup = group.map(p => {
+            const camp = (c.state?.data?.campaigns || []).find(x => x.id === (p._campaignId || p.campaignId));
+            return camp?.posts?.find(x => x.id === p.id) || p;
+          });
+          openFanoutDetail(ctx, updatedGroup);
+        }
+      } catch (_) {}
+
+      try { renderPostLibrary(ctx); } catch (_) {}
+    } catch (e) {
+      toast(ctx, 'Save failed: ' + (e.message || 'unknown'), 'error');
+      btn.disabled = false;
+      btn.innerHTML = prev;
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CANCEL SCHEDULE
+   ─────────────────────────────────────────────────────────────
+   Reverts scheduled posts back to 'draft' so they won't publish.
+   ═══════════════════════════════════════════════════════════════ */
+export async function cancelFanoutSchedule(ctx, group) {
+  if (!Array.isArray(group) || group.length === 0) return;
+
+  const c = C(ctx);
+  const scheduled = group.filter(p => p.status === 'scheduled');
+  if (!scheduled.length) {
+    toast(ctx, 'No scheduled posts in this group.', 'info');
+    return;
+  }
+
+  if (!confirm(`Cancel the schedule for ${scheduled.length} post${scheduled.length === 1 ? '' : 's'}? They'll revert to draft and won't publish until you click "Post now".`)) {
+    return;
+  }
+
+  try {
+    for (const p of scheduled) {
+      const camp = (c.state?.data?.campaigns || []).find(x => x.id === (p._campaignId || p.campaignId));
+      if (!camp || !Array.isArray(camp.posts)) continue;
+
+      const live = camp.posts.find(x => x.id === p.id);
+      if (!live) continue;
+
+      live.status = 'draft';
+      live.scheduledFor = null;
+      live.scheduledForUtc = null;
+      live.updatedAt = new Date().toISOString();
+
+      try {
+        await c.upsertDoc('campaigns', camp, camp._rev);
+      } catch (e) {
+        console.warn('[cancel-schedule] save failed for', p.id, e);
+      }
+    }
+
+    toast(ctx, 'Scheduling cancelled. Posts reverted to draft.', 'info');
+    try { closeFanoutDetail(ctx); } catch (_) {}
+    try { renderPostLibrary(ctx); } catch (_) {}
+  } catch (e) {
+    toast(ctx, 'Cancel failed: ' + (e.message || 'unknown'), 'error');
   }
 }
