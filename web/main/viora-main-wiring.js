@@ -424,7 +424,8 @@ export function attachEvents() {
   on($('projectAgreedTotal'), 'input', recalcInstallments);
   on($('projectInstallmentCount'), 'input', recalcInstallments);
 
-  on($('addTaskBtn'), 'click', () => d.Viora?.addTask?.());
+   on($('addTaskBtn'), 'click', () => d.Viora?.addTask?.());
+  on($('addWorklogBtn'), 'click', () => d.Viora?.addWorklog?.());
   on($('addInventoryBtn'), 'click', () => d.Viora?.addInventory?.());
   on($('addExpenseBtn'), 'click', () => d.Viora?.addExpense?.());
   on($('addPayrollBtn'), 'click', () => d.Viora?.addPayroll?.());
@@ -1323,6 +1324,16 @@ export function attachForms() {
     reminderMinutes: parseInt($('taskReminderMinutes')?.value) || 1440,
     price: parseFloat($('taskPrice')?.value) || 0,
     worklogId: $('taskWorklogId')?.value || null
+  })));
+
+  bindSubmit('worklogForm', () => safeSave(() => d.Viora?.saveWorklog?.({
+    projectId: $('worklogProject')?.value,
+    date: $('worklogDate')?.value,
+    activity: $('worklogActivity')?.value,
+    hours: parseFloat($('worklogHours')?.value) || 0,
+    rate: parseFloat($('worklogRate')?.value) || 0,
+    description: $('worklogDesc')?.value?.trim(),
+    isBilled: $('worklogBilled')?.checked || false,
   })));
 
   bindSubmit('inventoryForm', () => safeSave(() => d.Viora?.saveInventory?.({
