@@ -3319,7 +3319,7 @@ try {
     /* ═══════════════════════════════════════════════════════════
        PHASE 4 — buildVioraHandlers
        ═══════════════════════════════════════════════════════════ */
-    let _handlers = null;
+      let _handlers = null;
     try {
       _handlers = buildVioraHandlers({
         db, auth, ref, set, get, remove, push, update, query, limitToLast,
@@ -3339,6 +3339,7 @@ try {
         escapeHtml, normalizePhone, normalizeEmail, simpleHash, emailToId,
         generateLicenseKey, isMobile, debounce, pickFile, pickFileMobileSplit,
         upsertDoc, deleteDoc, queueOfflineMutation,
+        convertLeadToClientDeal,                    // ← ADD THIS LINE
         upsertPersonal, upsertTrackFlat, deletePersonal, deleteTrackFlat,
         EventBus, Orchester, Archiver, PushNotifications,
         AIRank, AIFiling, AIAnomaly,
