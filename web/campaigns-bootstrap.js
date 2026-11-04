@@ -247,6 +247,13 @@ window.callFn = callFn;
 window.VioraDb = db;
 window.VioraAuth = auth;
 
+/* Expose analytics renderer for inline handlers in campaigns.html
+   (campaignAnalyticsRefreshBtn, theme toggle). The orbit module
+   imports it directly — this line is only for the standalone buttons. */
+import('./main/campaign-analytics.js')
+  .then(m => { window.renderAnalyticsDashboard = m.renderAnalyticsDashboard; })
+  .catch(e => console.warn('[analytics] window expose failed', e));
+
 /* ═══════════════════════════════════════════════════════════════
    LOGO / SYNC HELPERS
    ═══════════════════════════════════════════════════════════════ */
@@ -572,8 +579,15 @@ onAuthStateChanged(auth, async (user) => {
      to the first module (Overview by default). */
   try {
     initOrbitShell({
+      /* Core */
       state, callFn, toast, upsertDoc, deleteDoc,
       openModal, closeModal,
+
+      /* Firebase SDK — needed by social accounts, competitor stats,
+         and any module that writes directly to RTDB */
+      db, ref, set, get, remove, update, push, onValue, P,
+
+      /* Renderers exposed to the shell */
       renderCampaigns,
       renderAccountsPanel,
       renderTrendRadar,
