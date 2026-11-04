@@ -472,6 +472,16 @@ async function initModules() {
     db, ref, set, P,
   });
 
+    /* ── Inbox (live listeners from worker-written Firebase nodes) ── */
+  initInbox({
+    state, callFn, toast,
+    db, ref, set, remove, push, onValue, P,
+  });
+  subscribeInbox();
+
+  /* ── Agent runner ── */
+  initAgentRunner({ state, callFn, toast });
+
   /* ── Campaign cron (background stats refresh) ── */
   initCampaignCron({
     state, callFn, upsertDoc,
@@ -577,6 +587,7 @@ onAuthStateChanged(auth, async (user) => {
   }
 
 
+  
   toast('Signed in to Campaigns', 'success');
 });
 
