@@ -1,23 +1,4 @@
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   training.js â€” VIORA Training Portal (Learner Side)
-   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   Powers training.html. Strictly learner-facing:
-     â€¢ Sign in / register (registration creates an access request)
-     â€¢ Wait for admin approval (subscribed, flips automatically)
-     â€¢ Browse courses, enroll, take lessons, submit quizzes
-     â€¢ View certificates awarded by the admin
-     â€¢ Read checklists and resources
 
-   Shares one Firebase RTDB with main.html (admin side). All paths
-   live under:  viora_data/orgs/viora/training/*
-
-   â˜… ISOLATED AUTH SESSION â˜…
-   Uses a NAMED Firebase App ("training") so its auth session is
-   completely independent from main.html's default app. Signing in
-   here does NOT affect main.html and vice versa.
-
-   No imports from main.js. Self-contained ES module.
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 import {
   initializeApp,
@@ -29,7 +10,8 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
-  signOut
+  signOut,
+  sendPasswordResetEmail   
 } from "firebase/auth";
 import {
   getDatabase,
@@ -42,9 +24,7 @@ import {
   off
 } from "firebase/database";
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   FIREBASE CONFIG â€” identical to main.js so both sides share one DB
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+
 const firebaseConfig = {
   apiKey: "AIzaSyC9gCBt-xR8t9n6rTGNvDZ5usUGiW-Dqxc",
   authDomain: "cliffclient-35ec5.firebaseapp.com",
@@ -313,11 +293,16 @@ async function doSignIn() {
 }
 
 async function doRegister() {
-  const name = ($("regName")?.value || "").trim();
-  const email = ($("regEmail")?.value || "").trim();
-  const phone = ($("regPhone")?.value || "").trim();
-  const password = $("regPassword")?.value || "";
-  const btn = $("registerBtn");
+ const name = $('regName')?.value?.trim() || '';
+const email = $('regEmail')?.value?.trim().toLowerCase() || '';
+const phone = $('regPhone')?.value?.trim() || '';
+const role = $('pRegRole')?.value || '';
+const password = $('regPassword')?.value || '';
+
+// Confirm password check
+if (typeof window.vioraConfirmPwMatch === 'function' && !window.vioraConfirmPwMatch()) {
+  return;
+}
 
   if (!name || !email || !password) {
     showLoginMessage("Name, email, and password are required.");
@@ -1872,3 +1857,66 @@ if (document.readyState === "loading") {
 } else {
   boot();
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   PASSWORD RESET EXPOSURE
+   ═══════════════════════════════════════════════════════════════ */
+window.vioraSendPasswordReset = async function (email) {
+  if (!email || typeof email !== 'string') {
+    return { ok: false, error: 'missing-email' };
+  }
+  try {
+    await sendPasswordResetEmail(auth, email.trim());
+    return { ok: true };
+  } catch (e) {
+    console.warn('[training] password reset failed:', e && e.code, e && e.message);
+    return { ok: false, error: (e && e.code) || (e && e.message) || 'unknown' };
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   WELCOME TOAST on ?welcome=1
+   ═══════════════════════════════════════════════════════════════ */
+(function () {
+  try {
+    const params = new URLSearchParams(location.search);
+    if (params.get('welcome') === '1') {
+      setTimeout(function () {
+        if (typeof toast === 'function') {
+          toast('Welcome to VIORA Academy!', 'success');
+        }
+      }, 800);
+    }
+  } catch (e) {}
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   PENDING PROGRESS ANIMATION
+   ═══════════════════════════════════════════════════════════════ */
+window.animatePendingProgress = function () {
+  const steps = document.querySelectorAll('.pending-step');
+  if (!steps.length) return;
+  setTimeout(() => steps[0]?.classList.add('done'), 300);
+  setTimeout(() => steps[1]?.classList.add('active'), 1200);
+};
+// Call on pending screen activation
+(function () {
+  const pending = document.getElementById('pendingScreen');
+  if (!pending) return;
+  const observer = new MutationObserver(() => {
+    if (pending.classList.contains('active')) {
+      window.animatePendingProgress();
+    }
+  });
+  observer.observe(pending, { attributes: true, attributeFilter: ['class'] });
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   DEFENSIVE ROLE INJECTION
+   Captures role from the form and makes it available globally
+   so any fetch/set call can pick it up.
+   ═══════════════════════════════════════════════════════════════ */
+window.vioraGetRegistrationRole = function () {
+  const el = document.getElementById('pRegRole');
+  return el && el.value ? el.value : '';
+};
