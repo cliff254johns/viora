@@ -1993,7 +1993,7 @@ export function renderPostLibrary(ctx) {
         </h3>
       </div>
 
-      <div class="plib-toolbar">
+          <div class="plib-toolbar">
         <div class="plib-filters" role="tablist">
           ${['all','published','scheduled','draft','compose-only','failed'].map(st => `
             <button type="button" class="plib-filter-btn ${_postLibState.filterStatus === st ? 'active' : ''}"
@@ -2015,6 +2015,9 @@ export function renderPostLibrary(ctx) {
           ${(_postLibState.filterStatus !== 'all' || _postLibState.filterPlatform !== 'all' || _postLibState.filterCampaign !== 'all' || _postLibState.search)
             ? `<button type="button" class="btn soft btn-sm" id="plibClear">Clear</button>`
             : ''}
+          <button type="button" class="btn primary btn-sm" id="plibImportBtn" title="Import an existing post by URL">
+            <i class="fa-solid fa-file-import"></i> Import post
+          </button>
         </div>
       </div>
 
@@ -2091,6 +2094,9 @@ export function renderPostLibrary(ctx) {
     _postLibState.search = '';
     renderPostLibrary(ctx);
   });
+
+  const importBtn = host.querySelector('#plibImportBtn');
+  if (importBtn) importBtn.addEventListener('click', () => openImportModal(ctx));
 
   /* ── Wire card clicks ── */
   host.querySelectorAll('[data-plib-card-idx]').forEach(card => {
@@ -2674,6 +2680,341 @@ function drawHistoryChart(ctx, bodyEl, post) {
     },
   });
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   IMPORT EXISTING POSTS
+   ─────────────────────────────────────────────────────────────
+   Lets the user paste one or more platform URLs and creates
+   post records in campaigns[].posts[] so the cron can fetch
+   their stats on the next tick.
+
+   Supported platforms for stats fetching (cron):
+     YouTube, TikTok
+
+   Other platforms will be imported but their stats stay empty
+   until worker routes are added.
+   ═══════════════════════════════════════════════════════════════ */
+
+const _IMPORT_PLATFORM_PATTERNS = [
+  { key: 'youtube',   label: 'YouTube',   icon: 'fa-brands fa-youtube',
+    test: /(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)/i,
+    color: '#ff0033' },
+  { key: 'tiktok',    label: 'TikTok',    icon: 'fa-brands fa-tiktok',
+    test: /tiktok\.com\/(?:@[^/]+\/video\/|video\/|t\/)/i,
+    color: '#ff0050' },
+  { key: 'instagram', label: 'Instagram', icon: 'fa-brands fa-instagram',
+    test: /instagram\.com\/(?:p|reel|tv)\//i,
+    color: '#e1306c' },
+  { key: 'facebook',  label: 'Facebook',  icon: 'fa-brands fa-facebook',
+    test: /facebook\.com\/.+\/(?:posts|videos)\/|fb\.watch\//i,
+    color: '#1877f2' },
+  { key: 'twitter',   label: 'X / Twitter', icon: 'fa-brands fa-x-twitter',
+    test: /(?:twitter\.com|x\.com)\/.+\/status\//i,
+    color: '#000000' },
+  { key: 'linkedin',  label: 'LinkedIn',  icon: 'fa-brands fa-linkedin',
+    test: /linkedin\.com\/(?:posts|feed\/update)\//i,
+    color: '#0a66c2' },
+  { key: 'threads',   label: 'Threads',   icon: 'fa-brands fa-threads',
+    test: /threads\.(?:net|com)\/@[^/]+\/post\//i,
+    color: '#000000' },
+  { key: 'pinterest', label: 'Pinterest', icon: 'fa-brands fa-pinterest',
+    test: /pinterest\.com\/pin\//i,
+    color: '#e60023' },
+];
+
+function _detectPlatformFromUrl(url) {
+  const s = String(url || '').trim();
+  if (!s) return null;
+  for (const p of _IMPORT_PLATFORM_PATTERNS) {
+    if (p.test.test(s)) return p;
+  }
+  return null;
+}
+
+export function openImportModal(ctx) {
+  const c = C(ctx);
+  const campaigns = Array.isArray(c.state?.data?.campaigns) ? c.state.data.campaigns : [];
+
+  if (!campaigns.length) {
+    toast(ctx, 'Create a campaign first — imported posts need a home.', 'warning');
+    try { window.Orbit?.navigate?.('campaigns'); } catch (_) {}
+    return;
+  }
+
+  let modal = document.getElementById('plibImportModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'plibImportModal';
+    document.body.appendChild(modal);
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal || e.target.closest('[data-plib-import-close]')) {
+        modal.classList.remove('active');
+      }
+    });
+  }
+
+  const campaignOptions = campaigns
+    .filter(cc => cc && cc.id)
+    .sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')))
+    .map(cc => `<option value="${esc(cc.id)}">${esc(cc.name || 'Untitled')}</option>`)
+    .join('');
+
+  modal.innerHTML = `
+    <div class="modal large" style="max-width:620px;">
+      <div class="modalhead">
+        <h3><i class="fa-solid fa-file-import"></i> Import existing posts</h3>
+        <button type="button" class="close" data-plib-import-close>×</button>
+      </div>
+
+      <div class="notice" style="margin-bottom:14px;">
+        <strong>Import live posts by URL.</strong> Once imported, live stats
+        for <strong>YouTube</strong> and <strong>TikTok</strong> posts refresh every 3 minutes.
+        Other platforms import fine but won't get stats until their worker
+        endpoints are added.
+      </div>
+
+      <div class="field">
+        <label>Post URLs * <span class="muted" style="font-weight:400;">(one per line)</span></label>
+        <textarea id="plibImportUrls" rows="6" placeholder="https://www.youtube.com/watch?v=abc123&#10;https://www.tiktok.com/@viora/video/7234567890123"></textarea>
+        <div class="small muted" style="margin-top:4px;">
+          Supported: YouTube, TikTok, Instagram, Facebook, X, LinkedIn, Threads, Pinterest
+        </div>
+      </div>
+
+      <div class="formgrid">
+        <div class="field">
+          <label>Assign to campaign *</label>
+          <select id="plibImportCampaign">${campaignOptions}</select>
+        </div>
+        <div class="field">
+          <label>Post date <span class="muted" style="font-weight:400;">(optional)</span></label>
+          <input type="date" id="plibImportDate" />
+          <div class="small muted" style="margin-top:4px;">
+            Leave blank to use today. YouTube/TikTok will auto-correct this on the first stats fetch.
+          </div>
+        </div>
+      </div>
+
+      <div id="plibImportPreview" style="margin-top:14px;"></div>
+
+      <div class="form-actions" style="margin-top:18px;">
+        <button type="button" class="btn soft" data-plib-import-close>Cancel</button>
+        <button type="button" class="btn primary" id="plibImportConfirm">
+          <i class="fa-solid fa-check"></i> Import
+        </button>
+      </div>
+    </div>
+  `;
+
+  const urlsEl = modal.querySelector('#plibImportUrls');
+  const preview = modal.querySelector('#plibImportPreview');
+  const confirmBtn = modal.querySelector('#plibImportConfirm');
+
+  /* Live preview: detect platforms as the user types */
+  const refreshPreview = () => {
+    const raw = String(urlsEl.value || '').trim();
+    if (!raw) {
+      preview.innerHTML = '';
+      confirmBtn.disabled = false;
+      return;
+    }
+    const lines = raw.split('\n').map(s => s.trim()).filter(Boolean);
+    let validCount = 0;
+    let unknownCount = 0;
+    const rows = lines.map((url, i) => {
+      const p = _detectPlatformFromUrl(url);
+      if (!p) {
+        unknownCount++;
+        return `<div class="plib-import-row plib-import-row-bad">
+          <i class="fa-solid fa-circle-question" style="color:var(--warn);"></i>
+          <span style="font-family:monospace;font-size:10.5px;word-break:break-all;">${esc(url.slice(0, 80))}${url.length > 80 ? '…' : ''}</span>
+          <span class="badge badge-warn" style="margin-left:auto;font-size:9px;">Unknown</span>
+        </div>`;
+      }
+      validCount++;
+      return `<div class="plib-import-row">
+        <i class="${p.icon}" style="color:${p.color};"></i>
+        <span style="font-family:monospace;font-size:10.5px;word-break:break-all;">${esc(url.slice(0, 80))}${url.length > 80 ? '…' : ''}</span>
+        <span class="badge badge-purple" style="margin-left:auto;font-size:9px;">${esc(p.label)}</span>
+      </div>`;
+    }).join('');
+
+    preview.innerHTML = `
+      <div class="plib-import-summary">
+        <strong>${validCount}</strong> valid · <strong>${unknownCount}</strong> unrecognized
+      </div>
+      <div style="max-height:200px;overflow-y:auto;margin-top:6px;">${rows}</div>
+    `;
+
+    /* Can import if at least one valid */
+    confirmBtn.disabled = validCount === 0;
+  };
+
+  urlsEl.addEventListener('input', refreshPreview);
+  refreshPreview();
+
+  confirmBtn.addEventListener('click', async () => {
+    const raw = String(urlsEl.value || '').trim();
+    if (!raw) { toast(ctx, 'Paste at least one URL.', 'warning'); return; }
+
+    const campaignId = modal.querySelector('#plibImportCampaign').value;
+    const dateValue = modal.querySelector('#plibImportDate').value;
+
+    const camp = campaigns.find(x => x.id === campaignId);
+    if (!camp) { toast(ctx, 'Campaign not found.', 'error'); return; }
+
+    const urls = raw.split('\n').map(s => s.trim()).filter(Boolean);
+    const imported = [];
+    const skipped = [];
+
+    for (const url of urls) {
+      const platform = _detectPlatformFromUrl(url);
+      if (!platform) { skipped.push({ url, reason: 'Unrecognized URL' }); continue; }
+      imported.push({ url, platform: platform.key });
+    }
+
+    if (!imported.length) {
+      toast(ctx, 'No valid URLs to import.', 'error');
+      return;
+    }
+
+    const prevBtn = confirmBtn.innerHTML;
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Importing…';
+
+    try {
+      /* Build the new posts array and merge into the campaign */
+      const existingPosts = Array.isArray(camp.posts) ? camp.posts.slice() : [];
+      const nowIso = new Date().toISOString();
+      const publishedAt = dateValue
+        ? new Date(dateValue + 'T00:00:00').toISOString()
+        : nowIso;
+
+      const newPosts = imported.map(({ url, platform }) => ({
+        id: 'imported-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6),
+        fanoutId: null,
+        campaignId: camp.id,
+        platform,
+        pillar: 'educational',
+        caption: '',
+        hashtags: [],
+        imageBase64: null,
+        imageMime: 'image/png',
+        imageWidth: null,
+        imageHeight: null,
+        imagePrompt: null,
+        imageModel: null,
+        imageSource: null,
+        imageSeed: null,
+        utm: {},
+        url,
+        status: 'published',
+        mode: 'auto',
+        scheduledFor: null,
+        scheduledForUtc: null,
+        publishedAt,
+        externalId: null,
+        composeUrl: null,
+        lastError: null,
+        stats: null,
+        statsUpdatedAt: null,
+        statsHistory: [],
+        accountHandle: null,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+        createdBy: c.state?.operator?.email || 'imported',
+        source: 'imported',
+      }));
+
+      camp.posts = [...existingPosts, ...newPosts];
+      camp.updatedAt = nowIso;
+
+      await c.upsertDoc('campaigns', camp, camp._rev);
+
+      /* Close the modal */
+      modal.classList.remove('active');
+      urlsEl.value = '';
+      preview.innerHTML = '';
+
+      toast(
+        `Imported ${newPosts.length} post${newPosts.length === 1 ? '' : 's'}.${skipped.length ? ` ${skipped.length} skipped.` : ''}`,
+        'success'
+      );
+
+      /* Re-render the library so the new posts appear */
+      try { renderPostLibrary(ctx); } catch (e) { console.warn('[import] render failed', e); }
+
+      /* Kick off an immediate stats fetch for the imports (best-effort) */
+      setTimeout(async () => {
+        try {
+          const callFn = c.callFn;
+          if (typeof callFn !== 'function') return;
+
+          const importable = newPosts
+            .filter(p => p.platform === 'youtube' || p.platform === 'tiktok')
+            .map(p => ({ id: p.id, platform: p.platform, url: p.url, externalId: null }));
+
+          if (!importable.length) return;
+
+          const res = await callFn('social/stats/batch', { posts: importable });
+          if (!res || !res.ok || !res.results) return;
+
+          /* Write stats back into the campaign */
+          const freshCamp = (c.state?.data?.campaigns || []).find(x => x.id === camp.id);
+          if (!freshCamp) return;
+
+          let touched = false;
+          for (const p of freshCamp.posts || []) {
+            const r = res.results[p.id];
+            if (!r || r.ok === false || !r.views && !r.likes && !r.comments) continue;
+            p.stats = {
+              views: r.views ?? null,
+              likes: r.likes ?? null,
+              comments: r.comments ?? null,
+              shares: r.shares ?? null,
+              followers: r.followers ?? null,
+            };
+            p.statsUpdatedAt = new Date().toISOString();
+            p.statsSource = r.source || null;
+            if (r.publishedAt && !p.publishedAt) p.publishedAt = r.publishedAt;
+            if (r.title && !p.caption) p.caption = r.title;
+            if (r.thumbnail && !p.imageBase64) {
+              /* We don't download the thumbnail — just store the URL for reference */
+              p.thumbnailUrl = r.thumbnail;
+            }
+            touched = true;
+          }
+
+          if (touched) {
+            freshCamp.updatedAt = new Date().toISOString();
+            await c.upsertDoc('campaigns', freshCamp, freshCamp._rev);
+            try { renderPostLibrary(ctx); } catch (_) {}
+            toast(ctx, 'Stats loaded for imported posts.', 'success');
+          }
+        } catch (e) {
+          console.warn('[import] initial stats fetch failed:', e);
+          /* Non-fatal — the cron will pick these up on the next 3-min tick */
+        }
+      }, 800);
+
+    } catch (e) {
+      console.error('[import] save failed', e);
+      toast(ctx, 'Import failed: ' + (e.message || 'unknown'), 'error');
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = prevBtn;
+    }
+  });
+
+  modal.classList.add('active');
+
+  /* Focus the textarea when opened */
+  setTimeout(() => {
+    try { urlsEl.focus(); } catch (_) {}
+  }, 100);
+}
+
 
 /* ── Draw compare chart ── */
 function drawCompareChart(ctx, bodyEl, group, mode) {
