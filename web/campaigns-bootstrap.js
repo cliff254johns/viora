@@ -470,10 +470,11 @@ async function initModules() {
     getAccountForPlatformSync: (key) => getAccountForPlatformSync(key),
   });
 
+  
   /* ── Campaign analytics ── */
   initCampaignAnalytics({
     state, callFn, toast,
-    db, ref, set, P,
+    db, ref, set, remove, update, get, onValue, P,
   });
 
     /* ── Inbox (live listeners from worker-written Firebase nodes) ── */
