@@ -29,6 +29,8 @@ import {
   renderIntegrations,
   renderSettings,
   renderAdmin,
+  renderAccountsModule,
+  renderCampaignsModule,
 } from './orbit-modules.js';
 
 let _ctx = null;
@@ -78,11 +80,11 @@ const MODULE_MAP = (() => {
 
 const RENDERERS = {
   overview: renderOverview,
-  accounts: null,                 // handled by campaign-accounts.js
+  accounts: renderAccountsModule,
   content: renderContentStudio,
   calendar: renderCalendar,
   publishing: renderPublishingCentre,
-  campaigns: null,                // handled by render-marketplace.js
+  campaigns: renderCampaignsModule,
   creative: renderCreativeStudio,
   inbox: renderInbox,
   crm: renderCRM,
@@ -227,24 +229,6 @@ export async function navigate(key, opts = {}) {
   /* Render */
   const view = document.getElementById('view');
   if (!view) return;
-
-  /* Two special modules delegated to existing renderers */
-  if (key === 'campaigns') {
-    view.innerHTML = '';
-    try {
-      ctx.renderCampaigns?.();
-      ctx.renderAccountsPanel?.();
-      ctx.renderTrendRadar?.();
-      ctx.renderDraftLibrary?.();
-      ctx.renderPromptLibrary?.();
-    } catch (e) { console.warn('[orbit] campaign render failed', e); }
-    return;
-  }
-  if (key === 'accounts') {
-    view.innerHTML = '';
-    try { ctx.renderAccountsPanel?.(); } catch (e) { console.warn('[orbit] accounts render failed', e); }
-    return;
-  }
 
   /* Standard renderers */
   const renderer = RENDERERS[key];
