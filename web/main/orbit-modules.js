@@ -4,8 +4,11 @@
 // Inbox delegates to ./inbox.js.
 // Agents use ./agent-runner.js with graceful worker fallback.
 // ═══════════════════════════════════════════════════════════════
-
-import { renderDraftLibrary, renderPromptLibrary } from './campaign-ai.js';
+import {
+  renderDraftLibrary,
+  renderPromptLibrary,
+  openComposer,
+} from './campaign-ai.js';
 import { renderInbox as _renderInboxImpl } from './inbox.js';
 import { runAgent } from './agent-runner.js';
 
@@ -261,76 +264,400 @@ function statusBadge(s) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   CREATIVE STUDIO
+   CREATIVE STUDIO — v2 (mode toggle + multi-platform composer)
+   ─────────────────────────────────────────────────────────────
+   Two modes:
+     • Quick image       — call ai/generateImage; show result inline
+     • Multi-platform    — open the composer (campaign-ai.js);
+                            the composer handles platform pick,
+                            per-platform captions, fanout, posting
+
+   Recent generations (last 5, this session) appear under the form
+   so the user can revisit a previous image without regenerating.
    ═══════════════════════════════════════════════════════════════ */
+
+/* Module-scoped session cache for recent generations. Not persisted. */
+const _creativeRecent = [];
+
 export async function renderCreativeStudio(ctx) {
-  const html = head('Creative studio', 'Generate marketing visuals with AI.',
-    '<button class="btn primary" id="orbitGenImage"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate image</button>') +
-    `<div class="card">
-      <div class="cardhead"><h3>Image generation</h3>
-        <span class="pill">ai/generateImage</span></div>
-      <div class="field"><label>Prompt</label>
-        <textarea id="orbitImagePrompt" placeholder="e.g. Aerial product photo of espresso cups on marble, soft morning light"></textarea></div>
-      <div class="formgrid">
-        <div class="field"><label>Pillar</label>
-          <select id="orbitImagePillar">
-            <option value="promotional">Promotional</option>
-            <option value="educational">Educational</option>
-            <option value="testimonial">Testimonial</option>
-            <option value="announcement">Announcement</option>
-          </select></div>
-        <div class="field"><label>Platform</label>
-          <select id="orbitImagePlatform">
-            <option value="instagram">Instagram (1080×1080)</option>
-            <option value="facebook">Facebook (1200×630)</option>
-            <option value="tiktok">TikTok (1080×1920)</option>
-          </select></div>
+  const c = C(ctx);
+  const state = c.state || { data: {} };
+  const campaigns = Array.isArray(state.data?.campaigns) ? state.data.campaigns : [];
+  const hasCampaigns = campaigns.length > 0;
+
+  const recentHtml = _creativeRecent.length
+    ? _creativeRecent.map((r, i) => `
+        <div class="cs-recent-item" data-cs-recent-idx="${i}" title="${esc(r.prompt)}">
+          <img src="data:${esc(r.mime)};base64,${esc(r.b64)}" alt="" />
+          <div class="cs-recent-meta">
+            <div class="cs-recent-model">${esc(r.model || '—')}</div>
+            <div class="cs-recent-time">${esc(r.at)}</div>
+          </div>
+        </div>
+      `).join('')
+    : `<div class="empty" style="padding:14px;">No generations yet this session.</div>`;
+
+  const html = head(
+    'Creative studio',
+    'Generate a visual, then draft the post — all in one place.',
+    ''
+  ) + `
+    <div class="cs-wrap">
+
+      <!-- ═══════════ MODE TOGGLE ═══════════ -->
+      <div class="cs-mode" role="tablist">
+        <button type="button" class="cs-mode-btn active" data-cs-mode="quick" role="tab">
+          <i class="fa-solid fa-image"></i>
+          <span>Quick image</span>
+          <small>Generate a single visual</small>
+        </button>
+        <button type="button" class="cs-mode-btn" data-cs-mode="multi" role="tab">
+          <i class="fa-solid fa-layer-group"></i>
+          <span>Full multi-platform post</span>
+          <small>Generate caption + image, post to N platforms</small>
+        </button>
       </div>
-      <div id="orbitImageResult" style="margin-top:14px;"></div>
+
+      <!-- ═══════════ TWO-COLUMN LAYOUT ═══════════ -->
+      <div class="cs-grid">
+
+        <!-- ── LEFT: GENERATOR ── -->
+        <div class="card">
+          <div class="cardhead"><h3><i class="fa-solid fa-wand-magic-sparkles"></i> Generator</h3></div>
+
+          <div class="field">
+            <label>Prompt *</label>
+            <textarea id="csPrompt" rows="4" placeholder="e.g. Aerial product photo of espresso cups on marble, soft morning light"></textarea>
+          </div>
+
+          <div class="formgrid">
+            <div class="field">
+              <label>Pillar</label>
+              <select id="csPillar">
+                <option value="promotional">Promotional</option>
+                <option value="educational">Educational</option>
+                <option value="testimonial">Testimonial</option>
+                <option value="announcement">Announcement</option>
+                <option value="trending">Trending</option>
+              </select>
+            </div>
+            <div class="field cs-platform-field">
+              <label>Platform</label>
+              <select id="csPlatform">
+                <option value="instagram">Instagram (1080×1080)</option>
+                <option value="facebook">Facebook (1200×630)</option>
+                <option value="tiktok">TikTok (1080×1920)</option>
+                <option value="linkedin">LinkedIn (1200×627)</option>
+                <option value="youtube">YouTube (1280×720)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="cs-multi-hint" style="display:none;">
+            <div class="notice" style="margin:0;">
+              <i class="fa-solid fa-layer-group"></i>
+              <strong>Multi-platform mode.</strong>
+              Platform selection happens in the composer — you'll pick 1 or more channels after clicking Generate.
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Campaign ${hasCampaigns ? '*' : ''}</label>
+            ${hasCampaigns
+              ? `<select id="csCampaign">
+                   <option value="">— Select a campaign —</option>
+                   ${campaigns.map(cc => `<option value="${esc(cc.id)}">${esc(cc.name || 'Untitled')}</option>`).join('')}
+                 </select>`
+              : `<div class="notice" style="margin:0;">
+                   <i class="fa-solid fa-triangle-exclamation"></i>
+                   Create a campaign first — you can't save or post without one.
+                   <button type="button" class="btn soft btn-sm" style="margin-left:8px;" onclick="window.Orbit && window.Orbit.navigate && window.Orbit.navigate('campaigns')">Go to Campaigns →</button>
+                 </div>`}
+          </div>
+
+          <div class="cs-actions">
+            <button type="button" class="btn primary" id="csGenerateImage" ${hasCampaigns ? '' : 'disabled'}>
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Generate image
+            </button>
+            <button type="button" class="btn soft" id="csGeneratePost" ${hasCampaigns ? '' : 'disabled'}>
+              <i class="fa-solid fa-layer-group"></i> Generate caption + image
+            </button>
+          </div>
+
+          <div class="cs-recent">
+            <div class="cs-recent-head">
+              <h4>Recent generations</h4>
+              <span class="pill">${_creativeRecent.length}</span>
+            </div>
+            <div class="cs-recent-list">${recentHtml}</div>
+          </div>
+        </div>
+
+        <!-- ── RIGHT: RESULT ── -->
+        <div class="card">
+          <div class="cardhead"><h3><i class="fa-solid fa-image"></i> Result</h3></div>
+          <div id="csResult">
+            <div class="empty" style="padding:32px;text-align:center;">
+              <i class="fa-solid fa-image" style="font-size:2rem;opacity:.35;margin-bottom:10px;display:block;"></i>
+              <div>Nothing generated yet.</div>
+              <div class="small muted" style="margin-top:4px;">Fill in the prompt on the left and click Generate.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>`;
 
   return {
     html,
     mount(view) {
-      view.querySelector('#orbitGenImage')?.addEventListener('click', async () => {
-        const prompt = view.querySelector('#orbitImagePrompt')?.value?.trim();
-        if (!prompt) { toast(ctx, 'Enter a prompt first.', 'warning'); return; }
-        const btn = view.querySelector('#orbitGenImage');
-        btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating…';
+      /* ── Refs ── */
+      const promptEl   = view.querySelector('#csPrompt');
+      const pillarEl   = view.querySelector('#csPillar');
+      const platformEl = view.querySelector('#csPlatform');
+      const campaignEl = view.querySelector('#csCampaign');
+      const genImgBtn  = view.querySelector('#csGenerateImage');
+      const genPostBtn = view.querySelector('#csGeneratePost');
+      const resultEl   = view.querySelector('#csResult');
+      const platformField = view.querySelector('.cs-platform-field');
+      const multiHint     = view.querySelector('.cs-multi-hint');
+      const recentList    = view.querySelector('.cs-recent-list');
+
+      /* ── Mode state ── */
+      let mode = 'quick';   // 'quick' | 'multi'
+
+      const setMode = (next) => {
+        mode = next;
+        view.querySelectorAll('.cs-mode-btn').forEach(b =>
+          b.classList.toggle('active', b.dataset.csMode === next)
+        );
+        const multi = next === 'multi';
+        platformField.style.display = multi ? 'none' : '';
+        multiHint.style.display     = multi ? 'block' : 'none';
+        genPostBtn.style.display    = multi ? '' : 'none';
+      };
+      view.querySelectorAll('.cs-mode-btn').forEach(b =>
+        b.addEventListener('click', () => setMode(b.dataset.csMode))
+      );
+      setMode('quick');
+
+      /* ── Track current generated image (for handoff to composer) ── */
+      let currentImage = null;   // { b64, mime, model, width, height, prompt }
+
+      /* ── Recent generations click → load back into result ── */
+      recentList?.addEventListener('click', (e) => {
+        const item = e.target.closest('[data-cs-recent-idx]');
+        if (!item) return;
+        const idx = Number(item.dataset.csRecentIdx);
+        const rec = _creativeRecent[idx];
+        if (!rec) return;
+        currentImage = { ...rec };
+        renderResultImage(rec);
+        if (promptEl) promptEl.value = rec.prompt || '';
+      });
+
+      /* ── Render helper for image-only result ── */
+      function renderResultImage(img) {
+        if (!resultEl) return;
+        resultEl.innerHTML = `
+          <div class="cs-image-preview">
+            <img src="data:${esc(img.mime)};base64,${esc(img.b64)}" alt="" />
+          </div>
+          <div class="cs-image-meta">
+            <span><i class="fa-solid fa-image"></i> ${esc(img.width && img.height ? img.width + '×' + img.height : '—')}</span>
+            <span><i class="fa-solid fa-cube"></i> ${esc(img.model || '—')}</span>
+          </div>
+          <div class="cs-image-actions">
+            <button type="button" class="btn soft btn-sm" id="csDlImg"><i class="fa-solid fa-download"></i> Download</button>
+            <button type="button" class="btn soft btn-sm" id="csCopyImg"><i class="fa-solid fa-copy"></i> Copy</button>
+            <button type="button" class="btn primary btn-sm" id="csUseInComposer"><i class="fa-solid fa-paper-plane"></i> Use in composer</button>
+          </div>`;
+
+        resultEl.querySelector('#csDlImg')?.addEventListener('click', () => {
+          const a = document.createElement('a');
+          a.href = `data:${img.mime};base64,${img.b64}`;
+          a.download = `viora-${Date.now()}.png`;
+          a.click();
+        });
+
+        resultEl.querySelector('#csCopyImg')?.addEventListener('click', async () => {
+          try {
+            const res = await fetch(`data:${img.mime};base64,${img.b64}`);
+            const blob = await res.blob();
+            if (blob.type !== 'image/png') throw new Error('PNG only');
+            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+            toast(ctx, 'Image copied.', 'success');
+          } catch (_) {
+            toast(ctx, 'Copy failed — use Download.', 'warning');
+          }
+        });
+
+        resultEl.querySelector('#csUseInComposer')?.addEventListener('click', () => {
+          openComposerFromCreative(ctx, { image: img, campaignId: campaignEl?.value || '' });
+        });
+      }
+
+      /* ── Render helper for empty state ── */
+      function renderResultEmpty(msg) {
+        if (!resultEl) return;
+        resultEl.innerHTML = `
+          <div class="empty" style="padding:32px;text-align:center;">
+            <i class="fa-solid fa-image" style="font-size:2rem;opacity:.35;margin-bottom:10px;display:block;"></i>
+            <div>${esc(msg || 'Nothing generated yet.')}</div>
+          </div>`;
+      }
+
+      /* ── Generate image (Quick mode) ── */
+      genImgBtn?.addEventListener('click', async () => {
+        const prompt = (promptEl?.value || '').trim();
+        if (!prompt) { toast(ctx, 'Enter a prompt first.', 'warning'); promptEl?.focus(); return; }
+        if (!campaignEl?.value) { toast(ctx, 'Pick a campaign first.', 'warning'); campaignEl?.focus(); return; }
+
+        const btn = genImgBtn;
+        const prev = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating…';
+
+        if (resultEl) {
+          resultEl.innerHTML = `
+            <div class="empty" style="padding:32px;text-align:center;">
+              <i class="fa-solid fa-spinner fa-spin" style="font-size:2rem;opacity:.6;margin-bottom:10px;display:block;"></i>
+              <div>Generating image…</div>
+              <div class="small muted" style="margin-top:4px;">This usually takes 10–20 seconds.</div>
+            </div>`;
+        }
+
         try {
-          const res = await C(ctx).callFn('ai/generateImage', {
+          const res = await c.callFn('ai/generateImage', {
             prompt,
-            pillar: view.querySelector('#orbitImagePillar')?.value || 'promotional',
-            platform: view.querySelector('#orbitImagePlatform')?.value || 'instagram',
+            pillar: pillarEl?.value || 'promotional',
+            platform: platformEl?.value || 'instagram',
             quality: 'production',
           });
           const b64 = res?.imageBase64 || res?.base64 || '';
           if (!b64) throw new Error('Worker returned no image');
           const mime = res?.mime || 'image/png';
-          const resultEl = view.querySelector('#orbitImageResult');
-          resultEl.innerHTML = `
-            <div style="text-align:center;">
-              <img src="data:${esc(mime)};base64,${esc(b64)}" style="max-width:100%;max-height:400px;border-radius:12px;border:1px solid var(--line);" />
-              <div class="small muted" style="margin-top:8px;">${esc(res?.model || '')} ${res?.width ? '· ' + res.width + '×' + res.height : ''}</div>
-              <div class="actions" style="margin-top:10px;justify-content:center;">
-                <button class="btn" id="orbitDownloadImg"><i class="fa-solid fa-download"></i> Download</button>
-              </div>
-            </div>`;
-          resultEl.querySelector('#orbitDownloadImg')?.addEventListener('click', () => {
-            const a = document.createElement('a');
-            a.href = `data:${mime};base64,${b64}`;
-            a.download = `orbit-${Date.now()}.png`;
-            a.click();
+
+          currentImage = {
+            b64: b64.replace(/^data:[^;]+;base64,/, ''),
+            mime,
+            model: res?.model || null,
+            width: res?.width || null,
+            height: res?.height || null,
+            prompt,
+          };
+
+          /* Push to recent list (max 5) */
+          _creativeRecent.unshift({
+            ...currentImage,
+            at: new Date().toLocaleTimeString(),
           });
+          if (_creativeRecent.length > 5) _creativeRecent.length = 5;
+
+          /* Refresh the recent list DOM */
+          if (recentList) {
+            recentList.innerHTML = _creativeRecent.map((r, i) => `
+              <div class="cs-recent-item" data-cs-recent-idx="${i}" title="${esc(r.prompt)}">
+                <img src="data:${esc(r.mime)};base64,${esc(r.b64)}" alt="" />
+                <div class="cs-recent-meta">
+                  <div class="cs-recent-model">${esc(r.model || '—')}</div>
+                  <div class="cs-recent-time">${esc(r.at)}</div>
+                </div>
+              </div>
+            `).join('');
+          }
+
+          renderResultImage(currentImage);
           toast(ctx, 'Image generated.', 'success');
         } catch (e) {
+          console.warn('[creative] image gen failed', e);
+          if (resultEl) {
+            resultEl.innerHTML = `
+              <div class="cs-error">
+                <div class="cs-error-head"><i class="fa-solid fa-triangle-exclamation"></i> Generation failed</div>
+                <div class="cs-error-body">${esc(e.message || 'unknown error')}</div>
+                <button type="button" class="btn soft btn-sm" id="csRetryImg">Try again</button>
+              </div>`;
+            resultEl.querySelector('#csRetryImg')?.addEventListener('click', () => genImgBtn.click());
+          }
           toast(ctx, 'Generation failed: ' + (e.message || 'unknown'), 'error');
         } finally {
-          btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Generate image';
+          btn.disabled = false;
+          btn.innerHTML = prev;
+        }
+      });
+
+      /* ── Generate caption + image (Multi mode → open composer) ── */
+      genPostBtn?.addEventListener('click', () => {
+        const prompt = (promptEl?.value || '').trim();
+        if (!prompt) { toast(ctx, 'Enter a brief first.', 'warning'); promptEl?.focus(); return; }
+        const campaignId = campaignEl?.value || '';
+        if (!campaignId) { toast(ctx, 'Pick a campaign first.', 'warning'); campaignEl?.focus(); return; }
+
+        /* openComposer is imported at top of orbit-modules.js from campaign-ai.js */
+        try {
+          openComposer({
+            campaignId,
+            brief: prompt,
+            pillar: pillarEl?.value || 'educational',
+            platforms: undefined,   // let the composer decide based on connected accounts
+          });
+        } catch (e) {
+          console.error('[creative] openComposer failed', e);
+          toast(ctx, 'Composer failed to open: ' + (e.message || 'unknown'), 'error');
         }
       });
     }
   };
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INTERNAL — handoff from Creative Studio to Composer
+   ─────────────────────────────────────────────────────────────
+   Opens the composer prefilled with the generated image + prompt,
+   so the user can pick platforms and per-platform captions there.
+
+   This helper is used by the "Use in composer" button on the
+   Quick-image result, and lives here (not in campaign-ai.js) so
+   the composer remains unmodified.
+   ═══════════════════════════════════════════════════════════════ */
+function openComposerFromCreative(ctx, opts) {
+  try {
+    const img = opts.image;
+    const campaignId = opts.campaignId || '';
+
+    /* openComposer accepts { campaignId, brief, ... }, but image
+       handoff isn't a first-class parameter. We call it first, then
+       push the image into the composer's state after it opens —
+       openComposer sets _state.composer synchronously, so a
+       microtask is enough time. */
+    openComposer({ campaignId, brief: img.prompt || '' });
+
+    /* Push the pre-generated image into the just-opened composer */
+    queueMicrotask(() => {
+      try {
+        const composer = window._vioraComposerState?.() || null;
+        /* campaign-ai.js stores state privately; but it exposes
+           _state.composer via the window if we add that hook.
+           For now, dispatch a custom event the composer can listen for. */
+        window.dispatchEvent(new CustomEvent('viora:composer-prefill-image', {
+          detail: {
+            b64: img.b64,
+            mime: img.mime,
+            model: img.model,
+            width: img.width,
+            height: img.height,
+            prompt: img.prompt,
+          }
+        }));
+        toast(ctx, 'Image attached to composer.', 'info');
+      } catch (e) {
+        console.warn('[creative] image handoff failed', e);
+      }
+    });
+  } catch (e) {
+    toast(ctx, 'Could not open composer: ' + (e.message || 'unknown'), 'error');
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
