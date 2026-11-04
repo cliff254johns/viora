@@ -431,25 +431,83 @@ function _openAccountEditor(ctx, platformKey, existing, PLATFORMS) {
 async function _verifyAccount(ctx, id) {
   const db = C(ctx).db, ref = C(ctx).ref, get = C(ctx).get, set = C(ctx).set, P = C(ctx).P;
   const callFn = C(ctx).callFn;
+  const state = C(ctx).state;
+
   if (typeof callFn !== 'function') { toast(ctx, 'Worker not available.', 'warning'); return; }
+
+  const path = P('socialAccounts/' + id);
+  console.log('[verify] path:', path);
+  console.log('[verify] db ready:', !!db, 'ref ready:', !!ref, 'set ready:', !!set);
+
   try {
-    const snap = await get(ref(db, P('socialAccounts/' + id)));
+    const snap = await get(ref(db, path));
     if (!snap.exists()) { toast(ctx, 'Account not found.', 'error'); return; }
     const account = snap.val();
+    console.log('[verify] account loaded:', { platform: account.platform, handle: account.handle, followers: account.followers });
+
     const res = await callFn('socialStats', { platform: account.platform, url: account.profileUrl });
-    if (res && res.ok !== false && res.followers != null) {
-      await set(ref(db, P('socialAccounts/' + id)), {
-        ...account,
-        followers: res.followers,
-        followersUpdatedAt: new Date().toISOString(),
-        verified: true,
-      });
-      toast(ctx, `Verified — ${Number(res.followers).toLocaleString()} followers.`, 'success');
-      /* subscriber re-renders */
-    } else {
-      toast(ctx, res?.error || 'Verification returned no data.', 'warning');
+    console.log('[verify] worker response:', res);
+
+    if (!res || res.ok === false) {
+      toast(ctx, res?.error || 'Worker returned no data.', 'warning');
+      return;
     }
-  } catch (e) { toast(ctx, 'Verify failed: ' + e.message, 'error'); }
+
+    if (res.followers == null) {
+      toast(ctx, 'Worker returned no follower count.', 'warning');
+      return;
+    }
+
+    const updated = {
+      ...account,
+      followers: res.followers,
+      followersUpdatedAt: new Date().toISOString(),
+      verified: true,
+    };
+
+    /* ── Write to Firebase ── */
+    try {
+      await set(ref(db, path), updated);
+      console.log('[verify] WRITE SUCCESS:', { followers: res.followers });
+
+      /* Verify the write by reading back */
+      const verify = await get(ref(db, path));
+      const readBack = verify.val();
+      console.log('[verify] read-back:', { followers: readBack?.followers, verified: readBack?.verified });
+
+      if (readBack?.followers !== res.followers) {
+        console.warn('[verify] READ-BACK MISMATCH — write may have been rejected by Firebase rules');
+        toast(ctx, 'Saved locally but Firebase rejected the write. Check rules.', 'warning');
+      }
+    } catch (writeErr) {
+      console.error('[verify] WRITE FAILED:', writeErr);
+      console.error('[verify] writeErr.code:', writeErr?.code);
+      console.error('[verify] writeErr.message:', writeErr?.message);
+      toast(ctx, 'Save to Firebase failed: ' + (writeErr.message || 'unknown'), 'error');
+      return;
+    }
+
+    /* ── Update local state so the render picks it up immediately ── */
+    if (state?.data?.socialAccounts) {
+      state.data.socialAccounts = state.data.socialAccounts.map(a =>
+        a && a.id === id ? { ...a, ...updated } : a
+      );
+      console.log('[verify] state updated:', state.data.socialAccounts.find(a => a.id === id));
+    }
+
+    /* ── Force re-render ── */
+    try {
+      if (window.Orbit?.renderActiveOrbitModule) {
+        window.Orbit.renderActiveOrbitModule();
+        console.log('[verify] re-render triggered');
+      }
+    } catch (e) { console.warn('[verify] re-render failed:', e); }
+
+    toast(ctx, `Verified — ${Number(res.followers).toLocaleString()} followers.`, 'success');
+  } catch (e) {
+    console.error('[verify] FATAL:', e);
+    toast(ctx, 'Verify failed: ' + (e.message || 'unknown'), 'error');
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
