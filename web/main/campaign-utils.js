@@ -292,3 +292,293 @@ export function bestPillar(allPosts) {
   }
   return best;
 }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   POST LIBRARY HELPERS — v1
+   ─────────────────────────────────────────────────────────────
+   Added for the Post Library + Fanout Detail modal.
+
+   Data model reminder:
+     campaign.posts[] is a FLAT array. Each entry is one platform
+     execution. Posts that were created together (via the composer's
+     multi-platform fanout) share a `fanoutId`. Posts created
+     independently have their own `fanoutId` (or null for legacy).
+
+   These helpers let the UI:
+     • Group posts into fanouts
+     • Aggregate stats across a fanout
+     • Slice statsHistory[] into a time window
+     • Combine per-platform history into a single "total" series
+   ═══════════════════════════════════════════════════════════════ */
+
+/**
+ * Group a flat posts[] array into fanouts.
+ *
+ * - Posts with the same `fanoutId` → grouped together.
+ * - Posts without `fanoutId` → each becomes its own group of 1
+ *   (legacy data, or intentionally single-platform posts).
+ * - Posts with a null/empty `fanoutId` are also solo.
+ *
+ * Within each group, posts are sorted oldest-first so the modal
+ * shows them in creation order.
+ *
+ * @param {Array} posts - campaign.posts[]
+ * @returns {Array<Array>} - array of arrays
+ */
+export function groupPostsByFanout(posts) {
+  if (!Array.isArray(posts) || posts.length === 0) return [];
+
+  const byFanout = new Map();
+  const soloGroups = [];
+
+  for (const p of posts) {
+    if (!p) continue;
+    const fid = p.fanoutId;
+    if (fid && typeof fid === 'string') {
+      if (!byFanout.has(fid)) byFanout.set(fid, []);
+      byFanout.get(fid).push(p);
+    } else {
+      soloGroups.push([p]);
+    }
+  }
+
+  const groups = [];
+  for (const arr of byFanout.values()) {
+    arr.sort((a, b) =>
+      String(a.createdAt || '').localeCompare(String(b.createdAt || ''))
+    );
+    groups.push(arr);
+  }
+  groups.push(...soloGroups);
+
+  // Sort groups by most recent post (descending)
+  groups.sort((a, b) => {
+    const aLast = a[a.length - 1]?.updatedAt || a[a.length - 1]?.createdAt || '';
+    const bLast = b[b.length - 1]?.updatedAt || b[b.length - 1]?.createdAt || '';
+    return String(bLast).localeCompare(String(aLast));
+  });
+
+  return groups;
+}
+
+/**
+ * Aggregate stats across all posts in a fanout.
+ *
+ * @param {Array} posts - posts belonging to one fanout
+ * @returns {{
+ *   heroPost: object|null,        // first post with an image, for the card thumbnail
+ *   totalStats: {views, likes, comments, shares, followers},
+ *   perPlatform: {[platform]: {post, stats}},
+ *   statusCounts: {published, scheduled, draft, 'compose-only', failed, other},
+ *   aggregateStatus: string,      // 'published' if all published, else the "worst" status
+ *   platforms: string[],          // ordered: published first, then scheduled, then others
+ *   firstCreatedAt: string|null,
+ *   lastUpdatedAt: string|null,
+ *   overallEngagementRate: number // (total interactions / total views) * 100
+ * }}
+ */
+export function summarizeFanout(posts) {
+  const empty = {
+    heroPost: null,
+    totalStats: { views: 0, likes: 0, comments: 0, shares: 0, followers: null },
+    perPlatform: {},
+    statusCounts: { published: 0, scheduled: 0, draft: 0, 'compose-only': 0, failed: 0, other: 0 },
+    aggregateStatus: 'draft',
+    platforms: [],
+    firstCreatedAt: null,
+    lastUpdatedAt: null,
+    overallEngagementRate: 0,
+  };
+  if (!Array.isArray(posts) || posts.length === 0) return empty;
+
+  const totalStats = { views: 0, likes: 0, comments: 0, shares: 0, followers: null };
+  const perPlatform = {};
+  const statusCounts = { published: 0, scheduled: 0, draft: 0, 'compose-only': 0, failed: 0, other: 0 };
+  let heroPost = null;
+  let firstCreatedAt = null;
+  let lastUpdatedAt = null;
+  let followerMax = null;
+
+  for (const p of posts) {
+    if (!p) continue;
+
+    if (!heroPost && p.imageBase64) heroPost = p;
+
+    const key = p.platform || 'unknown';
+    perPlatform[key] = { post: p, stats: p.stats || null };
+
+    if (p.stats) {
+      totalStats.views    += Number(p.stats.views)    || 0;
+      totalStats.likes    += Number(p.stats.likes)    || 0;
+      totalStats.comments += Number(p.stats.comments) || 0;
+      totalStats.shares   += Number(p.stats.shares)   || 0;
+      if (p.stats.followers != null) {
+        const f = Number(p.stats.followers) || 0;
+        if (followerMax === null || f > followerMax) followerMax = f;
+      }
+    }
+    totalStats.followers = followerMax;
+
+    const st = p.status || 'draft';
+    if (Object.prototype.hasOwnProperty.call(statusCounts, st)) statusCounts[st]++;
+    else statusCounts.other++;
+
+    const createdAt = p.createdAt || '';
+    if (createdAt && (firstCreatedAt === null || createdAt < firstCreatedAt)) {
+      firstCreatedAt = createdAt;
+    }
+    const updatedAt = p.updatedAt || p.publishedAt || p.createdAt || '';
+    if (updatedAt && (lastUpdatedAt === null || updatedAt > lastUpdatedAt)) {
+      lastUpdatedAt = updatedAt;
+    }
+  }
+
+  if (!heroPost) heroPost = posts[0] || null;
+
+  // Aggregate status: 'published' if all posts published, otherwise the "most urgent" status
+  let aggregateStatus = 'published';
+  if (statusCounts.failed > 0)             aggregateStatus = 'failed';
+  else if (statusCounts['compose-only'] > 0) aggregateStatus = 'compose-only';
+  else if (statusCounts.scheduled > 0)     aggregateStatus = 'scheduled';
+  else if (statusCounts.draft > 0)         aggregateStatus = 'draft';
+  else if (statusCounts.published === 0)   aggregateStatus = 'draft';
+
+  // Platforms: published first, then scheduled, then draft, then others
+  const platformOrder = ['published', 'scheduled', 'draft', 'compose-only', 'failed'];
+  const platforms = Object.keys(perPlatform).sort((a, b) => {
+    const pa = perPlatform[a].post?.status || 'draft';
+    const pb = perPlatform[b].post?.status || 'draft';
+    return platformOrder.indexOf(pa) - platformOrder.indexOf(pb);
+  });
+
+  const interactions = totalStats.likes + totalStats.comments + totalStats.shares;
+  const overallEngagementRate = totalStats.views > 0
+    ? Math.round((interactions / totalStats.views) * 10000) / 100
+    : 0;
+
+  return {
+    heroPost,
+    totalStats,
+    perPlatform,
+    statusCounts,
+    aggregateStatus,
+    platforms,
+    firstCreatedAt,
+    lastUpdatedAt,
+    overallEngagementRate,
+  };
+}
+
+/**
+ * Filter a post's statsHistory[] to the last `windowMs` milliseconds.
+ *
+ * @param {object} post - single post record
+ * @param {number} windowMs - e.g. 24*60*60*1000 for 24h
+ * @returns {Array<{ts, views, likes, comments, shares}>} - sorted oldest → newest
+ */
+export function statsHistoryFor(post, windowMs) {
+  if (!post || !Array.isArray(post.statsHistory) || post.statsHistory.length === 0) return [];
+  const cutoff = Date.now() - (Number(windowMs) || 0);
+  const out = [];
+  for (const snap of post.statsHistory) {
+    if (!snap || !snap.ts) continue;
+    const t = Date.parse(snap.ts);
+    if (!Number.isFinite(t)) continue;
+    if (t >= cutoff) out.push(snap);
+  }
+  out.sort((a, b) => Date.parse(a.ts) - Date.parse(b.ts));
+  return out;
+}
+
+/**
+ * Combine multiple posts' statsHistory[] into a single total series.
+ *
+ * Used for the "Combined" view of the "Compare across platforms" chart.
+ *
+ * Algorithm: bucket every snapshot into minute-level buckets, sum
+ * per-metric across platforms for each bucket. Then forward-fill any
+ * missing platforms in a bucket using the most recent prior snapshot
+ * from that platform — so a post published 2 days after another doesn't
+ * cause its views to "disappear" before it existed.
+ *
+ * @param {Array} posts - posts belonging to one fanout
+ * @param {number} windowMs
+ * @returns {Array<{ts, views, likes, comments, shares}>}
+ */
+export function combineStatsHistory(posts, windowMs) {
+  if (!Array.isArray(posts) || posts.length === 0) return [];
+
+  const cutoff = Date.now() - (Number(windowMs) || 0);
+
+  // Collect all snapshot timestamps
+  const tsSet = new Set();
+  const perPostHistories = [];
+
+  for (const p of posts) {
+    if (!p || !Array.isArray(p.statsHistory)) continue;
+    const filtered = p.statsHistory.filter(s => s && s.ts && Date.parse(s.ts) >= cutoff);
+    if (!filtered.length) continue;
+    filtered.sort((a, b) => Date.parse(a.ts) - Date.parse(b.ts));
+    perPostHistories.push(filtered);
+    for (const s of filtered) tsSet.add(s.ts);
+  }
+
+  if (!tsSet.size) return [];
+
+  const tsList = Array.from(tsSet).sort((a, b) => Date.parse(a) - Date.parse(b));
+
+  // For each timestamp, sum the latest-known values from each platform
+  const out = [];
+  const lastKnown = perPostHistories.map(() => ({ views: 0, likes: 0, comments: 0, shares: 0 }));
+
+  for (const ts of tsList) {
+    let totalViews = 0, totalLikes = 0, totalComments = 0, totalShares = 0;
+
+    for (let i = 0; i < perPostHistories.length; i++) {
+      const hist = perPostHistories[i];
+      const snap = hist.find(s => s.ts === ts);
+      if (snap) {
+        lastKnown[i] = {
+          views:    Number(snap.views)    || 0,
+          likes:    Number(snap.likes)    || 0,
+          comments: Number(snap.comments) || 0,
+          shares:   Number(snap.shares)   || 0,
+        };
+      }
+      totalViews    += lastKnown[i].views;
+      totalLikes    += lastKnown[i].likes;
+      totalComments += lastKnown[i].comments;
+      totalShares   += lastKnown[i].shares;
+    }
+
+    out.push({
+      ts,
+      views: totalViews,
+      likes: totalLikes,
+      comments: totalComments,
+      shares: totalShares,
+    });
+  }
+
+  return out;
+}
+
+/**
+ * Engagement rate from a stats object.
+ * Returns 0 if views is 0 or stats is null.
+ * Rounded to 2 decimal places.
+ *
+ * @param {object|null} stats
+ * @returns {number} - percent, e.g. 8.42
+ */
+export function engagementRateFor(stats) {
+  if (!stats) return 0;
+  const views = Number(stats.views) || 0;
+  if (views <= 0) return 0;
+  const interactions =
+    (Number(stats.likes) || 0) +
+    (Number(stats.comments) || 0) +
+    (Number(stats.shares) || 0);
+  return Math.round((interactions / views) * 10000) / 100;
+}
