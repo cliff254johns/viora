@@ -680,7 +680,26 @@ async function _generateText() {
     }
   } catch (e) {
     console.error('[composer] generate failed', e);
-    SAFE.toast('Generation failed: ' + (e.message || 'unknown'), 'error');
+
+    /* Distinguish user-actionable errors from server config errors.
+       - 503 = no providers configured or all down. Offer retry.
+       - Anything else = generic. */
+    const msg = String(e.message || 'unknown');
+    const is503 = msg.includes('503') ||
+                  msg.toLowerCase().includes('not configured') ||
+                  msg.toLowerCase().includes('unavailable');
+
+    if (is503) {
+      SAFE.toast(
+        'AI is temporarily unavailable. You can still write the caption manually, or try again in a minute.',
+        'warning'
+      );
+      /* Focus the caption textarea so the user can type */
+      const firstPreview = document.querySelector('.cc-pp-textarea');
+      if (firstPreview) firstPreview.focus();
+    } else {
+      SAFE.toast('Generation failed: ' + msg, 'error');
+    }
   } finally {
     _state.generating = false;
     if (btn) { btn.disabled = false; btn.innerHTML = prev; }
