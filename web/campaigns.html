@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0a0a0f" />
+<title>Campaigns — VIORA</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+<link rel="icon" href="https://viora.co.ke/viora.png" />
+<link rel="stylesheet" href="main.css" />
+</head>
+<body>
+
+<!-- ═══════════════ LOGIN GATE ═══════════════ -->
+<div id="loginScreen" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg);">
+  <div class="login-card" style="max-width:400px;width:100%;background:var(--bg-elev-1);border:1px solid var(--border-color);border-radius:24px;padding:40px 32px;">
+    <div class="login-brand" style="display:flex;flex-direction:column;align-items:center;gap:14px;margin-bottom:28px;text-align:center;">
+      <div class="logo-mark" style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#ff5c7c,#ff9a3c);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.5rem;">
+        <i class="fa-solid fa-bullhorn"></i>
+      </div>
+      <div>
+        <h1 style="font-size:1.3rem;font-weight:700;margin:0;">Campaigns</h1>
+        <p style="font-size:.75rem;color:var(--text-secondary);margin-top:4px;">VIORA Social Media Command</p>
+      </div>
+    </div>
+    <div class="login-field" style="position:relative;margin-bottom:14px;">
+      <label style="font-size:.72rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:block;">Email</label>
+      <input id="loginEmail" type="email" placeholder="you@viora.io" autocomplete="email" style="width:100%;padding:12px 14px;background:var(--bg-input);border:1.5px solid transparent;border-radius:10px;color:var(--text-primary);font-family:inherit;outline:none;" />
+    </div>
+    <div class="login-field" style="position:relative;margin-bottom:14px;">
+      <label style="font-size:.72rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:block;">Password</label>
+      <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password" style="width:100%;padding:12px 14px;background:var(--bg-input);border:1.5px solid transparent;border-radius:10px;color:var(--text-primary);font-family:inherit;outline:none;" />
+    </div>
+    <button id="loginBtn" style="width:100%;padding:13px;border:0;border-radius:10px;background:linear-gradient(120deg,#ff5c7c,#ff9a3c);color:#fff;font-weight:700;font-family:inherit;cursor:pointer;margin-top:8px;">
+      <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In
+    </button>
+    <div id="loginError" style="color:#ff5c7c;font-size:.78rem;min-height:18px;margin-top:10px;"></div>
+    <div style="margin-top:20px;text-align:center;">
+      <a href="/main.html" style="font-size:.78rem;color:var(--text-secondary);">
+        <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ APP SHELL ═══════════════ -->
+<div id="appShell" class="hidden" style="display:none;">
+
+  <!-- Header -->
+  <header style="position:sticky;top:0;z-index:30;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:var(--bg-glass);backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--border-color);">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#ff5c7c,#ff9a3c);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;">
+        <i class="fa-solid fa-bullhorn"></i>
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:.95rem;">Campaigns</div>
+        <div style="font-size:.65rem;color:var(--text-secondary);letter-spacing:1px;text-transform:uppercase;">VIORA Social Media Command</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button id="themeBtn" class="iconbtn" style="width:36px;height:36px;border:1px solid var(--border-color);background:var(--panel);border-radius:10px;color:var(--text-secondary);cursor:pointer;"><i class="fa-solid fa-moon"></i></button>
+      <button id="logoutBtn" class="iconbtn" style="width:36px;height:36px;border:1px solid var(--border-color);background:var(--panel);border-radius:10px;color:var(--text-secondary);cursor:pointer;" title="Sign out"><i class="fa-solid fa-right-from-bracket"></i></button>
+      <a href="/main.html" class="btn btn-outline btn-sm" style="text-decoration:none;">
+        <i class="fa-solid fa-arrow-left"></i> Dashboard
+      </a>
+    </div>
+  </header>
+
+  <!-- Tab strip -->
+  <nav id="tabStrip" style="position:sticky;top:64px;z-index:25;display:flex;gap:4px;padding:0 24px;background:var(--bg-elev-1);border-bottom:1px solid var(--border-color);overflow-x:auto;">
+    <button class="camp-tab active" data-tab="marketing-campaigns" style="padding:14px 18px;border:0;background:none;color:var(--text-secondary);font-family:inherit;font-size:.85rem;font-weight:600;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;">
+      <i class="fa-solid fa-bullhorn"></i> Campaigns
+    </button>
+    <button class="camp-tab" data-tab="campaign-analytics" style="padding:14px 18px;border:0;background:none;color:var(--text-secondary);font-family:inherit;font-size:.85rem;font-weight:600;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;">
+      <i class="fa-solid fa-chart-line"></i> Analytics
+    </button>
+    <style>
+      .camp-tab.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); }
+      .camp-tab:hover { color: var(--text-primary); }
+    </style>
+  </nav>
+
+  <!-- Content -->
+  <main class="main-content" style="padding:24px;max-width:1600px;margin:0 auto;">
+
+    <!-- ═══════════════ TAB: CAMPAIGNS ═══════════════ -->
+    <section id="tab-marketing-campaigns" class="tab-content active">
+
+      <div class="page-header">
+        <div>
+          <h1><span class="pillar-icon" style="background:linear-gradient(135deg,#ff5c7c,#ff9a3c);"><i class="fa-solid fa-bullhorn"></i></span> Campaigns</h1>
+          <p class="page-desc">Manage your marketing campaigns and track live ROI.</p>
+        </div>
+        <div class="actions">
+          <button class="btn btn-outline btn-sm" id="refreshAllCampaignStatsBtn">
+            <i class="fa-solid fa-rotate"></i> Refresh All Stats
+          </button>
+          <button class="btn btn-primary" id="campaignNewBtn">
+            <i class="fa-solid fa-plus"></i> New Campaign
+          </button>
+        </div>
+      </div>
+
+      <!-- Social accounts registry -->
+      <div id="campaignSocialAccounts" style="margin-bottom:20px;"></div>
+
+      <!-- Trend radar -->
+      <div id="campaignTrendRadar" style="margin-bottom:20px;"></div>
+
+      <!-- KPIs -->
+      <div class="kpi-grid" id="campaignKpiGrid" style="margin-bottom:20px;"></div>
+
+      <!-- Campaigns table -->
+      <div class="chart-box">
+        <h4><i class="fa-solid fa-list"></i> All Campaigns</h4>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Campaign</th>
+                <th>Budget</th>
+                <th>Spent</th>
+                <th>Leads</th>
+                <th>Live Stats</th>
+                <th>Dates</th>
+                <th>Status</th>
+                <th style="text-align:right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="campaignsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Draft library -->
+      <div id="campaignDraftLibrary" style="margin-top:20px;"></div>
+
+      <!-- Prompt library -->
+      <div id="campaignPromptLibrary" style="margin-top:20px;"></div>
+
+    </section>
+
+    <!-- ═══════════════ TAB: ANALYTICS ═══════════════ -->
+    <section id="tab-campaign-analytics" class="tab-content">
+      <div class="page-header">
+        <div>
+          <h1><span class="pillar-icon" style="background:linear-gradient(135deg,#00d4ff,#7c3aed);"><i class="fa-solid fa-chart-line"></i></span> Campaign Analytics</h1>
+          <p class="page-desc">Performance over time, engagement by platform, and best posting times.</p>
+        </div>
+        <div class="actions">
+          <button class="btn btn-outline btn-sm" id="campaignAnalyticsRefreshBtn">
+            <i class="fa-solid fa-rotate"></i> Refresh
+          </button>
+        </div>
+      </div>
+      <div id="campaignAnalyticsDashboard"></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ═══════════════ TOASTS ═══════════════ -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ═══════════════════ CAMPAIGN EDITOR MODAL (standalone) ═══════════════════ -->
+<div class="modal-overlay" id="campaignEditorModal">
+  <div class="modal large" style="max-width:640px;">
+    <h2>
+      <span class="modal-icon" style="background:linear-gradient(135deg,#ff5c7c,#ff9a3c);">
+        <i class="fa-solid fa-bullseye"></i>
+      </span>
+      <span id="campEditorTitle">New Campaign</span>
+    </h2>
+    <form id="campaignEditorForm" novalidate>
+
+      <input type="hidden" id="campEditId" />
+
+      <label>Campaign name <span class="required">*</span></label>
+      <input id="campName" type="text" placeholder="e.g. Autumn product launch" required maxlength="120" />
+
+      <div class="form-row">
+        <div>
+          <label>Status</label>
+          <select id="campStatus">
+            <option value="Planned">Planned</option>
+            <option value="Active">Active</option>
+            <option value="Paused">Paused</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+        <div>
+          <label>Channel</label>
+          <select id="campChannel">
+            <option value="meta">Meta (Facebook/Instagram)</option>
+            <option value="tiktok">TikTok</option>
+            <option value="youtube">YouTube</option>
+            <option value="google">Google Ads</option>
+            <option value="linkedin">LinkedIn</option>
+            <option value="x">X / Twitter</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label>Budget (KES)</label>
+          <input id="campBudget" type="number" min="0" step="100" value="0" />
+        </div>
+        <div>
+          <label>Spent so far (KES)</label>
+          <input id="campSpend" type="number" min="0" step="100" value="0" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label>Start date</label>
+          <input id="campStart" type="date" />
+        </div>
+        <div>
+          <label>End date</label>
+          <input id="campEnd" type="date" />
+        </div>
+      </div>
+
+      <label>Objective</label>
+      <select id="campObjective">
+        <option value="">— Select —</option>
+        <option value="awareness">Brand awareness</option>
+        <option value="engagement">Engagement</option>
+        <option value="leads">Lead generation</option>
+        <option value="sales">Sales / conversions</option>
+        <option value="retention">Customer retention</option>
+        <option value="launch">Product launch</option>
+      </select>
+
+      <label>Target audience</label>
+      <input id="campAudience" type="text" placeholder="e.g. Kenyan SMEs, 25–45, tech-curious" maxlength="180" />
+
+      <!-- ═════════ LIVE MEDIA (for stats) ═════════ -->
+      <div style="margin-top:20px;padding:16px;background:var(--bg-input);border-radius:12px;border:1px solid var(--border-color);">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+          <i class="fa-solid fa-chart-line" style="color:var(--accent-blue);"></i>
+          <strong style="font-size:.82rem;text-transform:uppercase;letter-spacing:.5px;">Live media (for stats)</strong>
+        </div>
+        <p style="font-size:.75rem;color:var(--text-secondary);margin:0 0 10px;">
+          Attach a YouTube or TikTok URL. The dashboard pulls views, likes and comments automatically every 3 minutes.
+        </p>
+        <div class="form-row">
+          <div>
+            <label>Media type</label>
+            <select id="campMediaType">
+              <option value="none">None</option>
+              <option value="youtube">YouTube</option>
+              <option value="tiktok">TikTok</option>
+            </select>
+          </div>
+          <div>
+            <label>Media URL</label>
+            <input id="campMediaUrl" type="url" placeholder="https://..." disabled />
+          </div>
+        </div>
+        <div id="campTikTokAuthWrap" style="display:none;margin-top:10px;padding:10px;background:rgba(255,255,255,.03);border-radius:8px;">
+          <div id="campTikTokAuthStatus" style="font-size:.75rem;color:var(--text-secondary);"></div>
+          <button type="button" class="btn btn-whatsapp btn-sm" id="campTikTokConnectBtn" style="margin-top:6px;">
+            <i class="fa-brands fa-tiktok"></i> Connect TikTok
+          </button>
+        </div>
+      </div>
+
+      <!-- ═════════ NOTES ═════════ -->
+      <label style="margin-top:16px;">Notes (internal)</label>
+      <textarea id="campNotes" rows="3" placeholder="Strategy, brief, budget breakdown…" maxlength="1000"></textarea>
+
+      <div class="form-actions" style="margin-top:20px;">
+        <button type="button" class="btn btn-danger" id="campDeleteBtn" style="display:none;margin-right:auto;">
+          <i class="fa-solid fa-trash"></i> Delete
+        </button>
+        <button type="button" class="btn btn-outline" data-close="campaignEditorModal">Cancel</button>
+        <button type="submit" class="btn btn-success">
+          <i class="fa-solid fa-check"></i> <span id="campSubmitLabel">Create campaign</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ FIREBASE IMPORT MAP (identical to main.html) ═══════════════ -->
+<script type="importmap">
+{
+  "imports": {
+    "firebase/app": "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js",
+    "firebase/database": "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js",
+    "firebase/auth": "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js",
+    "firebase/messaging": "https://www.gstatic.com/firebasejs/12.18.0/firebase-messaging.js"
+  }
+}
+</script>
+
+<script type="module" src="campaigns-bootstrap.js"></script>
+
+</body>
+</html>

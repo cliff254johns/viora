@@ -1,0 +1,183 @@
+<!-- ===== VIORA COOKIE BANNER ===== -->
+<div id="vioraCookieBanner" class="vcb" role="dialog" aria-modal="false" aria-labelledby="vcbTitle" aria-describedby="vcbDesc" hidden>
+  <div class="vcb-inner">
+    <div class="vcb-text">
+      <h2 id="vcbTitle">We use cookies</h2>
+      <p id="vcbDesc">We use essential cookies to make the site work, and optional analytics cookies (Google Analytics via Firebase) to improve it. You can accept all, reject non-essential, or manage preferences. See our <a href="cookies.html">Cookie Policy</a>.</p>
+    </div>
+    <div class="vcb-actions">
+      <button type="button" class="vcb-btn vcb-btn-ghost" data-vcb="reject">Reject non-essential</button>
+      <button type="button" class="vcb-btn vcb-btn-ghost" data-vcb="settings">Manage preferences</button>
+      <button type="button" class="vcb-btn vcb-btn-primary" data-vcb="accept">Accept all</button>
+    </div>
+  </div>
+</div>
+
+<div id="vioraCookieSettings" class="vcs" role="dialog" aria-modal="true" aria-labelledby="vcsTitle" hidden>
+  <div class="vcs-panel">
+    <button type="button" class="vcs-close" data-vcs-close aria-label="Close settings">×</button>
+    <h2 id="vcsTitle">Cookie preferences</h2>
+    <p class="vcs-intro">Choose which categories of cookies you allow. Essential cookies cannot be disabled because the site cannot function without them.</p>
+    <form id="vcsForm">
+      <label class="vcs-row">
+        <input type="checkbox" checked disabled>
+        <span><strong>Strictly necessary</strong><br><small>Theme, consent record, Cloudflare security. Always on.</small></span>
+      </label>
+      <label class="vcs-row">
+        <input type="checkbox" name="analytics">
+        <span><strong>Analytics</strong><br><small>Google Analytics via Firebase — aggregated usage data. Off by default.</small></span>
+      </label>
+      <label class="vcs-row">
+        <input type="checkbox" name="functional">
+        <span><strong>Functional</strong><br><small>Language and region preferences.</small></span>
+      </label>
+      <label class="vcs-row">
+        <input type="checkbox" disabled>
+        <span><strong>Marketing</strong><br><small>We don't currently set marketing cookies.</small></span>
+      </label>
+      <div class="vcs-actions">
+        <button type="button" class="vcb-btn vcb-btn-ghost" data-vcs-close>Cancel</button>
+        <button type="submit" class="vcb-btn vcb-btn-primary">Save preferences</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<a href="#" id="vioraCookieSettingsLink" class="vcs-link" hidden>Cookie settings</a>
+
+<style>
+.vcb{position:fixed;left:0;right:0;bottom:0;z-index:9000;background:rgba(10,25,47,.98);color:#fff;padding:20px;backdrop-filter:blur(8px);animation:vcbIn .35s cubic-bezier(.22,.61,.36,1)}
+@keyframes vcbIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.vcb-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.vcb-text{flex:1;min-width:280px}
+.vcb-text h2{font-family:'Manrope',sans-serif;font-size:16px;margin:0 0 6px;color:#fff;letter-spacing:-.01em}
+.vcb-text p{margin:0;font-size:13px;line-height:1.6;color:rgba(255,255,255,.8)}
+.vcb-text a{color:#7fb0ff;text-decoration:underline}
+.vcb-actions{display:flex;gap:10px;flex-wrap:wrap}
+.vcb-btn{font-family:inherit;font-weight:700;font-size:13px;padding:11px 18px;border-radius:8px;border:1.5px solid transparent;cursor:pointer;transition:all .2s;white-space:nowrap}
+.vcb-btn-primary{background:#2267EE;color:#fff}
+.vcb-btn-primary:hover{background:#1a56d1}
+.vcb-btn-ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.3)}
+.vcb-btn-ghost:hover{border-color:#fff;background:rgba(255,255,255,.08)}
+@media (max-width:640px){.vcb-actions{width:100%}.vcb-btn{flex:1;text-align:center}}
+.vcs{position:fixed;inset:0;z-index:9100;background:rgba(10,25,47,.6);backdrop-filter:blur(4px);display:grid;place-items:center;padding:20px}
+.vcs[hidden]{display:none}
+.vcs-panel{background:#fff;color:#0F172A;border-radius:16px;max-width:520px;width:100%;padding:28px;position:relative;box-shadow:0 24px 60px -20px rgba(10,25,47,.5);max-height:90vh;overflow-y:auto}
+.vcs-panel h2{font-family:'Manrope',sans-serif;font-size:20px;margin:0 0 8px;color:#0F172A}
+.vcs-intro{font-size:14px;color:#64748B;margin:0 0 20px}
+.vcs-close{position:absolute;top:14px;right:14px;width:34px;height:34px;border:1px solid #CBD5E1;background:#fff;border-radius:8px;font-size:20px;line-height:1;cursor:pointer;color:#64748B}
+.vcs-close:hover{color:#0F172A;border-color:#94A3B8}
+.vcs-row{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid #E2E8F0;align-items:flex-start;cursor:pointer}
+.vcs-row:last-of-type{border-bottom:none}
+.vcs-row input{margin-top:3px;width:18px;height:18px;flex-shrink:0;cursor:pointer;accent-color:#2267EE}
+.vcs-row strong{display:block;font-size:14px;color:#0F172A;margin-bottom:2px}
+.vcs-row small{font-size:12px;color:#64748B;line-height:1.5}
+.vcs-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
+.vcs-actions .vcb-btn-ghost{color:#0F172A;border-color:#CBD5E1}
+.vcs-actions .vcb-btn-ghost:hover{border-color:#0F172A;background:#F8FAFC}
+.vcs-link{position:fixed;left:16px;bottom:16px;z-index:8000;font-size:12px;font-weight:600;color:#fff;background:rgba(10,25,47,.85);padding:8px 14px;border-radius:999px;text-decoration:none;backdrop-filter:blur(6px);box-shadow:0 4px 12px rgba(10,25,47,.2)}
+.vcs-link:hover{background:#0A192F;text-decoration:none}
+.vcs-link[hidden]{display:none}
+</style>
+
+<script>
+(function(){
+  'use strict';
+  var KEY = 'viora_cookie_consent_v1';
+  var banner = document.getElementById('vioraCookieBanner');
+  var settings = document.getElementById('vioraCookieSettings');
+  var settingsLink = document.getElementById('vioraCookieSettingsLink');
+  var form = document.getElementById('vcsForm');
+
+  function loadConsent(){
+    try { return JSON.parse(localStorage.getItem(KEY) || 'null'); }
+    catch(e){ return null; }
+  }
+  function saveConsent(c){
+    try { localStorage.setItem(KEY, JSON.stringify(c)); } catch(e){}
+  }
+  function applyConsent(c){
+    // Analytics: load GA4 only if consented
+    if (c && c.analytics === true && !window.__vioraGaLoaded) {
+      window.__vioraGaLoaded = true;
+      var s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX'; // ← replace with your GA4 ID
+      document.head.appendChild(s);
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function(){ window.dataLayer.push(arguments); };
+      window.gtag('js', new Date());
+      window.gtag('config', 'G-XXXXXXXXXX', { anonymize_ip: true });
+    }
+    // Dispatch event so any listener (Firebase analytics, etc.) can react
+    window.dispatchEvent(new CustomEvent('viora:consent', { detail: c }));
+  }
+  function showBanner(){
+    banner.hidden = false;
+  }
+  function hideBanner(){
+    banner.hidden = true;
+    settingsLink.hidden = false;
+  }
+  function openSettings(){
+    var c = loadConsent() || {};
+    form.querySelector('[name="analytics"]').checked = !!c.analytics;
+    form.querySelector('[name="functional"]').checked = !!c.functional;
+    settings.hidden = false;
+    settings.querySelector('input[name="analytics"]').focus();
+  }
+  function closeSettings(){ settings.hidden = true; }
+
+  document.addEventListener('click', function(e){
+    var t = e.target.closest('[data-vcb]');
+    if (t) {
+      var action = t.getAttribute('data-vcb');
+      if (action === 'accept') {
+        var c = { essential:true, analytics:true, functional:true, ts: Date.now() };
+        saveConsent(c); applyConsent(c); hideBanner();
+      } else if (action === 'reject') {
+        var c2 = { essential:true, analytics:false, functional:false, ts: Date.now() };
+        saveConsent(c2); applyConsent(c2); hideBanner();
+      } else if (action === 'settings') {
+        openSettings();
+      }
+    }
+    if (e.target.closest('[data-vcs-close]') || e.target === settings) {
+      closeSettings();
+    }
+    if (e.target === settingsLink) {
+      e.preventDefault();
+      openSettings();
+    }
+  });
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var c = {
+      essential: true,
+      analytics: form.querySelector('[name="analytics"]').checked,
+      functional: form.querySelector('[name="functional"]').checked,
+      ts: Date.now()
+    };
+    saveConsent(c);
+    applyConsent(c);
+    closeSettings();
+    hideBanner();
+  });
+
+  // Escape closes settings
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && !settings.hidden) closeSettings();
+  });
+
+  // Init
+  var existing = loadConsent();
+  if (!existing) {
+    showBanner();
+  } else {
+    applyConsent(existing);
+    settingsLink.hidden = false;
+  }
+})();
+</script>
+<!-- ===== /VIORA COOKIE BANNER ===== -->

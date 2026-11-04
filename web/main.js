@@ -332,32 +332,7 @@ import {
   openWelcomeEmailPreview,
 } from './main/clients.js';
 
-/* ── Marketplace ── */
-import {
-  initCampaignTrends, renderTrendRadar,
-} from './main/campaign-trends.js';
-import {
-  initCampaignAccounts,
-  subscribeToAccounts,
-  renderAccountsPanel,
-  loadAccounts,
-  getAccountForPlatform,
-  getAccountForPlatformSync,
-  mentionForPlatform,
-  postingAsLabel,
-  allPlatforms,
-} from './main/campaign-accounts.js';
-import {
-  initCampaignAI,
-  openComposer, openComposerWithTrend, openComposerForCampaign, openComposerForDraft,
-  renderDraftLibrary, renderPromptLibrary,
-} from './main/campaign-ai.js';
-import {
-  initCampaignAnalytics, renderAnalyticsDashboard,
-} from './main/campaign-analytics.js';
-import {
-  initCampaignCron, startCampaignCron, stopCampaignCron,
-} from './main/campaign-cron.js';
+
 
 import {
   initRenderMarketplace,
@@ -1732,7 +1707,7 @@ const MOBILE_NAV_MAP = {
     { tab: 'orchestration', icon: 'fa-diagram-project', label: 'Orchestration' },
     { tab: 'archives', icon: 'fa-box-archive', label: 'Archives' },
     { tab: 'trash', icon: 'fa-trash-can', label: 'Trash' },
-    { tab: 'marketing-campaigns', icon: 'fa-bullseye', label: 'Campaigns' },
+   
     { tab: 'marketplace-products', icon: 'fa-store', label: 'Products' },
     { tab: 'personal-wishlist', icon: 'fa-heart', label: 'Wishlist' },
     { tab: 'clientsite', icon: 'fa-globe', label: 'Public Site' },
@@ -2619,33 +2594,7 @@ function startApp() {
         scheduleMarketSync: () => scheduleMarketSync(),
       });
     } catch (e) { console.error('[viora] initRenderMarketplace:', e); }
-     // 10b. Campaign subsystem
-    try {
-      initCampaignAccounts({
-        db, ref, get, set, remove, onValue, P,
-        state, toast, callFn,
-        openModal, closeModal,
-      });
-      subscribeToAccounts();
-
-      initCampaignTrends({
-        callFn, state,
-        openComposerWithTrend,
-      });
-  initCampaignAI({
-  state, callFn, toast,
-  upsertDoc, deleteDoc,
-  openModal, closeModal,
-  renderCampaigns: () => window.renderCampaigns?.(),
-  getAccountForPlatformSync: (key) => getAccountForPlatformSync(key),
-});
-      initCampaignAnalytics({
-        state, callFn, toast,
-        db, ref, set, P,
-      });
-      initCampaignCron({ state, callFn, upsertDoc, renderCampaigns: () => window.renderCampaigns?.() });
-      startCampaignCron();
-    } catch (e) { console.error('[viora] campaign subsystem init:', e); }
+    
 
     // 11. Misc helpers
     try {
@@ -2941,8 +2890,9 @@ function startApp() {
         openManualSale, submitManualSale,
         updateManualSaleItem, removeManualSaleItem,
         renderMyOrders, renderMyWishlist,
-        renderCampaigns, applyCampMediaTypeUI, renderCampaignStats,
-        fetchCampaignStats, connectTikTok, refreshAllCampaignStats,
+              renderCampaigns: () => {}, applyCampMediaTypeUI: () => {},
+        renderCampaignStats: () => {}, fetchCampaignStats: () => {},
+        connectTikTok: () => {}, refreshAllCampaignStats: () => {},
         renderMarketplaceProducts, renderPublicUiProducts,
         renderMarketplaceOrders, renderMarketplaceAnalytics,
         renderPartnerTasks, renderPartnerHourly, renderPartnerSchedule,
@@ -3029,14 +2979,7 @@ try {
 
           // ── Marketing ──
           case 'marketplace-analytics':   renderMarketplaceAnalytics(); break;
-          case 'personal-wishlist':       renderMyWishlist(); break;
-                case 'marketing-campaigns':
-            renderCampaigns();
-            renderAccountsPanel();
-            renderTrendRadar();
-            renderDraftLibrary();
-            break;
-          case 'campaign-analytics':      renderAnalyticsDashboard(); break;
+                case 'personal-wishlist':       renderMyWishlist(); break;
           case 'product-presentation':    try { PP?.subscribe?.(); } catch (e) {} break;
           case 'clientsite':              renderClientsite(); break;
           case 'market-content':          renderMarketContent(); break;
@@ -3444,7 +3387,7 @@ try {
         'marketing-leads':         'renderLeads',
         'marketing-appointments':  'renderAppointments',
         'marketing-presentations': 'renderPresentations',
-        'marketing-campaigns':     'renderCampaigns',
+    
         'ops-projects':            'renderProjects',
         'ops-tasks':               'renderTasks',
         'ops-inventory':           'renderInventory',
@@ -3677,14 +3620,14 @@ try {
         renderMarketContent,
         bindPPEvents,
         bindMarketContentEvents,
-        startCampaignStatsAutoRefresh,
+              startCampaignStatsAutoRefresh: () => {},
         renderMsProductsList,
         renderMsSummary,
-        applyCampMediaTypeUI,
-        fetchCampaignStats,
-        renderCampaignStats,
-        connectTikTok,
-        refreshAllCampaignStats,
+        applyCampMediaTypeUI: () => {},
+        fetchCampaignStats: () => {},
+        renderCampaignStats: () => {},
+        connectTikTok: () => {},
+        refreshAllCampaignStats: () => {},
       });
     } catch (e) {
       console.error('[viora] initMainWiring:', e);
@@ -3793,12 +3736,13 @@ try {
         bound++;
       });
 
-      // 2. Sidebar nav links
+         // 2. Sidebar nav links
       document.querySelectorAll('.sidebar nav a[data-tab]').forEach(a => {
         if (a._vioraNavDirectBound) return;
         a._vioraNavDirectBound = true;
         a.style.pointerEvents = 'auto';
         a.addEventListener('click', (e) => {
+          if (a.dataset.external === 'true') return;   // ← let the browser navigate
           e.preventDefault();
           e.stopPropagation();
           const tab = a.dataset.tab;
@@ -3928,17 +3872,10 @@ try {
    SUB-MODULE WIRING
    ═══════════════════════════════════════════════════════════════ */
 window.__vioraWireSubModules = function () {
-  try {
-    startCampaignStatsAutoRefresh();
-    console.info('[campaign-stats] auto-refresh started (3 min interval)');
-  } catch (e) {
-    console.warn('[campaign-stats] auto-refresh failed to start:', e);
-  }
+  // Campaign auto-refresh moved to campaigns.html
 };
 
-/* ═══════════════════════════════════════════════════════════════
-   WINDOW EXPOSURE
-   ═══════════════════════════════════════════════════════════════ */
+
 /* ═══════════════════════════════════════════════════════════
    WINDOW EXPOSURE (hardened — one bad key cannot kill the rest)
    ═══════════════════════════════════════════════════════════ */
@@ -4003,14 +3940,7 @@ window.__vioraWireSubModules = function () {
     dedupeLeads, syncMarketToLeads, syncOrderLeads,   // ★ NEW
     renderMarketplaceProducts, renderPublicUiProducts, renderMarketplaceOrders,
     renderMarketplaceAnalytics, renderMyOrders, renderMyWishlist, openOrderDetail,
-        renderCampaigns, applyCampMediaTypeUI, renderCampaignStats, fetchCampaignStats,
-    connectTikTok, startCampaignStatsAutoRefresh, refreshAllCampaigns: refreshAllCampaignStats,
-    // Campaign command center
-     renderTrendRadar, renderDraftLibrary, renderPromptLibrary, renderAnalyticsDashboard,
-    renderAccountsPanel, loadAccounts, getAccountForPlatform, getAccountForPlatformSync,
-    mentionForPlatform, postingAsLabel, allPlatforms,
-    openComposer, openComposerWithTrend, openComposerForCampaign, openComposerForDraft,
-    startCampaignCron, stopCampaignCron,
+      
     openManualSale, renderMsProductsList, renderMsSummary,
     updateManualSaleItem, removeManualSaleItem, submitManualSale,
     addToWishlist, removeFromWishlist, buyFromWishlist,

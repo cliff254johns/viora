@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accessibility Statement — VIORA Ecosystems</title>
+<meta name="description" content="VIORA Ecosystems' commitment to digital accessibility, WCAG 2.2 AA conformance, and how to report accessibility issues.">
+<link rel="canonical" href="https://viora.co.ke/accessibility.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0A192F;--accent:#2267EE;--bg:#F8FAFC;--ink:#0F172A;--muted:#64748B;--line:#CBD5E1;--white:#FFFFFF;--maxw:820px}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.75;color:var(--ink);background:var(--white);-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:'Manrope',sans-serif;color:var(--ink);line-height:1.2;letter-spacing:-.02em;font-weight:700;margin:0 0 .6em}
+h1{font-size:clamp(28px,4vw,42px)}
+h2{font-size:clamp(20px,2.4vw,26px);margin-top:2em}
+p,ul,ol{margin:0 0 1.1em}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+ul,ol{padding-left:24px}
+li{margin-bottom:6px}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+header.topbar{background:var(--navy);color:#fff;padding:20px 0}
+header.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+header.topbar a{color:#fff;font-weight:700;font-family:'Manrope';font-size:18px;text-decoration:none}
+header.topbar a:hover{text-decoration:none;opacity:.85}
+header.topbar span{font-size:13px;color:rgba(255,255,255,.65)}
+main{padding:64px 0 96px}
+.meta{color:var(--muted);font-size:14px;margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.callout{background:var(--bg);border-left:4px solid var(--accent);border-radius:8px;padding:16px 20px;margin:24px 0;font-size:15px}
+table{width:100%;border-collapse:collapse;margin:16px 0 24px;font-size:14px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--bg);font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.status{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.04em}
+.status.partial{background:#FEF3C7;color:#92400E}
+.status.supports{background:#D1FAE5;color:#065F46}
+.status.inprogress{background:#DBEAFE;color:#1E40AF}
+footer.foot{background:var(--navy);color:rgba(255,255,255,.7);padding:40px 0;font-size:13px;text-align:center}
+footer.foot a{color:rgba(255,255,255,.9)}
+.back{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;margin-bottom:24px;color:var(--accent)}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a href="index.html">VIORA Ecosystems</a>
+    <span>Legal · Accessibility</span>
+  </div>
+</header>
+<main>
+<div class="wrap">
+  <a href="index.html" class="back">← Back to home</a>
+  <h1>Accessibility Statement</h1>
+  <p class="meta"><strong>Last updated:</strong> 3 November 2026 · <strong>Effective:</strong> 3 November 2026</p>
+
+  <div class="callout">
+    <strong>Our commitment:</strong> VIORA Ecosystems is committed to making our website and services accessible to everyone, including people with disabilities. We aim to meet the <strong>Web Content Accessibility Guidelines (WCAG) 2.2 Level AA</strong>. As a young company (founded 2022), we are actively working towards full conformance and welcome your feedback.
+  </div>
+
+  <h2>1. Conformance status</h2>
+  <p><strong>Current status:</strong> <span class="status partial">Partially conformant</span></p>
+  <p>We are partially conformant with WCAG 2.2 Level AA. "Partially conformant" means that some parts of the content do not yet fully conform to the accessibility standard. We are actively working to close the remaining gaps and will update this statement as improvements are made.</p>
+  <p>We are working towards full conformance as part of our ongoing commitment to digital accessibility.</p>
+
+  <h2>2. Measures we take</h2>
+  <ul>
+    <li>Accessibility is considered from the design stage of new features and pages.</li>
+    <li>We test key user journeys with a combination of automated tools (axe-core, Lighthouse) and manual checks.</li>
+    <li>We aim to support keyboard navigation, screen reader compatibility, and visible focus indicators across the site.</li>
+    <li>We respect the <code>prefers-reduced-motion</code> setting for animated content.</li>
+    <li>We use semantic HTML and ARIA attributes where appropriate.</li>
+  </ul>
+
+  <h2>3. Known limitations</h2>
+  <p>As a growing company, we are aware of the following limitations and are actively working to address them:</p>
+  <table>
+    <thead><tr><th>Area</th><th>Status</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Interactive 3D globe</td><td><span class="status inprogress">In progress</span></td><td>Decorative visualisation; an equivalent text list of connected hubs is being added.</td></tr>
+      <tr><td>Some carousel animations</td><td><span class="status inprogress">In progress</span></td><td>Pause controls being added; reduced-motion is respected.</td></tr>
+      <tr><td>Complex dashboard preview</td><td><span class="status inprogress">In progress</span></td><td>Labelled as demo data; alternative text descriptions being added.</td></tr>
+      <tr><td>Third-party embedded content</td><td><span class="status inprogress">In progress</span></td><td>We aim to work only with providers who meet accessibility standards.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>4. Feedback and contact</h2>
+  <p>If you experience any accessibility barrier on our website or in our services, please contact us. We welcome feedback and will do our best to address issues promptly.</p>
+  <ul>
+    <li>Email: <a href="mailto:support@viora.co.ke">support@viora.co.ke</a></li>
+    <li>Phone: <a href="tel:+254713428774">+254 713 428 774</a></li>
+    <li>WhatsApp: <a href="https://wa.me/254713428774" target="_blank" rel="noopener">wa.me/254713428774</a></li>
+  </ul>
+  <p>Please include:</p>
+  <ul>
+    <li>The page or feature you were using.</li>
+    <li>A description of the barrier you encountered.</li>
+    <li>The assistive technology you were using (if any).</li>
+    <li>Your preferred method of contact.</li>
+  </ul>
+  <p>We aim to respond within 5 working days and to resolve accessibility issues within a reasonable timeframe.</p>
+
+  <h2>5. Compatibility with browsers and assistive technology</h2>
+  <p>Our website is designed to be compatible with:</p>
+  <ul>
+    <li><strong>Browsers:</strong> Chrome, Firefox, Safari, Edge — current and previous major versions.</li>
+    <li><strong>Assistive technology:</strong> NVDA and JAWS on Windows, VoiceOver on macOS and iOS, TalkBack on Android.</li>
+    <li><strong>Operating systems:</strong> Windows, macOS, iOS, Android, Linux.</li>
+  </ul>
+  <p>We cannot guarantee compatibility with every browser/assistive combination, but we test against the above and welcome reports of issues.</p>
+
+  <h2>6. Technical specifications</h2>
+  <p>Accessibility of our website relies on the following technologies:</p>
+  <ul>
+    <li>HTML</li>
+    <li>CSS</li>
+    <li>JavaScript</li>
+    <li>WAI-ARIA (where needed)</li>
+  </ul>
+
+  <h2>7. Assessment approach</h2>
+  <p>VIORA assesses accessibility through:</p>
+  <ul>
+    <li>Self-evaluation using automated tools (axe-core, Lighthouse accessibility audit).</li>
+    <li>Manual checks with keyboard and screen readers.</li>
+    <li>Feedback from users.</li>
+  </ul>
+  <p>We do not currently carry a third-party accessibility certification; as we grow, we intend to pursue independent accessibility audits.</p>
+
+  <h2>8. Legal framework</h2>
+  <p>We aim to align with:</p>
+  <ul>
+    <li>WCAG 2.2 Level AA.</li>
+    <li>The EU Web Accessibility Directive and European Accessibility Act (where applicable to our services).</li>
+    <li>The UN Convention on the Rights of Persons with Disabilities.</li>
+    <li>Kenyan disability rights legislation, where applicable.</li>
+  </ul>
+
+  <h2>9. Changes to this statement</h2>
+  <p>We will update this statement as we make accessibility improvements. The "Last updated" date at the top reflects the most recent change.</p>
+
+  <h2>10. Contact</h2>
+  <p>VIORA Ecosystems<br>
+  Email: <a href="mailto:support@viora.co.ke">support@viora.co.ke</a><br>
+  Phone: <a href="tel:+254713428774">+254 713 428 774</a><br>
+  Online · <a href="https://viora.co.ke">viora.co.ke</a> · Founded 2022</p>
+</div>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    © <span id="yr"></span> VIORA Ecosystems. All rights reserved. · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · <a href="cookies.html">Cookies</a> · <a href="accessibility.html">Accessibility</a> · <a href="dpa.html">DPA</a>
+  </div>
+</footer>
+<script>document.getElementById('yr').textContent=new Date().getFullYear();</script>
+</body>
+</html>

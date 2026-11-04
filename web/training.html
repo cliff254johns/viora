@@ -1,574 +1,599 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
-
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes, viewport-fit=cover" />
-  <meta name="theme-color" content="#0a0a0f" />
-  <title>VIORA Training Portal</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link rel="manifest" href="/manifest.json">
-  <link rel="icon" type="image/png" href="https://viora.co.ke/viora.png">
-  <link rel="apple-touch-icon" href="https://viora.co.ke/viora.png">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="VIORA Training">
-  <link rel="stylesheet" href="/mainTraining/training.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VIORA Academy — Training Portal</title>
+<meta name="description" content="VIORA Academy — structured training, onboarding checklists and certifications for VIORA clients and staff.">
+<link rel="canonical" href="https://viora.co.ke/training.html">
+<meta name="theme-color" content="#0A192F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared-app.css">
+<style>
+/* ---------- Creative hero ---------- */
+.academy-hero{
+  padding:140px 0 80px;position:relative;overflow:hidden;
+}
+.academy-hero::before{
+  content:"";position:absolute;top:-300px;left:-200px;width:700px;height:700px;border-radius:50%;
+  background:radial-gradient(circle,rgba(139,92,246,.16),transparent 70%);pointer-events:none;
+}
+.academy-hero::after{
+  content:"";position:absolute;bottom:-400px;right:-200px;width:800px;height:800px;border-radius:50%;
+  background:radial-gradient(circle,rgba(35,199,217,.12),transparent 70%);pointer-events:none;
+}
+.academy-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:64px;align-items:center;position:relative;z-index:1}
+@media(max-width:900px){.academy-grid{grid-template-columns:1fr;gap:48px}}
+.academy-hero h1{font-size:clamp(34px,5vw,54px);line-height:1.08;margin-bottom:20px;letter-spacing:-.03em}
+.academy-hero p{font-size:18px;color:var(--muted);max-width:520px;line-height:1.7;margin-bottom:32px}
+.academy-ctas{display:flex;gap:14px;flex-wrap:wrap}
+
+/* Floating course preview with animation */
+.course-preview{
+  position:relative;
+  perspective:1200px;
+}
+.course-preview .cp-card{
+  background:linear-gradient(135deg,#0A192F 0%,#1E293B 100%);
+  border-radius:24px;padding:28px;color:#fff;
+  box-shadow:0 40px 80px -20px rgba(10,25,47,.7);
+  border:1px solid rgba(255,255,255,.1);
+  transform:rotateY(-3deg) rotateX(2deg);
+  transition:transform .5s var(--ease);
+  position:relative;
+}
+.course-preview .cp-card::before{
+  content:"";position:absolute;inset:-2px;border-radius:26px;z-index:-1;
+  background:linear-gradient(135deg,rgba(139,92,246,.5),rgba(35,199,217,.4));
+  filter:blur(24px);opacity:.6;
+}
+.course-preview:hover .cp-card{transform:rotateY(0) rotateX(0)}
+
+/* Floating decorative cards */
+.float-badge{
+  position:absolute;background:var(--white);border:1px solid var(--line);
+  border-radius:14px;padding:12px 16px;box-shadow:var(--shadow-lg);
+  display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;
+  animation:floaty 4s ease-in-out infinite;
+  z-index:3;
+}
+[data-theme="dark"] .float-badge{background:var(--bg-alt)}
+.float-badge .fb-icon{
+  width:32px;height:32px;border-radius:10px;display:grid;place-items:center;
+  font-size:16px;flex-shrink:0;
+}
+.float-badge.b1{top:-16px;right:-20px;animation-delay:0s}
+.float-badge.b2{bottom:-16px;left:-20px;animation-delay:2s}
+.float-badge .fb-text{display:flex;flex-direction:column;line-height:1.2}
+.float-badge .fb-text strong{font-size:13px;color:var(--ink);font-family:'Manrope'}
+.float-badge .fb-text small{font-size:11px;color:var(--muted)}
+@keyframes floaty{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-8px)}
+}
+@media(max-width:900px){.float-badge{display:none}}
+
+.cp-tag{
+  display:inline-flex;align-items:center;gap:6px;padding:6px 12px;
+  background:rgba(139,92,246,.18);border:1px solid rgba(139,92,246,.4);
+  border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:#C4B5FD;margin-bottom:16px;
+}
+.cp-tag::before{content:"";width:6px;height:6px;border-radius:50%;background:#C4B5FD;box-shadow:0 0 8px #C4B5FD;animation:pulse 2s infinite}
+.cp-title{font-family:'Manrope';font-weight:800;font-size:22px;margin-bottom:8px;line-height:1.25;letter-spacing:-.02em}
+.cp-desc{font-size:13px;color:rgba(255,255,255,.65);line-height:1.6;margin-bottom:20px}
+.cp-progress-label{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.6);margin-bottom:6px;font-weight:600}
+.cp-progress{height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;margin-bottom:20px}
+.cp-progress div{height:100%;background:linear-gradient(90deg,#8B5CF6,#23C7D9);border-radius:3px;animation:progressFill 2s var(--ease) forwards}
+@keyframes progressFill{from{width:0}to{width:64%}}
+.cp-modules{display:flex;flex-direction:column;gap:8px}
+.cp-module{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:10px;font-size:12px;
+}
+.cp-module.done{background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.3)}
+.cp-module .num{
+  width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.1);
+  display:grid;place-items:center;font-size:10px;font-weight:700;flex-shrink:0;
+}
+.cp-module.done .num{background:#10B981;color:#fff}
+.cp-module span{flex:1;color:rgba(255,255,255,.85)}
+
+/* ---------- Why academy ---------- */
+.why-academy{padding:100px 0;background:var(--bg)}
+[data-theme="dark"] .why-academy{background:rgba(15,23,42,.5)}
+.why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:48px}
+@media(max-width:900px){.why-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.why-grid{grid-template-columns:1fr}}
+.why-card{
+  background:var(--white);border:1px solid var(--line);border-radius:20px;
+  padding:32px 24px;text-align:center;
+  transition:transform .3s var(--ease),box-shadow .3s,border-color .3s;
+  position:relative;overflow:hidden;
+}
+[data-theme="dark"] .why-card{background:var(--bg-alt)}
+.why-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--accent)}
+.why-card .v-icon{margin:0 auto 20px;transition:transform .4s var(--ease-spring)}
+.why-card:hover .v-icon{transform:scale(1.1) rotate(-5deg)}
+.why-card h3{font-size:17px;margin-bottom:8px}
+.why-card p{font-size:14px;color:var(--muted);line-height:1.65;margin:0}
+
+/* ---------- Course carousel ---------- */
+.courses-section{padding:100px 0}
+.courses-section .section-sub{max-width:600px}
+.course-card-lg{
+  flex-shrink:0;width:360px;
+  background:var(--white);border:1px solid var(--line);border-radius:20px;
+  overflow:hidden;transition:transform .3s var(--ease),box-shadow .3s,border-color .3s;
+}
+[data-theme="dark"] .course-card-lg{background:var(--bg-alt)}
+.course-card-lg:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--accent)}
+.course-card-lg .ccl-visual{
+  height:160px;position:relative;overflow:hidden;display:grid;place-items:center;
+}
+.course-card-lg .ccl-visual.v1{background:linear-gradient(135deg,rgba(34,103,238,.2),rgba(35,199,217,.2))}
+.course-card-lg .ccl-visual.v2{background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(236,72,153,.2))}
+.course-card-lg .ccl-visual.v3{background:linear-gradient(135deg,rgba(16,185,129,.2),rgba(34,103,238,.2))}
+.course-card-lg .ccl-visual.v4{background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(236,72,153,.2))}
+.course-card-lg .ccl-visual .ccl-glyph{
+  font-family:'Manrope';font-weight:800;font-size:56px;
+  color:rgba(34,103,238,.35);letter-spacing:-.04em;
+  position:relative;z-index:1;
+}
+.course-card-lg .ccl-body{padding:22px;display:flex;flex-direction:column;gap:10px}
+.course-card-lg .ccl-tag{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.course-card-lg h4{font-size:18px;margin:0;line-height:1.3}
+.course-card-lg p{font-size:13.5px;color:var(--muted);margin:0;line-height:1.55;flex:1}
+.course-card-lg .ccl-meta{
+  display:flex;gap:16px;padding-top:12px;border-top:1px solid var(--line);
+  font-size:12px;color:var(--muted);margin-top:auto;flex-wrap:wrap;
+}
+.course-card-lg .ccl-meta .ccl-meta-item{display:flex;align-items:center;gap:6px}
+.course-card-lg .ccl-meta svg{width:14px;height:14px;color:var(--accent)}
+
+/* ---------- Achievements section ---------- */
+.achievements{background:var(--navy);color:#fff;padding:100px 0;position:relative;overflow:hidden}
+.achievements::before{
+  content:"";position:absolute;top:-100px;left:50%;transform:translateX(-50%);
+  width:800px;height:800px;border-radius:50%;
+  background:radial-gradient(circle,rgba(139,92,246,.2),transparent 60%);
+  pointer-events:none;
+}
+.achievements .wrap{position:relative;z-index:1}
+.achievements h2{color:#fff;font-size:clamp(28px,3.6vw,42px);margin-bottom:16px;text-align:center}
+.achievements .section-sub{color:rgba(255,255,255,.75);margin:0 auto 48px;text-align:center}
+.achievements-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+@media(max-width:900px){.achievements-grid{grid-template-columns:1fr}}
+.achievement-card{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);
+  border-radius:20px;padding:32px;transition:transform .3s,background .3s;
+  position:relative;overflow:hidden;
+}
+.achievement-card:hover{transform:translateY(-4px);background:rgba(255,255,255,.07)}
+.achievement-card::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,#A78BFA,transparent);
+  opacity:.6;
+}
+.achievement-card .ac-icon{
+  width:56px;height:56px;border-radius:16px;display:grid;place-items:center;
+  background:linear-gradient(135deg,rgba(139,92,246,.25),rgba(35,199,217,.15));
+  color:#C4B5FD;margin-bottom:20px;font-size:26px;
+}
+.achievement-card h3{color:#fff;font-size:18px;margin-bottom:8px}
+.achievement-card p{color:rgba(255,255,255,.7);font-size:14px;line-height:1.65;margin:0}
+
+/* ---------- Sign-in section ---------- */
+.signin-section{padding:100px 0;text-align:center}
+.signin-box{
+  max-width:500px;margin:0 auto;background:var(--white);border:1px solid var(--line);
+  border-radius:24px;padding:48px 40px;box-shadow:var(--shadow-xl);
+}
+[data-theme="dark"] .signin-box{background:var(--bg-alt)}
+@media(max-width:520px){.signin-box{padding:32px 24px}}
+.signin-box h2{font-size:28px;margin-bottom:8px;letter-spacing:-.02em}
+.signin-box > p{color:var(--muted);font-size:15px;margin-bottom:24px;line-height:1.7}
+.signin-box .btn{width:100%;justify-content:center;margin-bottom:12px}
+.signin-note{
+  margin-top:24px;padding:16px;border-radius:12px;
+  background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.25);
+  font-size:13px;color:var(--ink);line-height:1.6;text-align:left;
+}
+[data-theme="dark"] .signin-note{background:rgba(139,92,246,.15);color:#E9D5FF}
+.signin-note strong{color:var(--accent-3)}
+[data-theme="dark"] .signin-note strong{color:#C4B5FD}
+.signin-box .signin-links{margin-top:20px;font-size:13px;color:var(--muted)}
+.signin-box .signin-links a{color:var(--accent);font-weight:600}
+</style>
 </head>
-
 <body>
+<a href="#main" class="skip">Skip to content</a>
 
-  <!-- ═══ PRELOADER ═══ -->
-  <style>
-    #vioraPreloader {
-      position: fixed;
-      inset: 0;
-      z-index: 99999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #05060a;
-      background-image: radial-gradient(ellipse at 50% 30%, #10131c 0%, #05060a 70%);
-      transition: opacity .6s ease, visibility .6s ease;
-      opacity: 1;
-      visibility: visible;
-      overflow: hidden
-    }
+<canvas id="globalNetwork" aria-hidden="true"></canvas>
+<div class="bg-aurora" aria-hidden="true"></div>
 
-    #vioraPreloader.viora-preloader-hide {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none
-    }
-
-    #vioraPreloader .viora-lockup {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: clamp(28px, 5vw, 48px);
-      width: min(92vw, 640px);
-      position: relative
-    }
-
-    #vioraPreloader .viora-lockup::before {
-      content: '';
-      position: absolute;
-      top: 30%;
-      left: 50%;
-      width: 70vw;
-      height: 70vw;
-      max-width: 720px;
-      max-height: 720px;
-      transform: translate(-50%, -50%);
-      background: radial-gradient(circle, rgba(60, 90, 160, .16) 0%, transparent 62%);
-      pointer-events: none;
-      z-index: -1;
-      filter: blur(46px);
-      animation: ambient-pulse 6s ease-in-out infinite
-    }
-
-    @keyframes ambient-pulse {
-
-      0%,
-      100% {
-        opacity: .55
-      }
-
-      50% {
-        opacity: 1
-      }
-    }
-
-    #vioraPreloader .v-mark {
-      width: min(44vw, 260px);
-      height: auto;
-      display: block;
-      filter: drop-shadow(0 22px 36px rgba(0, 0, 0, .85)) drop-shadow(0 8px 14px rgba(0, 0, 0, .55));
-      animation: mark-in 1s cubic-bezier(0.34, 1.56, 0.64, 1) both
-    }
-
-    @keyframes mark-in {
-      from {
-        opacity: 0;
-        transform: scale(.88) translateY(-10px)
-      }
-
-      to {
-        opacity: 1;
-        transform: none
-      }
-    }
-
-    #vioraPreloader .v-mark .v-shape {
-      fill: url(#silverBrush);
-      stroke: url(#silverEdge);
-      stroke-width: 1.2;
-      stroke-linejoin: round
-    }
-
-    #vioraPreloader .v-mark .specular {
-      fill: url(#specularShine);
-      opacity: .55;
-      mix-blend-mode: screen;
-      pointer-events: none
-    }
-
-    #vioraPreloader .viora-wordmark {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: clamp(4px, 1.4vw, 10px);
-      font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-      font-weight: 800;
-      font-size: clamp(2.6rem, 9.5vw, 5.4rem);
-      line-height: 1;
-      user-select: none
-    }
-
-    #vioraPreloader .viora-wordmark .letter {
-      display: inline-block;
-      background: linear-gradient(180deg, #506a9a 0%, #2c3f68 22%, #152549 55%, #0a152e 82%, #040a18 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      -webkit-text-stroke: 1.4px #c8ccd2;
-      filter: drop-shadow(0 2px 0 #7a8088) drop-shadow(0 4px 0 #565c64) drop-shadow(0 6px 0 #343a42) drop-shadow(0 10px 14px rgba(0, 0, 0, .9));
-      opacity: 0;
-      transform: translateY(16px);
-      animation: letter-in 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both
-    }
-
-    #vioraPreloader .viora-wordmark .letter.silver {
-      background: linear-gradient(180deg, #ffffff 0%, #eaecef 16%, #a8aeb6 38%, #7d848c 56%, #bdc4 72%, #e0e3e8 88%, #8b9097 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      -webkit-text-stroke: 1.4px #ffffff;
-      filter: drop-shadow(0 2px 0 #8a8f96) drop-shadow(0 4px 0 #6a7078) drop-shadow(0 6px 0 #454a51) drop-shadow(0 10px 14px rgba(0, 0, 0, .85));
-    }
-
-    #vioraPreloader .viora-wordmark .letter:nth-child(1) {
-      animation-delay: 0.35s
-    }
-
-    #vioraPreloader .viora-wordmark .letter:nth-child(2) {
-      animation-delay: 0.45s
-    }
-
-    #vioraPreloader .viora-wordmark .letter:nth-child(3) {
-      animation-delay: 0.55s
-    }
-
-    #vioraPreloader .viora-wordmark .letter:nth-child(4) {
-      animation-delay: 0.65s
-    }
-
-    #vioraPreloader .viora-wordmark .letter:nth-child(5) {
-      animation-delay: 0.75s
-    }
-
-    @keyframes letter-in {
-      to {
-        opacity: 1;
-        transform: none
-      }
-    }
-
-    #vioraPreloader .tagline {
-      font-family: 'Inter', system-ui, sans-serif;
-      font-weight: 500;
-      font-size: clamp(0.9rem, 2.5vw, 1.4rem);
-      letter-spacing: clamp(1px, 0.35vw, 3.2px);
-      color: #c8ccd2;
-      text-align: center;
-      opacity: 0;
-      transform: translateY(10px);
-      animation: tagline-in 0.8s 1.1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards
-    }
-
-    @keyframes tagline-in {
-      to {
-        opacity: 1;
-        transform: none
-      }
-    }
-
-    @media(max-width:480px) {
-      #vioraPreloader .viora-lockup {
-        gap: 34px
-      }
-
-      #vioraPreloader .v-mark {
-        width: min(52vw, 180px)
-      }
-    }
-  </style>
-
-  <div id="vioraPreloader" role="status" aria-live="polite" aria-label="Loading VIORA">
-    <div class="viora-lockup">
-      <svg class="v-mark" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-label="V">
-        <defs>
-          <linearGradient id="silverBrush" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#ffffff" />
-            <stop offset="16%" stop-color="#eaecef" />
-            <stop offset="38%" stop-color="#a8aeb6" />
-            <stop offset="56%" stop-color="#7d848c" />
-            <stop offset="72%" stop-color="#b8bdc4" />
-            <stop offset="88%" stop-color="#e0e3e8" />
-            <stop offset="100%" stop-color="#8b9097" />
-          </linearGradient>
-          <linearGradient id="silverEdge" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#ffffff" />
-            <stop offset="50%" stop-color="#5a6068" />
-            <stop offset="100%" stop-color="#2e3338" />
-          </linearGradient>
-          <linearGradient id="specularShine" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95" />
-            <stop offset="45%" stop-color="#ffffff" stop-opacity="0" />
-          </linearGradient>
-        </defs>
-        <path class="v-shape" d="M 30 40 L 120 40 L 150 200 L 180 40 L 270 40 L 165 265 L 135 265 Z" />
-        <path class="specular" d="M 30 40 L 120 40 L 138 120 L 123 120 Z" />
-        <path class="specular" d="M 180 40 L 270 40 L 255 120 L 240 120 Z" />
-      </svg>
-      <div class="viora-wordmark" aria-label="VIORA">
-        <span class="letter">V</span><span class="letter">I</span><span class="letter silver">O</span><span class="letter">R</span><span class="letter">A</span>
-      </div>
-      <div class="tagline">Explore. Discover. Belong.</div>
-    </div>
-  </div>
-
-
-  <script>
-    (function() {
-      'use strict';
-      var p = document.getElementById('vioraPreloader');
-      if (!p) return;
-      var MIN = 3000,
-        FADE = 700,
-        MAX = 8000;
-      var s = Date.now(),
-        h = false,
-        pend = false;
-
-      function doHide() {
-        if (h) return;
-        h = true;
-        p.classList.add('viora-preloader-hide');
-        setTimeout(function() {
-          if (p && p.parentNode) p.parentNode.removeChild(p);
-        }, FADE);
-      }
-
-      function hide() {
-        if (h || pend) return;
-        var r = MIN - (Date.now() - s);
-        if (r <= 0) doHide();
-        else {
-          pend = true;
-          setTimeout(doHide, r);
-        }
-      }
-      if (document.readyState === 'complete') hide();
-      else window.addEventListener('load', hide);
-      setTimeout(function() {
-        if (!h) doHide();
-      }, MAX);
-      window.vioraHidePreloader = hide;
-    })();
-  </script>
-
-  <!-- Animated background -->
-  <canvas id="bgCanvas"></canvas>
-  <div class="bg-aurora"></div>
-  <div class="bg-orbs">
-    <div class="orb"></div>
-    <div class="orb"></div>
-    <div class="orb"></div>
-    <div class="orb"></div>
-  </div>
-  <div class="bg-grid"></div>
-
-  <!-- ═══ LOGIN ═══ -->
-  <div id="loginScreen">
-    <div class="login-card">
-      <div class="login-brand">
-        <div class="logo-mark" id="loginLogoMark">
-          <img src="https://viora.co.ke/viora.png" />
-        </div>
-        <div>
-          <h1>Viora <span>Training Portal</span></h1>
-          <p>Upskill · Onboard · Certify</p>
-        </div>
-      </div>
-
-      <div class="login-tabs">
-        <button id="tabSignIn" class="active">Sign In</button>
-        <button id="tabRegister">First Time</button>
-      </div>
-
-      <div id="signInFields">
-        <div class="login-field"><label>Email</label><input id="loginEmail" type="email" placeholder="you@viora.io" autocomplete="email" /></div>
-        <div class="login-field"><label>Password</label><input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password" /></div>
-        <button class="btn-login" id="loginBtn"><i class="fa-solid fa-arrow-right-to-bracket"></i>&nbsp; Sign In</button>
-      </div>
-
-      <div id="registerFields" style="display:none;">
-        <div class="login-field"><label>Full Name</label><input id="regName" placeholder="Jane Doe" autocomplete="name" /></div>
-        <div class="login-field"><label>Email</label><input id="regEmail" type="email" placeholder="you@company.com" autocomplete="email" /></div>
-        <div class="login-field"><label>Phone (optional)</label><input id="regPhone" placeholder="+254 7XX XXX XXX" autocomplete="tel" /></div>
-        <div class="login-field"><label>Password (min 6 chars)</label><input id="regPassword" type="password" placeholder="••••••••" autocomplete="new-password" /></div>
-        <button class="btn-login" id="registerBtn"><i class="fa-solid fa-user-plus"></i>&nbsp; Request Training Access</button>
-        <div style="margin-top:12px;font-size:.72rem;color:#94a3b8;text-align:center;line-height:1.5;">Training access is limited to VIORA clients. After registering, an admin will verify and link your account before you can access the courses.</div>
-      </div>
-
-      <div id="loginMessage" class="login-message"></div>
-      <div class="login-footer">
-        Contact <strong style="color:#7de8ff;">cliff254johns@gmail.com</strong> for help.
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══ PENDING ═══ -->
-  <div id="pendingScreen">
-    <div class="pending-card">
-      <div class="icon"><i class="fa-solid fa-hourglass-half"></i></div>
-      <h2>Training Access Request Received</h2>
-      <p>Hi <strong id="pendingName">there</strong>, your training access request is being reviewed. Training is reserved for verified VIORA clients and staff. An admin will link your account shortly.</p>
-      <div class="check-row"><span class="dot-pulse"></span><span>Waiting for approval — this page checks automatically…</span></div>
-      <div style="margin-top:20px;"><button class="btn btn-outline btn-sm" id="pendingLogout"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button></div>
-    </div>
-  </div>
-
-  <!-- ═══ MOBILE APP BAR ═══ -->
-  <div id="mobileAppBar">
-    <div class="mab-brand">
-      <img src="https://viora.co.ke/viora.png" alt="VIORA" onerror="this.outerHTML='<i class=&quot;fa-solid fa-graduation-cap&quot; style=&quot;color:var(--accent-blue);&quot;></i>'" />
-      <span>VIORA Learn</span>
-    </div>
-    <div style="display:flex;gap:6px;">
-      <button class="mab-icon-btn" id="mobileLogoutBtn" title="Sign out"><i class="fa-solid fa-right-from-bracket"></i></button>
-    </div>
-  </div>
-
-  <!-- ═══ SHELL ═══ -->
-  <div id="appShell">
-    <header class="topbar">
-      <div class="brand">
-        <img src="https://viora.co.ke/viora.png" alt="VIORA" onerror="this.outerHTML='<i class=&quot;fa-solid fa-graduation-cap&quot; style=&quot;color:var(--accent-blue);font-size:1.3rem;&quot;></i>'" />
-        <span>VIORA</span>
-        <span class="badge badge-purple" style="font-size:9px;">Training Portal</span>
-      </div>
-      <div class="user-actions">
-        <span class="live-sync"><span class="pulse-dot"></span> Live sync</span>
-        <span class="user-info"><i class="fa-solid fa-user-circle"></i> <span id="whoami">—</span></span>
-        <button class="btn btn-outline btn-sm" id="themeToggle" title="Toggle theme"><i class="fa-solid fa-moon"></i></button>
-        <button class="btn btn-outline btn-sm" id="logoutBtn" title="Sign out"><i class="fa-solid fa-right-from-bracket"></i></button>
-      </div>
-    </header>
-
-    <nav class="tabs">
-      <button class="tab-btn active" data-tab="overview"><i class="fa-solid fa-house"></i> Overview</button>
-      <button class="tab-btn" data-tab="courses"><i class="fa-solid fa-book-open"></i> Courses</button>
-      <button class="tab-btn" data-tab="checklists"><i class="fa-solid fa-list-check"></i> Onboarding</button>
-      <button class="tab-btn" data-tab="progress"><i class="fa-solid fa-chart-line"></i> My Progress</button>
-      <button class="tab-btn" data-tab="certificates"><i class="fa-solid fa-certificate"></i> Certificates</button>
-      <button class="tab-btn" data-tab="resources"><i class="fa-solid fa-folder-tree"></i> Resources</button>
-      <button class="tab-btn" data-tab="admin" id="adminTabBtn" style="display:none;"><i class="fa-solid fa-shield-halved"></i> Manage</button>
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand">
+      <div class="brand-logo" aria-hidden="true"></div>
+      <div class="brand-text"><strong>VIORA</strong><small>ECOSYSTEMS</small></div>
+    </a>
+    <nav aria-label="Primary">
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="support.html">Solutions</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="client.html">Client Portal</a></li>
+        <li><a href="training.html" class="active">Academy</a></li>
+        <li><a href="contact_us.html">Contact</a></li>
+      </ul>
     </nav>
-
-    <main class="main">
-      <section id="tab-overview" class="ptab active"></section>
-      <section id="tab-courses" class="ptab"></section>
-      <section id="tab-checklists" class="ptab"></section>
-      <section id="tab-progress" class="ptab"></section>
-      <section id="tab-certificates" class="ptab"></section>
-      <section id="tab-resources" class="ptab"></section>
-      <section id="tab-admin" class="ptab"></section>
-    </main>
-  </div>
-
-  <!-- ═══ MOBILE BOTTOM NAV ═══ -->
-  <nav id="mobileBottomNav">
-    <button class="mnav-item active" data-mtab="overview"><i class="fa-solid fa-house"></i><span>Home</span></button>
-    <button class="mnav-item" data-mtab="courses"><i class="fa-solid fa-book-open"></i><span>Courses</span></button>
-    <button class="mnav-item" data-mtab="checklists"><i class="fa-solid fa-list-check"></i><span>Tasks</span></button>
-    <button class="mnav-item" data-mtab="progress"><i class="fa-solid fa-chart-line"></i><span>Progress</span></button>
-    <button class="mnav-item" data-mtab="certificates"><i class="fa-solid fa-certificate"></i><span>Certs</span></button>
-  </nav>
-
-  <!-- ═══ MODALS ═══ -->
-  <div class="modal-overlay" id="lessonModal">
-    <div class="modal">
-      <h2><span class="modal-icon"><i class="fa-solid fa-book-open"></i></span> <span id="lessonTitle">Module</span></h2>
-      <div id="lessonBody"></div>
-      <div class="form-actions">
-        <button class="btn btn-outline" data-close="lessonModal">Close</button>
-        <button class="btn btn-success" id="lessonCompleteBtn"><i class="fa-solid fa-check"></i> Mark Module Complete</button>
-      </div>
+    <div class="nav-actions">
+      <button class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode">
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      </button>
+      <a href="trainingportal.html" class="btn btn-gradient btn-sm">Sign in →</a>
+      <button class="burger" id="burger" aria-expanded="false" aria-controls="drawer" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </div>
+</header>
 
-  <div class="modal-overlay" id="quizModal">
-    <div class="modal">
-      <h2><span class="modal-icon"><i class="fa-solid fa-question-circle"></i></span> Final Quiz — <span id="quizTitle"></span></h2>
-      <div id="quizBody"></div>
-      <div class="form-actions">
-        <button class="btn btn-outline" data-close="quizModal">Cancel</button>
-        <button class="btn btn-primary" id="quizSubmitBtn"><i class="fa-solid fa-paper-plane"></i> Submit to Admin</button>
-      </div>
-    </div>
+<div class="mobile-appbar" role="banner">
+  <div class="mab-brand"><div class="mab-logo">V</div><span>VIORA Learn</span></div>
+  <div class="mab-actions">
+    <button class="mab-btn" data-theme-toggle aria-label="Theme">
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+    </button>
+    <a href="trainingportal.html" class="mab-btn" aria-label="Sign in">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+    </a>
   </div>
+</div>
 
-  <div class="modal-overlay" id="certModal">
-    <div class="modal">
-      <h2><span class="modal-icon"><i class="fa-solid fa-certificate"></i></span> Certificate of Completion</h2>
-      <div id="certBody"></div>
-      <div class="form-actions no-print">
-        <button class="btn btn-outline" data-close="certModal">Close</button>
-        <button class="btn btn-primary" id="certPrintBtn"><i class="fa-solid fa-print"></i> Print / Save PDF</button>
-      </div>
-    </div>
-  </div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <ul>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="support.html">Solutions</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="client.html">Client Portal</a></li>
+    <li><a href="training.html">Academy</a></li>
+    <li><a href="contact_us.html">Contact</a></li>
+  </ul>
+  <a href="trainingportal.html" class="btn btn-gradient">Sign in to Academy</a>
+</aside>
 
-  <div class="modal-overlay" id="courseEditorModal">
-    <div class="modal">
-      <h2><span class="modal-icon"><i class="fa-solid fa-pen"></i></span> <span id="courseEditorTitle">New Course</span></h2>
-      <input type="hidden" id="editCourseId" />
-      <div class="form-row">
-        <div><label>Title *</label><input id="ceTitle" required /></div>
-        <div><label>Category</label>
-          <select id="ceCategory">
-            <option>Software Tutorial</option>
-            <option>Venture Workflow</option>
-            <option>SOP</option>
-            <option>Compliance</option>
-            <option>Product Knowledge</option>
-            <option>Customer Service</option>
-          </select>
+<main id="main">
+
+<!-- ============ CREATIVE HERO ============ -->
+<section class="academy-hero">
+  <div class="wrap">
+    <div class="academy-grid">
+      <div>
+        <span class="eyebrow reveal">VIORA Academy</span>
+        <h1 class="reveal">Learn the systems your business<br><span style="background:linear-gradient(135deg,var(--accent-3),var(--accent-2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">actually runs on.</span></h1>
+        <p class="reveal">Structured courses, onboarding checklists and certifications for VIORA clients and staff. Get your team productive from day one.</p>
+        <div class="academy-ctas reveal">
+          <a href="trainingportal.html" class="btn btn-gradient btn-lg">Sign in to Academy →</a>
+          <a href="contact_us.html" class="btn btn-ghost btn-lg">Request access</a>
         </div>
       </div>
-      <label>Description</label>
-      <textarea id="ceDescription" rows="3"></textarea>
-      <div class="form-row">
-        <div><label>Level</label>
-          <select id="ceLevel">
-            <option>Beginner</option>
-            <option>Intermediate</option>
-            <option>Advanced</option>
-          </select>
+
+      <!-- Floating course preview -->
+      <div class="course-preview reveal" aria-hidden="true">
+        <div class="cp-card">
+          <span class="cp-tag">Software Tutorial</span>
+          <div class="cp-title">Getting Started with VIORA Business</div>
+          <div class="cp-desc">Master the ERP basics — dashboard, sales, inventory and reports — in 8 short modules.</div>
+          <div class="cp-progress-label"><span>Your progress</span><span>64%</span></div>
+          <div class="cp-progress"><div></div></div>
+          <div class="cp-modules">
+            <div class="cp-module done"><span class="num">✓</span><span>Introduction to the dashboard</span></div>
+            <div class="cp-module done"><span class="num">✓</span><span>Setting up your first product</span></div>
+            <div class="cp-module done"><span class="num">✓</span><span>Recording a sale</span></div>
+            <div class="cp-module"><span class="num">4</span><span>Managing inventory levels</span></div>
+            <div class="cp-module"><span class="num">5</span><span>Generating reports</span></div>
+          </div>
         </div>
-        <div><label>Duration (mins)</label><input type="number" id="ceDuration" value="30" min="5" /></div>
-        <div><label>Icon (FontAwesome)</label><input id="ceIcon" value="fa-solid fa-book" /></div>
-      </div>
-      <label>Required For Roles (comma-separated, or leave blank)</label>
-      <input id="ceRequiredFor" placeholder="client,sales,marketing,ops" />
-      <h4 style="margin-top:16px;font-size:.82rem;text-transform:uppercase;color:var(--text-secondary);letter-spacing:.5px;">Modules</h4>
-      <p style="font-size:.72rem;color:var(--text-secondary);margin-bottom:8px;">💡 The <strong>final module</strong> should include the final quiz. Check "Include final quiz" on the last module.</p>
-      <div id="ceModulesList"></div>
-      <button type="button" class="btn btn-outline btn-sm" id="ceAddModuleBtn" style="margin-top:8px;"><i class="fa-solid fa-plus"></i> Add Module</button>
-      <div class="form-actions">
-        <button class="btn btn-outline" data-close="courseEditorModal">Cancel</button>
-        <button class="btn btn-success" id="ceSaveBtn"><i class="fa-solid fa-check"></i> Save Course</button>
-      </div>
-    </div>
-  </div>
 
-  <div class="modal-overlay" id="checklistEditorModal">
-    <div class="modal">
-      <h2><span class="modal-icon"><i class="fa-solid fa-list-check"></i></span> <span id="checklistEditorTitle">New Checklist</span></h2>
-      <input type="hidden" id="editChecklistId" />
-      <label>Title *</label>
-      <input id="cleTitle" placeholder="e.g. Sales Team Onboarding" />
-      <label>Description</label>
-      <textarea id="cleDesc" rows="2"></textarea>
-      <label>Target Role (comma-separated, or 'all')</label>
-      <input id="cleRole" value="all" />
-      <label>Tasks (one per line, prefix * for required)</label>
-      <textarea id="cleTasks" rows="6" placeholder="Read the company handbook&#10;* Complete security training&#10;Set up your email signature"></textarea>
-      <div class="form-actions">
-        <button class="btn btn-outline" data-close="checklistEditorModal">Cancel</button>
-        <button class="btn btn-success" id="cleSaveBtn"><i class="fa-solid fa-check"></i> Save Checklist</button>
+        <!-- Floating achievement badges -->
+        <div class="float-badge b1">
+          <div class="fb-icon" style="background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(245,158,11,.1));color:#F59E0B">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+          </div>
+          <div class="fb-text">
+            <strong>Certificate earned</strong>
+            <small>Retail POS Basics</small>
+          </div>
+        </div>
+
+        <div class="float-badge b2">
+          <div class="fb-icon" style="background:linear-gradient(135deg,rgba(16,185,129,.2),rgba(16,185,129,.1));color:#10B981">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="fb-text">
+            <strong>Course complete</strong>
+            <small>Onboarding track</small>
+          </div>
+        </div>
       </div>
     </div>
   </div>
+</section>
 
-  <div class="modal-overlay" id="resourceEditorModal">
-    <div class="modal">
-      <h2><span class="modal-icon"><i class="fa-solid fa-folder-plus"></i></span> Add Resource</h2>
-      <label>Title *</label>
-      <input id="nrTitle" placeholder="e.g. Employee Handbook" />
-      <label>Type</label>
-      <select id="nrType">
-        <option value="document">Document</option>
-        <option value="video">Video</option>
-        <option value="pdf">PDF</option>
-        <option value="sheet">Spreadsheet</option>
-        <option value="link">External Link</option>
-      </select>
-      <label>Category</label>
-      <input id="nrCategory" placeholder="e.g. HR, Engineering, Sales" value="General" />
-      <label>URL *</label>
-      <input id="nrUrl" placeholder="https://..." />
-      <label>Notes</label>
-      <textarea id="nrNotes" rows="2"></textarea>
-      <div class="form-actions">
-        <button class="btn btn-outline" data-close="resourceEditorModal">Cancel</button>
-        <button class="btn btn-success" id="nrSaveBtn"><i class="fa-solid fa-check"></i> Save Resource</button>
+<!-- ============ WHY ACADEMY ============ -->
+<section class="why-academy">
+  <div class="wrap">
+    <div class="text-center reveal">
+      <span class="eyebrow" style="justify-content:center">Why it works</span>
+      <h2 class="section-h">Training built around your actual systems.</h2>
+      <p class="section-sub" style="margin-left:auto;margin-right:auto">Not generic tutorials — courses built on the VIORA modules you actually use.</p>
+    </div>
+    <div class="why-grid">
+      <div class="why-card reveal">
+        <div class="v-icon violet" style="margin:0 auto 20px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        </div>
+        <h3>Role-based paths</h3>
+        <p>Different learning paths for admins, cashiers, HR officers and managers.</p>
+      </div>
+      <div class="why-card reveal">
+        <div class="v-icon green" style="margin:0 auto 20px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <h3>Onboarding checklists</h3>
+        <p>Track every step of your team's setup — from account creation to first sale.</p>
+      </div>
+      <div class="why-card reveal">
+        <div class="v-icon amber" style="margin:0 auto 20px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+        </div>
+        <h3>Verified certificates</h3>
+        <p>Earn verifiable certificates when you complete a course. Share or print them.</p>
+      </div>
+      <div class="why-card reveal">
+        <div class="v-icon blue" style="margin:0 auto 20px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-4 4 4 6-6"/></svg>
+        </div>
+        <h3>Progress tracking</h3>
+        <p>See exactly how far your team has come — and what's still ahead.</p>
       </div>
     </div>
   </div>
+</section>
 
-  <div class="toast-container" id="toastContainer"></div>
+<!-- ============ COURSE CAROUSEL ============ -->
+<section class="courses-section">
+  <div class="wrap">
+    <span class="eyebrow reveal">Available Courses</span>
+    <h2 class="section-h reveal">Pick your path. Start learning.</h2>
+    <p class="section-sub reveal">From ERP basics to advanced workflows — structured, practical, and built on the systems you use.</p>
+  </div>
+  <div class="carousel-wrap" data-carousel style="max-width:100vw">
+    <div class="carousel-track">
+      <article class="course-card-lg">
+        <div class="ccl-visual v1"><span class="ccl-glyph">EB</span></div>
+        <div class="ccl-body">
+          <span class="ccl-tag">Software Tutorial</span>
+          <h4>Getting Started with VIORA Business</h4>
+          <p>Master the ERP basics — dashboard, sales, inventory and reports in 8 short modules.</p>
+          <div class="ccl-meta">
+            <span class="ccl-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg> 8 modules</span>
+            <span class="ccl-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ~2h</span>
+          </div>
+        </div>
+      </article>
+      <article class="course-card-lg">
+        <div class="ccl-visual v2"><span class="ccl-glyph">POS</span></div>
+        <div class="ccl-body">
+          <span class="ccl-tag">POS</span>
+          <h4>Running a Till Like a Pro</h4>
+          <p>Cash handling, refunds, shift close, and till reconciliation for cashiers and supervisors.</p>
+          <div class="ccl-meta">
+            <span class="ccl-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg> 5 modules</span>
+            <span class="ccl-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ~1h</span>
+          </div>
+        </div>
+      </article>
+      <article class="course-card-lg">
+        <div class="ccl-visual v3"><span class="ccl-glyph">PY</span></div>
+        <div class="ccl-body">
+          <span class="ccl-tag">HR</span>
+          <h4>Payroll &amp; Statutory Deductions</h4>
+          <p>Run monthly payroll, handle PAYE / NHIF / NSSF / Housing Levy, and issue payslips.</p>
+          <div class="ccl-meta">
+            <span class="ccl-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg> 6 modules</span>
+            <span class="ccl-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ~1.5h</span>
+          </div>
+        </div>
+      </article>
+      <article class="course-card-lg">
+        <div class="ccl-visual v4"><span class="ccl-glyph">INV</span></div>
+        <div class="ccl-body">
+          <span class="ccl-tag">Inventory</span>
+          <h4>Stock &amp; Warehouse Management</h4>
+          <p>Multi-location stock, transfers, cycle counts, and reorder rules.</p>
+          <div class="ccl-meta">
+            <span class="ccl-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg> 7 modules</span>
+            <span class="ccl-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ~2h</span>
+          </div>
+        </div>
+      </article>
+      <article class="course-card-lg">
+        <div class="ccl-visual v1"><span class="ccl-glyph">CRM</span></div>
+        <div class="ccl-body">
+          <span class="ccl-tag">CRM</span>
+          <h4>Customer Relationships that Convert</h4>
+          <p>Customer records, pipelines, follow-ups and support ticket best practices.</p>
+          <div class="ccl-meta">
+            <span class="ccl-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg> 5 modules</span>
+            <span class="ccl-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ~1h</span>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="carousel-controls">
+      <button class="carousel-btn" data-carousel-prev aria-label="Previous">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <button class="carousel-btn" data-carousel-next aria-label="Next">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
 
-  <script type="importmap">
-    {
-      "imports": {
-        "firebase/app": "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js",
-        "firebase/database": "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js",
-        "firebase/auth": "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js"
-      }
-    }
-  </script>
+<!-- ============ ACHIEVEMENTS ============ -->
+<section class="achievements">
+  <div class="wrap">
+    <h2 class="reveal">Everything you earn, kept forever.</h2>
+    <p class="section-sub reveal">Certificates, progress, and proof of learning — stored in your VIORA account.</p>
+    <div class="achievements-grid">
+      <div class="achievement-card reveal">
+        <div class="ac-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:26px;height:26px"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+        </div>
+        <h3>Verified certificates</h3>
+        <p>Each certificate has a unique code. Share it with employers, clients or your team — it verifies against VIORA's records.</p>
+      </div>
+      <div class="achievement-card reveal">
+        <div class="ac-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:26px;height:26px"><path d="M3 3v18h18"/><path d="M7 15l4-4 4 4 6-6"/></svg>
+        </div>
+        <h3>Progress you can prove</h3>
+        <p>See exactly which modules your team has completed and when — useful for compliance and audits.</p>
+      </div>
+      <div class="achievement-card reveal">
+        <div class="ac-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:26px;height:26px"><path d="M12 2l3 7h7l-5.5 4.5L18.5 21 12 17l-6.5 4 2-7.5L2 9h7z"/></svg>
+        </div>
+        <h3>Standing out</h3>
+        <p>Certified VIORA users are eligible for advanced courses and partner opportunities. Your skills open doors.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-  <script type="module" src="/mainTraining/training.js"></script>
-  <!-- ═══ VIORA NOTIFICATION SOUND ═══ -->
-  <audio id="vioraNotifSound" preload="auto" playsinline>
-    <source src="/sounds/viora-notification.mp3" type="audio/mpeg" />
-    <source src="/viora-notification.mp3" type="audio/mpeg" />
-    <source src="/notification.mp3" type="audio/mpeg" />
-  </audio>
+<!-- ============ SIGN IN ============ -->
+<section class="signin-section">
+  <div class="wrap">
+    <div class="signin-box reveal">
+      <span class="eyebrow" style="justify-content:center;display:inline-flex">Sign in</span>
+      <h2>Access VIORA Academy</h2>
+      <p>If you're a VIORA client or staff member, sign in with your email and password.</p>
+      <a href="trainingportal.html" class="btn btn-gradient btn-lg">Sign in to Academy →</a>
+      <a href="trainingportal.html?mode=register" class="btn btn-ghost">First time? Request access →</a>
 
-  <!-- ═══ VIORA NOTIFICATION BRIDGE ═══ -->
-  <script>
-    window.vioraNotify = window.vioraNotify || async function(opts) {
-      opts = opts || {};
-      try {
-        const id = 'notif-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-        const db = (typeof firebase !== 'undefined' && firebase.database) ? firebase.database() : null;
-        if (!db) return;
-        await db.ref('viora_data/orgs/viora/notifications/' + id).set({
-          id,
-          title: opts.title || 'VIORA',
-          body: opts.body || '',
-          icon: opts.icon || 'fa-bell',
-          level: opts.level || 'info',
-          url: opts.url || '/dash.html',
-          source: opts.source || 'unknown',
-          ts: new Date().toISOString(),
-          read: false
-        });
-        return id;
-      } catch (e) {
-        console.warn('[vioraNotify] failed:', e.message);
-      }
-    };
-  </script>
-  <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"da4051c1e9464e1b9047b31f384614ef","r":1,"spa":2}' crossorigin="anonymous"></script>
+      <div class="signin-note">
+        <strong>ℹ️ Access is limited</strong><br>
+        Training is reserved for verified VIORA clients and staff. After registering, an admin will review and approve your account.
+      </div>
+
+      <div class="signin-links">
+        Need help? <a href="contact_us.html">Contact the VIORA team</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA ============ -->
+<section style="background:var(--navy);color:#fff;text-align:center;padding:100px 0">
+  <div class="wrap">
+    <h2 style="color:#fff;font-size:clamp(28px,3.6vw,42px);margin-bottom:16px" class="reveal">Want your team trained on VIORA?</h2>
+    <p style="color:rgba(255,255,255,.75);max-width:600px;margin:0 auto 32px;font-size:17px;line-height:1.7" class="reveal">Every client deployment includes onboarding training. Talk to us to plan yours.</p>
+    <div class="reveal" style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+      <a href="contact_us.html" class="btn btn-primary btn-lg">Talk to VIORA →</a>
+      <a href="client.html" class="btn btn-ghost btn-lg" style="color:#fff;border-color:rgba(255,255,255,.3)">View client portal</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <a href="index.html" class="brand">
+          <div class="brand-logo" aria-hidden="true"></div>
+          <div class="brand-text"><strong>VIORA</strong><small>ECOSYSTEMS</small></div>
+        </a>
+        <p class="foot-tag">Connect People. Empower Businesses.</p>
+        <p style="color:rgba(255,255,255,.5);font-size:13px;line-height:1.7;max-width:300px">An integrated technology ecosystem for business management, commerce, digital services and support. Founded 2022.</p>
+      </div>
+      <div class="foot-col">
+        <h5>Solutions</h5>
+        <ul>
+          <li><a href="support.html">Business Management</a></li>
+          <li><a href="support.html">ERP Systems</a></li>
+          <li><a href="support.html">POS Systems</a></li>
+          <li><a href="support.html">Accounting</a></li>
+          <li><a href="support.html">Custom Software</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h5>Company</h5>
+        <ul>
+          <li><a href="about.html">About VIORA</a></li>
+          <li><a href="contact_us.html">Contact</a></li>
+          <li><a href="client.html">Client Portal</a></li>
+          <li><a href="training.html">Academy</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h5>Contact</h5>
+        <ul>
+          <li><a href="mailto:support@viora.co.ke">support@viora.co.ke</a></li>
+          <li><a href="tel:+254713428774">+254 713 428 774</a></li>
+          <li><a href="https://wa.me/254713428774" target="_blank" rel="noopener">WhatsApp</a></li>
+          <li><a href="contact_us.html">Book a demo</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© <span id="yr"></span> VIORA Ecosystems. All rights reserved.</span>
+      <span>
+        <a href="privacy.html">Privacy</a> ·
+        <a href="terms.html">Terms</a> ·
+        <a href="cookies.html">Cookies</a> ·
+        <a href="accessibility.html">Accessibility</a> ·
+        <a href="dpa.html">DPA</a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+  <a href="index.html" class="mnav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Home</span>
+  </a>
+  <a href="support.html" class="mnav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    <span>Solutions</span>
+  </a>
+  <a href="client.html" class="mnav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+    <span>Portal</span>
+  </a>
+  <a href="training.html" class="mnav-item active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+    <span>Academy</span>
+  </a>
+  <a href="contact_us.html" class="mnav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <span>Contact</span>
+  </a>
+</nav>
+
+<script src="shared-app.js" defer></script>
 </body>
-
 </html>

@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Contact — VIORA Ecosystems</title>
+<meta name="description" content="Book a demo or consultation with VIORA Ecosystems. Email support@viora.co.ke or WhatsApp +254 713 428 774.">
+<link rel="canonical" href="https://viora.co.ke/contact_us.html">
+<meta name="theme-color" content="#0A192F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared-app.css">
+<style>
+.contact-layout{display:grid;grid-template-columns:1fr 1.2fr;gap:60px;margin:60px 0}
+@media(max-width:900px){.contact-layout{grid-template-columns:1fr;gap:40px}}
+.contact-info h2{font-size:28px;margin-bottom:12px}
+.contact-info > p{color:var(--muted);font-size:16px;line-height:1.75;margin-bottom:32px}
+
+.contact-method{
+  display:flex;align-items:flex-start;gap:16px;padding:20px;
+  background:var(--white);border:1px solid var(--line);border-radius:16px;
+  margin-bottom:14px;transition:transform .25s var(--ease),box-shadow .25s,border-color .25s;
+  text-decoration:none!important;color:inherit;
+}
+[data-theme="dark"] .contact-method{background:var(--bg-alt)}
+.contact-method:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--accent)}
+.contact-method .cm-icon{
+  width:48px;height:48px;border-radius:14px;flex-shrink:0;
+  display:grid;place-items:center;font-size:22px;
+  background:linear-gradient(135deg,rgba(34,103,238,.15),rgba(35,199,217,.15));
+  color:var(--accent);
+}
+.contact-method .cm-icon.green{background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(16,185,129,.08));color:#10B981}
+.contact-method .cm-icon.violet{background:linear-gradient(135deg,rgba(139,92,246,.15),rgba(139,92,246,.08));color:#8B5CF6}
+.contact-method .cm-icon svg{width:24px;height:24px}
+.contact-method .cm-body{flex:1;min-width:0}
+.contact-method .cm-body strong{display:block;font-size:15px;color:var(--ink);margin-bottom:2px;font-family:'Manrope'}
+.contact-method .cm-body span{font-size:13px;color:var(--muted);line-height:1.5}
+
+.next-steps{margin-top:48px}
+.next-steps h3{font-size:20px;margin-bottom:20px}
+.step-item{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--line)}
+.step-item:last-child{border-bottom:none}
+.step-item .step-num{
+  width:32px;height:32px;border-radius:50%;flex-shrink:0;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--accent),var(--accent-3));
+  color:#fff;font-family:'Manrope';font-weight:800;font-size:14px;
+}
+.step-item .step-body strong{display:block;font-size:15px;color:var(--ink);margin-bottom:2px}
+.step-item .step-body span{font-size:13px;color:var(--muted);line-height:1.6}
+
+.contact-form-wrap{position:sticky;top:100px}
+@media(max-width:900px){.contact-form-wrap{position:static}}
+.form-card h2{font-size:24px;margin-bottom:8px}
+.form-card .form-sub{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.6}
+
+.success-message{
+  display:none;text-align:center;padding:60px 24px;
+  background:linear-gradient(135deg,rgba(16,185,129,.1),rgba(35,199,217,.1));
+  border:1px solid rgba(16,185,129,.3);border-radius:20px;
+}
+.success-message.show{display:block;animation:successIn .5s var(--ease-spring)}
+@keyframes successIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.success-message .sm-icon{
+  width:80px;height:80px;border-radius:50%;
+  background:linear-gradient(135deg,#10B981,#23C7D9);
+  color:#fff;display:grid;place-items:center;
+  margin:0 auto 20px;box-shadow:0 12px 32px -8px rgba(16,185,129,.5);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.success-message h3{font-size:24px;margin-bottom:8px;color:var(--ink)}
+.success-message p{color:var(--muted);font-size:15px;line-height:1.7;max-width:400px;margin:0 auto 24px}
+</style>
+</head>
+<body>
+<a href="#main" class="skip">Skip to content</a>
+
+<canvas id="globalNetwork" aria-hidden="true"></canvas>
+<div class="bg-aurora" aria-hidden="true"></div>
+
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand">
+      <div class="brand-logo" aria-hidden="true"></div>
+      <div class="brand-text"><strong>VIORA</strong><small>ECOSYSTEMS</small></div>
+    </a>
+    <nav aria-label="Primary">
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="support.html">Solutions</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="client.html">Client Portal</a></li>
+        <li><a href="training.html">Academy</a></li>
+        <li><a href="contact_us.html" class="active">Contact</a></li>
+      </ul>
+    </nav>
+    <div class="nav-actions">
+      <button class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode">
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      </button>
+      <a href="tel:+254713428774" class="btn btn-primary btn-sm">Call now</a>
+      <button class="burger" id="burger" aria-expanded="false" aria-controls="drawer" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="mobile-appbar" role="banner">
+  <div class="mab-brand"><div class="mab-logo">V</div><span>VIORA</span></div>
+  <div class="mab-actions">
+    <button class="mab-btn" data-theme-toggle aria-label="Theme">
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+    </button>
+    <a href="tel:+254713428774" class="mab-btn" aria-label="Call">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+    </a>
+  </div>
+</div>
+
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <ul>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="support.html">Solutions</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="client.html">Client Portal</a></li>
+    <li><a href="training.html">Academy</a></li>
+    <li><a href="contact_us.html">Contact</a></li>
+  </ul>
+  <a href="https://wa.me/254713428774" target="_blank" rel="noopener" class="btn btn-primary">WhatsApp us</a>
+</aside>
+
+<main id="main">
+
+<section class="page-hero">
+  <div class="wrap">
+    <span class="eyebrow reveal">Contact</span>
+    <h1 class="reveal">Let's talk about<br>your <span style="background:linear-gradient(135deg,var(--accent),var(--accent-3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">business.</span></h1>
+    <p class="reveal">Tell us what you're trying to solve. We'll come back with a clear next step — no pitch decks, no pressure.</p>
+  </div>
+</section>
+
+<section style="padding-top:20px">
+  <div class="wrap">
+    <div class="contact-layout">
+
+      <!-- LEFT: Contact info + steps -->
+      <div class="contact-info reveal">
+        <h2>Get in touch directly</h2>
+        <p>We respond within one business day. For urgent support, WhatsApp is fastest.</p>
+
+        <a href="mailto:support@viora.co.ke" class="contact-method">
+          <div class="cm-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <div class="cm-body">
+            <strong>Email</strong>
+            <span>support@viora.co.ke</span>
+          </div>
+        </a>
+
+        <a href="tel:+254713428774" class="contact-method">
+          <div class="cm-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </div>
+          <div class="cm-body">
+            <strong>Phone</strong>
+            <span>+254 713 428 774 · Mon–Fri, 8am–6pm EAT</span>
+          </div>
+        </a>
+
+        <a href="https://wa.me/254713428774" target="_blank" rel="noopener" class="contact-method">
+          <div class="cm-icon green">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          </div>
+          <div class="cm-body">
+            <strong>WhatsApp</strong>
+            <span>Chat with us · fastest response</span>
+          </div>
+        </a>
+
+        <div class="next-steps">
+          <h3>What happens next?</h3>
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <strong>We reply within 1 business day</strong>
+              <span>Your message goes to a real person on our team — no auto-replies.</span>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <strong>We book a 30-minute call</strong>
+              <span>Free, no-pressure. We ask questions about your operations.</span>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <strong>We send a written proposal</strong>
+              <span>Modules, timeline, pricing — all clear and fixed.</span>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <strong>If it fits, we start.</strong>
+              <span>If not, we part as friends. No hard feelings, no sales pressure.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Form -->
+      <div class="contact-form-wrap reveal">
+        <form class="form-card" id="contactForm" novalidate>
+          <h2>Send us a message</h2>
+          <p class="form-sub">All fields marked * are required. Your details are never shared.</p>
+
+          <div class="form-row">
+            <div class="field">
+              <label for="f-name">Name <span class="req">*</span></label>
+              <input id="f-name" type="text" autocomplete="name" required>
+              <span class="err">Please enter your name.</span>
+            </div>
+            <div class="field">
+              <label for="f-company">Company</label>
+              <input id="f-company" type="text" autocomplete="organization">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label for="f-email">Email <span class="req">*</span></label>
+              <input id="f-email" type="email" autocomplete="email" required>
+              <span class="err">Please enter a valid email.</span>
+            </div>
+            <div class="field">
+              <label for="f-phone">Phone</label>
+              <input id="f-phone" type="tel" autocomplete="tel">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label for="f-industry">Industry</label>
+              <select id="f-industry">
+                <option value="">Select…</option>
+                <option>Retail &amp; Wholesale</option>
+                <option>Healthcare</option>
+                <option>Hospitality</option>
+                <option>Manufacturing</option>
+                <option>Agriculture</option>
+                <option>Fashion</option>
+                <option>Transport &amp; Logistics</option>
+                <option>Professional Services</option>
+                <option>Law Firms</option>
+                <option>Education</option>
+                <option>Construction</option>
+                <option>Beauty &amp; Wellness</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f-solution">What do you need? <span class="req">*</span></label>
+              <select id="f-solution" required>
+                <option value="">Select…</option>
+                <option>Business Management / ERP</option>
+                <option>POS System</option>
+                <option>Accounting</option>
+                <option>Inventory</option>
+                <option>HR &amp; Payroll</option>
+                <option>Custom Software</option>
+                <option>Website / Web App</option>
+                <option>Mobile Application</option>
+                <option>E-commerce</option>
+                <option>Not sure yet</option>
+              </select>
+              <span class="err">Please choose a solution.</span>
+            </div>
+          </div>
+
+          <div class="field full" style="margin-bottom:16px">
+            <label for="f-desc">Tell us more <span class="req">*</span></label>
+            <textarea id="f-desc" required placeholder="What problem are you trying to solve? What systems do you use today?" aria-describedby="f-desc-err"></textarea>
+            <span class="err" id="f-desc-err">Please tell us a little about what you need.</span>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg" style="width:100%">
+            Send message →
+          </button>
+          <div class="form-status" id="formStatus" role="status" aria-live="polite"></div>
+        </form>
+
+        <div class="success-message" id="successMessage">
+          <div class="sm-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <h3>Thanks for reaching out!</h3>
+          <p>Your details look good. This demo form isn't connected to a mailbox yet — but you can reach us directly:</p>
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+            <a href="mailto:support@viora.co.ke" class="btn btn-primary">Email us</a>
+            <a href="https://wa.me/254713428774" target="_blank" rel="noopener" class="btn btn-ghost">WhatsApp</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section style="background:var(--navy);color:#fff;text-align:center;padding:100px 0">
+  <div class="wrap">
+    <h2 style="color:#fff;font-size:clamp(28px,3.6vw,42px);margin-bottom:16px" class="reveal">Prefer to talk first?</h2>
+    <p style="color:rgba(255,255,255,.75);max-width:600px;margin:0 auto 32px;font-size:17px;line-height:1.7" class="reveal">Call or WhatsApp us directly. No forms, no delay — just a conversation.</p>
+    <div class="reveal" style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+      <a href="tel:+254713428774" class="btn btn-primary btn-lg">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        Call +254 713 428 774
+      </a>
+      <a href="https://wa.me/254713428774" target="_blank" rel="noopener" class="btn btn-ghost btn-lg" style="color:#fff;border-color:rgba(255,255,255,.3)">WhatsApp us</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <a href="index.html" class="brand">
+          <div class="brand-logo" aria-hidden="true"></div>
+          <div class="brand-text"><strong>VIORA</strong><small>ECOSYSTEMS</small></div>
+        </a>
+        <p class="foot-tag">Connect People. Empower Businesses.</p>
+        <p style="color:rgba(255,255,255,.5);font-size:13px;line-height:1.7;max-width:300px">An integrated technology ecosystem for business management, commerce, digital services and support. Founded 2022.</p>
+      </div>
+      <div class="foot-col">
+        <h5>Solutions</h5>
+        <ul>
+          <li><a href="support.html">Business Management</a></li>
+          <li><a href="support.html">ERP Systems</a></li>
+          <li><a href="support.html">POS Systems</a></li>
+          <li><a href="support.html">Accounting</a></li>
+          <li><a href="support.html">Custom Software</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h5>Company</h5>
+        <ul>
+          <li><a href="about.html">About VIORA</a></li>
+          <li><a href="contact_us.html">Contact</a></li>
+          <li><a href="client.html">Client Portal</a></li>
+          <li><a href="training.html">Academy</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h5>Contact</h5>
+        <ul>
+          <li><a href="mailto:support@viora.co.ke">support@viora.co.ke</a></li>
+          <li><a href="tel:+254713428774">+254 713 428 774</a></li>
+          <li><a href="https://wa.me/254713428774" target="_blank" rel="noopener">WhatsApp</a></li>
+          <li><a href="contact_us.html">Book a demo</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© <span id="yr"></span> VIORA Ecosystems. All rights reserved.</span>
+      <span>
+        <a href="privacy.html">Privacy</a> ·
+        <a href="terms.html">Terms</a> ·
+        <a href="cookies.html">Cookies</a> ·
+        <a href="accessibility.html">Accessibility</a> ·
+        <a href="dpa.html">DPA</a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+  <a href="index.html" class="mnav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Home</span>
+  </a>
+  <a href="support.html" class="mnav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    <span>Solutions</span>
+  </a>
+  <a href="client.html" class="mnav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+    <span>Portal</span>
+  </a>
+  <a href="training.html" class="mnav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+    <span>Academy</span>
+  </a>
+  <a href="contact_us.html" class="mnav-item active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <span>Contact</span>
+  </a>
+</nav>
+
+<script>
+const form = document.getElementById('contactForm');
+const status = document.getElementById('formStatus');
+const success = document.getElementById('successMessage');
+const rules = {
+  'f-name': v => v.trim().length >= 2,
+  'f-email': v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()),
+  'f-solution': v => v.trim() !== '',
+  'f-desc': v => v.trim().length >= 10
+};
+function validate(id) {
+  const el = document.getElementById(id);
+  if (!el || !rules[id]) return true;
+  const ok = rules[id](el.value);
+  el.closest('.field').classList.toggle('invalid', !ok);
+  return ok;
+}
+['f-name','f-email','f-solution','f-desc'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('blur', () => validate(id));
+  el.addEventListener('input', () => {
+    if (el.closest('.field').classList.contains('invalid')) validate(id);
+  });
+});
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  let allOk = true;
+  Object.keys(rules).forEach(id => { if (!validate(id)) allOk = false; });
+  if (!allOk) {
+    status.className = 'form-status show err';
+    status.textContent = 'Please correct the highlighted fields and try again.';
+    return;
+  }
+  form.style.display = 'none';
+  success.classList.add('show');
+  success.scrollIntoView({behavior:'smooth', block:'center'});
+});
+</script>
+
+<script src="shared-app.js" defer></script>
+<!-- ═══ CONTACT FORM → FIREBASE ═══ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ── Same config as app.js ── */
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyC9gCBt-xR8t9n6rTGNvDZ5usUGiW-Dqxc",
+    authDomain: "cliffclient-35ec5.firebaseapp.com",
+    databaseURL: "https://cliffclient-35ec5-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "cliffclient-35ec5",
+    storageBucket: "cliffclient-35ec5.firebasestorage.app",
+    messagingSenderId: "519782791696",
+    appId: "1:519782791696:web:6e1a654ddeed14b72b2895"
+  };
+  const WHATSAPP_NUMBER = "254713428774";
+
+  let _fbPromise = null;
+  function loadFirebase() {
+    if (_fbPromise) return _fbPromise;
+    _fbPromise = Promise.all([
+      import('https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js')
+    ]).then(function (mods) {
+      const appMod = mods[0], dbMod = mods[1];
+      let app;
+      try { app = appMod.getApp(); }
+      catch (e) { app = appMod.initializeApp(FIREBASE_CONFIG); }
+      window._fbDb = dbMod.getDatabase(app);
+      window._fbRef = dbMod.ref;
+      window._fbPush = dbMod.push;
+      window._fbSet = dbMod.set;
+      return true;
+    }).catch(function (e) {
+      console.warn('[contact] Firebase load failed:', e.message);
+      return false;
+    });
+    return _fbPromise;
+  }
+
+  /* ── Save contact submission ── */
+  async function saveContactToFirebase(payload) {
+    const ok = await loadFirebase();
+    if (!ok || !window._fbDb || !window._fbRef || !window._fbPush || !window._fbSet) {
+      return { saved: false, error: 'firebase-unavailable' };
+    }
+    try {
+      const now = new Date().toISOString();
+
+      /* 1. marketLeads (same collection app.js uses) */
+      const leadRef = window._fbPush(window._fbRef(window._fbDb, "viora_data/orgs/viora/marketLeads"));
+      const record = {
+        id: leadRef.key,
+        leadId: 'contact-' + leadRef.key,
+        name: payload.name || "",
+        fullName: payload.name || "",
+        email: payload.email || "",
+        phone: payload.phone || "",
+        company: payload.company || "",
+        industry: payload.industry || "",
+        industryName: payload.industry || null,
+        industryCategory: null,
+        solution: payload.solution || "",
+        message: payload.description || "",
+        note: payload.description || "",
+        modules: [],
+        modulesDetailed: [],
+        blueprint: null,
+        source: "contact_us_form",
+        type: "contact_form",
+        leadSource: "contact_us.html",
+        status: "New",
+        isNewClient: true,
+        createdAt: now,
+        lastSeenAt: now,
+        timestamp: Date.now(),
+        userAgent: (navigator.userAgent || "").slice(0, 180),
+        referrer: document.referrer || ""
+      };
+      await window._fbSet(leadRef, record);
+
+      /* 2. leads/{id} (mirror — same as app.js) */
+      const mirrorRef = window._fbRef(window._fbDb, "viora_data/orgs/viora/leads/" + record.id);
+      await window._fbSet(mirrorRef, Object.assign({}, record, {
+        _fromContact: true,
+        _fromIndex: false,
+        _fromMarket: false
+      }));
+
+      /* 3. activityLog (same as app.js) */
+      const logRef = window._fbPush(window._fbRef(window._fbDb, "viora_data/orgs/viora/activityLog"));
+      await window._fbSet(logRef, {
+        id: logRef.key,
+        type: 'add',
+        title: 'New contact form submission',
+        description: `${payload.name}${payload.company ? ' · ' + payload.company : ''}${payload.solution ? ' — ' + payload.solution : ''}`,
+        by: 'contact-form',
+        byName: 'Contact Us Form',
+        timestamp: now
+      });
+
+      return { saved: true, id: record.id };
+    } catch (e) {
+      console.warn('[contact] Save failed:', e);
+      return { saved: false, error: e.message || 'unknown' };
+    }
+  }
+
+  /* ── Replace the existing form submit handler ── */
+  function wireContactForm() {
+    const form = document.getElementById('contactForm');
+    const status = document.getElementById('formStatus');
+    const success = document.getElementById('successMessage');
+    if (!form) return;
+
+    /* Remove the old listener by cloning the form (removes all listeners) */
+    const fresh = form.cloneNode(true);
+    form.parentNode.replaceChild(fresh, form);
+
+    const rules = {
+      'f-name':     function (v) { return v.trim().length >= 2; },
+      'f-email':    function (v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()); },
+      'f-solution': function (v) { return v.trim() !== ''; },
+      'f-desc':     function (v) { return v.trim().length >= 10; }
+    };
+
+    function validate(id) {
+      const el = fresh.querySelector('#' + id);
+      if (!el || !rules[id]) return true;
+      const ok = rules[id](el.value);
+      const field = el.closest('.field');
+      if (field) field.classList.toggle('invalid', !ok);
+      el.setAttribute('aria-invalid', String(!ok));
+      return ok;
+    }
+
+    ['f-name', 'f-email', 'f-solution', 'f-desc'].forEach(function (id) {
+      const el = fresh.querySelector('#' + id);
+      if (!el) return;
+      el.addEventListener('blur', function () { validate(id); });
+      el.addEventListener('input', function () {
+        const field = el.closest('.field');
+        if (field && field.classList.contains('invalid')) validate(id);
+      });
+    });
+
+    fresh.addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      /* clear old state */
+      if (status) { status.className = 'form-status'; status.textContent = ''; }
+      if (success) success.classList.remove('show');
+
+      let allOk = true;
+      Object.keys(rules).forEach(function (id) { if (!validate(id)) allOk = false; });
+
+      if (!allOk) {
+        if (status) {
+          status.className = 'form-status show err';
+          status.textContent = 'Please correct the highlighted fields and try again.';
+        }
+        const first = fresh.querySelector('.field.invalid input, .field.invalid select, .field.invalid textarea');
+        if (first) first.focus();
+        return;
+      }
+
+      const btn = fresh.querySelector('button[type="submit"]');
+      const origHTML = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite;margin-right:6px"><path d="M21 12a9 9 0 1 1-6.2-8.55"/></svg> Sending…';
+      }
+      if (status) {
+        status.className = 'form-status show warn';
+        status.textContent = 'Saving your message…';
+      }
+
+      const payload = {
+        name:        (fresh.querySelector('#f-name')?.value || '').trim(),
+        company:     (fresh.querySelector('#f-company')?.value || '').trim(),
+        email:       (fresh.querySelector('#f-email')?.value || '').trim(),
+        phone:       (fresh.querySelector('#f-phone')?.value || '').trim(),
+        industry:    (fresh.querySelector('#f-industry')?.value || '').trim(),
+        solution:    (fresh.querySelector('#f-solution')?.value || '').trim(),
+        description: (fresh.querySelector('#f-desc')?.value || '').trim()
+      };
+
+      const result = await saveContactToFirebase(payload);
+
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = origHTML;
+      }
+
+      if (status) {
+        status.className = 'form-status show ok';
+        status.textContent = result.saved
+          ? '✅ Saved. Opening WhatsApp so you can follow up instantly…'
+          : '⚠️ Could not save to server. Opening WhatsApp instead…';
+      }
+
+      /* Build the same WhatsApp message format app.js uses */
+      const lines = [];
+      lines.push("Hi VIORA 👋");
+      lines.push("");
+      lines.push("I'm " + (payload.name || 'a visitor') + " and I'm interested in VIORA.");
+      if (payload.company) lines.push("Company: " + payload.company);
+      if (payload.email) lines.push("Email: " + payload.email);
+      if (payload.phone) lines.push("WhatsApp: " + payload.phone);
+      lines.push("");
+      lines.push("━━━━━━━━━━━━━━━━");
+      lines.push("📋 CONTACT FORM SUBMISSION");
+      lines.push("━━━━━━━━━━━━━━━━");
+      if (payload.industry) lines.push("🏭 Industry: " + payload.industry);
+      if (payload.solution) lines.push("🧩 Solution: " + payload.solution);
+      if (payload.description) {
+        lines.push("");
+        lines.push("📝 MESSAGE");
+        lines.push("   " + payload.description);
+      }
+      lines.push("");
+      lines.push("━━━━━━━━━━━━━━━━");
+      lines.push("Can we talk?");
+
+      const url = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(lines.join("\n"));
+
+      setTimeout(function () {
+        const win = window.open(url, '_blank', 'noopener,noreferrer');
+        if (!win) window.location.href = url;
+
+        /* Show success card, hide form */
+        const formEl = fresh;
+        if (formEl) formEl.style.display = 'none';
+        if (success) {
+          success.classList.add('show');
+          success.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, result.saved ? 600 : 250);
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', wireContactForm);
+  } else {
+    wireContactForm();
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes, viewport-fit=cover" />
+<meta name="theme-color" content="#0a0a0f" />
+<meta name="description" content="VIORA Client Portal — projects, invoices, subscriptions, and training in real time." />
+<title>Sign In · VIORA Client Portal</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<link rel="icon" type="image/png" href="https://viora.co.ke/viora.png" />
+<link rel="apple-touch-icon" href="https://viora.co.ke/viora.png" />
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   RESET + TOKENS
+   ═══════════════════════════════════════════════════════════════ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body {
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  background: #0a0a0f;
+  color: #f0f4ff;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+h1, h2, h3, h4, h5, h6, .btn, .stat-card .number {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  letter-spacing: -.02em;
+}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%);
+  border-radius: 20px;
+}
+
+:root {
+  --bg-body: #0a0a0f;
+  --bg-card-solid: #12121a;
+  --bg-input: rgba(26, 26, 46, .65);
+  --bg-table-alt: rgba(0, 212, 255, .05);
+  --text-primary: #f0f4ff;
+  --text-secondary: #94a3b8;
+  --text-light: #64748b;
+  --border-color: rgba(0, 212, 255, .14);
+  --accent-blue: #00d4ff;
+  --accent-green: #22e6a0;
+  --accent-red: #ff5c7c;
+  --accent-gold: #ffc857;
+  --accent-purple: #a855f7;
+  --gradient-accent: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%);
+  --gradient-soft: linear-gradient(135deg, rgba(0, 212, 255, .18) 0%, rgba(124, 58, 237, .18) 100%);
+  --glass-bg: rgba(18, 18, 26, .55);
+  --glass-blur: blur(14px);
+  --shadow-3d: 0 10px 30px -8px rgba(0, 0, 0, .75), 0 4px 12px -4px rgba(0, 212, 255, .08);
+  --shadow-3d-strong: 0 20px 45px -12px rgba(0, 212, 255, .35), 0 8px 20px -6px rgba(124, 58, 237, .3);
+  --radius: 16px;
+  --nav-h: 64px;
+  --header-h: 58px;
+  --chips-h: 52px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ANIMATED BACKGROUND
+   ═══════════════════════════════════════════════════════════════ */
+#bgCanvas { position: fixed; inset: 0; z-index: -3; pointer-events: none; }
+.bg-aurora { position: fixed; inset: 0; z-index: -2; pointer-events: none; overflow: hidden; opacity: .55; }
+.bg-aurora::before, .bg-aurora::after {
+  content: ''; position: absolute;
+  width: 60vw; height: 60vw; border-radius: 50%;
+  filter: blur(120px); opacity: .35;
+  animation: auroraFloat 24s ease-in-out infinite;
+}
+.bg-aurora::before {
+  background: radial-gradient(circle, rgba(0, 212, 255, .55), transparent 70%);
+  top: -20%; left: -15%;
+}
+.bg-aurora::after {
+  background: radial-gradient(circle, rgba(124, 58, 237, .55), transparent 70%);
+  bottom: -25%; right: -15%; animation-delay: -12s;
+}
+@keyframes auroraFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(8%, 6%) scale(1.08); }
+  66%      { transform: translate(-6%, -4%) scale(.95); }
+}
+.bg-orbs { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+.bg-orbs .orb {
+  position: absolute; border-radius: 50%; filter: blur(60px);
+  opacity: .25; animation: orbFloat 18s ease-in-out infinite;
+}
+.bg-orbs .orb:nth-child(1) { width: 200px; height: 200px; background: radial-gradient(circle, rgba(0,212,255,.6), transparent); top: 15%; left: 10%; }
+.bg-orbs .orb:nth-child(2) { width: 250px; height: 250px; background: radial-gradient(circle, rgba(168,85,247,.5), transparent); top: 60%; right: 8%; animation-delay: -6s; }
+.bg-orbs .orb:nth-child(3) { width: 180px; height: 180px; background: radial-gradient(circle, rgba(34,230,160,.5), transparent); bottom: 10%; left: 30%; animation-delay: -12s; }
+.bg-orbs .orb:nth-child(4) { width: 220px; height: 220px; background: radial-gradient(circle, rgba(255,110,199,.4), transparent); top: 35%; right: 25%; animation-delay: -9s; }
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(30px, -40px) scale(1.15); }
+  66%      { transform: translate(-20px, 30px) scale(.9); }
+}
+.bg-grid {
+  position: fixed; inset: 0; z-index: -2; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(0, 212, 255, .03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, .03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: gridPulse 8s ease-in-out infinite;
+}
+@keyframes gridPulse { 0%, 100% { opacity: .4; } 50% { opacity: .8; } }
+
+/* ═══════════════════════════════════════════════════════════════
+   LOGIN
+   ═══════════════════════════════════════════════════════════════ */
+#portalLogin {
+  position: fixed; inset: 0; z-index: 9999;
+  background: radial-gradient(circle at 20% 20%, #1E1B4B 0%, #0B1220 60%, #060913 100%);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px;
+  padding-top: max(24px, 6vh);
+  overflow-y: auto;
+  pointer-events: auto !important;
+}
+#portalLogin.hidden { display: none; }
+#portalLogin .login-card {
+  width: 100%; max-width: 480px;
+  background: rgba(255, 255, 255, .04);
+  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 22px;
+  padding: 42px 38px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .5);
+  color: #E2E8F0;
+  margin: auto;
+  pointer-events: auto !important;
+  animation: fadeInUp .6s ease both;
+  transition: border-color .4s ease, box-shadow .4s ease;
+}
+#portalLogin .login-card[data-flow="signin"] {
+  border-top: 3px solid #2267EE;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .5), 0 -3px 24px -8px rgba(34,103,238,.45);
+}
+#portalLogin .login-card[data-flow="signup"] {
+  border-top: 3px solid #8B5CF6;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .5), 0 -3px 24px -8px rgba(139,92,246,.45);
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.login-brand { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+.login-brand .logo-img {
+  width: 56px; height: 56px; border-radius: 15px;
+  overflow: hidden; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #00d4ff, #7c3aed);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, .5);
+}
+.login-brand .logo-img img {
+  width: 100%; height: 100%; object-fit: contain; padding: 6px; display: block;
+}
+.login-brand h1 { font-size: 20px; font-weight: 800; letter-spacing: -.3px; color: #F8FAFC; }
+.login-brand h1 span { color: #7de8ff; }
+.login-brand p {
+  font-size: 11.5px; color: #94a3b8;
+  text-transform: uppercase; letter-spacing: 1.2px; margin-top: 2px;
+}
+
+.auth-mode-indicator {
+  display: flex; justify-content: center;
+  margin-bottom: 14px;
+}
+.auth-mode-indicator span {
+  padding: 5px 14px; border-radius: 999px;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase;
+  background: rgba(34,103,238,.12);
+  color: #7de8ff;
+  border: 1px solid rgba(34,103,238,.3);
+  transition: all .3s;
+}
+.auth-mode-indicator span.signup {
+  background: rgba(139,92,246,.14);
+  color: #C4B5FD;
+  border-color: rgba(139,92,246,.3);
+}
+
+.login-tabs {
+  display: flex; gap: 6px; margin-bottom: 18px;
+  background: rgba(15, 23, 42, .6);
+  padding: 4px; border-radius: 12px;
+  pointer-events: auto !important;
+}
+.login-tabs button {
+  flex: 1; padding: 10px 9px;
+  border: none; background: transparent;
+  color: #94a3b8; font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer; font-family: inherit;
+  font-size: .82rem;
+  transition: .2s;
+  -webkit-tap-highlight-color: transparent;
+  pointer-events: auto !important;
+  touch-action: manipulation;
+  position: relative;
+  z-index: 2;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.login-tabs button:hover { color: #e2e8f0; }
+.login-tabs button i { font-size: .78rem; }
+.login-tabs button[data-flow="signin"].active {
+  background: linear-gradient(135deg, #2267EE, #1E3A8A);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(34,103,238,.35);
+}
+.login-tabs button[data-flow="signup"].active {
+  background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(139,92,246,.35);
+}
+
+.login-field { margin-bottom: 14px; position: relative; }
+.login-field label {
+  display: block; font-size: 11px; font-weight: 600;
+  letter-spacing: .8px; text-transform: uppercase;
+  color: #94a3b8; margin-bottom: 8px;
+}
+.login-field input,
+.login-field select {
+  width: 100%; padding: 12px 40px 12px 14px;
+  background: rgba(15, 23, 42, .6);
+  border: 1px solid rgba(148, 163, 184, .18);
+  border-radius: 12px;
+  color: #F1F5F9; font-size: 14px;
+  outline: none; transition: .2s; font-family: inherit;
+}
+.login-field select { padding-right: 14px; }
+.login-field input:focus,
+.login-field select:focus {
+  border-color: #00d4ff;
+  box-shadow: 0 0 0 4px rgba(0, 212, 255, .18);
+}
+.pw-toggle {
+  position: absolute; right: 10px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none;
+  color: #94a3b8; cursor: pointer;
+  padding: 4px; font-size: 14px;
+  display: grid; place-items: center;
+  margin-top: 12px;
+}
+.pw-toggle:hover { color: #fff; }
+
+.forgot-row {
+  text-align: right; font-size: 12px;
+  margin: -8px 0 12px;
+}
+.forgot-row a { color: #94a3b8; text-decoration: none; }
+.forgot-row a:hover { color: #7de8ff; text-decoration: underline; }
+
+.login-helper {
+  text-align: center; font-size: 12px;
+  color: #94a3b8; margin-top: 14px;
+  line-height: 1.6;
+}
+.login-helper a { color: #7de8ff; font-weight: 600; text-decoration: none; }
+.login-helper a:hover { text-decoration: underline; }
+
+.btn-login {
+  width: 100%; padding: 13px;
+  background: linear-gradient(135deg, #2267EE 0%, #1E3A8A 100%);
+  border: none; border-radius: 12px;
+  color: #ffffff; font-weight: 700; font-size: 14px;
+  cursor: pointer; letter-spacing: .3px;
+  box-shadow: 0 6px 20px rgba(34, 103, 238, .4);
+  transition: .2s; margin-top: 6px;
+  font-family: 'Space Grotesk', sans-serif;
+  touch-action: manipulation;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-login:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(34, 103, 238, .55);
+}
+.btn-login:disabled { opacity: .6; cursor: not-allowed; }
+#pRegisterBtn {
+  background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, .4);
+}
+#pRegisterBtn:hover:not(:disabled) {
+  box-shadow: 0 10px 26px rgba(139, 92, 246, .55);
+}
+
+.signup-intro {
+  background: rgba(139,92,246,.08);
+  border: 1px solid rgba(139,92,246,.25);
+  border-left: 3px solid #8B5CF6;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #cbd5e1;
+}
+.signup-intro strong {
+  display: block; font-size: 12px;
+  text-transform: uppercase; letter-spacing: .06em;
+  color: #C4B5FD; margin-bottom: 6px;
+}
+.signup-intro ol {
+  margin: 0;
+  padding-left: 18px;
+  line-height: 1.7;
+}
+
+.signup-terms {
+  text-align: center; font-size: 11px;
+  color: #64748b; margin-top: 16px;
+  line-height: 1.6;
+}
+.signup-terms a { color: #7de8ff; text-decoration: underline; }
+
+.pw-meter { margin-top: 6px; display: none; }
+.pw-meter.show { display: block; }
+.pw-bars { display: flex; gap: 4px; height: 4px; margin-bottom: 4px; }
+.pw-bars span {
+  flex: 1;
+  background: rgba(148,163,184,.25);
+  border-radius: 2px;
+  transition: background .2s;
+}
+.pw-meter[data-strength="1"] .pw-bars span:nth-child(1) { background: #ff5c7c; }
+.pw-meter[data-strength="2"] .pw-bars span:nth-child(-n+2) { background: #ffc857; }
+.pw-meter[data-strength="3"] .pw-bars span:nth-child(-n+3) { background: #22e6a0; }
+.pw-meter[data-strength="4"] .pw-bars span { background: #22e6a0; }
+.pw-meter small { font-size: 11px; color: #91afbd; }
+
+.login-footer {
+  margin-top: 22px; padding-top: 20px;
+  border-top: 1px solid rgba(148, 163, 184, .1);
+  font-size: 11px; color: #64748b; line-height: 1.7; text-align: center;
+}
+.login-message {
+  margin-top: 14px; padding: 12px 14px;
+  border-radius: 10px; font-size: .8rem; line-height: 1.5;
+  display: none;
+}
+.login-message.error { display: block; background: rgba(255,92,124,.12); border-left: 3px solid #ff5c7c; color: #ff9eb1; }
+.login-message.success { display: block; background: rgba(34,230,160,.12); border-left: 3px solid #22e6a0; color: #7de8c2; }
+.login-message.info { display: block; background: rgba(0,212,255,.12); border-left: 3px solid #00d4ff; color: #7dd8ff; }
+
+.noscript-warning {
+  background: rgba(255,200,87,.1);
+  border-left: 3px solid #ffc857;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #ffc857;
+  margin-bottom: 16px;
+  line-height: 1.55;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PENDING
+   ═══════════════════════════════════════════════════════════════ */
+#pendingScreen {
+  position: fixed; inset: 0; z-index: 9999;
+  background: radial-gradient(circle at 20% 20%, #1E1B4B 0%, #0B1220 60%, #060913 100%);
+  display: none; align-items: center; justify-content: center; padding: 24px;
+}
+#pendingScreen.active { display: flex; }
+.pending-card {
+  width: 100%; max-width: 480px;
+  background: rgba(255, 255, 255, .04);
+  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 22px; padding: 42px 38px;
+  box-shadow: 0 24px 60px rgba(0,0,0,.5);
+  color: #E2E8F0; text-align: center; margin: auto;
+}
+.pending-card .pending-icon {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: linear-gradient(135deg, #F59E0B, #B45309);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 1.8rem; color: #fff; margin-bottom: 18px;
+  animation: pendingPulse 2s ease-in-out infinite;
+  box-shadow: 0 12px 32px -8px rgba(245,158,11,.5);
+}
+@keyframes pendingPulse { 0%, 100% { opacity: .75; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
+.pending-card h2 { font-size: 1.2rem; font-weight: 800; color: #F8FAFC; margin-bottom: 10px; }
+.pending-card p { font-size: .85rem; color: #94a3b8; line-height: 1.6; margin-bottom: 16px; }
+.pending-progress {
+  display: flex; flex-direction: column;
+  gap: 10px; margin: 22px 0 18px;
+  text-align: left;
+}
+.pending-step {
+  display: flex; align-items: center; gap: 12px;
+  font-size: .82rem; color: #94a3b8;
+  padding: 10px 14px;
+  background: rgba(255,255,255,.03);
+  border-radius: 10px;
+  transition: all .3s;
+}
+.pending-step span:first-child {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: .7rem; font-weight: 700;
+  background: rgba(148,163,184,.15);
+  color: #64748b;
+  flex-shrink: 0;
+}
+.pending-step.done { color: #7de8c2; background: rgba(34,230,160,.06); }
+.pending-step.done span:first-child {
+  background: #22e6a0;
+  color: #0a0a0f;
+}
+.pending-step.active { color: #ffc857; background: rgba(255,200,87,.06); }
+.spinner-mini {
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,200,87,.25);
+  border-top-color: #ffc857;
+  border-radius: 50%;
+  animation: spinMini 1s linear infinite;
+}
+@keyframes spinMini { to { transform: rotate(360deg); } }
+.pending-help {
+  font-size: .78rem; color: #94a3b8;
+  margin: 12px 0 0; line-height: 1.6;
+}
+.pending-help a { color: #7de8ff; text-decoration: underline; }
+.pending-card .check-row {
+  display: flex; align-items: center; gap: 10px; justify-content: center;
+  font-size: .78rem; color: #7de8c2; padding: 10px;
+  background: rgba(34,230,160,.08); border-radius: 10px; margin-top: 14px;
+}
+.pending-card .dot-pulse {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #22e6a0; animation: pendingPulse 1.5s ease-in-out infinite;
+}
+
+/* Hidden utility */
+.hidden { display: none !important; }
+
+/* Rest of the styles (portal shell etc.) unchanged from your existing file */
+</style>
+</head>
+
+<body>
+
+<!-- ═══ BACKGROUND ═══ -->
+<canvas id="bgCanvas" aria-hidden="true"></canvas>
+<div class="bg-aurora" aria-hidden="true"></div>
+<div class="bg-orbs" aria-hidden="true">
+  <div class="orb"></div><div class="orb"></div><div class="orb"></div><div class="orb"></div>
+</div>
+<div class="bg-grid" aria-hidden="true"></div>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="portalLogin" role="dialog" aria-labelledby="loginHeading" aria-modal="true">
+  <div class="login-card" id="loginCard" data-flow="signin">
+    <div class="login-brand">
+      <div class="logo-img">
+        <img src="https://viora.co.ke/viora.png" alt="VIORA" />
+      </div>
+      <div>
+        <h1 id="loginHeading">Welcome <span>back</span></h1>
+        <p id="loginSubheading">Sign in to your client portal</p>
+      </div>
+    </div>
+
+    <noscript>
+      <div class="noscript-warning">
+        JavaScript is required to sign in. Email <a href="mailto:support@viora.co.ke">support@viora.co.ke</a> if you're having trouble.
+      </div>
+    </noscript>
+
+    <div class="auth-mode-indicator">
+      <span id="modeLabel">Signing in</span>
+    </div>
+
+    <div class="login-tabs" role="tablist">
+      <button id="tabSignIn" class="active" type="button" role="tab" aria-selected="true" data-flow="signin">
+        <i class="fa-solid fa-arrow-right-to-bracket" aria-hidden="true"></i> Sign In
+      </button>
+      <button id="tabFirstTime" type="button" role="tab" aria-selected="false" data-flow="signup">
+        <i class="fa-solid fa-user-plus" aria-hidden="true"></i> Create Account
+      </button>
+    </div>
+
+    <!-- SIGN IN FORM -->
+    <form id="signInFields" aria-labelledby="tabSignIn">
+      <div class="login-field">
+        <label for="pEmail">Email</label>
+        <input id="pEmail" type="email" placeholder="you@company.com" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" />
+      </div>
+      <div class="login-field">
+        <label for="pPassword">Password</label>
+        <input id="pPassword" type="password" placeholder="••••••••" autocomplete="current-password" />
+        <button type="button" class="pw-toggle" data-pw-target="pPassword" aria-label="Show password">
+          <i class="fa-solid fa-eye" aria-hidden="true"></i>
+        </button>
+      </div>
+      <p class="forgot-row" id="forgotRow">
+        <a href="#" id="forgotLink">Forgot password?</a>
+      </p>
+      <button class="btn-login" id="pLoginBtn" type="button">
+        <i class="fa-solid fa-arrow-right-to-bracket" aria-hidden="true"></i> Sign In
+      </button>
+      <p class="login-helper">
+        Don't have access yet? <a href="#" id="switchToRegister">Create an account →</a>
+      </p>
+    </form>
+
+    <!-- CREATE ACCOUNT FORM -->
+    <form id="firstTimeFields" style="display:none;" aria-labelledby="tabFirstTime">
+
+      <div class="signup-intro">
+        <strong>What happens next:</strong>
+        <ol>
+          <li>You create a login with your email.</li>
+          <li>We match your details to your client profile.</li>
+          <li>You get instant access, or an admin links you within minutes.</li>
+        </ol>
+      </div>
+
+      <div class="login-field">
+        <label for="pRegName">Full Name</label>
+        <input id="pRegName" placeholder="Jane Doe" autocomplete="name" />
+      </div>
+      <div class="login-field">
+        <label for="pRegEmail">Email</label>
+        <input id="pRegEmail" type="email" placeholder="you@company.com" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" />
+      </div>
+      <div class="login-field">
+        <label for="pRegPhone">
+          Phone (optional)
+          <button type="button" class="info-tip" id="phoneTooltipBtn" aria-label="Why we need this" style="background:none;border:none;color:#7de8ff;font-size:11px;cursor:pointer;margin-left:4px;font-family:inherit;">?</button>
+        </label>
+        <input id="pRegPhone" placeholder="+254 7XX XXX XXX" autocomplete="tel" inputmode="tel" />
+        <div id="phoneTooltip" style="display:none;font-size:11px;color:#7de8ff;background:rgba(0,212,255,.08);border-left:2px solid #00d4ff;padding:8px 10px;border-radius:6px;margin-top:6px;">Used to match you to your client profile faster.</div>
+      </div>
+      <div class="login-field">
+        <label for="pRegPassword">Password (min 6 chars)</label>
+        <input id="pRegPassword" type="password" placeholder="••••••••" autocomplete="new-password" />
+        <button type="button" class="pw-toggle" data-pw-target="pRegPassword" aria-label="Show password">
+          <i class="fa-solid fa-eye" aria-hidden="true"></i>
+        </button>
+        <div class="pw-meter" id="pwMeter">
+          <div class="pw-bars"><span></span><span></span><span></span><span></span></div>
+          <small id="pwHint">Use 8+ characters</small>
+        </div>
+      </div>
+      <div class="login-field">
+        <label for="pRegPassword2">Confirm password</label>
+        <input id="pRegPassword2" type="password" placeholder="••••••••" autocomplete="new-password" />
+        <button type="button" class="pw-toggle" data-pw-target="pRegPassword2" aria-label="Show password">
+          <i class="fa-solid fa-eye" aria-hidden="true"></i>
+        </button>
+      </div>
+      <button class="btn-login" id="pRegisterBtn" type="button">
+        <i class="fa-solid fa-user-plus" aria-hidden="true"></i> Create Account →
+      </button>
+      <p class="login-helper">
+        Already have an account? <a href="#" id="switchToLogin">← Sign in instead</a>
+      </p>
+      <p class="signup-terms">
+        By creating an account you agree to our
+        <a href="terms.html" target="_blank">Terms</a> and
+        <a href="privacy.html" target="_blank">Privacy Policy</a>.
+      </p>
+    </form>
+
+    <div id="loginMessage" class="login-message" role="alert" aria-live="polite"></div>
+
+    <div class="login-footer">
+      Need help? Contact your project lead at<br>
+      <strong style="color:#7de8ff;">cliff254johns@gmail.com</strong>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PENDING ═══ -->
+<div id="pendingScreen" role="dialog" aria-labelledby="pendingTitle" aria-modal="true">
+  <div class="pending-card">
+    <div class="pending-icon" aria-hidden="true">
+      <i class="fa-solid fa-hourglass-half"></i>
+    </div>
+    <h2 id="pendingTitle">Access request received</h2>
+    <p>Hi <strong id="pendingName">there</strong>, we're linking your account now. This usually takes less than 2 minutes.</p>
+
+    <div class="pending-progress">
+      <div class="pending-step done">
+        <span aria-hidden="true">✓</span>
+        <span>Account created</span>
+      </div>
+      <div class="pending-step active">
+        <span aria-hidden="true"><div class="spinner-mini"></div></span>
+        <span>Matching to your profile</span>
+      </div>
+      <div class="pending-step">
+        <span aria-hidden="true">·</span>
+        <span>Access granted</span>
+      </div>
+    </div>
+
+    <div class="check-row">
+      <span class="dot-pulse"></span>
+      <span>This page checks automatically…</span>
+    </div>
+
+    <p class="pending-help">
+      Taking longer than expected?
+      <a href="https://wa.me/254713428774" target="_blank" rel="noopener">Chat on WhatsApp</a> or
+      <a href="mailto:support@viora.co.ke">email support</a>.
+    </p>
+
+    <div style="margin-top:20px;">
+      <button class="btn-login" id="pendingLogout" type="button" style="background:rgba(255,255,255,.08);box-shadow:none;font-size:12px;padding:10px;">
+        <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Sign Out
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PORTAL SHELL + everything below is unchanged from your existing file ═══ -->
+<div id="portalShell">
+  <!-- ═══════════════════════════════════════════════════════════
+       PORTAL SHELL — NO CHANGES NEEDED
+       ═══════════════════════════════════════════════════════════ -->
+  <header class="portal-topbar">
+    <div class="portal-brand">
+      <div class="brand-logo"><img src="https://viora.co.ke/viora.png" alt="VIORA" /></div>
+      <span>VIORA</span>
+      <span class="role-badge">Client Portal</span>
+    </div>
+    <div class="portal-actions">
+      <span class="live-sync"><span class="pulse-dot"></span> Live sync</span>
+      <span class="portal-userinfo"><i class="fa-solid fa-user-circle"></i><span id="pWho">—</span></span>
+      <a href="https://viora.co.ke/market.html" target="_blank" rel="noopener" class="btn btn-purple btn-sm"><i class="fa-solid fa-store"></i> Marketplace</a>
+      <button class="btn btn-outline btn-sm" id="pThemeToggle" type="button" title="Toggle theme"><i class="fa-solid fa-moon"></i></button>
+      <button class="btn btn-outline btn-sm" id="pLogout" type="button" title="Sign out"><i class="fa-solid fa-right-from-bracket"></i></button>
+    </div>
+  </header>
+  <nav class="portal-tabs" role="tablist">
+    <button class="ptab-btn active" data-ptab="overview" type="button"><i class="fa-solid fa-house"></i> Overview</button>
+    <button class="ptab-btn" data-ptab="projects" type="button"><i class="fa-solid fa-folder"></i> Projects</button>
+    <button class="ptab-btn" data-ptab="analytics" type="button"><i class="fa-solid fa-chart-line"></i> Analytics</button>
+    <button class="ptab-btn" data-ptab="documents" type="button"><i class="fa-solid fa-file"></i> Documents</button>
+    <button class="ptab-btn" data-ptab="presentations" type="button"><i class="fa-solid fa-chalkboard-user"></i> Presentations</button>
+    <button class="ptab-btn" data-ptab="billing" type="button"><i class="fa-solid fa-coins"></i> Billing</button>
+    <button class="ptab-btn" data-ptab="ai" type="button"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Assistant</button>
+    <button class="ptab-btn" data-ptab="messages" type="button"><i class="fa-solid fa-comments"></i> Messages <span id="pUnreadBadge" class="badge badge-pending" style="display:none;">0</span></button>
+    <button class="ptab-btn" data-ptab="appointments" type="button"><i class="fa-solid fa-calendar-check"></i> Appointments</button>
+    <button class="ptab-btn" data-ptab="marketplace" type="button"><i class="fa-solid fa-store"></i> Marketplace</button>
+  </nav>
+  <main class="portal-main">
+    <section id="ptab-overview" class="ptab active"></section>
+    <section id="ptab-projects" class="ptab"></section>
+    <section id="ptab-analytics" class="ptab"></section>
+    <section id="ptab-documents" class="ptab"></section>
+    <section id="ptab-presentations" class="ptab"></section>
+    <section id="ptab-billing" class="ptab"></section>
+    <section id="ptab-ai" class="ptab"></section>
+    <section id="ptab-messages" class="ptab"></section>
+    <section id="ptab-appointments" class="ptab"></section>
+    <section id="ptab-marketplace" class="ptab"></section>
+  </main>
+</div>
+
+<nav id="portalBottomNav" role="navigation">
+  <button class="mnav-item active" data-mnav="overview" type="button"><i class="fa-solid fa-house"></i><span class="mnav-label">Home</span></button>
+  <button class="mnav-item" data-mnav="projects" type="button"><i class="fa-solid fa-folder"></i><span class="mnav-label">Projects</span></button>
+  <button class="mnav-item" data-mnav="analytics" type="button"><i class="fa-solid fa-chart-line"></i><span class="mnav-label">Analytics</span></button>
+  <button class="mnav-item" data-mnav="documents" type="button"><i class="fa-solid fa-file"></i><span class="mnav-label">Docs</span></button>
+  <button class="mnav-item" data-mnav="ai" type="button"><i class="fa-solid fa-wand-magic-sparkles"></i><span class="mnav-label">AI</span></button>
+  <button class="mnav-item" data-mnav="billing" type="button"><i class="fa-solid fa-coins"></i><span class="mnav-label">Billing</span></button>
+  <button class="mnav-item" data-mnav="messages" type="button"><i class="fa-solid fa-comments"></i><span class="mnav-label">Chat</span></button>
+  <button class="mnav-item" data-mnav="more" type="button"><i class="fa-solid fa-bars"></i><span class="mnav-label">More</span></button>
+</nav>
+
+<!-- Your existing modals below — no changes needed -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   LOGIN TABS — Sign In vs Create Account distinction
+   ═══════════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+
+  const tabSignIn    = $('tabSignIn');
+  const tabFirstTime = $('tabFirstTime');
+  const signInFields = $('signInFields');
+  const firstTimeFields = $('firstTimeFields');
+  const loginCard    = $('loginCard');
+  const modeLabel    = $('modeLabel');
+  const forgotRow    = $('forgotRow');
+  const headingEl    = $('loginHeading');
+  const subEl        = $('loginSubheading');
+
+  if (!tabSignIn || !tabFirstTime) return;
+
+  function activateFlow(flow) {
+    const isSignin = flow === 'signin';
+    // Tabs
+    tabSignIn.classList.toggle('active', isSignin);
+    tabFirstTime.classList.toggle('active', !isSignin);
+    tabSignIn.setAttribute('aria-selected', String(isSignin));
+    tabFirstTime.setAttribute('aria-selected', String(!isSignin));
+    // Forms
+    signInFields.style.display = isSignin ? '' : 'none';
+    firstTimeFields.style.display = isSignin ? 'none' : '';
+    // Card accent
+    loginCard.setAttribute('data-flow', flow);
+    // Mode indicator
+    modeLabel.textContent = isSignin ? 'Signing in' : 'Creating account';
+    modeLabel.classList.toggle('signup', !isSignin);
+    // Forgot row: only on signin
+    forgotRow.style.display = isSignin ? '' : 'none';
+    // Heading
+    if (isSignin) {
+      headingEl.innerHTML = 'Welcome <span>back</span>';
+      subEl.textContent = 'Sign in to your client portal';
+    } else {
+      headingEl.innerHTML = 'Create <span>account</span>';
+      subEl.textContent = 'New here? Request access in under a minute';
+    }
+    // URL hash
+    try { history.replaceState(null, '', isSignin ? '#signin' : '#signup'); } catch (e) {}
+    // Clear any prior messages
+    const msg = $('loginMessage');
+    if (msg) { msg.className = 'login-message'; msg.textContent = ''; }
+  }
+
+  function anyInputFilled() {
+    return ['pEmail','pPassword','pRegName','pRegEmail','pRegPhone','pRegPassword','pRegPassword2']
+      .some(id => {
+        const el = $(id);
+        return el && el.value && el.value.length > 0;
+      });
+  }
+
+  function switchFlow(flow) {
+    if (anyInputFilled()) {
+      if (!confirm('You have unsaved input. Switch anyway?')) return;
+    }
+    activateFlow(flow);
+  }
+
+  tabSignIn.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (loginCard.getAttribute('data-flow') === 'signin') return;
+    switchFlow('signin');
+  });
+  tabFirstTime.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (loginCard.getAttribute('data-flow') === 'signup') return;
+    switchFlow('signup');
+  });
+
+  // Switch links
+  const switchToRegister = $('switchToRegister');
+  if (switchToRegister) switchToRegister.addEventListener('click', (e) => {
+    e.preventDefault(); switchFlow('signup');
+  });
+  const switchToLogin = $('switchToLogin');
+  if (switchToLogin) switchToLogin.addEventListener('click', (e) => {
+    e.preventDefault(); switchFlow('signin');
+  });
+
+  // URL hash on load
+  const hash = (location.hash || '').toLowerCase();
+  if (hash === '#signup' || hash === '#register') {
+    activateFlow('signup');
+  } else {
+    activateFlow('signin');
+  }
+
+  // Support deep-link from client.html?mode=register
+  const params = new URLSearchParams(location.search);
+  if (params.get('mode') === 'register') {
+    activateFlow('signup');
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     PASSWORD STRENGTH METER
+     ═══════════════════════════════════════════════════════════════════ */
+  const pwInput  = $('pRegPassword');
+  const pwMeter  = $('pwMeter');
+  const pwHint   = $('pwHint');
+  if (pwInput && pwMeter) {
+    pwInput.addEventListener('input', () => {
+      const v = pwInput.value;
+      if (!v) { pwMeter.classList.remove('show'); return; }
+      pwMeter.classList.add('show');
+      const strength = v.length >= 12 ? 4
+                     : v.length >= 8  ? 3
+                     : v.length >= 6  ? 2 : 1;
+      pwMeter.setAttribute('data-strength', String(strength));
+      pwHint.textContent = strength >= 3
+        ? 'Strong password'
+        : v.length < 6
+          ? 'Use 6+ characters'
+          : 'Add more characters for a stronger password';
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     PASSWORD VISIBILITY TOGGLES
+     ═══════════════════════════════════════════════════════════════════ */
+  document.querySelectorAll('.pw-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const targetId = btn.getAttribute('data-pw-target');
+      const input = document.getElementById(targetId);
+      if (!input) return;
+      const isPw = input.type === 'password';
+      input.type = isPw ? 'text' : 'password';
+      btn.innerHTML = isPw
+        ? '<i class="fa-solid fa-eye-slash" aria-hidden="true"></i>'
+        : '<i class="fa-solid fa-eye" aria-hidden="true"></i>';
+      btn.setAttribute('aria-label', isPw ? 'Hide password' : 'Show password');
+    });
+  });
+
+  /* ═══════════════════════════════════════════════════════════════════
+     PHONE TOOLTIP
+     ═══════════════════════════════════════════════════════════════════ */
+  const phoneBtn = $('phoneTooltipBtn');
+  const phoneTip = $('phoneTooltip');
+  if (phoneBtn && phoneTip) {
+    phoneBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      phoneTip.style.display = phoneTip.style.display === 'none' ? 'block' : 'none';
+    });
+    phoneBtn.addEventListener('focus', () => { phoneTip.style.display = 'block'; });
+    phoneBtn.addEventListener('blur', () => { phoneTip.style.display = 'none'; });
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     CONFIRM PASSWORD VALIDATION
+     ═══════════════════════════════════════════════════════════════════ */
+  window.vioraConfirmPwMatch = function () {
+    const p1 = $('pRegPassword');
+    const p2 = $('pRegPassword2');
+    if (!p1 || !p2) return true;
+    if (!p1.value && !p2.value) return true;
+    if (p1.value !== p2.value) {
+      const msg = $('loginMessage');
+      if (msg) {
+        msg.className = 'login-message error';
+        msg.textContent = 'Passwords do not match. Please check and try again.';
+      }
+      p2.focus();
+      return false;
+    }
+    return true;
+  };
+
+  /* ═══════════════════════════════════════════════════════════════════
+     FORGOT PASSWORD
+     ═══════════════════════════════════════════════════════════════════ */
+  const forgotLink = $('forgotLink');
+  if (forgotLink) {
+    forgotLink.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const email = ($('pEmail').value || '').trim();
+      const msg = $('loginMessage');
+      if (!email) {
+        if (msg) { msg.className = 'login-message error'; msg.textContent = 'Enter your email address first, then click Forgot password.'; }
+        return;
+      }
+      if (typeof window.vioraSendPasswordReset !== 'function') {
+        if (msg) { msg.className = 'login-message info'; msg.textContent = 'Password reset is initialising — please try again in a moment.'; }
+        return;
+      }
+      forgotLink.textContent = 'Sending…';
+      const res = await window.vioraSendPasswordReset(email);
+      forgotLink.textContent = 'Forgot password?';
+      if (res && res.ok) {
+        if (msg) { msg.className = 'login-message success'; msg.textContent = 'Reset link sent. Check your inbox.'; }
+      } else {
+        if (msg) { msg.className = 'login-message error'; msg.textContent = 'Could not send reset link. Check the email address.'; }
+      }
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     WELCOME TOAST on ?welcome=1
+     ═══════════════════════════════════════════════════════════════════ */
+  if (params.get('welcome') === '1') {
+    setTimeout(() => {
+      const msg = $('loginMessage');
+      if (msg) {
+        msg.className = 'login-message success';
+        msg.textContent = 'Welcome to your VIORA portal!';
+      }
+      try { history.replaceState(null, '', location.pathname); } catch (e) {}
+    }, 600);
+  }
+})();
+</script>
+
+<script type="module" src="client-app.js"></script>
+</body>
+</html>

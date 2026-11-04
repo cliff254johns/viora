@@ -1,0 +1,1715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>VIORA ECOSYSTEMS — We build the ecosystem, not just the software</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; background: #050508; font-family: 'Inter', sans-serif; color: #fff; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #050508; }
+        ::-webkit-scrollbar-thumb { background: #2a2a33; border-radius: 4px; }
+
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: 0; pointer-events: none; }
+        .scroll-container { position: relative; z-index: 10; pointer-events: none; }
+        a, button, .clickable { pointer-events: auto; }
+
+        /* ===== DESKTOP NAV ===== */
+        .nav-desktop { position: fixed; top: 0; left: 0; width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 3rem; z-index: 100; font-weight: 500; letter-spacing: -0.01em; background: linear-gradient(to bottom, rgba(5,5,8,0.9) 0%, transparent 100%); pointer-events: none; }
+        .nav-desktop a, .nav-desktop button { pointer-events: auto; }
+        .logo { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.03em; color: #fff; text-decoration: none; background: linear-gradient(135deg, #ffffff 0%, #a0a0c0 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .logo span { font-weight: 300; opacity: 0.6; }
+        .nav-links { display: flex; gap: 2.5rem; align-items: center; }
+        .nav-links a { color: rgba(255, 255, 255, 0.6); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; font-weight: 400; }
+        .nav-links a:hover { color: #fff; }
+        .nav-cta { background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); padding: 0.6rem 1.6rem; border-radius: 40px; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; backdrop-filter: blur(10px); color: #fff; cursor: pointer; }
+        .nav-cta:hover { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.25); transform: scale(1.02); }
+
+        /* ===== MOBILE BOTTOM NAV ===== */
+        .nav-mobile { display: none; position: fixed; bottom: 0; left: 0; width: 100%; z-index: 300; background: rgba(8, 8, 16, 0.85); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-top: 1px solid rgba(255, 255, 255, 0.08); padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom)) 0.5rem; justify-content: space-around; align-items: center; pointer-events: auto; }
+        .nav-mobile-item { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; padding: 0.4rem 0.8rem; color: rgba(255, 255, 255, 0.5); text-decoration: none; font-size: 0.6rem; font-weight: 500; letter-spacing: 0.02em; transition: all 0.2s; border-radius: 12px; cursor: pointer; background: none; border: none; }
+        .nav-mobile-item:active { transform: scale(0.92); }
+        .nav-mobile-item.active { color: #fff; }
+        .nav-mobile-item.active .nav-mobile-icon { background: rgba(134, 168, 231, 0.2); border-color: rgba(134, 168, 231, 0.5); box-shadow: 0 0 16px rgba(134, 168, 231, 0.3); }
+        .nav-mobile-icon { width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.06); transition: all 0.2s; }
+        .nav-mobile-icon svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+        /* ===== SCROLL PROGRESS ===== */
+        .scroll-progress { position: fixed; right: 1.5rem; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 0.8rem; z-index: 100; pointer-events: auto; }
+        .progress-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.15); transition: all 0.3s; cursor: pointer; border: none; padding: 0; }
+        .progress-dot.active { background: #86a8e7; box-shadow: 0 0 16px rgba(134, 168, 231, 0.6); transform: scale(1.3); }
+
+        /* ===== SECTIONS ===== */
+        .section { min-height: 100vh; display: flex; align-items: center; padding: 6rem 3rem; pointer-events: none; position: relative; gap: 3rem; }
+        .section-content { max-width: 520px; pointer-events: auto; position: relative; z-index: 2; flex-shrink: 0; background: rgba(10, 10, 18, 0.55); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; padding: 2.5rem; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06); transform: translateY(0); transition: transform 0.4s ease, box-shadow 0.4s ease; }
+        .section-content:hover { box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1); }
+        .section-content.right { margin-left: auto; text-align: right; }
+        .section-content.right .section-tag { margin-left: auto; }
+
+        .section-illustration { position: absolute; top: 50%; transform: translateY(-50%); width: 380px; height: 380px; pointer-events: none; z-index: 1; opacity: 0.9; }
+        .section-illustration.right-side { right: 3rem; }
+        .section-illustration.left-side { left: 3rem; }
+        .section-illustration canvas { width: 100% !important; height: 100% !important; display: block; }
+
+        .section-tag { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.15em; color: rgba(255, 255, 255, 0.6); margin-bottom: 1.2rem; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); padding: 0.4rem 1rem; border-radius: 40px; backdrop-filter: blur(8px); }
+        .section-tag .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent, #86a8e7); box-shadow: 0 0 12px var(--accent, #86a8e7); animation: pulse-dot 2s ease-in-out infinite; }
+        @keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.8); } }
+
+        .section h2 { font-size: 2.8rem; font-weight: 600; line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 1.2rem; background: linear-gradient(to bottom, #ffffff 60%, #b0b0c8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .section p { font-size: 1.02rem; color: rgba(255, 255, 255, 0.92); line-height: 1.75; margin-bottom: 1.2rem; font-weight: 400; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
+        .section ul { list-style: none; margin-bottom: 1.5rem; }
+        .section ul li { font-size: 0.94rem; color: rgba(255, 255, 255, 0.82); line-height: 1.7; padding-left: 1.2rem; position: relative; margin-bottom: 0.5rem; font-weight: 400; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25); }
+        .section ul li::before { content: ''; position: absolute; left: 0; top: 0.6rem; width: 5px; height: 5px; border-radius: 50%; background: var(--accent, #86a8e7); box-shadow: 0 0 10px var(--accent, #86a8e7); }
+        .section ul li strong { color: #ffffff; font-weight: 600; }
+        .section-stats { display: flex; gap: 2.5rem; flex-wrap: wrap; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+        .section-content.right .section-stats { justify-content: flex-end; }
+        .stat { display: flex; flex-direction: column; }
+        .stat-value { font-size: 1.6rem; font-weight: 700; color: #fff; letter-spacing: -0.02em; text-shadow: 0 0 20px rgba(255, 255, 255, 0.15); }
+        .stat-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255, 255, 255, 0.5); margin-top: 0.2rem; font-weight: 500; }
+
+        /* ===== BIG ANIMATED BUTTONS ===== */
+        .section-actions { display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap; }
+        .section-content.right .section-actions { justify-content: flex-end; }
+        .btn-lg { padding: 1rem 2.2rem; border-radius: 60px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); text-decoration: none; display: inline-flex; align-items: center; gap: 0.6rem; border: none; position: relative; overflow: hidden; letter-spacing: 0.01em; }
+        .btn-lg svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.3s; }
+        .btn-lg:hover svg { transform: translateX(3px); }
+        .btn-view-lg { background: rgba(255, 255, 255, 0.08); border: 1.5px solid rgba(255, 255, 255, 0.22); color: #fff; backdrop-filter: blur(12px); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); }
+        .btn-view-lg::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent); transition: left 0.6s; }
+        .btn-view-lg:hover { background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.5); transform: translateY(-4px) scale(1.03); box-shadow: 0 12px 32px rgba(255, 255, 255, 0.15); }
+        .btn-view-lg:hover::before { left: 100%; }
+        .btn-order-lg { background: linear-gradient(135deg, #25D366, #1eb855); color: #fff; font-weight: 700; box-shadow: 0 6px 24px rgba(37, 211, 102, 0.4); position: relative; overflow: hidden; }
+        .btn-order-lg::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(255,255,255,0.25), transparent); opacity: 0; transition: opacity 0.3s; }
+        .btn-order-lg::after { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; background: rgba(255, 255, 255, 0.3); border-radius: 50%; transform: translate(-50%, -50%); transition: width 0.5s, height 0.5s; }
+        .btn-order-lg:hover { transform: translateY(-4px) scale(1.04); box-shadow: 0 16px 40px rgba(37, 211, 102, 0.6); }
+        .btn-order-lg:hover::before { opacity: 1; }
+        .btn-order-lg:hover::after { width: 300px; height: 300px; }
+        .btn-order-lg .pulse-ring { position: absolute; inset: 0; border-radius: 60px; border: 2px solid rgba(37, 211, 102, 0.6); animation: btn-pulse 2s ease-out infinite; pointer-events: none; }
+        @keyframes btn-pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.15); opacity: 0; } }
+
+        /* ===== HERO ===== */
+        .hero { min-height: 100vh; display: flex; align-items: center; padding: 6rem 3rem; pointer-events: none; }
+        .hero-content { max-width: 720px; pointer-events: auto; background: rgba(10, 10, 18, 0.45); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 28px; padding: 3rem; box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5); }
+        .hero h1 { font-size: 4.6rem; font-weight: 600; line-height: 1.05; letter-spacing: -0.04em; margin-bottom: 1.5rem; background: linear-gradient(to bottom, #ffffff 60%, #b0b0c8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero .accent { background: linear-gradient(135deg, #7f7fd5, #86a8e7, #91eae4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero p { font-size: 1.15rem; color: rgba(255, 255, 255, 0.92); max-width: 620px; line-height: 1.7; margin-bottom: 2.5rem; font-weight: 400; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
+        .button-group { display: flex; gap: 1.2rem; flex-wrap: wrap; }
+        .btn-primary { background: #fff; color: #050508; padding: 0.9rem 2.4rem; border-radius: 50px; font-weight: 600; font-size: 0.95rem; border: none; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 8px 24px rgba(255, 255, 255, 0.15); text-decoration: none; display: inline-flex; align-items: center; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(255, 255, 255, 0.25); }
+        .btn-secondary { background: rgba(255, 255, 255, 0.04); color: #fff; padding: 0.9rem 2.4rem; border-radius: 50px; font-weight: 500; font-size: 0.95rem; border: 1px solid rgba(255, 255, 255, 0.25); cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; backdrop-filter: blur(8px); }
+        .btn-secondary:hover { border-color: rgba(255, 255, 255, 0.6); background: rgba(255, 255, 255, 0.08); }
+        .scroll-hint { display: flex; align-items: center; gap: 0.8rem; margin-top: 3rem; font-size: 0.8rem; color: rgba(255, 255, 255, 0.45); letter-spacing: 0.05em; }
+        .scroll-hint .line { width: 40px; height: 1px; background: rgba(255, 255, 255, 0.3); animation: line-pulse 2s ease-in-out infinite; }
+        @keyframes line-pulse { 0%, 100% { transform: scaleX(1); opacity: 1; } 50% { transform: scaleX(1.5); opacity: 0.5; } }
+
+        /* ===== HUD ===== */
+        .hud-stats { position: fixed; bottom: 2.5rem; right: 3rem; display: flex; gap: 2.5rem; z-index: 50; pointer-events: auto; background: rgba(6, 6, 12, 0.65); backdrop-filter: blur(20px); padding: 1rem 2rem; border-radius: 60px; border: 1px solid rgba(255, 255, 255, 0.08); font-size: 0.8rem; letter-spacing: 0.02em; }
+        .hud-item { display: flex; flex-direction: column; align-items: center; }
+        .hud-value { font-weight: 700; font-size: 1.1rem; color: #fff; line-height: 1.2; }
+        .hud-label { color: rgba(255, 255, 255, 0.4); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; }
+
+        /* ===== DECORATIVE ===== */
+        .grid-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px); background-size: 60px 60px; z-index: 1; pointer-events: none; }
+        .glow-spot { position: fixed; border-radius: 50%; filter: blur(120px); z-index: 0; pointer-events: none; }
+        .glow-spot.g1 { width: 600px; height: 600px; background: rgba(80, 120, 255, 0.06); top: -200px; right: -150px; }
+        .glow-spot.g2 { width: 500px; height: 500px; background: rgba(160, 80, 255, 0.05); bottom: -150px; left: -150px; }
+
+        /* ===== ACTIVE BADGE ===== */
+        .active-system-badge { position: fixed; top: 6rem; left: 3rem; z-index: 50; display: flex; align-items: center; gap: 0.8rem; background: rgba(6, 6, 12, 0.7); backdrop-filter: blur(20px); padding: 0.6rem 1.2rem; border-radius: 40px; border: 1px solid rgba(255, 255, 255, 0.08); font-size: 0.8rem; color: rgba(255, 255, 255, 0.8); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+        .active-system-badge.visible { opacity: 1; }
+        .active-system-badge .badge-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--badge-accent, #86a8e7); box-shadow: 0 0 16px var(--badge-accent, #86a8e7); transition: background 0.3s, box-shadow 0.3s; animation: pulse-dot 1.5s ease-in-out infinite; }
+
+        /* ===== CURSOR ===== */
+        .cursor-ring { position: fixed; width: 48px; height: 48px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.4); pointer-events: none; z-index: 999; transform: translate(-50%, -50%); transition: width 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), height 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.2s, box-shadow 0.2s; display: none; }
+        .cursor-ring.visible { display: block; }
+        .cursor-ring.hovering { width: 72px; height: 72px; border-color: var(--cursor-accent, #86a8e7); box-shadow: 0 0 24px var(--cursor-accent, #86a8e7), inset 0 0 12px var(--cursor-accent, #86a8e7); }
+        .cursor-dot { position: fixed; width: 4px; height: 4px; border-radius: 50%; background: #fff; pointer-events: none; z-index: 1000; transform: translate(-50%, -50%); display: none; }
+        .cursor-dot.visible { display: block; }
+        .radial-tooltip { position: fixed; pointer-events: none; z-index: 998; transform: translate(-50%, -50%); opacity: 0; transition: opacity 0.2s; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+        .radial-tooltip.visible { opacity: 1; }
+        .tooltip-name { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.15em; color: #fff; white-space: nowrap; background: rgba(6, 6, 12, 0.85); backdrop-filter: blur(12px); padding: 0.4rem 0.9rem; border-radius: 40px; border: 1px solid rgba(255, 255, 255, 0.12); }
+        .tooltip-value { font-size: 0.6rem; color: rgba(255, 255, 255, 0.6); letter-spacing: 0.08em; }
+
+        /* ===== FULL MESH ===== */
+        .section-full-mesh { justify-content: center; }
+        .section-full-mesh .section-content { max-width: 640px; margin: 0 auto; text-align: center; }
+        .section-full-mesh .section-tag { margin: 0 auto 1.2rem; }
+        .section-full-mesh .section-stats { justify-content: center; }
+        .section-full-mesh .button-group { justify-content: center; margin-top: 2.5rem; }
+
+        /* ===== WHATSAPP FLOAT ===== */
+        .whatsapp-float { position: fixed; bottom: 2.5rem; left: 2.5rem; z-index: 200; display: flex; align-items: center; gap: 0.8rem; background: rgba(37, 211, 102, 0.18); border: 1px solid rgba(37, 211, 102, 0.35); padding: 0.7rem 1.4rem 0.7rem 0.9rem; border-radius: 60px; cursor: pointer; text-decoration: none; color: #fff; backdrop-filter: blur(16px); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 8px 32px rgba(37, 211, 102, 0.2); pointer-events: auto; font-size: 0.85rem; font-weight: 500; }
+        .whatsapp-float:hover { background: rgba(37, 211, 102, 0.3); border-color: rgba(37, 211, 102, 0.7); transform: translateY(-4px) scale(1.03); box-shadow: 0 16px 48px rgba(37, 211, 102, 0.35); }
+        .whatsapp-float .wa-icon { width: 32px; height: 32px; border-radius: 50%; background: #25D366; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.3s; }
+        .whatsapp-float:hover .wa-icon { transform: rotate(-8deg) scale(1.08); }
+        .whatsapp-float .wa-icon svg { width: 20px; height: 20px; fill: #fff; }
+        .whatsapp-float .wa-label { white-space: nowrap; }
+        .whatsapp-float .wa-pulse { position: absolute; width: 100%; height: 100%; border-radius: 60px; background: rgba(37, 211, 102, 0.15); animation: wa-pulse 2.5s ease-out infinite; pointer-events: none; z-index: -1; }
+        @keyframes wa-pulse { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.25); opacity: 0; } }
+
+        /* ===== BACK TO TOP ===== */
+        .back-to-top { position: fixed; bottom: 8rem; right: 3rem; z-index: 200; width: 52px; height: 52px; border-radius: 50%; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.14); backdrop-filter: blur(16px); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; pointer-events: auto; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); opacity: 0; transform: translateY(20px) scale(0.8); visibility: hidden; }
+        .back-to-top.visible { opacity: 1; transform: translateY(0) scale(1); visibility: visible; }
+        .back-to-top:hover { background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.35); transform: translateY(-4px) scale(1.08); box-shadow: 0 8px 24px rgba(255, 255, 255, 0.15); }
+        .back-to-top svg { width: 20px; height: 20px; stroke: #fff; stroke-width: 2.2; fill: none; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.3s; }
+        .back-to-top:hover svg { transform: translateY(-3px); }
+
+        /* ===== SCROLL-REVEAL ANIMATIONS ===== */
+        .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal.revealed { opacity: 1; transform: translateY(0); }
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+
+        /* ===== RESPONSIVE DESKTOP ===== */
+        @media (max-width: 1280px) { .section-illustration { width: 320px; height: 320px; } }
+        @media (max-width: 1024px) {
+            .nav-desktop { padding: 1.2rem 2rem; }
+            .section { padding: 5rem 2rem; }
+            .hero { padding: 5rem 2rem; }
+            .hero h1 { font-size: 3.4rem; }
+            .hero p { font-size: 1.05rem; }
+            .section h2 { font-size: 2.2rem; }
+            .nav-links { gap: 1.5rem; }
+            .hud-stats { bottom: 1.5rem; right: 1.5rem; gap: 1.8rem; padding: 0.8rem 1.5rem; }
+            .active-system-badge { left: 2rem; top: 5rem; }
+            .whatsapp-float { bottom: 1.5rem; left: 1.5rem; padding: 0.6rem 1.1rem 0.6rem 0.7rem; font-size: 0.8rem; }
+            .whatsapp-float .wa-icon { width: 28px; height: 28px; }
+            .back-to-top { bottom: 6.5rem; right: 1.5rem; width: 48px; height: 48px; }
+            .btn-lg { padding: 0.9rem 1.9rem; font-size: 0.9rem; }
+            .section-illustration { width: 280px; height: 280px; opacity: 0.85; }
+        }
+
+        /* ===== MOBILE APP MODE ===== */
+        @media (max-width: 768px) {
+            body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+            .nav-desktop { display: none; }
+            .nav-mobile { display: flex; }
+            .scroll-progress { display: none; }
+            .cursor-ring, .cursor-dot, .radial-tooltip { display: none !important; }
+            .whatsapp-float { display: none; }
+            .hud-stats { display: flex; bottom: calc(80px + env(safe-area-inset-bottom)); right: 1rem; left: 1rem; justify-content: space-around; gap: 1rem; padding: 0.6rem 1rem; font-size: 0.7rem; border-radius: 40px; }
+            .hud-value { font-size: 0.95rem; }
+            .hud-label { font-size: 0.55rem; }
+            .active-system-badge { display: flex; top: 4.5rem; left: 1rem; font-size: 0.7rem; padding: 0.5rem 1rem; }
+            .back-to-top { bottom: calc(150px + env(safe-area-inset-bottom)); right: 1rem; width: 44px; height: 44px; }
+            .hero { padding: 5rem 1.2rem 2rem; min-height: 92vh; }
+            .hero-content { padding: 1.8rem; border-radius: 20px; }
+            .hero h1 { font-size: 2.4rem; line-height: 1.12; }
+            .hero p { font-size: 0.95rem; margin-bottom: 1.8rem; }
+            .hero .button-group { flex-direction: column; }
+            .btn-primary, .btn-secondary { width: 100%; justify-content: center; padding: 0.9rem 1.8rem; font-size: 0.9rem; }
+            .scroll-hint { display: none; }
+            .section { padding: 2.5rem 1.2rem; min-height: auto; flex-direction: column; gap: 1.5rem; }
+            .section-content { max-width: 100%; padding: 1.8rem; border-radius: 20px; width: 100%; }
+            .section-content.right { text-align: left; margin-left: 0; }
+            .section-content.right .section-tag { margin-left: 0; }
+            .section-content.right .section-stats { justify-content: flex-start; }
+            .section-content.right .section-actions { justify-content: flex-start; }
+            .section h2 { font-size: 1.8rem; }
+            .section p { font-size: 0.92rem; }
+            .section ul li { font-size: 0.85rem; }
+            .section-stats { gap: 1.5rem; }
+            .stat-value { font-size: 1.35rem; }
+            .section-actions { flex-direction: column; gap: 0.75rem; margin-top: 1.5rem; }
+            .btn-lg { width: 100%; justify-content: center; padding: 0.95rem 1.5rem; font-size: 0.9rem; }
+            .section-illustration { position: relative; top: auto; left: auto; right: auto; transform: none; width: 220px; height: 220px; margin: 0 auto; opacity: 0.9; display: block; }
+            .section-illustration.right-side, .section-illustration.left-side { left: auto; right: auto; }
+            .section-full-mesh .section-content { text-align: center; }
+            .section-full-mesh .button-group { flex-direction: column; width: 100%; }
+            .section-full-mesh .btn-primary, .section-full-mesh .btn-secondary { width: 100%; }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 { font-size: 2rem; }
+            .logo { font-size: 1.2rem; }
+            .section h2 { font-size: 1.5rem; }
+            .hero-content, .section-content { padding: 1.4rem; }
+            .section-illustration { width: 180px; height: 180px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+            .reveal { opacity: 1; transform: none; }
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div class="grid-overlay"></div>
+    <div class="glow-spot g1"></div>
+    <div class="glow-spot g2"></div>
+
+    <div class="cursor-ring" id="cursor-ring"></div>
+    <div class="cursor-dot" id="cursor-dot"></div>
+    <div class="radial-tooltip" id="radial-tooltip">
+        <div class="tooltip-name" id="tooltip-name">System</div>
+        <div class="tooltip-value" id="tooltip-value">0.0ms</div>
+    </div>
+
+    <nav class="nav-desktop">
+        <a href="index.html" class="logo">VIORA <span>ECOSYSTEMS</span></a>
+        <div class="nav-links">
+            <a href="https://viora.co.ke/market.html">Marketplace</a>
+            <a href="https://viora.co.ke/inde.html">Solutions</a>
+            <button class="nav-cta" id="nav-chat">Chat with us</button>
+        </div>
+    </nav>
+
+    <nav class="nav-mobile" id="nav-mobile">
+        <a href="index.html" class="nav-mobile-item active" data-mobile="home">
+            <span class="nav-mobile-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+            Home
+        </a>
+        <a href="https://viora.co.ke/market.html" class="nav-mobile-item" data-mobile="market">
+            <span class="nav-mobile-icon"><svg viewBox="0 0 24 24"><path d="M3 9h18v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"/><path d="M3 9l3-6h12l3 6"/><line x1="9" y1="21" x2="9" y2="12"/><line x1="15" y1="21" x2="15" y2="12"/></svg></span>
+            Market
+        </a>
+        <a href="#section-1" class="nav-mobile-item" data-mobile="tour" id="mobile-tour-btn">
+            <span class="nav-mobile-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg></span>
+            Tour
+        </a>
+        <button class="nav-mobile-item" data-mobile="chat" id="mobile-chat-btn">
+            <span class="nav-mobile-icon"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
+            Chat
+        </button>
+    </nav>
+
+    <div class="active-system-badge" id="active-badge">
+        <span class="badge-dot"></span>
+        <span id="badge-text">Overview</span>
+    </div>
+
+    <div class="scroll-progress" id="scroll-progress"></div>
+
+    <div class="hud-stats">
+        <div class="hud-item"><span class="hud-value" id="hud-latency">0.3ms</span><span class="hud-label">latency</span></div>
+        <div class="hud-item"><span class="hud-value" id="hud-packets">0</span><span class="hud-label">packets / sec</span></div>
+        <div class="hud-item"><span class="hud-value">∞</span><span class="hud-label">scale</span></div>
+    </div>
+
+    <a href="https://wa.me/254713428774?text=Hi%20Viora%20Ecosystems%2C%20I%27d%20like%20to%20learn%20more%20about%20building%20a%20digital%20ecosystem%20for%20my%20business."
+       target="_blank" rel="noopener noreferrer" class="whatsapp-float clickable" aria-label="Chat on WhatsApp">
+        <span class="wa-pulse"></span>
+        <span class="wa-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg></span>
+        <span class="wa-label">Chat with us</span>
+    </a>
+
+    <button class="back-to-top" id="back-to-top" aria-label="Back to top">
+        <svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+    </button>
+
+    <div class="scroll-container">
+
+        <div class="hero" data-section="0" id="home">
+            <div class="hero-content reveal">
+                <h1>We build the <span class="accent">ecosystem</span>, not just the software.</h1>
+                <p>VIORA Ecosystems designs and builds complete digital ecosystems for every industry. We don't just sell you a tool — we architect the blueprint, build the system, and connect every part so your data flows freely.</p>
+                <div class="button-group">
+                    <a href="https://viora.co.ke/inde.html" class="btn-primary">Start building →</a>
+                    <a href="#section-1" class="btn-secondary" id="take-tour-hero">Take the tour</a>
+                </div>
+                <div class="scroll-hint">
+                    <span class="line"></span>
+                    Scroll to explore the ecosystem
+                </div>
+            </div>
+        </div>
+
+        <!-- 01: Business Management Systems -->
+        <div class="section" data-section="1" id="section-1">
+            <div class="section-content reveal">
+                <div class="section-tag reveal reveal-delay-1" style="--accent: #4a8aff;">
+                    <span class="dot"></span>Business Systems — 01
+                </div>
+                <h2 class="reveal reveal-delay-1">Business Management Systems</h2>
+                <p class="reveal reveal-delay-2">A unified hub for running your entire operation — staff, tasks, workflows, records, and reporting. Instead of juggling spreadsheets and disconnected tools, your team works from one system that knows the state of the business in real time.</p>
+                <ul class="reveal reveal-delay-2">
+                    <li><strong>Unified operations hub</strong> — every department on one platform</li>
+                    <li><strong>Workflow automation</strong> — approvals, escalations, and handoffs</li>
+                    <li><strong>Live dashboards</strong> — managers see the truth as it happens</li>
+                </ul>
+                <div class="section-stats reveal reveal-delay-3">
+                    <div class="stat"><span class="stat-value">24/7</span><span class="stat-label">visibility</span></div>
+                    <div class="stat"><span class="stat-value">0.4ms</span><span class="stat-label">core latency</span></div>
+                    <div class="stat"><span class="stat-value">99.9%</span><span class="stat-label">uptime</span></div>
+                </div>
+                <div class="section-actions reveal reveal-delay-3">
+                    <a href="https://viora.co.ke/market.html" class="btn-lg btn-view-lg">View sample <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                    <a href="https://wa.me/254713428774?text=Hi%20Viora%20Ecosystems%2C%20I%27d%20like%20to%20order%20a%20Business%20Management%20System." target="_blank" rel="noopener noreferrer" class="btn-lg btn-order-lg"><span class="pulse-ring"></span>Order now <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                </div>
+            </div>
+            <div class="section-illustration right-side" data-illustration="1"></div>
+        </div>
+
+        <!-- 02: 3D Websites -->
+        <div class="section" data-section="2">
+            <div class="section-illustration left-side" data-illustration="2"></div>
+            <div class="section-content right reveal">
+                <div class="section-tag reveal reveal-delay-1" style="--accent: #6a5aff;"><span class="dot"></span>Immersive Web — 02</div>
+                <h2 class="reveal reveal-delay-1">3D Websites</h2>
+                <p class="reveal reveal-delay-2">Interactive, WebGL-powered websites that let visitors explore your product, space, or brand in three dimensions. Built for businesses that need to stand out — real estate, hospitality, manufacturing, architecture, and anyone selling an experience.</p>
+                <ul class="reveal reveal-delay-2">
+                    <li><strong>Immersive product showcases</strong> — rotate, zoom, configure</li>
+                    <li><strong>Interactive storytelling</strong> — scroll-driven 3D journeys</li>
+                    <li><strong>Mobile-ready WebGL</strong> — smooth on phones and desktops</li>
+                </ul>
+                <div class="section-stats reveal reveal-delay-3">
+                    <div class="stat"><span class="stat-value">60fps</span><span class="stat-label">render</span></div>
+                    <div class="stat"><span class="stat-value">&lt;2s</span><span class="stat-label">load</span></div>
+                    <div class="stat"><span class="stat-value">340%</span><span class="stat-label">engagement</span></div>
+                </div>
+                <div class="section-actions reveal reveal-delay-3">
+                    <a href="https://viora.co.ke/market.html" class="btn-lg btn-view-lg">View sample <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                    <a href="https://wa.me/254713428774?text=Hi%20Viora%20Ecosystems%2C%20I%27d%20like%20to%20order%20a%203D%20Website." target="_blank" rel="noopener noreferrer" class="btn-lg btn-order-lg"><span class="pulse-ring"></span>Order now <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 03: Financial Management Systems -->
+        <div class="section" data-section="3">
+            <div class="section-content reveal">
+                <div class="section-tag reveal reveal-delay-1" style="--accent: #44ddaa;"><span class="dot"></span>Finance — 03</div>
+                <h2 class="reveal reveal-delay-1">Financial Management Systems</h2>
+                <p class="reveal reveal-delay-2">Bookkeeping, invoicing, payroll, tax compliance, and cash-flow visibility in one system. Every transaction posts to a shared ledger, so your books are always current and audit-ready — no month-end reconciliation nightmares.</p>
+                <ul class="reveal reveal-delay-2">
+                    <li><strong>Automated bookkeeping</strong> — double-entry with full audit trail</li>
+                    <li><strong>Invoicing &amp; payments</strong> — real-time cash flow visibility</li>
+                    <li><strong>Payroll &amp; tax</strong> — multi-jurisdiction compliance</li>
+                </ul>
+                <div class="section-stats reveal reveal-delay-3">
+                    <div class="stat"><span class="stat-value">8.7B</span><span class="stat-label">events / day</span></div>
+                    <div class="stat"><span class="stat-value">0.3ms</span><span class="stat-label">posting</span></div>
+                    <div class="stat"><span class="stat-value">100%</span><span class="stat-label">audit-ready</span></div>
+                </div>
+                <div class="section-actions reveal reveal-delay-3">
+                    <a href="https://viora.co.ke/market.html" class="btn-lg btn-view-lg">View sample <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                    <a href="https://wa.me/254713428774?text=Hi%20Viora%20Ecosystems%2C%20I%27d%20like%20to%20order%20a%20Financial%20Management%20System." target="_blank" rel="noopener noreferrer" class="btn-lg btn-order-lg"><span class="pulse-ring"></span>Order now <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                </div>
+            </div>
+            <div class="section-illustration right-side" data-illustration="3"></div>
+        </div>
+
+        <!-- 04: Operational Management Systems -->
+        <div class="section" data-section="4">
+            <div class="section-illustration left-side" data-illustration="4"></div>
+            <div class="section-content right reveal">
+                <div class="section-tag reveal reveal-delay-1" style="--accent: #ffaa44;"><span class="dot"></span>Operations — 04</div>
+                <h2 class="reveal reveal-delay-1">Operational Management Systems</h2>
+                <p class="reveal reveal-delay-2">For the day-to-day engine of your business — inventory, logistics, projects, field teams, and service delivery. Ops systems track the physical and procedural side of your company so nothing falls between the cracks.</p>
+                <ul class="reveal reveal-delay-2">
+                    <li><strong>Inventory &amp; logistics</strong> — stock, shipments, supplier flow</li>
+                    <li><strong>Project tracking</strong> — tasks, timelines, resource allocation</li>
+                    <li><strong>Field operations</strong> — mobile check-ins, route planning, reports</li>
+                </ul>
+                <div class="section-stats reveal reveal-delay-3">
+                    <div class="stat"><span class="stat-value">4.1M</span><span class="stat-label">ops events / sec</span></div>
+                    <div class="stat"><span class="stat-value">0.2ms</span><span class="stat-label">write</span></div>
+                    <div class="stat"><span class="stat-value">∞</span><span class="stat-label">scale</span></div>
+                </div>
+                <div class="section-actions reveal reveal-delay-3">
+                    <a href="https://viora.co.ke/market.html" class="btn-lg btn-view-lg">View sample <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                    <a href="https://wa.me/254713428774?text=Hi%20Viora%20Ecosystems%2C%20I%27d%20like%20to%20order%20an%20Operational%20Management%20System." target="_blank" rel="noopener noreferrer" class="btn-lg btn-order-lg"><span class="pulse-ring"></span>Order now <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 05: Digital Commerce Systems -->
+        <div class="section" data-section="5">
+            <div class="section-content reveal">
+                <div class="section-tag reveal reveal-delay-1" style="--accent: #ff66aa;"><span class="dot"></span>Commerce — 05</div>
+                <h2 class="reveal reveal-delay-1">Digital Commerce Systems</h2>
+                <p class="reveal reveal-delay-2">Sell online with a connected commerce stack — storefront, cart, checkout, payments, order management, and fulfilment. Every sale feeds directly into your inventory and financial systems, so you never sell what you don't have.</p>
+                <ul class="reveal reveal-delay-2">
+                    <li><strong>Storefront &amp; catalogue</strong> — products, variants, pricing</li>
+                    <li><strong>Payments &amp; checkout</strong> — cards, mobile money, wallets</li>
+                    <li><strong>Order &amp; fulfilment</strong> — automated stock and delivery flow</li>
+                </ul>
+                <div class="section-stats reveal reveal-delay-3">
+                    <div class="stat"><span class="stat-value">2.8K</span><span class="stat-label">stores</span></div>
+                    <div class="stat"><span class="stat-value">0.2ms</span><span class="stat-label">checkout</span></div>
+                    <div class="stat"><span class="stat-value">40+</span><span class="stat-label">payment rails</span></div>
+                </div>
+                <div class="section-actions reveal reveal-delay-3">
+                    <a href="https://viora.co.ke/market.html" class="btn-lg btn-view-lg">View sample <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                    <a href="https://wa.me/254713428774?text=Hi%20Viora%20Ecosystems%2C%20I%27d%20like%20to%20order%20a%20Digital%20Commerce%20System." target="_blank" rel="noopener noreferrer" class="btn-lg btn-order-lg"><span class="pulse-ring"></span>Order now <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                </div>
+            </div>
+            <div class="section-illustration right-side" data-illustration="5"></div>
+        </div>
+
+        <!-- 06: Specialized Enterprise Systems -->
+        <div class="section" data-section="6">
+            <div class="section-illustration left-side" data-illustration="6"></div>
+            <div class="section-content right reveal">
+                <div class="section-tag reveal reveal-delay-1" style="--accent: #aa88ff;"><span class="dot"></span>Enterprise — 06</div>
+                <h2 class="reveal reveal-delay-1">Specialized Enterprise Systems</h2>
+                <p class="reveal reveal-delay-2">Custom-built systems for organisations with unique workflows — hospitals, schools, cooperatives, logistics firms, government agencies. When off-the-shelf software can't fit, we build the system that does.</p>
+                <ul class="reveal reveal-delay-2">
+                    <li><strong>Custom workflows</strong> — built around how you actually work</li>
+                    <li><strong>Complex integrations</strong> — connect legacy and modern systems</li>
+                    <li><strong>Compliance-ready</strong> — audit trails, access control, reporting</li>
+                </ul>
+                <div class="section-stats reveal reveal-delay-3">
+                    <div class="stat"><span class="stat-value">120K</span><span class="stat-label">users</span></div>
+                    <div class="stat"><span class="stat-value">0.8ms</span><span class="stat-label">edge latency</span></div>
+                    <div class="stat"><span class="stat-value">AES-512</span><span class="stat-label">encryption</span></div>
+                </div>
+                <div class="section-actions reveal reveal-delay-3">
+                    <a href="https://viora.co.ke/market.html" class="btn-lg btn-view-lg">View sample <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                    <a href="https://wa.me/254713428774?text=Hi%20Viora%20Ecosystems%2C%20I%27d%20like%20to%20order%20a%20Specialized%20Enterprise%20System." target="_blank" rel="noopener noreferrer" class="btn-lg btn-order-lg"><span class="pulse-ring"></span>Order now <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 07: Android Applications -->
+        <div class="section" data-section="7">
+            <div class="section-content reveal">
+                <div class="section-tag reveal reveal-delay-1" style="--accent: #22d3ee;"><span class="dot"></span>Mobile — 07</div>
+                <h2 class="reveal reveal-delay-1">Android Applications</h2>
+                <p class="reveal reveal-delay-2">Native Android apps built for the field, the shop floor, or the customer's pocket. Offline-first where needed, with push notifications, mobile payments, and real-time sync back to your central systems.</p>
+                <ul class="reveal reveal-delay-2">
+                    <li><strong>Native performance</strong> — fast, responsive, battery-efficient</li>
+                    <li><strong>Offline sync</strong> — keep working without signal</li>
+                    <li><strong>Push &amp; payments</strong> — engagement and mobile money built in</li>
+                </ul>
+                <div class="section-stats reveal reveal-delay-3">
+                    <div class="stat"><span class="stat-value">1.2K</span><span class="stat-label">devices</span></div>
+                    <div class="stat"><span class="stat-value">0.1ms</span><span class="stat-label">touch response</span></div>
+                    <div class="stat"><span class="stat-value">24/7</span><span class="stat-label">sync</span></div>
+                </div>
+                <div class="section-actions reveal reveal-delay-3">
+                    <a href="https://viora.co.ke/market.html" class="btn-lg btn-view-lg">View sample <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                    <a href="https://wa.me/254713428774?text=Hi%20Viora%20Ecosystems%2C%20I%27d%20like%20to%20order%20an%20Android%20Application." target="_blank" rel="noopener noreferrer" class="btn-lg btn-order-lg"><span class="pulse-ring"></span>Order now <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                </div>
+            </div>
+            <div class="section-illustration right-side" data-illustration="7"></div>
+        </div>
+
+        <!-- 08: Agriculture & Cooperative Systems -->
+        <div class="section" data-section="8">
+            <div class="section-illustration left-side" data-illustration="8"></div>
+            <div class="section-content right reveal">
+                <div class="section-tag reveal reveal-delay-1" style="--accent: #f472b6;"><span class="dot"></span>AgriTech — 08</div>
+                <h2 class="reveal reveal-delay-1">Agriculture &amp; Cooperative Systems</h2>
+                <p class="reveal reveal-delay-2">Built for farmer cooperatives, agribusinesses, and rural enterprises — member records, produce intake, weighing, grading, payments, and distribution. Works on low bandwidth and handles the realities of field operations.</p>
+                <ul class="reveal reveal-delay-2">
+                    <li><strong>Farmer &amp; member records</strong> — profiles, land, deliveries</li>
+                    <li><strong>Produce tracking</strong> — intake, grading, storage, dispatch</li>
+                    <li><strong>Payouts</strong> — automated member payments and statements</li>
+                </ul>
+                <div class="section-stats reveal reveal-delay-3">
+                    <div class="stat"><span class="stat-value">85K</span><span class="stat-label">farmers</span></div>
+                    <div class="stat"><span class="stat-value">1.4M</span><span class="stat-label">deliveries / season</span></div>
+                    <div class="stat"><span class="stat-value">99%</span><span class="stat-label">payout accuracy</span></div>
+                </div>
+                <div class="section-actions reveal reveal-delay-3">
+                    <a href="https://viora.co.ke/market.html" class="btn-lg btn-view-lg">View sample <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                    <a href="https://wa.me/254713428774?text=Hi%20Viora%20Ecosystems%2C%20I%27d%20like%20to%20order%20an%20Agriculture%20%26%20Cooperative%20System." target="_blank" rel="noopener noreferrer" class="btn-lg btn-order-lg"><span class="pulse-ring"></span>Order now <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 09: AI Assistant -->
+        <div class="section" data-section="9">
+            <div class="section-content reveal">
+                <div class="section-tag reveal reveal-delay-1" style="--accent: #a78bfa;"><span class="dot"></span>AI — 09</div>
+                <h2 class="reveal reveal-delay-1">AI Assistant</h2>
+                <p class="reveal reveal-delay-2">A conversational AI that answers questions, retrieves knowledge, and takes action across your systems. Deployed on your website, WhatsApp, or internal tools — trained on your data, not the open internet.</p>
+                <ul class="reveal reveal-delay-2">
+                    <li><strong>Knowledge retrieval</strong> — accurate answers from your documents</li>
+                    <li><strong>Task automation</strong> — bookings, orders, support tickets</li>
+                    <li><strong>Multi-channel</strong> — web, WhatsApp, mobile, voice</li>
+                </ul>
+                <div class="section-stats reveal reveal-delay-3">
+                    <div class="stat"><span class="stat-value">&lt;1s</span><span class="stat-label">response</span></div>
+                    <div class="stat"><span class="stat-value">24/7</span><span class="stat-label">availability</span></div>
+                    <div class="stat"><span class="stat-value">92%</span><span class="stat-label">resolution rate</span></div>
+                </div>
+                <div class="section-actions reveal reveal-delay-3">
+                    <a href="https://viora.co.ke/market.html" class="btn-lg btn-view-lg">View sample <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                    <a href="https://wa.me/254713428774?text=Hi%20Viora%20Ecosystems%2C%20I%27d%20like%20to%20order%20an%20AI%20Assistant." target="_blank" rel="noopener noreferrer" class="btn-lg btn-order-lg"><span class="pulse-ring"></span>Order now <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                </div>
+            </div>
+            <div class="section-illustration right-side" data-illustration="9"></div>
+        </div>
+
+        <!-- 10: Personal Profile -->
+        <div class="section" data-section="10">
+            <div class="section-illustration left-side" data-illustration="10"></div>
+            <div class="section-content right reveal">
+                <div class="section-tag reveal reveal-delay-1" style="--accent: #f59e0b;"><span class="dot"></span>Personal — 10</div>
+                <h2 class="reveal reveal-delay-1">Personal Profile</h2>
+                <p class="reveal reveal-delay-2">A polished personal website for professionals, creatives, and founders — your portfolio, CV, projects, and contact in one place. Custom-designed, fast, and entirely yours.</p>
+                <ul class="reveal reveal-delay-2">
+                    <li><strong>Portfolio &amp; CV</strong> — showcase work and credentials</li>
+                    <li><strong>Personal branding</strong> — custom design, your identity</li>
+                    <li><strong>Link hub</strong> — all your profiles in one destination</li>
+                </ul>
+                <div class="section-stats reveal reveal-delay-3">
+                    <div class="stat"><span class="stat-value">100</span><span class="stat-label">Lighthouse</span></div>
+                    <div class="stat"><span class="stat-value">&lt;1s</span><span class="stat-label">load</span></div>
+                    <div class="stat"><span class="stat-value">∞</span><span class="stat-label">customisation</span></div>
+                </div>
+                <div class="section-actions reveal reveal-delay-3">
+                    <a href="https://viora.co.ke/market.html" class="btn-lg btn-view-lg">View sample <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                    <a href="https://wa.me/254713428774?text=Hi%20Viora%20Ecosystems%2C%20I%27d%20like%20to%20order%20a%20Personal%20Profile%20website." target="_blank" rel="noopener noreferrer" class="btn-lg btn-order-lg"><span class="pulse-ring"></span>Order now <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 11: Video Advertisements -->
+        <div class="section" data-section="11">
+            <div class="section-content reveal">
+                <div class="section-tag reveal reveal-delay-1" style="--accent: #fb923c;"><span class="dot"></span>Media — 11</div>
+                <h2 class="reveal reveal-delay-1">Video Advertisements</h2>
+                <p class="reveal reveal-delay-2">Short-form promotional videos for social media, TV, and digital campaigns — motion graphics, product demos, and brand films. Scripted, shot or animated, and delivered in every aspect ratio your channels need.</p>
+                <ul class="reveal reveal-delay-2">
+                    <li><strong>Motion graphics</strong> — animated brand and product stories</li>
+                    <li><strong>Product demos</strong> — show how it works, clearly</li>
+                    <li><strong>Multi-format delivery</strong> — reels, YouTube, TV, billboards</li>
+                </ul>
+                <div class="section-stats reveal reveal-delay-3">
+                    <div class="stat"><span class="stat-value">4K</span><span class="stat-label">resolution</span></div>
+                    <div class="stat"><span class="stat-value">15–60s</span><span class="stat-label">formats</span></div>
+                    <div class="stat"><span class="stat-value">3x</span><span class="stat-label">engagement lift</span></div>
+                </div>
+                <div class="section-actions reveal reveal-delay-3">
+                    <a href="https://viora.co.ke/market.html" class="btn-lg btn-view-lg">View sample <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                    <a href="https://wa.me/254713428774?text=Hi%20Viora%20Ecosystems%2C%20I%27d%20like%20to%20order%20a%20Video%20Advertisement." target="_blank" rel="noopener noreferrer" class="btn-lg btn-order-lg"><span class="pulse-ring"></span>Order now <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                </div>
+            </div>
+            <div class="section-illustration right-side" data-illustration="11"></div>
+        </div>
+
+        <!-- 12: Graphics Design -->
+        <div class="section" data-section="12">
+            <div class="section-illustration left-side" data-illustration="12"></div>
+            <div class="section-content right reveal">
+                <div class="section-tag reveal reveal-delay-1" style="--accent: #2dd4bf;"><span class="dot"></span>Design — 12</div>
+                <h2 class="reveal reveal-delay-1">Graphics Design</h2>
+                <p class="reveal reveal-delay-2">Brand identity, logos, UI assets, social media graphics, packaging, and print collateral. Design that makes your business look as good as it actually is — consistent across every touchpoint.</p>
+                <ul class="reveal reveal-delay-2">
+                    <li><strong>Brand identity</strong> — logo, palette, typography, guidelines</li>
+                    <li><strong>UI assets</strong> — icons, illustrations, screen graphics</li>
+                    <li><strong>Marketing collateral</strong> — social, print, packaging</li>
+                </ul>
+                <div class="section-stats reveal reveal-delay-3">
+                    <div class="stat"><span class="stat-value">1.8K</span><span class="stat-label">assets delivered</span></div>
+                    <div class="stat"><span class="stat-value">48h</span><span class="stat-label">turnaround</span></div>
+                    <div class="stat"><span class="stat-value">100%</span><span class="stat-label">vector-ready</span></div>
+                </div>
+                <div class="section-actions reveal reveal-delay-3">
+                    <a href="https://viora.co.ke/market.html" class="btn-lg btn-view-lg">View sample <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                    <a href="https://wa.me/254713428774?text=Hi%20Viora%20Ecosystems%2C%20I%27d%20like%20to%20order%20Graphics%20Design." target="_blank" rel="noopener noreferrer" class="btn-lg btn-order-lg"><span class="pulse-ring"></span>Order now <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 13: AI & Automation -->
+        <div class="section" data-section="13">
+            <div class="section-content reveal">
+                <div class="section-tag reveal reveal-delay-1" style="--accent: #38bdf8;"><span class="dot"></span>Automation — 13</div>
+                <h2 class="reveal reveal-delay-1">AI &amp; Automation</h2>
+                <p class="reveal reveal-delay-2">Workflow automation and machine-learning integrations that remove repetitive work and surface decisions. From invoice matching to predictive alerts, we automate the boring parts so your team can focus on the real work.</p>
+                <ul class="reveal reveal-delay-2">
+                    <li><strong>Workflow automation</strong> — triggers, approvals, integrations</li>
+                    <li><strong>LLM integrations</strong> — AI inside your existing tools</li>
+                    <li><strong>Decision engines</strong> — rules and predictions that act</li>
+                </ul>
+                <div class="section-stats reveal reveal-delay-3">
+                    <div class="stat"><span class="stat-value">850</span><span class="stat-label">models deployed</span></div>
+                    <div class="stat"><span class="stat-value">14ms</span><span class="stat-label">inference</span></div>
+                    <div class="stat"><span class="stat-value">∞</span><span class="stat-label">runs / day</span></div>
+                </div>
+                <div class="section-actions reveal reveal-delay-3">
+                    <a href="https://viora.co.ke/market.html" class="btn-lg btn-view-lg">View sample <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                    <a href="https://wa.me/254713428774?text=Hi%20Viora%20Ecosystems%2C%20I%27d%20like%20to%20order%20AI%20%26%20Automation%20services." target="_blank" rel="noopener noreferrer" class="btn-lg btn-order-lg"><span class="pulse-ring"></span>Order now <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                </div>
+            </div>
+            <div class="section-illustration right-side" data-illustration="13"></div>
+        </div>
+
+        <!-- 14: General Websites -->
+        <div class="section" data-section="14">
+            <div class="section-illustration left-side" data-illustration="14"></div>
+            <div class="section-content right reveal">
+                <div class="section-tag reveal reveal-delay-1" style="--accent: #94a3b8;"><span class="dot"></span>Web — 14</div>
+                <h2 class="reveal reveal-delay-1">General Websites</h2>
+                <p class="reveal reveal-delay-2">Corporate sites, landing pages, blogs, and content-driven builds — fast, secure, and search-optimised. The solid web foundation every business needs, built to last and easy to maintain.</p>
+                <ul class="reveal reveal-delay-2">
+                    <li><strong>Corporate &amp; brochure sites</strong> — your business, presented well</li>
+                    <li><strong>Landing pages</strong> — conversion-focused, A/B ready</li>
+                    <li><strong>Content management</strong> — update without a developer</li>
+                </ul>
+                <div class="section-stats reveal reveal-delay-3">
+                    <div class="stat"><span class="stat-value">100</span><span class="stat-label">Lighthouse</span></div>
+                    <div class="stat"><span class="stat-value">&lt;1.2s</span><span class="stat-label">load</span></div>
+                    <div class="stat"><span class="stat-value">SEO</span><span class="stat-label">optimised</span></div>
+                </div>
+                <div class="section-actions reveal reveal-delay-3">
+                    <a href="https://viora.co.ke/market.html" class="btn-lg btn-view-lg">View sample <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                    <a href="https://wa.me/254713428774?text=Hi%20Viora%20Ecosystems%2C%20I%27d%20like%20to%20order%20a%20General%20Website." target="_blank" rel="noopener noreferrer" class="btn-lg btn-order-lg"><span class="pulse-ring"></span>Order now <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 15: Ecommerce Website -->
+        <div class="section" data-section="15">
+            <div class="section-content reveal">
+                <div class="section-tag reveal reveal-delay-1" style="--accent: #34d399;"><span class="dot"></span>Ecommerce — 15</div>
+                <h2 class="reveal reveal-delay-1">Ecommerce Website</h2>
+                <p class="reveal reveal-delay-2">A dedicated online store — catalogue, product pages, cart, checkout, payments, shipping, and customer accounts. Plugged into your inventory and accounts so stock and cash stay in sync from day one.</p>
+                <ul class="reveal reveal-delay-2">
+                    <li><strong>Product catalogue</strong> — variants, images, inventory counts</li>
+                    <li><strong>Checkout &amp; payments</strong> — cards, mobile money, wallets</li>
+                    <li><strong>Shipping &amp; returns</strong> — tracking and reverse logistics</li>
+                </ul>
+                <div class="section-stats reveal reveal-delay-3">
+                    <div class="stat"><span class="stat-value">2.8K</span><span class="stat-label">stores</span></div>
+                    <div class="stat"><span class="stat-value">0.2ms</span><span class="stat-label">checkout</span></div>
+                    <div class="stat"><span class="stat-value">40+</span><span class="stat-label">payment rails</span></div>
+                </div>
+                <div class="section-actions reveal reveal-delay-3">
+                    <a href="https://viora.co.ke/market.html" class="btn-lg btn-view-lg">View sample <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                    <a href="https://wa.me/254713428774?text=Hi%20Viora%20Ecosystems%2C%20I%27d%20like%20to%20order%20an%20Ecommerce%20Website." target="_blank" rel="noopener noreferrer" class="btn-lg btn-order-lg"><span class="pulse-ring"></span>Order now <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                </div>
+            </div>
+            <div class="section-illustration right-side" data-illustration="15"></div>
+        </div>
+
+        <!-- 16: Industry Management Systems -->
+        <div class="section" data-section="16">
+            <div class="section-illustration left-side" data-illustration="16"></div>
+            <div class="section-content right reveal">
+                <div class="section-tag reveal reveal-delay-1" style="--accent: #ef4444;"><span class="dot"></span>Vertical — 16</div>
+                <h2 class="reveal reveal-delay-1">Industry Management Systems</h2>
+                <p class="reveal reveal-delay-2">Sector-specific systems built for the way your industry actually operates — hospitality (PMS/POS), education (school management), healthcare (patient records), logistics (fleet), and more. Purpose-built, not adapted.</p>
+                <ul class="reveal reveal-delay-2">
+                    <li><strong>Hospitality</strong> — reservations, rooms, restaurant POS</li>
+                    <li><strong>Education</strong> — students, fees, exams, timetables</li>
+                    <li><strong>Healthcare &amp; logistics</strong> — patients, fleets, scheduling</li>
+                </ul>
+                <div class="section-stats reveal reveal-delay-3">
+                    <div class="stat"><span class="stat-value">12+</span><span class="stat-label">industries</span></div>
+                    <div class="stat"><span class="stat-value">4.2ms</span><span class="stat-label">query</span></div>
+                    <div class="stat"><span class="stat-value">∞</span><span class="stat-label">scaling</span></div>
+                </div>
+                <div class="section-actions reveal reveal-delay-3">
+                    <a href="https://viora.co.ke/market.html" class="btn-lg btn-view-lg">View sample <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                    <a href="https://wa.me/254713428774?text=Hi%20Viora%20Ecosystems%2C%20I%27d%20like%20to%20order%20an%20Industry%20Management%20System." target="_blank" rel="noopener noreferrer" class="btn-lg btn-order-lg"><span class="pulse-ring"></span>Order now <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Full Mesh -->
+        <div class="section section-full-mesh" data-section="17">
+            <div class="section-content reveal">
+                <div class="section-tag reveal reveal-delay-1" style="--accent: #86a8e7;"><span class="dot"></span>The VIORA Ecosystem</div>
+                <h2 class="reveal reveal-delay-1">One core. Sixteen solutions. Zero silos.</h2>
+                <p class="reveal reveal-delay-2">VIORA Ecosystems' shared storage hub sits at the center of the mesh. Every system — from business management to AI automation — connects directly to it, reading, writing, and reacting in real time. Watch the data streams flow live across the entire ecosystem.</p>
+                <div class="section-stats reveal reveal-delay-3">
+                    <div class="stat"><span class="stat-value">1</span><span class="stat-label">shared core</span></div>
+                    <div class="stat"><span class="stat-value">16</span><span class="stat-label">solutions</span></div>
+                    <div class="stat"><span class="stat-value">0</span><span class="stat-label">data silos</span></div>
+                </div>
+                <div class="button-group reveal reveal-delay-3">
+                    <a href="https://viora.co.ke/inde.html" class="btn-primary">Start building →</a>
+                    <a href="#section-1" class="btn-secondary" id="take-tour-full">Take the tour</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.162.0/build/three.module.js"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+
+        gsap.registerPlugin(ScrollTrigger);
+
+        // --- Helpers ---
+        const WHATSAPP_URL = 'https://wa.me/254713428774?text=Hi%20Viora%20Ecosystems%2C%20I%27d%20like%20to%20learn%20more%20about%20building%20a%20digital%20ecosystem%20for%20my%20business.';
+        function openWhatsApp() { window.open(WHATSAPP_URL, '_blank'); }
+
+        const navChat = document.getElementById('nav-chat');
+        if (navChat) navChat.addEventListener('click', openWhatsApp);
+        const mobileChat = document.getElementById('mobile-chat-btn');
+        if (mobileChat) mobileChat.addEventListener('click', openWhatsApp);
+
+        function scrollToTour(e) {
+            if (e) e.preventDefault();
+            const target = document.getElementById('section-1');
+            if (target) target.scrollIntoView({ behavior: 'smooth' });
+        }
+        const tourHero = document.getElementById('take-tour-hero');
+        const tourFull = document.getElementById('take-tour-full');
+        const mobileTour = document.getElementById('mobile-tour-btn');
+        if (tourHero) tourHero.addEventListener('click', scrollToTour);
+        if (tourFull) tourFull.addEventListener('click', scrollToTour);
+        if (mobileTour) mobileTour.addEventListener('click', scrollToTour);
+
+        const mobileItems = document.querySelectorAll('.nav-mobile-item');
+        function setMobileActive(id) {
+            mobileItems.forEach(el => el.classList.toggle('active', el.dataset.mobile === id));
+        }
+
+        const backToTop = document.getElementById('back-to-top');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 400) backToTop.classList.add('visible');
+            else backToTop.classList.remove('visible');
+        });
+        backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+        // ===== SCROLL REVEAL ANIMATIONS =====
+        const revealEls = document.querySelectorAll('.reveal');
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('revealed');
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.15, rootMargin: '0px 0px -80px 0px' });
+        revealEls.forEach(el => revealObserver.observe(el));
+
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.querySelectorAll('.hero .reveal').forEach(el => el.classList.add('revealed'));
+            }, 100);
+        });
+
+        // ===== SECTION 3D ILLUSTRATIONS =====
+        const illustrationContainers = document.querySelectorAll('.section-illustration');
+        const illustrationScenes = [];
+
+        const illustrationConfigs = {
+            1:  { type: 'cube',         color: 0x4a8aff },
+            2:  { type: 'sphere',       color: 0x6a5aff },
+            3:  { type: 'torus',        color: 0x44ddaa },
+            4:  { type: 'octahedron',   color: 0xffaa44 },
+            5:  { type: 'torusKnot',    color: 0xff66aa },
+            6:  { type: 'icosahedron',  color: 0xaa88ff },
+            7:  { type: 'cone',         color: 0x22d3ee },
+            8:  { type: 'dodecahedron', color: 0xf472b6 },
+            9:  { type: 'cylinder',     color: 0xa78bfa },
+            10: { type: 'tetrahedron',  color: 0xf59e0b },
+            11: { type: 'cube',         color: 0xfb923c },
+            12: { type: 'sphere',       color: 0x2dd4bf },
+            13: { type: 'torus',        color: 0x38bdf8 },
+            14: { type: 'octahedron',   color: 0x94a3b8 },
+            15: { type: 'icosahedron',  color: 0x34d399 },
+            16: { type: 'cone',         color: 0xef4444 }
+        };
+
+        function createIllustration(container, type, color) {
+            const w = Math.max(container.clientWidth || 0, 220);
+            const h = Math.max(container.clientHeight || 0, 220);
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
+            camera.position.set(0, 0, 5);
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+            renderer.setSize(w, h);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.setClearColor(0x000000, 0);
+            container.appendChild(renderer.domElement);
+            renderer.domElement.style.width = '100%';
+            renderer.domElement.style.height = '100%';
+
+            const amb = new THREE.AmbientLight(0xffffff, 0.4);
+            scene.add(amb);
+            const dir = new THREE.DirectionalLight(0xffffff, 1.2);
+            dir.position.set(3, 5, 4);
+            scene.add(dir);
+            const point = new THREE.PointLight(color, 2, 10);
+            point.position.set(-3, -2, 3);
+            scene.add(point);
+            const point2 = new THREE.PointLight(0x86a8e7, 1.5, 10);
+            point2.position.set(3, -1, -3);
+            scene.add(point2);
+
+            let geo;
+            switch (type) {
+                case 'cube': geo = new THREE.BoxGeometry(1.8, 1.8, 1.8); break;
+                case 'sphere': geo = new THREE.SphereGeometry(1.2, 48, 48); break;
+                case 'torus': geo = new THREE.TorusGeometry(1.1, 0.35, 32, 80); break;
+                case 'octahedron': geo = new THREE.OctahedronGeometry(1.4); break;
+                case 'torusKnot': geo = new THREE.TorusKnotGeometry(0.9, 0.28, 128, 24); break;
+                case 'icosahedron': geo = new THREE.IcosahedronGeometry(1.4); break;
+                case 'cone': geo = new THREE.ConeGeometry(1.2, 2, 40); break;
+                case 'dodecahedron': geo = new THREE.DodecahedronGeometry(1.3); break;
+                case 'cylinder': geo = new THREE.CylinderGeometry(1, 1, 2, 40); break;
+                case 'tetrahedron': geo = new THREE.TetrahedronGeometry(1.5); break;
+                default: geo = new THREE.SphereGeometry(1.2, 48, 48);
+            }
+
+            const mat = new THREE.MeshStandardMaterial({
+                color, roughness: 0.25, metalness: 0.75,
+                emissive: new THREE.Color(color).multiplyScalar(0.15),
+                emissiveIntensity: 1
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            scene.add(mesh);
+
+            const wireMat = new THREE.MeshBasicMaterial({ color, wireframe: true, transparent: true, opacity: 0.15 });
+            const wire = new THREE.Mesh(geo, wireMat);
+            wire.scale.set(1.02, 1.02, 1.02);
+            scene.add(wire);
+
+            const particleGeo = new THREE.BufferGeometry();
+            const particleCount = 120;
+            const positions = new Float32Array(particleCount * 3);
+            const colors = new Float32Array(particleCount * 3);
+            const c = new THREE.Color(color);
+            for (let i = 0; i < particleCount * 3; i += 3) {
+                const r = 2.2 + Math.random() * 1.5;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos((Math.random() * 2) - 1);
+                positions[i] = r * Math.sin(phi) * Math.cos(theta);
+                positions[i+1] = r * Math.sin(phi) * Math.sin(theta);
+                positions[i+2] = r * Math.cos(phi);
+                colors[i] = c.r * (0.5 + Math.random() * 0.5);
+                colors[i+1] = c.g * (0.5 + Math.random() * 0.5);
+                colors[i+2] = c.b * (0.5 + Math.random() * 0.5);
+            }
+            particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            particleGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            const particleMat = new THREE.PointsMaterial({
+                size: 0.05, vertexColors: true, transparent: true, opacity: 0.7,
+                blending: THREE.AdditiveBlending, depthWrite: false
+            });
+            const particles = new THREE.Points(particleGeo, particleMat);
+            scene.add(particles);
+
+            const ringGeo = new THREE.TorusGeometry(1.9, 0.02, 8, 100);
+            const ringMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.3 });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.rotation.x = Math.PI / 2;
+            scene.add(ring);
+
+            const ring2 = new THREE.Mesh(ringGeo, ringMat.clone());
+            ring2.material.opacity = 0.2;
+            ring2.rotation.x = Math.PI / 3;
+            ring2.rotation.z = 0.5;
+            ring2.scale.setScalar(1.15);
+            scene.add(ring2);
+
+            return { scene, camera, renderer, mesh, wire, particles, ring, ring2, type, color, container, visible: false };
+        }
+
+        const illustrationObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const ill = illustrationScenes.find(i => i.container === entry.target);
+                if (ill) ill.visible = entry.isIntersecting;
+            });
+        }, { threshold: 0.01 });
+
+        illustrationContainers.forEach(container => {
+            const id = parseInt(container.dataset.illustration);
+            const config = illustrationConfigs[id];
+            if (config) {
+                requestAnimationFrame(() => {
+                    const ill = createIllustration(container, config.type, config.color);
+                    illustrationScenes.push(ill);
+                    illustrationObserver.observe(container);
+                });
+            }
+        });
+
+        // ===== MAIN SCENE =====
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050508);
+        scene.fog = new THREE.Fog(0x050508, 22, 50);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 2.5, 20);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.15;
+        container.appendChild(renderer.domElement);
+
+        scene.add(new THREE.AmbientLight(0x303050));
+        const dirLight = new THREE.DirectionalLight(0xaaccff, 1.6);
+        dirLight.position.set(6, 12, 8);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
+        const rimLight = new THREE.PointLight(0xffaa88, 0.9);
+        rimLight.position.set(-6, 3, -6);
+        scene.add(rimLight);
+        const fillLight = new THREE.PointLight(0x88aaff, 0.6);
+        fillLight.position.set(4, 1, 8);
+        scene.add(fillLight);
+        const coreLight = new THREE.PointLight(0x86a8e7, 2.0);
+        coreLight.position.set(0, 0, 0);
+        scene.add(coreLight);
+
+        const coreGroup = new THREE.Group();
+        coreGroup.position.set(0, 0.3, 0);
+        scene.add(coreGroup);
+
+        const coreSphereGeo = new THREE.SphereGeometry(1.1, 64, 64);
+        const coreSphereMat = new THREE.MeshStandardMaterial({
+            color: 0x2a4a7a, roughness: 0.15, metalness: 0.95,
+            emissive: new THREE.Color(0x1a2a4a), emissiveIntensity: 0.6,
+            transparent: true, opacity: 0.92
+        });
+        const coreSphere = new THREE.Mesh(coreSphereGeo, coreSphereMat);
+        coreSphere.castShadow = true;
+        coreGroup.add(coreSphere);
+
+        const coreWireMat = new THREE.MeshBasicMaterial({ color: 0x88ccff, wireframe: true, transparent: true, opacity: 0.15 });
+        const coreWire = new THREE.Mesh(coreSphereGeo, coreWireMat);
+        coreWire.scale.set(1.02, 1.02, 1.02);
+        coreGroup.add(coreWire);
+
+        const coreGlowMat = new THREE.MeshBasicMaterial({ color: 0x86a8e7, transparent: true, opacity: 0.08, blending: THREE.AdditiveBlending, depthWrite: false });
+        const coreGlow = new THREE.Mesh(new THREE.SphereGeometry(1.3, 32, 32), coreGlowMat);
+        coreGroup.add(coreGlow);
+
+        const latticeGroup = new THREE.Group();
+        coreGroup.add(latticeGroup);
+
+        function createLatticeRing(r, t, c, o) {
+            const geo = new THREE.TorusGeometry(r, t, 24, 160);
+            const mat = new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 0.8, transparent: true, opacity: o, roughness: 0.4, metalness: 0.3 });
+            return new THREE.Mesh(geo, mat);
+        }
+        const latRing1 = createLatticeRing(1.8, 0.02, 0x4488ff, 0.3); latRing1.rotation.x = Math.PI / 2.5;
+        const latRing2 = createLatticeRing(2.1, 0.015, 0x88aaff, 0.22); latRing2.rotation.x = Math.PI / 1.8; latRing2.rotation.z = 0.4;
+        const latRing3 = createLatticeRing(1.5, 0.018, 0xaa88ff, 0.25); latRing3.rotation.x = Math.PI / 3.5; latRing3.rotation.z = -0.3;
+        latticeGroup.add(latRing1, latRing2, latRing3);
+
+        // ===== 16 SYSTEMS =====
+        const systemData = [
+            { id: 'bms',  name: 'Business Mgmt',  color: 0x4a8aff, section: 1,  angle: 0 },
+            { id: 'web3d',name: '3D Websites',    color: 0x6a5aff, section: 2,  angle: Math.PI * 2 / 16 },
+            { id: 'fin',  name: 'Financial Mgmt', color: 0x44ddaa, section: 3,  angle: Math.PI * 4 / 16 },
+            { id: 'ops',  name: 'Operational Mgmt',color: 0xffaa44, section: 4,  angle: Math.PI * 6 / 16 },
+            { id: 'dcom', name: 'Digital Commerce',color: 0xff66aa, section: 5,  angle: Math.PI * 8 / 16 },
+            { id: 'spec', name: 'Enterprise',      color: 0xaa88ff, section: 6,  angle: Math.PI * 10 / 16 },
+            { id: 'and',  name: 'Android Apps',    color: 0x22d3ee, section: 7,  angle: Math.PI * 12 / 16 },
+            { id: 'agri', name: 'Agri & Co-op',    color: 0xf472b6, section: 8,  angle: Math.PI * 14 / 16 },
+            { id: 'aias', name: 'AI Assistant',    color: 0xa78bfa, section: 9,  angle: Math.PI * 16 / 16 },
+            { id: 'pp',   name: 'Personal Profile',color: 0xf59e0b, section: 10, angle: Math.PI * 18 / 16 },
+            { id: 'vid',  name: 'Video Ads',       color: 0xfb923c, section: 11, angle: Math.PI * 20 / 16 },
+            { id: 'gfx',  name: 'Graphics Design', color: 0x2dd4bf, section: 12, angle: Math.PI * 22 / 16 },
+            { id: 'aia',  name: 'AI & Automation', color: 0x38bdf8, section: 13, angle: Math.PI * 24 / 16 },
+            { id: 'web',  name: 'General Web',     color: 0x94a3b8, section: 14, angle: Math.PI * 26 / 16 },
+            { id: 'ecom', name: 'Ecommerce',       color: 0x34d399, section: 15, angle: Math.PI * 28 / 16 },
+            { id: 'ind',  name: 'Industry Mgmt',   color: 0xef4444, section: 16, angle: Math.PI * 30 / 16 }
+        ];
+
+        const isMobile = window.innerWidth <= 768;
+        const orbitRadius = isMobile ? 5.0 : 6.8;
+        const nodeMeshes = [];
+        const nodePositions = {};
+        const baseGeo = new THREE.SphereGeometry(0.42, 48, 48);
+
+        const nodeVertexShader = `
+            uniform float uTime; uniform float uHover; uniform float uActive;
+            varying vec3 vNormal; varying vec3 vPosition;
+            vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
+            vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}
+            vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+            vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}
+            float snoise(vec3 v){
+                const vec2 C=vec2(1.0/6.0,1.0/3.0); const vec4 D=vec4(0.0,0.5,1.0,2.0);
+                vec3 i=floor(v+dot(v,C.yyy)); vec3 x0=v-i+dot(i,C.xxx);
+                vec3 g=step(x0.yzx,x0.xyz); vec3 l=1.0-g;
+                vec3 i1=min(g.xyz,l.zxy); vec3 i2=max(g.xyz,l.zxy);
+                vec3 x1=x0-i1+C.xxx; vec3 x2=x0-i2+C.yyy; vec3 x3=x0-D.yyy;
+                i=mod289(i);
+                vec4 p=permute(permute(permute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));
+                float n_=0.142857142857; vec3 ns=n_*D.wyz-D.xzx;
+                vec4 j=p-49.0*floor(p*ns.z*ns.z); vec4 x_=floor(j*ns.z); vec4 y_=floor(j-7.0*x_);
+                vec4 x=x_*ns.x+ns.yyyy; vec4 y=y_*ns.x+ns.yyyy; vec4 h=1.0-abs(x)-abs(y);
+                vec4 b0=vec4(x.xy,y.xy); vec4 b1=vec4(x.zw,y.zw);
+                vec4 s0=floor(b0)*2.0+1.0; vec4 s1=floor(b1)*2.0+1.0; vec4 sh=-step(h,vec4(0.0));
+                vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy; vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
+                vec3 p0=vec3(a0.xy,h.x); vec3 p1=vec3(a0.zw,h.y); vec3 p2=vec3(a1.xy,h.z); vec3 p3=vec3(a1.zw,h.w);
+                vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
+                p0*=norm.x; p1*=norm.y; p2*=norm.z; p3*=norm.w;
+                vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0); m=m*m;
+                return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
+            }
+            void main(){
+                vNormal=normalize(normalMatrix*normal); vPosition=position;
+                vec3 p=position; vec3 n=normalize(p);
+                float noise=snoise(n*2.0+uTime*0.6)*0.08;
+                float pulse=sin(uTime*2.0+length(p)*4.0)*0.03;
+                vec3 displaced=p*(1.0+noise+pulse+uHover*0.15+uActive*0.08);
+                gl_Position=projectionMatrix*modelViewMatrix*vec4(displaced,1.0);
+            }
+        `;
+
+        const nodeFragmentShader = `
+            uniform vec3 uColor; uniform float uTime; uniform float uHover; uniform float uActive;
+            varying vec3 vNormal; varying vec3 vPosition;
+            void main(){
+                vec3 lightDir=normalize(vec3(1.0,2.0,1.0));
+                float diff=max(dot(vNormal,lightDir),0.0);
+                float rim=pow(1.0-abs(dot(vNormal,vec3(0.0,0.0,1.0))),2.5);
+                vec3 emissive=uColor*(0.25+uActive*0.9+uHover*0.5);
+                vec3 color=uColor*(0.35+diff*0.65)+emissive*0.5+rim*uColor*0.4;
+                gl_FragColor=vec4(color,0.85+uHover*0.15);
+            }
+        `;
+
+        systemData.forEach((sys, index) => {
+            const x = Math.cos(sys.angle) * orbitRadius;
+            const z = Math.sin(sys.angle) * orbitRadius;
+            const y = Math.sin(sys.angle * 2.0) * 0.8;
+
+            const uniforms = {
+                uTime: { value: 0 }, uHover: { value: 0 }, uActive: { value: 0 },
+                uColor: { value: new THREE.Color(sys.color) }
+            };
+            const mat = new THREE.ShaderMaterial({
+                vertexShader: nodeVertexShader, fragmentShader: nodeFragmentShader,
+                uniforms, transparent: true, side: THREE.DoubleSide
+            });
+            const mesh = new THREE.Mesh(baseGeo, mat);
+            mesh.position.set(x, y, z);
+            mesh.userData = { system: sys, index, uniforms };
+            scene.add(mesh);
+            nodeMeshes.push(mesh);
+            nodePositions[sys.id] = { x, y, z, angle: sys.angle };
+
+            const wireMat = new THREE.MeshBasicMaterial({ color: sys.color, wireframe: true, transparent: true, opacity: 0.06 });
+            const wireMesh = new THREE.Mesh(baseGeo, wireMat);
+            wireMesh.position.copy(mesh.position);
+            wireMesh.scale.set(1.03, 1.03, 1.03);
+            wireMesh.userData = { baseOpacity: 0.06 };
+            scene.add(wireMesh);
+            mesh.userData.wireMesh = wireMesh;
+
+            const glowMat = new THREE.MeshBasicMaterial({ color: sys.color, transparent: true, opacity: 0.08, blending: THREE.AdditiveBlending, depthWrite: false });
+            const glowMesh = new THREE.Mesh(new THREE.SphereGeometry(0.65, 16, 16), glowMat);
+            glowMesh.position.copy(mesh.position);
+            glowMesh.userData = { baseOpacity: 0.08 };
+            scene.add(glowMesh);
+            mesh.userData.glowMesh = glowMesh;
+
+            const streamGroup = new THREE.Group();
+            const initCurvePoints = [];
+            for (let i = 0; i <= 32; i++) {
+                const t = i / 32;
+                initCurvePoints.push(new THREE.Vector3(x * (1 - t), y * (1 - t), z * (1 - t)));
+            }
+            const initCurve = new THREE.CatmullRomCurve3(initCurvePoints);
+            const tubeGeo = new THREE.TubeGeometry(initCurve, 48, 0.028, 8, false);
+            const tubeMat = new THREE.MeshStandardMaterial({
+                color: sys.color, emissive: sys.color, emissiveIntensity: 1.2,
+                transparent: true, opacity: 0.22, roughness: 0.3, metalness: 0.5
+            });
+            const tubeMesh = new THREE.Mesh(tubeGeo, tubeMat);
+            tubeMesh.userData = { baseOpacity: 0.22, isTube: true };
+            streamGroup.add(tubeMesh);
+
+            const packetMeshes = [];
+            const packetGroup = new THREE.Group();
+            for (let p = 0; p < 6; p++) {
+                const packetMat = new THREE.MeshBasicMaterial({ color: sys.color, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false });
+                const packet = new THREE.Mesh(new THREE.SphereGeometry(0.075, 8, 8), packetMat);
+                packet.userData = {
+                    offset: p / 6,
+                    speed: 0.35 + Math.random() * 0.25,
+                    direction: Math.random() > 0.5 ? 1 : -1,
+                    speedMultiplier: 1
+                };
+                packetGroup.add(packet);
+                packetMeshes.push(packet);
+            }
+            streamGroup.add(packetGroup);
+
+            const trailGeo = new THREE.BufferGeometry();
+            const trailCount = 24;
+            const trailPositions = new Float32Array(trailCount * 3);
+            const trailParams = [];
+            for (let i = 0; i < trailCount; i++) {
+                trailParams.push({ offset: i / trailCount, speed: 0.3 + Math.random() * 0.25, direction: Math.random() > 0.5 ? 1 : -1 });
+            }
+            trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPositions, 3));
+            const trailMat = new THREE.PointsMaterial({
+                color: sys.color, size: 0.06, transparent: true, opacity: 0.75,
+                blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
+            });
+            const trailPoints = new THREE.Points(trailGeo, trailMat);
+            trailPoints.userData = { trailParams };
+            streamGroup.add(trailPoints);
+
+            mesh.userData.streamGroup = streamGroup;
+            mesh.userData.packetMeshes = packetMeshes;
+            mesh.userData.trailPoints = trailPoints;
+            mesh.userData.currentCurve = initCurve;
+
+            scene.add(streamGroup);
+
+            // Small chart above the node
+            const chartGroup = new THREE.Group();
+            const chartType = index % 4;
+            if (chartType === 0) {
+                for (let b = 0; b < 7; b++) {
+                    const barH = 0.3 + Math.random() * 0.8;
+                    const barMat = new THREE.MeshStandardMaterial({ color: sys.color, emissive: sys.color, emissiveIntensity: 0.4, transparent: true, opacity: 0.8, roughness: 0.3, metalness: 0.4 });
+                    const bar = new THREE.Mesh(new THREE.BoxGeometry(0.12, barH, 0.12), barMat);
+                    bar.position.set((b - 3) * 0.2, barH / 2 - 0.5, 0);
+                    bar.userData = { baseHeight: barH };
+                    chartGroup.add(bar);
+                }
+            } else if (chartType === 1) {
+                const pts = [];
+                for (let p = 0; p < 8; p++) pts.push(new THREE.Vector3((p - 3.5) * 0.18, Math.sin(p * 0.8) * 0.4, 0));
+                const lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
+                chartGroup.add(new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: sys.color, transparent: true, opacity: 0.8 })));
+                pts.forEach(pt => {
+                    const dot = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 6), new THREE.MeshBasicMaterial({ color: sys.color, transparent: true, opacity: 0.9 }));
+                    dot.position.copy(pt);
+                    dot.userData = { baseY: pt.y };
+                    chartGroup.add(dot);
+                });
+            } else if (chartType === 2) {
+                for (let s = 0; s < 6; s++) {
+                    const segMat = new THREE.MeshStandardMaterial({ color: sys.color, emissive: sys.color, emissiveIntensity: 0.3 + s * 0.1, transparent: true, opacity: 0.8, roughness: 0.3, metalness: 0.4 });
+                    const seg = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.06, 8, 20, Math.PI * 0.8), segMat);
+                    seg.rotation.z = (s / 6) * Math.PI * 2;
+                    seg.rotation.x = Math.PI / 2;
+                    seg.position.y = -0.3;
+                    seg.userData = { baseRot: seg.rotation.z };
+                    chartGroup.add(seg);
+                }
+            } else {
+                const sGeo = new THREE.BufferGeometry();
+                const sPos = new Float32Array(30 * 3);
+                for (let s = 0; s < sPos.length; s += 3) {
+                    sPos[s] = (Math.random() - 0.5) * 0.9;
+                    sPos[s + 1] = (Math.random() - 0.5) * 0.9;
+                    sPos[s + 2] = (Math.random() - 0.5) * 0.4;
+                }
+                sGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
+                chartGroup.add(new THREE.Points(sGeo, new THREE.PointsMaterial({ color: sys.color, size: 0.06, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false })));
+            }
+            chartGroup.position.set(x * 1.25, y + 0.5, z * 1.25);
+            chartGroup.userData = { chartType, active: false };
+            scene.add(chartGroup);
+            mesh.userData.chartGroup = chartGroup;
+        });
+
+        // Inter-system connections (representative pairs across the 16)
+        const interConnections = [
+            ['bms','fin'], ['bms','ops'], ['bms','and'],
+            ['web3d','web'], ['web3d','gfx'],
+            ['fin','ops'], ['fin','ecom'], ['fin','ind'],
+            ['ops','dcom'], ['ops','ind'],
+            ['dcom','ecom'], ['dcom','and'],
+            ['spec','ind'], ['spec','agri'],
+            ['and','web'], ['and','ecom'],
+            ['agri','ops'], ['agri','ind'],
+            ['aias','aia'], ['aias','web'],
+            ['pp','web'], ['vid','gfx'],
+            ['gfx','web3d'], ['gfx','web'],
+            ['aia','bms'], ['aia','aias'],
+            ['web','ecom'],
+            ['ecom','fin'],
+            ['ind','bms'], ['ind','ops']
+        ];
+        const interLineMeshes = [];
+        interConnections.forEach(([a, b]) => {
+            const pa = nodePositions[a], pb = nodePositions[b];
+            if (!pa || !pb) return;
+            const pts = [new THREE.Vector3(pa.x, pa.y, pa.z), new THREE.Vector3(pb.x, pb.y, pb.z)];
+            const curve = new THREE.CatmullRomCurve3(pts);
+            const lineGeo = new THREE.BufferGeometry().setFromPoints(curve.getPoints(28));
+            const lineMat = new THREE.LineBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.06, blending: THREE.AdditiveBlending });
+            const line = new THREE.Line(lineGeo, lineMat);
+            line.userData = { connectionPair: [a, b], baseOpacity: 0.06 };
+            scene.add(line);
+            interLineMeshes.push(line);
+        });
+
+        // Ambient particles + stars + dust
+        const ambientCount = isMobile ? 800 : 1400;
+        const ambientParticlesGeo = new THREE.BufferGeometry();
+        const ambientPositions = new Float32Array(ambientCount * 3);
+        const ambientColors = new Float32Array(ambientCount * 3);
+        for (let i = 0; i < ambientCount * 3; i += 3) {
+            const r = 1.5 + Math.random() * 7;
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos((Math.random() * 2) - 1);
+            ambientPositions[i] = r * Math.sin(phi) * Math.cos(theta);
+            ambientPositions[i+1] = r * Math.sin(phi) * Math.sin(theta) * 0.6;
+            ambientPositions[i+2] = r * Math.cos(phi);
+            const c = new THREE.Color().setHSL(0.6 + Math.random() * 0.15, 0.7, 0.6);
+            ambientColors[i] = c.r; ambientColors[i+1] = c.g; ambientColors[i+2] = c.b;
+        }
+        ambientParticlesGeo.setAttribute('position', new THREE.BufferAttribute(ambientPositions, 3));
+        ambientParticlesGeo.setAttribute('color', new THREE.BufferAttribute(ambientColors, 3));
+        const ambientParticlesMat = new THREE.PointsMaterial({ size: 0.045, vertexColors: true, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+        const ambientParticles = new THREE.Points(ambientParticlesGeo, ambientParticlesMat);
+        coreGroup.add(ambientParticles);
+
+        const starCount = isMobile ? 1200 : 2600;
+        const starsGeo = new THREE.BufferGeometry();
+        const starPositions = new Float32Array(starCount * 3);
+        const starColors = new Float32Array(starCount * 3);
+        for (let i = 0; i < starCount * 3; i += 3) {
+            const r = 14 + Math.random() * 22;
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos((Math.random() * 2) - 1);
+            starPositions[i] = r * Math.sin(phi) * Math.cos(theta);
+            starPositions[i+1] = r * Math.sin(phi) * Math.sin(theta) * 0.7;
+            starPositions[i+2] = r * Math.cos(phi);
+            starColors[i] = 0.4 + Math.random() * 0.6;
+            starColors[i+1] = 0.5 + Math.random() * 0.5;
+            starColors[i+2] = 0.8 + Math.random() * 0.2;
+        }
+        starsGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+        starsGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
+        const starsMat = new THREE.PointsMaterial({ size: 0.08, vertexColors: true, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+        const stars = new THREE.Points(starsGeo, starsMat);
+        scene.add(stars);
+
+        const dustCount = isMobile ? 200 : 400;
+        const dustGeo = new THREE.BufferGeometry();
+        const dustPositions = new Float32Array(dustCount * 3);
+        for (let i = 0; i < dustCount * 3; i += 3) {
+            dustPositions[i] = (Math.random() - 0.5) * 40;
+            dustPositions[i+1] = (Math.random() - 0.5) * 30;
+            dustPositions[i+2] = (Math.random() - 0.5) * 20 + 5;
+        }
+        dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
+        const dustMat = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.03, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+        const dust = new THREE.Points(dustGeo, dustMat);
+        scene.add(dust);
+
+        const gridHelper = new THREE.GridHelper(45, 70, 0x1a2a44, 0x0e1522);
+        gridHelper.position.y = -3.5;
+        scene.add(gridHelper);
+
+        // ===== UI =====
+        const progressDots = document.getElementById('scroll-progress');
+        const activeBadge = document.getElementById('active-badge');
+        const badgeText = document.getElementById('badge-text');
+        const badgeDot = activeBadge.querySelector('.badge-dot');
+        const cursorRing = document.getElementById('cursor-ring');
+        const cursorDot = document.getElementById('cursor-dot');
+        const radialTooltip = document.getElementById('radial-tooltip');
+        const tooltipName = document.getElementById('tooltip-name');
+        const tooltipValue = document.getElementById('tooltip-value');
+        const hudLatency = document.getElementById('hud-latency');
+        const hudPackets = document.getElementById('hud-packets');
+
+        const sections = document.querySelectorAll('.section, .hero');
+        sections.forEach((_, i) => {
+            const dot = document.createElement('button');
+            dot.className = 'progress-dot' + (i === 0 ? ' active' : '');
+            dot.dataset.section = i;
+            dot.addEventListener('click', () => sections[i].scrollIntoView({ behavior: 'smooth' }));
+            progressDots.appendChild(dot);
+        });
+
+        const scrollState = {
+            section: 0,
+            targetCameraX: 0, targetCameraY: 2.5, targetCameraZ: 20,
+            targetLookX: 0, targetLookY: 0.3, targetLookZ: 0,
+            activeSystemId: null, hoveredSystemId: null,
+            cursorX: 0, cursorY: 0, cursorRingX: 0, cursorRingY: 0,
+            orbitRotation: 0, scrollProgress: 0, scrollTargetProgress: 0
+        };
+
+        const cameraPositions = [
+            { pos: [0, 2.5, 20],   look: [0, 0.3, 0] },
+            { pos: [-5.5, 2, 14],  look: [0, 0.3, 0] },
+            { pos: [6, 2.2, 14],   look: [0, 0.3, 0] },
+            { pos: [-4, 3.5, 15],  look: [0, 0.3, 0] },
+            { pos: [6.5, 1.5, 14], look: [0, 0.3, 0] },
+            { pos: [-6, 0.5, 14],  look: [0, 0.3, 0] },
+            { pos: [4, 0, 15],     look: [0, 0.3, 0] },
+            { pos: [-4.5, 1.5, 14],look: [0, 0.3, 0] },
+            { pos: [5, -1, 14],    look: [0, 0.3, 0] },
+            { pos: [-5, 2.5, 14],  look: [0, 0.3, 0] },
+            { pos: [4.5, 1, 14],   look: [0, 0.3, 0] },
+            { pos: [-4, 2, 14],    look: [0, 0.3, 0] },
+            { pos: [5, 0.5, 14],   look: [0, 0.3, 0] },
+            { pos: [-5, 1.5, 14],  look: [0, 0.3, 0] },
+            { pos: [4, 2.5, 14],   look: [0, 0.3, 0] },
+            { pos: [-4.5, 0.5, 14],look: [0, 0.3, 0] },
+            { pos: [5, 2, 14],     look: [0, 0.3, 0] },
+            { pos: [0, 5.5, 24],   look: [0, 0.3, 0] }
+        ];
+
+        function updateSection(index) {
+            scrollState.section = index;
+            const cam = cameraPositions[index] || cameraPositions[0];
+            scrollState.targetCameraX = cam.pos[0];
+            scrollState.targetCameraY = cam.pos[1];
+            scrollState.targetCameraZ = cam.pos[2];
+            scrollState.targetLookX = cam.look[0];
+            scrollState.targetLookY = cam.look[1];
+            scrollState.targetLookZ = cam.look[2];
+
+            document.querySelectorAll('.progress-dot').forEach((dot, i) => dot.classList.toggle('active', i === index));
+
+            if (index >= 1 && index <= 16) {
+                const sys = systemData.find(s => s.section === index);
+                if (sys) {
+                    scrollState.activeSystemId = sys.id;
+                    badgeText.textContent = sys.name;
+                    const colorHex = '#' + sys.color.toString(16).padStart(6, '0');
+                    badgeDot.style.background = colorHex;
+                    badgeDot.style.boxShadow = `0 0 16px ${colorHex}`;
+                    activeBadge.classList.add('visible');
+                }
+            } else {
+                scrollState.activeSystemId = null;
+                activeBadge.classList.remove('visible');
+                badgeText.textContent = 'Shared Storage Core';
+                badgeDot.style.background = '#86a8e7';
+                badgeDot.style.boxShadow = '0 0 16px #86a8e7';
+            }
+
+            nodeMeshes.forEach(mesh => {
+                const sys = mesh.userData.system;
+                const isActive = scrollState.activeSystemId === sys.id;
+                mesh.userData.targetActive = isActive ? 1.0 : 0.0;
+                if (mesh.userData.glowMesh) mesh.userData.glowMesh.userData.targetOpacity = isActive ? 0.4 : 0.08;
+                if (mesh.userData.wireMesh) mesh.userData.wireMesh.userData.targetOpacity = isActive ? 0.22 : 0.06;
+                if (mesh.userData.streamGroup) {
+                    mesh.userData.streamGroup.children.forEach(c => { if (c.userData.isTube) c.userData.targetOpacity = isActive ? 0.7 : 0.22; });
+                }
+                if (mesh.userData.packetMeshes) mesh.userData.packetMeshes.forEach(p => p.userData.speedMultiplier = isActive ? 3.0 : 1.0);
+                if (mesh.userData.chartGroup) mesh.userData.chartGroup.userData.active = isActive;
+            });
+
+            interLineMeshes.forEach(line => {
+                const pair = line.userData.connectionPair;
+                const isActive = scrollState.activeSystemId && pair && pair.includes(scrollState.activeSystemId);
+                line.userData.targetOpacity = isActive ? 0.35 : line.userData.baseOpacity;
+            });
+
+            const isOverview = (index === 0 || index === 17);
+            coreSphereMat.emissiveIntensity = isOverview ? 1.1 : 0.6;
+            coreGlowMat.opacity = isOverview ? 0.15 : 0.08;
+
+            if (index === 0) setMobileActive('home');
+            else if (index >= 1 && index <= 16) setMobileActive('tour');
+        }
+
+        sections.forEach((section, i) => {
+            ScrollTrigger.create({
+                trigger: section,
+                start: 'top 60%',
+                end: 'bottom 40%',
+                onEnter: () => updateSection(i),
+                onEnterBack: () => updateSection(i)
+            });
+        });
+
+        updateSection(0);
+
+        let mouseX = 0, mouseY = 0, targetX = 0, targetY = 0;
+        window.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+            mouseY = (e.clientY / window.innerHeight) * 2 - 1;
+            scrollState.cursorX = e.clientX;
+            scrollState.cursorY = e.clientY;
+        });
+
+        window.addEventListener('scroll', () => {
+            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+            scrollState.scrollTargetProgress = maxScroll > 0 ? window.scrollY / maxScroll : 0;
+        });
+
+        const raycaster = new THREE.Raycaster();
+        const pointer = new THREE.Vector2();
+
+        window.addEventListener('mousemove', (e) => {
+            pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+            pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(pointer, camera);
+
+            let closestNode = null, closestDist = Infinity;
+            nodeMeshes.forEach(mesh => {
+                const wp = new THREE.Vector3();
+                mesh.getWorldPosition(wp);
+                const dist = raycaster.ray.distanceToPoint(wp);
+                if (dist < 0.85 && dist < closestDist) {
+                    closestDist = dist;
+                    closestNode = mesh;
+                }
+            });
+
+            if (closestNode && closestNode.userData.system) {
+                const sysId = closestNode.userData.system.id;
+                if (scrollState.hoveredSystemId !== sysId) {
+                    scrollState.hoveredSystemId = sysId;
+                    const sys = closestNode.userData.system;
+                    const colorHex = '#' + sys.color.toString(16).padStart(6, '0');
+                    cursorRing.classList.add('hovering');
+                    cursorRing.style.setProperty('--cursor-accent', colorHex);
+                    cursorRing.style.borderColor = colorHex;
+                    tooltipName.textContent = sys.name;
+                    tooltipValue.textContent = (Math.random() * 2 + 0.3).toFixed(1) + 'ms to core';
+                    radialTooltip.classList.add('visible');
+                }
+            } else if (scrollState.hoveredSystemId !== null) {
+                scrollState.hoveredSystemId = null;
+                cursorRing.classList.remove('hovering');
+                radialTooltip.classList.remove('visible');
+            }
+        });
+
+        window.addEventListener('mouseenter', () => { cursorRing.classList.add('visible'); cursorDot.classList.add('visible'); });
+        window.addEventListener('mouseleave', () => { cursorRing.classList.remove('visible'); cursorDot.classList.remove('visible'); });
+
+        let lastHudUpdate = 0;
+        let displayedPackets = 0;
+
+        function animate() {
+            const elapsedTime = performance.now() * 0.001;
+            targetX = mouseX * 0.6;
+            targetY = mouseY * 0.6;
+
+            scrollState.scrollProgress += (scrollState.scrollTargetProgress - scrollState.scrollProgress) * 0.05;
+            const sp = scrollState.scrollProgress;
+
+            const lerpFactor = 0.04;
+            camera.position.x += (scrollState.targetCameraX - camera.position.x) * lerpFactor + (targetX * 0.3);
+            camera.position.y += (scrollState.targetCameraY - camera.position.y) * lerpFactor + (targetY * 0.2);
+            camera.position.z += (scrollState.targetCameraZ - camera.position.z) * lerpFactor;
+            camera.lookAt(new THREE.Vector3(scrollState.targetLookX, scrollState.targetLookY, scrollState.targetLookZ));
+
+            scrollState.cursorRingX += (scrollState.cursorX - scrollState.cursorRingX) * 0.15;
+            scrollState.cursorRingY += (scrollState.cursorY - scrollState.cursorRingY) * 0.15;
+            cursorRing.style.left = scrollState.cursorRingX + 'px';
+            cursorRing.style.top = scrollState.cursorRingY + 'px';
+            cursorDot.style.left = scrollState.cursorX + 'px';
+            cursorDot.style.top = scrollState.cursorY + 'px';
+            radialTooltip.style.left = scrollState.cursorX + 'px';
+            radialTooltip.style.top = (scrollState.cursorY - 40) + 'px';
+
+            scene.rotation.y = sp * Math.PI * 0.5;
+            scene.rotation.x = Math.sin(sp * Math.PI) * 0.1;
+
+            coreGroup.position.y = 0.3 + Math.sin(sp * Math.PI * 2) * 0.8;
+            coreGroup.position.z = sp * 1.5;
+
+            coreSphere.rotation.y += 0.004;
+            coreWire.rotation.y = coreSphere.rotation.y;
+            coreWire.rotation.x = Math.sin(elapsedTime * 0.3) * 0.1;
+            coreSphere.scale.setScalar(1.0 + Math.sin(elapsedTime * 1.8) * 0.025);
+            coreWire.scale.setScalar(1.02 + Math.sin(elapsedTime * 1.8) * 0.025);
+            coreGlow.scale.setScalar(1.0 + Math.sin(elapsedTime * 1.4) * 0.06);
+            coreLight.intensity = 1.5 + Math.sin(elapsedTime * 2.5) * 0.5;
+
+            latticeGroup.rotation.y += 0.003;
+            latticeGroup.rotation.x = Math.sin(elapsedTime * 0.2) * 0.15 + sp * 0.3;
+            latRing1.rotation.z += 0.004;
+            latRing2.rotation.z -= 0.003;
+            latRing3.rotation.z += 0.002;
+
+            ambientParticles.rotation.y += 0.0015 + sp * 0.008;
+            ambientParticles.rotation.x += 0.0008 + sp * 0.004;
+            dust.rotation.y += 0.0005 + sp * 0.003;
+            dust.position.z = sp * 3;
+            stars.rotation.y += 0.0001 + sp * 0.001;
+            stars.rotation.x += 0.00005 + sp * 0.0005;
+
+            scrollState.orbitRotation += 0.0015 + sp * 0.002;
+            const orbitRot = scrollState.orbitRotation;
+            let activePackets = 0;
+
+            nodeMeshes.forEach((mesh, i) => {
+                const sys = mesh.userData.system;
+                const uniforms = mesh.userData.uniforms;
+                const isActive = scrollState.activeSystemId === sys.id;
+                const isHovered = scrollState.hoveredSystemId === sys.id;
+
+                const angle = sys.angle + orbitRot;
+                const x = Math.cos(angle) * orbitRadius;
+                const z = Math.sin(angle) * orbitRadius;
+                const y = Math.sin(angle * 2.0) * 0.8 + Math.sin(elapsedTime * 0.5 + i) * 0.1;
+                mesh.position.set(x, y, z);
+
+                uniforms.uTime.value = elapsedTime;
+                uniforms.uHover.value += ((isHovered ? 1.0 : 0.0) - uniforms.uHover.value) * 0.1;
+                uniforms.uActive.value += ((isActive ? 1.0 : 0.0) - uniforms.uActive.value) * 0.08;
+
+                const targetScale = isHovered ? 1.3 : (isActive ? 1.15 : 1.0);
+                const currentScale = mesh.scale.x;
+                const newScale = currentScale + (targetScale - currentScale) * 0.12;
+                mesh.scale.set(newScale, newScale, newScale);
+
+                const wire = mesh.userData.wireMesh;
+                if (wire) {
+                    wire.position.copy(mesh.position);
+                    wire.scale.set(newScale * 1.03, newScale * 1.03, newScale * 1.03);
+                    const t = wire.userData.targetOpacity || 0.06;
+                    wire.material.opacity += (t - wire.material.opacity) * 0.08;
+                }
+
+                const glow = mesh.userData.glowMesh;
+                if (glow) {
+                    glow.position.copy(mesh.position);
+                    const t = glow.userData.targetOpacity || 0.08;
+                    glow.material.opacity += (t - glow.material.opacity) * 0.08;
+                    const gs = newScale * 1.15 + Math.sin(elapsedTime * 2 + i) * 0.03;
+                    glow.scale.set(gs, gs, gs);
+                }
+
+                const chart = mesh.userData.chartGroup;
+                if (chart) {
+                    chart.position.set(x * 1.25, y + 0.5 + Math.sin(elapsedTime * 0.8 + i) * 0.05, z * 1.25);
+                    const cActive = chart.userData.active;
+                    const cType = chart.userData.chartType;
+                    chart.children.forEach((child, ci) => {
+                        if (cType === 0) {
+                            const baseH = child.userData.baseHeight || 0.5;
+                            const pulse = 0.85 + Math.sin(elapsedTime * 2 + ci * 0.5) * 0.15;
+                            const boost = cActive ? 1.3 : 1.0;
+                            child.scale.y = baseH * pulse * boost;
+                            child.position.y = (baseH * pulse * boost) / 2 - 0.5;
+                        } else if (cType === 1) {
+                            if (child.userData.baseY !== undefined) child.position.y = child.userData.baseY + Math.sin(elapsedTime * 3 + ci) * (cActive ? 0.08 : 0.03);
+                        } else if (cType === 2) {
+                            child.rotation.z = child.userData.baseRot + elapsedTime * (cActive ? 0.8 : 0.3);
+                        } else {
+                            child.rotation.y += 0.01;
+                            child.rotation.x += 0.005;
+                        }
+                    });
+                    chart.scale.setScalar(cActive ? 1.2 : 1.0);
+                }
+
+                const stream = mesh.userData.streamGroup;
+                const packetMeshes = mesh.userData.packetMeshes;
+                const trailPoints = mesh.userData.trailPoints;
+
+                if (stream && packetMeshes) {
+                    const curvePoints = [];
+                    const segs = 32;
+                    for (let s = 0; s <= segs; s++) {
+                        const t = s / segs;
+                        curvePoints.push(new THREE.Vector3(x * (1 - t), y * (1 - t) + Math.sin(t * Math.PI) * 0.5, z * (1 - t)));
+                    }
+                    const curve = new THREE.CatmullRomCurve3(curvePoints);
+                    mesh.userData.currentCurve = curve;
+
+                    const tubeMesh = stream.children.find(c => c.userData.isTube);
+                    if (tubeMesh) {
+                        tubeMesh.geometry.dispose();
+                        tubeMesh.geometry = new THREE.TubeGeometry(curve, 48, 0.028, 8, false);
+                        const t = tubeMesh.userData.targetOpacity || tubeMesh.userData.baseOpacity;
+                        tubeMesh.material.opacity += (t - tubeMesh.material.opacity) * 0.08;
+                        tubeMesh.material.emissiveIntensity = 1.0 + Math.sin(elapsedTime * 3) * 0.4 + (isActive ? 0.8 : 0);
+                    }
+
+                    packetMeshes.forEach((packet, pi) => {
+                        const d = packet.userData;
+                        const sm = d.speedMultiplier || 1.0;
+                        d.offset += d.speed * 0.008 * sm * d.direction;
+                        if (d.offset > 1) d.offset -= 1;
+                        if (d.offset < 0) d.offset += 1;
+                        const pt = curve.getPointAt(Math.max(0, Math.min(1, d.offset)));
+                        packet.position.copy(pt);
+                        const edgeFade = Math.sin(Math.min(d.offset, 1 - d.offset) * Math.PI);
+                        packet.material.opacity = 0.4 + edgeFade * 0.55;
+                        const ps = 1.0 + Math.sin(elapsedTime * 8 + pi) * 0.35;
+                        packet.scale.setScalar(ps);
+                    });
+                    activePackets += packetMeshes.length;
+
+                    if (trailPoints) {
+                        const positions = trailPoints.geometry.attributes.position.array;
+                        const params = trailPoints.userData.trailParams;
+                        params.forEach((p, pi) => {
+                            const sm = isActive ? 2.5 : 1.0;
+                            p.offset += p.speed * 0.006 * sm * p.direction;
+                            if (p.offset > 1) p.offset -= 1;
+                            if (p.offset < 0) p.offset += 1;
+                            const pt = curve.getPointAt(Math.max(0, Math.min(1, p.offset)));
+                            positions[pi * 3] = pt.x;
+                            positions[pi * 3 + 1] = pt.y;
+                            positions[pi * 3 + 2] = pt.z;
+                        });
+                        trailPoints.geometry.attributes.position.needsUpdate = true;
+                    }
+                }
+            });
+
+            const now = performance.now();
+            if (now - lastHudUpdate > 400) {
+                displayedPackets = Math.floor(displayedPackets + (activePackets * 18 - displayedPackets) * 0.3);
+                if (hudPackets) hudPackets.textContent = displayedPackets.toLocaleString();
+                if (hudLatency) hudLatency.textContent = (0.15 + Math.random() * 0.25).toFixed(2) + 'ms';
+                lastHudUpdate = now;
+            }
+
+            interLineMeshes.forEach(line => {
+                const t = line.userData.targetOpacity || line.userData.baseOpacity;
+                line.material.opacity += (t - line.material.opacity) * 0.06;
+            });
+
+            renderer.render(scene, camera);
+
+            illustrationScenes.forEach(ill => {
+                if (!ill.visible) return;
+                const t = elapsedTime;
+                ill.mesh.rotation.x = t * 0.4;
+                ill.mesh.rotation.y = t * 0.55;
+                ill.wire.rotation.copy(ill.mesh.rotation);
+                ill.particles.rotation.y = t * 0.3;
+                ill.particles.rotation.x = t * 0.15;
+                ill.ring.rotation.z = t * 0.3;
+                ill.ring2.rotation.z = -t * 0.2;
+                ill.mesh.scale.setScalar(1.0 + Math.sin(t * 1.5) * 0.04);
+                ill.wire.scale.setScalar(1.02 + Math.sin(t * 1.5) * 0.04);
+                ill.renderer.render(ill.scene, ill.camera);
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            illustrationScenes.forEach(ill => {
+                const w = Math.max(ill.container.clientWidth || 0, 220);
+                const h = Math.max(ill.container.clientHeight || 0, 220);
+                ill.camera.aspect = w / h;
+                ill.camera.updateProjectionMatrix();
+                ill.renderer.setSize(w, h);
+                ill.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            });
+            ScrollTrigger.refresh();
+        });
+
+        console.log('VIORA ECOSYSTEMS — 16 product categories live in the 3D mesh');
+    </script>
+</body>
+</html>

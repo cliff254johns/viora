@@ -424,12 +424,9 @@
           <a data-tab="marketplace-analytics" data-roles="admin,exec,finance,marketing" data-counter="none"><i class="fa-solid fa-chart-line"></i> Marketplace Analytics</a>
           <a data-tab="personal-wishlist" data-roles="all" data-counter="myWishlist"><i class="fa-solid fa-heart"></i> Marketplace Wishlist</a>
           
-          <a data-tab="marketing-campaigns" data-roles="admin,exec,marketing" data-counter="campaigns"><i class="fa-solid fa-bullseye"></i> Campaigns</a>
-          <a href="#" data-tab="campaign-analytics" data-roles="exec,admin,marketing">
-  <i class="fa-solid fa-chart-line"></i>
-  <span>Campaign Analytics</span>
-  <span class="nav-badge"></span>
-</a>
+               <a href="/campaigns.html" data-external="true" data-roles="admin,exec,marketing"><i class="fa-solid fa-bullseye"></i> Campaigns <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.6rem;opacity:.5;margin-left:auto;"></i></a>
+          <a href="/campaigns.html#analytics" data-external="true" data-roles="admin,exec,marketing"><i class="fa-solid fa-chart-line"></i> Campaign Analytics <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.6rem;opacity:.5;margin-left:auto;"></i></a>
+          
           <a data-tab="product-presentation" data-roles="admin,exec,marketing" data-counter="none"><i class="fa-solid fa-window-restore"></i> Product Presentation</a>
           <a data-tab="clientsite" data-roles="admin,exec,marketing" data-counter="none"><i class="fa-solid fa-globe"></i> Public Site</a>
           <a data-tab="market-content" data-roles="admin,exec,marketing" data-counter="none"><i class="fa-solid fa-store"></i> Marketplace Content <span class="badge badge-purple" style="font-size:8px;padding:1px 6px;margin-left:4px;">NEW</span></a>
@@ -1290,78 +1287,22 @@
       <div class="table-wrapper"><table><thead><tr><th>ID</th><th>Name</th><th>Contact</th><th>Source</th><th>Campaign</th><th>Stage</th><th>Created</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="leadsBody"></tbody></table></div>
     </section>
 
-    <!-- CAMPAIGNS -->
+     <!-- CAMPAIGNS MOVED -->
     <section id="tab-marketing-campaigns" class="tab-content">
-<div id="campaignKpiGrid"></div>
-<div id="campaignSocialAccounts" style="margin-top:16px;"></div>
-<div id="campaignTrendRadar" style="margin-top:16px;"></div>
-<div style="margin-top:16px;">
-  <h4 style="margin-bottom:10px;">
-    <i class="fa-solid fa-diagram-project"></i> Campaigns
-    <button type="button" class="btn btn-primary btn-sm" id="campaignNewBtn" style="float:right;">
-      <i class="fa-solid fa-plus"></i> New Campaign
-    </button>
-  </h4>
-  <div id="campaignsBody"></div>
-</div>
-<div id="campaignDraftLibrary" style="margin-top:16px;"></div>
-<div id="campaignPromptLibrary" style="margin-top:16px;"></div>
-
-<div id="tab-marketing-campaigns" class="tab-content">
-  <!-- Campaign Header & KPIs -->
-  <div class="page-header" style="margin-bottom:20px;">
-    <div>
-      <h1><span class="pillar-icon" style="background:linear-gradient(135deg,#ff5c7c,#ff9a3c);"><i class="fa-solid fa-bullhorn"></i></span> Campaigns</h1>
-      <p class="page-desc">Manage your marketing campaigns and track live ROI.</p>
-    </div>
-    <div class="actions">
-      <button class="btn btn-primary" id="addCampaignBtn" onclick="Viora.addCampaign()"><i class="fa-solid fa-plus"></i> New Campaign</button>
-    </div>
-  </div>
-
-  <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); margin-bottom:20px;">
-    <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-money-bill-wave"></i></div><div class="number" id="campKpiBudget">—</div><div class="label">Total Budget</div></div>
-    <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-chart-line"></i></div><div class="number" id="campKpiSpend">—</div><div class="label">Total Spent</div></div>
-    <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-users"></i></div><div class="number" id="campKpiLeads">—</div><div class="label">Total Leads Generated</div></div>
-    <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-bullseye"></i></div><div class="number" id="campKpiActive">—</div><div class="label">Active Campaigns</div></div>
-  </div>
-
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
-    <div class="chart-box">
-      <h4><i class="fa-solid fa-chart-pie"></i> Spend by Platform</h4>
-      <div style="height:220px;"><canvas id="campPlatformChart"></canvas></div>
-    </div>
-    <div class="chart-box">
-      <h4><i class="fa-solid fa-chart-bar"></i> Budget vs Spend</h4>
-      <div style="height:220px;"><canvas id="campBudgetChart"></canvas></div>
-    </div>
-  </div>
-
-  <div class="chart-box">
-    <h4><i class="fa-solid fa-list"></i> All Campaigns</h4>
-    <div class="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>Campaign</th>
-            <th>Budget</th>
-            <th>Spent</th>
-            <th>Leads</th>
-            <th>Live Stats</th>
-            <th>Dates</th>
-            <th>Status</th>
-            <th style="text-align:right;">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="campaignsBody"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
+      <div class="empty-state" style="padding:60px;text-align:center;">
+        <i class="fa-solid fa-bullhorn" style="font-size:2rem;opacity:.4;"></i>
+        <div style="margin-top:12px;font-weight:600;">Campaigns have moved</div>
+        <div style="font-size:.85rem;color:var(--text-secondary);margin-top:6px;">The social media management suite now lives on its own page.</div>
+        <a href="/campaigns.html" class="btn btn-primary" style="margin-top:16px;">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Campaigns
+        </a>
+      </div>
     </section>
 
     <section id="tab-campaign-analytics" class="tab-content">
-      <div id="campaignAnalyticsDashboard"></div>
+      <div class="empty-state" style="padding:60px;text-align:center;">
+        <a href="/campaigns.html#analytics" class="btn btn-primary">Open Campaign Analytics</a>
+      </div>
     </section>
 
     <!-- APPOINTMENTS -->
