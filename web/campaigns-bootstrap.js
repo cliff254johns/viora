@@ -539,9 +539,9 @@ onAuthStateChanged(auth, async (user) => {
   const hide = (id) => { const el = document.getElementById(id); if (el) el.style.display = 'none'; };
   const showGrid = (id) => { const el = document.getElementById(id); if (el) el.style.display = 'grid'; };
 
-  if (!user) {
+   if (!user) {
     showGrid('loginGate');
-    hide('orbitApp');
+    hide('App');
     state.firebaseReady = false;
     return;
   }
@@ -550,7 +550,7 @@ onAuthStateChanged(auth, async (user) => {
 
   /* Hide login, show app */
   hide('loginGate');
-  show('orbitApp');
+  show('App');
 
   /* Init modules once */
   try {
