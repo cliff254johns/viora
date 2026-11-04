@@ -16,6 +16,8 @@ import {
 import { initOrbitShell } from './main/orbit-shell.js';
 /* ── Shared helpers ── */
 import * as H from './main/helpers.js';
+import { initInbox, subscribeInbox } from './main/inbox.js';
+import { initAgentRunner } from './main/agent-runner.js';
 
 import { initIdb, idbOpen, idbSave, idbLoad, idbClear, queueOfflineMutation } from './main/idb.js';
 
