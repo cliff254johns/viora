@@ -333,7 +333,20 @@ function _renderCompetitors() {
     host.innerHTML = '<div class="empty-state" style="padding:20px;font-size:.82rem;">No competitors tracked yet. Click "Add Competitor" to start benchmarking.</div>';
     return;
   }
+function _renderCompetitors() {
+  const host = document.getElementById('caCompetitors');
+  if (!host) return;
 
+  let competitors = (ctx().state?.data?.competitorBenchmarks) || [];
+  // Firebase returns this node as an object {id: {...}}, not an array.
+  // Normalize so .map / .filter work below.
+  if (!Array.isArray(competitors)) {
+    competitors = Object.entries(competitors).map(([id, v]) => ({ id, ...(v || {}) }));
+  }
+  if (!competitors.length) {
+    host.innerHTML = '<div class="empty-state" style="padding:20px;font-size:.82rem;">No competitors tracked yet. Click "Add Competitor" to start benchmarking.</div>';
+    return;
+  }
   host.innerHTML = `
     <div style="display:flex;flex-direction:column;gap:6px;">
       ${competitors.map(c => {
