@@ -1,11 +1,10 @@
 // main/orbit-shell.js
 // ═══════════════════════════════════════════════════════════════
-// Orbit shell — 24-module sidebar router for campaigns.html
-// (Billing removed by request.)
+// Orbit shell — sidebar router for campaigns.html
 //
-// Internal file/module names stay "orbit-*" so all other files
-// (campaigns-bootstrap.js, orbit-modules.js, inbox.js, agent-runner.js)
-// keep working unchanged. User-facing labels read "VIORA".
+// v1.1 changes:
+//   • data-orbit-goto buttons inside the view now navigate
+//   • Exposed from window.Orbit for bootstrap integration
 // ═══════════════════════════════════════════════════════════════
 
 import {
@@ -37,7 +36,6 @@ import {
 let _ctx = null;
 let _activeModule = 'overview';
 
-/* ── Sidebar definition (24 modules, grouped) ── */
 const SIDEBAR = [
   { group: 'Workspace', items: [
     { key: 'overview',   label: 'Overview',            icon: 'fa-house' },
@@ -72,7 +70,6 @@ const SIDEBAR = [
   ]},
 ];
 
-/* Flat lookup for crumb + search */
 const MODULE_MAP = (() => {
   const m = {};
   for (const g of SIDEBAR) for (const it of g.items) m[it.key] = it;
@@ -166,7 +163,8 @@ function wireNav() {
     document.getElementById('sidebar')?.classList.remove('open');
     document.getElementById('overlay')?.classList.remove('show');
   });
-    /* data-orbit-goto buttons inside modules (e.g. Overview "Details →") */
+
+  /* data-orbit-goto buttons inside modules */
   document.getElementById('view')?.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-orbit-goto]');
     if (!btn) return;
@@ -191,9 +189,6 @@ function wireHash() {
   });
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   NAVIGATE
-   ═══════════════════════════════════════════════════════════════ */
 export async function navigate(key, opts = {}) {
   const mod = MODULE_MAP[key];
   if (!mod) return;
@@ -201,14 +196,11 @@ export async function navigate(key, opts = {}) {
   _activeModule = key;
   const ctx = C();
 
-  /* Re-render sidebar so workspace/company name stays in sync */
   try { renderSidebar(); } catch (_) {}
 
-  /* Crumb */
   const crumbEl = document.getElementById('crumb');
   if (crumbEl) crumbEl.textContent = mod.label;
 
-  /* Sidebar highlight */
   document.querySelectorAll('#sidebar [data-page]').forEach(b =>
     b.classList.toggle('active', b.dataset.page === key)
   );
@@ -216,34 +208,28 @@ export async function navigate(key, opts = {}) {
     b.classList.toggle('active', b.dataset.mnav === key)
   );
 
-  /* Sync state.currentTab for the campaigns legacy renderers */
   if (ctx.state) {
     if (key === 'campaigns') ctx.state.currentTab = 'marketing-campaigns';
     else if (key === 'analytics') ctx.state.currentTab = 'campaign-analytics';
     else ctx.state.currentTab = key;
   }
 
-  /* Close mobile sidebar */
   document.getElementById('sidebar')?.classList.remove('open');
   document.getElementById('overlay')?.classList.remove('show');
 
-  /* Hash */
   if (!opts.skipHash) {
     try { history.replaceState(null, '', '#' + key); } catch (_) {}
   }
 
-  /* Render */
   const view = document.getElementById('view');
   if (!view) return;
 
-  /* Standard renderers */
   const renderer = RENDERERS[key];
   if (typeof renderer === 'function') {
     view.innerHTML = '<div class="muted small" style="padding:24px;">Loading…</div>';
     try {
       const html = await renderer(ctx);
       view.innerHTML = typeof html === 'string' ? html : (html?.html || '');
-      // Attach any post-render effects the module returned
       if (html?.mount && typeof html.mount === 'function') {
         requestAnimationFrame(() => { try { html.mount(view); } catch (e) { console.warn(e); } });
       }
@@ -272,7 +258,6 @@ export function renderActiveOrbitModule() {
   navigate(_activeModule, { skipHash: true });
 }
 
-/* Expose for inline onclick + bootstrap */
 window.Orbit = {
   navigate,
   currentModule,
