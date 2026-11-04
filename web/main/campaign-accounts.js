@@ -1,0 +1,509 @@
+// main/campaign-accounts.js
+// ═══════════════════════════════════════════════════════════════
+// Global social account registry for the Campaigns subsystem.
+//
+// What it does:
+//   • Lets the admin register each platform once (handle + URL + IDs)
+//   • Stores everything in one Firebase node: socialAccounts/
+//   • Every campaign, composer post, and analytics query reads from here
+//   • Per-platform extras: page IDs, verification status, follower cache
+//
+// Storage shape:
+//   socialAccounts/{accountId} = {
+//     id, platform, handle, displayName, profileUrl,
+//     platformId (page_id / video channel id / etc.),
+//     verified, followers, followersUpdatedAt,
+//     connectedVia (api | manual), notes,
+//     createdAt, updatedAt
+//   }
+// ═══════════════════════════════════════════════════════════════
+
+let _ctx = null;
+let _accountsCache = null;
+let _accountsCacheTs = 0;
+const CACHE_TTL_MS = 60 * 1000;
+
+export function initCampaignAccounts(deps) {
+  _ctx = deps || {};
+  _accountsCache = null;
+  _accountsCacheTs = 0;
+}
+
+function ctx() { return _ctx || {}; }
+
+const $ = (id) => (typeof document !== 'undefined' ? document.getElementById(id) : null);
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+const q = (s) => String(s == null ? '' : s)
+  .replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+const SAFE = {
+  get state()    { return ctx().state || null; },
+  get db()       { return ctx().db; },
+  get ref()      { return ctx().ref; },
+  get get()      { return ctx().get; },
+  get set()      { return ctx().set; },
+  get remove()   { return ctx().remove; },
+  get P()        { return ctx().P; },
+  get onValue()  { return ctx().onValue; },
+  get toast()    { return (msg, type) => { try { ctx().toast?.(msg, type); } catch (_) {} }; },
+  get openModal(){ return ctx().openModal; },
+  get closeModal(){ return ctx().closeModal; },
+  get callFn()   { return ctx().callFn; },
+};
+
+/* ── Platform metadata ── */
+const PLATFORMS = [
+  { key: 'facebook', label: 'Facebook', icon: 'fa-brands fa-facebook', color: '#1877f2',
+    handlePlaceholder: '@viora', urlPlaceholder: 'https://facebook.com/viora',
+    idLabel: 'Page ID (required for API posting)', idPlaceholder: '1234567890',
+    canPost: true },
+  { key: 'instagram', label: 'Instagram', icon: 'fa-brands fa-instagram', color: '#e1306c',
+    handlePlaceholder: '@viora', urlPlaceholder: 'https://instagram.com/viora',
+    idLabel: 'Business Account ID', idPlaceholder: '17841400...',
+    canPost: false },
+  { key: 'tiktok', label: 'TikTok', icon: 'fa-brands fa-tiktok', color: '#ff0050',
+    handlePlaceholder: '@viora', urlPlaceholder: 'https://tiktok.com/@viora',
+    idLabel: 'Open ID (from TikTok Developer Portal)', idPlaceholder: 'open-id-abc123',
+    canPost: true },
+  { key: 'x', label: 'X / Twitter', icon: 'fa-brands fa-x-twitter', color: '#000000',
+    handlePlaceholder: '@viora', urlPlaceholder: 'https://x.com/viora',
+    idLabel: 'Twitter User ID', idPlaceholder: '',
+    canPost: false },
+  { key: 'linkedin', label: 'LinkedIn', icon: 'fa-brands fa-linkedin', color: '#0a66c2',
+    handlePlaceholder: 'viora', urlPlaceholder: 'https://linkedin.com/company/viora',
+    idLabel: 'Company Page ID', idPlaceholder: '',
+    canPost: false },
+  { key: 'youtube', label: 'YouTube', icon: 'fa-brands fa-youtube', color: '#ff0033',
+    handlePlaceholder: '@viora', urlPlaceholder: 'https://youtube.com/@viora',
+    idLabel: 'Channel ID (UCxxxxxxxx)', idPlaceholder: 'UCxxxxxxxxxxxxxxxxxxxxxx',
+    canPost: false },
+  { key: 'threads', label: 'Threads', icon: 'fa-brands fa-threads', color: '#000000',
+    handlePlaceholder: '@viora', urlPlaceholder: 'https://threads.net/@viora',
+    idLabel: 'Threads User ID', idPlaceholder: '',
+    canPost: false },
+  { key: 'pinterest', label: 'Pinterest', icon: 'fa-brands fa-pinterest', color: '#e60023',
+    handlePlaceholder: '@viora', urlPlaceholder: 'https://pinterest.com/viora',
+    idLabel: 'Pinterest Business Account ID', idPlaceholder: '',
+    canPost: false },
+  { key: 'whatsapp', label: 'WhatsApp Business', icon: 'fa-brands fa-whatsapp', color: '#25d366',
+    handlePlaceholder: '+254 7XX XXX XXX', urlPlaceholder: 'https://wa.me/254713428774',
+    idLabel: 'WhatsApp Business Account ID', idPlaceholder: 'WABA ID',
+    canPost: false },
+  { key: 'gbp', label: 'Google Business Profile', icon: 'fa-brands fa-google', color: '#4285f4',
+    handlePlaceholder: 'Viora Intercollective', urlPlaceholder: 'https://g.page/viora',
+    idLabel: 'Google Business Profile ID', idPlaceholder: 'accounts/1234/locations/5678',
+    canPost: false },
+];
+
+export function platformMeta(key) {
+  return PLATFORMS.find(p => p.key === key) || PLATFORMS[0];
+}
+
+export function allPlatforms() { return PLATFORMS.slice(); }
+
+/* ═══════════════════════════════════════════════════════════════
+   DATA LAYER
+   ═══════════════════════════════════════════════════════════════ */
+
+/** Fetch all accounts from Firebase (with in-memory cache). */
+export async function loadAccounts(force = false) {
+  const now = Date.now();
+  if (!force && _accountsCache && (now - _accountsCacheTs) < CACHE_TTL_MS) {
+    return _accountsCache;
+  }
+  const { db, ref, get, P } = SAFE;
+  if (!db || !ref || !get || !P) return [];
+
+  try {
+    const snap = await get(ref(db, P('socialAccounts')));
+    const raw = snap.exists() ? snap.val() : {};
+    const list = Object.entries(raw).map(([id, v]) => ({ id, ...v }));
+    list.sort((a, b) => {
+      const pa = PLATFORMS.findIndex(p => p.key === a.platform);
+      const pb = PLATFORMS.findIndex(p => p.key === b.platform);
+      return pa - pb;
+    });
+    _accountsCache = list;
+    _accountsCacheTs = now;
+    return list;
+  } catch (e) {
+    console.warn('[accounts] load failed', e.message);
+    return _accountsCache || [];
+  }
+}
+
+/** Find the account object for a specific platform. */
+export async function getAccountForPlatform(platformKey) {
+  const list = await loadAccounts();
+  return list.find(a => a.platform === platformKey) || null;
+}
+
+/** Sync — reads whatever is in state (populated by the live listener below). */
+export function getAccountForPlatformSync(platformKey) {
+  const raw = SAFE.state?.data?.socialAccounts;
+  if (!raw) return null;
+  const list = Array.isArray(raw) ? raw : Object.entries(raw).map(([id, v]) => ({ id, ...v }));
+  return list.find(a => a.platform === platformKey) || null;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LIVE LISTENER — populates state.data.socialAccounts
+   ═══════════════════════════════════════════════════════════════ */
+let _unsub = null;
+
+export function subscribeToAccounts() {
+  if (_unsub) return;
+  const { db, ref, onValue, P, state } = SAFE;
+  if (!db || !ref || !onValue || !P) return;
+
+  try {
+    _unsub = onValue(ref(db, P('socialAccounts')), (snap) => {
+      const raw = snap.exists() ? snap.val() : {};
+      const list = Object.entries(raw).map(([id, v]) => ({ id, ...v }));
+      if (state) {
+        if (!state.data) state.data = {};
+        state.data.socialAccounts = list;
+      }
+      _accountsCache = list;
+      _accountsCacheTs = Date.now();
+      // Re-render any panel that's currently open
+      try { renderAccountsPanel(); } catch (_) {}
+    }, (err) => {
+      if (err && err.code !== 'PERMISSION_DENIED') {
+        console.warn('[accounts] subscribe failed', err);
+      }
+    });
+  } catch (e) {
+    console.warn('[accounts] subscribe threw', e);
+  }
+}
+
+export function unsubscribeAccounts() {
+  if (_unsub) { try { _unsub(); } catch (_) {} _unsub = null; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RENDER — the Social Accounts panel
+   ═══════════════════════════════════════════════════════════════ */
+export async function renderAccountsPanel() {
+  const host = $('campaignSocialAccounts');
+  if (!host) return;
+
+  const list = await loadAccounts();
+  const byPlatform = {};
+  for (const a of list) byPlatform[a.platform] = a;
+
+  host.innerHTML = `
+    <div class="card">
+      <div class="cardhead">
+        <h3><i class="fa-solid fa-share-nodes"></i> Your social media accounts</h3>
+        <span class="pill">${Object.keys(byPlatform).length} of ${PLATFORMS.length} connected</span>
+      </div>
+
+      <div class="accounts-grid">
+        ${PLATFORMS.map(p => renderAccountCard(p, byPlatform[p.key])).join('')}
+      </div>
+
+      <div class="notice" style="margin-top:14px;margin-bottom:0">
+        <b>Why register here?</b>
+        The composer uses these handles to prefill captions with @mentions.
+        Facebook and TikTok post directly through the VIORA Cloudflare worker —
+        the other platforms open a compose window with everything prefilled.
+      </div>
+    </div>
+  `;
+  host.querySelectorAll('[data-sa-edit]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const platform = btn.getAttribute('data-sa-edit');
+      openAccountEditor(platform, byPlatform[platform] || null);
+    });
+  });
+
+  host.querySelectorAll('[data-sa-remove]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-sa-remove');
+      if (!id) return;
+      if (!confirm('Remove this account? Campaigns that reference it will fall back to raw handle text.')) return;
+      try {
+        const { db, ref, remove, P } = SAFE;
+        await remove(ref(db, P(`socialAccounts/${id}`)));
+        SAFE.toast('Account removed.', 'info');
+        renderAccountsPanel();
+      } catch (e) {
+        SAFE.toast('Remove failed: ' + (e.message || 'unknown'), 'error');
+      }
+    });
+  });
+
+  host.querySelectorAll('[data-sa-verify]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-sa-verify');
+      if (!id) return;
+      await verifyAccount(id);
+    });
+  });
+
+  const refreshBtn = $('saRefreshBtn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', () => {
+      _accountsCache = null;
+      _accountsCacheTs = 0;
+      renderAccountsPanel();
+      SAFE.toast('Refreshed.', 'info');
+    });
+  }
+}
+
+function renderAccountCard(platform, account) {
+  const isRegistered = !!account;
+  const connected = account && account.connectedVia === 'api';
+  const followersText = account && account.followers != null
+    ? Number(account.followers).toLocaleString()
+    : null;
+  const verified = account && account.verified;
+
+  return `
+    <div class="account-card" style="--platform-color:${platform.color};">
+      <div class="account-head">
+        <div class="account-ico">
+          <i class="${platform.icon}"></i>
+        </div>
+        <div class="account-body">
+          <div class="account-name">
+            ${esc(platform.label)}
+            ${verified ? '<i class="fa-solid fa-circle-check" style="color:var(--accent);font-size:11px" title="Verified"></i>' : ''}
+          </div>
+          <div class="account-handle">
+            ${account
+              ? esc(account.handle || '—') + (account.displayName ? ' · ' + esc(account.displayName) : '')
+              : '<em>Not registered</em>'}
+          </div>
+        </div>
+      </div>
+
+      ${isRegistered ? `
+        <div class="account-meta">
+          <span>${connected ? '<i class="fa-solid fa-bolt" style="color:var(--good)"></i> API posting' : '<i class="fa-solid fa-link" style="color:var(--muted)"></i> Compose-link'}</span>
+          ${followersText ? `<span>${followersText} followers</span>` : '<span>—</span>'}
+        </div>
+      ` : `
+        <div class="account-meta">
+          <span style="color:var(--muted)">Connect this channel to post and track stats.</span>
+        </div>
+      `}
+
+      <div class="account-actions">
+        <button type="button" class="btn ${isRegistered ? 'primary' : ''}"
+                data-sa-edit="${esc(platform.key)}">
+          <i class="fa-solid fa-${isRegistered ? 'pen' : 'plus'}"></i>
+          ${isRegistered ? 'Edit' : 'Connect'}
+        </button>
+        ${isRegistered ? `
+          <button type="button" class="btn" data-sa-verify="${esc(account.id)}" title="Verify by calling the worker">
+            <i class="fa-solid fa-satellite-dish"></i>
+          </button>
+          <button type="button" class="btn danger" data-sa-remove="${esc(account.id)}" title="Remove">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        ` : ''}
+      </div>
+    </div>
+  `;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   EDIT MODAL
+   ═══════════════════════════════════════════════════════════════ */
+export function openAccountEditor(platformKey, existingAccount) {
+  const platform = platformMeta(platformKey);
+  let modal = document.getElementById('saEditorModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'saEditorModal';
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.classList.remove('active');
+    });
+  }
+
+  const a = existingAccount || {};
+
+  modal.innerHTML = `
+    <div class="modal" style="max-width:560px;">
+      <h2 style="margin-bottom:16px;">
+        <span class="modal-icon" style="background:${platform.color}22;color:${platform.color};">
+          <i class="${platform.icon}"></i>
+        </span>
+        ${esc(platform.label)} — ${a.id ? 'Edit Account' : 'Register Account'}
+      </h2>
+
+      <label>Handle *</label>
+      <input id="saHandle" placeholder="${esc(platform.handlePlaceholder)}" value="${esc(a.handle || '')}" />
+      <div style="font-size:.72rem;color:var(--text-secondary);margin-top:-4px;margin-bottom:10px;">
+        Include the @ if your platform uses one (e.g. <code>@viora</code> for TikTok, <code>viora</code> for LinkedIn).
+      </div>
+
+      <label>Display Name</label>
+      <input id="saDisplayName" placeholder="Viora Intercollective" value="${esc(a.displayName || '')}" />
+
+      <label>Profile URL *</label>
+      <input id="saProfileUrl" type="url" placeholder="${esc(platform.urlPlaceholder)}" value="${esc(a.profileUrl || '')}" />
+      <div style="font-size:.72rem;color:var(--text-secondary);margin-top:-4px;margin-bottom:10px;">
+        The full link to your page — this becomes the "Open" button on the account card and is used by analytics.
+      </div>
+
+      <label>${esc(platform.idLabel)}</label>
+      <input id="saPlatformId" placeholder="${esc(platform.idPlaceholder)}" value="${esc(a.platformId || '')}" />
+      <div style="font-size:.72rem;color:var(--text-secondary);margin-top:-4px;margin-bottom:10px;">
+        ${platform.canPost
+          ? '<strong style="color:var(--accent-green);">Required</strong> for direct posting via your Cloudflare worker.'
+          : 'Optional — used for reference and analytics matching.'}
+      </div>
+
+      <label style="display:flex;align-items:center;gap:8px;font-weight:400;cursor:pointer;margin:12px 0;">
+        <input type="checkbox" id="saConnectedVia" ${a.connectedVia === 'api' ? 'checked' : ''} style="width:auto;" />
+        <span>
+          API-connected (post directly via worker)
+          ${platform.canPost ? '' : '<span style="color:var(--accent-gold);">— your worker only supports Facebook & TikTok for direct posting</span>'}
+        </span>
+      </label>
+
+      <label style="display:flex;align-items:center;gap:8px;font-weight:400;cursor:pointer;margin:12px 0;">
+        <input type="checkbox" id="saVerified" ${a.verified ? 'checked' : ''} style="width:auto;" />
+        <span>Mark as verified / official account</span>
+      </label>
+
+      <label>Internal notes</label>
+      <textarea id="saNotes" rows="2" placeholder="e.g. paid-ads account, do not post here">${esc(a.notes || '')}</textarea>
+
+      <div class="form-actions" style="margin-top:18px;">
+        <button type="button" class="btn btn-outline" id="saCancelBtn">Cancel</button>
+        <button type="button" class="btn btn-success" id="saSaveBtn">
+          <i class="fa-solid fa-check"></i> ${a.id ? 'Update' : 'Save Account'}
+        </button>
+      </div>
+    </div>
+  `;
+
+  modal.classList.add('active');
+
+  modal.querySelector('#saCancelBtn').addEventListener('click', () => {
+    modal.classList.remove('active');
+  });
+
+  modal.querySelector('#saSaveBtn').addEventListener('click', async () => {
+    const handle = (modal.querySelector('#saHandle').value || '').trim();
+    const displayName = (modal.querySelector('#saDisplayName').value || '').trim();
+    const profileUrl = (modal.querySelector('#saProfileUrl').value || '').trim();
+    const platformId = (modal.querySelector('#saPlatformId').value || '').trim();
+    const connectedVia = modal.querySelector('#saConnectedVia').checked ? 'api' : 'manual';
+    const verified = modal.querySelector('#saVerified').checked;
+    const notes = (modal.querySelector('#saNotes').value || '').trim();
+
+    if (!handle) { SAFE.toast('Handle is required.', 'error'); return; }
+    if (!profileUrl) { SAFE.toast('Profile URL is required.', 'error'); return; }
+    if (platform.canPost && connectedVia === 'api' && !platformId) {
+      SAFE.toast(`${platform.label} requires a ${platform.idLabel} for API posting.`, 'error');
+      return;
+    }
+
+    const payload = {
+      id: a.id || ('sa-' + platformKey + '-' + Date.now().toString(36)),
+      platform: platformKey,
+      handle,
+      displayName,
+      profileUrl,
+      platformId,
+      connectedVia,
+      verified,
+      notes,
+           followers: a.followers ?? null,
+      followersUpdatedAt: a.followersUpdatedAt || null,
+      createdAt: a.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    try {
+      const { db, ref, set, P } = SAFE;
+      await set(ref(db, P(`socialAccounts/${payload.id}`)), payload);
+      SAFE.toast(a.id ? 'Account updated.' : 'Account registered.', 'success');
+      modal.classList.remove('active');
+      _accountsCache = null;
+      _accountsCacheTs = 0;
+      renderAccountsPanel();
+    } catch (e) {
+      SAFE.toast('Save failed: ' + (e.message || 'unknown'), 'error');
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   VERIFY ACCOUNT — calls the worker to fetch live follower count
+   ═══════════════════════════════════════════════════════════════ */
+async function verifyAccount(id) {
+  const { db, ref, get, set, P, callFn } = SAFE;
+  if (!db || !ref || !get || !set || !P) return;
+  if (typeof callFn !== 'function') {
+    SAFE.toast('Worker not available.', 'warning');
+    return;
+  }
+
+  try {
+    const snap = await get(ref(db, P(`socialAccounts/${id}`)));
+    if (!snap.exists()) { SAFE.toast('Account not found.', 'error'); return; }
+    const account = snap.val();
+
+    SAFE.toast('Checking ' + account.handle + '…', 'info');
+
+    // Call the worker's competitor/stats or socialStats endpoint with the profile URL
+    const res = await callFn('socialStats', {
+      platform: account.platform,
+      url: account.profileUrl,
+      videoId: null,
+    });
+
+    if (single && single.ok !== false && single.followers != null) {
+      const updated = {
+        ...account,
+        followers: single.followers,
+        followersUpdatedAt: new Date().toISOString(),
+        verified: true,
+      };
+      await set(ref(db, P(`socialAccounts/${id}`)), updated);
+      SAFE.toast(`Verified — ${Number(single.followers).toLocaleString()} followers.`, 'success');
+      renderAccountsPanel();
+    } else {
+      SAFE.toast('Verification returned no data. Check the profile URL.', 'warning');
+    }
+  } catch (e) {
+    SAFE.toast('Verify failed: ' + (e.message || 'unknown'), 'error');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HELPERS FOR OTHER MODULES
+   ═══════════════════════════════════════════════════════════════ */
+
+/**
+ * Enrich a caption with the handle mention for a given platform.
+ * e.g. for TikTok, prepend "@viora " if not already there.
+ */
+export function mentionForPlatform(platformKey, caption) {
+  const account = getAccountForPlatformSync(platformKey);
+  if (!account || !account.handle) return caption;
+  const handle = account.handle.startsWith('@') ? account.handle : '@' + account.handle;
+  if (String(caption || '').includes(handle)) return caption;
+  return handle + ' ' + (caption || '');
+}
+
+/**
+ * Return a small "post as @handle" badge for the composer preview.
+ */
+export function postingAsLabel(platformKey) {
+  const account = getAccountForPlatformSync(platformKey);
+  if (!account) return null;
+  return account.handle;
+}
