@@ -597,6 +597,24 @@ onAuthStateChanged(auth, async (user) => {
    ═══════════════════════════════════════════════════════════════ */
 window.Viora = window.Viora || {};
 
+/* Expose campaign renderers so the Orbit campaigns module can delegate */
+window.Viora.renderTrendRadar = () => {
+  try { renderTrendRadar(); } catch (e) { console.warn('[Viora] renderTrendRadar failed', e); }
+};
+window.Viora.renderDraftLibrary = () => {
+  try { renderDraftLibrary(); } catch (e) { console.warn('[Viora] renderDraftLibrary failed', e); }
+};
+window.Viora.renderPromptLibrary = () => {
+  try { renderPromptLibrary(); } catch (e) { console.warn('[Viora] renderPromptLibrary failed', e); }
+};
+window.Viora.refreshAllCampaignStats = () => refreshAllCampaignStats();
+window.Viora.refreshCampaignStats = async (id) => {
+  const c = (state.data.campaigns || []).find(x => x.id === id);
+  if (!c || !c.media?.url) { toast('No media URL on this campaign.', 'info'); return; }
+  try { await fetchCampaignStats(id, c.media.type, c.media.url); toast('Stats refreshed.', 'success'); }
+  catch (e) { toast('Refresh failed: ' + e.message, 'error'); }
+};
+
 /* Campaign action handlers used by render-marketplace.js's HTML */
 window.Viora.addCampaign = () => {
   // Uses the campaign modal in main.html — not present here.
