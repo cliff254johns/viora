@@ -698,6 +698,7 @@ tr:last-child td{border-bottom:0}
      Visitors hitting this URL directly are redirected to the login.
      ═══════════════════════════════════════════════════════════ */
   import { getAuth, onAuthStateChanged } from "firebase/auth";
+   import { getDatabase, forceLongPolling } from "firebase/database";
   import { getDatabase, ref, get } from "firebase/database";
   import { initializeApp, getApps, getApp } from "firebase/app";
 
@@ -714,6 +715,7 @@ tr:last-child td{border-bottom:0}
   const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getDatabase(app);
+   forceLongPolling(db);
   const ROOT = 'viora_data';
   const ORG = 'orgs/viora';
 
