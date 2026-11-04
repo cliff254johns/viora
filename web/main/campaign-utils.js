@@ -606,3 +606,93 @@ export function toUtcIso(localDateTimeStr) {
     return null;
   }
 }
+
+
+/**
+ * Read an image File, downscale it via canvas, and re-encode as base64.
+ *
+ * Used by:
+ *   • Creative Studio "Upload image"
+ *   • Composer "Upload own image"
+ *   • Any future image-upload surface
+ *
+ * Returns a Promise resolving to:
+ *   { b64, mime, width, height, sizeBytes }
+ *
+ * b64 is the *bare* base64 string (no data: prefix).
+ *
+ * Rejects with Error if:
+ *   • file isn't an image
+ *   • file.type is SVG (XSS risk)
+ *   • file > 5 MB source
+ *   • encoded base64 exceeds MAX_STORED_B64_BYTES
+ *
+ * The caller is responsible for showing the error to the user.
+ */
+export async function readImageFile(file) {
+  const MAX_SOURCE_BYTES = 5 * 1024 * 1024;
+  const MAX_STORED_B64_BYTES = 1024 * 1024;
+  const MAX_DIM = 1600;
+
+  if (!file) throw new Error('No file provided');
+  if (!file.type || !file.type.startsWith('image/')) {
+    throw new Error('Not an image file.');
+  }
+  if (file.type === 'image/svg+xml') {
+    throw new Error('SVG uploads are not supported — use PNG or JPG.');
+  }
+  if (file.size > MAX_SOURCE_BYTES) {
+    throw new Error(`Image too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max 5 MB.`);
+  }
+
+  /* Read the raw file */
+  const dataUrl = await new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = () => reject(new Error('Could not read file.'));
+    r.readAsDataURL(file);
+  });
+
+  /* Load into an Image element so we can size it */
+  const img = await new Promise((resolve, reject) => {
+    const i = new Image();
+    i.onload = () => resolve(i);
+    i.onerror = () => reject(new Error('Could not decode image.'));
+    i.src = dataUrl;
+  });
+
+  /* Downscale if needed */
+  let { width, height } = img;
+  const ratio = Math.min(1, MAX_DIM / Math.max(width, height));
+  const targetW = Math.round(width * ratio);
+  const targetH = Math.round(height * ratio);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = targetW;
+  canvas.height = targetH;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas unavailable in this browser.');
+  ctx.drawImage(img, 0, 0, targetW, targetH);
+
+  /* Pick output format: PNG for transparency-preserving, JPEG otherwise */
+  const wantsPng = file.type === 'image/png' || file.type === 'image/webp';
+  const outMime = wantsPng ? 'image/png' : 'image/jpeg';
+  const quality = wantsPng ? undefined : 0.82;
+
+  const outDataUrl = canvas.toDataURL(outMime, quality);
+  if (!outDataUrl || !outDataUrl.includes(',')) throw new Error('Re-encode failed.');
+
+  const b64 = outDataUrl.split(',')[1];
+  if (!b64) throw new Error('Re-encode produced empty data.');
+  if (b64.length > MAX_STORED_B64_BYTES) {
+    throw new Error(`Image too complex to store (${(b64.length / 1024).toFixed(0)} KB encoded). Try a simpler image or fewer colours.`);
+  }
+
+  return {
+    b64,
+    mime: outMime,
+    width: targetW,
+    height: targetH,
+    sizeBytes: Math.round((b64.length * 3) / 4),   // approx decoded size
+  };
+}
