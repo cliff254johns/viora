@@ -30,7 +30,7 @@ import { boot, registerNetworkEvents } from './main/boot.js';
 import {
   getDatabase, ref, onValue, onChildAdded, onChildChanged, onChildRemoved,
   set, push, remove, get, update, goOnline, goOffline, query, limitToLast,
-  increment, off
+  increment, off, forceLongPolling
 } from "firebase/database";
 import {
   getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
@@ -405,6 +405,7 @@ const firebaseConfig = {
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db   = getDatabase(app);
+forceLongPolling(db);
 const auth = getAuth(app);
 
 /* ═══════════════════════════════════════════════════════════════
