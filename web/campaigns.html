@@ -1,125 +1,466 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<meta name="theme-color" content="#0a0a0f" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="VIORA Campaigns — social media command centre">
 <title>Campaigns — VIORA</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<!-- Orbit aesthetic, VIORA content -->
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   VIORA CAMPAIGNS — Orbit-styled shell
+   Colors, typography, spacing, components lifted from Orbit's
+   design system. VIORA content and endpoints preserved.
+   ═══════════════════════════════════════════════════════════════ */
+:root{
+  --bg:#f4f6fa; --panel:#fff; --panel2:#f8f9fc;
+  --text:#172033; --muted:#748096; --line:#e7eaf1;
+  --accent:#6558f5; --accent2:#f05aa6;
+  --good:#159b72; --warn:#d68b22; --bad:#d95368;
+  --shadow:0 12px 34px rgba(24,36,68,.07); --radius:17px;
+}
+[data-theme=dark]{
+  --bg:#10131c; --panel:#191e2a; --panel2:#202636;
+  --text:#edf1fb; --muted:#9aa5ba; --line:#2b3446;
+  --accent:#8190ff; --accent2:#b18aff;
+  --good:#48c99b; --warn:#f0b35c; --bad:#ff7188;
+  --shadow:0 12px 34px rgba(0,0,0,.22);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+a{color:inherit;text-decoration:none}
 
-<link rel="icon" href="https://viora.co.ke/viora.png" />
-<link rel="stylesheet" href="main.css" />
+/* ── App layout ── */
+.app{min-height:100vh}
+.sidebar{position:fixed;inset:0 auto 0 0;width:258px;background:var(--panel);border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;z-index:20;transition:.25s;overflow:auto}
+.brand{display:flex;align-items:center;gap:11px;padding:2px 9px 22px}
+.logo{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;color:white;font-weight:900;font-size:19px;box-shadow:0 7px 18px #6878ed55;background:linear-gradient(135deg,#6558f5,#e45fa8 60%,#20c8d8);animation:logoPulse 4s ease-in-out infinite}
+@keyframes logoPulse{0%,100%{box-shadow:0 7px 18px #6878ed55}50%{box-shadow:0 8px 28px #d65da877,0 0 0 7px #8d72f41a}}
+.brand strong{font-size:16px;letter-spacing:-.4px}
+.brand small{display:block;color:var(--muted);font-size:10px;letter-spacing:1.4px;text-transform:uppercase}
+.workspace{margin:0 4px 18px;padding:11px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;display:flex;align-items:center;gap:9px}
+.workspace .avatar{width:31px;height:31px;border-radius:9px;background:#e8eaff;color:#4e5ce1;display:grid;place-items:center;font-weight:800}
+.workspace div:nth-child(2){flex:1;min-width:0}
+.workspace b{display:block;font-size:12px}
+.workspace small{color:var(--muted);font-size:10px}
+.nav-label{padding:9px 11px 5px;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:1.2px;font-weight:800}
+.nav{display:grid;gap:3px}
+.nav button{border:0;background:transparent;color:var(--muted);padding:10px 11px;border-radius:10px;display:flex;align-items:center;gap:12px;text-align:left;width:100%;font-weight:600;font-size:12.5px}
+.nav button:hover{background:var(--panel2);color:var(--text)}
+.nav button.active{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent)}
+.ico{width:18px;text-align:center;font-size:16px}
+.nav .count{margin-left:auto;border-radius:20px;padding:1px 7px;background:var(--panel2);font-size:10px}
+.sidebar-bottom{margin-top:auto;padding:12px 5px 0}
+.planbox{background:linear-gradient(135deg,#283a88,#7047aa);color:white;padding:14px;border-radius:13px;margin-bottom:12px}
+.planbox b{font-size:12px}
+.planbox p{font-size:10px;opacity:.8;margin:5px 0 10px}
+.planbox button{background:#fff;color:#33418e;border:0;border-radius:8px;padding:7px 10px;font-size:10px;font-weight:800}
+
+.main{margin-left:258px;min-height:100vh}
+.topbar{height:72px;padding:0 30px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:15}
+.top-left{display:flex;align-items:center;gap:13px}
+.hamb{display:none}
+.crumb{font-size:12px;color:var(--muted)}
+.crumb b{color:var(--text)}
+.top-actions{display:flex;align-items:center;gap:9px}
+.search{width:230px;position:relative}
+.search input{width:100%;background:var(--panel2);border:1px solid var(--line);padding:9px 12px 9px 34px;border-radius:10px;color:var(--text);outline:none}
+.search span{position:absolute;left:11px;top:8px;color:var(--muted)}
+.iconbtn{width:36px;height:36px;border:1px solid var(--line);background:var(--panel);border-radius:10px;color:var(--muted);position:relative}
+.dot{position:absolute;right:7px;top:6px;width:6px;height:6px;background:#ef5c75;border-radius:50%}
+.userpic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#d7ddff,#e9d7ff);color:#5548a7;font-weight:800;border:0;cursor:pointer}
+
+.content{padding:27px 30px 50px;max-width:1600px;margin:auto}
+.pagehead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:22px}
+.eyebrow{font-size:10px;color:var(--accent);font-weight:800;letter-spacing:1.3px;text-transform:uppercase}
+.pagehead h1{font-size:25px;letter-spacing:-.8px;margin:3px 0 4px}
+.sub{color:var(--muted);font-size:12px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:10px;padding:9px 13px;font-weight:700;font-size:11px;display:inline-flex;align-items:center;gap:7px;transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
+.btn:hover{border-color:var(--accent);transform:translateY(-1px)}
+.btn.primary{background:linear-gradient(115deg,#6558f5,#a34ce8 58%,#e45fa8);border:0;color:#fff;box-shadow:0 8px 20px #7959ec38}
+.btn.soft{background:color-mix(in srgb,var(--accent) 10%,var(--panel));color:var(--accent);border-color:transparent}
+.btn.danger{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,var(--line))}
+
+.grid{display:grid;gap:15px}
+.kpis{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px}
+.two{grid-template-columns:1.55fr 1fr}
+.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:17px;box-shadow:var(--shadow);min-width:0;transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
+.card:hover{transform:translateY(-3px);box-shadow:0 18px 40px rgba(63,70,150,.12)}
+.cardhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.cardhead h3{font-size:13px;margin:0}
+
+.kpi-top{display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:11px;font-weight:650}
+.kpi-icon{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:var(--panel2);font-size:16px}
+.kpi-value{font-size:26px;font-weight:800;letter-spacing:-1px;margin:8px 0 1px}
+.trend{font-size:10px;color:var(--good)}
+
+.muted{color:var(--muted)}
+.small{font-size:10px}
+.pill{font-size:9px;background:var(--panel2);padding:4px 8px;border-radius:20px;color:var(--muted)}
+.status{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:4px 8px;font-size:9px;font-weight:800;background:var(--panel2);color:var(--muted);white-space:nowrap}
+.status:before{content:"";width:5px;height:5px;background:currentColor;border-radius:50%}
+.status.good{background:#159b7217;color:var(--good)}
+.status.warn{background:#d68b2217;color:var(--warn)}
+.status.bad{background:#d9536817;color:var(--bad)}
+
+.notice{border:1px solid color-mix(in srgb,var(--warn) 35%,var(--line));background:color-mix(in srgb,var(--warn) 8%,var(--panel));border-radius:11px;padding:12px;font-size:10px;color:var(--text);margin-bottom:15px}
+
+/* ── Table ── */
+.tablewrap{overflow:auto}
+table{width:100%;border-collapse:collapse;white-space:nowrap}
+th{text-align:left;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.8px;padding:10px;border-bottom:1px solid var(--line)}
+td{padding:12px 10px;border-bottom:1px solid var(--line);font-size:11px}
+tr:last-child td{border-bottom:0}
+
+/* ── Social accounts grid ── */
+.accounts-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+  gap:12px;
+}
+.account-card{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease;
+  position:relative;
+  overflow:hidden;
+}
+.account-card:hover{
+  transform:translateY(-2px);
+  border-color:color-mix(in srgb,var(--accent) 30%,var(--line));
+  box-shadow:0 12px 28px rgba(24,36,68,.10);
+}
+.account-card::before{
+  content:"";
+  position:absolute;
+  top:0;left:0;right:0;
+  height:3px;
+  background:var(--platform-color,var(--accent));
+  opacity:.9;
+}
+.account-head{display:flex;align-items:center;gap:10px}
+.account-ico{
+  width:38px;height:38px;
+  border-radius:10px;
+  display:grid;place-items:center;
+  font-size:18px;
+  color:#fff;
+  background:var(--platform-color,var(--accent));
+  flex-shrink:0;
+}
+.account-body{flex:1;min-width:0}
+.account-name{font-weight:700;font-size:13px;letter-spacing:-.01em;display:flex;align-items:center;gap:6px}
+.account-handle{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.account-meta{font-size:10px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+.account-actions{display:flex;gap:6px;align-items:center;margin-top:auto}
+.account-actions .btn{flex:1;justify-content:center;padding:7px 10px;font-size:10.5px}
+
+/* ── Hero ── */
+.orbit-hero{
+  position:relative;overflow:hidden;border-radius:20px;
+  min-height:190px;padding:25px;color:#fff;
+  background:
+    linear-gradient(105deg,rgba(24,25,65,.94),rgba(74,47,142,.78),rgba(21,137,160,.45)),
+    url('https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1800&q=85') center/cover;
+  display:flex;align-items:center;margin-bottom:16px;
+  box-shadow:0 16px 35px #4232a52b;
+}
+.orbit-hero:after{
+  content:"";position:absolute;width:280px;height:280px;
+  border:1px solid #ffffff35;border-radius:50%;right:8%;top:-95px;
+  box-shadow:0 0 0 24px #ffffff0b,0 0 0 55px #ffffff08;
+}
+.orbit-hero h2{font-size:clamp(21px,3vw,31px);max-width:600px;line-height:1.12;margin:8px 0}
+.orbit-hero p{color:#e8e8ff;max-width:520px;font-size:12px}
+.orbit-hero .hero-tag{font-size:9px;letter-spacing:2px;font-weight:900;color:#a9f1ee}
+
+/* ── Login gate ── */
+.login-gate{
+  position:fixed;inset:0;z-index:1000;
+  background:
+    radial-gradient(circle at 80% 15%,#6653dd 0,transparent 32%),
+    radial-gradient(circle at 10% 90%,#168c9c 0,transparent 34%),
+    #111426;
+  display:grid;place-items:center;padding:20px;
+}
+.login-card{
+  width:min(420px,100%);padding:30px;
+  border:1px solid #ffffff22;border-radius:24px;
+  background:#fffffff2;color:#182039;
+  box-shadow:0 30px 100px #0007;
+  animation:riseIn .5s ease;
+}
+@keyframes riseIn{from{opacity:0;transform:translateY(13px)}to{opacity:1;transform:translateY(0)}}
+.login-brand{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.login-mark{
+  width:45px;height:45px;border-radius:15px;
+  background:linear-gradient(135deg,#6558f5,#e45fa8,#20c8d8);
+  display:grid;place-items:center;color:#fff;font-weight:900;font-size:21px;
+}
+.login-card h1{font-size:25px;margin:0 0 5px}
+.login-card p{font-size:12px;color:#69728b}
+.login-card label{display:block;font-size:11px;font-weight:800;margin:18px 0 6px}
+.login-card input{width:100%;padding:13px;border:1px solid #dce0eb;border-radius:11px;background:#f8f9fd;color:#182039;outline:none}
+.login-card input:focus{border-color:#6558f5;box-shadow:0 0 0 3px #6558f51c}
+.login-card button{width:100%;padding:13px;margin-top:14px;border:0;border-radius:11px;color:white;font-weight:800;background:linear-gradient(110deg,#6558f5,#b34de4,#e45fa8)}
+.login-error{color:#c83e5c;font-size:11px;min-height:17px;margin-top:8px}
+.login-note{font-size:10px;color:#7d8497;margin-top:16px;line-height:1.5}
+
+/* ── Modal (Orbit) ── */
+.modalback{position:fixed;inset:0;background:#080d1b88;z-index:60;display:none;align-items:center;justify-content:center;padding:18px}
+.modalback.show{display:flex}
+.modal{width:min(560px,100%);max-height:90vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 25px 80px #0004}
+.modalhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+.modalhead h3{margin:0;font-size:15px}
+.close{border:0;background:var(--panel2);color:var(--text);border-radius:8px;width:30px;height:30px}
+
+/* ── Form fields (Orbit) ── */
+.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.field{display:grid;gap:5px;margin-bottom:12px}
+.field label{font-size:10px;font-weight:750;color:var(--muted)}
+.field input,.field select,.field textarea{
+  width:100%;border:1px solid var(--line);background:var(--panel2);
+  border-radius:9px;padding:10px;color:var(--text);outline:none;font-size:11px;
+}
+.field textarea{min-height:90px;resize:vertical}
+.field.full{grid-column:1/-1}
+
+/* ── Toast ── */
+.toast{
+  position:fixed;right:22px;bottom:22px;z-index:90;
+  background:#1d2940;color:white;padding:12px 16px;border-radius:11px;
+  box-shadow:var(--shadow);font-size:11px;
+  opacity:0;transform:translateY(10px);transition:.25s;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* ── Overlay ── */
+.mobile-overlay{display:none}
+.mobile-overlay.show{display:block;position:fixed;inset:0;background:#0006;z-index:19}
+
+/* ── Analytics dashboard area ── */
+#campaignAnalyticsDashboard .chart-box,
+#campaignAnalyticsDashboard .kpi-grid{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:17px;box-shadow:var(--shadow);margin-bottom:15px;
+}
+#campaignAnalyticsDashboard .kpi-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:14px;background:transparent;border:0;box-shadow:none;padding:0;
+}
+#campaignAnalyticsDashboard .stat-card{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);
+}
+#campaignAnalyticsDashboard .stat-card .number{font-size:26px;font-weight:800;letter-spacing:-1px}
+#campaignAnalyticsDashboard .stat-card .label{font-size:11px;color:var(--muted)}
+#campaignAnalyticsDashboard .chart-box h4{font-size:13px;margin:0 0 12px}
+#campaignAnalyticsDashboard .table-wrapper{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);overflow:auto;margin-bottom:15px;
+}
+#campaignAnalyticsDashboard th{
+  text-align:left;color:var(--muted);font-size:9px;text-transform:uppercase;
+  letter-spacing:.8px;padding:10px;border-bottom:1px solid var(--line);
+}
+#campaignAnalyticsDashboard td{
+  padding:12px 10px;border-bottom:1px solid var(--line);font-size:11px;
+}
+
+/* ── Trend radar, draft library, prompt library ── */
+#campaignTrendRadar .chart-box,
+#campaignDraftLibrary .chart-box,
+#campaignPromptLibrary .chart-box{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);padding:17px;box-shadow:var(--shadow);
+}
+#campaignTrendRadar h4,
+#campaignDraftLibrary h4,
+#campaignPromptLibrary h4{
+  font-size:13px;margin:0 0 12px;
+}
+
+/* ── Responsive ── */
+@media(max-width:1100px){
+  .sidebar{width:225px}
+  .main{margin-left:225px}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .two{grid-template-columns:1fr}
+  .accounts-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+}
+@media(max-width:760px){
+  .sidebar{transform:translateX(-100%);width:270px}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .hamb{display:inline-block}
+  .topbar{padding:0 14px;height:62px}
+  .content{padding:20px 14px 40px}
+  .search{width:150px}
+  .crumb{display:none}
+  .pagehead{display:block}
+  .pagehead .actions{margin-top:13px}
+  .kpis{gap:9px}
+  .card{padding:13px}
+  .kpi-value{font-size:22px}
+  .three{grid-template-columns:1fr}
+  .formgrid{grid-template-columns:1fr}
+  .field.full{grid-column:auto}
+  .tablewrap{margin-right:-5px}
+  .chart{height:175px}
+  .orbit-hero{min-height:210px;padding:19px;background-position:60% center}
+  .orbit-hero:after{right:-100px}
+  .orbit-hero h2{max-width:290px}
+  .accounts-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:420px){
+  .accounts-grid{grid-template-columns:1fr}
+  .kpi-value{font-size:23px}
+  .orbit-hero{min-height:230px}
+  .top-actions #helpBtn{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
+</style>
+
+<!-- Font Awesome for the platform icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 </head>
 <body>
 
-<!-- ═══════════════ LOGIN GATE ═══════════════ -->
-<div id="loginScreen" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg);">
-  <div class="login-card" style="max-width:400px;width:100%;background:var(--bg-elev-1);border:1px solid var(--border-color);border-radius:24px;padding:40px 32px;">
-    <div class="login-brand" style="display:flex;flex-direction:column;align-items:center;gap:14px;margin-bottom:28px;text-align:center;">
-      <div class="logo-mark" style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#ff5c7c,#ff9a3c);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.5rem;">
-        <i class="fa-solid fa-bullhorn"></i>
-      </div>
+<!-- ═══════════════ ACCESS GATE ═══════════════ -->
+<div class="login-gate" id="loginGate">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="login-mark">O</div>
       <div>
-        <h1 style="font-size:1.3rem;font-weight:700;margin:0;">Campaigns</h1>
-        <p style="font-size:.75rem;color:var(--text-secondary);margin-top:4px;">VIORA Social Media Command</p>
+        <strong style="font-size:18px">VIORA</strong>
+        <div style="font-size:9px;letter-spacing:1.5px;color:#7b8196;font-weight:800">CAMPAIGNS MODULE</div>
       </div>
     </div>
-    <div class="login-field" style="position:relative;margin-bottom:14px;">
-      <label style="font-size:.72rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:block;">Email</label>
-      <input id="loginEmail" type="email" placeholder="you@viora.io" autocomplete="email" style="width:100%;padding:12px 14px;background:var(--bg-input);border:1.5px solid transparent;border-radius:10px;color:var(--text-primary);font-family:inherit;outline:none;" />
-    </div>
-    <div class="login-field" style="position:relative;margin-bottom:14px;">
-      <label style="font-size:.72rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:block;">Password</label>
-      <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password" style="width:100%;padding:12px 14px;background:var(--bg-input);border:1.5px solid transparent;border-radius:10px;color:var(--text-primary);font-family:inherit;outline:none;" />
-    </div>
-    <button id="loginBtn" style="width:100%;padding:13px;border:0;border-radius:10px;background:linear-gradient(120deg,#ff5c7c,#ff9a3c);color:#fff;font-weight:700;font-family:inherit;cursor:pointer;margin-top:8px;">
+    <h1>Welcome back</h1>
+    <p>Sign in to the campaigns workspace.</p>
+    <label for="loginEmail">Email</label>
+    <input id="loginEmail" type="email" placeholder="you@viora.io" autocomplete="email">
+    <label for="loginPassword">Password</label>
+    <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password">
+    <button id="loginBtn">
       <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In
     </button>
-    <div id="loginError" style="color:#ff5c7c;font-size:.78rem;min-height:18px;margin-top:10px;"></div>
-    <div style="margin-top:20px;text-align:center;">
-      <a href="/main.html" style="font-size:.78rem;color:var(--text-secondary);">
-        <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
-      </a>
+    <div class="login-error" id="loginError"></div>
+    <div class="login-note">
+      Same Firebase credentials as the VIORA dashboard.
+      <a href="/main.html" style="color:#6558f5;font-weight:700">← Back to Dashboard</a>
     </div>
   </div>
 </div>
 
 <!-- ═══════════════ APP SHELL ═══════════════ -->
-<div id="appShell" class="hidden" style="display:none;">
-
-  <!-- Header -->
-  <header style="position:sticky;top:0;z-index:30;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:var(--bg-glass);backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--border-color);">
-    <div style="display:flex;align-items:center;gap:14px;">
-      <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#ff5c7c,#ff9a3c);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;">
-        <i class="fa-solid fa-bullhorn"></i>
-      </div>
-      <div>
-        <div style="font-weight:700;font-size:.95rem;">Campaigns</div>
-        <div style="font-size:.65rem;color:var(--text-secondary);letter-spacing:1px;text-transform:uppercase;">VIORA Social Media Command</div>
-      </div>
+<div class="app" id="orbitApp" style="display:none">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo">O</div>
+      <div><strong>VIORA</strong><small>campaigns</small></div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;">
-      <button id="themeBtn" class="iconbtn" style="width:36px;height:36px;border:1px solid var(--border-color);background:var(--panel);border-radius:10px;color:var(--text-secondary);cursor:pointer;"><i class="fa-solid fa-moon"></i></button>
-      <button id="logoutBtn" class="iconbtn" style="width:36px;height:36px;border:1px solid var(--border-color);background:var(--panel);border-radius:10px;color:var(--text-secondary);cursor:pointer;" title="Sign out"><i class="fa-solid fa-right-from-bracket"></i></button>
-      <a href="/main.html" class="btn btn-outline btn-sm" style="text-decoration:none;">
-        <i class="fa-solid fa-arrow-left"></i> Dashboard
-      </a>
+    <div class="workspace">
+      <div class="avatar">NW</div>
+      <div><b>Northwind Studio</b><small>Business workspace ▾</small></div>
+      <span>⌄</span>
     </div>
-  </header>
 
-  <!-- Tab strip -->
-  <nav id="tabStrip" style="position:sticky;top:64px;z-index:25;display:flex;gap:4px;padding:0 24px;background:var(--bg-elev-1);border-bottom:1px solid var(--border-color);overflow-x:auto;">
-    <button class="camp-tab active" data-tab="marketing-campaigns" style="padding:14px 18px;border:0;background:none;color:var(--text-secondary);font-family:inherit;font-size:.85rem;font-weight:600;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;">
-      <i class="fa-solid fa-bullhorn"></i> Campaigns
-    </button>
-    <button class="camp-tab" data-tab="campaign-analytics" style="padding:14px 18px;border:0;background:none;color:var(--text-secondary);font-family:inherit;font-size:.85rem;font-weight:600;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;">
-      <i class="fa-solid fa-chart-line"></i> Analytics
-    </button>
-    <style>
-      .camp-tab.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); }
-      .camp-tab:hover { color: var(--text-primary); }
-    </style>
-  </nav>
+    <div class="nav-label">Campaigns</div>
+    <nav class="nav" id="nav">
+      <button class="active" data-page="campaigns"><span class="ico">◉</span>Campaigns</button>
+      <button data-page="analytics"><span class="ico">▥</span>Campaign Analytics</button>
+    </nav>
 
-  <!-- Content -->
-  <main class="main-content" style="padding:24px;max-width:1600px;margin:0 auto;">
+    <div class="nav-label">Workspace</div>
+    <nav class="nav" id="navWorkspace">
+      <button data-page="overview"><span class="ico">◫</span>Back to Overview</button>
+    </nav>
 
-    <!-- ═══════════════ TAB: CAMPAIGNS ═══════════════ -->
-    <section id="tab-marketing-campaigns" class="tab-content active">
+    <div class="sidebar-bottom">
+      <div class="planbox">
+        <b>VIORA Campaigns</b>
+        <p>Included in your workspace plan</p>
+        <button data-go="billing">View plan →</button>
+      </div>
+      <div class="muted small">● Campaigns module · Production integrations pending</div>
+    </div>
+  </aside>
 
-      <div class="page-header">
+  <div class="mobile-overlay" id="overlay"></div>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="top-left">
+        <button class="iconbtn hamb" id="hamb">☰</button>
+        <div class="crumb">Campaigns / <b id="crumb">Campaigns</b></div>
+      </div>
+      <div class="top-actions">
+        <div class="search"><span>⌕</span><input id="globalSearch" placeholder="Search campaigns..."></div>
+        <button class="iconbtn" id="themeBtn" title="Toggle theme">◐</button>
+        <button class="iconbtn" id="helpBtn" title="Help">?</button>
+        <button class="iconbtn" id="notifBtn" title="Notifications">♧<i class="dot"></i></button>
+        <button class="userpic" id="logoutBtn" title="Sign out">JD</button>
+      </div>
+    </header>
+
+    <!-- ═══ TAB: CAMPAIGNS ═══ -->
+    <section class="content" id="viewCampaigns" style="display:none">
+      <div class="pagehead">
         <div>
-          <h1><span class="pillar-icon" style="background:linear-gradient(135deg,#ff5c7c,#ff9a3c);"><i class="fa-solid fa-bullhorn"></i></span> Campaigns</h1>
-          <p class="page-desc">Manage your marketing campaigns and track live ROI.</p>
+          <div class="eyebrow">VIORA · CAMPAIGNS</div>
+          <h1>Campaign command centre</h1>
+          <div class="sub">Plan, coordinate, approve and measure your marketing campaigns.</div>
         </div>
         <div class="actions">
-          <button class="btn btn-outline btn-sm" id="refreshAllCampaignStatsBtn">
-            <i class="fa-solid fa-rotate"></i> Refresh All Stats
+          <button class="btn" id="refreshAllCampaignStatsBtn">
+            <i class="fa-solid fa-rotate"></i> Refresh All
           </button>
-          <button class="btn btn-primary" id="campaignNewBtn">
+          <button class="btn primary" id="campaignNewBtn">
             <i class="fa-solid fa-plus"></i> New Campaign
           </button>
         </div>
       </div>
 
-      <!-- Social accounts registry -->
-      <div id="campaignSocialAccounts" style="margin-bottom:20px;"></div>
+      <!-- Hero -->
+      <div class="orbit-hero">
+        <div>
+          <div class="hero-tag">EVERY CAMPAIGN. ONE COMMAND CENTRE.</div>
+          <h2>Make every campaign count.</h2>
+          <p>Budgets, spend, leads, live stats and AI drafting — all in one workspace.</p>
+        </div>
+      </div>
+
+      <!-- ═════════ SOCIAL ACCOUNTS (ALL 10 PLATFORMS) ═════════ -->
+      <div id="campaignSocialAccounts" style="margin-bottom:15px"></div>
 
       <!-- Trend radar -->
-      <div id="campaignTrendRadar" style="margin-bottom:20px;"></div>
+      <div id="campaignTrendRadar" style="margin-bottom:15px"></div>
 
-      <!-- KPIs -->
-      <div class="kpi-grid" id="campaignKpiGrid" style="margin-bottom:20px;"></div>
+      <!-- KPI grid -->
+      <div class="grid kpis" id="campaignKpiGrid"></div>
 
       <!-- Campaigns table -->
-      <div class="chart-box">
-        <h4><i class="fa-solid fa-list"></i> All Campaigns</h4>
-        <div class="table-wrapper">
+      <div class="card">
+        <div class="cardhead">
+          <h3>All campaigns</h3>
+          <span class="pill">Live · auto-refreshing</span>
+        </div>
+        <div class="tablewrap">
           <table>
             <thead>
               <tr>
@@ -130,7 +471,7 @@
                 <th>Live Stats</th>
                 <th>Dates</th>
                 <th>Status</th>
-                <th style="text-align:right;">Actions</th>
+                <th style="text-align:right">Actions</th>
               </tr>
             </thead>
             <tbody id="campaignsBody"></tbody>
@@ -139,160 +480,151 @@
       </div>
 
       <!-- Draft library -->
-      <div id="campaignDraftLibrary" style="margin-top:20px;"></div>
+      <div id="campaignDraftLibrary" style="margin-top:15px"></div>
 
       <!-- Prompt library -->
-      <div id="campaignPromptLibrary" style="margin-top:20px;"></div>
-
+      <div id="campaignPromptLibrary" style="margin-top:15px"></div>
     </section>
 
-    <!-- ═══════════════ TAB: ANALYTICS ═══════════════ -->
-    <section id="tab-campaign-analytics" class="tab-content">
-      <div class="page-header">
+    <!-- ═══ TAB: ANALYTICS ═══ -->
+    <section class="content" id="viewAnalytics" style="display:none">
+      <div class="pagehead">
         <div>
-          <h1><span class="pillar-icon" style="background:linear-gradient(135deg,#00d4ff,#7c3aed);"><i class="fa-solid fa-chart-line"></i></span> Campaign Analytics</h1>
-          <p class="page-desc">Performance over time, engagement by platform, and best posting times.</p>
+          <div class="eyebrow">VIORA · CAMPAIGNS</div>
+          <h1>Campaign analytics</h1>
+          <div class="sub">Performance over time, engagement by platform and best posting times.</div>
         </div>
         <div class="actions">
-          <button class="btn btn-outline btn-sm" id="campaignAnalyticsRefreshBtn">
+          <button class="btn" id="campaignAnalyticsRefreshBtn">
             <i class="fa-solid fa-rotate"></i> Refresh
           </button>
         </div>
       </div>
+
       <div id="campaignAnalyticsDashboard"></div>
     </section>
-
   </main>
 </div>
 
-<!-- ═══════════════ TOASTS ═══════════════ -->
-<div class="toast-container" id="toastContainer"></div>
+<!-- ═══════════════ TOAST ═══════════════ -->
+<div class="toast" id="toast"></div>
 
-<!-- ═══════════════════ CAMPAIGN EDITOR MODAL (standalone) ═══════════════════ -->
-<div class="modal-overlay" id="campaignEditorModal">
-  <div class="modal large" style="max-width:640px;">
-    <h2>
-      <span class="modal-icon" style="background:linear-gradient(135deg,#ff5c7c,#ff9a3c);">
-        <i class="fa-solid fa-bullseye"></i>
-      </span>
-      <span id="campEditorTitle">New Campaign</span>
-    </h2>
-    <form id="campaignEditorForm" novalidate>
-
-      <input type="hidden" id="campEditId" />
-
-      <label>Campaign name <span class="required">*</span></label>
-      <input id="campName" type="text" placeholder="e.g. Autumn product launch" required maxlength="120" />
-
-      <div class="form-row">
-        <div>
-          <label>Status</label>
-          <select id="campStatus">
-            <option value="Planned">Planned</option>
-            <option value="Active">Active</option>
-            <option value="Paused">Paused</option>
-            <option value="Completed">Completed</option>
-          </select>
+<!-- ═══════════════ CAMPAIGN EDITOR MODAL ═══════════════ -->
+<div class="modalback" id="campaignEditorModal">
+  <div class="modal">
+    <div class="modalhead">
+      <h3 id="campEditorTitle">New campaign</h3>
+      <button class="close" id="campEditorClose">×</button>
+    </div>
+    <div id="campEditorBody">
+      <form id="campaignEditorForm">
+        <input type="hidden" id="campEditId">
+        <div class="field">
+          <label>Campaign name *</label>
+          <input id="campName" required maxlength="120" placeholder="e.g. Autumn product launch">
         </div>
-        <div>
-          <label>Channel</label>
-          <select id="campChannel">
-            <option value="meta">Meta (Facebook/Instagram)</option>
-            <option value="tiktok">TikTok</option>
-            <option value="youtube">YouTube</option>
-            <option value="google">Google Ads</option>
-            <option value="linkedin">LinkedIn</option>
-            <option value="x">X / Twitter</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div>
-          <label>Budget (KES)</label>
-          <input id="campBudget" type="number" min="0" step="100" value="0" />
-        </div>
-        <div>
-          <label>Spent so far (KES)</label>
-          <input id="campSpend" type="number" min="0" step="100" value="0" />
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div>
-          <label>Start date</label>
-          <input id="campStart" type="date" />
-        </div>
-        <div>
-          <label>End date</label>
-          <input id="campEnd" type="date" />
-        </div>
-      </div>
-
-      <label>Objective</label>
-      <select id="campObjective">
-        <option value="">— Select —</option>
-        <option value="awareness">Brand awareness</option>
-        <option value="engagement">Engagement</option>
-        <option value="leads">Lead generation</option>
-        <option value="sales">Sales / conversions</option>
-        <option value="retention">Customer retention</option>
-        <option value="launch">Product launch</option>
-      </select>
-
-      <label>Target audience</label>
-      <input id="campAudience" type="text" placeholder="e.g. Kenyan SMEs, 25–45, tech-curious" maxlength="180" />
-
-      <!-- ═════════ LIVE MEDIA (for stats) ═════════ -->
-      <div style="margin-top:20px;padding:16px;background:var(--bg-input);border-radius:12px;border:1px solid var(--border-color);">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-          <i class="fa-solid fa-chart-line" style="color:var(--accent-blue);"></i>
-          <strong style="font-size:.82rem;text-transform:uppercase;letter-spacing:.5px;">Live media (for stats)</strong>
-        </div>
-        <p style="font-size:.75rem;color:var(--text-secondary);margin:0 0 10px;">
-          Attach a YouTube or TikTok URL. The dashboard pulls views, likes and comments automatically every 3 minutes.
-        </p>
-        <div class="form-row">
-          <div>
-            <label>Media type</label>
-            <select id="campMediaType">
-              <option value="none">None</option>
-              <option value="youtube">YouTube</option>
-              <option value="tiktok">TikTok</option>
+        <div class="formgrid">
+          <div class="field">
+            <label>Status</label>
+            <select id="campStatus">
+              <option value="Planned">Planned</option>
+              <option value="Active">Active</option>
+              <option value="Paused">Paused</option>
+              <option value="Completed">Completed</option>
             </select>
           </div>
-          <div>
-            <label>Media URL</label>
-            <input id="campMediaUrl" type="url" placeholder="https://..." disabled />
+          <div class="field">
+            <label>Channel</label>
+            <select id="campChannel">
+              <option value="meta">Meta (Facebook/Instagram)</option>
+              <option value="tiktok">TikTok</option>
+              <option value="youtube">YouTube</option>
+              <option value="google">Google Ads</option>
+              <option value="linkedin">LinkedIn</option>
+              <option value="x">X / Twitter</option>
+              <option value="threads">Threads</option>
+              <option value="pinterest">Pinterest</option>
+              <option value="whatsapp">WhatsApp Business</option>
+              <option value="gbp">Google Business Profile</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Budget (KES)</label>
+            <input id="campBudget" type="number" min="0" step="100" value="0">
+          </div>
+          <div class="field">
+            <label>Spent (KES)</label>
+            <input id="campSpend" type="number" min="0" step="100" value="0">
+          </div>
+          <div class="field">
+            <label>Start date</label>
+            <input id="campStart" type="date">
+          </div>
+          <div class="field">
+            <label>End date</label>
+            <input id="campEnd" type="date">
           </div>
         </div>
-        <div id="campTikTokAuthWrap" style="display:none;margin-top:10px;padding:10px;background:rgba(255,255,255,.03);border-radius:8px;">
-          <div id="campTikTokAuthStatus" style="font-size:.75rem;color:var(--text-secondary);"></div>
-          <button type="button" class="btn btn-whatsapp btn-sm" id="campTikTokConnectBtn" style="margin-top:6px;">
-            <i class="fa-brands fa-tiktok"></i> Connect TikTok
+        <div class="field">
+          <label>Objective</label>
+          <select id="campObjective">
+            <option value="">— Select —</option>
+            <option value="awareness">Brand awareness</option>
+            <option value="engagement">Engagement</option>
+            <option value="leads">Lead generation</option>
+            <option value="sales">Sales / conversions</option>
+            <option value="retention">Customer retention</option>
+            <option value="launch">Product launch</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Target audience</label>
+          <input id="campAudience" maxlength="180" placeholder="e.g. Kenyan SMEs, 25–45">
+        </div>
+        <div class="field">
+          <label>Notes</label>
+          <textarea id="campNotes" placeholder="Strategy, brief, budget breakdown…" maxlength="1000"></textarea>
+        </div>
+
+        <div style="margin-top:16px;padding:12px;background:var(--panel2);border-radius:10px;border:1px solid var(--line)">
+          <strong style="font-size:11px;text-transform:uppercase;letter-spacing:.5px">Live media (for stats)</strong>
+          <p style="font-size:10px;color:var(--muted);margin:4px 0 10px">Attach a YouTube or TikTok URL. Stats refresh every 3 minutes.</p>
+          <div class="formgrid">
+            <div class="field">
+              <label>Media type</label>
+              <select id="campMediaType">
+                <option value="none">None</option>
+                <option value="youtube">YouTube</option>
+                <option value="tiktok">TikTok</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Media URL</label>
+              <input id="campMediaUrl" type="url" placeholder="https://..." disabled>
+            </div>
+          </div>
+          <div id="campTikTokAuthWrap" style="display:none;margin-top:10px;padding:10px;background:var(--panel);border-radius:8px;font-size:11px">
+            <div id="campTikTokAuthStatus" style="font-size:10px;color:var(--muted)"></div>
+            <button type="button" class="btn" id="campTikTokConnectBtn" style="margin-top:6px">
+              <i class="fa-brands fa-tiktok"></i> Connect TikTok
+            </button>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px;flex-wrap:wrap">
+          <button type="button" class="btn danger" id="campDeleteBtn" style="display:none;margin-right:auto">Delete</button>
+          <button type="button" class="btn" id="campCancelBtn">Cancel</button>
+          <button type="submit" class="btn primary" id="campSubmitBtn">
+            <span id="campSubmitLabel">Create campaign</span>
           </button>
         </div>
-      </div>
-
-      <!-- ═════════ NOTES ═════════ -->
-      <label style="margin-top:16px;">Notes (internal)</label>
-      <textarea id="campNotes" rows="3" placeholder="Strategy, brief, budget breakdown…" maxlength="1000"></textarea>
-
-      <div class="form-actions" style="margin-top:20px;">
-        <button type="button" class="btn btn-danger" id="campDeleteBtn" style="display:none;margin-right:auto;">
-          <i class="fa-solid fa-trash"></i> Delete
-        </button>
-        <button type="button" class="btn btn-outline" data-close="campaignEditorModal">Cancel</button>
-        <button type="submit" class="btn btn-success">
-          <i class="fa-solid fa-check"></i> <span id="campSubmitLabel">Create campaign</span>
-        </button>
-      </div>
-    </form>
+      </form>
+    </div>
   </div>
 </div>
 
-<!-- ═══════════════ FIREBASE IMPORT MAP (identical to main.html) ═══════════════ -->
+<!-- ═══════════════ FIREBASE IMPORT MAP + BOOTSTRAP ═══════════════ -->
 <script type="importmap">
 {
   "imports": {
@@ -306,5 +638,83 @@
 
 <script type="module" src="campaigns-bootstrap.js"></script>
 
+<script>
+/* ═══════════════ SHELL NAVIGATION + THEME ═══════════════ */
+(function () {
+  const $  = (id) => document.getElementById(id);
+  const $$ = (sel) => [...document.querySelectorAll(sel)];
+
+  function showTab(tab) {
+    $('viewCampaigns').style.display = tab === 'campaigns' ? 'block' : 'none';
+    $('viewAnalytics').style.display = tab === 'analytics' ? 'block' : 'none';
+    $('crumb').textContent = tab === 'campaigns' ? 'Campaigns' : 'Campaign Analytics';
+
+    $$('#nav button').forEach(b => b.classList.toggle('active', b.dataset.page === tab));
+
+    try { history.replaceState(null, '', tab === 'analytics' ? '#analytics' : '#campaigns'); } catch (_) {}
+
+    if (tab === 'analytics') {
+      try { window.renderAnalyticsDashboard?.(); } catch (_) {}
+    } else {
+      try { window.renderCampaigns?.(); } catch (_) {}
+    }
+
+    $('sidebar')?.classList.remove('open');
+    $('overlay')?.classList.remove('show');
+  }
+
+  $$('#nav button').forEach(btn => btn.addEventListener('click', () => showTab(btn.dataset.page)));
+  $$('#navWorkspace button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.dataset.page === 'overview') location.href = '/main.html';
+    });
+  });
+
+  $('hamb')?.addEventListener('click', () => {
+    $('sidebar').classList.toggle('open');
+    $('overlay').classList.toggle('show');
+  });
+  $('overlay')?.addEventListener('click', () => {
+    $('sidebar').classList.remove('open');
+    $('overlay').classList.remove('show');
+  });
+
+  const saved = localStorage.getItem('orbit-theme') || 'light';
+  document.documentElement.dataset.theme = saved;
+  $('themeBtn')?.addEventListener('click', () => {
+    const cur = document.documentElement.dataset.theme;
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem('orbit-theme', next);
+    setTimeout(() => {
+      try { window.renderCampaigns?.(); } catch (_) {}
+      try { window.renderAnalyticsDashboard?.(); } catch (_) {}
+    }, 80);
+  });
+
+  $('helpBtn')?.addEventListener('click', () => {
+    alert('Campaigns command centre.\n\nUse the sidebar to switch between Campaigns and Campaign Analytics.\n\nClick "New Campaign" to add one — data saves to Firebase.');
+  });
+  $('notifBtn')?.addEventListener('click', () => {
+    alert('Notifications are managed on the main VIORA dashboard.');
+  });
+
+  /* Logout is owned by campaigns-bootstrap.js */
+
+  $('globalSearch')?.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    const q = e.target.value.trim().toLowerCase();
+    if (!q) return;
+    const camp = (window.state?.data?.campaigns || []).find(c =>
+      String(c.name || '').toLowerCase().includes(q)
+    );
+    if (camp && window.Viora?.editCampaign) window.Viora.editCampaign(camp.id);
+    else alert('No campaign found matching "' + q + '"');
+  });
+
+  const hash = (location.hash || '').toLowerCase();
+  showTab(hash === '#analytics' ? 'analytics' : 'campaigns');
+})();
+</script>
 </body>
 </html>
