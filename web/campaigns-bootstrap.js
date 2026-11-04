@@ -537,9 +537,14 @@ function attachListeners() {
    AUTH STATE
    ═══════════════════════════════════════════════════════════════ */
 onAuthStateChanged(auth, async (user) => {
+  /* Safe DOM helpers — don't crash if the element is missing */
+  const show = (id) => { const el = document.getElementById(id); if (el) el.style.display = 'block'; };
+  const hide = (id) => { const el = document.getElementById(id); if (el) el.style.display = 'none'; };
+  const showGrid = (id) => { const el = document.getElementById(id); if (el) el.style.display = 'grid'; };
+
   if (!user) {
-    document.getElementById('loginGate').style.display = 'grid';
-    document.getElementById('orbitApp').style.display = 'none';
+    showGrid('loginGate');
+    hide('orbitApp');
     state.firebaseReady = false;
     return;
   }
@@ -547,8 +552,8 @@ onAuthStateChanged(auth, async (user) => {
   state.operator = { uid: user.uid, email: user.email, name: user.email };
 
   /* Hide login, show app */
-  document.getElementById('loginGate').style.display = 'none';
-  document.getElementById('orbitApp').style.display = 'block';
+  hide('loginGate');
+  show('orbitApp');
 
   /* Init modules once */
   try {
@@ -566,11 +571,8 @@ onAuthStateChanged(auth, async (user) => {
   state.firebaseReady = true;
   state._bootDraining = false;
 
-  const hash = (location.hash || '').replace('#', '');
-  const initialTab = (hash === 'analytics' || hash === 'campaign-analytics')
-    ? 'campaign-analytics'
-    : 'marketing-campaigns';
-    /* ── Orbit shell ── */
+  /* Boot the Orbit shell — it renders the sidebar and navigates
+     to the first module (Overview by default). */
   try {
     initOrbitShell({
       state, callFn, toast, upsertDoc, deleteDoc,
@@ -584,10 +586,9 @@ onAuthStateChanged(auth, async (user) => {
     window.__orbitShellReady = true;
   } catch (e) {
     console.error('[orbit-shell] init failed', e);
+    toast('Failed to boot workspace shell: ' + e.message, 'error');
   }
 
-
-  
   toast('Signed in to Campaigns', 'success');
 });
 
