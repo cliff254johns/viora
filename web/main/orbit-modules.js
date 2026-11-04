@@ -61,23 +61,104 @@ function kpi(label, value, change, icon) {
 export async function renderOverview(ctx) {
   const d = data(ctx);
   const campaigns = Array.isArray(d.campaigns) ? d.campaigns : [];
-  const leads = Array.isArray(d.leads) ? d.leads : [];
-  const orders = Array.isArray(d.orders) ? d.orders : [];
-  const accounts = Array.isArray(d.socialAccounts) ? d.socialAccounts : [];
+  const leads     = Array.isArray(d.leads)     ? d.leads     : [];
+  const orders    = Array.isArray(d.orders)    ? d.orders    : [];
+  const accounts  = Array.isArray(d.socialAccounts) ? d.socialAccounts : [];
 
+  /* ── Campaign aggregates ── */
   let totalBudget = 0, totalSpend = 0, activeCount = 0, totalLeads = 0;
-  campaigns.forEach(c => {
-    if (!c) return;
+  for (const c of campaigns) {
+    if (!c) continue;
     totalBudget += Number(c.budget) || 0;
-    totalSpend  += Number(c.spend) || 0;
+    totalSpend  += Number(c.spend)  || 0;
     if (c.status === 'Active') activeCount++;
     totalLeads += leads.filter(l => l && l.campaignId === c.id).length;
-  });
+  }
 
   const paidOrders = orders.filter(o => o && o.paymentStatus === 'paid').length;
   const revenue = orders
     .filter(o => o && o.paymentStatus === 'paid')
     .reduce((s, o) => s + (Number(o.totalKES) || 0), 0);
+
+  /* ── Social analytics aggregate ──
+     Flatten every published post across every campaign, then total
+     up views / likes / comments / shares / followers. */
+  const allPosts = [];
+  for (const c of campaigns) {
+    for (const p of (c.posts || [])) {
+      if (p && p.status === 'published' && p.stats) {
+        allPosts.push({ ...p, _campaignName: c.name });
+      }
+    }
+  }
+
+  const social = {
+    totalPosts:    allPosts.length,
+    views:         sumBy(allPosts, p => Number(p.stats.views)    || 0),
+    likes:         sumBy(allPosts, p => Number(p.stats.likes)    || 0),
+    comments:      sumBy(allPosts, p => Number(p.stats.comments) || 0),
+    shares:        sumBy(allPosts, p => Number(p.stats.shares)   || 0),
+  };
+  social.interactions = social.likes + social.comments + social.shares;
+  social.engagementRate = social.views > 0
+    ? Math.round((social.interactions / social.views) * 10000) / 100
+    : 0;
+
+  const totalFollowers = accounts.reduce(
+    (s, a) => s + (Number(a.followers) || 0),
+    0
+  );
+
+  /* ── Per-platform breakdown ── */
+  const byPlatform = {};
+  for (const p of allPosts) {
+    const k = p.platform || 'unknown';
+    if (!byPlatform[k]) byPlatform[k] = { views: 0, likes: 0, comments: 0, shares: 0, posts: 0 };
+    byPlatform[k].views    += Number(p.stats.views)    || 0;
+    byPlatform[k].likes    += Number(p.stats.likes)    || 0;
+    byPlatform[k].comments += Number(p.stats.comments) || 0;
+    byPlatform[k].shares   += Number(p.stats.shares)   || 0;
+    byPlatform[k].posts++;
+  }
+
+  /* ── Connected accounts grid ── */
+  const accountsGrid = accounts.length === 0
+    ? `<div class="empty" style="padding:16px;">No social accounts connected. <button class="btn soft btn-sm" onclick="window.Orbit && window.Orbit.navigate('accounts')">Connect →</button></div>`
+    : accounts.map(a => {
+        const meta = platformMetaSafe(a.platform);
+        return `
+          <div class="account-card" style="--platform-color:${meta.color};">
+            <div class="account-head">
+              <div class="account-ico"><i class="${meta.icon}"></i></div>
+              <div class="account-body">
+                <div class="account-name">${esc(meta.label)}</div>
+                <div class="account-handle">${esc(a.handle || '—')}</div>
+              </div>
+            </div>
+            <div class="account-meta">
+              <span>${a.followers != null ? Number(a.followers).toLocaleString() + ' followers' : '— followers'}</span>
+              <span>${a.connectedVia === 'api' ? '⚡ API' : '🔗 Manual'}</span>
+            </div>
+          </div>`;
+      }).join('');
+
+  /* ── Per-platform stat rows ── */
+  const platformRows = Object.entries(byPlatform)
+    .sort((a, b) => b[1].views - a[1].views)
+    .map(([k, s]) => {
+      const meta = platformMetaSafe(k);
+      const er = s.views > 0 ? ((s.likes + s.comments + s.shares) / s.views) * 100 : 0;
+      return `
+        <tr>
+          <td><i class="${meta.icon}" style="color:${meta.color};margin-right:6px;"></i>${esc(meta.label)}</td>
+          <td>${s.posts}</td>
+          <td>${fmtNum(s.views)}</td>
+          <td>${fmtNum(s.likes)}</td>
+          <td>${fmtNum(s.comments)}</td>
+          <td>${fmtNum(s.shares)}</td>
+          <td><strong>${er.toFixed(1)}%</strong></td>
+        </tr>`;
+    }).join('');
 
   const recentCampaigns = campaigns
     .slice()
@@ -86,11 +167,39 @@ export async function renderOverview(ctx) {
 
   return head('Overview', 'Live snapshot of your marketing command centre.', '') +
     `<div class="grid kpis">
-      ${kpi('Campaigns', campaigns.length, activeCount + ' active', '<i class="fa-solid fa-bullhorn"></i>')}
-      ${kpi('Budget', 'KSh ' + totalBudget.toLocaleString(), 'Spent KSh ' + totalSpend.toLocaleString(), '<i class="fa-solid fa-coins"></i>')}
-      ${kpi('Leads', String(totalLeads || leads.length), leads.length + ' in system', '<i class="fa-solid fa-user-group"></i>')}
-      ${kpi('Revenue', 'KSh ' + revenue.toLocaleString(), paidOrders + ' paid orders', '<i class="fa-solid fa-sack-dollar"></i>')}
+      ${kpi('Total Reach', fmtNum(social.views), social.totalPosts + ' published posts', '<i class="fa-solid fa-eye"></i>')}
+      ${kpi('Engagement', fmtNum(social.interactions), social.engagementRate.toFixed(2) + '% ER', '<i class="fa-solid fa-heart"></i>')}
+      ${kpi('Followers', fmtNum(totalFollowers), accounts.length + ' connected accounts', '<i class="fa-solid fa-users"></i>')}
+      ${kpi('Campaigns', campaigns.length, activeCount + ' active · KSh ' + totalBudget.toLocaleString() + ' budget', '<i class="fa-solid fa-bullhorn"></i>')}
     </div>
+
+    <div class="grid two" style="margin-top:15px;">
+      <div class="card">
+        <div class="cardhead">
+          <h3><i class="fa-solid fa-chart-simple"></i> Social performance</h3>
+          <button class="btn soft btn-sm" data-orbit-goto="analytics">Details →</button>
+        </div>
+        ${platformRows.length === 0
+          ? '<div class="empty">No published posts yet — their stats appear here after the first refresh cycle.</div>'
+          : `<div class="tablewrap"><table>
+              <thead><tr>
+                <th>Platform</th><th>Posts</th><th>Views</th><th>Likes</th>
+                <th>Comments</th><th>Shares</th><th>ER</th>
+              </tr></thead>
+              <tbody>${platformRows}</tbody>
+            </table></div>`}
+      </div>
+      <div class="card">
+        <div class="cardhead">
+          <h3><i class="fa-solid fa-share-nodes"></i> Connected channels</h3>
+          <button class="btn soft btn-sm" data-orbit-goto="accounts">Manage →</button>
+        </div>
+        <div class="accounts-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));">
+          ${accountsGrid}
+        </div>
+      </div>
+    </div>
+
     <div class="grid two" style="margin-top:15px;">
       <div class="card">
         <div class="cardhead"><h3>Recent campaigns</h3>
@@ -105,21 +214,52 @@ export async function renderOverview(ctx) {
               </div>`).join('')}
       </div>
       <div class="card">
-        <div class="cardhead"><h3>Connected channels</h3>
-          <button class="btn soft" data-orbit-goto="accounts">Manage →</button></div>
-        ${accounts.length === 0
-          ? '<div class="empty">No social accounts registered.</div>'
-          : accounts.map(a => `
-              <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);">
-                <i class="fa-brands fa-${esc(a.platform || 'globe')}" style="font-size:20px;"></i>
-                <div style="flex:1;"><b style="font-size:12px;">${esc(a.handle || '—')}</b>
-                  <div class="small muted">${esc(a.displayName || '')}</div></div>
-                ${a.connectedVia === 'api'
-                  ? '<span class="status good">API</span>'
-                  : '<span class="status warn">Manual</span>'}
-              </div>`).join('')}
+        <div class="cardhead"><h3>Revenue & leads</h3></div>
+        <div style="padding:14px 0;">
+          <div class="kpi-value">KSh ${revenue.toLocaleString()}</div>
+          <div class="small muted">${paidOrders} paid orders</div>
+        </div>
+        <div style="padding:14px 0;border-top:1px solid var(--line);">
+          <div class="kpi-value">${totalLeads}</div>
+          <div class="small muted">Leads attributed to campaigns</div>
+        </div>
       </div>
-    </div>`;
+    </div>
+
+    <!-- Wire the small "→" buttons — the shell already handles data-orbit-goto -->
+  `;
+}
+
+/* ── Local helpers (add near the top of orbit-modules.js) ── */
+function sumBy(arr, fn) {
+  let total = 0;
+  for (const x of arr) total += Number(fn(x)) || 0;
+  return total;
+}
+
+function fmtNum(n) {
+  const v = Number(n) || 0;
+  if (v >= 1e9) return (v / 1e9).toFixed(1) + 'B';
+  if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
+  if (v >= 1e3) return (v / 1e3).toFixed(1) + 'K';
+  return String(v);
+}
+
+function platformMetaSafe(key) {
+  const map = {
+    facebook:  { label: 'Facebook',       icon: 'fa-brands fa-facebook',  color: '#1877f2' },
+    instagram: { label: 'Instagram',      icon: 'fa-brands fa-instagram', color: '#e1306c' },
+    tiktok:    { label: 'TikTok',         icon: 'fa-brands fa-tiktok',    color: '#ff0050' },
+    youtube:   { label: 'YouTube',        icon: 'fa-brands fa-youtube',   color: '#ff0033' },
+    linkedin:  { label: 'LinkedIn',       icon: 'fa-brands fa-linkedin',  color: '#0a66c2' },
+    x:         { label: 'X / Twitter',    icon: 'fa-brands fa-x-twitter', color: '#000000' },
+    twitter:   { label: 'X / Twitter',    icon: 'fa-brands fa-x-twitter', color: '#000000' },
+    threads:   { label: 'Threads',        icon: 'fa-brands fa-threads',   color: '#000000' },
+    pinterest: { label: 'Pinterest',      icon: 'fa-brands fa-pinterest', color: '#e60023' },
+    whatsapp:  { label: 'WhatsApp',       icon: 'fa-brands fa-whatsapp',  color: '#25d366' },
+    gbp:       { label: 'Google Business', icon: 'fa-brands fa-google',   color: '#4285f4' },
+  };
+  return map[key] || { label: key || 'Unknown', icon: 'fa-solid fa-globe', color: '#94a3b8' };
 }
 
 /* ═══════════════════════════════════════════════════════════════
