@@ -887,6 +887,117 @@ async function _postNow() {
   const c = _state.composer;
   if (!c || _state.posting) return;
 
+  /* ═══════════════════════════════════════════════════════════════
+     STEP 1 — Pre-open compose windows SYNCHRONOUSLY
+     ─────────────────────────────────────────────────────────────
+     Browsers block window.open() from async callbacks. We must
+     open all windows inside the click handler, before any await.
+     Strategy: pre-open a window for every platform we expect to be
+     compose-link (based on account.connectedVia), then close any
+     we don't actually need after the API responds.
+
+     For the platforms we expect to post via API (facebook/tiktok
+     with connectedVia='api'), no pre-open is needed — they'll
+     post silently.
+
+     For non-API platforms (instagram, x, linkedin, threads,
+     youtube, pinterest, whatsapp, gbp), pre-open the composer. ═════ */
+
+  const preOpenedWindows = {};   // platform → window object
+
+  for (const key of c.platforms) {
+    const meta = PLATFORMS[key];
+    if (!meta) continue;
+
+    /* Only pre-open if we expect a compose fallback */
+    const variant = c.perPlatform[key] || {};
+    const caption = variant.caption || '';
+    const hashtags = Array.isArray(variant.hashtags) ? variant.hashtags : [];
+    const utmUrl = buildUtmUrl(c.baseUrl, { ...c.utm, source: c.utm.source || key });
+
+    const tagString = hashtags
+      .map(h => String(h || '').trim())
+      .filter(Boolean)
+      .map(h => h.startsWith('#') ? h : '#' + h)
+      .join(' ');
+
+    const fullCaption = [caption, tagString, utmUrl].filter(Boolean).join('\n\n');
+
+    /* Determine the URL */
+    let url = null;
+    switch (key) {
+      case 'twitter':
+      case 'x':
+        url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(fullCaption)}`;
+        break;
+      case 'linkedin':
+        url = 'https://www.linkedin.com/feed/?shareActive=true';
+        break;
+      case 'threads':
+        url = 'https://www.threads.net/';
+        break;
+      case 'youtube':
+        url = 'https://studio.youtube.com/';
+        break;
+      case 'pinterest':
+        url = 'https://www.pinterest.com/pin-builder/';
+        break;
+      case 'whatsapp':
+        url = `https://wa.me/?text=${encodeURIComponent(fullCaption)}`;
+        break;
+      case 'gbp':
+        url = 'https://business.google.com/posts';
+        break;
+      case 'instagram':
+        url = 'https://www.instagram.com/create/select/';
+        break;
+      case 'facebook':
+        url = 'https://www.facebook.com/';
+        break;
+      case 'tiktok':
+        url = 'https://www.tiktok.com/tiktokstudio/upload';
+        break;
+    }
+
+    if (!url) continue;
+
+    /* Synchronously open the window. `noopener` blocks us from
+       inspecting it, so we deliberately DON'T pass it — we need
+       the handle to close unused windows later. */
+    try {
+      const w = window.open(url, '_blank');
+      if (w) preOpenedWindows[key] = w;
+    } catch (_) {}
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     STEP 2 — Copy caption to clipboard + build target payloads
+     ═══════════════════════════════════════════════════════════════ */
+
+  /* Copy each platform's caption to the clipboard (last one wins
+     when user opens each tab — that's the practical limit). We
+     also stash them on window so a "paste helper" banner can show
+     the correct text per tab. */
+  try {
+    const firstPlatform = c.platforms[0];
+    const firstVariant = c.perPlatform[firstPlatform] || {};
+    const firstCaption = [
+      firstVariant.caption || '',
+      (firstVariant.hashtags || []).map(h => h.startsWith('#') ? h : '#' + h).join(' '),
+    ].filter(Boolean).join('\n\n');
+    if (firstCaption) await navigator.clipboard.writeText(firstCaption);
+  } catch (_) {}
+
+  /* Store all captions on window for the paste-helper UI */
+  window._vioraComposeCaptions = {};
+  for (const key of c.platforms) {
+    const v = c.perPlatform[key] || {};
+    window._vioraComposeCaptions[key] = [
+      v.caption || '',
+      (v.hashtags || []).map(h => h.startsWith('#') ? h : '#' + h).join(' '),
+    ].filter(Boolean).join('\n\n');
+  }
+
   _state.posting = true;
   const btn = document.getElementById('ccPublishBtn');
   const prev = btn ? btn.innerHTML : '';
@@ -914,9 +1025,28 @@ async function _postNow() {
       throw new Error('Worker returned no results');
     }
 
+    /* ═══════════════════════════════════════════════════════════════
+       STEP 3 — Close unused windows, keep compose-link ones open
+       ═══════════════════════════════════════════════════════════════ */
+
     _state.fanoutLog = res.results.map(r => {
       const isComposeOnly = r.fallback === 'compose-link';
       const trulyPosted   = !!r.ok && (!!r.postId || !!r.post_id) && !isComposeOnly;
+
+      /* If this platform posted via API, close its pre-opened window */
+      if (trulyPosted && preOpenedWindows[r.platform]) {
+        try { preOpenedWindows[r.platform].close(); } catch (_) {}
+      }
+
+      /* If the worker returned a different composeUrl than the one we
+         pre-opened, navigate the pre-opened window to the worker's URL */
+      if (isComposeOnly && r.fallbackUrl && preOpenedWindows[r.platform]) {
+        try {
+          preOpenedWindows[r.platform].location.href = r.fallbackUrl;
+        } catch (_) {
+          /* If navigation blocked, leave the original URL — it still works */
+        }
+      }
 
       return {
         platform:   r.platform,
@@ -930,6 +1060,7 @@ async function _postNow() {
       };
     });
 
+    /* Persist each platform's post with its real status */
     const campaign = (SAFE.state?.data?.campaigns || []).find(x => x.id === c.campaignId);
     if (campaign) {
       const existingIds = c._existingPostIds || {};
@@ -974,19 +1105,6 @@ async function _postNow() {
       try { await SAFE.upsertDoc('campaigns', campaign, campaign._rev); } catch (_) {}
     }
 
-    const composeTargets = _state.fanoutLog.filter(r => r.mode === 'compose-link' && r.composeUrl);
-    for (const t of composeTargets) {
-      try { window.open(t.composeUrl, '_blank', 'noopener,noreferrer'); } catch (_) {}
-      try {
-        const variant = c.perPlatform[t.platform] || {};
-        const captionWithTags = [
-          variant.caption || '',
-          (variant.hashtags || []).map(h => h.startsWith('#') ? h : '#' + h).join(' '),
-        ].filter(Boolean).join('\n\n');
-        if (captionWithTags) await navigator.clipboard.writeText(captionWithTags);
-      } catch (_) {}
-    }
-
     _renderFanoutLog();
 
     const succeeded   = _state.fanoutLog.filter(r => r.mode === 'auto').length;
@@ -994,19 +1112,26 @@ async function _postNow() {
     const failed      = _state.fanoutLog.filter(r => r.mode === 'failed').length;
 
     const parts = [];
-    if (succeeded) parts.push(`${succeeded} posted`);
-    if (composeOnly) parts.push(`${composeOnly} ready to paste (window opened)`);
+    if (succeeded) parts.push(`${succeeded} posted automatically`);
+    if (composeOnly) parts.push(`${composeOnly} composer${composeOnly === 1 ? '' : 's'} opened — press Ctrl+V to paste caption`);
     if (failed) parts.push(`${failed} failed`);
 
     SAFE.toast(parts.join(' · ') || 'Done.', failed ? 'warning' : 'success');
 
+    /* If only silent posts succeeded, close the composer immediately.
+       If any compose tabs are open, DON'T close the composer — the user
+       needs to see the fanoutLog to know which platforms to paste on. */
     if (!composeOnly && !failed) {
       setTimeout(_closeComposer, 600);
     }
-    try { SAFE.renderCampaigns?.(); } catch (_) {}
   } catch (e) {
     console.error('[composer] post failed', e);
     SAFE.toast('Post failed: ' + (e.message || 'unknown'), 'error');
+
+    /* Clean up pre-opened windows on error */
+    for (const [key, w] of Object.entries(preOpenedWindows)) {
+      try { if (w && !w.closed) w.close(); } catch (_) {}
+    }
   } finally {
     _state.posting = false;
     if (btn) { btn.disabled = false; btn.innerHTML = prev; }
