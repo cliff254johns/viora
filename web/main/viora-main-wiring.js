@@ -64,6 +64,7 @@ export function attachEvents() {
   /* Sidebar navigation (delegated — cheap, safe to re-bind on idempotent guard). */
   document.querySelectorAll('.sidebar nav a').forEach(a => {
     on(a, 'click', () => {
+      if (a.dataset.external === 'true') return;   // ← let the browser navigate
       const tab = a.dataset.tab;
       if (!tab) return;
       if (d.Viora && typeof d.Viora.navigate === 'function') d.Viora.navigate(tab);

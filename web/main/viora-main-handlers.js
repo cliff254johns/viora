@@ -169,8 +169,12 @@ export function buildVioraHandlers(d) {
      Kept almost identical to your original; the important fix
      is that this now actually gets installed.
      ═══════════════════════════════════════════════════════════ */
-  Viora.navigate = function (tab, opts = {}) {
+   Viora.navigate = function (tab, opts = {}) {
     try {
+      if (tab === 'marketing-campaigns' || tab === 'campaign-analytics') {
+        window.location.href = '/campaigns.html' + (tab === 'campaign-analytics' ? '#analytics' : '');
+        return;
+      }
       const navEl = document.querySelector(`.sidebar nav a[data-tab="${tab}"]`);
       if (navEl && navEl.classList.contains('rbac-hidden')) {
         _toast('Access restricted.', 'warning');
