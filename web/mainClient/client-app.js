@@ -23,7 +23,8 @@ import {
 import {
   getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
   onAuthStateChanged, signOut, setPersistence,
-  browserSessionPersistence, inMemoryPersistence
+  browserSessionPersistence, inMemoryPersistence,
+  sendPasswordResetEmail  
 } from "firebase/auth";
 
 /* ─── Firebase config ─── */
@@ -3637,3 +3638,36 @@ async function subscribeMarketItem(p) {
     toast('Request failed: ' + e.message, 'error');
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   PASSWORD RESET EXPOSURE
+   Called by the login page's Forgot password link.
+   ═══════════════════════════════════════════════════════════════ */
+window.vioraSendPasswordReset = async function (email) {
+  if (!email || typeof email !== 'string') {
+    return { ok: false, error: 'missing-email' };
+  }
+  try {
+    await sendPasswordResetEmail(auth, email.trim());
+    return { ok: true };
+  } catch (e) {
+    console.warn('[client] password reset failed:', e && e.code, e && e.message);
+    return { ok: false, error: (e && e.code) || (e && e.message) || 'unknown' };
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   WELCOME TOAST on ?welcome=1
+   ═══════════════════════════════════════════════════════════════ */
+(function () {
+  try {
+    const params = new URLSearchParams(location.search);
+    if (params.get('welcome') === '1') {
+      setTimeout(function () {
+        if (typeof toast === 'function') {
+          toast('Welcome to your VIORA portal!', 'success');
+        }
+      }, 800);
+    }
+  } catch (e) {}
+})();
