@@ -609,7 +609,13 @@ function _updateUtmPreview() { /* optional live preview — skipped for brevity 
 /* ═══════════════════════════════════════════════════════════════
    GENERATE TEXT (multi-platform in one call)
    ═══════════════════════════════════════════════════════════════ */
-async function _generateText() {
+async function _generateText(evt) {
+  /* Guard against auto-fire on mount. Synthetic events (from .click() or
+     dispatchEvent) have isTrusted: false. Real user clicks have true. */
+  if (evt && typeof evt === 'object' && evt.isTrusted === false) {
+    console.warn('[composer] _generateText ignored synthetic event — auto-fire blocked');
+    return;
+  }
   const c = _state.composer;
   if (!c || _state.generating) return;
 
@@ -732,7 +738,11 @@ async function _generateText() {
 /* ═══════════════════════════════════════════════════════════════
    GENERATE IMAGE
    ═══════════════════════════════════════════════════════════════ */
-async function _generateImage() {
+async function _generateImage(evt) {
+  if (evt && typeof evt === 'object' && evt.isTrusted === false) {
+    console.warn('[composer] _generateImage ignored synthetic event — auto-fire blocked');
+    return;
+  }
   const c = _state.composer;
   if (!c || _state.generatingImage) return;
 
