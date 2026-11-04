@@ -522,8 +522,8 @@ function attachListeners() {
    ═══════════════════════════════════════════════════════════════ */
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    document.getElementById('loginScreen').style.display = 'flex';
-    document.getElementById('appShell').style.display = 'none';
+    document.getElementById('loginGate').style.display = 'grid';
+    document.getElementById('orbitApp').style.display = 'none';
     state.firebaseReady = false;
     return;
   }
@@ -531,8 +531,8 @@ onAuthStateChanged(auth, async (user) => {
   state.operator = { uid: user.uid, email: user.email, name: user.email };
 
   /* Hide login, show app */
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('appShell').style.display = 'block';
+  document.getElementById('loginGate').style.display = 'none';
+  document.getElementById('orbitApp').style.display = 'block';
 
   /* Init modules once */
   try {
