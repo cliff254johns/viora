@@ -854,11 +854,18 @@ async function _persistPosts(status) {
 
   const campaign = (SAFE.state?.data?.campaigns || []).find(x => x.id === c.campaignId);
   if (!campaign) { SAFE.toast('Campaign not found.', 'error'); return; }
+   /* If we're re-saving an existing fanout, preserve each post's id
+     so we UPDATE instead of DUPLICATE. `c.fanoutId` tells us which
+     fanout this composer session belongs to, and `c._existingPostIds`
+     (set by openComposerForDraft) maps platform → existing post id. */
+  const existingIds = c._existingPostIds || {};
+
   const posts = c.platforms.map(key => {
     const variant = c.perPlatform[key] || {};
     return makePost({
+      id: existingIds[key] || undefined,   // makePost honours `id` if supplied
       campaignId: c.campaignId,
-      fanoutId: c.fanoutId || undefined,        // ← new: pass through to makePost
+      fanoutId: c.fanoutId || undefined,
       platform: key,
       pillar: c.pillar,
       caption: variant.caption || '',
