@@ -17,6 +17,7 @@ import {
   combineStatsHistory,
   engagementRateFor,
   toUtcIso,
+  readImageFile,
   platformMeta as _platformMeta,
 } from './campaign-utils.js';
 import { renderInbox as _renderInboxImpl } from './inbox.js';
@@ -385,23 +386,18 @@ export async function renderCreativeStudio(ctx) {
                  </div>`}
           </div>
 
-          <div class="cs-actions">
+                    <div class="cs-actions">
             <button type="button" class="btn primary" id="csGenerateImage" ${hasCampaigns ? '' : 'disabled'}>
               <i class="fa-solid fa-wand-magic-sparkles"></i> Generate image
+            </button>
+            <button type="button" class="btn soft" id="csUploadImage" ${hasCampaigns ? '' : 'disabled'}>
+              <i class="fa-solid fa-upload"></i> Upload image
             </button>
             <button type="button" class="btn soft" id="csGeneratePost" ${hasCampaigns ? '' : 'disabled'}>
               <i class="fa-solid fa-layer-group"></i> Generate caption + image
             </button>
+            <input type="file" id="csUploadImageInput" accept="image/jpeg,image/png,image/webp" style="display:none;" />
           </div>
-
-          <div class="cs-recent">
-            <div class="cs-recent-head">
-              <h4>Recent generations</h4>
-              <span class="pill">${_creativeRecent.length}</span>
-            </div>
-            <div class="cs-recent-list">${recentHtml}</div>
-          </div>
-        </div>
 
         <!-- ── RIGHT: RESULT ── -->
         <div class="card">
@@ -597,7 +593,7 @@ export async function renderCreativeStudio(ctx) {
         }
       });
 
-      /* ── Generate caption + image (Multi mode → open composer) ── */
+          /* ── Generate caption + image (Multi mode → open composer) ── */
       genPostBtn?.addEventListener('click', () => {
         const prompt = (promptEl?.value || '').trim();
         if (!prompt) { toast(ctx, 'Enter a brief first.', 'warning'); promptEl?.focus(); return; }
@@ -615,6 +611,54 @@ export async function renderCreativeStudio(ctx) {
         } catch (e) {
           console.error('[creative] openComposer failed', e);
           toast(ctx, 'Composer failed to open: ' + (e.message || 'unknown'), 'error');
+        }
+      });
+
+      /* ── Upload own image (Quick mode) ── */
+      const uploadBtn = view.querySelector('#csUploadImage');
+      const uploadInput = view.querySelector('#csUploadImageInput');
+      uploadBtn?.addEventListener('click', () => uploadInput?.click());
+      uploadInput?.addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        e.target.value = '';
+        if (!file) return;
+        if (!campaignEl?.value) { toast(ctx, 'Pick a campaign first.', 'warning'); return; }
+
+        try {
+          const img = await readImageFile(file);
+          currentImage = {
+            b64: img.b64,
+            mime: img.mime,
+            model: 'upload',
+            width: img.width,
+            height: img.height,
+            prompt: (promptEl?.value || '').trim(),
+            imageSource: 'upload',
+          };
+
+          /* Push to recent list */
+          _creativeRecent.unshift({
+            ...currentImage,
+            at: new Date().toLocaleTimeString(),
+          });
+          if (_creativeRecent.length > 5) _creativeRecent.length = 5;
+
+          if (recentList) {
+            recentList.innerHTML = _creativeRecent.map((r, i) => `
+              <div class="cs-recent-item" data-cs-recent-idx="${i}" title="${esc(r.prompt || '')}">
+                <img src="data:${esc(r.mime)};base64,${esc(r.b64)}" alt="" />
+                <div class="cs-recent-meta">
+                  <div class="cs-recent-model">${esc(r.model || '—')}</div>
+                  <div class="cs-recent-time">${esc(r.at)}</div>
+                </div>
+              </div>
+            `).join('');
+          }
+
+          renderResultImage(currentImage);
+          toast(ctx, 'Image uploaded.', 'success');
+        } catch (err) {
+          toast(ctx, 'Upload failed: ' + (err.message || 'unknown'), 'error');
         }
       });
     }
@@ -2298,19 +2342,24 @@ function renderFanoutModalBody(ctx, bodyEl, group, summary, activeTab) {
   }).join('');
 
   /* Left column — image */
+  const isUploaded = activePost?.imageSource === 'upload' || activePost?.imageModel === 'upload';
+  const sourceLabel = isUploaded
+    ? 'UPLOADED'
+    : (activePost?.imageModel || '—').toUpperCase();
+
   const img = activePost?.imageBase64
     ? `<div class="plib-detail-img">
          <img src="data:${esc(activePost.imageMime || 'image/png')};base64,${esc(activePost.imageBase64)}" alt="" />
        </div>
        <div class="plib-detail-img-meta">
          ${activePost.imageWidth && activePost.imageHeight ? `<span>${activePost.imageWidth}×${activePost.imageHeight}</span>` : ''}
-         ${activePost.imageMime ? `<span>${esc(activePost.imageMime.split('/')[1]?.toUpperCase() || 'IMG')}</span>` : ''}
+         <span>${esc(sourceLabel)}</span>
        </div>
        <div class="plib-detail-img-actions">
          <button type="button" class="btn soft btn-sm" data-plib-dl>Download</button>
        </div>`
     : `<div class="plib-detail-img-empty"><i class="fa-solid fa-image" style="font-size:2rem;opacity:.35;display:block;margin-bottom:8px;"></i>No image</div>`;
-
+  
   /* Right column — content */
   const contentHtml = `
     <div class="plib-detail-section">
@@ -2789,10 +2838,11 @@ export function openAddPlatformDialog(ctx, group) {
     /* Build composer options */
     const campaignId = source._campaignId || source.campaignId || '';
 
-    const composerOpts = {
+       const composerOpts = {
       campaignId,
       platforms: [targetPlatform],
       pillar: source.pillar || 'educational',
+      fanoutId: source.fanoutId || undefined,     // ← new: inherit fanout
     };
 
     if (captMode === 'reuse') {
