@@ -10,6 +10,7 @@ import {
   openComposer,
   openComposerForDraft,
 } from './campaign-ai.js';
+import { renderAnalyticsDashboard } from './campaign-analytics.js';
 import {
   groupPostsByFanout,
   summarizeFanout,
@@ -1100,11 +1101,21 @@ export async function renderAnalyticsModule(ctx) {
       '<div id="campaignAnalyticsDashboard"></div>',
     mount() {
       try {
-        const fn = window.renderAnalyticsDashboard;
-        if (typeof fn === 'function') fn();
-      } catch (e) { console.warn('[analytics] render failed', e); }
+        renderAnalyticsDashboard();
+      } catch (e) {
+        console.warn('[analytics] render failed', e);
+        const host = document.getElementById('campaignAnalyticsDashboard');
+        if (host) {
+          host.innerHTML =
+            '<div class="card" style="padding:24px;text-align:center;">' +
+              '<i class="fa-solid fa-triangle-exclamation" style="font-size:2rem;color:var(--bad);opacity:.6;margin-bottom:12px;display:block;"></i>' +
+              '<div style="font-weight:800;margin-bottom:6px;">Analytics failed to render</div>' +
+              '<div class="small muted" style="font-family:monospace;word-break:break-word;">' + String(e.message || e) + '</div>' +
+            '</div>';
+        }
+      }
       document.getElementById('orbitAnalyticsRefresh')?.addEventListener('click', () => {
-        try { window.renderAnalyticsDashboard?.(); } catch (_) {}
+        try { renderAnalyticsDashboard(); } catch (e) { console.warn('[analytics] refresh failed', e); }
         toast(ctx, 'Refreshed.', 'info');
       });
     }
