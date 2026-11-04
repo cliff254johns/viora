@@ -1,10 +1,10 @@
-// main/orbit-shell.js
+// main/Viora Ecosystems-shell.js
 // ═══════════════════════════════════════════════════════════════
-// Orbit shell — 24-module sidebar router for campaign.html
+// Viora Ecosystems shell — 24-module sidebar router for campaign.html
 // (Billing removed by request.)
 //
 // Renders the sidebar, wires navigation, hosts every module renderer.
-// Delegates to ./orbit-modules.js for each module's content.
+// Delegates to ./Viora Ecosystems-modules.js for each module's content.
 // ═══════════════════════════════════════════════════════════════
 
 import {
@@ -31,7 +31,7 @@ import {
   renderAdmin,
   renderAccountsModule,
   renderCampaignsModule,
-} from './orbit-modules.js';
+} from './Viora Ecosystems-modules.js';
 
 let _ctx = null;
 let _activeModule = 'overview';
@@ -104,7 +104,7 @@ const RENDERERS = {
   admin: renderAdmin,
 };
 
-export function initOrbitShell(ctx) {
+export function initViora EcosystemsShell(ctx) {
   _ctx = ctx || {};
   _activeModule = 'overview';
   renderSidebar();
@@ -135,14 +135,10 @@ function renderSidebar() {
 
   host.innerHTML = `
     <div class="brand">
-      <div class="logo">O</div>
-      <div><strong>orbit</strong><small>AI marketing command</small></div>
+      <div class="logo"><img src="/viora.png"></div>
+      <div><strong>Viora</strong><small>Social Media Manager</small></div>
     </div>
-    <div class="workspace">
-      <div class="avatar">NW</div>
-      <div><b>Northwind Studio</b><small>Business workspace ▾</small></div>
-      <span>⌄</span>
-    </div>
+  
     ${groupsHtml}
     <div class="sidebar-bottom">
       <div class="planbox">
@@ -242,7 +238,7 @@ export async function navigate(key, opts = {}) {
         requestAnimationFrame(() => { try { html.mount(view); } catch (e) { console.warn(e); } });
       }
     } catch (e) {
-      console.error('[orbit] render failed:', key, e);
+      console.error('[Viora Ecosystems] render failed:', key, e);
       view.innerHTML = `<div class="card"><div class="cardhead"><h3>${mod.label}</h3></div>
         <div class="empty">Failed to load: ${String(e.message || e)}</div></div>`;
     }
@@ -262,15 +258,15 @@ export function findModuleByName(q) {
   return null;
 }
 
-export function renderActiveOrbitModule() {
+export function renderActiveViora EcosystemsModule() {
   navigate(_activeModule, { skipHash: true });
 }
 
 /* Expose for inline onclick + bootstrap */
-window.Orbit = {
+window.Viora Ecosystems = {
   navigate,
   currentModule,
   findModuleByName,
-  renderActiveOrbitModule,
+  renderActiveViora EcosystemsModule,
   MODULES: MODULE_MAP,
 };
