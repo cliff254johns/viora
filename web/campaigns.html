@@ -475,6 +475,68 @@ tr:last-child td{border-bottom:0}
 @media(prefers-reduced-motion:reduce){
   *,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
 }
+   
+/* ═══════════════════════════════════════════════════════════════
+   CREATIVE STUDIO — v2
+   ═══════════════════════════════════════════════════════════════ */
+.cs-wrap{display:flex;flex-direction:column;gap:16px}
+.cs-mode{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px}
+.cs-mode-btn{
+  display:flex;flex-direction:column;align-items:flex-start;gap:2px;
+  padding:14px 16px;border:1.5px solid var(--line);border-radius:14px;
+  background:var(--panel);color:var(--text);text-align:left;cursor:pointer;
+  transition:border-color .15s ease,background .15s ease,transform .15s ease;
+}
+.cs-mode-btn:hover{border-color:var(--accent);transform:translateY(-1px)}
+.cs-mode-btn.active{
+  border-color:var(--accent);
+  background:color-mix(in srgb,var(--accent) 8%,var(--panel));
+}
+.cs-mode-btn i{font-size:1.05rem;margin-bottom:6px;color:var(--muted)}
+.cs-mode-btn.active i{color:var(--accent)}
+.cs-mode-btn span{font-weight:800;font-size:13px}
+.cs-mode-btn small{color:var(--muted);font-size:10.5px;font-weight:500;line-height:1.4}
+.cs-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.cs-multi-hint{margin:10px 0}
+.cs-actions{display:flex;gap:8px;margin:14px 0 4px;flex-wrap:wrap}
+.cs-actions .btn{flex:1;justify-content:center;min-width:160px}
+.cs-recent{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.cs-recent-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cs-recent-head h4{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:0}
+.cs-recent-list{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.cs-recent-item{
+  flex:0 0 auto;width:110px;cursor:pointer;
+  border:1px solid var(--line);border-radius:10px;overflow:hidden;
+  background:var(--panel2);transition:border-color .15s ease,transform .15s ease;
+}
+.cs-recent-item:hover{border-color:var(--accent);transform:translateY(-1px)}
+.cs-recent-item img{width:100%;height:70px;object-fit:cover;display:block}
+.cs-recent-meta{padding:5px 8px}
+.cs-recent-model{font-size:9.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cs-recent-time{font-size:9px;color:var(--text-light);margin-top:1px}
+.cs-image-preview{
+  display:flex;align-items:center;justify-content:center;
+  background:var(--panel2);border-radius:12px;padding:12px;
+  border:1px solid var(--line);min-height:180px;
+}
+.cs-image-preview img{max-width:100%;max-height:380px;border-radius:8px;display:block}
+.cs-image-meta{
+  display:flex;gap:14px;justify-content:center;
+  margin-top:10px;font-size:10.5px;color:var(--muted);flex-wrap:wrap;
+}
+.cs-image-meta i{opacity:.7;margin-right:3px}
+.cs-image-actions{display:flex;gap:8px;margin-top:12px;justify-content:center;flex-wrap:wrap}
+.cs-error{
+  padding:16px;border-radius:12px;
+  background:color-mix(in srgb,var(--bad) 8%,var(--panel));
+  border:1px solid color-mix(in srgb,var(--bad) 30%,var(--line));
+}
+.cs-error-head{font-weight:800;color:var(--bad);margin-bottom:6px;font-size:12px}
+.cs-error-body{font-size:11px;color:var(--text);margin-bottom:10px;line-height:1.5}
+@media(max-width:900px){
+  .cs-grid{grid-template-columns:1fr}
+  .cs-mode{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
