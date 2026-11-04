@@ -2041,3 +2041,291 @@ tr:hover td {
     background: #fff !important
   }
 }
+/* ═══════════════════════════════════════════════════════════════
+   training-login.css
+   Overrides training.css's login UI so the training portal's
+   sign-in and sign-up match the client portal exactly.
+
+   Load order matters:
+     <link rel="stylesheet" href="training.css">
+     <link rel="stylesheet" href="training-login.css">   ← this file
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── 1. Shell ─────────────────────────────────────────────── */
+#loginScreen {
+  background: radial-gradient(circle at 20% 20%, #1E1B4B 0%, #0B1220 60%, #060913 100%);
+  /* Same background the client portal uses (adjust hex if different) */
+  padding: 24px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── 2. Card ──────────────────────────────────────────────── */
+.login-card {
+  width: 100%;
+  max-width: 440px;                /* client portal card width */
+  padding: 40px 36px;              /* symmetric padding */
+  background: rgba(255, 255, 255, .05);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 22px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .55);
+  color: #E2E8F0;
+  animation: fadeInUp .55s ease both;
+}
+
+/* ── 3. Brand header ──────────────────────────────────────── */
+.login-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  margin-bottom: 26px;
+}
+
+.login-brand .logo-mark {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 24px;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, .55);
+  overflow: hidden;
+}
+
+.login-brand .logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 8px;
+}
+
+.login-brand h1 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: #F8FAFC;
+  margin: 0;
+}
+
+.login-brand h1 span {
+  color: #7de8ff;
+}
+
+.login-brand p {
+  font-size: .72rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-top: 2px;
+}
+
+/* ── 4. Tabs (Sign In / Sign Up) ──────────────────────────── */
+.login-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  background: rgba(15, 23, 42, .55);
+  padding: 4px;
+  border-radius: 12px;
+}
+
+.login-tabs button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-family: inherit;
+  font-size: .82rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.login-tabs button.active {
+  background: linear-gradient(135deg, #00d4ff, #7c3aed);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(0, 212, 255, .35);
+}
+
+/* ── 5. Fields ────────────────────────────────────────────── */
+.login-field {
+  margin-bottom: 14px;
+}
+
+.login-field label {
+  display: block;
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+
+.login-field input,
+.login-field select {
+  width: 100%;
+  padding: 12px 14px;
+  background: rgba(15, 23, 42, .55);
+  border: 1px solid rgba(148, 163, 184, .18);
+  border-radius: 12px;
+  color: #F1F5F9;
+  font-family: inherit;
+  font-size: .92rem;
+  outline: none;
+  transition: .2s;
+}
+
+.login-field input:focus,
+.login-field select:focus {
+  border-color: #00d4ff;
+  box-shadow: 0 0 0 4px rgba(0, 212, 255, .18);
+  background: rgba(15, 23, 42, .75);
+}
+
+.login-field input::placeholder {
+  color: #64748b;
+}
+
+/* ── 6. Submit button ─────────────────────────────────────── */
+.btn-login {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: .92rem;
+  letter-spacing: .3px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 212, 255, .4);
+  transition: .2s;
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-login:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(0, 212, 255, .55);
+}
+
+.btn-login:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+/* ── 7. Footer ────────────────────────────────────────────── */
+.login-footer {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(148, 163, 184, .1);
+  font-size: .72rem;
+  color: #64748b;
+  line-height: 1.7;
+  text-align: center;
+}
+
+.login-footer code {
+  background: rgba(148, 163, 184, .12);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  color: #94a3b8;
+}
+
+/* ── 8. Inline messages ──────────────────────────────────── */
+.login-message {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: .8rem;
+  line-height: 1.5;
+  display: none;
+}
+
+.login-message.error {
+  display: block;
+  background: rgba(255, 92, 124, .12);
+  border-left: 3px solid #ff5c7c;
+  color: #ff9eb1;
+}
+
+.login-message.info {
+  display: block;
+  background: rgba(0, 212, 255, .12);
+  border-left: 3px solid #00d4ff;
+  color: #7dd8ff;
+}
+
+.login-message.success {
+  display: block;
+  background: rgba(34, 230, 160, .12);
+  border-left: 3px solid #22e6a0;
+  color: #7de8bf;
+}
+
+/* ── 9. Register form row layout (name / email / phone) ──── */
+.login-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 480px) {
+  .login-field-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── 10. Light theme override ────────────────────────────── */
+[data-theme="light"] #loginScreen {
+  background: radial-gradient(circle at 20% 20%, #dbeafe 0%, #eef2f9 60%, #f8fafc 100%);
+}
+
+[data-theme="light"] .login-card {
+  background: rgba(255, 255, 255, .92);
+  border-color: rgba(0, 150, 199, .25);
+  color: #0a0a0f;
+}
+
+[data-theme="light"] .login-brand h1 {
+  color: #0a0a0f;
+}
+
+[data-theme="light"] .login-brand h1 span {
+  color: #0096c7;
+}
+
+[data-theme="light"] .login-field input,
+[data-theme="light"] .login-field select {
+  background: #fff;
+  border-color: rgba(0, 150, 199, .25);
+  color: #0a0a0f;
+}
+
+[data-theme="light"] .login-tabs {
+  background: rgba(240, 244, 255, .9);
+}
+
+[data-theme="light"] .login-tabs button {
+  color: #334155;
+}
+
+[data-theme="light"] .login-footer {
+  color: #64748b;
+}
