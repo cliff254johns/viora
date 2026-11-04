@@ -538,6 +538,7 @@ tr:last-child td{border-bottom:0}
   .cs-mode{grid-template-columns:1fr}
 }
    
+
 /* ═══════════════════════════════════════════════════════════════
    POST LIBRARY + FANOUT DETAIL
    ═══════════════════════════════════════════════════════════════ */
@@ -670,6 +671,58 @@ tr:last-child td{border-bottom:0}
 .plib-detail-section{margin-bottom:16px}
 .plib-detail-section h4{font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:0 0 8px}
 .plib-detail-row{display:flex;gap:8px;padding:4px 0;font-size:11.5px}
+.plib-detail-label{color:var(--muted);min-width:80px;flex-shrink:0}
+.plib-detail-caption{
+  padding:10px;background:var(--panel2);border-radius:8px;
+  font-size:12px;line-height:1.55;color:var(--text);white-space:pre-wrap;
+}
+.plib-detail-hashtags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.plib-detail-utm code{
+  font-family:monospace;font-size:10.5px;color:var(--accent);
+  word-break:break-all;background:var(--panel2);padding:6px 8px;border-radius:6px;
+  display:block;
+}
+.plib-stats-section{
+  padding:14px;background:var(--panel2);border-radius:12px;
+  border:1px solid var(--line);margin-bottom:16px;
+}
+.plib-stats-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
+.plib-stats-head h4{margin:0;font-size:12px}
+.plib-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:8px}
+.plib-stat{text-align:center;padding:8px;background:var(--panel);border-radius:8px}
+.plib-stat-num{font-size:16px;font-weight:800;letter-spacing:-.5px}
+.plib-stat-lbl{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.plib-stat-updated{font-size:10px;color:var(--muted);text-align:right;margin-top:8px}
+.plib-detail-empty{
+  padding:14px;background:var(--panel);border-radius:8px;
+  color:var(--muted);font-size:12px;text-align:center;
+}
+.plib-history, .plib-compare{margin-bottom:16px}
+.plib-history-head, .plib-compare-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px}
+.plib-history-head h4, .plib-compare-head h4{margin:0;font-size:12px}
+.plib-compare-toggle{display:flex;gap:4px}
+.plib-cmp-btn{
+  padding:4px 10px;border-radius:8px;border:1px solid var(--line);
+  background:var(--panel);color:var(--muted);font-size:10.5px;font-weight:700;cursor:pointer;
+}
+.plib-cmp-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.plib-compare-chart{background:var(--panel2);border-radius:10px;padding:10px;border:1px solid var(--line)}
+.plib-sched-banner{
+  display:flex;gap:12px;align-items:flex-start;
+  padding:12px 14px;margin-bottom:16px;
+  background:color-mix(in srgb,var(--warn) 8%,var(--panel));
+  border:1px solid color-mix(in srgb,var(--warn) 30%,var(--line));
+  border-radius:10px;font-size:12px;
+}
+.plib-sched-banner i{color:var(--warn);margin-top:3px;font-size:16px}
+.plib-modal-actions{
+  display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;
+  margin-top:16px;padding-top:16px;border-top:1px solid var(--line);
+}
+@media(max-width:760px){
+  .plib-detail-grid{grid-template-columns:1fr}
+  .plib-grid{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
