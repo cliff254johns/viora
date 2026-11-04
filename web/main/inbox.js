@@ -111,11 +111,20 @@ function _setData(key, value) {
   s.data[key] = value;
 }
 
+function _isInboxActive() {
+  try { return window.Orbit?.currentModule?.() === 'inbox'; }
+  catch (_) { return false; }
+}
+
 function _scheduleRender() {
   if (_pendingRender) return;
   _pendingRender = true;
   setTimeout(() => {
     _pendingRender = false;
+    /* Only paint #view when the shell is actually on the inbox module.
+       Data still warms up via subscribeInbox() listeners; we just
+       skip the DOM write when we're not the active module. */
+    if (!_isInboxActive()) return;
     try { renderInbox(); } catch (e) { console.warn('[inbox] re-render failed', e); }
   }, 120);
 }
