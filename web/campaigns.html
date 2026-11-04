@@ -2,97 +2,207 @@
 <html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="VIORA Campaigns — social media command centre">
+<meta name="theme-color" content="#6558f5">
 <title>Campaigns — VIORA</title>
 
-<!-- Orbit aesthetic, VIORA content -->
+<!-- ── Favicon (root) ── -->
+<link rel="icon" type="image/png" href="/viora.png" />
+<link rel="apple-touch-icon" href="/viora.png" />
+
+<!-- ── Fonts + icons + charts (CDN) ── -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<!-- ── App styles (root) ── -->
+<link rel="stylesheet" href="/main.css" />
+
 <style>
 /* ═══════════════════════════════════════════════════════════════
-   VIORA CAMPAIGNS — Orbit-styled shell
-   Colors, typography, spacing, components lifted from Orbit's
-   design system. VIORA content and endpoints preserved.
+   Orbit shell — self-contained styles.
+   These override / supplement /main.css so the shell renders
+   correctly even if main.css is the older VIORA theme.
+   Uses the same CSS variables as VIORA where possible.
    ═══════════════════════════════════════════════════════════════ */
+
 :root{
-  --bg:#f4f6fa; --panel:#fff; --panel2:#f8f9fc;
+  --bg:#f4f6fa; --panel:#ffffff; --panel2:#f8f9fc;
   --text:#172033; --muted:#748096; --line:#e7eaf1;
   --accent:#6558f5; --accent2:#f05aa6;
   --good:#159b72; --warn:#d68b22; --bad:#d95368;
   --shadow:0 12px 34px rgba(24,36,68,.07); --radius:17px;
+
+  /* Aliases so any older module using var(--text-primary) etc. still works */
+  --text-primary: var(--text);
+  --text-secondary: var(--muted);
+  --text-light: var(--muted);
+  --border-color: var(--line);
+  --bg-input: var(--panel2);
+  --bg-elev-1: var(--panel);
+  --bg-elev-2: var(--panel2);
+  --bg-glass: rgba(255,255,255,0.75);
+  --accent-blue: var(--accent);
+  --accent-green: var(--good);
+  --accent-red: var(--bad);
+  --accent-gold: var(--warn);
+  --accent-orange: #ff9a3c;
+  --accent-purple: #a855f7;
+  --chart-text: var(--muted);
 }
-[data-theme=dark]{
+
+[data-theme="dark"]{
   --bg:#10131c; --panel:#191e2a; --panel2:#202636;
   --text:#edf1fb; --muted:#9aa5ba; --line:#2b3446;
   --accent:#8190ff; --accent2:#b18aff;
   --good:#48c99b; --warn:#f0b35c; --bad:#ff7188;
   --shadow:0 12px 34px rgba(0,0,0,.22);
+
+  --bg-glass: rgba(25,30,42,0.75);
+  --text-primary: var(--text);
+  --text-secondary: var(--muted);
+  --text-light: var(--muted);
+  --border-color: var(--line);
+  --bg-input: var(--panel2);
+  --bg-elev-1: var(--panel);
+  --bg-elev-2: var(--panel2);
+  --chart-text: var(--muted);
 }
+
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--text);
+  font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
 a{color:inherit;text-decoration:none}
 
-/* ── App layout ── */
+/* ── Sidebar ── */
 .app{min-height:100vh}
-.sidebar{position:fixed;inset:0 auto 0 0;width:258px;background:var(--panel);border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;z-index:20;transition:.25s;overflow:auto}
+.sidebar{
+  position:fixed;inset:0 auto 0 0;width:258px;
+  background:var(--panel);border-right:1px solid var(--line);
+  padding:20px 14px;display:flex;flex-direction:column;
+  z-index:20;transition:transform .25s ease;overflow-y:auto;
+}
 .brand{display:flex;align-items:center;gap:11px;padding:2px 9px 22px}
-.logo{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;color:white;font-weight:900;font-size:19px;box-shadow:0 7px 18px #6878ed55;background:linear-gradient(135deg,#6558f5,#e45fa8 60%,#20c8d8);animation:logoPulse 4s ease-in-out infinite}
-@keyframes logoPulse{0%,100%{box-shadow:0 7px 18px #6878ed55}50%{box-shadow:0 8px 28px #d65da877,0 0 0 7px #8d72f41a}}
+.logo{
+  width:38px;height:38px;border-radius:12px;
+  display:grid;place-items:center;color:#fff;font-weight:900;font-size:19px;
+  background:linear-gradient(135deg,#6558f5,#e45fa8 60%,#20c8d8);
+  box-shadow:0 7px 18px #6878ed55;
+}
 .brand strong{font-size:16px;letter-spacing:-.4px}
 .brand small{display:block;color:var(--muted);font-size:10px;letter-spacing:1.4px;text-transform:uppercase}
-.workspace{margin:0 4px 18px;padding:11px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;display:flex;align-items:center;gap:9px}
-.workspace .avatar{width:31px;height:31px;border-radius:9px;background:#e8eaff;color:#4e5ce1;display:grid;place-items:center;font-weight:800}
+
+.workspace{
+  margin:0 4px 18px;padding:11px;background:var(--panel2);
+  border:1px solid var(--line);border-radius:12px;
+  display:flex;align-items:center;gap:9px;
+}
+.workspace .avatar{
+  width:31px;height:31px;border-radius:9px;background:#e8eaff;color:#4e5ce1;
+  display:grid;place-items:center;font-weight:800;flex-shrink:0;
+}
 .workspace div:nth-child(2){flex:1;min-width:0}
 .workspace b{display:block;font-size:12px}
 .workspace small{color:var(--muted);font-size:10px}
-.nav-label{padding:9px 11px 5px;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:1.2px;font-weight:800}
+
+.nav-label{
+  padding:9px 11px 5px;color:var(--muted);font-size:10px;
+  text-transform:uppercase;letter-spacing:1.2px;font-weight:800;
+}
 .nav{display:grid;gap:3px}
-.nav button{border:0;background:transparent;color:var(--muted);padding:10px 11px;border-radius:10px;display:flex;align-items:center;gap:12px;text-align:left;width:100%;font-weight:600;font-size:12.5px}
+.nav button{
+  border:0;background:transparent;color:var(--muted);
+  padding:10px 11px;border-radius:10px;
+  display:flex;align-items:center;gap:12px;
+  text-align:left;width:100%;font-weight:600;font-size:12.5px;
+  cursor:pointer;transition:background .15s ease,color .15s ease;
+}
 .nav button:hover{background:var(--panel2);color:var(--text)}
 .nav button.active{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent)}
-.ico{width:18px;text-align:center;font-size:16px}
-.nav .count{margin-left:auto;border-radius:20px;padding:1px 7px;background:var(--panel2);font-size:10px}
-.sidebar-bottom{margin-top:auto;padding:12px 5px 0}
-.planbox{background:linear-gradient(135deg,#283a88,#7047aa);color:white;padding:14px;border-radius:13px;margin-bottom:12px}
-.planbox b{font-size:12px}
-.planbox p{font-size:10px;opacity:.8;margin:5px 0 10px}
-.planbox button{background:#fff;color:#33418e;border:0;border-radius:8px;padding:7px 10px;font-size:10px;font-weight:800}
+.ico{width:18px;text-align:center;font-size:16px;flex-shrink:0}
 
+.sidebar-bottom{margin-top:auto;padding:12px 5px 0}
+.planbox{background:linear-gradient(135deg,#283a88,#7047aa);color:#fff;padding:14px;border-radius:13px;margin-bottom:12px}
+.planbox b{font-size:12px;display:block}
+.planbox p{font-size:10px;opacity:.8;margin:5px 0 10px}
+.planbox button{background:#fff;color:#33418e;border:0;border-radius:8px;padding:7px 10px;font-size:10px;font-weight:800;cursor:pointer}
+
+/* ── Main ── */
 .main{margin-left:258px;min-height:100vh}
-.topbar{height:72px;padding:0 30px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:15}
+.topbar{
+  height:72px;padding:0 30px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--line);background:var(--panel);
+  position:sticky;top:0;z-index:15;
+}
 .top-left{display:flex;align-items:center;gap:13px}
 .hamb{display:none}
 .crumb{font-size:12px;color:var(--muted)}
 .crumb b{color:var(--text)}
 .top-actions{display:flex;align-items:center;gap:9px}
 .search{width:230px;position:relative}
-.search input{width:100%;background:var(--panel2);border:1px solid var(--line);padding:9px 12px 9px 34px;border-radius:10px;color:var(--text);outline:none}
+.search input{
+  width:100%;background:var(--panel2);border:1px solid var(--line);
+  padding:9px 12px 9px 34px;border-radius:10px;color:var(--text);outline:none;
+}
 .search span{position:absolute;left:11px;top:8px;color:var(--muted)}
-.iconbtn{width:36px;height:36px;border:1px solid var(--line);background:var(--panel);border-radius:10px;color:var(--muted);position:relative}
+.iconbtn{
+  width:36px;height:36px;border:1px solid var(--line);background:var(--panel);
+  border-radius:10px;color:var(--muted);position:relative;cursor:pointer;
+}
 .dot{position:absolute;right:7px;top:6px;width:6px;height:6px;background:#ef5c75;border-radius:50%}
-.userpic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#d7ddff,#e9d7ff);color:#5548a7;font-weight:800;border:0;cursor:pointer}
+.userpic{
+  width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(135deg,#d7ddff,#e9d7ff);color:#5548a7;font-weight:800;
+  border:0;cursor:pointer;
+}
 
 .content{padding:27px 30px 50px;max-width:1600px;margin:auto}
+
+/* ── Module content styles (used by orbit-modules.js output) ── */
 .pagehead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:22px}
 .eyebrow{font-size:10px;color:var(--accent);font-weight:800;letter-spacing:1.3px;text-transform:uppercase}
 .pagehead h1{font-size:25px;letter-spacing:-.8px;margin:3px 0 4px}
 .sub{color:var(--muted);font-size:12px}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
 
-.btn{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:10px;padding:9px 13px;font-weight:700;font-size:11px;display:inline-flex;align-items:center;gap:7px;transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
+.btn{
+  border:1px solid var(--line);background:var(--panel);color:var(--text);
+  border-radius:10px;padding:9px 13px;font-weight:700;font-size:11px;
+  display:inline-flex;align-items:center;gap:7px;cursor:pointer;
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
 .btn:hover{border-color:var(--accent);transform:translateY(-1px)}
-.btn.primary{background:linear-gradient(115deg,#6558f5,#a34ce8 58%,#e45fa8);border:0;color:#fff;box-shadow:0 8px 20px #7959ec38}
+.btn.primary{
+  background:linear-gradient(115deg,#6558f5,#a34ce8 58%,#e45fa8);
+  border:0;color:#fff;box-shadow:0 8px 20px #7959ec38;
+}
 .btn.soft{background:color-mix(in srgb,var(--accent) 10%,var(--panel));color:var(--accent);border-color:transparent}
 .btn.danger{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,var(--line))}
+.btn.outline{background:transparent}
+.btn-sm{padding:6px 10px;font-size:10.5px}
+.btn-xs{padding:4px 8px;font-size:9.5px}
 
 .grid{display:grid;gap:15px}
 .kpis{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px}
 .two{grid-template-columns:1.55fr 1fr}
 .three{grid-template-columns:repeat(3,minmax(0,1fr))}
 
-.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:17px;box-shadow:var(--shadow);min-width:0;transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
-.card:hover{transform:translateY(-3px);box-shadow:0 18px 40px rgba(63,70,150,.12)}
+.card{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);padding:17px;
+  box-shadow:var(--shadow);min-width:0;
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:0 18px 40px rgba(63,70,150,.12)}
 .cardhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
 .cardhead h3{font-size:13px;margin:0}
 
@@ -103,88 +213,170 @@ a{color:inherit;text-decoration:none}
 
 .muted{color:var(--muted)}
 .small{font-size:10px}
-.pill{font-size:9px;background:var(--panel2);padding:4px 8px;border-radius:20px;color:var(--muted)}
-.status{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:4px 8px;font-size:9px;font-weight:800;background:var(--panel2);color:var(--muted);white-space:nowrap}
+.pill{font-size:9px;background:var(--panel2);padding:4px 8px;border-radius:20px;color:var(--muted);display:inline-block}
+
+.status{
+  display:inline-flex;align-items:center;gap:5px;border-radius:20px;
+  padding:4px 8px;font-size:9px;font-weight:800;
+  background:var(--panel2);color:var(--muted);white-space:nowrap;
+}
 .status:before{content:"";width:5px;height:5px;background:currentColor;border-radius:50%}
 .status.good{background:#159b7217;color:var(--good)}
 .status.warn{background:#d68b2217;color:var(--warn)}
 .status.bad{background:#d9536817;color:var(--bad)}
 
-.notice{border:1px solid color-mix(in srgb,var(--warn) 35%,var(--line));background:color-mix(in srgb,var(--warn) 8%,var(--panel));border-radius:11px;padding:12px;font-size:10px;color:var(--text);margin-bottom:15px}
+.notice{
+  border:1px solid color-mix(in srgb,var(--warn) 35%,var(--line));
+  background:color-mix(in srgb,var(--warn) 8%,var(--panel));
+  border-radius:11px;padding:12px;font-size:10px;color:var(--text);
+  margin-bottom:15px;
+}
 
-/* ── Table ── */
+/* Table */
 .tablewrap{overflow:auto}
 table{width:100%;border-collapse:collapse;white-space:nowrap}
 th{text-align:left;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.8px;padding:10px;border-bottom:1px solid var(--line)}
 td{padding:12px 10px;border-bottom:1px solid var(--line);font-size:11px}
 tr:last-child td{border-bottom:0}
 
-/* ── Social accounts grid ── */
-.accounts-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
-  gap:12px;
-}
+/* Social accounts grid (used by campaign-accounts.js) */
+.accounts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
 .account-card{
-  background:var(--panel);
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:14px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease;
-  position:relative;
-  overflow:hidden;
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;
+  display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden;
 }
-.account-card:hover{
-  transform:translateY(-2px);
-  border-color:color-mix(in srgb,var(--accent) 30%,var(--line));
-  box-shadow:0 12px 28px rgba(24,36,68,.10);
-}
-.account-card::before{
-  content:"";
-  position:absolute;
-  top:0;left:0;right:0;
-  height:3px;
-  background:var(--platform-color,var(--accent));
-  opacity:.9;
-}
+.account-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--platform-color,var(--accent));opacity:.9}
 .account-head{display:flex;align-items:center;gap:10px}
-.account-ico{
-  width:38px;height:38px;
-  border-radius:10px;
-  display:grid;place-items:center;
-  font-size:18px;
-  color:#fff;
-  background:var(--platform-color,var(--accent));
-  flex-shrink:0;
-}
+.account-ico{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:18px;color:#fff;background:var(--platform-color,var(--accent));flex-shrink:0}
 .account-body{flex:1;min-width:0}
-.account-name{font-weight:700;font-size:13px;letter-spacing:-.01em;display:flex;align-items:center;gap:6px}
+.account-name{font-weight:700;font-size:13px}
 .account-handle{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
 .account-meta{font-size:10px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;margin-top:4px}
 .account-actions{display:flex;gap:6px;align-items:center;margin-top:auto}
 .account-actions .btn{flex:1;justify-content:center;padding:7px 10px;font-size:10.5px}
 
-/* ── Hero ── */
-.orbit-hero{
-  position:relative;overflow:hidden;border-radius:20px;
-  min-height:190px;padding:25px;color:#fff;
-  background:
-    linear-gradient(105deg,rgba(24,25,65,.94),rgba(74,47,142,.78),rgba(21,137,160,.45)),
-    url('https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1800&q=85') center/cover;
-  display:flex;align-items:center;margin-bottom:16px;
-  box-shadow:0 16px 35px #4232a52b;
+/* Chart boxes (used by analytics) */
+.chart-box{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);padding:17px;box-shadow:var(--shadow);
+  margin-bottom:15px;
 }
-.orbit-hero:after{
-  content:"";position:absolute;width:280px;height:280px;
-  border:1px solid #ffffff35;border-radius:50%;right:8%;top:-95px;
-  box-shadow:0 0 0 24px #ffffff0b,0 0 0 55px #ffffff08;
+.chart-box h4{font-size:13px;margin:0 0 12px}
+.kpi-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:14px;margin-bottom:15px;
 }
-.orbit-hero h2{font-size:clamp(21px,3vw,31px);max-width:600px;line-height:1.12;margin:8px 0}
-.orbit-hero p{color:#e8e8ff;max-width:520px;font-size:12px}
-.orbit-hero .hero-tag{font-size:9px;letter-spacing:2px;font-weight:900;color:#a9f1ee}
+.stat-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.stat-card .number{font-size:26px;font-weight:800;letter-spacing:-1px}
+.stat-card .label{font-size:11px;color:var(--muted)}
+.table-wrapper{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);overflow:auto;margin-bottom:15px;
+}
+.empty{color:var(--muted);text-align:center;padding:24px}
+.empty-state{color:var(--muted);text-align:center;padding:24px;font-size:.85rem}
+
+/* Agent grid (used by agents module) */
+.agentgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.agent{padding:15px;border:1px solid var(--line);border-radius:13px;background:var(--panel)}
+.agenttop{display:flex;justify-content:space-between;align-items:center}
+.agenticon{width:36px;height:36px;border-radius:11px;background:color-mix(in srgb,var(--accent) 12%,var(--panel));display:grid;place-items:center;font-size:18px}
+.agent h4{margin:10px 0 3px;font-size:12px}
+.agent p{font-size:10px;color:var(--muted);margin:0 0 11px;min-height:30px}
+.agentfoot{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.switch{width:32px;height:18px;border-radius:20px;background:#aab2c3;position:relative;border:0;cursor:pointer;transition:background .18s ease}
+.switch:after{content:"";position:absolute;width:12px;height:12px;left:3px;top:3px;background:#fff;border-radius:50%;transition:left .18s ease}
+.switch.on{background:var(--good)}
+.switch.on:after{left:17px}
+
+/* Form */
+.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.field{display:grid;gap:5px;margin-bottom:12px}
+.field label{font-size:10px;font-weight:750;color:var(--muted)}
+.field input,.field select,.field textarea{
+  width:100%;border:1px solid var(--line);background:var(--panel2);
+  border-radius:9px;padding:10px;color:var(--text);outline:none;font-size:11px;
+}
+.field textarea{min-height:90px;resize:vertical}
+.field.full{grid-column:1/-1}
+.form-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px}
+.form-row > div{display:grid;gap:5px}
+.form-row label{font-size:10px;font-weight:750;color:var(--muted)}
+.form-row input,.form-row select,.form-row textarea{
+  width:100%;border:1px solid var(--line);background:var(--panel2);
+  border-radius:9px;padding:10px;color:var(--text);outline:none;font-size:11px;
+}
+
+/* Calendar */
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.day{min-height:92px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:7px;font-size:10px}
+.day b{display:block;margin-bottom:7px}
+.event{background:color-mix(in srgb,var(--accent) 13%,var(--panel));color:var(--accent);border-radius:5px;padding:4px;margin:3px 0;font-size:8px;overflow:hidden}
+
+/* Inbox */
+.inbox{display:grid;grid-template-columns:280px 1fr 280px;min-height:520px;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.inboxlist{border-right:1px solid var(--line);background:var(--panel2);overflow:auto;max-height:620px}
+.conversation{padding:12px;border-top:1px solid var(--line);cursor:pointer}
+.conversation.active{background:var(--panel)}
+.conversation b{font-size:12px}
+.conversation .small{color:var(--muted);margin:2px 0}
+.chat{display:flex;flex-direction:column;min-width:0}
+.chathead{padding:13px;border-bottom:1px solid var(--line);font-size:12px;font-weight:800}
+.messages{padding:18px;display:flex;flex-direction:column;gap:10px;flex:1;background:var(--panel2);overflow:auto;max-height:480px}
+.bubble{max-width:78%;padding:10px 12px;border-radius:12px;background:var(--panel);border:1px solid var(--line);font-size:11px}
+.bubble.mine{align-self:flex-end;background:color-mix(in srgb,var(--accent) 13%,var(--panel));border-color:transparent}
+.reply{display:flex;padding:10px;gap:7px;border-top:1px solid var(--line)}
+.reply input{flex:1;min-width:0;border:1px solid var(--line);background:var(--panel2);border-radius:9px;padding:9px;color:var(--text)}
+.profilepane{border-left:1px solid var(--line);padding:14px}
+
+/* Integration grid */
+.integration-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;display:grid}
+.integration{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--panel)}
+.integration .bigico{font-size:22px}
+.integration b{display:block;font-size:11px;margin-top:8px}
+.integration .small{color:var(--muted);margin-top:4px}
+
+/* ── Modals ── */
+.modalback, .modal-overlay{
+  position:fixed;inset:0;background:#080d1b88;z-index:60;
+  display:none;align-items:center;justify-content:center;padding:18px;
+}
+.modalback.show, .modal-overlay.active{display:flex}
+.modal{
+  width:min(560px,100%);max-height:90vh;overflow:auto;
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:18px;padding:20px;box-shadow:0 25px 80px #0004;
+}
+.modal.large{width:min(640px,100%)}
+.modalhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+.modalhead h3{margin:0;font-size:15px}
+.modal h2{font-size:15px;margin:0 0 15px;display:flex;align-items:center;gap:10px}
+.modal-icon{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;color:#fff;flex-shrink:0}
+.close{border:0;background:var(--panel2);color:var(--text);border-radius:8px;width:30px;height:30px;cursor:pointer}
+
+/* ── Toasts ── */
+.toast{
+  position:fixed;right:22px;bottom:22px;z-index:90;
+  background:#1d2940;color:#fff;padding:12px 16px;border-radius:11px;
+  box-shadow:var(--shadow);font-size:11px;
+  opacity:0;transform:translateY(10px);transition:.25s;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateY(0)}
+#toastContainer{
+  position:fixed;top:16px;right:16px;z-index:9999;
+  display:flex;flex-direction:column;gap:8px;pointer-events:none;
+}
+#toastContainer .toast{
+  position:relative;right:auto;bottom:auto;opacity:1;transform:none;
+  pointer-events:auto;
+}
+#toastContainer .toast.error{background:#7a1f36}
+#toastContainer .toast.success{background:#0e5a44}
+#toastContainer .toast.warning{background:#7a5320}
+
+/* ── Mobile overlay ── */
+.mobile-overlay{display:none}
+.mobile-overlay.show{display:block;position:fixed;inset:0;background:#0006;z-index:19}
 
 /* ── Login gate ── */
 .login-gate{
@@ -200,103 +392,33 @@ tr:last-child td{border-bottom:0}
   border:1px solid #ffffff22;border-radius:24px;
   background:#fffffff2;color:#182039;
   box-shadow:0 30px 100px #0007;
-  animation:riseIn .5s ease;
 }
-@keyframes riseIn{from{opacity:0;transform:translateY(13px)}to{opacity:1;transform:translateY(0)}}
 .login-brand{display:flex;align-items:center;gap:12px;margin-bottom:24px}
 .login-mark{
   width:45px;height:45px;border-radius:15px;
   background:linear-gradient(135deg,#6558f5,#e45fa8,#20c8d8);
   display:grid;place-items:center;color:#fff;font-weight:900;font-size:21px;
+  overflow:hidden;
 }
+.login-mark img{width:100%;height:100%;object-fit:cover;border-radius:15px}
 .login-card h1{font-size:25px;margin:0 0 5px}
 .login-card p{font-size:12px;color:#69728b}
 .login-card label{display:block;font-size:11px;font-weight:800;margin:18px 0 6px}
-.login-card input{width:100%;padding:13px;border:1px solid #dce0eb;border-radius:11px;background:#f8f9fd;color:#182039;outline:none}
+.login-card input{
+  width:100%;padding:13px;border:1px solid #dce0eb;
+  border-radius:11px;background:#f8f9fd;color:#182039;outline:none;
+}
 .login-card input:focus{border-color:#6558f5;box-shadow:0 0 0 3px #6558f51c}
-.login-card button{width:100%;padding:13px;margin-top:14px;border:0;border-radius:11px;color:white;font-weight:800;background:linear-gradient(110deg,#6558f5,#b34de4,#e45fa8)}
+.login-card button{
+  width:100%;padding:13px;margin-top:14px;border:0;
+  border-radius:11px;color:#fff;font-weight:800;
+  background:linear-gradient(110deg,#6558f5,#b34de4,#e45fa8);
+}
 .login-error{color:#c83e5c;font-size:11px;min-height:17px;margin-top:8px}
 .login-note{font-size:10px;color:#7d8497;margin-top:16px;line-height:1.5}
 
-/* ── Modal (Orbit) ── */
-.modalback{position:fixed;inset:0;background:#080d1b88;z-index:60;display:none;align-items:center;justify-content:center;padding:18px}
-.modalback.show{display:flex}
-.modal{width:min(560px,100%);max-height:90vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 25px 80px #0004}
-
-@media(max-width:760px){
-  .modalback{align-items:flex-end;padding:0}
-  .modal{width:100%;max-height:92vh;border-radius:20px 20px 0 0;padding:18px 16px calc(20px + env(safe-area-inset-bottom,0px))}
-  .modalhead h3{font-size:15px}
-}
-.modalhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
-.modalhead h3{margin:0;font-size:15px}
-.close{border:0;background:var(--panel2);color:var(--text);border-radius:8px;width:30px;height:30px}
-
-/* ── Form fields (Orbit) ── */
-.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.field{display:grid;gap:5px;margin-bottom:12px}
-.field label{font-size:10px;font-weight:750;color:var(--muted)}
-.field input,.field select,.field textarea{
-  width:100%;border:1px solid var(--line);background:var(--panel2);
-  border-radius:9px;padding:10px;color:var(--text);outline:none;font-size:11px;
-}
-.field textarea{min-height:90px;resize:vertical}
-.field.full{grid-column:1/-1}
-
-/* ── Toast ── */
-.toast{
-  position:fixed;right:22px;bottom:22px;z-index:90;
-  background:#1d2940;color:white;padding:12px 16px;border-radius:11px;
-  box-shadow:var(--shadow);font-size:11px;
-  opacity:0;transform:translateY(10px);transition:.25s;pointer-events:none;
-}
-.toast.show{opacity:1;transform:translateY(0)}
-
-/* ── Overlay ── */
-.mobile-overlay{display:none}
-.mobile-overlay.show{display:block;position:fixed;inset:0;background:#0006;z-index:19}
-
-/* ── Analytics dashboard area ── */
-#campaignAnalyticsDashboard .chart-box,
-#campaignAnalyticsDashboard .kpi-grid{
-  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-  padding:17px;box-shadow:var(--shadow);margin-bottom:15px;
-}
-#campaignAnalyticsDashboard .kpi-grid{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-  gap:14px;background:transparent;border:0;box-shadow:none;padding:0;
-}
-#campaignAnalyticsDashboard .stat-card{
-  background:var(--panel);border:1px solid var(--line);
-  border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);
-}
-#campaignAnalyticsDashboard .stat-card .number{font-size:26px;font-weight:800;letter-spacing:-1px}
-#campaignAnalyticsDashboard .stat-card .label{font-size:11px;color:var(--muted)}
-#campaignAnalyticsDashboard .chart-box h4{font-size:13px;margin:0 0 12px}
-#campaignAnalyticsDashboard .table-wrapper{
-  background:var(--panel);border:1px solid var(--line);
-  border-radius:var(--radius);overflow:auto;margin-bottom:15px;
-}
-#campaignAnalyticsDashboard th{
-  text-align:left;color:var(--muted);font-size:9px;text-transform:uppercase;
-  letter-spacing:.8px;padding:10px;border-bottom:1px solid var(--line);
-}
-#campaignAnalyticsDashboard td{
-  padding:12px 10px;border-bottom:1px solid var(--line);font-size:11px;
-}
-
-/* ── Trend radar, draft library, prompt library ── */
-#campaignTrendRadar .chart-box,
-#campaignDraftLibrary .chart-box,
-#campaignPromptLibrary .chart-box{
-  background:var(--panel);border:1px solid var(--line);
-  border-radius:var(--radius);padding:17px;box-shadow:var(--shadow);
-}
-#campaignTrendRadar h4,
-#campaignDraftLibrary h4,
-#campaignPromptLibrary h4{
-  font-size:13px;margin:0 0 12px;
-}
+/* ── Mobile bottom nav ── */
+.mobile-nav{display:none}
 
 /* ── Responsive ── */
 @media(max-width:1100px){
@@ -304,149 +426,68 @@ tr:last-child td{border-bottom:0}
   .main{margin-left:225px}
   .kpis{grid-template-columns:repeat(2,1fr)}
   .two{grid-template-columns:1fr}
-  .accounts-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+  .agentgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:760px){
   .sidebar{transform:translateX(-100%);width:270px}
   .sidebar.open{transform:translateX(0)}
   .main{margin-left:0}
-  .hamb{display:inline-block}
+  .hamb{display:inline-grid;place-items:center}
   .topbar{padding:0 14px;height:62px}
-  .content{padding:20px 14px 40px}
-  .search{width:150px}
+  .content{padding:20px 14px 100px}
+  .search{display:none}
   .crumb{display:none}
   .pagehead{display:block}
   .pagehead .actions{margin-top:13px}
   .kpis{gap:9px}
-  .card{padding:13px}
+  .card{padding:14px}
   .kpi-value{font-size:22px}
-  .three{grid-template-columns:1fr}
-  .formgrid{grid-template-columns:1fr}
+  .three,.agentgrid{grid-template-columns:1fr}
+  .formgrid,.form-row{grid-template-columns:1fr}
   .field.full{grid-column:auto}
-  .tablewrap{margin-right:-5px}
-  .chart{height:175px}
-  .orbit-hero{min-height:210px;padding:19px;background-position:60% center}
-  .orbit-hero:after{right:-100px}
-  .orbit-hero h2{max-width:290px}
-  .accounts-grid{grid-template-columns:1fr 1fr}
-}
-@media(max-width:420px){
-  .accounts-grid{grid-template-columns:1fr}
-  .kpi-value{font-size:23px}
-  .orbit-hero{min-height:230px}
-  .top-actions #helpBtn{display:none}
+  .inbox{grid-template-columns:1fr}
+  .profilepane{display:none}
+  .login-card{padding:24px}
+
+  .mobile-nav{
+    display:grid;grid-template-columns:repeat(5,1fr);
+    position:fixed;z-index:30;bottom:0;left:0;right:0;
+    padding:8px 5px calc(8px + env(safe-area-inset-bottom));
+    background:color-mix(in srgb,var(--panel) 93%,transparent);
+    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    border-top:1px solid var(--line);
+    box-shadow:0 -8px 30px rgba(0,0,0,.06);
+  }
+  [data-theme="dark"] .mobile-nav{box-shadow:0 -8px 30px rgba(0,0,0,.4)}
+  .mobile-nav button{
+    border:0;background:transparent;color:var(--muted);
+    font-size:9.5px;font-weight:700;display:grid;justify-items:center;gap:3px;
+    padding:6px 0;cursor:pointer;border-radius:10px;
+  }
+  .mobile-nav button i{font-size:19px;line-height:1}
+  .mobile-nav button.active{color:var(--accent)}
+  .mobile-nav button.active::before{
+    content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:22px;height:3px;border-radius:0 0 3px 3px;background:var(--accent);
+  }
+  .mobile-nav button{position:relative}
+  .mnav-label{line-height:1}
 }
 @media(prefers-reduced-motion:reduce){
   *,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
 }
-
-/* ═══════════════════════════════════════════════════════════════
-   MOBILE APP MODE — bottom navigation
-   ═══════════════════════════════════════════════════════════════ */
-.mobile-nav{display:none}
-
-@media(max-width:760px){
-  .main{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
-  .content{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
-
-  .mobile-nav{
-    display:grid;
-    grid-template-columns:repeat(5,1fr);
-    position:fixed;
-    bottom:0;left:0;right:0;
-    height:calc(64px + env(safe-area-inset-bottom,0px));
-    padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));
-    background:color-mix(in srgb,var(--panel) 96%,transparent);
-    backdrop-filter:blur(20px) saturate(160%);
-    -webkit-backdrop-filter:blur(20px) saturate(160%);
-    border-top:1px solid var(--line);
-    box-shadow:0 -8px 24px rgba(15,23,42,.08);
-    z-index:30;
-  }
-  [data-theme=dark] .mobile-nav{
-    box-shadow:0 -8px 24px rgba(0,0,0,.35);
-  }
-
-  .mobile-nav button{
-    display:grid;
-    justify-items:center;
-    align-items:center;
-    gap:2px;
-    border:0;
-    background:transparent;
-    color:var(--muted);
-    font-family:inherit;
-    font-size:9.5px;
-    font-weight:700;
-    letter-spacing:.1px;
-    padding:6px 0;
-    border-radius:12px;
-    cursor:pointer;
-    transition:color .18s ease,background .18s ease;
-    position:relative;
-  }
-  .mobile-nav button i{
-    font-size:19px;
-    line-height:1;
-    transition:transform .22s ease;
-  }
-  .mobile-nav button span.mnav-label{
-    line-height:1;
-  }
-  .mobile-nav button:active{
-    background:var(--panel2);
-  }
-  .mobile-nav button.active{
-    color:var(--accent);
-  }
-  .mobile-nav button.active i{
-    transform:translateY(-1px);
-  }
-  .mobile-nav button.active::before{
-    content:"";
-    position:absolute;
-    top:0;
-    left:50%;
-    transform:translateX(-50%);
-    width:22px;
-    height:3px;
-    border-radius:0 0 3px 3px;
-    background:var(--accent);
-  }
-  .mobile-nav button .mnav-badge{
-    position:absolute;
-    top:3px;
-    right:calc(50% - 22px);
-    min-width:15px;
-    height:15px;
-    padding:0 4px;
-    border-radius:20px;
-    background:var(--bad);
-    color:#fff;
-    font-size:9px;
-    font-weight:800;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    line-height:1;
-    border:2px solid var(--panel);
-  }
-
-  .top-actions .search{display:none}
-  .topbar .hamb{display:none}
-}
 </style>
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
-<!-- ═══════════════ ACCESS GATE ═══════════════ -->
+<!-- ═══════════════ LOGIN GATE ═══════════════ -->
 <div class="login-gate" id="loginGate">
   <div class="login-card">
     <div class="login-brand">
-      <div class="login-mark">O</div>
+      <div class="login-mark">
+        <img src="/viora.png" alt="VIORA"
+             onerror="this.style.display='none';this.parentNode.textContent='O';" />
+      </div>
       <div>
         <strong style="font-size:18px">VIORA</strong>
         <div style="font-size:9px;letter-spacing:1.5px;color:#7b8196;font-weight:800">CAMPAIGNS MODULE</div>
@@ -471,198 +512,223 @@ tr:last-child td{border-bottom:0}
 
 <!-- ═══════════════ APP SHELL ═══════════════ -->
 <div class="app" id="orbitApp" style="display:none">
+  <aside class="sidebar" id="sidebar">
+    <!-- populated by orbit-shell.js -->
+  </aside>
+
+  <div class="mobile-overlay" id="overlay"></div>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="top-left">
+        <button class="iconbtn hamb" id="hamb" title="Menu">☰</button>
+        <div class="crumb">Orbit / <b id="crumb">Overview</b></div>
+      </div>
+      <div class="top-actions">
+        <div class="search"><span>⌕</span><input id="globalSearch" placeholder="Search modules…"></div>
+        <button class="iconbtn" id="themeBtn" title="Toggle theme">◐</button>
+        <button class="iconbtn" id="helpBtn" title="Help">?</button>
+        <button class="iconbtn" id="notifBtn" title="Notifications">♧<i class="dot"></i></button>
+        <button class="userpic" id="logoutBtn" title="Sign out">JD</button>
+      </div>
+    </header>
+
+    <section class="content" id="view"></section>
+  </main>
+</div>
 
 <!-- ═══════════════ MOBILE BOTTOM NAV ═══════════════ -->
-<nav class="mobile-nav" id="mobileNav" aria-label="Campaigns mobile navigation">
-  <button data-mnav="campaigns" class="active" type="button">
-    <i class="fa-solid fa-bullhorn"></i>
-    <span class="mnav-label">Campaigns</span>
+<nav class="mobile-nav" id="mobileNav" aria-label="Orbit mobile navigation">
+  <button data-mnav="overview" class="active" type="button">
+    <i class="fa-solid fa-house"></i><span class="mnav-label">Home</span>
   </button>
-  <button data-mnav="analytics" type="button">
-    <i class="fa-solid fa-chart-line"></i>
-    <span class="mnav-label">Analytics</span>
+  <button data-mnav="content" type="button">
+    <i class="fa-solid fa-wand-magic-sparkles"></i><span class="mnav-label">Create</span>
   </button>
-  <button data-mnav="new" type="button">
-    <i class="fa-solid fa-circle-plus"></i>
-    <span class="mnav-label">New</span>
+  <button data-mnav="calendar" type="button">
+    <i class="fa-solid fa-calendar"></i><span class="mnav-label">Calendar</span>
   </button>
-  <button data-mnav="refresh" type="button">
-    <i class="fa-solid fa-rotate"></i>
-    <span class="mnav-label">Refresh</span>
+  <button data-mnav="inbox" type="button">
+    <i class="fa-solid fa-inbox"></i><span class="mnav-label">Inbox</span>
   </button>
-  <button data-mnav="more" type="button">
-    <i class="fa-solid fa-bars"></i>
-    <span class="mnav-label">More</span>
+  <button data-mnav="agents" type="button">
+    <i class="fa-solid fa-robot"></i><span class="mnav-label">Agents</span>
   </button>
 </nav>
 
-<!-- ═══════════════ TOAST ═══════════════ -->
+<!-- ═══════════════ TOASTS ═══════════════ -->
 <div class="toast" id="toast"></div>
-<div id="toastContainer" style="position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;"></div>
+<div id="toastContainer"></div>
 
 <!-- ═══════════════ CAMPAIGN EDITOR MODAL ═══════════════ -->
-<div class="modalback" id="campaignEditorModal">
-  <div class="modal">
+<div class="modal-overlay" id="campaignEditorModal">
+  <div class="modal large">
     <div class="modalhead">
       <h3 id="campEditorTitle">New campaign</h3>
-      <button class="close" id="campEditorClose">×</button>
+      <button class="close" id="campEditorClose" type="button">×</button>
     </div>
-    <div id="campEditorBody">
-      <form id="campaignEditorForm">
-        <input type="hidden" id="campEditId">
+    <form id="campaignEditorForm" novalidate>
+      <input type="hidden" id="campEditId">
+
+      <div class="field">
+        <label>Campaign name *</label>
+        <input id="campName" required maxlength="120" placeholder="e.g. Autumn product launch">
+      </div>
+
+      <div class="formgrid">
         <div class="field">
-          <label>Campaign name *</label>
-          <input id="campName" required maxlength="120" placeholder="e.g. Autumn product launch">
-        </div>
-        <div class="formgrid">
-          <div class="field">
-            <label>Status</label>
-            <select id="campStatus">
-              <option value="Planned">Planned</option>
-              <option value="Active">Active</option>
-              <option value="Paused">Paused</option>
-              <option value="Completed">Completed</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Channel</label>
-            <select id="campChannel">
-              <option value="meta">Meta (Facebook/Instagram)</option>
-              <option value="tiktok">TikTok</option>
-              <option value="youtube">YouTube</option>
-              <option value="google">Google Ads</option>
-              <option value="linkedin">LinkedIn</option>
-              <option value="x">X / Twitter</option>
-              <option value="threads">Threads</option>
-              <option value="pinterest">Pinterest</option>
-              <option value="whatsapp">WhatsApp Business</option>
-              <option value="gbp">Google Business Profile</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Budget (KES)</label>
-            <input id="campBudget" type="number" min="0" step="100" value="0">
-          </div>
-          <div class="field">
-            <label>Spent (KES)</label>
-            <input id="campSpend" type="number" min="0" step="100" value="0">
-          </div>
-          <div class="field">
-            <label>Start date</label>
-            <input id="campStart" type="date">
-          </div>
-          <div class="field">
-            <label>End date</label>
-            <input id="campEnd" type="date">
-          </div>
-        </div>
-        <div class="field">
-          <label>Objective</label>
-          <select id="campObjective">
-            <option value="">— Select —</option>
-            <option value="awareness">Brand awareness</option>
-            <option value="engagement">Engagement</option>
-            <option value="leads">Lead generation</option>
-            <option value="sales">Sales / conversions</option>
-            <option value="retention">Customer retention</option>
-            <option value="launch">Product launch</option>
+          <label>Status</label>
+          <select id="campStatus">
+            <option value="Planned">Planned</option>
+            <option value="Active">Active</option>
+            <option value="Paused">Paused</option>
+            <option value="Completed">Completed</option>
           </select>
         </div>
         <div class="field">
-          <label>Target audience</label>
-          <input id="campAudience" maxlength="180" placeholder="e.g. Kenyan SMEs, 25–45">
+          <label>Channel</label>
+          <select id="campChannel">
+            <option value="meta">Meta (Facebook/Instagram)</option>
+            <option value="tiktok">TikTok</option>
+            <option value="youtube">YouTube</option>
+            <option value="google">Google Ads</option>
+            <option value="linkedin">LinkedIn</option>
+            <option value="x">X / Twitter</option>
+            <option value="threads">Threads</option>
+            <option value="pinterest">Pinterest</option>
+            <option value="whatsapp">WhatsApp Business</option>
+            <option value="gbp">Google Business Profile</option>
+            <option value="other">Other</option>
+          </select>
         </div>
         <div class="field">
-          <label>Notes</label>
-          <textarea id="campNotes" placeholder="Strategy, brief, budget breakdown…" maxlength="1000"></textarea>
+          <label>Budget (KES)</label>
+          <input id="campBudget" type="number" min="0" step="100" value="0">
         </div>
+        <div class="field">
+          <label>Spent (KES)</label>
+          <input id="campSpend" type="number" min="0" step="100" value="0">
+        </div>
+        <div class="field">
+          <label>Start date</label>
+          <input id="campStart" type="date">
+        </div>
+        <div class="field">
+          <label>End date</label>
+          <input id="campEnd" type="date">
+        </div>
+      </div>
 
-        <div style="margin-top:16px;padding:12px;background:var(--panel2);border-radius:10px;border:1px solid var(--line)">
-          <strong style="font-size:11px;text-transform:uppercase;letter-spacing:.5px">Live media (for stats)</strong>
-          <p style="font-size:10px;color:var(--muted);margin:4px 0 10px">Attach a YouTube or TikTok URL. Stats refresh every 3 minutes.</p>
-          <div class="formgrid">
-            <div class="field">
-              <label>Media type</label>
-              <select id="campMediaType">
-                <option value="none">None</option>
-                <option value="youtube">YouTube</option>
-                <option value="tiktok">TikTok</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Media URL</label>
-              <input id="campMediaUrl" type="url" placeholder="https://..." disabled>
-            </div>
+      <div class="field">
+        <label>Objective</label>
+        <select id="campObjective">
+          <option value="">— Select —</option>
+          <option value="awareness">Brand awareness</option>
+          <option value="engagement">Engagement</option>
+          <option value="leads">Lead generation</option>
+          <option value="sales">Sales / conversions</option>
+          <option value="retention">Customer retention</option>
+          <option value="launch">Product launch</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Target audience</label>
+        <input id="campAudience" maxlength="180" placeholder="e.g. Kenyan SMEs, 25–45">
+      </div>
+
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="campNotes" placeholder="Strategy, brief, budget breakdown…" maxlength="1000"></textarea>
+      </div>
+
+      <div style="margin-top:16px;padding:12px;background:var(--panel2);border-radius:10px;border:1px solid var(--line)">
+        <strong style="font-size:11px;text-transform:uppercase;letter-spacing:.5px">Live media (for stats)</strong>
+        <p style="font-size:10px;color:var(--muted);margin:4px 0 10px">Attach a YouTube or TikTok URL. Stats refresh every 3 minutes.</p>
+        <div class="formgrid">
+          <div class="field">
+            <label>Media type</label>
+            <select id="campMediaType">
+              <option value="none">None</option>
+              <option value="youtube">YouTube</option>
+              <option value="tiktok">TikTok</option>
+            </select>
           </div>
-          <div id="campTikTokAuthWrap" style="display:none;margin-top:10px;padding:10px;background:var(--panel);border-radius:8px;font-size:11px">
-            <div id="campTikTokAuthStatus" style="font-size:10px;color:var(--muted)"></div>
-            <button type="button" class="btn" id="campTikTokConnectBtn" style="margin-top:6px">
-              <i class="fa-brands fa-tiktok"></i> Connect TikTok
-            </button>
+          <div class="field">
+            <label>Media URL</label>
+            <input id="campMediaUrl" type="url" placeholder="https://..." disabled>
           </div>
         </div>
-
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px;flex-wrap:wrap">
-          <button type="button" class="btn danger" id="campDeleteBtn" style="display:none;margin-right:auto">Delete</button>
-          <button type="button" class="btn" id="campCancelBtn">Cancel</button>
-          <button type="submit" class="btn primary" id="campSubmitBtn">
-            <span id="campSubmitLabel">Create campaign</span>
+        <div id="campTikTokAuthWrap" style="display:none;margin-top:10px;padding:10px;background:var(--panel);border-radius:8px;font-size:11px">
+          <div id="campTikTokAuthStatus" style="font-size:10px;color:var(--muted)"></div>
+          <button type="button" class="btn" id="campTikTokConnectBtn" style="margin-top:6px">
+            <i class="fa-brands fa-tiktok"></i> Connect TikTok
           </button>
         </div>
-      </form>
-    </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px;flex-wrap:wrap">
+        <button type="button" class="btn danger" id="campDeleteBtn" style="display:none;margin-right:auto">Delete</button>
+        <button type="button" class="btn" id="campCancelBtn">Cancel</button>
+        <button type="submit" class="btn primary" id="campSubmitBtn">
+          <span id="campSubmitLabel">Create campaign</span>
+        </button>
+      </div>
+    </form>
   </div>
 </div>
 
-<!-- ═══════════════ FIREBASE IMPORT MAP + BOOTSTRAP ═══════════════ -->
+<!-- ═══════════════ FIREBASE IMPORTMAP ═══════════════ -->
 <script type="importmap">
 {
   "imports": {
     "firebase/app": "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js",
     "firebase/database": "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js",
     "firebase/auth": "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js",
+    "firebase/storage": "https://www.gstatic.com/firebasejs/12.18.0/firebase-storage.js",
     "firebase/messaging": "https://www.gstatic.com/firebasejs/12.18.0/firebase-messaging.js"
   }
 }
 </script>
 
-<script type="module" src="campaigns-bootstrap.js"></script>
+<!-- ═══════════════ BOOTSTRAP ═══════════════ -->
+<script type="module" src="/campaigns-bootstrap.js"></script>
 
+<!-- ═══════════════ THEME + TOPBAR WIRING ═══════════════ -->
 <script>
 (function () {
-  const $  = (id) => document.getElementById(id);
-  const $$ = (sel) => [...document.querySelectorAll(sel)];
+  const $ = (id) => document.getElementById(id);
 
-  /* Theme toggle — one handler, one storage key */
-  const saved = localStorage.getItem('viora-theme') || 'dark';
-  document.documentElement.dataset.theme = saved;
+  // Theme toggle (same storage key as the app)
+  const savedTheme = localStorage.getItem('viora-theme') || 'light';
+  document.documentElement.dataset.theme = savedTheme;
   $('themeBtn')?.addEventListener('click', () => {
     const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
     document.documentElement.dataset.theme = next;
     localStorage.setItem('viora-theme', next);
-    // Charts need to restyle
     setTimeout(() => {
-      try { window.renderActiveOrbitModule?.(); } catch (_) {}
+      try { window.Orbit?.renderActiveOrbitModule?.(); } catch (_) {}
     }, 60);
   });
 
+  // Help + notifications (simple UX placeholders, no stub — real app owns this)
   $('helpBtn')?.addEventListener('click', () => {
-    alert('Use the sidebar to navigate between modules. Data saves to Firebase.');
+    alert('Use the sidebar to navigate modules. All changes save to Firebase.');
   });
   $('notifBtn')?.addEventListener('click', () => {
-    alert('Notifications are managed on the main VIORA dashboard.');
+    try { window.Orbit?.navigate?.('inbox'); }
+    catch (_) { alert('Inbox not ready yet — try again in a moment.'); }
   });
 
+  // Search → jump to matching module
   $('globalSearch')?.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter') return;
     const q = e.target.value.trim().toLowerCase();
     if (!q) return;
-    const module = window.Orbit?.findModuleByName?.(q);
-    if (module) window.Orbit.navigate(module);
+    const mod = window.Orbit?.findModuleByName?.(q);
+    if (mod) window.Orbit.navigate(mod);
+    else alert('No module matches "' + q + '"');
   });
-
-  /* Logout is owned by campaigns-bootstrap.js */
 })();
 </script>
 </body>
