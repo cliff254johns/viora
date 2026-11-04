@@ -133,7 +133,7 @@ export function engagementRate(stats) {
 export function makePost(draft = {}) {
   const now = new Date().toISOString();
   return {
-    id: 'post-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    id: draft.id || ('post-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)),
     fanoutId: draft.fanoutId || null,
     campaignId: draft.campaignId || '',
     platform: draft.platform || 'tiktok',
