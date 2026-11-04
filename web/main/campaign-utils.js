@@ -34,15 +34,36 @@ export const PLATFORMS = Object.freeze({
                canPost: false, supportsImage: true,  imageSize: '1600x900',  imageAR: '16:9',    maxChars: 280 },
   linkedin:  { label: 'LinkedIn',  icon: 'fa-brands fa-linkedin',  color: '#0a66c2',
                canPost: false, supportsImage: true,  imageSize: '1200x627',  imageAR: '1.91:1',  maxChars: 3000 },
+  threads:   { label: 'Threads',   icon: 'fa-brands fa-threads',   color: '#000000',
+               canPost: false, supportsImage: true,  imageSize: '1080x1080', imageAR: '1:1',     maxChars: 500 },
+  pinterest: { label: 'Pinterest', icon: 'fa-brands fa-pinterest', color: '#e60023',
+               canPost: false, supportsImage: true,  imageSize: '1000x1500', imageAR: '2:3',     maxChars: 500 },
+  whatsapp:  { label: 'WhatsApp',  icon: 'fa-brands fa-whatsapp',  color: '#25d366',
+               canPost: false, supportsImage: true,  imageSize: '1080x1080', imageAR: '1:1',     maxChars: 1000 },
+  gbp:       { label: 'Google Business', icon: 'fa-brands fa-google', color: '#4285f4',
+               canPost: false, supportsImage: true,  imageSize: '1200x900',  imageAR: '4:3',     maxChars: 1500 },
 });
 
+/**
+ * Extract the platform-tailored caption from a worker response.
+ *
+ * The worker can return any of:
+ *   • { text: string, hashtags: string[], variants: { platform: string } }
+ *   • { variants: [ { text, hashtags, variants: {...} } ] }        (bulk mode)
+ *   • { text: string, hashtags: string[] }                          (no variants)
+ *   • An empty / fallback object with `_isFallback: true`
+ *
+ * We prefer a per-platform variant. If none exists we fall back to the
+ * base `text` and log a warning so it's not silent.
+ */
 export function captionForPlatform(workerResponse, platform) {
   if (!workerResponse) return '';
 
+  /* Variant object form (single, non-bulk) */
   const v = workerResponse.variants && workerResponse.variants[platform];
   if (v && typeof v === 'string' && v.trim()) return v.trim();
 
-  /* Bulk responses return an array — grab the first item's text */
+  /* Variant array form (bulk mode) — grab first item's variant */
   if (Array.isArray(workerResponse.variants) && workerResponse.variants[0]) {
     const first = workerResponse.variants[0];
     const fv = first.variants && first.variants[platform];
@@ -50,12 +71,15 @@ export function captionForPlatform(workerResponse, platform) {
     if (first.text) return String(first.text).trim();
   }
 
-  /* Fallback to base caption — always present in the worker response */
+  /* Fallback to base caption */
   const fallback = String(workerResponse.text || '').trim();
   if (fallback) {
+    const keys = workerResponse.variants && !Array.isArray(workerResponse.variants)
+      ? Object.keys(workerResponse.variants)
+      : [];
     console.warn(
-      `[composer] No variant returned for "${platform}" — using base caption. ` +
-      `Worker returned variants: ${JSON.stringify(Object.keys(workerResponse.variants || {}))}`
+      `[captionForPlatform] No variant for "${platform}" — using base caption. ` +
+      `Worker returned variants for: [${keys.join(', ')}]`
     );
   }
   return fallback;
@@ -73,8 +97,12 @@ export function composeUrlFor(platform, caption, hashtags) {
   switch (platform) {
     case 'twitter':   return `https://twitter.com/intent/tweet?text=${text}`;
     case 'linkedin':  return `https://www.linkedin.com/feed/?shareActive=true`;
-    case 'instagram': return `https://www.instagram.com/create/style/`;
+    case 'instagram': return `https://www.instagram.com/create/select/`;
     case 'youtube':   return `https://studio.youtube.com/`;
+    case 'tiktok':    return `https://www.tiktok.com/tiktokstudio/upload`;
+    case 'facebook':  return `https://www.facebook.com/`;
+    case 'threads':   return `https://www.threads.net/`;
+    case 'pinterest': return `https://www.pinterest.com/pin-builder/`;
     default:          return null;
   }
 }
@@ -127,9 +155,9 @@ export function engagementRate(stats) {
 }
 
 /* ── Post schema factory ──
-   A "post" now represents a single platform execution.
-   Multi-platform fanouts should use makeFanoutItem() which wraps
-   N platform-posts under one creative group. */
+   A "post" represents a single platform execution.
+   `draft.id` is now honoured, so callers can update-in-place by
+   passing an existing id (used when re-saving a draft/scheduled post). */
 export function makePost(draft = {}) {
   const now = new Date().toISOString();
   return {
@@ -138,7 +166,7 @@ export function makePost(draft = {}) {
     campaignId: draft.campaignId || '',
     platform: draft.platform || 'tiktok',
     pillar: draft.pillar || 'educational',
-        caption: String(draft.caption || '').slice(0, (PLATFORMS[draft.platform]?.maxChars) || 2200),
+    caption: String(draft.caption || '').slice(0, (PLATFORMS[draft.platform]?.maxChars) || 2200),
     hashtags: Array.isArray(draft.hashtags) ? draft.hashtags.slice(0, 30) : [],
     imageBase64: draft.imageBase64 || null,
     imageMime: draft.imageMime || 'image/png',
@@ -154,22 +182,27 @@ export function makePost(draft = {}) {
     status: draft.status || 'draft',      // draft | scheduled | published | failed | compose-only
     mode: draft.mode || null,             // 'auto' | 'compose-link'
     scheduledFor: draft.scheduledFor || null,
+    scheduledForUtc: draft.scheduledForUtc || null,
     publishedAt: draft.publishedAt || null,
     externalId: draft.externalId || null,
     composeUrl: draft.composeUrl || null,
     lastError: draft.lastError || null,
     stats: draft.stats || null,
     statsUpdatedAt: draft.statsUpdatedAt || null,
+    statsHistory: Array.isArray(draft.statsHistory) ? draft.statsHistory : [],
     accountHandle: draft.accountHandle || null,
-    createdAt: now,
+    createdAt: draft.createdAt || now,
     updatedAt: now,
     createdBy: draft.createdBy || null,
   };
 }
 
-/* Wrap N platform-posts under one creative group */
-export function makeFanoutItem({ campaignId, pillar, brief, posts, createdBy }) {
-  const fanoutId = 'fan-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+/* ── Fanout wrapper ──
+   `fanoutId` is optional. Pass an existing one when re-saving a draft
+   so the whole fanout stays coherent across saves. */
+export function makeFanoutItem({ campaignId, pillar, brief, posts, createdBy, fanoutId: existingFanoutId }) {
+  const fanoutId = existingFanoutId
+    || ('fan-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
   const stamped = posts.map(p => ({ ...p, fanoutId }));
   return {
     id: fanoutId,
@@ -210,12 +243,7 @@ export function utmFromPost(post) {
   };
 }
 
-/* ── Anomaly detection ──
-   Compares a post's engagement rate against the median of all
-   recent posts for the SAME platform.
-   Returns:
-     { type: 'spike' | 'drop' | null, multiple: number, median: number, current: number }
-*/
+/* ── Anomaly detection ── */
 export function detectAnomaly(post, allPosts) {
   if (!post || !post.stats || !Array.isArray(allPosts)) return { type: null };
   const mine = engagementRate(post.stats);
@@ -238,10 +266,7 @@ export function detectAnomaly(post, allPosts) {
   return { type: null, multiple, median, current: mine };
 }
 
-/* ── Best-time-to-post heatmap ──
-   Aggregates engagement by (day-of-week × 3-hour-bucket).
-   Returns a 7×8 array of {sum, count, avg} cells.
-*/
+/* ── Best-time-to-post heatmap ── */
 export function buildTimeHeatmap(allPosts) {
   const grid = [];
   for (let d = 0; d < 7; d++) {
@@ -262,7 +287,7 @@ export function buildTimeHeatmap(allPosts) {
   return grid;
 }
 
-/* ── Aggregate stats for a campaign (used by KPI strip) ── */
+/* ── Aggregate stats for a campaign ── */
 export function summarizeCampaign(campaign) {
   const posts = Array.isArray(campaign && campaign.posts) ? campaign.posts : [];
   const published = posts.filter(p => p && p.status === 'published');
@@ -288,7 +313,7 @@ export function summarizeCampaign(campaign) {
   };
 }
 
-/* ── Best pillar (needs ≥20 published posts to be meaningful) ── */
+/* ── Best pillar ── */
 export function bestPillar(allPosts) {
   if (!Array.isArray(allPosts) || allPosts.length < 20) return null;
   const byPillar = {};
@@ -310,36 +335,12 @@ export function bestPillar(allPosts) {
 
 
 /* ═══════════════════════════════════════════════════════════════
-   POST LIBRARY HELPERS — v1
-   ─────────────────────────────────────────────────────────────
-   Added for the Post Library + Fanout Detail modal.
-
-   Data model reminder:
-     campaign.posts[] is a FLAT array. Each entry is one platform
-     execution. Posts that were created together (via the composer's
-     multi-platform fanout) share a `fanoutId`. Posts created
-     independently have their own `fanoutId` (or null for legacy).
-
-   These helpers let the UI:
-     • Group posts into fanouts
-     • Aggregate stats across a fanout
-     • Slice statsHistory[] into a time window
-     • Combine per-platform history into a single "total" series
+   POST LIBRARY HELPERS
    ═══════════════════════════════════════════════════════════════ */
 
 /**
  * Group a flat posts[] array into fanouts.
- *
- * - Posts with the same `fanoutId` → grouped together.
- * - Posts without `fanoutId` → each becomes its own group of 1
- *   (legacy data, or intentionally single-platform posts).
- * - Posts with a null/empty `fanoutId` are also solo.
- *
- * Within each group, posts are sorted oldest-first so the modal
- * shows them in creation order.
- *
- * @param {Array} posts - campaign.posts[]
- * @returns {Array<Array>} - array of arrays
+ * Posts with the same `fanoutId` are grouped. Others become solo groups.
  */
 export function groupPostsByFanout(posts) {
   if (!Array.isArray(posts) || posts.length === 0) return [];
@@ -367,7 +368,6 @@ export function groupPostsByFanout(posts) {
   }
   groups.push(...soloGroups);
 
-  // Sort groups by most recent post (descending)
   groups.sort((a, b) => {
     const aLast = a[a.length - 1]?.updatedAt || a[a.length - 1]?.createdAt || '';
     const bLast = b[b.length - 1]?.updatedAt || b[b.length - 1]?.createdAt || '';
@@ -379,19 +379,6 @@ export function groupPostsByFanout(posts) {
 
 /**
  * Aggregate stats across all posts in a fanout.
- *
- * @param {Array} posts - posts belonging to one fanout
- * @returns {{
- *   heroPost: object|null,        // first post with an image, for the card thumbnail
- *   totalStats: {views, likes, comments, shares, followers},
- *   perPlatform: {[platform]: {post, stats}},
- *   statusCounts: {published, scheduled, draft, 'compose-only', failed, other},
- *   aggregateStatus: string,      // 'published' if all published, else the "worst" status
- *   platforms: string[],          // ordered: published first, then scheduled, then others
- *   firstCreatedAt: string|null,
- *   lastUpdatedAt: string|null,
- *   overallEngagementRate: number // (total interactions / total views) * 100
- * }}
  */
 export function summarizeFanout(posts) {
   const empty = {
@@ -451,15 +438,13 @@ export function summarizeFanout(posts) {
 
   if (!heroPost) heroPost = posts[0] || null;
 
-  // Aggregate status: 'published' if all posts published, otherwise the "most urgent" status
   let aggregateStatus = 'published';
-  if (statusCounts.failed > 0)             aggregateStatus = 'failed';
+  if (statusCounts.failed > 0)               aggregateStatus = 'failed';
   else if (statusCounts['compose-only'] > 0) aggregateStatus = 'compose-only';
-  else if (statusCounts.scheduled > 0)     aggregateStatus = 'scheduled';
-  else if (statusCounts.draft > 0)         aggregateStatus = 'draft';
-  else if (statusCounts.published === 0)   aggregateStatus = 'draft';
+  else if (statusCounts.scheduled > 0)       aggregateStatus = 'scheduled';
+  else if (statusCounts.draft > 0)           aggregateStatus = 'draft';
+  else if (statusCounts.published === 0)     aggregateStatus = 'draft';
 
-  // Platforms: published first, then scheduled, then draft, then others
   const platformOrder = ['published', 'scheduled', 'draft', 'compose-only', 'failed'];
   const platforms = Object.keys(perPlatform).sort((a, b) => {
     const pa = perPlatform[a].post?.status || 'draft';
@@ -487,10 +472,6 @@ export function summarizeFanout(posts) {
 
 /**
  * Filter a post's statsHistory[] to the last `windowMs` milliseconds.
- *
- * @param {object} post - single post record
- * @param {number} windowMs - e.g. 24*60*60*1000 for 24h
- * @returns {Array<{ts, views, likes, comments, shares}>} - sorted oldest → newest
  */
 export function statsHistoryFor(post, windowMs) {
   if (!post || !Array.isArray(post.statsHistory) || post.statsHistory.length === 0) return [];
@@ -508,25 +489,11 @@ export function statsHistoryFor(post, windowMs) {
 
 /**
  * Combine multiple posts' statsHistory[] into a single total series.
- *
- * Used for the "Combined" view of the "Compare across platforms" chart.
- *
- * Algorithm: bucket every snapshot into minute-level buckets, sum
- * per-metric across platforms for each bucket. Then forward-fill any
- * missing platforms in a bucket using the most recent prior snapshot
- * from that platform — so a post published 2 days after another doesn't
- * cause its views to "disappear" before it existed.
- *
- * @param {Array} posts - posts belonging to one fanout
- * @param {number} windowMs
- * @returns {Array<{ts, views, likes, comments, shares}>}
  */
 export function combineStatsHistory(posts, windowMs) {
   if (!Array.isArray(posts) || posts.length === 0) return [];
 
   const cutoff = Date.now() - (Number(windowMs) || 0);
-
-  // Collect all snapshot timestamps
   const tsSet = new Set();
   const perPostHistories = [];
 
@@ -542,8 +509,6 @@ export function combineStatsHistory(posts, windowMs) {
   if (!tsSet.size) return [];
 
   const tsList = Array.from(tsSet).sort((a, b) => Date.parse(a) - Date.parse(b));
-
-  // For each timestamp, sum the latest-known values from each platform
   const out = [];
   const lastKnown = perPostHistories.map(() => ({ views: 0, likes: 0, comments: 0, shares: 0 }));
 
@@ -580,12 +545,7 @@ export function combineStatsHistory(posts, windowMs) {
 }
 
 /**
- * Engagement rate from a stats object.
- * Returns 0 if views is 0 or stats is null.
- * Rounded to 2 decimal places.
- *
- * @param {object|null} stats
- * @returns {number} - percent, e.g. 8.42
+ * Engagement rate from a stats object, rounded to 2 decimals.
  */
 export function engagementRateFor(stats) {
   if (!stats) return 0;
@@ -599,15 +559,7 @@ export function engagementRateFor(stats) {
 }
 
 /**
- * Normalize a datetime-local value ("2026-11-12T09:00") into an ISO UTC
- * string ("2026-11-12T06:00:00.000Z") based on the browser's timezone.
- *
- * The composer's schedule field is a `datetime-local` input, which emits
- * a timezone-less string. The worker scheduler will need a UTC ISO string
- * to compare against `Date.now()`. This helper does that conversion
- * without assuming any particular timezone.
- *
- * Returns null if the input is empty or unparseable.
+ * Normalize a datetime-local string into UTC ISO.
  */
 export function toUtcIso(localDateTimeStr) {
   if (!localDateTimeStr) return null;
@@ -622,27 +574,10 @@ export function toUtcIso(localDateTimeStr) {
   }
 }
 
-
 /**
  * Read an image File, downscale it via canvas, and re-encode as base64.
  *
- * Used by:
- *   • Creative Studio "Upload image"
- *   • Composer "Upload own image"
- *   • Any future image-upload surface
- *
- * Returns a Promise resolving to:
- *   { b64, mime, width, height, sizeBytes }
- *
- * b64 is the *bare* base64 string (no data: prefix).
- *
- * Rejects with Error if:
- *   • file isn't an image
- *   • file.type is SVG (XSS risk)
- *   • file > 5 MB source
- *   • encoded base64 exceeds MAX_STORED_B64_BYTES
- *
- * The caller is responsible for showing the error to the user.
+ * Returns Promise<{ b64, mime, width, height, sizeBytes }>
  */
 export async function readImageFile(file) {
   const MAX_SOURCE_BYTES = 5 * 1024 * 1024;
@@ -660,7 +595,6 @@ export async function readImageFile(file) {
     throw new Error(`Image too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max 5 MB.`);
   }
 
-  /* Read the raw file */
   const dataUrl = await new Promise((resolve, reject) => {
     const r = new FileReader();
     r.onload = () => resolve(r.result);
@@ -668,7 +602,6 @@ export async function readImageFile(file) {
     r.readAsDataURL(file);
   });
 
-  /* Load into an Image element so we can size it */
   const img = await new Promise((resolve, reject) => {
     const i = new Image();
     i.onload = () => resolve(i);
@@ -676,7 +609,6 @@ export async function readImageFile(file) {
     i.src = dataUrl;
   });
 
-  /* Downscale if needed */
   let { width, height } = img;
   const ratio = Math.min(1, MAX_DIM / Math.max(width, height));
   const targetW = Math.round(width * ratio);
@@ -689,7 +621,6 @@ export async function readImageFile(file) {
   if (!ctx) throw new Error('Canvas unavailable in this browser.');
   ctx.drawImage(img, 0, 0, targetW, targetH);
 
-  /* Pick output format: PNG for transparency-preserving, JPEG otherwise */
   const wantsPng = file.type === 'image/png' || file.type === 'image/webp';
   const outMime = wantsPng ? 'image/png' : 'image/jpeg';
   const quality = wantsPng ? undefined : 0.82;
@@ -708,6 +639,6 @@ export async function readImageFile(file) {
     mime: outMime,
     width: targetW,
     height: targetH,
-    sizeBytes: Math.round((b64.length * 3) / 4),   // approx decoded size
+    sizeBytes: Math.round((b64.length * 3) / 4),
   };
 }
