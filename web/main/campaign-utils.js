@@ -36,14 +36,29 @@ export const PLATFORMS = Object.freeze({
                canPost: false, supportsImage: true,  imageSize: '1200x627',  imageAR: '1.91:1',  maxChars: 3000 },
 });
 
-/* Extract the platform-tailored caption from a worker response.
-   Falls back to the base text if the variant is missing.
-   Worker returns: { text, hashtags, variants: { tiktok, facebook, ... } } */
 export function captionForPlatform(workerResponse, platform) {
   if (!workerResponse) return '';
+
   const v = workerResponse.variants && workerResponse.variants[platform];
   if (v && typeof v === 'string' && v.trim()) return v.trim();
-  return String(workerResponse.text || '').trim();
+
+  /* Bulk responses return an array — grab the first item's text */
+  if (Array.isArray(workerResponse.variants) && workerResponse.variants[0]) {
+    const first = workerResponse.variants[0];
+    const fv = first.variants && first.variants[platform];
+    if (fv && typeof fv === 'string' && fv.trim()) return fv.trim();
+    if (first.text) return String(first.text).trim();
+  }
+
+  /* Fallback to base caption — always present in the worker response */
+  const fallback = String(workerResponse.text || '').trim();
+  if (fallback) {
+    console.warn(
+      `[composer] No variant returned for "${platform}" — using base caption. ` +
+      `Worker returned variants: ${JSON.stringify(Object.keys(workerResponse.variants || {}))}`
+    );
+  }
+  return fallback;
 }
 
 export function platformMeta(key) {
