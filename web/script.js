@@ -2528,33 +2528,36 @@ const CASE_TAGS = ['All', ...new Set(CASE_STUDIES.map(c => c.tag))];
   const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
   if (!mobileNavItems.length) return;
 
-  const homeItem = document.querySelector('[data-mnav="home"]');
-  const modulesItem = document.querySelector('[data-mnav="modules"]');
-  const appsSection = document.getElementById('apps');
+  /* Determine which item should be active based on the current page URL.
+     On the home page → Home. On client.html → Client. On training.html → Training.
+     On market.html → Market. */
+  function setActiveFromURL() {
+    const path = window.location.pathname.toLowerCase();
+    let key = 'home';
+    if (path.includes('client')) key = 'client';
+    else if (path.includes('training')) key = 'training';
+    else if (path.includes('market')) key = 'market';
 
-  function setActive(item) {
-    mobileNavItems.forEach(i => i.classList.remove('active'));
-    if (item) item.classList.add('active');
-  }
-
-  function updateActive() {
-    const y = window.scrollY;
-    const appsTop = appsSection ? appsSection.offsetTop : 9999;
-    if (y < appsTop - 100) {
-      setActive(homeItem);
-    } else {
-      setActive(modulesItem);
-    }
-  }
-
-  window.addEventListener('scroll', updateActive, { passive: true });
-  updateActive();
-
-  mobileNavItems.forEach(item => {
-    item.addEventListener('click', () => {
-      if (item.dataset.mnav === 'home' || item.dataset.mnav === 'modules') {
-        setActive(item);
-      }
+    mobileNavItems.forEach(i => {
+      i.classList.toggle('active', i.dataset.mnav === key);
     });
-  });
+  }
+
+  setActiveFromURL();
+
+  /* When on the home page, highlight Home while scrolling above the apps section;
+     highlight nothing else (portals are separate pages, not in-page anchors). */
+  if (window.location.pathname === '/' || window.location.pathname === '' || window.location.pathname.endsWith('/14.html') || window.location.pathname.endsWith('/index.html')) {
+    const homeItem = document.querySelector('[data-mnav="home"]');
+    const appsSection = document.getElementById('apps');
+
+    window.addEventListener('scroll', () => {
+      const y = window.scrollY;
+      const appsTop = appsSection ? appsSection.offsetTop : 9999;
+      if (y < appsTop - 100) {
+        mobileNavItems.forEach(i => i.classList.remove('active'));
+        if (homeItem) homeItem.classList.add('active');
+      }
+    }, { passive: true });
+  }
 })();
