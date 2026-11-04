@@ -13,12 +13,11 @@ import {
 import {
   getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut
 } from 'firebase/auth';
-
+import { initOrbitShell } from './main/orbit-shell.js';
 /* ── Shared helpers ── */
 import * as H from './main/helpers.js';
 
-/* ── IDB ── */
-import { initIdb, idbOpen, idbSave, idbLoad, idbClear } from './main/idb.js';
+import { initIdb, idbOpen, idbSave, idbLoad, idbClear, queueOfflineMutation } from './main/idb.js';
 
 /* ── Modal utilities ── */
 import {
@@ -374,7 +373,11 @@ document.getElementById('logoutBtn')?.addEventListener('click', async () => {
    ═══════════════════════════════════════════════════════════════ */
 async function initModules() {
   /* IDB — must come first so write-layer's offline queue works */
-  initIdb({ state, toast, setSyncStatus });
+  initIdb({
+    state, toast, setSyncStatus,
+    // Bug fix: wire the real directWrite/directDelete so the queue can flush
+    directWrite, directDelete,
+  });
 
   /* Write layer */
   initWriteLayer({
@@ -382,7 +385,8 @@ async function initModules() {
     state, toast, setSyncStatus,
     logActivity: () => Promise.resolve(),
     EventBus,
-    queueOfflineMutation: async () => {},
+    // Bug fix: wire the real queueOfflineMutation instead of a no-op
+    queueOfflineMutation,
     idbSave,
     vioraConfirm: window.vioraConfirm,
   });
@@ -554,8 +558,22 @@ onAuthStateChanged(auth, async (user) => {
   const initialTab = (hash === 'analytics' || hash === 'campaign-analytics')
     ? 'campaign-analytics'
     : 'marketing-campaigns';
+    /* ── Orbit shell ── */
+  try {
+    initOrbitShell({
+      state, callFn, toast, upsertDoc, deleteDoc,
+      openModal, closeModal,
+      renderCampaigns,
+      renderAccountsPanel,
+      renderTrendRadar,
+      renderDraftLibrary,
+      renderPromptLibrary,
+    });
+    window.__orbitShellReady = true;
+  } catch (e) {
+    console.error('[orbit-shell] init failed', e);
+  }
 
-  setActiveTab(initialTab);
 
   toast('Signed in to Campaigns', 'success');
 });
