@@ -946,16 +946,38 @@ async function _postNow() {
       throw new Error('Worker returned no results');
     }
 
-    _state.fanoutLog = res.results.map(r => ({
-      platform: r.platform,
-      ok: !!r.ok,
-      mode: r.mode || (r.ok ? 'auto' : 'compose-link'),
-      postId: r.postId || r.post_id || null,
-      composeUrl: r.fallbackUrl || null,
-      error: r.error || null,
-      message: r.message || null,
-      ts: new Date().toISOString(),
-    }));
+    /* ── Correctly interpret worker results ──────────────────────────
+       Worker returns one of three shapes per target:
+
+         1. Successfully posted:
+            { ok: true, mode: 'auto', postId, url }
+
+         2. Needs manual paste (Facebook/TikTok/IG fallback):
+            { ok: true, fallback: 'compose-link', fallbackUrl }
+            ── or ──
+            { ok: false, error, fallback: 'compose-link', fallbackUrl }
+
+         3. Failed:
+            { ok: false, error }
+
+       We normalise all three into { ok, mode, postId, composeUrl, error }
+       so the rest of this function (and _renderFanoutLog) can read
+       a single, consistent shape. */
+    _state.fanoutLog = res.results.map(r => {
+      const isComposeOnly = r.fallback === 'compose-link';
+      const trulyPosted   = !!r.ok && (!!r.postId || !!r.post_id) && !isComposeOnly;
+
+      return {
+        platform:   r.platform,
+        ok:         trulyPosted,
+        mode:       trulyPosted ? 'auto' : (isComposeOnly ? 'compose-link' : 'failed'),
+        postId:     r.postId || r.post_id || null,
+        composeUrl: r.fallbackUrl || r.composeUrl || null,
+        error:      r.error || null,
+        message:    r.message || null,
+        ts:         new Date().toISOString(),
+      };
+    });
 
     /* Persist each platform's post with its real status */
     const campaign = (SAFE.state?.data?.campaigns || []).find(x => x.id === c.campaignId);
@@ -977,9 +999,13 @@ async function _postNow() {
           imageSeed: c.heroImageSeed,
           utm: { ...c.utm, source: c.utm.source || r.platform },
           url: buildUtmUrl(c.baseUrl, { ...c.utm, source: c.utm.source || r.platform }),
-          status: r.ok
-            ? (r.mode === 'compose-link' ? 'compose-only' : 'published')
-            : 'failed',
+                 /* ok:true + mode:'auto'     → published (real post)
+             ok:false + mode:'compose' → compose-only (needs paste)
+             ok:false + mode:'failed'  → failed (retry)
+             We never mark a compose-link fallback as 'published'. */
+          status: r.mode === 'auto' ? 'published'
+                : r.mode === 'compose-link' ? 'compose-only'
+                : 'failed',
           mode: r.mode,
           publishedAt: r.ok && r.mode !== 'compose-link' ? new Date().toISOString() : null,
           externalId: r.postId,
@@ -993,7 +1019,7 @@ async function _postNow() {
       try { await SAFE.upsertDoc('campaigns', campaign, campaign._rev); } catch (_) {}
     }
 
-    /* Open compose windows for platforms that require manual posting */
+    
     const composeTargets = _state.fanoutLog.filter(r => r.mode === 'compose-link' && r.composeUrl);
     for (const t of composeTargets) {
       try { window.open(t.composeUrl, '_blank', 'noopener,noreferrer'); } catch (_) {}
@@ -1010,9 +1036,9 @@ async function _postNow() {
 
     _renderFanoutLog();
 
-    const succeeded = _state.fanoutLog.filter(r => r.ok && r.mode !== 'compose-link').length;
+        const succeeded   = _state.fanoutLog.filter(r => r.mode === 'auto').length;
     const composeOnly = _state.fanoutLog.filter(r => r.mode === 'compose-link').length;
-    const failed = _state.fanoutLog.filter(r => !r.ok && r.mode !== 'compose-link').length;
+    const failed      = _state.fanoutLog.filter(r => r.mode === 'failed').length;
 
     const parts = [];
     if (succeeded) parts.push(`${succeeded} posted`);
