@@ -631,9 +631,32 @@ async function _generateText() {
     const callFn = SAFE.callFn;
     if (typeof callFn !== 'function') throw new Error('callFn unavailable');
 
+    /* Retry helper — handles transient 503s from the worker.
+       Two attempts total. If the worker is really down, we fall through
+       to the catch block which shows the "AI unavailable" message. */
+    const callWithRetry = async (fn, args, attempts = 2) => {
+      let lastErr = null;
+      for (let i = 0; i < attempts; i++) {
+        try {
+          return await fn(...args);
+        } catch (err) {
+          lastErr = err;
+          const msg = String(err.message || '');
+          const isTransient =
+            msg.includes('503') ||
+            msg.toLowerCase().includes('unavailable') ||
+            msg.toLowerCase().includes('rate limit');
+          if (!isTransient || i === attempts - 1) throw err;
+          /* Wait 1.5s then retry — enough for a rate limit to reset */
+          await new Promise(r => setTimeout(r, 1500));
+        }
+      }
+      throw lastErr;
+    };
+
     /* Generate for the FIRST platform; worker returns per-platform variants for all */
       /* Send all selected platforms so the worker can tailor variants */
-    const res = await callFn(ENDPOINTS.generatePost, {
+    const res = await callWithRetry(callFn, [ENDPOINTS.generatePost, {
       brief: c.brief,
       platform: c.platforms[0],
       platforms: c.platforms.slice(),
@@ -644,7 +667,7 @@ async function _generateText() {
       count: 1,
       useTrends: c.useTrends,
       trendGeo: c.trendGeo,
-    });
+    }]);
 
     if (!res || !res.ok && !res.text) {
       throw new Error(res?.error || 'Worker returned no content');
