@@ -1,10 +1,11 @@
-// main/Viora Ecosystems-shell.js
+// main/orbit-shell.js
 // ═══════════════════════════════════════════════════════════════
-// Viora Ecosystems shell — 24-module sidebar router for campaign.html
+// Orbit shell — 24-module sidebar router for campaigns.html
 // (Billing removed by request.)
 //
-// Renders the sidebar, wires navigation, hosts every module renderer.
-// Delegates to ./Viora Ecosystems-modules.js for each module's content.
+// Internal file/module names stay "orbit-*" so all other files
+// (campaigns-bootstrap.js, orbit-modules.js, inbox.js, agent-runner.js)
+// keep working unchanged. User-facing labels read "VIORA".
 // ═══════════════════════════════════════════════════════════════
 
 import {
@@ -31,7 +32,7 @@ import {
   renderAdmin,
   renderAccountsModule,
   renderCampaignsModule,
-} from './Viora Ecosystems-modules.js';
+} from './orbit-modules.js';
 
 let _ctx = null;
 let _activeModule = 'overview';
@@ -104,7 +105,7 @@ const RENDERERS = {
   admin: renderAdmin,
 };
 
-export function initViora EcosystemsShell(ctx) {
+export function initOrbitShell(ctx) {
   _ctx = ctx || {};
   _activeModule = 'overview';
   renderSidebar();
@@ -135,10 +136,10 @@ function renderSidebar() {
 
   host.innerHTML = `
     <div class="brand">
-      <div class="logo"><img src="/viora.png"/></div>
-      <div><strong>Viora</strong><small>Social Media Manager</small></div>
+      <div class="logo"><img src="/viora.png" alt="VIORA" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" onerror="this.style.display='none';this.parentNode.textContent='V';" /></div>
+      <div><strong>VIORA</strong><small>Social Media Manager</small></div>
     </div>
-  
+
     ${groupsHtml}
     <div class="sidebar-bottom">
       <div class="planbox">
@@ -194,6 +195,9 @@ export async function navigate(key, opts = {}) {
   _activeModule = key;
   const ctx = C();
 
+  /* Re-render sidebar so workspace/company name stays in sync */
+  try { renderSidebar(); } catch (_) {}
+
   /* Crumb */
   const crumbEl = document.getElementById('crumb');
   if (crumbEl) crumbEl.textContent = mod.label;
@@ -238,7 +242,7 @@ export async function navigate(key, opts = {}) {
         requestAnimationFrame(() => { try { html.mount(view); } catch (e) { console.warn(e); } });
       }
     } catch (e) {
-      console.error('[Viora Ecosystems] render failed:', key, e);
+      console.error('[orbit-shell] render failed:', key, e);
       view.innerHTML = `<div class="card"><div class="cardhead"><h3>${mod.label}</h3></div>
         <div class="empty">Failed to load: ${String(e.message || e)}</div></div>`;
     }
@@ -258,15 +262,15 @@ export function findModuleByName(q) {
   return null;
 }
 
-export function renderActiveViora EcosystemsModule() {
+export function renderActiveOrbitModule() {
   navigate(_activeModule, { skipHash: true });
 }
 
 /* Expose for inline onclick + bootstrap */
-window.Viora Ecosystems = {
+window.Orbit = {
   navigate,
   currentModule,
   findModuleByName,
-  renderActiveViora EcosystemsModule,
+  renderActiveOrbitModule,
   MODULES: MODULE_MAP,
 };
