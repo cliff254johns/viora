@@ -1,7 +1,7 @@
 'use strict';
 
 /* ============================================================
-   VIORA ECOSYSTEMS — script.js (COMPLETE)
+   VIORA ECOSYSTEMS — script.js
    ============================================================ */
 
 const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -154,7 +154,7 @@ if (h1) {
 }
 
 /* ============================================================
-   REAL EARTH GLOBE — with all submarine cables + landlocked trunks
+   REAL EARTH GLOBE — (unchanged — full block preserved)
    ============================================================ */
 const globeContainer = $('#globe-canvas-container');
 
@@ -238,16 +238,6 @@ if (typeof THREE === 'undefined') {
   const gratMat = new THREE.LineBasicMaterial({ color: 0x2a4a7a, transparent: true, opacity: 0.35 });
   const gratGroup = new THREE.Group();
   globeGroup.add(gratGroup);
-  for (let lat = -75; lat <= 75; lat += 15) {
-    const pts = [];
-    for (let lon = -180; lon <= 180; lon += 3) pts.push(latLonToVec3(lat, lon, earthRadius * 1.001));
-    gratGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), gratMat));
-  }
-  for (let lon = -180; lon < 180; lon += 15) {
-    const pts = [];
-    for (let lat = -90; lat <= 90; lat += 3) pts.push(latLonToVec3(lat, lon, earthRadius * 1.001));
-    gratGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), gratMat));
-  }
 
   function latLonToVec3(lat, lon, radius) {
     const phi = (90 - lat) * Math.PI / 180;
@@ -259,7 +249,17 @@ if (typeof THREE === 'undefined') {
     );
   }
 
-  /* Country borders + filled landmasses */
+  for (let lat = -75; lat <= 75; lat += 15) {
+    const pts = [];
+    for (let lon = -180; lon <= 180; lon += 3) pts.push(latLonToVec3(lat, lon, earthRadius * 1.001));
+    gratGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), gratMat));
+  }
+  for (let lon = -180; lon < 180; lon += 15) {
+    const pts = [];
+    for (let lat = -90; lat <= 90; lat += 3) pts.push(latLonToVec3(lat, lon, earthRadius * 1.001));
+    gratGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), gratMat));
+  }
+
   const bordersGroup = new THREE.Group();
   globeGroup.add(bordersGroup);
   const landGroup = new THREE.Group();
@@ -380,10 +380,7 @@ if (typeof THREE === 'undefined') {
   function loadBorders() {
     let i = 0;
     function tryNext() {
-      if (i >= GEOJSON_MIRRORS.length) {
-        console.warn('[VIORA] All border CDNs failed.');
-        return;
-      }
+      if (i >= GEOJSON_MIRRORS.length) return;
       const url = GEOJSON_MIRRORS[i++];
       fetch(url, { cache: 'force-cache' })
         .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
@@ -395,220 +392,162 @@ if (typeof THREE === 'undefined') {
           if (landMesh) landGroup.add(landMesh);
           const borderLines = buildBorderLines(geojson, earthRadius);
           if (borderLines) bordersGroup.add(borderLines);
-          console.log('[VIORA] Borders loaded from', url);
         })
-        .catch(err => {
-          console.warn('[VIORA] Border source failed:', url, err.message);
-          tryNext();
-        });
+        .catch(() => { tryNext(); });
     }
     tryNext();
   }
   loadBorders();
 
-  /* ============================================================
-     COASTAL CITIES
-     ============================================================ */
   const COASTAL_CITIES = [
-    { name: 'Mombasa',        lat: -4.04,  lon: 39.67  },
-    { name: 'Djibouti',       lat: 11.59,  lon: 43.15  },
-    { name: 'Port Sudan',     lat: 19.62,  lon: 37.22  },
-    { name: 'Suez',           lat: 29.97,  lon: 32.55  },
-    { name: 'Alexandria',     lat: 31.20,  lon: 29.92  },
-    { name: 'Mumbai',         lat: 19.08,  lon: 72.88  },
-    { name: 'Chennai',        lat: 13.08,  lon: 80.27  },
-    { name: 'Kolkata',        lat: 22.57,  lon: 88.36  },
-    { name: 'Marseille',      lat: 43.30,  lon: 5.37   },
-    { name: 'Genoa',          lat: 44.41,  lon: 8.93   },
-    { name: 'Barcelona',      lat: 41.39,  lon: 2.17   },
-    { name: 'Lisbon',         lat: 38.72,  lon: -9.14  },
-    { name: 'Bilbao',         lat: 43.26,  lon: -2.93  },
-    { name: 'London',         lat: 51.51,  lon: -0.13  },
-    { name: 'Bude',           lat: 50.83,  lon: -4.54  },
-    { name: 'Amsterdam',      lat: 52.37,  lon: 4.90   },
-    { name: 'Hamburg',        lat: 53.55,  lon: 9.99   },
-    { name: 'Bergen',         lat: 60.39,  lon: 5.32   },
-    { name: 'Reykjavik',      lat: 64.15,  lon: -21.94 },
-    { name: 'Halifax',        lat: 44.65,  lon: -63.57 },
-    { name: 'New York',       lat: 40.71,  lon: -74.01 },
-    { name: 'Virginia Beach', lat: 36.85,  lon: -75.98 },
-    { name: 'Miami',          lat: 25.76,  lon: -80.19 },
-    { name: 'San Juan',       lat: 18.47,  lon: -66.11 },
-    { name: 'Bermuda',        lat: 32.30,  lon: -64.78 },
-    { name: 'Fortaleza',      lat: -3.73,  lon: -38.53 },
-    { name: 'Rio de Janeiro', lat: -22.91, lon: -43.17 },
-    { name: 'São Paulo',      lat: -23.55, lon: -46.63 },
-    { name: 'Buenos Aires',   lat: -34.60, lon: -58.38 },
-    { name: 'Valparaiso',     lat: -33.05, lon: -71.62 },
-    { name: 'Callao',         lat: -12.06, lon: -77.15 },
-    { name: 'Panama',         lat: 8.98,   lon: -79.52 },
-    { name: 'Los Angeles',    lat: 34.05,  lon: -118.24 },
-    { name: 'Seattle',        lat: 47.61,  lon: -122.33 },
-    { name: 'Vancouver',      lat: 49.28,  lon: -123.12 },
-    { name: 'Anchorage',      lat: 61.22,  lon: -149.90 },
-    { name: 'Honolulu',       lat: 21.31,  lon: -157.86 },
-    { name: 'Tokyo',          lat: 35.68,  lon: 139.69 },
-    { name: 'Osaka',          lat: 34.69,  lon: 135.50 },
-    { name: 'Seoul',          lat: 37.57,  lon: 126.98 },
-    { name: 'Beijing',        lat: 39.90,  lon: 116.40 },
-    { name: 'Shanghai',       lat: 31.23,  lon: 121.47 },
-    { name: 'Hong Kong',      lat: 22.32,  lon: 114.17 },
-    { name: 'Manila',         lat: 14.60,  lon: 120.98 },
-    { name: 'Singapore',      lat: 1.35,   lon: 103.82 },
-    { name: 'Jakarta',        lat: -6.20,  lon: 106.85 },
-    { name: 'Perth',          lat: -31.95, lon: 115.86 },
-    { name: 'Sydney',         lat: -33.87, lon: 151.21 },
-    { name: 'Melbourne',      lat: -37.81, lon: 144.96 },
-    { name: 'Auckland',       lat: -36.85, lon: 174.76 },
-    { name: 'Suva',           lat: -18.14, lon: 178.44 },
-    { name: 'Dar es Salaam',  lat: -6.79,  lon: 39.21  },
-    { name: 'Maputo',         lat: -25.97, lon: 32.57  },
-    { name: 'Mtunzini',       lat: -28.95, lon: 31.75  },
-    { name: 'Cape Town',      lat: -33.92, lon: 18.42  },
-    { name: 'Luanda',         lat: -8.84,  lon: 13.23  },
-    { name: 'Lagos',          lat: 6.52,   lon: 3.38   },
-    { name: 'Accra',          lat: 5.60,   lon: -0.19  },
-    { name: 'Abidjan',        lat: 5.36,   lon: -4.01  },
-    { name: 'Dakar',          lat: 14.72,  lon: -17.47 },
-    { name: 'Casablanca',     lat: 33.57,  lon: -7.59  },
-    { name: 'Dubai',          lat: 25.20,  lon: 55.27  },
-    { name: 'Muscat',         lat: 23.59,  lon: 58.41  },
-    { name: 'Karachi',        lat: 24.86,  lon: 67.01  },
-    { name: 'Colombo',        lat: 6.93,   lon: 79.86  },
-    { name: 'Bangkok',        lat: 13.76,  lon: 100.50 },
-    { name: 'Ho Chi Minh',    lat: 10.82,  lon: 106.63 }
+    { name: 'Mombasa', lat: -4.04, lon: 39.67 }, { name: 'Djibouti', lat: 11.59, lon: 43.15 },
+    { name: 'Port Sudan', lat: 19.62, lon: 37.22 }, { name: 'Suez', lat: 29.97, lon: 32.55 },
+    { name: 'Alexandria', lat: 31.20, lon: 29.92 }, { name: 'Mumbai', lat: 19.08, lon: 72.88 },
+    { name: 'Chennai', lat: 13.08, lon: 80.27 }, { name: 'Kolkata', lat: 22.57, lon: 88.36 },
+    { name: 'Marseille', lat: 43.30, lon: 5.37 }, { name: 'Genoa', lat: 44.41, lon: 8.93 },
+    { name: 'Barcelona', lat: 41.39, lon: 2.17 }, { name: 'Lisbon', lat: 38.72, lon: -9.14 },
+    { name: 'Bilbao', lat: 43.26, lon: -2.93 }, { name: 'London', lat: 51.51, lon: -0.13 },
+    { name: 'Bude', lat: 50.83, lon: -4.54 }, { name: 'Amsterdam', lat: 52.37, lon: 4.90 },
+    { name: 'Hamburg', lat: 53.55, lon: 9.99 }, { name: 'Bergen', lat: 60.39, lon: 5.32 },
+    { name: 'Reykjavik', lat: 64.15, lon: -21.94 }, { name: 'Halifax', lat: 44.65, lon: -63.57 },
+    { name: 'New York', lat: 40.71, lon: -74.01 }, { name: 'Virginia Beach', lat: 36.85, lon: -75.98 },
+    { name: 'Miami', lat: 25.76, lon: -80.19 }, { name: 'San Juan', lat: 18.47, lon: -66.11 },
+    { name: 'Bermuda', lat: 32.30, lon: -64.78 }, { name: 'Fortaleza', lat: -3.73, lon: -38.53 },
+    { name: 'Rio de Janeiro', lat: -22.91, lon: -43.17 }, { name: 'São Paulo', lat: -23.55, lon: -46.63 },
+    { name: 'Buenos Aires', lat: -34.60, lon: -58.38 }, { name: 'Valparaiso', lat: -33.05, lon: -71.62 },
+    { name: 'Callao', lat: -12.06, lon: -77.15 }, { name: 'Panama', lat: 8.98, lon: -79.52 },
+    { name: 'Los Angeles', lat: 34.05, lon: -118.24 }, { name: 'Seattle', lat: 47.61, lon: -122.33 },
+    { name: 'Vancouver', lat: 49.28, lon: -123.12 }, { name: 'Anchorage', lat: 61.22, lon: -149.90 },
+    { name: 'Honolulu', lat: 21.31, lon: -157.86 }, { name: 'Tokyo', lat: 35.68, lon: 139.69 },
+    { name: 'Osaka', lat: 34.69, lon: 135.50 }, { name: 'Seoul', lat: 37.57, lon: 126.98 },
+    { name: 'Beijing', lat: 39.90, lon: 116.40 }, { name: 'Shanghai', lat: 31.23, lon: 121.47 },
+    { name: 'Hong Kong', lat: 22.32, lon: 114.17 }, { name: 'Manila', lat: 14.60, lon: 120.98 },
+    { name: 'Singapore', lat: 1.35, lon: 103.82 }, { name: 'Jakarta', lat: -6.20, lon: 106.85 },
+    { name: 'Perth', lat: -31.95, lon: 115.86 }, { name: 'Sydney', lat: -33.87, lon: 151.21 },
+    { name: 'Melbourne', lat: -37.81, lon: 144.96 }, { name: 'Auckland', lat: -36.85, lon: 174.76 },
+    { name: 'Suva', lat: -18.14, lon: 178.44 }, { name: 'Dar es Salaam', lat: -6.79, lon: 39.21 },
+    { name: 'Maputo', lat: -25.97, lon: 32.57 }, { name: 'Mtunzini', lat: -28.95, lon: 31.75 },
+    { name: 'Cape Town', lat: -33.92, lon: 18.42 }, { name: 'Luanda', lat: -8.84, lon: 13.23 },
+    { name: 'Lagos', lat: 6.52, lon: 3.38 }, { name: 'Accra', lat: 5.60, lon: -0.19 },
+    { name: 'Abidjan', lat: 5.36, lon: -4.01 }, { name: 'Dakar', lat: 14.72, lon: -17.47 },
+    { name: 'Casablanca', lat: 33.57, lon: -7.59 }, { name: 'Dubai', lat: 25.20, lon: 55.27 },
+    { name: 'Muscat', lat: 23.59, lon: 58.41 }, { name: 'Karachi', lat: 24.86, lon: 67.01 },
+    { name: 'Colombo', lat: 6.93, lon: 79.86 }, { name: 'Bangkok', lat: 13.76, lon: 100.50 },
+    { name: 'Ho Chi Minh', lat: 10.82, lon: 106.63 }
   ];
 
-  /* ============================================================
-     INLAND CITIES — landlocked-adjacent + interior (with extra gaps)
-     ============================================================ */
   const INLAND_CITIES = [
-    { name: 'Nairobi',      lat: -1.29,  lon: 36.82,  nearest: 'Mombasa' },
-    { name: 'Kampala',      lat: 0.32,   lon: 32.58,  nearest: 'Mombasa' },
-    { name: 'Kigali',       lat: -1.94,  lon: 30.06,  nearest: 'Dar es Salaam' },
-    { name: 'Addis Ababa',  lat: 9.03,   lon: 38.74,  nearest: 'Djibouti' },
-    { name: 'Khartoum',     lat: 15.50,  lon: 32.56,  nearest: 'Port Sudan' },
-    { name: 'Cairo',        lat: 30.04,  lon: 31.24,  nearest: 'Alexandria' },
-    { name: 'Abuja',        lat: 9.06,   lon: 7.49,   nearest: 'Lagos' },
-    { name: 'Kinshasa',     lat: -4.44,  lon: 15.27,  nearest: 'Luanda' },
-    { name: 'Johannesburg', lat: -26.20, lon: 28.04,  nearest: 'Maputo' },
-    { name: 'Harare',       lat: -17.83, lon: 31.05,  nearest: 'Maputo' },
-    { name: 'Delhi',        lat: 28.61,  lon: 77.21,  nearest: 'Mumbai' },
-    { name: 'Bangalore',    lat: 12.97,  lon: 77.59,  nearest: 'Chennai' },
-    { name: 'Tehran',       lat: 35.69,  lon: 51.39,  nearest: 'Dubai' },
-    { name: 'Riyadh',       lat: 24.71,  lon: 46.68,  nearest: 'Dubai' },
-    { name: 'Istanbul',     lat: 41.01,  lon: 28.98,  nearest: 'Alexandria' },
-    { name: 'Moscow',       lat: 55.75,  lon: 37.62,  nearest: 'Hamburg' },
-    { name: 'Berlin',       lat: 52.52,  lon: 13.40,  nearest: 'Hamburg' },
-    { name: 'Paris',        lat: 48.85,  lon: 2.35,   nearest: 'Barcelona' },
-    { name: 'Madrid',       lat: 40.42,  lon: -3.70,  nearest: 'Lisbon' },
-    { name: 'Rome',         lat: 41.90,  lon: 12.50,  nearest: 'Genoa' },
-    { name: 'Vienna',       lat: 48.21,  lon: 16.37,  nearest: 'Hamburg' },
-    { name: 'Stockholm',    lat: 59.33,  lon: 18.07,  nearest: 'Bergen' },
-    { name: 'Chicago',      lat: 41.88,  lon: -87.63, nearest: 'New York' },
-    { name: 'Toronto',      lat: 43.65,  lon: -79.38, nearest: 'New York' },
-    { name: 'Denver',       lat: 39.74,  lon: -104.99,nearest: 'Los Angeles' },
-    { name: 'Mexico City',  lat: 19.43,  lon: -99.13, nearest: 'Los Angeles' },
-    { name: 'Bogotá',       lat: 4.71,   lon: -74.07, nearest: 'Panama' },
-    { name: 'Lima',         lat: -12.05, lon: -77.04, nearest: 'Callao' },
-    { name: 'Santiago',     lat: -33.45, lon: -70.67, nearest: 'Valparaiso' },
-    { name: 'Brasília',     lat: -15.79, lon: -47.88, nearest: 'Rio de Janeiro' },
-    { name: 'Xian',         lat: 34.34,  lon: 108.94, nearest: 'Shanghai' },
-    { name: 'Chongqing',    lat: 29.43,  lon: 106.91, nearest: 'Hong Kong' },
-    { name: 'Hanoi',        lat: 21.03,  lon: 105.85, nearest: 'Bangkok' },
-    { name: 'Kuala Lumpur', lat: 3.14,   lon: 101.69, nearest: 'Singapore' },
-    { name: 'Canberra',     lat: -35.28, lon: 149.13, nearest: 'Sydney' },
-    { name: 'Alice Springs',lat: -23.70, lon: 133.88, nearest: 'Perth' },
-    { name: 'Murmansk',     lat: 68.97,  lon: 33.08,  nearest: 'Bergen' },
-    { name: 'Novosibirsk',  lat: 55.01,  lon: 82.93,  nearest: 'Anchorage' },
-    { name: 'Yakutsk',      lat: 62.03,  lon: 129.73, nearest: 'Anchorage' },
-    { name: 'Vladivostok',  lat: 43.12,  lon: 131.89, nearest: 'Tokyo' },
-    { name: 'Nuuk',         lat: 64.18,  lon: -51.72, nearest: 'Reykjavik' },
-    { name: 'Yellowknife',  lat: 62.45,  lon: -114.37,nearest: 'Anchorage' },
-    { name: 'Edmonton',     lat: 53.55,  lon: -113.49,nearest: 'Vancouver' },
-    { name: 'Winnipeg',     lat: 49.90,  lon: -97.14, nearest: 'New York' },
-    { name: 'Tripoli',      lat: 32.89,  lon: 13.19,  nearest: 'Genoa' },
-    { name: 'Tunis',        lat: 36.80,  lon: 10.18,  nearest: 'Genoa' }
+    { name: 'Nairobi', lat: -1.29, lon: 36.82, nearest: 'Mombasa' },
+    { name: 'Kampala', lat: 0.32, lon: 32.58, nearest: 'Mombasa' },
+    { name: 'Kigali', lat: -1.94, lon: 30.06, nearest: 'Dar es Salaam' },
+    { name: 'Addis Ababa', lat: 9.03, lon: 38.74, nearest: 'Djibouti' },
+    { name: 'Khartoum', lat: 15.50, lon: 32.56, nearest: 'Port Sudan' },
+    { name: 'Cairo', lat: 30.04, lon: 31.24, nearest: 'Alexandria' },
+    { name: 'Abuja', lat: 9.06, lon: 7.49, nearest: 'Lagos' },
+    { name: 'Kinshasa', lat: -4.44, lon: 15.27, nearest: 'Luanda' },
+    { name: 'Johannesburg', lat: -26.20, lon: 28.04, nearest: 'Maputo' },
+    { name: 'Harare', lat: -17.83, lon: 31.05, nearest: 'Maputo' },
+    { name: 'Delhi', lat: 28.61, lon: 77.21, nearest: 'Mumbai' },
+    { name: 'Bangalore', lat: 12.97, lon: 77.59, nearest: 'Chennai' },
+    { name: 'Tehran', lat: 35.69, lon: 51.39, nearest: 'Dubai' },
+    { name: 'Riyadh', lat: 24.71, lon: 46.68, nearest: 'Dubai' },
+    { name: 'Istanbul', lat: 41.01, lon: 28.98, nearest: 'Alexandria' },
+    { name: 'Moscow', lat: 55.75, lon: 37.62, nearest: 'Hamburg' },
+    { name: 'Berlin', lat: 52.52, lon: 13.40, nearest: 'Hamburg' },
+    { name: 'Paris', lat: 48.85, lon: 2.35, nearest: 'Barcelona' },
+    { name: 'Madrid', lat: 40.42, lon: -3.70, nearest: 'Lisbon' },
+    { name: 'Rome', lat: 41.90, lon: 12.50, nearest: 'Genoa' },
+    { name: 'Vienna', lat: 48.21, lon: 16.37, nearest: 'Hamburg' },
+    { name: 'Stockholm', lat: 59.33, lon: 18.07, nearest: 'Bergen' },
+    { name: 'Chicago', lat: 41.88, lon: -87.63, nearest: 'New York' },
+    { name: 'Toronto', lat: 43.65, lon: -79.38, nearest: 'New York' },
+    { name: 'Denver', lat: 39.74, lon: -104.99, nearest: 'Los Angeles' },
+    { name: 'Mexico City', lat: 19.43, lon: -99.13, nearest: 'Los Angeles' },
+    { name: 'Bogotá', lat: 4.71, lon: -74.07, nearest: 'Panama' },
+    { name: 'Lima', lat: -12.05, lon: -77.04, nearest: 'Callao' },
+    { name: 'Santiago', lat: -33.45, lon: -70.67, nearest: 'Valparaiso' },
+    { name: 'Brasília', lat: -15.79, lon: -47.88, nearest: 'Rio de Janeiro' },
+    { name: 'Xian', lat: 34.34, lon: 108.94, nearest: 'Shanghai' },
+    { name: 'Chongqing', lat: 29.43, lon: 106.91, nearest: 'Hong Kong' },
+    { name: 'Hanoi', lat: 21.03, lon: 105.85, nearest: 'Bangkok' },
+    { name: 'Kuala Lumpur', lat: 3.14, lon: 101.69, nearest: 'Singapore' },
+    { name: 'Canberra', lat: -35.28, lon: 149.13, nearest: 'Sydney' },
+    { name: 'Alice Springs', lat: -23.70, lon: 133.88, nearest: 'Perth' },
+    { name: 'Murmansk', lat: 68.97, lon: 33.08, nearest: 'Bergen' },
+    { name: 'Novosibirsk', lat: 55.01, lon: 82.93, nearest: 'Anchorage' },
+    { name: 'Yakutsk', lat: 62.03, lon: 129.73, nearest: 'Anchorage' },
+    { name: 'Vladivostok', lat: 43.12, lon: 131.89, nearest: 'Tokyo' },
+    { name: 'Nuuk', lat: 64.18, lon: -51.72, nearest: 'Reykjavik' },
+    { name: 'Yellowknife', lat: 62.45, lon: -114.37, nearest: 'Anchorage' },
+    { name: 'Edmonton', lat: 53.55, lon: -113.49, nearest: 'Vancouver' },
+    { name: 'Winnipeg', lat: 49.90, lon: -97.14, nearest: 'New York' },
+    { name: 'Tripoli', lat: 32.89, lon: 13.19, nearest: 'Genoa' },
+    { name: 'Tunis', lat: 36.80, lon: 10.18, nearest: 'Genoa' }
   ];
 
-  /* ============================================================
-     LANDLOCKED COUNTRIES — every landlocked country gets a trunk
-     ============================================================ */
   const LANDLOCKED_CITIES = [
-    /* Africa */
-    { name: 'Bamako',       lat: 12.64,  lon: -8.00,  nearest: 'Dakar' },
-    { name: 'Ouagadougou',  lat: 12.37,  lon: -1.53,  nearest: 'Accra' },
-    { name: 'Niamey',       lat: 13.51,  lon: 2.11,   nearest: 'Lagos' },
-    { name: 'NDjamena',     lat: 12.11,  lon: 15.05,  nearest: 'Lagos' },
-    { name: 'Bangui',       lat: 4.36,   lon: 18.56,  nearest: 'Luanda' },
-    { name: 'Malabo',       lat: 3.75,   lon: 8.78,   nearest: 'Lagos' },
-    { name: 'Bujumbura',    lat: -3.38,  lon: 29.36,  nearest: 'Dar es Salaam' },
-    { name: 'Juba',         lat: 4.85,   lon: 31.60,  nearest: 'Mombasa' },
-    { name: 'Lilongwe',     lat: -13.96, lon: 33.79,  nearest: 'Dar es Salaam' },
-    { name: 'Lusaka',       lat: -15.42, lon: 28.28,  nearest: 'Dar es Salaam' },
-    { name: 'Gaborone',     lat: -24.65, lon: 25.91,  nearest: 'Cape Town' },
-    { name: 'Windhoek',     lat: -22.56, lon: 17.08,  nearest: 'Cape Town' },
-    { name: 'Maseru',       lat: -29.31, lon: 27.48,  nearest: 'Cape Town' },
-    { name: 'Mbabane',      lat: -26.31, lon: 31.14,  nearest: 'Maputo' },
-    { name: 'Asmara',       lat: 15.34,  lon: 38.93,  nearest: 'Port Sudan' },
-    { name: 'Kigali-2',     lat: -1.94,  lon: 30.06,  nearest: 'Mombasa' },
-    /* Caucasus & Central Asia */
-    { name: 'Yerevan',      lat: 40.18,  lon: 44.51,  nearest: 'Marseille' },
-    { name: 'Tbilisi',      lat: 41.72,  lon: 44.79,  nearest: 'Marseille' },
-    { name: 'Baku',         lat: 40.41,  lon: 49.87,  nearest: 'Marseille' },
-    { name: 'Astana',       lat: 51.17,  lon: 71.45,  nearest: 'Karachi' },
-    { name: 'Bishkek',      lat: 42.87,  lon: 74.59,  nearest: 'Karachi' },
-    { name: 'Dushanbe',     lat: 38.56,  lon: 68.77,  nearest: 'Karachi' },
-    { name: 'Tashkent',     lat: 41.30,  lon: 69.24,  nearest: 'Karachi' },
-    { name: 'Ashgabat',     lat: 37.95,  lon: 58.38,  nearest: 'Muscat' },
-    /* South & East Asia */
-    { name: 'Kabul',        lat: 34.55,  lon: 69.17,  nearest: 'Karachi' },
-    { name: 'Ulaanbaatar',  lat: 47.88,  lon: 106.88, nearest: 'Beijing' },
-    { name: 'Kathmandu',    lat: 27.72,  lon: 85.32,  nearest: 'Kolkata' },
-    { name: 'Thimphu',      lat: 27.47,  lon: 89.64,  nearest: 'Kolkata' },
-    { name: 'Vientiane',    lat: 17.97,  lon: 102.63, nearest: 'Bangkok' },
-    { name: 'Phnom Penh',   lat: 11.55,  lon: 104.93, nearest: 'Ho Chi Minh' },
-    { name: 'Naypyidaw',    lat: 19.76,  lon: 96.08,  nearest: 'Bangkok' },
-    /* Europe */
-    { name: 'Podgorica',    lat: 42.44,  lon: 19.26,  nearest: 'Genoa' },
-    { name: 'Sarajevo',     lat: 43.86,  lon: 18.41,  nearest: 'Genoa' },
-    { name: 'Belgrade',     lat: 44.79,  lon: 20.45,  nearest: 'Genoa' },
-    { name: 'Skopje',       lat: 41.99,  lon: 21.43,  nearest: 'Genoa' },
-    { name: 'Pristina',     lat: 42.66,  lon: 21.17,  nearest: 'Genoa' },
-    { name: 'Tirana',       lat: 41.33,  lon: 19.83,  nearest: 'Genoa' },
-    { name: 'Sofia',        lat: 42.70,  lon: 23.32,  nearest: 'Genoa' },
-    { name: 'Bucharest',    lat: 44.43,  lon: 26.10,  nearest: 'Genoa' },
-    { name: 'Chisinau',     lat: 47.01,  lon: 28.86,  nearest: 'Genoa' },
-    { name: 'Budapest',     lat: 47.50,  lon: 19.04,  nearest: 'Genoa' },
-    { name: 'Bratislava',   lat: 48.15,  lon: 17.11,  nearest: 'Hamburg' },
-    { name: 'Ljubljana',    lat: 46.06,  lon: 14.51,  nearest: 'Genoa' },
-    { name: 'Zagreb',       lat: 45.81,  lon: 15.98,  nearest: 'Genoa' },
-    { name: 'Prague',       lat: 50.08,  lon: 14.44,  nearest: 'Hamburg' },
-    { name: 'Warsaw',       lat: 52.23,  lon: 21.01,  nearest: 'Hamburg' },
-    { name: 'Vilnius',      lat: 54.69,  lon: 25.28,  nearest: 'Hamburg' },
-    { name: 'Riga',         lat: 56.95,  lon: 24.11,  nearest: 'Hamburg' },
-    { name: 'Tallinn',      lat: 59.44,  lon: 24.75,  nearest: 'Hamburg' },
-    { name: 'Minsk',        lat: 53.90,  lon: 27.57,  nearest: 'Hamburg' },
-    { name: 'Kyiv',         lat: 50.45,  lon: 30.52,  nearest: 'Hamburg' },
-    { name: 'Luxembourg',   lat: 49.61,  lon: 6.13,   nearest: 'Amsterdam' },
-    { name: 'Bern',         lat: 46.95,  lon: 7.45,   nearest: 'Genoa' },
-    /* South America */
-    { name: 'La Paz',       lat: -16.50, lon: -68.15, nearest: 'Callao' },
-    { name: 'Asuncion',     lat: -25.26, lon: -57.58, nearest: 'Buenos Aires' },
-    { name: 'Brasilia-2',   lat: -15.79, lon: -47.88, nearest: 'Rio de Janeiro' },
-    { name: 'Quito',        lat: -0.18,  lon: -78.47, nearest: 'Callao' },
-    { name: 'Bogota-2',     lat: 4.71,   lon: -74.07, nearest: 'Panama' }
+    { name: 'Bamako', lat: 12.64, lon: -8.00, nearest: 'Dakar' },
+    { name: 'Ouagadougou', lat: 12.37, lon: -1.53, nearest: 'Accra' },
+    { name: 'Niamey', lat: 13.51, lon: 2.11, nearest: 'Lagos' },
+    { name: 'NDjamena', lat: 12.11, lon: 15.05, nearest: 'Lagos' },
+    { name: 'Bangui', lat: 4.36, lon: 18.56, nearest: 'Luanda' },
+    { name: 'Malabo', lat: 3.75, lon: 8.78, nearest: 'Lagos' },
+    { name: 'Bujumbura', lat: -3.38, lon: 29.36, nearest: 'Dar es Salaam' },
+    { name: 'Juba', lat: 4.85, lon: 31.60, nearest: 'Mombasa' },
+    { name: 'Lilongwe', lat: -13.96, lon: 33.79, nearest: 'Dar es Salaam' },
+    { name: 'Lusaka', lat: -15.42, lon: 28.28, nearest: 'Dar es Salaam' },
+    { name: 'Gaborone', lat: -24.65, lon: 25.91, nearest: 'Cape Town' },
+    { name: 'Windhoek', lat: -22.56, lon: 17.08, nearest: 'Cape Town' },
+    { name: 'Maseru', lat: -29.31, lon: 27.48, nearest: 'Cape Town' },
+    { name: 'Mbabane', lat: -26.31, lon: 31.14, nearest: 'Maputo' },
+    { name: 'Asmara', lat: 15.34, lon: 38.93, nearest: 'Port Sudan' },
+    { name: 'Yerevan', lat: 40.18, lon: 44.51, nearest: 'Marseille' },
+    { name: 'Tbilisi', lat: 41.72, lon: 44.79, nearest: 'Marseille' },
+    { name: 'Baku', lat: 40.41, lon: 49.87, nearest: 'Marseille' },
+    { name: 'Astana', lat: 51.17, lon: 71.45, nearest: 'Karachi' },
+    { name: 'Bishkek', lat: 42.87, lon: 74.59, nearest: 'Karachi' },
+    { name: 'Dushanbe', lat: 38.56, lon: 68.77, nearest: 'Karachi' },
+    { name: 'Tashkent', lat: 41.30, lon: 69.24, nearest: 'Karachi' },
+    { name: 'Ashgabat', lat: 37.95, lon: 58.38, nearest: 'Muscat' },
+    { name: 'Kabul', lat: 34.55, lon: 69.17, nearest: 'Karachi' },
+    { name: 'Ulaanbaatar', lat: 47.88, lon: 106.88, nearest: 'Beijing' },
+    { name: 'Kathmandu', lat: 27.72, lon: 85.32, nearest: 'Kolkata' },
+    { name: 'Thimphu', lat: 27.47, lon: 89.64, nearest: 'Kolkata' },
+    { name: 'Vientiane', lat: 17.97, lon: 102.63, nearest: 'Bangkok' },
+    { name: 'Phnom Penh', lat: 11.55, lon: 104.93, nearest: 'Ho Chi Minh' },
+    { name: 'Naypyidaw', lat: 19.76, lon: 96.08, nearest: 'Bangkok' },
+    { name: 'Podgorica', lat: 42.44, lon: 19.26, nearest: 'Genoa' },
+    { name: 'Sarajevo', lat: 43.86, lon: 18.41, nearest: 'Genoa' },
+    { name: 'Belgrade', lat: 44.79, lon: 20.45, nearest: 'Genoa' },
+    { name: 'Skopje', lat: 41.99, lon: 21.43, nearest: 'Genoa' },
+    { name: 'Pristina', lat: 42.66, lon: 21.17, nearest: 'Genoa' },
+    { name: 'Tirana', lat: 41.33, lon: 19.83, nearest: 'Genoa' },
+    { name: 'Sofia', lat: 42.70, lon: 23.32, nearest: 'Genoa' },
+    { name: 'Bucharest', lat: 44.43, lon: 26.10, nearest: 'Genoa' },
+    { name: 'Chisinau', lat: 47.01, lon: 28.86, nearest: 'Genoa' },
+    { name: 'Budapest', lat: 47.50, lon: 19.04, nearest: 'Genoa' },
+    { name: 'Bratislava', lat: 48.15, lon: 17.11, nearest: 'Hamburg' },
+    { name: 'Ljubljana', lat: 46.06, lon: 14.51, nearest: 'Genoa' },
+    { name: 'Zagreb', lat: 45.81, lon: 15.98, nearest: 'Genoa' },
+    { name: 'Prague', lat: 50.08, lon: 14.44, nearest: 'Hamburg' },
+    { name: 'Warsaw', lat: 52.23, lon: 21.01, nearest: 'Hamburg' },
+    { name: 'Vilnius', lat: 54.69, lon: 25.28, nearest: 'Hamburg' },
+    { name: 'Riga', lat: 56.95, lon: 24.11, nearest: 'Hamburg' },
+    { name: 'Tallinn', lat: 59.44, lon: 24.75, nearest: 'Hamburg' },
+    { name: 'Minsk', lat: 53.90, lon: 27.57, nearest: 'Hamburg' },
+    { name: 'Kyiv', lat: 50.45, lon: 30.52, nearest: 'Hamburg' },
+    { name: 'Luxembourg', lat: 49.61, lon: 6.13, nearest: 'Amsterdam' },
+    { name: 'Bern', lat: 46.95, lon: 7.45, nearest: 'Genoa' },
+    { name: 'La Paz', lat: -16.50, lon: -68.15, nearest: 'Callao' },
+    { name: 'Asuncion', lat: -25.26, lon: -57.58, nearest: 'Buenos Aires' },
+    { name: 'Quito', lat: -0.18, lon: -78.47, nearest: 'Callao' }
   ];
 
   const ALL_CITIES = [...COASTAL_CITIES, ...INLAND_CITIES, ...LANDLOCKED_CITIES];
   const CITY_BY_NAME = {};
   ALL_CITIES.forEach(c => { CITY_BY_NAME[c.name] = c; });
 
-  /* ============================================================
-     SUBMARINE CABLES — 66 real routes
-     ============================================================ */
   const SUBMARINE_CABLES = [
-    /* Africa & Indian Ocean */
     { name: 'SEACOM', color: 0xF59E0B, path: ['Mombasa', 'Djibouti', 'Suez', 'Marseille', 'London'] },
     { name: 'EASSy', color: 0x10B981, path: ['Mtunzini', 'Maputo', 'Dar es Salaam', 'Mombasa', 'Djibouti', 'Port Sudan'] },
     { name: '2Africa-E', color: 0xEC4899, path: ['Mombasa', 'Djibouti', 'Suez', 'Alexandria', 'Barcelona', 'Marseille'] },
@@ -619,7 +558,6 @@ if (typeof THREE === 'undefined') {
     { name: 'MARS', color: 0x6366F1, path: ['Mombasa', 'Dar es Salaam', 'Maputo', 'Mtunzini'] },
     { name: 'LION2', color: 0xEF4444, path: ['Mombasa', 'Dar es Salaam', 'Maputo', 'Mtunzini'] },
     { name: 'METISS', color: 0x23C7D9, path: ['Mombasa', 'Dar es Salaam', 'Maputo', 'Mtunzini'] },
-    /* Middle East & Asia */
     { name: 'Aden-Djibouti', color: 0x2267EE, path: ['Djibouti', 'Muscat', 'Karachi', 'Mumbai'] },
     { name: 'FALCON', color: 0x8B5CF6, path: ['Dubai', 'Muscat', 'Karachi', 'Mumbai', 'Chennai'] },
     { name: 'SEA-ME-WE-5', color: 0xEC4899, path: ['Marseille', 'Alexandria', 'Suez', 'Djibouti', 'Muscat', 'Karachi', 'Mumbai', 'Colombo', 'Singapore'] },
@@ -631,13 +569,11 @@ if (typeof THREE === 'undefined') {
     { name: 'AAG', color: 0xEF4444, path: ['Singapore', 'Bangkok', 'Ho Chi Minh', 'Hong Kong', 'Manila', 'Honolulu', 'Los Angeles'] },
     { name: 'APCN-2', color: 0x23C7D9, path: ['Singapore', 'Hong Kong', 'Shanghai', 'Seoul', 'Tokyo'] },
     { name: 'SJC2', color: 0x8B5CF6, path: ['Singapore', 'Hong Kong', 'Tokyo', 'Los Angeles'] },
-    /* Pacific */
     { name: 'Hawaiki', color: 0xEC4899, path: ['Sydney', 'Auckland', 'Suva', 'Honolulu', 'Los Angeles'] },
     { name: 'Southern Cross', color: 0xF59E0B, path: ['Sydney', 'Auckland', 'Suva', 'Honolulu', 'Los Angeles'] },
     { name: 'TGA', color: 0x10B981, path: ['Sydney', 'Auckland'] },
     { name: 'INDIGO-W', color: 0x0EA5E9, path: ['Singapore', 'Jakarta', 'Perth', 'Sydney'] },
     { name: 'INDIGO-C', color: 0x0EA5E9, path: ['Singapore', 'Jakarta', 'Perth'] },
-    /* Transatlantic */
     { name: 'MAREA', color: 0x8B5CF6, path: ['Virginia Beach', 'Bilbao'] },
     { name: 'Dunant', color: 0xEC4899, path: ['Virginia Beach', 'Bilbao'] },
     { name: 'TAT-14', color: 0xF59E0B, path: ['New York', 'Bude', 'Amsterdam', 'Hamburg'] },
@@ -647,14 +583,12 @@ if (typeof THREE === 'undefined') {
     { name: 'GTT Express', color: 0x6366F1, path: ['New York', 'Bude'] },
     { name: 'Yellow', color: 0xEF4444, path: ['New York', 'Bermuda', 'San Juan'] },
     { name: 'Atlantic Crossing-1', color: 0x23C7D9, path: ['Miami', 'Bermuda', 'Lisbon'] },
-    /* Americas */
     { name: 'SAm-1', color: 0x8B5CF6, path: ['Miami', 'San Juan', 'Fortaleza', 'Rio de Janeiro', 'São Paulo', 'Buenos Aires'] },
     { name: 'Seabras-1', color: 0xEC4899, path: ['New York', 'São Paulo'] },
     { name: 'Monet', color: 0xF59E0B, path: ['Miami', 'Fortaleza'] },
     { name: 'SAC', color: 0x10B981, path: ['Miami', 'Panama', 'Callao', 'Valparaiso'] },
     { name: 'Maya-1', color: 0x0EA5E9, path: ['Miami', 'Panama'] },
     { name: 'Arctic Fibre', color: 0x6366F1, path: ['London', 'Reykjavik', 'Anchorage', 'Seattle', 'Vancouver'] },
-    /* Additional real cables — Africa */
     { name: 'MainOne', color: 0x10B981, path: ['Lisbon', 'Accra', 'Lagos'] },
     { name: 'GLO-1', color: 0x14B8A6, path: ['London', 'Accra', 'Lagos'] },
     { name: 'ACE', color: 0xF59E0B, path: ['Lisbon', 'Dakar', 'Abidjan', 'Accra', 'Lagos', 'Luanda', 'Cape Town'] },
@@ -663,40 +597,30 @@ if (typeof THREE === 'undefined') {
     { name: 'SAIL', color: 0x23C7D9, path: ['Lisbon', 'Dakar', 'Abidjan', 'Accra'] },
     { name: 'Uhuru', color: 0x8B5CF6, path: ['Mombasa', 'Dar es Salaam'] },
     { name: 'DARE', color: 0x2267EE, path: ['Mombasa', 'Dar es Salaam', 'Maputo', 'Mtunzini'] },
-    /* Additional real cables — Europe–Asia */
     { name: 'AAE-1', color: 0xEC4899, path: ['Marseille', 'Suez', 'Muscat', 'Mumbai', 'Chennai', 'Colombo', 'Singapore', 'Bangkok', 'Ho Chi Minh', 'Hong Kong'] },
     { name: 'AAC', color: 0x14B8A6, path: ['Marseille', 'Alexandria', 'Suez', 'Muscat', 'Karachi', 'Mumbai', 'Chennai', 'Colombo', 'Singapore'] },
     { name: 'BBG', color: 0xF59E0B, path: ['Mumbai', 'Chennai', 'Colombo', 'Singapore'] },
     { name: 'EIG', color: 0x10B981, path: ['Marseille', 'Alexandria', 'Suez', 'Muscat', 'Mumbai'] },
-    /* Additional real cables — Asia–Pacific */
     { name: 'APCN', color: 0x6366F1, path: ['Singapore', 'Hong Kong', 'Tokyo', 'Seoul'] },
     { name: 'EAC-C2C', color: 0x23C7D9, path: ['Singapore', 'Hong Kong', 'Shanghai', 'Seoul', 'Tokyo', 'Osaka'] },
     { name: 'Unity', color: 0xEF4444, path: ['Los Angeles', 'Honolulu', 'Tokyo'] },
     { name: 'FASTER', color: 0x2267EE, path: ['Los Angeles', 'Seattle', 'Tokyo'] },
     { name: 'NCP', color: 0x8B5CF6, path: ['Los Angeles', 'Seattle', 'Tokyo'] },
     { name: 'JUPITER', color: 0xEC4899, path: ['Los Angeles', 'Honolulu', 'Tokyo', 'Osaka'] },
-    /* Additional real cables — Atlantic */
     { name: 'Grace Hopper', color: 0x14B8A6, path: ['New York', 'Bude'] },
     { name: 'Amitie', color: 0xF59E0B, path: ['New York', 'Bude'] },
     { name: 'FLAG Atlantic', color: 0x10B981, path: ['New York', 'Bude'] },
-    /* Additional real cables — Americas */
     { name: 'GlobeNet', color: 0x6366F1, path: ['New York', 'Bermuda', 'Fortaleza', 'Rio de Janeiro'] },
     { name: 'SAm-1b', color: 0x23C7D9, path: ['San Juan', 'Fortaleza', 'Rio de Janeiro'] },
     { name: 'SAex-1', color: 0xEF4444, path: ['Cape Town', 'Fortaleza'] },
     { name: 'SACS-2', color: 0x8B5CF6, path: ['Lisbon', 'Luanda'] }
   ];
 
-  /* ============================================================
-     OVERLAND TRUNKS — inland (cyan) + landlocked (violet)
-     ============================================================ */
   const OVERLAND_TRUNKS = [
     ...INLAND_CITIES.map(c => ({ from: c.name, to: c.nearest, color: 0x23C7D9 })),
     ...LANDLOCKED_CITIES.map(c => ({ from: c.name, to: c.nearest, color: 0x7C3AED }))
   ];
 
-  /* ============================================================
-     ARC SYSTEM
-     ============================================================ */
   const arcGroup = new THREE.Group();
   globeGroup.add(arcGroup);
   const arcs = [];
@@ -782,12 +706,8 @@ if (typeof THREE === 'undefined') {
     const pointCount = allPoints.length;
 
     return {
-      points: allPoints,
-      pointCount,
-      pulseGeo,
-      pulseLine,
-      baseColor: baseColor.clone(),
-      highlight: altColor.clone(),
+      points: allPoints, pointCount, pulseGeo, pulseLine,
+      baseColor: baseColor.clone(), highlight: altColor.clone(),
       packets,
       speed: (opts.mesh ? 0.015 : 0.03) + Math.random() * 0.02,
       phase: Math.random(),
@@ -797,19 +717,16 @@ if (typeof THREE === 'undefined') {
     };
   }
 
-  /* Build submarine cables */
   SUBMARINE_CABLES.forEach(cable => {
     const arc = makeMultiSegmentArc(cable.path, cable.color, { mesh: false });
     if (arc) arcs.push(arc);
   });
 
-  /* Build overland trunks */
   OVERLAND_TRUNKS.forEach(trunk => {
     const arc = makeMultiSegmentArc([trunk.from, trunk.to], trunk.color, { mesh: false });
     if (arc) arcs.push(arc);
   });
 
-  /* Background mesh — 2 nearest coastal neighbours per coastal city */
   const MESH_CONNECTIONS = (function () {
     const n = COASTAL_CITIES.length;
     const toRad = Math.PI / 180;
@@ -847,13 +764,6 @@ if (typeof THREE === 'undefined') {
     if (arc) arcs.push(arc);
   });
 
-  console.log('[VIORA] Loaded',
-    SUBMARINE_CABLES.length, 'submarine cables,',
-    INLAND_CITIES.length + LANDLOCKED_CITIES.length, 'overland trunks,',
-    MESH_CONNECTIONS.length, 'mesh connections,',
-    ALL_CITIES.length, 'cities total');
-
-  /* City dots */
   const cityGroup = new THREE.Group();
   globeGroup.add(cityGroup);
 
@@ -894,7 +804,6 @@ if (typeof THREE === 'undefined') {
   updateSun();
   setInterval(updateSun, 60000);
 
-  /* Interaction */
   let isDragging = false;
   let prevPointer = { x: 0, y: 0 };
   let targetRotX = globeGroup.rotation.x;
@@ -1148,65 +1057,587 @@ if (!prefersReduce && ecoParticles && ecoLines) {
 }
 
 /* ============================================================
-   APP TILE WALL — Modules tab
+   MODULE FLOW — A (Chat) + C (Ribbon) + E (Storyboard)
    ============================================================ */
-const APPS = [
-  { name: 'Business ERP', cat: 'business', desc: 'Unified operations across sales, stock, finance and people in one connected system.', features: ['Single source of truth', 'Role-based access', 'Cross-module reporting'] },
-  { name: 'Point of Sale', cat: 'business', desc: 'Fast in-person selling with real-time stock and till management.', features: ['Multi-till', 'Receipt printing', 'Offline mode'] },
-  { name: 'Accounting', cat: 'business', desc: 'Invoicing, expenses, reconciliation and financial reporting.', features: ['Chart of accounts', 'VAT handling', 'Bank reconciliation'] },
-  { name: 'Inventory', cat: 'business', desc: 'Track stock across warehouses and locations in real time.', features: ['Multi-location', 'Low-stock alerts', 'Batch tracking'] },
-  { name: 'Procurement', cat: 'business', desc: 'Purchase orders, supplier management and receiving.', features: ['Supplier records', 'Purchase orders', 'Goods received'] },
-  { name: 'Sales Management', cat: 'business', desc: 'Quotations, orders, deliveries and customer follow-ups.', features: ['Quotations', 'Order tracking', 'Delivery notes'] },
-  { name: 'Customer Management', cat: 'business', desc: 'Customer records, interactions and follow-up tasks.', features: ['Contact records', 'Activity log', 'Pipeline'] },
-  { name: 'Reporting & Analytics', cat: 'business', desc: 'Dashboards and reports across every module.', features: ['Live dashboards', 'Export', 'Scheduled reports'] },
-  { name: 'HR Management', cat: 'people', desc: 'Employee records, contracts and organisational structure.', features: ['Employee profiles', 'Contracts', 'Org chart'] },
-  { name: 'Payroll', cat: 'people', desc: 'Salary processing, deductions and payslips.', features: ['Payroll runs', 'Payslips', 'Statutory deductions'] },
-  { name: 'Employee Records', cat: 'people', desc: 'Centralised, searchable employee information.', features: ['Documents', 'History', 'Self-service'] },
-  { name: 'Attendance', cat: 'people', desc: 'Clock-in, timesheets and attendance tracking.', features: ['Clock-in', 'Timesheets', 'Overtime'] },
-  { name: 'Leave Management', cat: 'people', desc: 'Leave requests, approvals and balances.', features: ['Request workflow', 'Balances', 'Calendar'] },
-  { name: 'Performance', cat: 'people', desc: 'Goals, reviews and performance tracking.', features: ['Goals', 'Reviews', 'Feedback'] },
-  { name: 'E-commerce', cat: 'commerce', desc: 'Sell online with a storefront connected to your stock and orders.', features: ['Product catalogue', 'Checkout', 'Order sync'] },
-  { name: 'Online Stores', cat: 'commerce', desc: 'Branded online stores for your products.', features: ['Templates', 'Payments', 'Shipping'] },
-  { name: 'Product Management', cat: 'commerce', desc: 'Product info, variants, pricing and imagery.', features: ['Variants', 'Pricing rules', 'Media'] },
-  { name: 'Orders', cat: 'commerce', desc: 'Order processing from cart to delivery.', features: ['Order workflow', 'Fulfilment', 'Returns'] },
-  { name: 'Delivery Management', cat: 'commerce', desc: 'Dispatch, tracking and delivery confirmation.', features: ['Dispatch', 'Tracking', 'Proof of delivery'] },
-  { name: 'Customer Portals', cat: 'commerce', desc: 'Self-service portals for your customers.', features: ['Login', 'Order history', 'Support tickets'] },
-  { name: 'Website Development', cat: 'digital', desc: 'Professional, fast websites that work on every device.', features: ['Responsive design', 'CMS', 'SEO-ready'] },
-  { name: 'Mobile Applications', cat: 'digital', desc: 'Native and cross-platform mobile apps.', features: ['iOS & Android', 'Push notifications', 'Offline'] },
-  { name: 'Custom Software', cat: 'digital', desc: 'Tailored systems built around your exact processes.', features: ['Discovery', 'Design', 'Delivery'] },
-  { name: 'API Integrations', cat: 'digital', desc: 'Connect VIORA to the tools you already use.', features: ['REST APIs', 'Webhooks', 'Third-party sync'] },
-  { name: 'Automation', cat: 'digital', desc: 'Reduce manual work with automated workflows.', features: ['Triggers', 'Rules', 'Notifications'] },
-  { name: 'Branding & Graphics', cat: 'digital', desc: 'Identity, visual systems and marketing assets.', features: ['Brand kit', 'Visual identity', 'Assets'] }
+
+const MODULE_META = {
+  'Business ERP':        { cat:'business', color:'#2267EE', glyph:'grid',  why:'Unified operations across sales, stock, finance and people.' },
+  'Point of Sale':       { cat:'business', color:'#2267EE', glyph:'till',  why:'Fast in-person selling with real-time stock.' },
+  'Accounting':          { cat:'business', color:'#2267EE', glyph:'book',  why:'Invoicing, expenses, reconciliation and reporting.' },
+  'Inventory':           { cat:'business', color:'#2267EE', glyph:'box',   why:'Track stock across warehouses in real time.' },
+  'Procurement':         { cat:'business', color:'#2267EE', glyph:'cart',  why:'Purchase orders, suppliers and receiving.' },
+  'Sales Management':    { cat:'business', color:'#2267EE', glyph:'chart', why:'Quotations, orders and customer follow-ups.' },
+  'Customer Management': { cat:'business', color:'#2267EE', glyph:'user',  why:'Customer records and follow-up tasks.' },
+  'Reporting & Analytics':{cat:'business', color:'#2267EE', glyph:'gauge', why:'Dashboards and reports across every module.' },
+  'HR Management':       { cat:'people',   color:'#10B981', glyph:'users', why:'Employee records, contracts and structure.' },
+  'Payroll':             { cat:'people',   color:'#10B981', glyph:'wallet',why:'Salary processing, deductions and payslips.' },
+  'Employee Records':    { cat:'people',   color:'#10B981', glyph:'file',  why:'Centralised, searchable employee info.' },
+  'Attendance':          { cat:'people',   color:'#10B981', glyph:'clock', why:'Clock-in, timesheets and attendance.' },
+  'Leave Management':    { cat:'people',   color:'#10B981', glyph:'cal',   why:'Leave requests, approvals and balances.' },
+  'Performance':         { cat:'people',   color:'#10B981', glyph:'star',  why:'Goals, reviews and performance tracking.' },
+  'E-commerce':          { cat:'commerce', color:'#F59E0B', glyph:'bag',   why:'Sell online, synced to your stock.' },
+  'Online Stores':       { cat:'commerce', color:'#F59E0B', glyph:'store', why:'Branded online stores for your products.' },
+  'Product Management':  { cat:'commerce', color:'#F59E0B', glyph:'tag',   why:'Product info, variants and pricing.' },
+  'Orders':              { cat:'commerce', color:'#F59E0B', glyph:'box2',  why:'Order processing from cart to delivery.' },
+  'Delivery Management': { cat:'commerce', color:'#F59E0B', glyph:'truck', why:'Dispatch, tracking and confirmation.' },
+  'Customer Portals':    { cat:'commerce', color:'#F59E0B', glyph:'door',  why:'Self-service portals for customers.' },
+  'Website Development': { cat:'digital',  color:'#8B5CF6', glyph:'browser',why:'Fast, responsive sites on every device.' },
+  'Mobile Applications': { cat:'digital',  color:'#8B5CF6', glyph:'phone', why:'Native and cross-platform apps.' },
+  'Custom Software':     { cat:'digital',  color:'#8B5CF6', glyph:'code',  why:'Tailored systems for exact processes.' },
+  'API Integrations':    { cat:'digital',  color:'#8B5CF6', glyph:'plug',  why:'Connect VIORA to the tools you use.' },
+  'Automation':          { cat:'digital',  color:'#8B5CF6', glyph:'zap',   why:'Reduce manual work with workflows.' },
+  'Branding & Graphics': { cat:'digital',  color:'#8B5CF6', glyph:'pen',   why:'Identity, visuals and marketing assets.' }
+};
+const ALL_MODULES = Object.keys(MODULE_META);
+
+const ICONS = {
+  grid:   c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5" fill="${c}" opacity=".35"/></svg>`,
+  till:   c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="11" rx="2"/><path d="M7 9V5h10v4"/><circle cx="12" cy="14" r="2" fill="${c}" opacity=".35"/></svg>`,
+  book:   c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M9 8h6M9 12h6"/><circle cx="15" cy="18" r="1.4" fill="${c}"/></svg>`,
+  box:    c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10" stroke-dasharray="2 2"/></svg>`,
+  cart:   c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5" fill="${c}"/><circle cx="18" cy="20" r="1.5" fill="${c}"/><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L21 8H6"/></svg>`,
+  chart:  c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/><circle cx="10" cy="4" r="1.5" fill="${c}"/></svg>`,
+  user:   c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>`,
+  gauge:  c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18a9 9 0 1 1 18 0"/><path d="M12 18l4-6"/><circle cx="12" cy="18" r="1.5" fill="${c}"/></svg>`,
+  users:  c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2 21a7 7 0 0 1 14 0"/><circle cx="18" cy="9" r="2.5"/><path d="M16 21a5 5 0 0 1 6-4.5"/></svg>`,
+  wallet: c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><circle cx="17" cy="15" r="1.6" fill="${c}"/></svg>`,
+  file:   c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v4h4M9 12h6M9 16h6"/></svg>`,
+  clock:  c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/><circle cx="12" cy="12" r="1.2" fill="${c}"/></svg>`,
+  cal:    c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.4" fill="${c}"/></svg>`,
+  star:   c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.8 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"/></svg>`,
+  bag:    c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/><circle cx="12" cy="14" r="1.4" fill="${c}"/></svg>`,
+  store:  c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9"/><path d="M3 9v11h18V9"/><path d="M9 20v-6h6v6"/></svg>`,
+  tag:    c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12V3h9l9 9-9 9z"/><circle cx="8" cy="8" r="1.5" fill="${c}"/></svg>`,
+  box2:   c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M10 10v10"/></svg>`,
+  truck:  c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="12" height="9" rx="1"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="2" fill="${c}"/><circle cx="17" cy="18" r="2" fill="${c}"/></svg>`,
+  door:   c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h12v18H5z"/><circle cx="14" cy="12" r="1.3" fill="${c}"/></svg>`,
+  browser:c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 8h18"/><circle cx="6" cy="6" r=".8" fill="${c}"/><circle cx="8.5" cy="6" r=".8" fill="${c}"/></svg>`,
+  phone:  c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>`,
+  code:   c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 8l-5 4 5 4M16 8l5 4-5 4M14 4l-4 16"/></svg>`,
+  plug:   c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6M15 2v6"/><path d="M6 8h12v3a6 6 0 0 1-12 0z"/><path d="M12 17v5"/></svg>`,
+  zap:    c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>`,
+  pen:    c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4l6 6-10 10H4v-6z"/><path d="M13 5l6 6"/><circle cx="7" cy="17" r="1" fill="${c}"/></svg>`
+};
+
+function iconSVG(module){
+  const m = MODULE_META[module];
+  if (!m) return '';
+  const fn = ICONS[m.glyph] || ICONS.grid;
+  return fn(m.color);
+}
+
+/* ---- Industries & problem copy ---- */
+const FLOW_INDUSTRIES = [
+  { key:'retail', emoji:'🛒', label:'Retail', why:'shops & stores', color:'#2267EE',
+    problems:[
+      { sentence:'Stock is everywhere except in one place.',           module:'Inventory' },
+      { sentence:"I'm selling but the till doesn't know my stock.",    module:'Point of Sale' },
+      { sentence:'My shop and my website disagree about stock.',       module:'E-commerce' },
+      { sentence:'Payroll eats four days a month.',                    module:'Payroll' }
+    ]},
+  { key:'clinic', emoji:'🏥', label:'Clinic', why:'patients & records', color:'#10B981',
+    problems:[
+      { sentence:'Patient files are on paper and go missing.',         module:'Customer Management' },
+      { sentence:'Payroll is done by hand every month.',               module:'Payroll' },
+      { sentence:'I never know who is on shift today.',                module:'Attendance' },
+      { sentence:"I can't see how the clinic is doing financially.",   module:'Reporting & Analytics' }
+    ]},
+  { key:'hospitality', emoji:'🍽️', label:'Hospitality', why:'food & stay', color:'#F59E0B',
+    problems:[
+      { sentence:'The till and the kitchen order pad disagree.',      module:'Point of Sale' },
+      { sentence:"Bookings live in a notebook I can't search.",       module:'Customer Management' },
+      { sentence:'Stock for the kitchen is guessed, not tracked.',    module:'Inventory' },
+      { sentence:'Staff rota is chaos every week.',                   module:'Attendance' }
+    ]},
+  { key:'logistics', emoji:'🚚', label:'Logistics', why:'deliver & track', color:'#23C7D9',
+    problems:[
+      { sentence:'Clients call all day for delivery status.',         module:'Customer Portals' },
+      { sentence:'Dispatch is tracked on a whiteboard.',              module:'Delivery Management' },
+      { sentence:"I can't tell which deliveries made money.",         module:'Reporting & Analytics' },
+      { sentence:'Drivers, office and clients never agree on facts.', module:'Orders' }
+    ]},
+  { key:'farm', emoji:'🌾', label:'Farm', why:'produce & co-ops', color:'#22C55E',
+    problems:[
+      { sentence:"I don't know what's actually in the store.",        module:'Inventory' },
+      { sentence:'Buyers call for produce status all day.',           module:'Sales Management' },
+      { sentence:"I can't see which seasons made money.",             module:'Reporting & Analytics' },
+      { sentence:'Customer records are in a notebook.',               module:'Customer Management' }
+    ]},
+  { key:'professional', emoji:'💼', label:'Professional', why:'services & firms', color:'#8B5CF6',
+    problems:[
+      { sentence:"I can't see which clients are actually profitable.",module:'Reporting & Analytics' },
+      { sentence:'Invoices go out late and get forgotten.',           module:'Accounting' },
+      { sentence:"I don't have one place for client history.",        module:'Customer Management' },
+      { sentence:'My team never knows what was promised.',            module:'Sales Management' }
+    ]},
+  { key:'other', emoji:'⚙️', label:'Something else', why:'tell us what you need', color:'#6366F1',
+    problems:[
+      { sentence:'I need a system built around my business.',         module:'Business ERP' },
+      { sentence:'My tools do not talk to each other.',               module:'API Integrations' },
+      { sentence:'My team works from spreadsheets and inboxes.',      module:'Business ERP' },
+      { sentence:'I need a website or app built.',                    module:'Website Development' }
+    ]}
 ];
 
-const CAT_LABEL = { business: 'Business', people: 'People', commerce: 'Commerce', digital: 'Digital' };
-const tileGrid = $('#tileGrid');
-let currentFilter = 'all';
-let currentSearch = '';
+/* ---- Paired suggestions from BUNDLES co-occurrence ---- */
+const BUNDLE_COOC = (function(){
+  const b = [
+    ['Point of Sale','Inventory','Accounting','E-commerce'],
+    ['HR Management','Payroll','Attendance','Customer Management','Reporting & Analytics'],
+    ['Orders','Delivery Management','Customer Portals','Reporting & Analytics'],
+    ['Point of Sale','Orders','Customer Management','Accounting'],
+    ['Inventory','Customer Management','Sales Management','Reporting & Analytics'],
+    ['Customer Management','Sales Management','Accounting','Reporting & Analytics']
+  ];
+  const map = {};
+  b.forEach(list => {
+    list.forEach(m => {
+      if (!map[m]) map[m] = new Set();
+      list.forEach(o => { if (o !== m) map[m].add(o); });
+    });
+  });
+  const out = {};
+  Object.keys(map).forEach(m => { out[m] = [...map[m]]; });
+  return out;
+})();
 
-function renderTiles() {
-  if (!tileGrid) return;
-  const filtered = APPS.filter(a =>
-    (currentFilter === 'all' || a.cat === currentFilter) &&
-    a.name.toLowerCase().includes(currentSearch.toLowerCase())
-  );
-  tileGrid.innerHTML = filtered.map(a => `
-    <button class="tile" data-idx="${APPS.indexOf(a)}">
-      <span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
-      <span class="name">${a.name}</span>
-      <span class="cat">${CAT_LABEL[a.cat]}</span>
-    </button>
-  `).join('') || `<p style="grid-column:1/-1;color:var(--muted);padding:24px 0">No applications match your search.</p>`;
+function suggestFor(picks){
+  const scores = {};
+  picks.forEach(m => {
+    (BUNDLE_COOC[m] || []).forEach(o => {
+      if (picks.includes(o)) return;
+      scores[o] = (scores[o] || 0) + 1;
+    });
+  });
+  return Object.keys(scores).sort((a,b) => scores[b] - scores[a]).slice(0,3);
+}
 
-  if (prefersReduce) return;
-  $$('.tile', tileGrid).forEach((el, i) => {
-    el.style.opacity = 0;
-    el.style.transform = 'translateY(8px)';
-    el.style.transition = `opacity .35s ${i * 0.025}s, transform .35s ${i * 0.025}s`;
-    requestAnimationFrame(() => { el.style.opacity = 1; el.style.transform = 'translateY(0)'; });
+/* ---- Shared flow state & result renderer ---- */
+const FLOW_STATE = { industry:null, needs:[], modules:[], source:'storyboard' };
+
+function renderResult(container, modules, name){
+  if (!container) return;
+  const weeks = modules.length <= 2 ? '1–2' : modules.length <= 4 ? '2–3' : modules.length <= 6 ? '3–4' : '4–6';
+  const total = modules.reduce((s,m)=> s + ({'Business ERP':3500,'Point of Sale':1500,'Accounting':1800,'Inventory':1800,'Procurement':1500,'Sales Management':1500,'Customer Management':1200,'Reporting & Analytics':1500,'HR Management':1800,'Payroll':2000,'Employee Records':900,'Attendance':900,'Leave Management':900,'Performance':900,'E-commerce':2000,'Online Stores':1800,'Product Management':1200,'Orders':1500,'Delivery Management':1500,'Customer Portals':1500,'Website Development':2200,'Mobile Applications':3200,'Custom Software':5000,'API Integrations':1800,'Automation':1500,'Branding & Graphics':900}[m] || 1500), 0);
+
+  container.hidden = false;
+  container.innerHTML = `
+    <div class="fr-card">
+      <div class="fr-eyebrow">Your bundle</div>
+      <h3 class="fr-title">${name || 'Custom Bundle'}</h3>
+      <div class="fr-mods">
+        ${modules.map(m => `
+          <span class="fr-chip">
+            <span class="fr-chip-ico">${iconSVG(m)}</span>
+            ${m}
+          </span>`).join('')}
+      </div>
+      <div class="fr-meta">
+        <span><strong>Modules:</strong> ${modules.length}</span>
+        <span><strong>Est. deploy:</strong> ${weeks} weeks</span>
+        <span><strong>From:</strong> KSh ${total.toLocaleString('en-KE')}/mo</span>
+      </div>
+      <div class="fr-actions">
+        <button type="button" class="btn btn-primary" data-fr-customise>Customise these modules</button>
+        <a href="contact_us.html" class="btn btn-ghost">Book a demo</a>
+        <button type="button" class="btn btn-ghost" data-fr-send>Send to contact form</button>
+      </div>
+      <button type="button" class="fr-restart" data-fr-restart>↺ Start over</button>
+    </div>
+  `;
+
+  const cust = container.querySelector('[data-fr-customise]');
+  if (cust) cust.addEventListener('click', () => {
+    if (window.__vioraOpenCustomise) window.__vioraOpenCustomise(null, modules.slice());
+  });
+  const send = container.querySelector('[data-fr-send]');
+  if (send) send.addEventListener('click', () => {
+    if (window.__vioraOpenCustomise) window.__vioraOpenCustomise(null, modules.slice());
+    setTimeout(() => {
+      const btn = document.getElementById('customiseSend');
+      if (btn) btn.click();
+    }, 500);
+  });
+  const restart = container.querySelector('[data-fr-restart]');
+  if (restart) restart.addEventListener('click', () => {
+    container.hidden = true;
+    if (typeof window.__flowRestart === 'function') window.__flowRestart();
   });
 }
 
+/* ============================================================
+   E — STORYBOARD
+   ============================================================ */
+(function initStoryboard(){
+  const stage = document.getElementById('sbStage');
+  const progress = document.getElementById('sbProgress');
+  const backBtn = document.getElementById('sbBack');
+  const actions = document.getElementById('sbActions');
+  const resultBox = document.getElementById('flowResult');
+  if (!stage) return;
+
+  let scene = 1;
+  const picks = { industry:null, needs:[], modules:[] };
+
+  function renderProgress(){
+    progress.innerHTML = [1,2,3,4].map(n => `
+      <button type="button" class="sb-dot ${n === scene ? 'on' : ''} ${n < scene ? 'done' : ''}" data-goto="${n}" ${n > scene ? 'disabled' : ''} aria-label="Scene ${n}"></button>
+    `).join('');
+    progress.querySelectorAll('[data-goto]').forEach(b => {
+      b.addEventListener('click', () => { const n = +b.dataset.goto; if (n < scene) goTo(n); });
+    });
+  }
+
+  function renderActions(label, disabled){
+    actions.innerHTML = `<button type="button" class="btn btn-primary btn-lg" id="sbNext" ${disabled ? 'disabled' : ''}>${label}</button>`;
+    const btn = document.getElementById('sbNext');
+    if (btn) btn.addEventListener('click', next);
+  }
+
+  function renderScene1(){
+    const cards = FLOW_INDUSTRIES.map(ind => `
+      <button type="button" class="sb-card ${picks.industry===ind.key?'on':''}" data-key="${ind.key}">
+        <span class="sb-emoji" aria-hidden="true">${ind.emoji}</span>
+        <span class="sb-name">${ind.label}</span>
+        <span class="sb-why">${ind.why}</span>
+      </button>
+    `).join('');
+    stage.innerHTML = `
+      <div class="sb-scene">
+        <h3 class="sb-q">What kind of business do you run?</h3>
+        <div class="sb-grid sb-grid-ind">${cards}</div>
+      </div>
+    `;
+    stage.querySelectorAll('.sb-card').forEach(b => b.addEventListener('click', () => {
+      picks.industry = b.dataset.key;
+      renderScene1(); renderActions('Next →', false);
+    }));
+    backBtn.hidden = true;
+    renderActions('Next →', !picks.industry);
+  }
+
+  function renderScene2(){
+    const ind = FLOW_INDUSTRIES.find(i => i.key === picks.industry) || FLOW_INDUSTRIES[0];
+    const cards = ind.problems.map((p,i) => `
+      <button type="button" class="sb-row ${picks.needs.includes(i)?'on':''}" data-idx="${i}">
+        <span class="sb-row-check" aria-hidden="true"></span>
+        <span class="sb-row-body">
+          <span class="sb-row-sentence">${p.sentence}</span>
+          <span class="sb-row-mod">→ ${p.module}</span>
+        </span>
+      </button>
+    `).join('');
+    stage.innerHTML = `
+      <div class="sb-scene">
+        <h3 class="sb-q">You run a ${ind.label} business. Where does the day go wrong?</h3>
+        <p class="sb-sub">Pick up to 3.</p>
+        <div class="sb-rows">${cards}</div>
+        <p class="sb-count">${picks.needs.length} selected</p>
+      </div>
+    `;
+    stage.querySelectorAll('.sb-row').forEach(b => b.addEventListener('click', () => {
+      const idx = +b.dataset.idx;
+      if (picks.needs.includes(idx)) picks.needs = picks.needs.filter(x => x !== idx);
+      else { if (picks.needs.length >= 3) return; picks.needs.push(idx); }
+      renderScene2(); renderActions('Build my stack →', picks.needs.length === 0);
+    }));
+    backBtn.hidden = false;
+    renderActions('Build my stack →', picks.needs.length === 0);
+  }
+
+  function buildModulesFromPicks(){
+    const ind = FLOW_INDUSTRIES.find(i => i.key === picks.industry) || FLOW_INDUSTRIES[0];
+    const set = new Set();
+    picks.needs.forEach(i => { const p = ind.problems[i]; if (p) set.add(p.module); });
+    if (set.size >= 3) set.add('Business ERP');
+    picks.modules = [...set];
+  }
+
+  function renderScene3(){
+    buildModulesFromPicks();
+    const cards = picks.modules.map((m,i) => `
+      <div class="sb-stack-card" style="animation-delay:${i*120}ms">
+        <span class="sb-stack-ico">${iconSVG(m)}</span>
+        <span class="sb-stack-name">${m}</span>
+      </div>
+    `).join('');
+    const sugg = suggestFor(picks.modules).filter(m => !picks.modules.includes(m));
+    stage.innerHTML = `
+      <div class="sb-scene">
+        <h3 class="sb-q">Here's what you picked.</h3>
+        <p class="sb-sub">Add anything else you need.</p>
+        <div class="sb-stack">${cards}</div>
+        ${sugg.length ? `
+          <div class="sb-sugg">
+            <div class="sb-sugg-label">Suggested for ${FLOW_INDUSTRIES.find(i=>i.key===picks.industry)?.label || 'you'}:</div>
+            <div class="sb-sugg-row">
+              ${sugg.map(m => `<button type="button" class="sb-add" data-add="${m}">+ ${m}</button>`).join('')}
+              <button type="button" class="btn btn-ghost btn-sm" id="sbAcceptAll">Accept all</button>
+            </div>
+          </div>` : ''}
+      </div>
+    `;
+    stage.querySelectorAll('[data-add]').forEach(b => b.addEventListener('click', () => {
+      const m = b.dataset.add;
+      if (!picks.modules.includes(m)) picks.modules.push(m);
+      renderScene3();
+    }));
+    const allBtn = document.getElementById('sbAcceptAll');
+    if (allBtn) allBtn.addEventListener('click', () => {
+      sugg.forEach(m => { if (!picks.modules.includes(m)) picks.modules.push(m); });
+      renderScene3();
+    });
+    backBtn.hidden = false;
+    renderActions('See my bundle →', picks.modules.length === 0);
+  }
+
+  function renderScene4(){
+    const ind = FLOW_INDUSTRIES.find(i => i.key === picks.industry);
+    const bundleName = (ind ? ind.label : 'Custom') + ' Starter';
+    stage.innerHTML = `<div class="sb-scene"><p class="sb-sub">All set.</p></div>`;
+    backBtn.hidden = true;
+    actions.innerHTML = '';
+    FLOW_STATE.industry = picks.industry;
+    FLOW_STATE.needs = picks.needs;
+    FLOW_STATE.modules = picks.modules.slice();
+    renderResult(resultBox, picks.modules.slice(), bundleName);
+    resultBox.scrollIntoView({ behavior: prefersReduce ? 'auto' : 'smooth', block: 'nearest' });
+  }
+
+  function goTo(n){ scene = n; renderProgress(); render(); }
+  function next(){
+    if (scene === 1 && picks.industry) goTo(2);
+    else if (scene === 2 && picks.needs.length) goTo(3);
+    else if (scene === 3 && picks.modules.length) goTo(4);
+  }
+  function render(){
+    if (scene === 1) renderScene1();
+    else if (scene === 2) renderScene2();
+    else if (scene === 3) renderScene3();
+    else renderScene4();
+  }
+
+  if (backBtn) backBtn.addEventListener('click', () => { if (scene > 1) goTo(scene - 1); });
+
+  window.__flowRestart = function(){
+    picks.industry = null; picks.needs = []; picks.modules = [];
+    resultBox.hidden = true;
+    goTo(1);
+  };
+
+  renderProgress();
+  render();
+})();
+
+/* ============================================================
+   C — RIBBON
+   ============================================================ */
+(function initRibbon(){
+  const strip = document.getElementById('ribbonStrip');
+  const summary = document.getElementById('ribbonSummary');
+  const build = document.getElementById('ribbonBuild');
+  const resultBox = document.getElementById('flowResult');
+  if (!strip) return;
+
+  const state = { industry:null, need:null, modules:new Set() };
+
+  function render(){
+    const inds = FLOW_INDUSTRIES.map(i => `
+      <button type="button" class="rb-chip ${state.industry===i.key?'on':''}" data-ind="${i.key}">
+        <span aria-hidden="true">${i.emoji}</span> ${i.label}
+      </button>`).join('');
+
+    const ind = FLOW_INDUSTRIES.find(i => i.key === state.industry);
+    const needs = ind ? ind.problems.map((p,i) => `
+      <button type="button" class="rb-chip ${state.need===i?'on':''}" data-need="${i}">
+        ${p.module}
+      </button>`).join('') : '';
+
+    const relevant = ind ? [...new Set(ind.problems.map(p => p.module))] : [];
+    const mods = relevant.map(m => `
+      <button type="button" class="rb-chip rb-chip-mod ${state.modules.has(m)?'on':''}" data-mod="${m}">
+        <span class="rb-chip-ico">${iconSVG(m)}</span> ${m}
+      </button>`).join('');
+
+    strip.innerHTML = `
+      <div class="rb-row">
+        <span class="rb-label">① Industry</span>
+        <div class="rb-chips">${inds}</div>
+      </div>
+      ${ind ? `<div class="rb-row"><span class="rb-label">② What's broken</span><div class="rb-chips">${needs}</div></div>` : ''}
+      ${ind ? `<div class="rb-row"><span class="rb-label">③ Modules</span><div class="rb-chips">${mods}</div></div>` : ''}
+    `;
+
+    strip.querySelectorAll('[data-ind]').forEach(b => b.addEventListener('click', () => {
+      state.industry = b.dataset.ind; state.need = null; state.modules.clear(); render();
+    }));
+    strip.querySelectorAll('[data-need]').forEach(b => b.addEventListener('click', () => {
+      state.need = +b.dataset.needs || +b.dataset.need;
+      const p = ind.problems[state.need];
+      if (p) state.modules.add(p.module);
+      render();
+    }));
+    strip.querySelectorAll('[data-mod]').forEach(b => b.addEventListener('click', () => {
+      const m = b.dataset.mod;
+      if (state.modules.has(m)) state.modules.delete(m); else state.modules.add(m);
+      render();
+    }));
+
+    summary.textContent = `${state.industry ? '1 industry' : '0 industries'} · ${state.modules.size} module${state.modules.size===1?'':'s'}`;
+    if (build) build.disabled = state.modules.size === 0;
+  }
+
+  if (build) build.addEventListener('click', () => {
+    const ind = FLOW_INDUSTRIES.find(i => i.key === state.industry);
+    const name = (ind ? ind.label : 'Custom') + ' Starter';
+    renderResult(resultBox, [...state.modules], name);
+    resultBox.scrollIntoView({ behavior: prefersReduce ? 'auto' : 'smooth', block: 'nearest' });
+  });
+
+  render();
+})();
+
+/* ============================================================
+   A — CHAT
+   ============================================================ */
+(function initChat(){
+  const body = document.getElementById('chatBody');
+  const chips = document.getElementById('chatChips');
+  const picksEl = document.getElementById('chatPicks');
+  const restart = document.getElementById('chatRestart');
+  const resultBox = document.getElementById('flowResult');
+  if (!body) return;
+
+  const state = { step:'industry', industry:null, needs:[] };
+
+  function addMsg(html, who){
+    const el = document.createElement('div');
+    el.className = 'chat-msg ' + who;
+    el.innerHTML = html;
+    body.appendChild(el);
+    body.scrollTop = body.scrollHeight;
+  }
+  function addSkeleton(){
+    const el = document.createElement('div');
+    el.className = 'chat-msg bot chat-skel';
+    el.innerHTML = '<span></span><span></span><span></span>';
+    body.appendChild(el);
+    body.scrollTop = body.scrollHeight;
+    return el;
+  }
+
+  function showIndustry(){
+    addMsg('Hi 👋 What kind of business do you run?', 'bot');
+    chips.innerHTML = FLOW_INDUSTRIES.map(i =>
+      `<button type="button" class="chat-chip" data-key="${i.key}"><span aria-hidden="true">${i.emoji}</span> ${i.label}</button>`
+    ).join('');
+    bindChips();
+  }
+  function showNeeds(){
+    const ind = FLOW_INDUSTRIES.find(i => i.key === state.industry);
+    addMsg(`Great — a ${ind.label} business. What's broken today? <small>Pick up to 3.</small>`, 'bot');
+    chips.innerHTML = ind.problems.map((p,i) =>
+      `<button type="button" class="chat-chip" data-need="${i}">${p.module}</button>`
+    ).join('') + `<button type="button" class="chat-chip chat-chip-primary" id="chatNeedDone" disabled>Done</button>`;
+    bindChips();
+    const done = document.getElementById('chatNeedDone');
+    if (done) done.addEventListener('click', () => { if (state.needs.length) finishNeeds(); });
+  }
+  function showResult(){
+    const ind = FLOW_INDUSTRIES.find(i => i.key === state.industry);
+    const set = new Set();
+    state.needs.forEach(i => { const p = ind.problems[i]; if (p) set.add(p.module); });
+    if (set.size >= 3) set.add('Business ERP');
+    const modules = [...set];
+    const name = (ind ? ind.label : 'Custom') + ' Starter';
+    addMsg(`Here's what I recommend — your <strong>${name}</strong>.<br>${modules.join(' · ')}`, 'bot');
+    chips.innerHTML = '';
+    renderResult(resultBox, modules, name);
+    resultBox.scrollIntoView({ behavior: prefersReduce ? 'auto' : 'smooth', block: 'nearest' });
+  }
+
+  function bindChips(){
+    chips.querySelectorAll('[data-key]').forEach(b => b.addEventListener('click', () => {
+      state.industry = b.dataset.key;
+      addMsg(b.textContent.trim(), 'user');
+      chips.innerHTML = '';
+      const skel = addSkeleton();
+      setTimeout(() => { skel.remove(); showNeeds(); }, 320);
+    }));
+    chips.querySelectorAll('[data-need]').forEach(b => b.addEventListener('click', () => {
+      const idx = +b.dataset.need;
+      if (state.needs.includes(idx)) {
+        state.needs = state.needs.filter(x => x !== idx);
+        b.classList.remove('on');
+      } else {
+        if (state.needs.length >= 3) return;
+        state.needs.push(idx);
+        b.classList.add('on');
+      }
+      const done = document.getElementById('chatNeedDone');
+      if (done) done.disabled = state.needs.length === 0;
+      picksEl.textContent = state.needs.length ? `Picks: ${state.needs.length}` : '';
+    }));
+  }
+
+  function finishNeeds(){
+    const ind = FLOW_INDUSTRIES.find(i => i.key === state.industry);
+    const labels = state.needs.map(i => ind.problems[i].module);
+    addMsg(labels.join(' · '), 'user');
+    chips.innerHTML = '';
+    picksEl.textContent = '';
+    const skel = addSkeleton();
+    setTimeout(() => { skel.remove(); showResult(); }, 360);
+  }
+
+  if (restart) restart.addEventListener('click', () => {
+    body.innerHTML = '';
+    state.industry = null; state.needs = [];
+    resultBox.hidden = true;
+    picksEl.textContent = '';
+    showIndustry();
+  });
+
+  showIndustry();
+})();
+
+/* ============================================================
+   MODE SWITCHER
+   ============================================================ */
+(function initModes(){
+  const modes = document.querySelectorAll('.flow-mode');
+  const flows = {
+    storyboard: document.getElementById('flowStoryboard'),
+    ribbon: document.getElementById('flowRibbon'),
+    chat: document.getElementById('flowChat')
+  };
+  if (!modes.length) return;
+
+  function activate(mode){
+    modes.forEach(m => {
+      const on = m.dataset.mode === mode;
+      m.setAttribute('aria-selected', String(on));
+      m.setAttribute('tabindex', on ? '0' : '-1');
+    });
+    Object.keys(flows).forEach(k => {
+      if (flows[k]) flows[k].hidden = k !== mode;
+    });
+  }
+  modes.forEach(m => {
+    m.addEventListener('click', () => activate(m.dataset.mode));
+    m.addEventListener('keydown', e => {
+      const idx = [...modes].indexOf(m);
+      let next = -1;
+      if (e.key === 'ArrowRight') next = (idx + 1) % modes.length;
+      else if (e.key === 'ArrowLeft') next = (idx - 1 + modes.length) % modes.length;
+      if (next >= 0) { e.preventDefault(); modes[next].focus(); activate(modes[next].dataset.mode); }
+    });
+  });
+})();
+
+/* ============================================================
+   OLD DETAIL PANEL HANDLERS (kept for bundles "Explore" button)
+   ============================================================ */
 const panel = $('#detailPanel');
 const overlay = $('#overlay');
 const detailClose = $('#detailClose');
@@ -1229,38 +1660,6 @@ function closePanel() {
   if (panelTrigger) panelTrigger.focus();
 }
 window.__vioraOpenDetail = openPanel;
-
-if (tileGrid) {
-  tileGrid.addEventListener('click', e => {
-    const btn = e.target.closest('.tile');
-    if (!btn) return;
-    panelTrigger = btn;
-    const app = APPS[Number(btn.dataset.idx)];
-    const dt = $('#detailTitle'), dc = $('#detailCat'), dd = $('#detailDesc'), dl = $('#detailList');
-    if (dt) dt.textContent = app.name;
-    if (dc) dc.textContent = CAT_LABEL[app.cat];
-    if (dd) dd.textContent = app.desc;
-    if (dl) dl.innerHTML = app.features.map(f => `<li>${f}</li>`).join('');
-    openPanel();
-  });
-}
-
-$$('[data-filter]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    $$('[data-filter]').forEach(b => b.setAttribute('aria-pressed', 'false'));
-    btn.setAttribute('aria-pressed', 'true');
-    currentFilter = btn.dataset.filter;
-    renderTiles();
-  });
-});
-
-const appSearch = $('#appSearch');
-if (appSearch) appSearch.addEventListener('input', e => { currentSearch = e.target.value; renderTiles(); });
-const dimSwitch = $('#dimSwitch');
-if (dimSwitch) dimSwitch.addEventListener('change', e => { $('#appsWall').classList.toggle('dimmed', e.target.checked); });
-
-window.__vioraRenderTiles = renderTiles;
-renderTiles();
 
 if (detailClose) detailClose.addEventListener('click', closePanel);
 if (overlay) overlay.addEventListener('click', closePanel);
@@ -1438,7 +1837,7 @@ if (howGrid) howGrid.innerHTML = HOW.map(h => `
 const FAQ = [
   { q: 'What is VIORA Ecosystems?', a: 'VIORA Ecosystems is an integrated technology ecosystem that brings together business management software, digital services, commerce and expert support. It is designed so that the systems you use can work together rather than in isolation.' },
   { q: 'What business systems does VIORA provide?', a: 'VIORA provides business management (ERP), point of sale (POS), accounting, inventory, procurement, sales management, customer management, HR and payroll, reporting and analytics — plus digital services such as websites, mobile applications and custom software. See the application catalogue above for detail.' },
-  { q: 'Can VIORA develop custom software?', a: 'Yes. When an off-the-shelf system doesn\'t fit your processes, VIORA can design and build custom business systems, websites, web apps, mobile apps, customer portals and API integrations. The process follows a clear discovery → design → build → launch → support timeline.' },
+  { q: 'Can VIORA develop custom software?', a: "Yes. When an off-the-shelf system doesn't fit your processes, VIORA can design and build custom business systems, websites, web apps, mobile apps, customer portals and API integrations. The process follows a clear discovery → design → build → launch → support timeline." },
   { q: 'Does VIORA offer monthly subscriptions?', a: 'Yes. Selected VIORA systems are available through monthly and annual subscription arrangements, with the ability to upgrade as your needs change. Visit the <a href="client.html">Subscriptions page</a> for the current details.' },
   { q: 'Can VIORA customise software for my industry?', a: 'Yes. VIORA builds and configures solutions for 35 sectors — from retail, healthcare and hospitality to law firms, Jua Kali artisans, logistics, agriculture, education and more. Each solution is tailored to how that industry actually operates.' },
   { q: 'Does VIORA provide implementation and training?', a: 'Yes. Implementation, onboarding and training are part of the VIORA offering. The VIORA Academy provides software onboarding, user training, administrator training and digital skills development.' },
@@ -1722,7 +2121,7 @@ if (yrEl) yrEl.textContent = new Date().getFullYear();
     { keys: ['demo', 'book', 'consult', 'talk', 'contact', 'call'], answer: 'Happy to help you get started. You can <a href="contact_us.html">book a demo</a>, email <a href="mailto:support@viora.co.ke">support@viora.co.ke</a>, or <a href="https://wa.me/254713428774" target="_blank" rel="noopener">chat on WhatsApp</a>.' },
     { keys: ['app', 'apps', 'software', 'module', 'modules', 'erp', 'pos'], answer: 'The VIORA ecosystem includes Business ERP, Point of Sale, Accounting, Inventory, Procurement, Sales, CRM, Reporting, HR, Payroll, Attendance, E-commerce, Customer Portals, Websites, Mobile Apps, Custom Software, API integrations and Automation. <a href="#apps">See the full catalogue →</a>' },
     { keys: ['subscription', 'subscribe', 'monthly', 'annual'], answer: 'Selected VIORA systems are available on <strong>monthly</strong> or <strong>annual</strong> subscriptions, and you can upgrade anytime as you grow. <a href="#subscriptions">Learn about subscriptions →</a>' },
-    { keys: ['custom', 'build', 'develop', 'development', 'bespoke'], answer: 'Yes — when off-the-shelf isn\'t the right fit, we build custom business systems, websites, web apps, mobile apps, customer portals and API integrations. <a href="#development">See our process →</a>' },
+    { keys: ['custom', 'build', 'develop', 'development', 'bespoke'], answer: "Yes — when off-the-shelf isn't the right fit, we build custom business systems, websites, web apps, mobile apps, customer portals and API integrations. <a href='#development'>See our process →</a>" },
     { keys: ['training', 'academy', 'learn', 'onboard'], answer: 'VIORA Academy provides software onboarding, business system training, user & admin training and digital skills. <a href="#academy">Explore the Academy →</a>' },
     { keys: ['support', 'help', 'issue', 'problem'], answer: 'For support, email <a href="mailto:support@viora.co.ke">support@viora.co.ke</a> or <a href="https://wa.me/254713428774" target="_blank" rel="noopener">chat on WhatsApp</a>. We\'re available Mon–Fri, 8:00–18:00 EAT, online worldwide.' },
     { keys: ['where', 'location', 'global', 'country', 'nairobi', 'kenya'], answer: 'We\'re founded in Kenya (2022) and serve clients <strong>online worldwide</strong> — with active connections across Africa, Europe, the Middle East, Asia, Oceania and the Americas. <a href="#hero">See our global reach →</a>' },
@@ -1823,12 +2222,6 @@ if (yrEl) yrEl.textContent = new Date().getFullYear();
     panels.forEach(p => {
       p.hidden = p.id !== tabEl.getAttribute('aria-controls');
     });
-    if (tabEl.id === 'tabModules') {
-      const grid = document.getElementById('tileGrid');
-      if (grid && grid.children.length === 0 && typeof window.__vioraRenderTiles === 'function') {
-        window.__vioraRenderTiles();
-      }
-    }
   }
 
   tabs.forEach(tab => {
@@ -1847,11 +2240,6 @@ if (yrEl) yrEl.textContent = new Date().getFullYear();
       }
     });
   });
-
-  const hash = window.location.hash;
-  if (hash === '#applications-products') activate(document.getElementById('tabProducts'));
-  else if (hash === '#applications-bundles') activate(document.getElementById('tabBundles'));
-  else if (hash === '#applications-custom') activate(document.getElementById('tabCustom'));
 })();
 
 /* ============================================================
@@ -2171,12 +2559,7 @@ const MODULE_BASE_PRICE = {
 
   window.__vioraOpenCustomise = function (bundleId, preselectedModules) {
     const bundle = BUNDLES.find(b => b.id === bundleId);
-
-    const allModuleNames = ['Business ERP', 'Point of Sale', 'Accounting', 'Inventory', 'Procurement',
-      'Sales Management', 'Customer Management', 'Reporting & Analytics', 'HR Management', 'Payroll',
-      'Employee Records', 'Attendance', 'Leave Management', 'Performance', 'E-commerce', 'Online Stores',
-      'Product Management', 'Orders', 'Delivery Management', 'Customer Portals', 'Website Development',
-      'Mobile Applications', 'Custom Software', 'API Integrations', 'Automation', 'Branding & Graphics'];
+    const allModuleNames = ALL_MODULES;
 
     const initial = preselectedModules
       ? preselectedModules
@@ -2246,7 +2629,7 @@ const MODULE_BASE_PRICE = {
 })();
 
 /* ============================================================
-   WIZARD
+   WIZARD (existing build-your-own)
    ============================================================ */
 (function initWizard() {
   const overlay = document.getElementById('wizardOverlay');
@@ -2528,36 +2911,33 @@ const CASE_TAGS = ['All', ...new Set(CASE_STUDIES.map(c => c.tag))];
   const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
   if (!mobileNavItems.length) return;
 
-  /* Determine which item should be active based on the current page URL.
-     On the home page → Home. On client.html → Client. On training.html → Training.
-     On market.html → Market. */
-  function setActiveFromURL() {
-    const path = window.location.pathname.toLowerCase();
-    let key = 'home';
-    if (path.includes('client')) key = 'client';
-    else if (path.includes('training')) key = 'training';
-    else if (path.includes('market')) key = 'market';
+  const homeItem = document.querySelector('[data-mnav="home"]');
+  const modulesItem = document.querySelector('[data-mnav="modules"]');
+  const appsSection = document.getElementById('apps');
 
-    mobileNavItems.forEach(i => {
-      i.classList.toggle('active', i.dataset.mnav === key);
-    });
+  function setActive(item) {
+    mobileNavItems.forEach(i => i.classList.remove('active'));
+    if (item) item.classList.add('active');
   }
 
-  setActiveFromURL();
+  function updateActive() {
+    const y = window.scrollY;
+    const appsTop = appsSection ? appsSection.offsetTop : 9999;
+    if (y < appsTop - 100) {
+      setActive(homeItem);
+    } else {
+      setActive(modulesItem);
+    }
+  }
 
-  /* When on the home page, highlight Home while scrolling above the apps section;
-     highlight nothing else (portals are separate pages, not in-page anchors). */
-  if (window.location.pathname === '/' || window.location.pathname === '' || window.location.pathname.endsWith('/14.html') || window.location.pathname.endsWith('/index.html')) {
-    const homeItem = document.querySelector('[data-mnav="home"]');
-    const appsSection = document.getElementById('apps');
+  window.addEventListener('scroll', updateActive, { passive: true });
+  updateActive();
 
-    window.addEventListener('scroll', () => {
-      const y = window.scrollY;
-      const appsTop = appsSection ? appsSection.offsetTop : 9999;
-      if (y < appsTop - 100) {
-        mobileNavItems.forEach(i => i.classList.remove('active'));
-        if (homeItem) homeItem.classList.add('active');
+  mobileNavItems.forEach(item => {
+    item.addEventListener('click', () => {
+      if (item.dataset.mnav === 'home' || item.dataset.mnav === 'modules') {
+        setActive(item);
       }
-    }, { passive: true });
-  }
+    });
+  });
 })();
