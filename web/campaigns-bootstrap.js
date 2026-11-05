@@ -532,9 +532,20 @@ function attachListeners() {
   });
 
   /* logo */
+  /* logo */
   onValue(ref(db, P('logoUrl')), (snap) => {
     state.data.logoUrl = snap.exists() ? snap.val() : null;
     applyLogoToHeader();
+  });
+
+  /* competitorBenchmarks — live sync so analytics and add/refresh never
+     stomp on each other with a stale local snapshot */
+  onValue(ref(db, P('competitorBenchmarks')), (snap) => {
+    state.data.competitorBenchmarks = snap.exists() ? snap.val() : {};
+    try {
+      const current = window.Orbit?.currentModule?.();
+      if (current === 'analytics') window.Orbit.renderActiveOrbitModule?.();
+    } catch (_) {}
   });
 }
 
