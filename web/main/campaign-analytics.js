@@ -40,59 +40,6 @@ function _textColor() {
    MAIN DASHBOARD RENDER
    ═══════════════════════════════════════════════════════════════ */
 export function renderAnalyticsDashboard() {
-  const host = document.getElementById('campaignAnalyticsDashboard');
-  if (!host) return;
-
-  const campaigns = (ctx().state?.data?.campaigns) || [];
-  const allPosts = [];
-  for (const cc of campaigns) {
-    for (const p of (cc.posts || [])) {
-      if (p) allPosts.push({ ...p, campaignName: cc.name });
-    }
-  }
-
-  const published = allPosts.filter(p => p.status === 'published' && p.stats);
-  const anomalies = [];
-
-  for (const p of published) {
-    const a = detectAnomaly(p, published);
-    if (a.type === 'spike' || a.type === 'drop') {
-      anomalies.push({ post: p, ...a });
-    }
-  }
-
-  host.innerHTML = `
-    ${anomalies.length ? _renderAnomalyPanel(anomalies) : ''}
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
-      <div class="chart-box"><h4><i class="fa-solid fa-chart-line"></i> Views & Engagement (30d)</h4><div style="height:260px;"><canvas id="caViewsChart"></canvas></div></div>
-      <div class="chart-box"><h4><i class="fa-solid fa-heart"></i> Engagement Rate per Platform</h4><div style="height:260px;"><canvas id="caEngagementChart"></canvas></div></div>
-      <div class="chart-box"><h4><i class="fa-solid fa-trophy"></i> Top 10 Posts by Engagement</h4><div style="height:260px;"><canvas id="caTopPostsChart"></canvas></div></div>
-      <div class="chart-box"><h4><i class="fa-solid fa-users"></i> Followers Over Time</h4><div style="height:260px;"><canvas id="caFollowersChart"></canvas></div></div>
-    </div>
-
-    <div class="chart-box" style="margin-top:16px;">
-      <h4><i class="fa-solid fa-clock"></i> Best Time to Post (Median Engagement Rate)</h4>
-      <div id="caHeatmap"></div>
-    </div>
-
-    <div class="chart-box" style="margin-top:16px;">
-      <h4>
-        <i class="fa-solid fa-users-viewfinder"></i> Competitor Benchmarks
-        <button type="button" class="btn btn-outline btn-sm" id="caAddCompetitorBtn" style="float:right;">
-          <i class="fa-solid fa-plus"></i> Add Competitor
-        </button>
-      </h4>
-      <div id="caCompetitors"></div>
-    </div>
-  `;
-
-  _renderCharts(published);
-  _renderHeatmap(published);
-  _renderCompetitors();
-
-  document.getElementById('caAddCompetitorBtn')?.addEventListener('click', _openAddCompetitor);
-}
 
 /* ═══════════════════════════════════════════════════════════════
    ANOMALY PANEL
