@@ -232,29 +232,52 @@
       </div>
     </div>
 
-    <!-- MODULES TAB -->
+    <!-- MODULES TAB — A + C + E -->
     <div class="app-panel" id="panelModules" role="tabpanel" aria-labelledby="tabModules">
-      <div class="apps-tools">
-        <div role="group" aria-label="Filter by category" style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="chip" data-filter="all" aria-pressed="true">All</button>
-          <button class="chip" data-filter="business" aria-pressed="false">Business</button>
-          <button class="chip" data-filter="people" aria-pressed="false">People</button>
-          <button class="chip" data-filter="commerce" aria-pressed="false">Commerce</button>
-          <button class="chip" data-filter="digital" aria-pressed="false">Digital</button>
-        </div>
-        <div class="search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
-          <input type="search" id="appSearch" placeholder="Search modules…" aria-label="Search modules">
+
+      <div class="flow-modes" role="tablist" aria-label="Module discovery modes">
+        <button class="flow-mode" role="tab" id="modeStoryboard" aria-selected="true" aria-controls="flowStoryboard" data-mode="storyboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v6M15 4v6"/></svg>
+          <span>Storyboard</span>
+        </button>
+        <button class="flow-mode" role="tab" id="modeRibbon" aria-selected="false" aria-controls="flowRibbon" data-mode="ribbon" tabindex="-1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+          <span>Quick ribbon</span>
+        </button>
+        <button class="flow-mode" role="tab" id="modeChat" aria-selected="false" aria-controls="flowChat" data-mode="chat" tabindex="-1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg>
+          <span>Ask VIORA</span>
+        </button>
+      </div>
+
+      <div class="flow-flow" id="flowStoryboard" role="tabpanel" aria-labelledby="modeStoryboard">
+        <div class="sb-progress" id="sbProgress" aria-label="Storyboard progress"></div>
+        <div class="sb-stage" id="sbStage"></div>
+        <div class="sb-nav">
+          <button type="button" class="btn btn-ghost" id="sbBack" hidden>← Back</button>
+          <div class="sb-actions" id="sbActions"></div>
         </div>
       </div>
-      <div class="apps-wall-wrap" id="appsWall">
-        <div class="tile-grid" id="tileGrid" role="group" aria-label="Module catalogue"></div>
+
+      <div class="flow-flow" id="flowRibbon" role="tabpanel" aria-labelledby="modeRibbon" hidden>
+        <div class="ribbon-strip" id="ribbonStrip"></div>
+        <div class="ribbon-foot">
+          <span class="ribbon-summary" id="ribbonSummary"></span>
+          <button type="button" class="btn btn-primary" id="ribbonBuild" disabled>Build bundle →</button>
+        </div>
       </div>
-      <div class="dim-note" id="dimNote"><strong>Imagine without VIORA:</strong> the same work scattered across disconnected tools, spreadsheets and inboxes. The ecosystem is what connects them.</div>
-      <label class="switch">
-        <input type="checkbox" id="dimSwitch">
-        Imagine without VIORA
-      </label>
+
+      <div class="flow-flow" id="flowChat" role="tabpanel" aria-labelledby="modeChat" hidden>
+        <div class="chat-body" id="chatBody" aria-live="polite"></div>
+        <div class="chat-chips" id="chatChips"></div>
+        <div class="chat-foot">
+          <span class="chat-picks" id="chatPicks"></span>
+          <button type="button" class="btn btn-ghost" id="chatRestart">Start over</button>
+        </div>
+      </div>
+
+      <div class="flow-result" id="flowResult" hidden aria-live="polite"></div>
+
     </div>
 
     <!-- CUSTOM BUILDS TAB -->
@@ -1027,36 +1050,34 @@
   </form>
 </aside>
 
-
 <!-- MOBILE BOTTOM NAV -->
 <nav class="mobile-nav" aria-label="Mobile navigation">
   <div class="mobile-nav-inner">
-    <a href="https://viora.co.ke/" class="mobile-nav-item active" data-mnav="home" aria-label="Home">
+    <a href="#hero" class="mobile-nav-item active" data-mnav="home" aria-label="Home">
       <span class="mobile-nav-icon">
         <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       </span>
       <span>Home</span>
     </a>
-     <a href="https://viora.co.ke/market" class="mobile-nav-item" data-mnav="market" aria-label="Marketplace">
-      <span class="mobile-nav-icon">
-        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-      </span>
-      <span>Market</span>
-    </a>
-    <a href="https://viora.co.ke/client" class="mobile-nav-item" data-mnav="client" aria-label="Client Portal">
+    <button type="button" class="mobile-nav-item" data-mnav="products" aria-label="Products" onclick="document.getElementById('tabProducts').click();document.getElementById('apps').scrollIntoView({behavior:'smooth'});">
       <span class="mobile-nav-icon">
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
       </span>
-      <span>Subscriptions</span>
-    </a>
-    <a href="https://viora.co.ke/training" class="mobile-nav-item" data-mnav="training" aria-label="Training Portal">
+      <span>Products</span>
+    </button>
+    <button type="button" class="mobile-nav-item" data-mnav="bundles" aria-label="Bundles" onclick="document.getElementById('tabBundles').click();document.getElementById('apps').scrollIntoView({behavior:'smooth'});">
       <span class="mobile-nav-icon">
         <svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4 8 4 8-4z"/><path d="M4 7v10l8 4 8-4V7"/></svg>
       </span>
-      <span>Training</span>
-    </a>
-   
-    <button type="button" class="mobile-nav-item" data-mnav="ai" aria-label="Ask AI" onclick="document.getElementById('aiFab').click();">
+      <span>Bundles</span>
+    </button>
+    <button type="button" class="mobile-nav-item" data-mnav="modules" aria-label="Modules" onclick="document.getElementById('tabModules').click();document.getElementById('apps').scrollIntoView({behavior:'smooth'});">
+      <span class="mobile-nav-icon">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      </span>
+      <span>Modules</span>
+    </button>
+    <button type="button" class="mobile-nav-item" data-mnav="ai" aria-label="AI Assistant" onclick="document.getElementById('aiFab').click();">
       <span class="mobile-nav-icon">
         <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v1a3 3 0 0 0-3 3v1a3 3 0 0 0 0 6v1a3 3 0 0 0 3 3v1a3 3 0 0 0 6 0v-1a3 3 0 0 0 3-3v-1a3 3 0 0 0 0-6V9a3 3 0 0 0-3-3V5a3 3 0 0 0-3-3z"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/></svg>
       </span>
