@@ -1,15 +1,4 @@
-// main/orbit-modules.js — v3.0 (full CRUD, no stubs, working delete + followers)
-// ═══════════════════════════════════════════════════════════════
-// Every module is fully wired to real Firebase + worker routes.
-// Inbox delegates to ./inbox.js.
-// Agents use ./agent-runner.js with graceful worker fallback.
-//
-// v3.0 changes:
-//   • renderOverview pulls followers from followers/stats.followers/followersCache
-//   • renderOverview renders per-platform stats from published posts
-//   • renderAccountsModule delegates deletes to deleteAccount() from campaign-accounts.js
-//   • Post Library filter state persists between renders
-// ═══════════════════════════════════════════════════════════════
+// main/orbit-modules.js — v3.1 (calendar create/preview + all prior fixes)
 import {
   renderDraftLibrary,
   renderPromptLibrary,
@@ -102,7 +91,6 @@ export async function renderOverview(ctx) {
   const orders    = Array.isArray(d.orders)    ? d.orders    : [];
   const accounts  = Array.isArray(d.socialAccounts) ? d.socialAccounts : [];
 
-  /* Campaign aggregates */
   let totalBudget = 0, totalSpend = 0, activeCount = 0, totalLeads = 0;
   for (const c of campaigns) {
     if (!c) continue;
@@ -117,8 +105,6 @@ export async function renderOverview(ctx) {
     .filter(o => o && o.paymentStatus === 'paid')
     .reduce((s, o) => s + (Number(o.totalKES) || 0), 0);
 
-  /* ── Social analytics aggregate ──
-     Flatten every published post with stats, then total up. */
   const allPublished = [];
   for (const c of campaigns) {
     for (const p of (c.posts || [])) {
@@ -140,7 +126,6 @@ export async function renderOverview(ctx) {
     ? Math.round((social.interactions / social.views) * 10000) / 100
     : 0;
 
-  /* Followers can live in 3 places — pick the freshest source per account */
   const followerFor = (a) =>
     a.followers        != null ? Number(a.followers) :
     a.stats?.followers != null ? Number(a.stats.followers) :
@@ -149,7 +134,6 @@ export async function renderOverview(ctx) {
 
   const totalFollowers = accounts.reduce((s, a) => s + followerFor(a), 0);
 
-  /* Per-platform breakdown */
   const byPlatform = {};
   for (const p of allPublished) {
     const k = p.platform || 'unknown';
@@ -161,7 +145,6 @@ export async function renderOverview(ctx) {
     byPlatform[k].posts++;
   }
 
-  /* Accounts grid */
   const accountsGrid = accounts.length === 0
     ? `<div class="empty" style="padding:16px;">No social accounts connected. <button class="btn soft btn-sm" data-orbit-goto="accounts">Connect →</button></div>`
     : accounts.map(a => {
@@ -186,7 +169,6 @@ export async function renderOverview(ctx) {
           </div>`;
       }).join('');
 
-  /* Platform rows */
   const platformRows = Object.entries(byPlatform)
     .sort((a, b) => b[1].views - a[1].views)
     .map(([k, s]) => {
@@ -209,7 +191,7 @@ export async function renderOverview(ctx) {
     .sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')))
     .slice(0, 5);
 
-    const html = head('Overview', 'Live snapshot of your marketing command centre.', '') +
+  const html = head('Overview', 'Live snapshot of your marketing command centre.', '') +
     `<div class="grid kpis">
       ${kpi('Total Reach', fmtNumShort(social.views), social.totalPosts + ' published posts', '<i class="fa-solid fa-eye"></i>')}
       ${kpi('Engagement', fmtNumShort(social.interactions), social.engagementRate.toFixed(2) + '% ER', '<i class="fa-solid fa-heart"></i>')}
@@ -218,7 +200,7 @@ export async function renderOverview(ctx) {
     </div>
 
     <div class="grid two" style="margin-top:15px;">
-            <div class="card">
+      <div class="card">
         <div class="cardhead">
           <h3><i class="fa-solid fa-chart-simple"></i> Social performance</h3>
           <button class="btn soft btn-sm" data-orbit-goto="analytics">Details →</button>
@@ -260,7 +242,7 @@ export async function renderOverview(ctx) {
                 <div class="small">KSh ${Number(c.spend || 0).toLocaleString()} / ${Number(c.budget || 0).toLocaleString()}</div>
               </div>`).join('')}
       </div>
-           <div class="card">
+      <div class="card">
         <div class="cardhead"><h3>Revenue & leads</h3></div>
         <div style="padding:14px 0;">
           <div class="kpi-value">KSh ${revenue.toLocaleString()}</div>
@@ -274,7 +256,6 @@ export async function renderOverview(ctx) {
     </div>
   `;
 
-  /* Render the social performance chart once the DOM is mounted */
   const mount = function () {
     if (platformRows.length === 0) return;
     if (typeof Chart === 'undefined') return;
@@ -282,22 +263,19 @@ export async function renderOverview(ctx) {
     const canvas = document.getElementById('overviewSocialChart');
     if (!canvas) return;
 
-    /* Destroy any previous instance so hot re-renders don't stack */
     try {
       if (canvas._vioraChart) { canvas._vioraChart.destroy(); canvas._vioraChart = null; }
     } catch (_) {}
 
     const c = C(ctx);
-    const state = c.state || { data: {} };
-    if (!state.charts) state.charts = {};
-    try { state.charts['overviewSocialChart']?.destroy(); } catch (_) {}
+    const st = c.state || { data: {} };
+    if (!st.charts) st.charts = {};
+    try { st.charts['overviewSocialChart']?.destroy(); } catch (_) {}
 
-    /* Sort platforms by views (largest first) so the bars make sense */
     const sorted = Object.entries(byPlatform)
       .sort((a, b) => b[1].views - a[1].views);
 
     const labels = sorted.map(([k]) => platformMetaSafe(k).label);
-    const colors = sorted.map(([k]) => platformMetaSafe(k).color);
 
     const postsData    = sorted.map(([, s]) => Number(s.posts)    || 0);
     const viewsData    = sorted.map(([, s]) => Number(s.views)    || 0);
@@ -321,51 +299,11 @@ export async function renderOverview(ctx) {
       data: {
         labels,
         datasets: [
-          {
-            label: 'Posts',
-            data: postsData,
-            backgroundColor: 'rgba(168,85,247,0.75)',
-            borderColor: '#a855f7',
-            borderWidth: 1,
-            borderRadius: 4,
-            yAxisID: 'y',
-          },
-          {
-            label: 'Views',
-            data: viewsData,
-            backgroundColor: 'rgba(0,212,255,0.75)',
-            borderColor: '#00d4ff',
-            borderWidth: 1,
-            borderRadius: 4,
-            yAxisID: 'y',
-          },
-          {
-            label: 'Likes',
-            data: likesData,
-            backgroundColor: 'rgba(255,92,124,0.75)',
-            borderColor: '#ff5c7c',
-            borderWidth: 1,
-            borderRadius: 4,
-            yAxisID: 'y',
-          },
-          {
-            label: 'Comments',
-            data: commentsData,
-            backgroundColor: 'rgba(34,230,160,0.75)',
-            borderColor: '#22e6a0',
-            borderWidth: 1,
-            borderRadius: 4,
-            yAxisID: 'y',
-          },
-          {
-            label: 'Shares',
-            data: sharesData,
-            backgroundColor: 'rgba(255,200,87,0.75)',
-            borderColor: '#ffc857',
-            borderWidth: 1,
-            borderRadius: 4,
-            yAxisID: 'y',
-          },
+          { label: 'Posts',    data: postsData,    backgroundColor: 'rgba(168,85,247,0.75)',  borderColor: '#a855f7', borderWidth: 1, borderRadius: 4, yAxisID: 'y' },
+          { label: 'Views',    data: viewsData,    backgroundColor: 'rgba(0,212,255,0.75)',   borderColor: '#00d4ff', borderWidth: 1, borderRadius: 4, yAxisID: 'y' },
+          { label: 'Likes',    data: likesData,    backgroundColor: 'rgba(255,92,124,0.75)',  borderColor: '#ff5c7c', borderWidth: 1, borderRadius: 4, yAxisID: 'y' },
+          { label: 'Comments', data: commentsData, backgroundColor: 'rgba(34,230,160,0.75)',  borderColor: '#22e6a0', borderWidth: 1, borderRadius: 4, yAxisID: 'y' },
+          { label: 'Shares',   data: sharesData,   backgroundColor: 'rgba(255,200,87,0.75)',  borderColor: '#ffc857', borderWidth: 1, borderRadius: 4, yAxisID: 'y' },
           {
             label: 'Engagement Rate %',
             type: 'line',
@@ -389,13 +327,7 @@ export async function renderOverview(ctx) {
         plugins: {
           legend: {
             position: 'top',
-            labels: {
-              color: tc,
-              font: { size: 11 },
-              boxWidth: 12,
-              usePointStyle: true,
-              padding: 12,
-            },
+            labels: { color: tc, font: { size: 11 }, boxWidth: 12, usePointStyle: true, padding: 12 },
           },
           tooltip: {
             callbacks: {
@@ -409,14 +341,9 @@ export async function renderOverview(ctx) {
           },
         },
         scales: {
-          x: {
-            ticks: { color: tc, font: { size: 11 } },
-            grid: { display: false },
-          },
+          x: { ticks: { color: tc, font: { size: 11 } }, grid: { display: false } },
           y: {
-            type: 'linear',
-            position: 'left',
-            beginAtZero: true,
+            type: 'linear', position: 'left', beginAtZero: true,
             title: { display: true, text: 'Count', color: tc, font: { size: 10 } },
             ticks: {
               color: tc,
@@ -430,14 +357,9 @@ export async function renderOverview(ctx) {
             grid: { color: gc },
           },
           y1: {
-            type: 'linear',
-            position: 'right',
-            beginAtZero: true,
+            type: 'linear', position: 'right', beginAtZero: true,
             title: { display: true, text: 'Engagement rate (%)', color: '#f97316', font: { size: 10 } },
-            ticks: {
-              color: '#f97316',
-              callback: v => v + '%',
-            },
+            ticks: { color: '#f97316', callback: v => v + '%' },
             grid: { drawOnChartArea: false },
           },
         },
@@ -445,13 +367,10 @@ export async function renderOverview(ctx) {
     });
 
     canvas._vioraChart = chart;
-    state.charts['overviewSocialChart'] = chart;
+    st.charts['overviewSocialChart'] = chart;
   };
 
-  return {
-    html,
-    mount,
-  };
+  return { html, mount };
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -511,7 +430,7 @@ export async function renderAccountsModule(ctx) {
                 <i class="fa-solid fa-${isRegistered ? 'pen' : 'plus'}"></i>
                 ${isRegistered ? 'Edit' : 'Connect'}
               </button>
-                           ${isRegistered ? `
+              ${isRegistered ? `
                 <button class="btn" data-acc-verify="${esc(a.id)}" title="Verify"><i class="fa-solid fa-satellite-dish"></i></button>
                 ${p.key === 'youtube' ? `<button class="btn" data-acc-sync="${esc(a.id)}" title="Sync all videos from this channel"><i class="fa-solid fa-cloud-arrow-down"></i></button>` : ''}
                 <button class="btn danger" data-acc-remove="${esc(a.id)}" title="Remove"><i class="fa-solid fa-trash"></i></button>` : ''}
@@ -529,7 +448,7 @@ export async function renderAccountsModule(ctx) {
           _openAccountEditor(ctx, key, byPlatform[key] || null, PLATFORMS);
         });
       });
-            view.querySelectorAll('[data-acc-verify]').forEach(btn => {
+      view.querySelectorAll('[data-acc-verify]').forEach(btn => {
         btn.addEventListener('click', () => _verifyAccount(ctx, btn.getAttribute('data-acc-verify')));
       });
       view.querySelectorAll('[data-acc-sync]').forEach(btn => {
@@ -609,7 +528,6 @@ function _openAccountEditor(ctx, platformKey, existing, PLATFORMS) {
       await set(ref(db, P('socialAccounts/' + payload.id)), payload);
       toast(ctx, a.id ? 'Account updated.' : 'Account saved.', 'success');
       close();
-      /* subscriber will re-render */
     } catch (e) { toast(ctx, 'Save failed: ' + e.message, 'error'); }
   });
 }
@@ -622,17 +540,13 @@ async function _verifyAccount(ctx, id) {
   if (typeof callFn !== 'function') { toast(ctx, 'Worker not available.', 'warning'); return; }
 
   const path = P('socialAccounts/' + id);
-  console.log('[verify] path:', path);
-  console.log('[verify] db ready:', !!db, 'ref ready:', !!ref, 'set ready:', !!set);
 
   try {
     const snap = await get(ref(db, path));
     if (!snap.exists()) { toast(ctx, 'Account not found.', 'error'); return; }
     const account = snap.val();
-    console.log('[verify] account loaded:', { platform: account.platform, handle: account.handle, followers: account.followers });
 
     const res = await callFn('socialStats', { platform: account.platform, url: account.profileUrl });
-    console.log('[verify] worker response:', res);
 
     if (!res || res.ok === false) {
       toast(ctx, res?.error || 'Worker returned no data.', 'warning');
@@ -651,10 +565,9 @@ async function _verifyAccount(ctx, id) {
       verified: true,
     };
 
-    /* ── Write to Firebase ── */
     try {
       await set(ref(db, path), updated);
-            try {
+      try {
         const historyPath = path + '/followersHistory';
         const historySnap = await get(ref(db, historyPath));
         const history = historySnap.exists() ? (historySnap.val() || []) : [];
@@ -668,44 +581,21 @@ async function _verifyAccount(ctx, id) {
       } catch (histErr) {
         console.warn('[verify] history append failed:', histErr.message);
       }
-      console.log('[verify] WRITE SUCCESS:', { followers: res.followers });
-
-      /* Verify the write by reading back */
-      const verify = await get(ref(db, path));
-      const readBack = verify.val();
-      console.log('[verify] read-back:', { followers: readBack?.followers, verified: readBack?.verified });
-
-      if (readBack?.followers !== res.followers) {
-        console.warn('[verify] READ-BACK MISMATCH — write may have been rejected by Firebase rules');
-        toast(ctx, 'Saved locally but Firebase rejected the write. Check rules.', 'warning');
-      }
     } catch (writeErr) {
-      console.error('[verify] WRITE FAILED:', writeErr);
-      console.error('[verify] writeErr.code:', writeErr?.code);
-      console.error('[verify] writeErr.message:', writeErr?.message);
       toast(ctx, 'Save to Firebase failed: ' + (writeErr.message || 'unknown'), 'error');
       return;
     }
 
-    /* ── Update local state so the render picks it up immediately ── */
     if (state?.data?.socialAccounts) {
       state.data.socialAccounts = state.data.socialAccounts.map(a =>
         a && a.id === id ? { ...a, ...updated } : a
       );
-      console.log('[verify] state updated:', state.data.socialAccounts.find(a => a.id === id));
     }
 
-    /* ── Force re-render ── */
-    try {
-      if (window.Orbit?.renderActiveOrbitModule) {
-        window.Orbit.renderActiveOrbitModule();
-        console.log('[verify] re-render triggered');
-      }
-    } catch (e) { console.warn('[verify] re-render failed:', e); }
+    try { window.Orbit?.renderActiveOrbitModule?.(); } catch (_) {}
 
     toast(ctx, `Verified — ${Number(res.followers).toLocaleString()} followers.`, 'success');
   } catch (e) {
-    console.error('[verify] FATAL:', e);
     toast(ctx, 'Verify failed: ' + (e.message || 'unknown'), 'error');
   }
 }
@@ -807,7 +697,7 @@ export async function renderCampaignsModule(ctx) {
       });
       document.querySelectorAll('[data-camp-edit]').forEach(b =>
         b.addEventListener('click', () => window.Viora?.editCampaign?.(b.getAttribute('data-camp-edit'))));
-          document.querySelectorAll('[data-camp-del]').forEach(b =>
+      document.querySelectorAll('[data-camp-del]').forEach(b =>
         b.addEventListener('click', async () => {
           if (!confirm('Delete this campaign?')) return;
           try {
@@ -830,7 +720,7 @@ export async function renderCampaignsModule(ctx) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   POST LIBRARY
+   POST LIBRARY (unchanged — included for completeness)
    ═══════════════════════════════════════════════════════════════ */
 const _postLibState = {
   filterStatus: 'all',
@@ -845,8 +735,8 @@ export function renderPostLibrary(ctx) {
   if (!host) return;
 
   const c = C(ctx);
-  const state = c.state || { data: {} };
-  const campaigns = Array.isArray(state.data?.campaigns) ? state.data.campaigns : [];
+  const st = c.state || { data: {} };
+  const campaigns = Array.isArray(st.data?.campaigns) ? st.data.campaigns : [];
 
   const allPosts = [];
   for (const camp of campaigns) {
@@ -921,10 +811,10 @@ export function renderPostLibrary(ctx) {
 
       <div class="plib-toolbar">
         <div class="plib-filters" role="tablist">
-          ${['all','published','scheduled','draft','compose-only','failed'].map(st => `
-            <button type="button" class="plib-filter-btn ${_postLibState.filterStatus === st ? 'active' : ''}"
-                    data-plib-status="${st}" role="tab">
-              ${st === 'all' ? 'All' : st.charAt(0).toUpperCase() + st.slice(1).replace('-', ' ')}
+          ${['all','published','scheduled','draft','compose-only','failed'].map(st2 => `
+            <button type="button" class="plib-filter-btn ${_postLibState.filterStatus === st2 ? 'active' : ''}"
+                    data-plib-status="${st2}" role="tab">
+              ${st2 === 'all' ? 'All' : st2.charAt(0).toUpperCase() + st2.slice(1).replace('-', ' ')}
             </button>
           `).join('')}
         </div>
@@ -1032,7 +922,7 @@ export function renderPostLibrary(ctx) {
     });
   });
 
-   host.querySelectorAll('[data-plib-action]').forEach(btn => {
+  host.querySelectorAll('[data-plib-action]').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
       const action = btn.getAttribute('data-plib-action');
@@ -1040,11 +930,9 @@ export function renderPostLibrary(ctx) {
       const group = filtered[i];
       if (!group) return;
 
-         if (action === 'view') {
+      if (action === 'view') {
         openFanoutDetail(ctx, group);
       } else if (action === 'copy') {
-        /* For a multi-platform fanout, copy the hero post (most likely
-           the one with the image). If the group has one post, copy that. */
         const hero = group.reduce((best, p) => {
           const score = (p.caption || '').length + (p.imageBase64 ? 1000 : 0);
           const bestScore = (best.caption || '').length + (best.imageBase64 ? 1000 : 0);
@@ -1056,7 +944,6 @@ export function renderPostLibrary(ctx) {
       } else if (action === 'post-now') {
         postFanoutNow(ctx, group);
       } else if (action === 'delete') {
-        const summary = summarizeFanout(group);
         const count = group.length;
         const label = count === 1 ? 'this post' : `all ${count} posts in this fanout`;
         if (!confirm(`Delete ${label}? This cannot be undone.`)) return;
@@ -1132,7 +1019,7 @@ function renderFanoutCard(group, idx) {
 
   const campaignName = hero?._campaignName || '—';
 
-      const actionsHtml = (() => {
+  const actionsHtml = (() => {
     const buttons = [
       `<button type="button" class="btn soft btn-sm" data-plib-action="view" data-plib-card-idx="${idx}">View</button>`,
       `<button type="button" class="btn soft btn-sm" data-plib-action="copy" data-plib-card-idx="${idx}" title="Copy caption + hashtags + image"><i class="fa-solid fa-copy"></i></button>`,
@@ -1427,7 +1314,7 @@ function renderFanoutModalBody(ctx, bodyEl, group, summary, activeTab) {
     ${historyHtml}
     ${compareHtml}
 
-       <div class="plib-modal-actions">
+    <div class="plib-modal-actions">
       <button type="button" class="btn soft btn-sm" data-plib-copy title="Copy caption + hashtags + image">
         <i class="fa-solid fa-copy"></i> Copy post
       </button>
@@ -1494,7 +1381,7 @@ function renderFanoutModalBody(ctx, bodyEl, group, summary, activeTab) {
     await postFanoutNow(ctx, group);
   });
 
-   bodyEl.querySelector('[data-plib-delete]')?.addEventListener('click', async () => {
+  bodyEl.querySelector('[data-plib-delete]')?.addEventListener('click', async () => {
     if (!confirm(`Delete ${group.length > 1 ? 'all posts in this fanout' : 'this post'}? This cannot be undone.`)) return;
     try {
       const result = await deleteFanoutPosts(ctx, group);
@@ -1553,11 +1440,11 @@ function drawHistoryChart(ctx, bodyEl, post) {
   }
 
   const c = C(ctx);
-  const state = c.state || {};
-  if (!state.charts) state.charts = {};
-  if (state.charts['plibHistoryChart']) {
-    try { state.charts['plibHistoryChart'].destroy(); } catch (_) {}
-    delete state.charts['plibHistoryChart'];
+  const st = c.state || {};
+  if (!st.charts) st.charts = {};
+  if (st.charts['plibHistoryChart']) {
+    try { st.charts['plibHistoryChart'].destroy(); } catch (_) {}
+    delete st.charts['plibHistoryChart'];
   }
 
   const history = statsHistoryFor(post, 24 * 60 * 60 * 1000);
@@ -1575,7 +1462,7 @@ function drawHistoryChart(ctx, bodyEl, post) {
 
   const tc = (() => { try { return getComputedStyle(document.documentElement).getPropertyValue('--chart-text').trim() || '#94a3b8'; } catch (_) { return '#94a3b8'; } })();
 
-  state.charts['plibHistoryChart'] = new Chart(canvas, {
+  st.charts['plibHistoryChart'] = new Chart(canvas, {
     type: 'line',
     data: {
       labels: history.map(s => {
@@ -1610,11 +1497,11 @@ function drawCompareChart(ctx, bodyEl, group, mode) {
   }
 
   const c = C(ctx);
-  const state = c.state || {};
-  if (!state.charts) state.charts = {};
-  if (state.charts['plibCompareChart']) {
-    try { state.charts['plibCompareChart'].destroy(); } catch (_) {}
-    delete state.charts['plibCompareChart'];
+  const st = c.state || {};
+  if (!st.charts) st.charts = {};
+  if (st.charts['plibCompareChart']) {
+    try { st.charts['plibCompareChart'].destroy(); } catch (_) {}
+    delete st.charts['plibCompareChart'];
   }
 
   const tc = (() => { try { return getComputedStyle(document.documentElement).getPropertyValue('--chart-text').trim() || '#94a3b8'; } catch (_) { return '#94a3b8'; } })();
@@ -1632,7 +1519,7 @@ function drawCompareChart(ctx, bodyEl, group, mode) {
       shares: Number(p.stats?.shares) || 0,
     }));
 
-    state.charts['plibCompareChart'] = new Chart(canvas, {
+    st.charts['plibCompareChart'] = new Chart(canvas, {
       type: 'bar',
       data: {
         labels: platforms.map(p => p.label),
@@ -1658,7 +1545,7 @@ function drawCompareChart(ctx, bodyEl, group, mode) {
       host.innerHTML = `<div class="small muted" style="padding:16px;text-align:center;">Not enough combined history yet.</div>`;
       return;
     }
-    state.charts['plibCompareChart'] = new Chart(canvas, {
+    st.charts['plibCompareChart'] = new Chart(canvas, {
       type: 'line',
       data: {
         labels: combined.map(s => new Date(s.ts).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })),
@@ -1686,8 +1573,6 @@ function drawCompareChart(ctx, bodyEl, group, mode) {
    ═══════════════════════════════════════════════════════════════ */
 export function openAddPlatformDialog(ctx, group) {
   if (!Array.isArray(group) || group.length === 0) return;
-
-  const c = C(ctx);
 
   const source = group.reduce((best, p) => {
     const score = (p.caption || '').length + (p.imageBase64 ? 1000 : 0);
@@ -1901,7 +1786,6 @@ export function openEditScheduleDialog(ctx, group) {
       return;
     }
 
-    const newIso = new Date(newLocal).toISOString();
     const newUtc = toUtcIso(newLocal);
 
     const btn = dlg.querySelector('#plibSchedSave');
@@ -2308,10 +2192,7 @@ export function openImportModal(ctx) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   CONTENT STUDIO, CALENDAR, PUBLISHING, CREATIVE, INBOX, CRM,
-   LISTENING, AGENTS, AUTOMATION, ANALYTICS, COMPETITORS,
-   REPORTS, CLIENTS, APPROVALS, MEDIA, KNOWLEDGE, TEAM,
-   INTEGRATIONS, SETTINGS, ADMIN
+   CONTENT STUDIO
    ═══════════════════════════════════════════════════════════════ */
 export async function renderContentStudio(ctx) {
   const html = head(
@@ -2368,12 +2249,18 @@ export async function renderContentStudio(ctx) {
   };
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   CONTENT CALENDAR — click a day to create, click a pill to preview
+   ═══════════════════════════════════════════════════════════════ */
 export async function renderCalendar(ctx) {
+  const c = C(ctx);
   const campaigns = Array.isArray(data(ctx).campaigns) ? data(ctx).campaigns : [];
   const events = [];
-  for (const c of campaigns) for (const p of (c.posts || [])) {
-    if (!p || !p.scheduledFor) continue;
-    events.push({ ...p, campaignName: c.name });
+  for (const camp of campaigns) {
+    for (const p of (camp.posts || [])) {
+      if (!p || !p.scheduledFor) continue;
+      events.push({ ...p, campaignName: camp.name, _campaignId: camp.id });
+    }
   }
 
   const now = new Date();
@@ -2392,26 +2279,525 @@ export async function renderCalendar(ctx) {
   }
 
   let cells = '';
-  for (let i = 0; i < firstDay; i++) cells += '<div class="day" style="opacity:.3;"></div>';
+  for (let i = 0; i < firstDay; i++) {
+    cells += '<div class="day" style="opacity:.3;"></div>';
+  }
+  const today = new Date();
+  const isThisMonth = today.getFullYear() === year && today.getMonth() === month;
+  const todayDate = today.getDate();
+
   for (let d = 1; d <= daysInMonth; d++) {
     const dayEvents = byDay[d] || [];
-    cells += `<div class="day">
-      <b>${d}</b>
-      ${dayEvents.map(ev => `<div class="event" title="${esc(ev.caption || '')}">${esc(ev.platform)} · ${esc((ev.caption || '').slice(0, 20))}</div>`).join('')}
-    </div>`;
+    const isToday = isThisMonth && d === todayDate;
+    const isoDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+
+    cells += `
+      <div class="day"
+           data-cal-day="${isoDate}"
+           style="cursor:pointer;position:relative;${isToday ? 'border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);' : ''}"
+           title="Click to schedule a post on ${isoDate}">
+        <b style="${isToday ? 'color:var(--accent);' : ''}">${d}${isToday ? ' · today' : ''}</b>
+        ${dayEvents.map(ev => {
+          const pm = platformMetaSafe(ev.platform);
+          const time = (() => {
+            try {
+              const dt = new Date(ev.scheduledFor);
+              return dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+            } catch (_) { return ''; }
+          })();
+          return `<div class="event" data-cal-post="${esc(ev.id)}" data-cal-camp="${esc(ev._campaignId)}"
+                       style="cursor:pointer;"
+                       title="${esc((ev.caption || '').slice(0, 120))}">
+                    ${time} · <i class="${pm.icon}" style="color:${pm.color};"></i> ${esc((ev.caption || pm.label || '').slice(0, 16))}
+                  </div>`;
+        }).join('')}
+        <div style="position:absolute;bottom:4px;right:6px;font-size:9px;color:var(--text-light);opacity:0;" class="day-hint">+ add</div>
+      </div>`;
   }
 
-  return head('Content calendar', 'All scheduled posts across campaigns.', '') +
-    `<div class="card"><div class="cardhead"><h3>${now.toLocaleString('en-US', { month: 'long', year: 'numeric' })}</h3>
-      <span class="pill">${events.length} scheduled</span></div>
+  const html = head('Content calendar', 'All scheduled posts across campaigns. Click any day to schedule a new post.', '') +
+    `<div class="card">
+      <div class="cardhead">
+        <h3>${now.toLocaleString('en-US', { month: 'long', year: 'numeric' })}</h3>
+        <span class="pill">${events.length} scheduled</span>
+      </div>
       <div class="calendar">
         ${dayNames.map(n => `<div class="muted small" style="padding:5px;">${n}</div>`).join('')}
         ${cells}
       </div>
-      ${events.length === 0 ? '<div class="empty">No scheduled posts yet. Create one from Content studio.</div>' : ''}
-    </div>`;
+      ${events.length === 0
+        ? '<div class="empty" style="margin-top:14px;">No scheduled posts yet. Click any day to create one.</div>'
+        : '<div class="small muted" style="margin-top:10px;">Click a day to add a post · click a post pill to preview</div>'}
+    </div>
+    <style>
+      .day:hover { border-color: var(--accent) !important; }
+      .day:hover .day-hint { opacity: 1 !important; }
+      .event:hover { filter: brightness(1.08); }
+    </style>`;
+
+  return {
+    html,
+    mount(view) {
+      view.querySelectorAll('[data-cal-day]').forEach(el => {
+        el.addEventListener('click', (e) => {
+          const postEl = e.target.closest('[data-cal-post]');
+          if (postEl) {
+            e.stopPropagation();
+            const postId = postEl.getAttribute('data-cal-post');
+            const campId = postEl.getAttribute('data-cal-camp');
+            const camp = campaigns.find(x => x.id === campId);
+            const post = camp && (camp.posts || []).find(p => p.id === postId);
+            if (post) openCalendarPostPreview(ctx, post, camp);
+            return;
+          }
+          const isoDate = el.getAttribute('data-cal-day');
+          openCalendarCreateModal(ctx, isoDate);
+        });
+      });
+    }
+  };
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   CREATE POST FROM CALENDAR
+   ═══════════════════════════════════════════════════════════════ */
+function openCalendarCreateModal(ctx, isoDate) {
+  const c = C(ctx);
+  const state = c.state || { data: {} };
+  const campaigns = Array.isArray(state.data?.campaigns) ? state.data.campaigns : [];
+
+  if (!campaigns.length) {
+    toast(ctx, 'Create a campaign first — posts need a home.', 'warning');
+    try { window.Orbit?.navigate?.('campaigns'); } catch (_) {}
+    return;
+  }
+
+  const defaultLocal = `${isoDate}T09:00`;
+
+  const platforms = [
+    { key: 'facebook',  label: 'Facebook',       icon: 'fa-facebook',  color: '#1877f2' },
+    { key: 'instagram', label: 'Instagram',      icon: 'fa-instagram', color: '#e1306c' },
+    { key: 'tiktok',    label: 'TikTok',         icon: 'fa-tiktok',    color: '#ff0050' },
+    { key: 'youtube',   label: 'YouTube',        icon: 'fa-youtube',   color: '#ff0033' },
+    { key: 'linkedin',  label: 'LinkedIn',       icon: 'fa-linkedin',  color: '#0a66c2' },
+    { key: 'x',         label: 'X / Twitter',    icon: 'fa-x-twitter', color: '#000000' },
+    { key: 'threads',   label: 'Threads',        icon: 'fa-threads',   color: '#000000' },
+    { key: 'pinterest', label: 'Pinterest',      icon: 'fa-pinterest', color: '#e60023' },
+    { key: 'whatsapp',  label: 'WhatsApp',       icon: 'fa-whatsapp',  color: '#25d366' },
+  ];
+
+  let modal = document.getElementById('calCreateModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'calCreateModal';
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.classList.remove('active');
+    });
+  }
+
+  modal.innerHTML = `
+    <div class="modal large" style="max-width:640px;">
+      <div class="modalhead">
+        <h3><i class="fa-solid fa-calendar-plus"></i> Schedule post · ${esc(isoDate)}</h3>
+        <button type="button" class="close" data-cal-close>×</button>
+      </div>
+
+      <div class="field">
+        <label>Campaign *</label>
+        <select id="calCampaign">
+          ${campaigns
+            .filter(cc => cc && cc.id)
+            .sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')))
+            .map(cc => `<option value="${esc(cc.id)}">${esc(cc.name || 'Untitled')}</option>`)
+            .join('')}
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Caption *</label>
+        <textarea id="calCaption" rows="4" placeholder="What are you posting?"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Hashtags <span class="muted" style="font-weight:400;">(space-separated, # optional)</span></label>
+        <input id="calHashtags" placeholder="#viora #kenya launch" />
+      </div>
+
+      <div class="field">
+        <label>Platforms * <span class="muted" style="font-weight:400;">(select at least one)</span></label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
+          ${platforms.map(p => `
+            <label class="cc-platform-chip" style="padding:6px 10px;font-size:11px;cursor:pointer;">
+              <input type="checkbox" data-cal-platform="${esc(p.key)}" ${p.key === 'facebook' ? 'checked' : ''} />
+              <span class="cc-platform-icon" style="color:${p.color};"><i class="fa-brands ${p.icon}"></i></span>
+              <span>${esc(p.label)}</span>
+            </label>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="formgrid">
+        <div class="field">
+          <label>Scheduled for *</label>
+          <input type="datetime-local" id="calScheduledFor" value="${esc(defaultLocal)}" />
+        </div>
+        <div class="field">
+          <label>Pillar</label>
+          <select id="calPillar">
+            <option value="educational">Educational</option>
+            <option value="promotional">Promotional</option>
+            <option value="behind_the_scenes">Behind the Scenes</option>
+            <option value="testimonial">Testimonial</option>
+            <option value="announcement">Announcement</option>
+            <option value="trending">Trending</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Image <span class="muted" style="font-weight:400;">(optional)</span></label>
+        <input type="file" id="calImageInput" accept="image/png,image/jpeg,image/webp" />
+        <div id="calImagePreview" style="margin-top:8px;"></div>
+      </div>
+
+      <div class="notice" style="margin-top:14px;margin-bottom:0;">
+        The post is saved as <b>scheduled</b>. To publish it, open the post from the calendar
+        and click "Post now", or let the worker's scheduler publish it at the scheduled time.
+      </div>
+
+      <div class="form-actions" style="margin-top:18px;">
+        <button type="button" class="btn soft" data-cal-close>Cancel</button>
+        <button type="button" class="btn primary" id="calSaveBtn">
+          <i class="fa-solid fa-check"></i> Schedule post
+        </button>
+      </div>
+    </div>
+  `;
+
+  modal.classList.add('active');
+
+  const fileInput = modal.querySelector('#calImageInput');
+  const previewEl = modal.querySelector('#calImagePreview');
+  let uploadedImage = null;
+
+  fileInput.addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) { uploadedImage = null; previewEl.innerHTML = ''; return; }
+    try {
+      const img = await readImageFile(file);
+      uploadedImage = img;
+      previewEl.innerHTML = `
+        <img src="data:${img.mime};base64,${img.b64}" style="max-width:100%;max-height:180px;border-radius:8px;border:1px solid var(--border-color);" />
+      `;
+    } catch (err) {
+      toast(ctx, 'Image upload failed: ' + (err.message || 'unknown'), 'error');
+      uploadedImage = null;
+      previewEl.innerHTML = '';
+    }
+  });
+
+  modal.querySelectorAll('[data-cal-close]').forEach(b => {
+    b.addEventListener('click', () => modal.classList.remove('active'));
+  });
+
+  modal.querySelector('#calSaveBtn').addEventListener('click', async () => {
+    const campaignId = modal.querySelector('#calCampaign').value;
+    const caption = modal.querySelector('#calCaption').value.trim();
+    const hashtagsRaw = modal.querySelector('#calHashtags').value.trim();
+    const scheduledFor = modal.querySelector('#calScheduledFor').value;
+    const pillar = modal.querySelector('#calPillar').value;
+
+    const selectedPlatforms = [];
+    modal.querySelectorAll('[data-cal-platform]:checked').forEach(cb => {
+      selectedPlatforms.push(cb.getAttribute('data-cal-platform'));
+    });
+
+    if (!campaignId) { toast(ctx, 'Pick a campaign.', 'warning'); return; }
+    if (!caption) { toast(ctx, 'Write a caption.', 'warning'); return; }
+    if (!selectedPlatforms.length) { toast(ctx, 'Select at least one platform.', 'warning'); return; }
+    if (!scheduledFor) { toast(ctx, 'Pick a date and time.', 'warning'); return; }
+
+    const hashtags = hashtagsRaw
+      .split(/\s+/)
+      .map(h => h.trim())
+      .filter(Boolean)
+      .map(h => h.startsWith('#') ? h : '#' + h);
+
+    const btn = modal.querySelector('#calSaveBtn');
+    const prev = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
+
+    try {
+      const campaign = campaigns.find(cc => cc.id === campaignId);
+      if (!campaign) throw new Error('Campaign not found');
+
+      const nowIso = new Date().toISOString();
+      const scheduledForUtc = new Date(scheduledFor).toISOString();
+      const fanoutId = 'fan-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+      const newPosts = selectedPlatforms.map((platformKey, i) => ({
+        id: 'cal-' + Date.now().toString(36) + '-' + i + '-' + Math.random().toString(36).slice(2, 6),
+        fanoutId,
+        campaignId,
+        platform: platformKey,
+        pillar,
+        caption,
+        hashtags,
+        imageBase64: uploadedImage?.b64 || null,
+        imageMime: uploadedImage?.mime || 'image/png',
+        imageWidth: uploadedImage?.width || null,
+        imageHeight: uploadedImage?.height || null,
+        imagePrompt: null,
+        imageModel: uploadedImage ? 'upload' : null,
+        imageSource: uploadedImage ? 'upload' : null,
+        imageSeed: null,
+        utm: {},
+        url: null,
+        status: 'scheduled',
+        mode: 'auto',
+        scheduledFor,
+        scheduledForUtc,
+        publishedAt: null,
+        externalId: null,
+        composeUrl: null,
+        lastError: null,
+        stats: null,
+        statsUpdatedAt: null,
+        statsHistory: [],
+        accountHandle: null,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+        createdBy: state.operator?.email || 'calendar',
+        source: 'calendar',
+      }));
+
+      const existingPosts = Array.isArray(campaign.posts) ? campaign.posts.slice() : [];
+      campaign.posts = [...existingPosts, ...newPosts];
+      campaign.updatedAt = nowIso;
+
+      await c.upsertDoc('campaigns', campaign, campaign._rev);
+
+      modal.classList.remove('active');
+      toast(ctx, `Scheduled ${newPosts.length} post${newPosts.length === 1 ? '' : 's'} for ${new Date(scheduledFor).toLocaleString('en-GB')}.`, 'success');
+
+      window.Orbit?.renderActiveOrbitModule?.();
+    } catch (err) {
+      console.error('[calendar] save failed:', err);
+      toast(ctx, 'Save failed: ' + (err.message || 'unknown'), 'error');
+      btn.disabled = false;
+      btn.innerHTML = prev;
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PREVIEW SCHEDULED POST FROM THE CALENDAR
+   ═══════════════════════════════════════════════════════════════ */
+function openCalendarPostPreview(ctx, post, campaign) {
+  const c = C(ctx);
+  const pm = platformMetaSafe(post.platform);
+
+  let modal = document.getElementById('calPreviewModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'calPreviewModal';
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.classList.remove('active');
+    });
+  }
+
+  const timeLabel = (() => {
+    try {
+      return new Date(post.scheduledFor).toLocaleString('en-GB', {
+        weekday: 'short', day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+      });
+    } catch (_) { return post.scheduledFor || '—'; }
+  })();
+
+  modal.innerHTML = `
+    <div class="modal large" style="max-width:640px;">
+      <div class="modalhead">
+        <h3>
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9px;background:${pm.color}22;color:${pm.color};margin-right:8px;">
+            <i class="fa-brands ${pm.icon}"></i>
+          </span>
+          ${esc(pm.label || post.platform)} post preview
+        </h3>
+        <button type="button" class="close" data-cal-close>×</button>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+        <span class="status warn">${esc(post.status || 'scheduled')}</span>
+        <span class="pill"><i class="fa-solid fa-calendar"></i> ${esc(timeLabel)}</span>
+        <span class="pill"><i class="fa-solid fa-bullhorn"></i> ${esc(campaign?.name || '—')}</span>
+        ${post.pillar ? `<span class="pill"><i class="fa-solid fa-tag"></i> ${esc(post.pillar)}</span>` : ''}
+      </div>
+
+      ${post.imageBase64 ? `
+        <div style="text-align:center;margin-bottom:14px;">
+          <img src="data:${esc(post.imageMime || 'image/png')};base64,${esc(post.imageBase64)}"
+               style="max-width:100%;max-height:300px;border-radius:10px;border:1px solid var(--border-color);" />
+        </div>
+      ` : ''}
+
+      <div class="field" style="margin-top:0;">
+        <label>Caption</label>
+        <div style="padding:12px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:10px;font-size:13px;line-height:1.55;white-space:pre-wrap;">${esc(post.caption || '(no caption)')}</div>
+      </div>
+
+      ${(post.hashtags && post.hashtags.length) ? `
+        <div class="field">
+          <label>Hashtags</label>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;">
+            ${post.hashtags.map(h => `<span class="badge">${esc(String(h).replace(/^#+/, '#'))}</span>`).join(' ')}
+          </div>
+        </div>
+      ` : ''}
+
+      <div class="form-actions" style="margin-top:18px;flex-wrap:wrap;">
+        <button type="button" class="btn soft" data-cal-close>Close</button>
+        <button type="button" class="btn soft" id="calPrevCopy"><i class="fa-solid fa-copy"></i> Copy</button>
+        <button type="button" class="btn soft" id="calPrevEdit"><i class="fa-solid fa-pen"></i> Edit in composer</button>
+        <button type="button" class="btn danger" id="calPrevDelete"><i class="fa-solid fa-trash"></i> Delete</button>
+        <button type="button" class="btn primary" id="calPrevPostNow">
+          <i class="fa-solid fa-paper-plane"></i> Post now
+        </button>
+      </div>
+    </div>
+  `;
+
+  modal.classList.add('active');
+
+  modal.querySelectorAll('[data-cal-close]').forEach(b => {
+    b.addEventListener('click', () => modal.classList.remove('active'));
+  });
+
+  modal.querySelector('#calPrevCopy').addEventListener('click', async () => {
+    try {
+      if (typeof window.__vioraCopyPost === 'function') {
+        await window.__vioraCopyPost(post);
+      } else {
+        await navigator.clipboard.writeText(
+          [post.caption || '', (post.hashtags || []).join(' ')].filter(Boolean).join('\n\n')
+        );
+        toast(ctx, 'Caption copied.', 'success');
+      }
+    } catch (e) {
+      toast(ctx, 'Copy failed: ' + (e.message || 'unknown'), 'error');
+    }
+  });
+
+  modal.querySelector('#calPrevEdit').addEventListener('click', () => {
+    modal.classList.remove('active');
+    try {
+      const composerFn = window.Viora?.openComposerForDraft;
+      if (typeof composerFn === 'function') {
+        composerFn(post);
+      } else {
+        window.Orbit?.navigate?.('campaigns');
+        toast(ctx, 'Open the post from the Post Library to edit.', 'info');
+      }
+    } catch (e) {
+      toast(ctx, 'Could not open composer: ' + (e.message || 'unknown'), 'error');
+    }
+  });
+
+  modal.querySelector('#calPrevDelete').addEventListener('click', async () => {
+    if (!confirm('Delete this scheduled post?')) return;
+    try {
+      const camp = campaignsArray().find(x => x.id === (post._campaignId || post.campaignId));
+      if (!camp) throw new Error('Campaign not found');
+      camp.posts = (camp.posts || []).filter(p => p.id !== post.id);
+      camp.updatedAt = new Date().toISOString();
+      await c.upsertDoc('campaigns', camp, camp._rev);
+      modal.classList.remove('active');
+      toast(ctx, 'Post deleted.', 'info');
+      window.Orbit?.renderActiveOrbitModule?.();
+    } catch (e) {
+      toast(ctx, 'Delete failed: ' + (e.message || 'unknown'), 'error');
+    }
+  });
+
+  modal.querySelector('#calPrevPostNow').addEventListener('click', async () => {
+    if (!confirm('Post this now? (ignores the scheduled time)')) return;
+    const btn = modal.querySelector('#calPrevPostNow');
+    const prev = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Posting…';
+
+    try {
+      const callFn = c.callFn;
+      if (typeof callFn !== 'function') throw new Error('Worker not available');
+
+      const res = await callFn('social/post/fanout', {
+        targets: [{
+          platform: post.platform,
+          caption: post.caption || '',
+          hashtags: post.hashtags || [],
+          imageBase64: post.imageBase64 || null,
+          imageMime: post.imageMime || 'image/png',
+          utmUrl: post.url || '',
+        }],
+      });
+
+      if (!res || !Array.isArray(res.results) || !res.results.length) {
+        throw new Error('Worker returned no results');
+      }
+
+      const r = res.results[0];
+      const trulyPosted = !!r.ok && (!!r.postId || !!r.post_id) && r.fallback !== 'compose-link';
+      const isComposeOnly = r.fallback === 'compose-link';
+
+      const camp = campaignsArray().find(x => x.id === (post._campaignId || post.campaignId));
+      if (camp) {
+        const live = camp.posts.find(x => x.id === post.id);
+        if (live) {
+          live.status = trulyPosted ? 'published' : (isComposeOnly ? 'compose-only' : 'failed');
+          live.mode = trulyPosted ? 'auto' : (isComposeOnly ? 'compose-link' : 'failed');
+          live.publishedAt = trulyPosted ? new Date().toISOString() : null;
+          live.externalId = r.postId || r.post_id || null;
+          live.composeUrl = r.fallbackUrl || r.composeUrl || null;
+          live.lastError = r.error || null;
+          live.updatedAt = new Date().toISOString();
+        }
+        await c.upsertDoc('campaigns', camp, camp._rev);
+      }
+
+      modal.classList.remove('active');
+
+      if (trulyPosted) {
+        toast(ctx, 'Posted successfully.', 'success');
+      } else if (isComposeOnly) {
+        toast(ctx, 'Composer opened — paste the caption in the new tab.', 'info');
+        if (r.fallbackUrl) window.open(r.fallbackUrl, '_blank');
+      } else {
+        toast(ctx, 'Post failed: ' + (r.error || 'unknown'), 'error');
+      }
+
+      window.Orbit?.renderActiveOrbitModule?.();
+    } catch (e) {
+      toast(ctx, 'Post failed: ' + (e.message || 'unknown'), 'error');
+      btn.disabled = false;
+      btn.innerHTML = prev;
+    }
+  });
+
+  function campaignsArray() {
+    const s = c.state || { data: {} };
+    return Array.isArray(s.data?.campaigns) ? s.data.campaigns : [];
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PUBLISHING CENTRE
+   ═══════════════════════════════════════════════════════════════ */
 export async function renderPublishingCentre(ctx) {
   const campaigns = Array.isArray(data(ctx).campaigns) ? data(ctx).campaigns : [];
   const rows = [];
@@ -2457,6 +2843,9 @@ function statusBadge(s) {
   return `<span class="status ${map[s] || ''}">${esc(s || '—')}</span>`;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   CREATIVE STUDIO
+   ═══════════════════════════════════════════════════════════════ */
 export async function renderCreativeStudio(ctx) {
   const c = C(ctx);
   const state = c.state || { data: {} };
@@ -3566,14 +3955,7 @@ export async function renderAdmin(ctx) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   DELETE FANOUT — correctly removes a group of posts from a campaign
-   ─────────────────────────────────────────────────────────────
-   Removes every post in the group from its parent campaign's
-   posts[] array, saves the campaign, and re-renders the library.
-
-   Handles both cases:
-     • Whole fanout (all posts share the same fanoutId)
-     • Single post (has its own fanoutId, or no fanoutId)
+   DELETE FANOUT
    ═══════════════════════════════════════════════════════════════ */
 async function deleteFanoutPosts(ctx, group) {
   if (!Array.isArray(group) || group.length === 0) return { ok: false, error: 'empty group' };
@@ -3582,8 +3964,6 @@ async function deleteFanoutPosts(ctx, group) {
   const state = c.state || { data: {} };
   const campaigns = state.data?.campaigns || [];
 
-  /* Group posts by their parent campaign so we only save each
-     campaign once. */
   const byCampaign = new Map();
   for (const post of group) {
     const campaignId = post._campaignId || post.campaignId;
@@ -3613,7 +3993,6 @@ async function deleteFanoutPosts(ctx, group) {
     }
   }
 
-  /* Refresh the Post Library */
   try { renderPostLibrary(ctx); } catch (_) {}
   try { renderDraftLibrary(); } catch (_) {}
 
@@ -3624,19 +4003,7 @@ async function deleteFanoutPosts(ctx, group) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   COPY POST — copies caption + hashtags + image to clipboard
-   ─────────────────────────────────────────────────────────────
-   Used by every "Copy" button in the Post Library, Draft Library,
-   and Fanout Detail modal.
-
-   Behaviour:
-     • Builds `caption\n\n#tag1 #tag2\n\n<utmUrl>`
-     • Tries to copy the image via ClipboardItem (PNG only, Chrome
-       and Safari support this; Firefox falls back to download).
-     • If image copy fails, downloads the image as a file.
-     • Shows a toast telling the user what happened.
-
-   Returns a promise that resolves when done (or throws).
+   COPY POST
    ═══════════════════════════════════════════════════════════════ */
 async function copyPostToClipboard(ctx, post) {
   if (!post) {
@@ -3644,7 +4011,6 @@ async function copyPostToClipboard(ctx, post) {
     return;
   }
 
-  /* ── 1. Build the text block ── */
   const caption = String(post.caption || '').trim();
   const hashtags = Array.isArray(post.hashtags)
     ? post.hashtags
@@ -3661,24 +4027,20 @@ async function copyPostToClipboard(ctx, post) {
 
   const text = parts.join('\n\n');
 
-  /* ── 2. Try to copy text + image ── */
   let imageCopied = false;
   let textCopied = false;
   let imageDownloaded = false;
 
   if (post.imageBase64) {
     try {
-      /* Convert base64 → blob */
       const res = await fetch(`data:${post.imageMime || 'image/png'};base64,${post.imageBase64}`);
       const blob = await res.blob();
 
-      /* The Clipboard API only accepts image/png. Convert if needed. */
       let pngBlob = blob;
       if (blob.type !== 'image/png') {
         pngBlob = await _convertBlobToPng(blob);
       }
 
-      /* Build the clipboard payload — text + image together */
       const items = {};
       if (text) items['text/plain'] = new Blob([text], { type: 'text/plain' });
       items['image/png'] = pngBlob;
@@ -3689,7 +4051,6 @@ async function copyPostToClipboard(ctx, post) {
     } catch (err) {
       console.warn('[copy-post] clipboard image write failed:', err);
 
-      /* Fall back: copy text alone, download image */
       try {
         if (text) {
           await navigator.clipboard.writeText(text);
@@ -3713,7 +4074,6 @@ async function copyPostToClipboard(ctx, post) {
       }
     }
   } else {
-    /* No image — just copy the text */
     try {
       if (text) {
         await navigator.clipboard.writeText(text);
@@ -3725,7 +4085,6 @@ async function copyPostToClipboard(ctx, post) {
     }
   }
 
-  /* ── 3. Toast with what happened ── */
   if (imageCopied && textCopied) {
     toast(ctx, 'Post copied — caption, hashtags, and image are on your clipboard.', 'success');
   } else if (textCopied && imageDownloaded) {
@@ -3750,11 +4109,7 @@ async function _convertBlobToPng(blob) {
   });
 }
 
-/* Expose the copy helper so campaign-ai.js (Draft Library) can call it
-   without importing. The helper only needs a `post` object. */
 window.__vioraCopyPost = async function (post) {
-  /* No ctx available across module boundary — pass a minimal shim that
-     just has `toast`. The real ctx is only used for the toast call. */
   const shim = {
     toast: (msg, type) => {
       try {
@@ -3768,9 +4123,7 @@ window.__vioraCopyPost = async function (post) {
 };
 
 /* ═══════════════════════════════════════════════════════════════
-   SYNC CHANNEL — pulls every video from a YouTube channel and
-   imports them all as published posts in a chosen campaign.
-   Uses the worker's existing /social/syncChannel endpoint.
+   SYNC CHANNEL
    ═══════════════════════════════════════════════════════════════ */
 async function _syncChannel(ctx, accountId, btn) {
   const c = C(ctx);
@@ -3794,7 +4147,6 @@ async function _syncChannel(ctx, accountId, btn) {
     return;
   }
 
-  /* Pick which campaign the videos should be attached to */
   const campaigns = Array.isArray(state.data?.campaigns) ? state.data.campaigns : [];
   const sortedCampaigns = campaigns
     .filter(cc => cc && cc.id)
@@ -3842,12 +4194,10 @@ async function _syncChannel(ctx, accountId, btn) {
       return;
     }
 
-    /* Re-fetch campaign — it may have changed while we waited */
     const freshCampaigns = Array.isArray(state.data?.campaigns) ? state.data.campaigns : [];
     const camp = freshCampaigns.find(x => x.id === targetCampaign.id);
     if (!camp) { toast(ctx, 'Campaign was deleted. Aborting.', 'error'); return; }
 
-    /* Dedupe by externalId + url */
     const existing = Array.isArray(camp.posts) ? camp.posts : [];
     const existingByExt = new Map();
     const existingByUrl = new Map();
