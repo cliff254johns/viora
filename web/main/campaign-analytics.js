@@ -13,9 +13,15 @@ let _ctx = null;
 
 const _charts = {};
 
+/* Tracks competitor ids whose refresh has been cancelled by a delete.
+   Checked before every write so a slow API call cannot resurrect a
+   deleted competitor. */
+const _cancelledCompetitorRefreshes = new Set();
+
 export function initCampaignAnalytics(deps) {
   _ctx = deps || {};
   Object.keys(_charts).forEach(k => { try { _charts[k]?.destroy(); } catch (_) {} delete _charts[k]; });
+  _cancelledCompetitorRefreshes.clear();
 }
 
 function ctx() { return _ctx || {}; }
@@ -25,9 +31,7 @@ function _destroy(id) {
 }
 
 function _canvas(id) {
-  const el = document.getElementById(id);
-  if (!el) return null;
-  return el;
+  return typeof document !== 'undefined' ? document.getElementById(id) : null;
 }
 
 function _textColor() {
@@ -87,7 +91,6 @@ export function renderAnalyticsDashboard() {
     </div>
   `;
 
-  /* Each block runs independently so one failure can't hide the rest */
   try { _renderCharts(published); } catch (e) { console.error('[analytics] _renderCharts failed:', e); }
   try { _renderHeatmap(published); } catch (e) { console.error('[analytics] _renderHeatmap failed:', e); }
   try { _renderCompetitors(); } catch (e) { console.error('[analytics] _renderCompetitors failed:', e); }
@@ -124,9 +127,6 @@ function _renderAnomalyPanel(anomalies) {
 
 /* ═══════════════════════════════════════════════════════════════
    CHARTS
-   Each chart wrapped individually so one bad chart cannot block
-   the others. If a chart has no data, show a message instead of
-   an empty white canvas.
    ═══════════════════════════════════════════════════════════════ */
 function _renderCharts(published) {
   if (typeof Chart === 'undefined') {
@@ -141,7 +141,6 @@ function _renderCharts(published) {
   _renderFollowersChart(tc);
 }
 
-/* ── Chart 1: Views & Engagement over time ── */
 function _renderViewsChart(published, tc) {
   const byMonth = {};
   for (const p of published) {
@@ -185,7 +184,6 @@ function _renderViewsChart(published, tc) {
   });
 }
 
-/* ── Chart 2: Engagement rate per platform ── */
 function _renderEngagementChart(published, tc) {
   const byPlatform = {};
   for (const p of published) {
@@ -232,7 +230,6 @@ function _renderEngagementChart(published, tc) {
   });
 }
 
-/* ── Chart 3: Top 10 posts by engagement ── */
 function _renderTopPostsChart(published, tc) {
   const top10 = published
     .map(p => ({ p, er: engagementRate(p.stats) }))
@@ -272,7 +269,6 @@ function _renderTopPostsChart(published, tc) {
   });
 }
 
-/* ── Chart 4: Followers over time ── */
 function _renderFollowersChart(tc) {
   const accounts = (ctx().state?.data?.socialAccounts) || [];
 
@@ -347,7 +343,6 @@ function _renderFollowersChart(tc) {
     return;
   }
 
-  /* No history — show current total as a single point, or a friendly empty */
   const totalNow = accounts.reduce((sum, a) => {
     const fc =
       a.followers        != null ? Number(a.followers) :
@@ -397,7 +392,6 @@ function _renderFollowersChart(tc) {
     'Verify a social account from Social accounts to start tracking follower growth.');
 }
 
-/* ── Shared empty-chart helper ── */
 function _emptyChart(canvas, icon, title, body) {
   const parent = canvas.parentElement;
   if (!parent) return;
@@ -468,15 +462,23 @@ function _renderHeatmap(published) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   COMPETITORS
+   COMPETITORS — data normalization
    ═══════════════════════════════════════════════════════════════ */
 function _competitorsAsArray() {
   const raw = ctx().state?.data?.competitorBenchmarks;
   if (!raw) return [];
   if (Array.isArray(raw)) return raw.filter(Boolean);
-  return Object.entries(raw).map(([id, v]) => ({ id, ...(v || {}) }));
+  /* Preserve the Firebase key as `_key` so deletes target the correct node. */
+  return Object.entries(raw).map(([key, v]) => ({
+    _key: key,
+    ...(v || {}),
+    id: v?.id || key,
+  }));
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   COMPETITORS — render
+   ═══════════════════════════════════════════════════════════════ */
 function _renderCompetitors() {
   const host = document.getElementById('caCompetitors');
   if (!host) return;
@@ -500,6 +502,7 @@ function _renderCompetitors() {
         competitors.length + ' tracked · click refresh to update' +
       '</span>' +
     '</div>' +
+    '<div id="caCompetitorsChartHost" style="margin-bottom:14px;"></div>' +
     '<div style="display:flex;flex-direction:column;gap:6px;">' +
     competitors.map((c) => {
       const pm = platformMeta(c.platform);
@@ -539,48 +542,57 @@ function _renderCompetitors() {
               esc(pm.label) + ' · ' + statsLine +
             '</div>' +
           '</div>' +
-          '<button type="button" class="btn btn-outline btn-xs" data-comp-refresh="' + esc(c.id) + '" title="Refresh"><i class="fa-solid fa-rotate"></i></button>' +
-          '<button type="button" class="btn btn-danger btn-xs" data-comp-remove="' + esc(c.id) + '" title="Remove"><i class="fa-solid fa-trash"></i></button>' +
+          '<button type="button" class="btn btn-outline btn-xs" data-comp-refresh="' + esc(c._key || c.id) + '" title="Refresh"><i class="fa-solid fa-rotate"></i></button>' +
+          '<button type="button" class="btn btn-danger btn-xs" data-comp-remove="' + esc(c._key || c.id) + '" title="Remove"><i class="fa-solid fa-trash"></i></button>' +
         '</div>'
       );
     }).join('') +
     '</div>';
 
-   /* Insert the combined chart above the per-competitor list */
-  const chartHost = document.createElement('div');
-  chartHost.id = 'caCompetitorsChartHost';
-  chartHost.style.marginBottom = '14px';
-  host.insertBefore(chartHost, host.firstChild?.nextSibling || null);
-  _renderCompetitorsChart(chartHost, competitors);
+  /* Insert the combined chart */
+  const chartHost = host.querySelector('#caCompetitorsChartHost');
+  if (chartHost) _renderCompetitorsChart(chartHost, competitors);
 
+  /* Wire refresh buttons */
   host.querySelectorAll('[data-comp-refresh]').forEach((b) => {
     b.addEventListener('click', () => _refreshCompetitor(b.getAttribute('data-comp-refresh')));
   });
 
+  /* Wire delete buttons */
   host.querySelectorAll('[data-comp-remove]').forEach((b) => {
     b.addEventListener('click', async () => {
       if (!confirm('Remove this competitor?')) return;
-      const id = b.getAttribute('data-comp-remove');
-      try {
-        const db = ctx().db, ref = ctx().ref, remove = ctx().remove, P = ctx().P;
-        if (!db || !ref || !remove || !P) throw new Error('Firebase not wired');
-        await remove(ref(db, P('competitorBenchmarks/' + id)));
+      const key = b.getAttribute('data-comp-remove');
 
-        /* Update local state — drop just this one */
+      /* Cancel any in-flight refresh for this key so it can't resurrect it */
+      _cancelledCompetitorRefreshes.add(key);
+      setTimeout(() => _cancelledCompetitorRefreshes.delete(key), 60000);
+
+      try {
+        await ctx().remove(ctx().ref(ctx().db, ctx().P('competitorBenchmarks/' + key)));
+
+        /* Update local state — drop the entry with this key */
         const raw = ctx().state?.data?.competitorBenchmarks;
         if (Array.isArray(raw)) {
-          ctx().state.data.competitorBenchmarks = raw.filter(x => x.id !== id);
+          ctx().state.data.competitorBenchmarks = raw.filter(x =>
+            (x._key || x.id) !== key
+          );
         } else if (raw && typeof raw === 'object') {
           const next = { ...raw };
-          delete next[id];
+          delete next[key];
           ctx().state.data.competitorBenchmarks = next;
         }
-             } catch (e) {
-        ctx().toast?.('Remove failed: ' + e.message, 'error');
+
+        _renderCompetitors();
+        ctx().toast?.('Competitor removed.', 'success');
+      } catch (e) {
+        console.error('[competitor] remove failed:', e);
+        ctx().toast?.('Remove failed: ' + (e.message || 'unknown'), 'error');
       }
     });
   });
 
+  /* Wire refresh-all button */
   host.querySelector('#caRefreshAllCompetitors')?.addEventListener('click', async () => {
     const btn = host.querySelector('#caRefreshAllCompetitors');
     const prev = btn.innerHTML;
@@ -588,8 +600,10 @@ function _renderCompetitors() {
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Refreshing…';
     let ok = 0, fail = 0;
     for (const c of competitors) {
-      try { await _refreshCompetitor(c.id); ok++; }
-      catch (_) { fail++; }
+      try {
+        await _refreshCompetitor(c._key || c.id);
+        ok++;
+      } catch (_) { fail++; }
     }
     btn.disabled = false;
     btn.innerHTML = prev;
@@ -597,6 +611,9 @@ function _renderCompetitors() {
   });
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   ADD COMPETITOR
+   ═══════════════════════════════════════════════════════════════ */
 function _openAddCompetitor() {
   const platform = prompt('Platform (facebook, tiktok, instagram, youtube)?', 'youtube');
   if (!platform) return;
@@ -615,29 +632,12 @@ function _openAddCompetitor() {
 
   (async () => {
     try {
-         /* Guard: if the competitor was deleted while we were fetching,
-       do NOT write it back. Otherwise the delete gets undone. */
-    let stillExists = false;
-    try {
-      const db = ctx().db, ref = ctx().ref, get = ctx().get, P = ctx().P;
-      if (db && ref && get && P) {
-        const snap = await get(ref(db, P('competitorBenchmarks/' + id)));
-        stillExists = snap.exists();
-      } else {
-        stillExists = true; // can't check, proceed
-      }
-    } catch (_) { stillExists = true; }
+      /* update() adds ONE key — never wipes existing competitors */
+      await ctx().update(ctx().ref(ctx().db, ctx().P('competitorBenchmarks')), {
+        [id]: entry,
+      });
 
-    if (!stillExists) {
-      console.info('[analytics] competitor ' + id + ' was deleted while refreshing — skipping write');
-      return;
-    }
-
-    /* update() writes only this one key — never touches the others */
-    await ctx().update(ctx().ref(ctx().db, ctx().P('competitorBenchmarks')), {
-      [id]: nextEntry,
-    });
-      /* Merge into local state too */
+      /* Merge into local state */
       const raw = ctx().state?.data?.competitorBenchmarks;
       if (Array.isArray(raw)) {
         ctx().state.data.competitorBenchmarks = [...raw, entry];
@@ -649,26 +649,43 @@ function _openAddCompetitor() {
       _refreshCompetitor(id);
       ctx().toast?.('Competitor added.', 'success');
     } catch (e) {
+      console.error('[competitor] add failed:', e);
       ctx().toast?.('Add failed: ' + (e.message || 'unknown'), 'error');
     }
   })();
 }
 
-async function _competitorsAsArrayLocal() {
-  const raw = ctx().state?.data?.competitorBenchmarks;
-  if (!raw) return [];
-  if (Array.isArray(raw)) return raw.filter(Boolean);
-  return Object.entries(raw).map(([id, v]) => ({ id, ...(v || {}) }));
-}
+/* ═══════════════════════════════════════════════════════════════
+   REFRESH ONE COMPETITOR
+   ═══════════════════════════════════════════════════════════════ */
+async function _refreshCompetitor(key) {
+  if (!key) return;
+  if (_cancelledCompetitorRefreshes.has(key)) {
+    console.info('[analytics] competitor ' + key + ' refresh cancelled — aborting before API call');
+    return;
+  }
 
-async function _refreshCompetitor(id) {
-  const list = _competitorsAsArrayLocal();
-  const entry = list.find(x => x.id === id);
-  if (!entry) return;
+  const list = _competitorsAsArray();
+  const entry = list.find(x => (x._key || x.id) === key);
+  if (!entry) {
+    console.warn('[analytics] competitor ' + key + ' not found in state — aborting');
+    return;
+  }
 
   try {
     const callFn = ctx().callFn;
-    const res = await callFn('competitor/stats', { platform: entry.platform, handle: entry.handle });
+    if (typeof callFn !== 'function') throw new Error('callFn not wired');
+
+    const res = await callFn('competitor/stats', {
+      platform: entry.platform,
+      handle: entry.handle,
+    });
+
+    /* If deleted mid-flight, abandon before writing */
+    if (_cancelledCompetitorRefreshes.has(key)) {
+      console.info('[analytics] competitor ' + key + ' cancelled after API — skipping write');
+      return;
+    }
 
     let nextEntry;
 
@@ -679,6 +696,7 @@ async function _refreshCompetitor(id) {
       );
       nextEntry = {
         ...entry,
+        stats: entry.stats || { error: res?.error || 'unknown', ok: false },
         lastError: res?.error || 'unknown',
         lastAttemptAt: new Date().toISOString(),
       };
@@ -705,17 +723,40 @@ async function _refreshCompetitor(id) {
       };
     }
 
-    /* update() writes only this one key — never touches the others */
+    /* Firebase existence check — keyed on `key`, not `id` */
+    let stillExists = true;
+    try {
+      const db = ctx().db, ref = ctx().ref, get = ctx().get, P = ctx().P;
+      if (db && ref && get && P) {
+        const check = await get(ref(db, P('competitorBenchmarks/' + key)));
+        stillExists = check.exists();
+      }
+    } catch (_) { /* can't check, proceed */ }
+
+    if (!stillExists) {
+      console.info('[analytics] competitor ' + key + ' was deleted while refreshing — write skipped');
+      return;
+    }
+
+    /* Final re-check just before writing */
+    if (_cancelledCompetitorRefreshes.has(key)) {
+      console.info('[analytics] competitor ' + key + ' cancelled after existence check — write skipped');
+      return;
+    }
+
+    /* Write only this one key */
     await ctx().update(ctx().ref(ctx().db, ctx().P('competitorBenchmarks')), {
-      [id]: nextEntry,
+      [key]: nextEntry,
     });
 
-    /* Merge into local state */
+    /* Merge into local state — keyed on the Firebase key */
     const raw = ctx().state?.data?.competitorBenchmarks;
     if (Array.isArray(raw)) {
-      ctx().state.data.competitorBenchmarks = raw.map(x => x.id === id ? nextEntry : x);
+      ctx().state.data.competitorBenchmarks = raw.map(x =>
+        (x._key || x.id) === key ? nextEntry : x
+      );
     } else {
-      ctx().state.data.competitorBenchmarks = { ...(raw || {}), [id]: nextEntry };
+      ctx().state.data.competitorBenchmarks = { ...(raw || {}), [key]: nextEntry };
     }
 
     _renderCompetitors();
@@ -723,14 +764,13 @@ async function _refreshCompetitor(id) {
       ctx().toast?.('Competitor stats refreshed.', 'success');
     }
   } catch (e) {
+    console.error('[analytics] refresh failed for', key, e);
     ctx().toast?.('Refresh failed: ' + (e.message || 'unknown'), 'error');
   }
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   COMPETITORS CHART — one combined bar+line chart showing every
-   competitor's followers (bars) and engagement rate (line).
-   Renders inside the Competitor Benchmarks card.
+   COMPETITORS CHART — combined bar + line
    ═══════════════════════════════════════════════════════════════ */
 function _renderCompetitorsChart(host, competitors) {
   if (!host) return;
@@ -774,7 +814,6 @@ function _renderCompetitorsChart(host, competitors) {
   const canvas = host.querySelector('#caCompetitorsChart');
   if (!canvas) return;
 
-  /* Destroy any previous instance so hot re-renders don't stack */
   if (_charts['caCompetitorsChart']) {
     try { _charts['caCompetitorsChart'].destroy(); } catch (_) {}
     delete _charts['caCompetitorsChart'];
@@ -829,13 +868,7 @@ function _renderCompetitorsChart(host, competitors) {
       plugins: {
         legend: {
           position: 'top',
-          labels: {
-            color: tc,
-            font: { size: 11 },
-            boxWidth: 12,
-            usePointStyle: true,
-            padding: 12,
-          },
+          labels: { color: tc, font: { size: 11 }, boxWidth: 12, usePointStyle: true, padding: 12 },
         },
         tooltip: {
           callbacks: {
@@ -849,10 +882,7 @@ function _renderCompetitorsChart(host, competitors) {
         },
       },
       scales: {
-        x: {
-          ticks: { color: tc, font: { size: 11 } },
-          grid: { display: false },
-        },
+        x: { ticks: { color: tc, font: { size: 11 } }, grid: { display: false } },
         y: {
           type: 'linear',
           position: 'left',
