@@ -3,39 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="VIORA Campaigns — social media command centre">
+<meta name="description" content="VIORA Campaigns - social media command centre">
 <meta name="theme-color" content="#6558f5">
-<title>Campaigns — VIORA</title>
+<title>Campaigns - VIORA</title>
 
-<!-- ── Favicon (root) ── -->
 <link rel="icon" type="image/png" href="/viora.png" />
 <link rel="apple-touch-icon" href="/viora.png" />
 
-<!-- ── Fonts + icons + charts (CDN) ── -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-<!-- /main.css intentionally removed — Orbit shell uses inline styles -->
-
 <style>
-/* ═══════════════════════════════════════════════════════════════
-   Orbit shell — self-contained styles.
-   These override / supplement /main.css so the shell renders
-   correctly even if main.css is the older VIORA theme.
-   Uses the same CSS variables as VIORA where possible.
-   ═══════════════════════════════════════════════════════════════ */
-
 :root{
   --bg:#f4f6fa; --panel:#ffffff; --panel2:#f8f9fc;
   --text:#172033; --muted:#748096; --line:#e7eaf1;
   --accent:#6558f5; --accent2:#f05aa6;
   --good:#159b72; --warn:#d68b22; --bad:#d95368;
   --shadow:0 12px 34px rgba(24,36,68,.07); --radius:17px;
-
-  /* Aliases so any older module using var(--text-primary) etc. still works */
   --text-primary: var(--text);
   --text-secondary: var(--muted);
   --text-light: var(--muted);
@@ -59,7 +46,6 @@
   --accent:#8190ff; --accent2:#b18aff;
   --good:#48c99b; --warn:#f0b35c; --bad:#ff7188;
   --shadow:0 12px 34px rgba(0,0,0,.22);
-
   --bg-glass: rgba(25,30,42,0.75);
   --text-primary: var(--text);
   --text-secondary: var(--muted);
@@ -81,7 +67,6 @@ button,input,select,textarea{font:inherit}
 button{cursor:pointer}
 a{color:inherit;text-decoration:none}
 
-/* ── Sidebar ── */
 .app{min-height:100vh}
 .sidebar{
   position:fixed;inset:0 auto 0 0;width:258px;
@@ -134,7 +119,6 @@ a{color:inherit;text-decoration:none}
 .planbox p{font-size:10px;opacity:.8;margin:5px 0 10px}
 .planbox button{background:#fff;color:#33418e;border:0;border-radius:8px;padding:7px 10px;font-size:10px;font-weight:800;cursor:pointer}
 
-/* ── Main ── */
 .main{margin-left:258px;min-height:100vh}
 .topbar{
   height:72px;padding:0 30px;
@@ -166,7 +150,6 @@ a{color:inherit;text-decoration:none}
 
 .content{padding:27px 30px 50px;max-width:1600px;margin:auto}
 
-/* ── Module content styles (used by -modules.js output) ── */
 .pagehead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:22px}
 .eyebrow{font-size:10px;color:var(--accent);font-weight:800;letter-spacing:1.3px;text-transform:uppercase}
 .pagehead h1{font-size:25px;letter-spacing:-.8px;margin:3px 0 4px}
@@ -231,14 +214,12 @@ a{color:inherit;text-decoration:none}
   margin-bottom:15px;
 }
 
-/* Table */
 .tablewrap{overflow:auto}
 table{width:100%;border-collapse:collapse;white-space:nowrap}
 th{text-align:left;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.8px;padding:10px;border-bottom:1px solid var(--line)}
 td{padding:12px 10px;border-bottom:1px solid var(--line);font-size:11px}
 tr:last-child td{border-bottom:0}
 
-/* Social accounts grid (used by campaign-accounts.js) */
 .accounts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
 .account-card{
   background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;
@@ -254,7 +235,6 @@ tr:last-child td{border-bottom:0}
 .account-actions{display:flex;gap:6px;align-items:center;margin-top:auto}
 .account-actions .btn{flex:1;justify-content:center;padding:7px 10px;font-size:10.5px}
 
-/* Chart boxes (used by analytics) */
 .chart-box{
   background:var(--panel);border:1px solid var(--line);
   border-radius:var(--radius);padding:17px;box-shadow:var(--shadow);
@@ -275,7 +255,6 @@ tr:last-child td{border-bottom:0}
 .empty{color:var(--muted);text-align:center;padding:24px}
 .empty-state{color:var(--muted);text-align:center;padding:24px;font-size:.85rem}
 
-/* Agent grid (used by agents module) */
 .agentgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
 .agent{padding:15px;border:1px solid var(--line);border-radius:13px;background:var(--panel)}
 .agenttop{display:flex;justify-content:space-between;align-items:center}
@@ -288,7 +267,6 @@ tr:last-child td{border-bottom:0}
 .switch.on{background:var(--good)}
 .switch.on:after{left:17px}
 
-/* Form */
 .formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .field{display:grid;gap:5px;margin-bottom:12px}
 .field label{font-size:10px;font-weight:750;color:var(--muted)}
@@ -306,13 +284,11 @@ tr:last-child td{border-bottom:0}
   border-radius:9px;padding:10px;color:var(--text);outline:none;font-size:11px;
 }
 
-/* Calendar */
 .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .day{min-height:92px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:7px;font-size:10px}
 .day b{display:block;margin-bottom:7px}
 .event{background:color-mix(in srgb,var(--accent) 13%,var(--panel));color:var(--accent);border-radius:5px;padding:4px;margin:3px 0;font-size:8px;overflow:hidden}
 
-/* Inbox */
 .inbox{display:grid;grid-template-columns:280px 1fr 280px;min-height:520px;border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .inboxlist{border-right:1px solid var(--line);background:var(--panel2);overflow:auto;max-height:620px}
 .conversation{padding:12px;border-top:1px solid var(--line);cursor:pointer}
@@ -328,14 +304,12 @@ tr:last-child td{border-bottom:0}
 .reply input{flex:1;min-width:0;border:1px solid var(--line);background:var(--panel2);border-radius:9px;padding:9px;color:var(--text)}
 .profilepane{border-left:1px solid var(--line);padding:14px}
 
-/* Integration grid */
 .integration-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;display:grid}
 .integration{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--panel)}
 .integration .bigico{font-size:22px}
 .integration b{display:block;font-size:11px;margin-top:8px}
 .integration .small{color:var(--muted);margin-top:4px}
 
-/* ── Modals ── */
 .modalback, .modal-overlay{
   position:fixed;inset:0;background:#080d1b88;z-index:60;
   display:none;align-items:center;justify-content:center;padding:18px;
@@ -353,7 +327,6 @@ tr:last-child td{border-bottom:0}
 .modal-icon{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;color:#fff;flex-shrink:0}
 .close{border:0;background:var(--panel2);color:var(--text);border-radius:8px;width:30px;height:30px;cursor:pointer}
 
-/* ── Toasts ── */
 .toast{
   position:fixed;right:22px;bottom:22px;z-index:90;
   background:#1d2940;color:#fff;padding:12px 16px;border-radius:11px;
@@ -373,11 +346,9 @@ tr:last-child td{border-bottom:0}
 #toastContainer .toast.success{background:#0e5a44}
 #toastContainer .toast.warning{background:#7a5320}
 
-/* ── Mobile overlay ── */
 .mobile-overlay{display:none}
 .mobile-overlay.show{display:block;position:fixed;inset:0;background:#0006;z-index:19}
 
-/* ── Login gate ── */
 .login-gate{
   position:fixed;inset:0;z-index:1000;
   background:
@@ -416,10 +387,8 @@ tr:last-child td{border-bottom:0}
 .login-error{color:#c83e5c;font-size:11px;min-height:17px;margin-top:8px}
 .login-note{font-size:10px;color:#7d8497;margin-top:16px;line-height:1.5}
 
-/* ── Mobile bottom nav ── */
 .mobile-nav{display:none}
 
-/* ── Responsive ── */
 @media(max-width:1100px){
   .sidebar{width:225px}
   .main{margin-left:225px}
@@ -475,10 +444,7 @@ tr:last-child td{border-bottom:0}
 @media(prefers-reduced-motion:reduce){
   *,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
 }
-   
-/* ═══════════════════════════════════════════════════════════════
-   CREATIVE STUDIO — v2
-   ═══════════════════════════════════════════════════════════════ */
+
 .cs-wrap{display:flex;flex-direction:column;gap:16px}
 .cs-mode{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px}
 .cs-mode-btn{
@@ -537,11 +503,7 @@ tr:last-child td{border-bottom:0}
   .cs-grid{grid-template-columns:1fr}
   .cs-mode{grid-template-columns:1fr}
 }
-   
 
-/* ═══════════════════════════════════════════════════════════════
-   POST LIBRARY + FANOUT DETAIL
-   ═══════════════════════════════════════════════════════════════ */
 .plib-toolbar{display:flex;flex-direction:column;gap:10px;margin:14px 0 18px}
 .plib-filters{display:flex;gap:6px;flex-wrap:wrap}
 .plib-filter-btn{
@@ -634,7 +596,6 @@ tr:last-child td{border-bottom:0}
 .plib-empty-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px}
 .plib-empty-sub{font-size:12px;line-height:1.5}
 
-/* ── Detail modal ── */
 .plib-modal-head{
   display:flex;align-items:center;justify-content:space-between;
   margin-bottom:14px;gap:12px;
@@ -723,10 +684,7 @@ tr:last-child td{border-bottom:0}
   .plib-detail-grid{grid-template-columns:1fr}
   .plib-grid{grid-template-columns:1fr}
 }
-   
-/* ═══════════════════════════════════════════════════════════════
-   ADD-PLATFORM DIALOG + CAPTION CHOICE
-   ═══════════════════════════════════════════════════════════════ */
+
 .plib-caption-choice{display:flex;flex-direction:column;gap:8px;margin-top:4px}
 .plib-choice{
   display:flex;gap:10px;padding:12px;
@@ -743,22 +701,7 @@ tr:last-child td{border-bottom:0}
 }
 .plib-choice div{flex:1;min-width:0;font-size:12px;line-height:1.5}
 .plib-choice strong{display:block;margin-bottom:2px;font-size:12px}
-   
-/* ═══════════════════════════════════════════════════════════════
-   SHARED MODAL / FORM / BUTTON / BADGE STYLES
-   ─────────────────────────────────────────────────────────────
-   These classes are used by:
-     • The AI composer (campaign-ai.js)
-     • The Fanout Detail modal (orbit-modules.js)
-     • The Add-platform dialog (orbit-modules.js)
-     • The Edit-schedule dialog (orbit-modules.js)
-     • Any dynamically-created modal in the campaigns shell
 
-   They mirror the visual language of main.html so the composer
-   looks identical here and in the main dashboard.
-   ═══════════════════════════════════════════════════════════════ */
-
-/* ── Modal shell ── */
 .modal-overlay{
   position:fixed;inset:0;z-index:9000;
   background:rgba(8,13,27,0.55);
@@ -819,7 +762,6 @@ tr:last-child td{border-bottom:0}
   to{opacity:1;transform:translateY(0) scale(1)}
 }
 
-/* ── Form primitives ── */
 .modal label,
 .field label{
   display:block;
@@ -903,7 +845,6 @@ tr:last-child td{border-bottom:0}
   flex-wrap:wrap;
 }
 
-/* ── Buttons (extend the existing .btn) ── */
 .btn.primary,
 .btn.btn-primary{
   background:linear-gradient(115deg,#6558f5,#a34ce8 58%,#e45fa8);
@@ -957,7 +898,6 @@ tr:last-child td{border-bottom:0}
 .btn-xs,
 .btn.btn-xs{padding:5px 9px;font-size:9.5px}
 
-/* ── Badges ── */
 .badge{
   display:inline-flex;align-items:center;gap:4px;
   padding:3px 9px;border-radius:12px;
@@ -980,7 +920,6 @@ tr:last-child td{border-bottom:0}
 .badge-gray{background:var(--panel2);color:var(--muted);border:1px solid var(--line)}
 .badge-sent{background:color-mix(in srgb,var(--accent) 12%,var(--panel));color:var(--accent);border-color:transparent}
 
-/* ── Empty states (extend the base rule) ── */
 .modal .empty-state,
 .empty-state{
   text-align:center;
@@ -991,7 +930,6 @@ tr:last-child td{border-bottom:0}
 }
 .modal .empty-state i{opacity:.5}
 
-/* ── Small utilities ── */
 .small{font-size:10.5px}
 .muted{color:var(--muted)}
 .pill{
@@ -1002,19 +940,10 @@ tr:last-child td{border-bottom:0}
   border:1px solid var(--line);
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   COMPOSER-SPECIFIC (campaign-ai.js)
-   ─────────────────────────────────────────────────────────────
-   The composer renders a lot of layout primitives that only exist
-   in main.html. These local rules cover the pieces that break.
-   ═══════════════════════════════════════════════════════════════ */
-
-/* Two-column composer grid inside the modal */
 .modal.xl > div[style*="grid-template-columns:1fr 1.4fr"]{
   align-items:start;
 }
 
-/* Platform chip grid */
 .cc-platform-grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
@@ -1039,7 +968,6 @@ tr:last-child td{border-bottom:0}
 .cc-platform-handle{font-size:9.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cc-platform-mode{font-size:9px;color:var(--text-light);text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
 
-/* Per-platform preview card */
 .cc-platform-preview{
   padding:10px 12px;border:1px solid var(--line);
   border-radius:12px;background:var(--panel2);
@@ -1083,7 +1011,6 @@ tr:last-child td{border-bottom:0}
   border-radius:8px;color:var(--text-light);font-size:11px;
 }
 
-/* Installment / list row inside modal */
 .installment-row{
   display:flex;align-items:flex-start;gap:10px;
   padding:8px 10px;
@@ -1091,7 +1018,6 @@ tr:last-child td{border-bottom:0}
   margin-bottom:4px;
 }
 
-/* AI recorder panel */
 .ai-rec-panel,
 .ai-rec-loading{
   padding:12px 14px;border:1px solid var(--line);
@@ -1102,7 +1028,6 @@ tr:last-child td{border-bottom:0}
   font-size:12px;color:var(--muted);
 }
 
-/* Responsive: collapse the composer to single column on mobile */
 @media(max-width:900px){
   .modal.xl{width:100%;padding:18px}
   .modal.xl > div[style*="grid-template-columns:1fr 1.4fr"]{
@@ -1110,10 +1035,7 @@ tr:last-child td{border-bottom:0}
   }
   .formgrid,.form-row{grid-template-columns:1fr}
 }
-   
-/* ═══════════════════════════════════════════════════════════════
-   IMPORT MODAL — preview rows
-   ═══════════════════════════════════════════════════════════════ */
+
 .plib-import-summary{
   font-size:11px;
   padding:6px 10px;
@@ -1136,21 +1058,7 @@ tr:last-child td{border-bottom:0}
   border-color:color-mix(in srgb,var(--warn) 35%,var(--line));
   background:color-mix(in srgb,var(--warn) 6%,var(--panel));
 }
-   /* ═══════════════════════════════════════════════════════════════
-   SIDEBAR — COLOURFUL SOCIAL MEDIA ICONS
-   ═══════════════════════════════════════════════════════════════
-   Brand-aware icons for the sidebar nav. Every social-media
-   module gets its platform's colour; every non-social module
-   gets a thematically-coloured icon so the sidebar doesn't look
-   like an Excel menu.
 
-   Icons inherit their brand colours on hover and when active.
-   Default (inactive) icons keep a subtle tint so they're
-   distinguishable at a glance without shouting.
-   ═══════════════════════════════════════════════════════════════ */
-
-/* Base: nav buttons normally show a muted icon. We override
-   the .ico span so each module can paint its own colour. */
 .nav button .ico,
 .nav button .ico i {
   transition: color .18s ease, transform .18s ease, filter .18s ease;
@@ -1164,20 +1072,11 @@ tr:last-child td{border-bottom:0}
   filter: drop-shadow(0 0 6px currentColor);
 }
 
-/* ── Social media platform colours ──
-   Each rule targets the specific module by its data-page attribute.
-   Facebook blue, Instagram gradient, TikTok pink, YouTube red,
-   LinkedIn blue, X/Twitter black-on-light, Threads black,
-   Pinterest red, WhatsApp green, GBP multi-colour.
-   The icons are Font Awesome "fa-brands" inside .ico. */
-
-/* FACEBOOK — single blue */
 .nav button[data-page="campaigns"] .ico i,
 .nav button[data-page="publishing"] .ico i {
   color: #1877f2;
 }
 
-/* INSTAGRAM — gradient via background-clip trick on the icon */
 .nav button[data-page="creative"] .ico i {
   background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
   -webkit-background-clip: text;
@@ -1189,7 +1088,6 @@ tr:last-child td{border-bottom:0}
   filter: drop-shadow(0 0 6px #dc2743aa);
 }
 
-/* TIKTOK — pink/cyan duotone simulated via gradient */
 .nav button[data-page="calendar"] .ico i,
 .nav button[data-page="overview"] .ico i {
   color: #ff0050;
@@ -1198,17 +1096,14 @@ tr:last-child td{border-bottom:0}
   color: #00f2ea;
 }
 
-/* YOUTUBE — red */
 .nav button[data-page="analytics"] .ico i {
   color: #ff0033;
 }
 
-/* LINKEDIN — corporate blue */
 .nav button[data-page="crm"] .ico i {
   color: #0a66c2;
 }
 
-/* X / TWITTER — black in light theme, white in dark */
 .nav button[data-page="listening"] .ico i {
   color: #0f1419;
 }
@@ -1216,7 +1111,6 @@ tr:last-child td{border-bottom:0}
   color: #e7e9ea;
 }
 
-/* THREADS — black */
 .nav button[data-page="automation"] .ico i {
   color: #101010;
 }
@@ -1224,94 +1118,70 @@ tr:last-child td{border-bottom:0}
   color: #f5f5f5;
 }
 
-/* PINTEREST — red */
 .nav button[data-page="media"] .ico i {
   color: #e60023;
 }
 
-/* WHATSAPP — green */
 .nav button[data-page="inbox"] .ico i {
   color: #25d366;
 }
 
-/* GOOGLE BUSINESS — Google blue (simplified) */
 .nav button[data-page="integrations"] .ico i {
   color: #4285f4;
 }
 
-/* ── Non-social modules — thematic colours ──
-   These are NOT social platforms, so they get themed colours
-   from the app's palette rather than brand colours. */
-
-/* Overview — house icon in accent purple */
 .nav button[data-page="overview"] .ico i {
   color: var(--accent);
 }
 
-/* Social accounts — share-nodes in accent pink */
 .nav button[data-page="accounts"] .ico i {
   color: var(--accent2);
 }
 
-/* Content studio — pen in accent purple */
 .nav button[data-page="content"] .ico i {
   color: #a855f7;
 }
 
-/* Publishing centre — paper-plane in cyan */
 .nav button[data-page="publishing"] .ico i {
   color: #00c2d8;
 }
 
-/* AI agents — robot in violet */
 .nav button[data-page="agents"] .ico i {
   color: #8b5cf6;
 }
 
-/* Competitors — flag in orange */
 .nav button[data-page="competitors"] .ico i {
   color: #f97316;
 }
 
-/* Reports — file-lines in teal */
 .nav button[data-page="reports"] .ico i {
   color: #14b8a6;
 }
 
-/* Clients — building in gold */
 .nav button[data-page="clients"] .ico i {
   color: #d68b22;
 }
 
-/* Approvals — check-double in emerald */
 .nav button[data-page="approvals"] .ico i {
   color: #10b981;
 }
 
-/* Brand knowledge — book in amber */
 .nav button[data-page="knowledge"] .ico i {
   color: #f59e0b;
 }
 
-/* Team — users-gear in indigo */
 .nav button[data-page="team"] .ico i {
   color: #6366f1;
 }
 
-/* Settings — gear in slate */
 .nav button[data-page="settings"] .ico i {
   color: #64748b;
 }
 
-/* Platform admin — shield in crimson */
 .nav button[data-page="admin"] .ico i {
   color: #dc2626;
 }
 
-/* ── Active state: keep the brand colour, add a left accent bar ──
-   The .active class is already applied by orbit-shell.js. We just
-   make sure the icon colour survives (it does by default) and add
-   a subtle glow behind active items. */
 .nav button.active {
   background: color-mix(in srgb, var(--accent) 10%, var(--panel));
   position: relative;
@@ -1329,13 +1199,10 @@ tr:last-child td{border-bottom:0}
   opacity: 0.85;
 }
 
-/* Active item icon glows softly */
 .nav button.active .ico i {
   filter: drop-shadow(0 0 4px currentColor);
 }
 
-/* ── Hover: subtle lift (already in base CSS, but ensure the
-   colour survives the hover bg change) ── */
 .nav button:hover {
   background: var(--panel2);
 }
@@ -1343,9 +1210,6 @@ tr:last-child td{border-bottom:0}
   transform: scale(1.15) rotate(-3deg);
 }
 
-/* ── Mobile bottom nav — smaller but same colours ──
-   The mobile nav uses <i class="fa-solid ..."> directly (not .ico),
-   so we target it by [data-mnav]. */
 .mobile-nav button[data-mnav="overview"] i     { color: var(--accent); }
 .mobile-nav button[data-mnav="content"] i      { color: #a855f7; }
 .mobile-nav button[data-mnav="calendar"] i     { color: #ff0050; }
@@ -1360,22 +1224,18 @@ tr:last-child td{border-bottom:0}
   transition: transform .18s ease, filter .18s ease;
 }
 
-/* ── Dark theme adjustments ──
-   Some brand colours (X black, LinkedIn navy, Facebook blue) become
-   invisible on dark backgrounds. We lighten them slightly in dark
-   mode so they stay readable without losing identity. */
 [data-theme="dark"] .nav button[data-page="campaigns"] .ico i,
 [data-theme="dark"] .nav button[data-page="publishing"] .ico i {
-  color: #4c8bf5;   /* lighter FB blue */
+  color: #4c8bf5;
 }
 
 [data-theme="dark"] .nav button[data-page="crm"] .ico i {
-  color: #4d9bdb;   /* lighter LinkedIn blue */
+  color: #4d9bdb;
 }
 
 [data-theme="dark"] .nav button[data-page="youtube"],
 [data-theme="dark"] .nav button[data-page="analytics"] .ico i {
-  color: #ff3355;   /* brighter YT red */
+  color: #ff3355;
 }
 
 [data-theme="dark"] .nav button[data-page="pinterest"] .ico i,
@@ -1383,21 +1243,16 @@ tr:last-child td{border-bottom:0}
   color: #ff2d55;
 }
 
-/* Instagram gradient is already dark-safe (bright saturation) */
 [data-theme="dark"] .nav button[data-page="creative"] .ico i {
   filter: brightness(1.1) saturate(1.15);
 }
 
-/* ── Accessibility: keep focus outline visible on keyboard nav ── */
 .nav button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 10px;
 }
 
-/* ── Optional: subtle entrance animation on the sidebar icons ──
-   Makes the app feel alive on first paint. Disabled for users who
-   prefer reduced motion. */
 @media (prefers-reduced-motion: no-preference) {
   .nav button .ico i {
     animation: sidebar-icon-in 0.35s ease-out backwards;
@@ -1419,7 +1274,6 @@ tr:last-child td{border-bottom:0}
 </head>
 <body>
 
-<!-- ═══════════════ LOGIN GATE ═══════════════ -->
 <div class="login-gate" id="loginGate">
   <div class="login-card">
     <div class="login-brand">
@@ -1437,46 +1291,39 @@ tr:last-child td{border-bottom:0}
     <label for="loginEmail">Email</label>
     <input id="loginEmail" type="email" placeholder="you@viora.io" autocomplete="email">
     <label for="loginPassword">Password</label>
-    <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password">
+    <input id="loginPassword" type="password" placeholder="Password" autocomplete="current-password">
     <button id="loginBtn">
       <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In
     </button>
     <div class="login-error" id="loginError"></div>
     <div class="login-note">
       Same Firebase credentials as the VIORA dashboard.
-      <a href="/main.html" style="color:#6558f5;font-weight:700">← Back to Dashboard</a>
+      <a href="/main.html" style="color:#6558f5;font-weight:700">&larr; Back to Dashboard</a>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════ APP SHELL ═══════════════ -->
 <div class="app" id="App" style="display:none">
-  <aside class="sidebar" id="sidebar">
-    <!-- populated by -shell.js -->
-  </aside>
-
+  <aside class="sidebar" id="sidebar"></aside>
   <div class="mobile-overlay" id="overlay"></div>
-
   <main class="main">
     <header class="topbar">
       <div class="top-left">
-        <button class="iconbtn hamb" id="hamb" title="Menu">☰</button>
+        <button class="iconbtn hamb" id="hamb" title="Menu">&#9776;</button>
         <div class="crumb">Viora / <b id="crumb">Overview</b></div>
       </div>
       <div class="top-actions">
-        <div class="search"><span>⌕</span><input id="globalSearch" placeholder="Search modules…"></div>
-        <button class="iconbtn" id="themeBtn" title="Toggle theme">◐</button>
+        <div class="search"><span>&#8981;</span><input id="globalSearch" placeholder="Search modules..."></div>
+        <button class="iconbtn" id="themeBtn" title="Toggle theme">&#9680;</button>
         <button class="iconbtn" id="helpBtn" title="Help">?</button>
-        <button class="iconbtn" id="notifBtn" title="Notifications">♧<i class="dot"></i></button>
+        <button class="iconbtn" id="notifBtn" title="Notifications">&#9827;<i class="dot"></i></button>
         <button class="userpic" id="logoutBtn" title="Sign out">VR</button>
       </div>
     </header>
-
     <section class="content" id="view"></section>
   </main>
 </div>
 
-<!-- ═══════════════ MOBILE BOTTOM NAV ═══════════════ -->
 <nav class="mobile-nav" id="mobileNav" aria-label="Orbit mobile navigation">
   <button data-mnav="overview" class="active" type="button">
     <i class="fa-solid fa-house"></i><span class="mnav-label">Home</span>
@@ -1495,16 +1342,14 @@ tr:last-child td{border-bottom:0}
   </button>
 </nav>
 
-<!-- ═══════════════ TOASTS ═══════════════ -->
 <div class="toast" id="toast"></div>
 <div id="toastContainer"></div>
 
-<!-- ═══════════════ CAMPAIGN EDITOR MODAL ═══════════════ -->
 <div class="modal-overlay" id="campaignEditorModal">
   <div class="modal large">
     <div class="modalhead">
       <h3 id="campEditorTitle">New campaign</h3>
-      <button class="close" id="campEditorClose" type="button">×</button>
+      <button class="close" id="campEditorClose" type="button">&#215;</button>
     </div>
     <form id="campaignEditorForm" novalidate>
       <input type="hidden" id="campEditId">
@@ -1561,7 +1406,7 @@ tr:last-child td{border-bottom:0}
       <div class="field">
         <label>Objective</label>
         <select id="campObjective">
-          <option value="">— Select —</option>
+          <option value="">- Select -</option>
           <option value="awareness">Brand awareness</option>
           <option value="engagement">Engagement</option>
           <option value="leads">Lead generation</option>
@@ -1573,12 +1418,12 @@ tr:last-child td{border-bottom:0}
 
       <div class="field">
         <label>Target audience</label>
-        <input id="campAudience" maxlength="180" placeholder="e.g. Kenyan SMEs, 25–45">
+        <input id="campAudience" maxlength="180" placeholder="e.g. Kenyan SMEs, 25-45">
       </div>
 
       <div class="field">
         <label>Notes</label>
-        <textarea id="campNotes" placeholder="Strategy, brief, budget breakdown…" maxlength="1000"></textarea>
+        <textarea id="campNotes" placeholder="Strategy, brief, budget breakdown..." maxlength="1000"></textarea>
       </div>
 
       <div style="margin-top:16px;padding:12px;background:var(--panel2);border-radius:10px;border:1px solid var(--line)">
@@ -1617,7 +1462,6 @@ tr:last-child td{border-bottom:0}
   </div>
 </div>
 
-<!-- ═══════════════ FIREBASE IMPORTMAP ═══════════════ -->
 <script type="importmap">
 {
   "imports": {
@@ -1630,14 +1474,8 @@ tr:last-child td{border-bottom:0}
 }
 </script>
 
-<!-- ═══════════════ BOOTSTRAP ═══════════════ -->
 <script type="module">
-  /* ═══════════════════════════════════════════════════════════
-     CAMPAIGNS.HTML — AUTH GATE
-     Only signed-in admin/exec/marketing users should reach this page.
-     Visitors hitting this URL directly are redirected to the login.
-     ═══════════════════════════════════════════════════════════ */
-   import { getAuth, onAuthStateChanged } from "firebase/auth";
+  import { getAuth, onAuthStateChanged } from "firebase/auth";
   import { getDatabase, ref, get, forceLongPolling } from "firebase/database";
   import { initializeApp, getApps, getApp } from "firebase/app";
 
@@ -1654,10 +1492,10 @@ tr:last-child td{border-bottom:0}
   const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getDatabase(app);
-   forceLongPolling(db);
+  forceLongPolling(db);
+
   const ROOT = 'viora_data';
   const ORG = 'orgs/viora';
-
   const ALLOWED_ROLES = new Set(['admin', 'exec', 'marketing']);
 
   onAuthStateChanged(auth, async (user) => {
@@ -1666,26 +1504,12 @@ tr:last-child td{border-bottom:0}
       return;
     }
     try {
-      const snap = await get(ref(db, `${ROOT}/${ORG}/users/${user.uid}`));
-      const role = snap.exists() ? (snap.val()?.role || 'member') : 'member';
+      const snap = await get(ref(db, ROOT + '/' + ORG + '/users/' + user.uid));
+      const role = snap.exists() ? (snap.val().role || 'member') : 'member';
       if (!ALLOWED_ROLES.has(role)) {
-        document.body.innerHTML = `
-          <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;
-                      background:#0a0a0f;color:#f0f4ff;font-family:Inter,sans-serif;padding:24px;text-align:center;">
-            <div style="max-width:420px;">
-              <h1 style="font-family:'Space Grotesk',sans-serif;font-size:1.4rem;margin-bottom:8px;">Access Restricted</h1>
-              <p style="color:#94a3b8;font-size:.9rem;line-height:1.6;">
-                Campaigns are available to <strong>admin</strong>, <strong>exec</strong>, and
-                <strong>marketing</strong> roles only.
-              </p>
-                            <a href="/main.html" style="display:inline-block;margin-top:20px;padding:11px 22px;
-                  background:#00d4ff;color:#0a0a0f;text-decoration:none;border-radius:10px;
-                  font-weight:700;font-size:.85rem;">&larr; Back to Dashboard</a>
-            </div>
-          </div>`;
+        document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0a0a0f;color:#f0f4ff;font-family:Inter,sans-serif;padding:24px;text-align:center;"><div style="max-width:420px;"><h1 style="font-size:1.4rem;margin-bottom:8px;">Access Restricted</h1><p style="color:#94a3b8;font-size:.9rem;line-height:1.6;">Campaigns are available to admin, exec, and marketing roles only.</p><a href="/main.html" style="display:inline-block;margin-top:20px;padding:11px 22px;background:#00d4ff;color:#0a0a0f;text-decoration:none;border-radius:10px;font-weight:700;font-size:.85rem;">&larr; Back to Dashboard</a></div></div>';
         return;
       }
-          // Authorized — load the campaigns bootstrap (which wires everything)
       import('/campaigns-bootstrap.js').catch(err => {
         console.error('[campaigns] bootstrap load failed:', err);
       });
@@ -1700,7 +1524,6 @@ tr:last-child td{border-bottom:0}
 (function () {
   const $ = (id) => document.getElementById(id);
 
-  // Theme toggle
   const savedTheme = localStorage.getItem('viora-theme') || 'light';
   document.documentElement.dataset.theme = savedTheme;
 
@@ -1713,21 +1536,18 @@ tr:last-child td{border-bottom:0}
     }, 60);
   });
 
-  // Help
   $('helpBtn')?.addEventListener('click', () => {
     alert('Use the sidebar to navigate modules. All changes save to Firebase.');
   });
 
-  // Notifications
   $('notifBtn')?.addEventListener('click', () => {
     try {
       window.Orbit?.navigate?.('inbox');
     } catch (_) {
-      alert('Inbox not ready yet — try again in a moment.');
+      alert('Inbox not ready yet - try again in a moment.');
     }
   });
 
-  // Search
   $('globalSearch')?.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter') return;
     const q = (e.target.value || '').trim().toLowerCase();
