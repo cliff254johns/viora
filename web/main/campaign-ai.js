@@ -1,10 +1,4 @@
-// main/campaign-ai.js — v2.1 (dedupe-safe composer)
-// ═══════════════════════════════════════════════════════════════
-// AI Composer — generate text/images across N platforms at once,
-// preview each platform's tailored variant, and fan out posting
-// via /social/post/fanout. Falls back to compose-link per platform
-// when the worker says manual upload is required.
-// ═══════════════════════════════════════════════════════════════
+// main/campaign-ai.js — v2.2 (calendar-aware composer)
 import {
   PILLARS, pillarByKey, PLATFORMS, platformMeta,
   composeUrlFor, escHtml as esc, q,
@@ -61,6 +55,9 @@ const SAFE = {
 
 /* ═══════════════════════════════════════════════════════════════
    OPEN COMPOSER
+   Accepts opts:
+     campaignId, fanoutId, platforms, pillar, brief,
+     scheduledFor ('YYYY-MM-DDTHH:mm'), status ('draft'|'scheduled'|'published')
    ═══════════════════════════════════════════════════════════════ */
 export function openComposer(opts = {}) {
   const campaigns = (SAFE.state?.data?.campaigns) || [];
@@ -82,6 +79,11 @@ export function openComposer(opts = {}) {
   const initialPlatforms = opts.platforms && opts.platforms.length
     ? opts.platforms
     : connectedPlatforms.length ? connectedPlatforms : ['facebook'];
+
+  /* Determine status + scheduled time. Calendar clicks pass scheduledFor
+     so the composer opens in "Schedule" mode, pre-filled with that date. */
+  const optsScheduledFor = opts.scheduledFor || '';
+  const optsStatus = opts.status || (optsScheduledFor ? 'scheduled' : 'draft');
 
   _state.composer = {
     campaignId,
@@ -113,8 +115,8 @@ export function openComposer(opts = {}) {
 
     utm: { source: '', medium: 'social', campaign: '', content: '', term: '' },
     baseUrl: (ctx().state?.data?.companyProfile?.website) || 'https://viora.co.ke',
-    status: 'draft',
-    scheduledFor: '',
+    status: optsStatus,
+    scheduledFor: optsScheduledFor,
   };
 
   _state.bulkResults = null;
@@ -181,7 +183,6 @@ export function openComposerForDraft(post) {
   _state.composer.heroImagePrompt = post.imagePrompt || '';
   _state.composer.utm = post.utm || { source: '', medium: 'social', campaign: '', content: '', term: '' };
 
-  /* Preserve IDs so re-saving updates in place instead of duplicating */
   _state.composer._existingPostIds = {};
   if (camp && post.fanoutId) {
     for (const p of camp.posts || []) {
@@ -403,7 +404,7 @@ function _renderComposer() {
           </button>
           <button type="button" class="btn btn-success" id="ccPublishBtn" style="flex:1;">
             <i class="fa-solid fa-paper-plane"></i>
-            <span id="ccPublishLabel">Post to ${c.platforms.length} Platform${c.platforms.length === 1 ? '' : 's'}</span>
+            <span id="ccPublishLabel">${c.status === 'scheduled' ? 'Schedule for ' + c.platforms.length + ' Platform' + (c.platforms.length === 1 ? '' : 's') : 'Post to ' + c.platforms.length + ' Platform' + (c.platforms.length === 1 ? '' : 's')}</span>
           </button>
         </div>
 
@@ -529,6 +530,12 @@ function _bindComposerEvents() {
       if (id === 'ccStatus') {
         const row = g('ccScheduleRow');
         if (row) row.style.display = el.value === 'scheduled' ? 'block' : 'none';
+        const label = g('ccPublishLabel');
+        if (label) {
+          label.textContent = el.value === 'scheduled'
+            ? `Schedule for ${_state.composer.platforms.length} Platform${_state.composer.platforms.length === 1 ? '' : 's'}`
+            : `Post to ${_state.composer.platforms.length} Platform${_state.composer.platforms.length === 1 ? '' : 's'}`;
+        }
       }
     });
   };
@@ -561,7 +568,9 @@ function _bindComposerEvents() {
   g('ccCancelBtn')?.addEventListener('click', _closeComposer);
   g('ccSaveDraftBtn')?.addEventListener('click', () => _savePost('draft'));
   g('ccPublishBtn')?.addEventListener('click', () => {
-    _savePost('published');
+    const status = _state.composer?.status || 'draft';
+    if (status === 'published') _postNow();
+    else _savePost(status);
   });
   g('ccDownloadImageBtn')?.addEventListener('click', _downloadImage);
   g('ccCopyImageBtn')?.addEventListener('click', _copyImage);
@@ -871,7 +880,7 @@ async function _persistPosts(status) {
     SAFE.toast(
       status === 'draft'
         ? `Saved ${fanout.posts.length} draft${fanout.posts.length === 1 ? '' : 's'}.`
-        : `Scheduled ${fanout.posts.length} post${fanout.posts.length === 1 ? '' : 's'}.`,
+        : `Scheduled ${fanout.posts.length} post${fanout.posts.length === 1 ? '' : 's'} for ${new Date(c.scheduledFor).toLocaleString('en-GB')}.`,
       'success'
     );
     _closeComposer();
@@ -887,29 +896,12 @@ async function _postNow() {
   const c = _state.composer;
   if (!c || _state.posting) return;
 
-  /* ═══════════════════════════════════════════════════════════════
-     STEP 1 — Pre-open compose windows SYNCHRONOUSLY
-     ─────────────────────────────────────────────────────────────
-     Browsers block window.open() from async callbacks. We must
-     open all windows inside the click handler, before any await.
-     Strategy: pre-open a window for every platform we expect to be
-     compose-link (based on account.connectedVia), then close any
-     we don't actually need after the API responds.
-
-     For the platforms we expect to post via API (facebook/tiktok
-     with connectedVia='api'), no pre-open is needed — they'll
-     post silently.
-
-     For non-API platforms (instagram, x, linkedin, threads,
-     youtube, pinterest, whatsapp, gbp), pre-open the composer. ═════ */
-
-  const preOpenedWindows = {};   // platform → window object
+  const preOpenedWindows = {};
 
   for (const key of c.platforms) {
     const meta = PLATFORMS[key];
     if (!meta) continue;
 
-    /* Only pre-open if we expect a compose fallback */
     const variant = c.perPlatform[key] || {};
     const caption = variant.caption || '';
     const hashtags = Array.isArray(variant.hashtags) ? variant.hashtags : [];
@@ -923,7 +915,6 @@ async function _postNow() {
 
     const fullCaption = [caption, tagString, utmUrl].filter(Boolean).join('\n\n');
 
-    /* Determine the URL */
     let url = null;
     switch (key) {
       case 'twitter':
@@ -961,23 +952,12 @@ async function _postNow() {
 
     if (!url) continue;
 
-    /* Synchronously open the window. `noopener` blocks us from
-       inspecting it, so we deliberately DON'T pass it — we need
-       the handle to close unused windows later. */
     try {
       const w = window.open(url, '_blank');
       if (w) preOpenedWindows[key] = w;
     } catch (_) {}
   }
 
-  /* ═══════════════════════════════════════════════════════════════
-     STEP 2 — Copy caption to clipboard + build target payloads
-     ═══════════════════════════════════════════════════════════════ */
-
-  /* Copy each platform's caption to the clipboard (last one wins
-     when user opens each tab — that's the practical limit). We
-     also stash them on window so a "paste helper" banner can show
-     the correct text per tab. */
   try {
     const firstPlatform = c.platforms[0];
     const firstVariant = c.perPlatform[firstPlatform] || {};
@@ -988,7 +968,6 @@ async function _postNow() {
     if (firstCaption) await navigator.clipboard.writeText(firstCaption);
   } catch (_) {}
 
-  /* Store all captions on window for the paste-helper UI */
   window._vioraComposeCaptions = {};
   for (const key of c.platforms) {
     const v = c.perPlatform[key] || {};
@@ -1025,27 +1004,18 @@ async function _postNow() {
       throw new Error('Worker returned no results');
     }
 
-    /* ═══════════════════════════════════════════════════════════════
-       STEP 3 — Close unused windows, keep compose-link ones open
-       ═══════════════════════════════════════════════════════════════ */
-
     _state.fanoutLog = res.results.map(r => {
       const isComposeOnly = r.fallback === 'compose-link';
       const trulyPosted   = !!r.ok && (!!r.postId || !!r.post_id) && !isComposeOnly;
 
-      /* If this platform posted via API, close its pre-opened window */
       if (trulyPosted && preOpenedWindows[r.platform]) {
         try { preOpenedWindows[r.platform].close(); } catch (_) {}
       }
 
-      /* If the worker returned a different composeUrl than the one we
-         pre-opened, navigate the pre-opened window to the worker's URL */
       if (isComposeOnly && r.fallbackUrl && preOpenedWindows[r.platform]) {
         try {
           preOpenedWindows[r.platform].location.href = r.fallbackUrl;
-        } catch (_) {
-          /* If navigation blocked, leave the original URL — it still works */
-        }
+        } catch (_) {}
       }
 
       return {
@@ -1060,7 +1030,6 @@ async function _postNow() {
       };
     });
 
-    /* Persist each platform's post with its real status */
     const campaign = (SAFE.state?.data?.campaigns || []).find(x => x.id === c.campaignId);
     if (campaign) {
       const existingIds = c._existingPostIds || {};
@@ -1083,11 +1052,11 @@ async function _postNow() {
           imageSeed: c.heroImageSeed,
           utm: { ...c.utm, source: c.utm.source || r.platform },
           url: buildUtmUrl(c.baseUrl, { ...c.utm, source: c.utm.source || r.platform }),
-                   status: r.mode === 'auto' ? 'published'
+          status: r.mode === 'auto' ? 'published'
                 : r.mode === 'compose-link' ? 'published'
                 : 'failed',
           mode: r.mode,
-          needsManualPost: r.mode === 'compose-link' ? true : false,
+          needsManualPost: r.mode === 'compose-link',
           publishedAt: r.mode === 'auto' ? new Date().toISOString() : null,
           externalId: r.postId,
           composeUrl: r.composeUrl,
@@ -1117,18 +1086,14 @@ async function _postNow() {
     if (composeOnly) parts.push(`${composeOnly} composer${composeOnly === 1 ? '' : 's'} opened — press Ctrl+V to paste caption`);
     if (failed) parts.push(`${failed} failed`);
 
-       SAFE.toast(parts.join(' · ') || 'Done.', failed ? 'warning' : 'success');
+    SAFE.toast(parts.join(' · ') || 'Done.', failed ? 'warning' : 'success');
 
-    /* Refresh whatever module is visible */
     try { window.Orbit?.renderActiveOrbitModule?.(); } catch (_) {}
-
-    /* Always close the composer — even compose-only posts are saved. */
     setTimeout(_closeComposer, 600);
   } catch (e) {
     console.error('[composer] post failed', e);
     SAFE.toast('Post failed: ' + (e.message || 'unknown'), 'error');
 
-    /* Clean up pre-opened windows on error */
     for (const [key, w] of Object.entries(preOpenedWindows)) {
       try { if (w && !w.closed) w.close(); } catch (_) {}
     }
@@ -1217,11 +1182,8 @@ export function renderDraftLibrary() {
                       ${esc(p.caption || '')}
                     </div>
                   </div>
-                                         <button type="button" class="btn btn-primary btn-xs" data-draft-open="${esc(p.id)}" data-draft-camp="${esc(p.campaignId)}" title="Edit">
+                  <button type="button" class="btn btn-primary btn-xs" data-draft-open="${esc(p.id)}" data-draft-camp="${esc(p.campaignId)}" title="Edit">
                     <i class="fa-solid fa-pen"></i>
-                  </button>
-                  <button type="button" class="btn soft btn-xs" data-draft-copy="${esc(p.id)}" data-draft-copy-camp="${esc(p.campaignId)}" title="Copy caption + hashtags + image">
-                    <i class="fa-solid fa-copy"></i>
                   </button>
                   <button type="button" class="btn danger btn-xs" data-draft-delete="${esc(p.id)}" data-draft-delete-camp="${esc(p.campaignId)}" title="Delete">
                     <i class="fa-solid fa-trash"></i>
@@ -1240,25 +1202,6 @@ export function renderDraftLibrary() {
       const camp = campaigns.find(c => c.id === campId);
       const post = camp && (camp.posts || []).find(p => p.id === postId);
       if (post) openComposerForDraft(post);
-    });
-  });
-
-   host.querySelectorAll('[data-draft-copy]').forEach(b => {
-    b.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      const postId = b.getAttribute('data-draft-copy');
-      const campId = b.getAttribute('data-draft-copy-camp');
-      const campaigns = (SAFE.state?.data?.campaigns) || [];
-      const camp = campaigns.find(c => c.id === campId);
-      const post = camp && (camp.posts || []).find(p => p.id === postId);
-      if (!post) { SAFE.toast('Post not found.', 'error'); return; }
-
-      /* Reuse the shared helper — orbit-modules.js exposes it on window */
-      if (typeof window.__vioraCopyPost === 'function') {
-        await window.__vioraCopyPost(post);
-      } else {
-        SAFE.toast('Copy helper not available.', 'warning');
-      }
     });
   });
 
