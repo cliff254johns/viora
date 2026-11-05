@@ -858,13 +858,22 @@ export function renderPostLibrary(ctx) {
       const group = filtered[i];
       if (!group) return;
 
-      if (action === 'view') {
+         if (action === 'view') {
         openFanoutDetail(ctx, group);
+      } else if (action === 'copy') {
+        /* For a multi-platform fanout, copy the hero post (most likely
+           the one with the image). If the group has one post, copy that. */
+        const hero = group.reduce((best, p) => {
+          const score = (p.caption || '').length + (p.imageBase64 ? 1000 : 0);
+          const bestScore = (best.caption || '').length + (best.imageBase64 ? 1000 : 0);
+          return score > bestScore ? p : best;
+        }, group[0]);
+        await copyPostToClipboard(ctx, hero);
       } else if (action === 'refresh') {
         refreshFanoutStats(ctx, group);
       } else if (action === 'post-now') {
         postFanoutNow(ctx, group);
-        } else if (action === 'delete') {
+      } else if (action === 'delete') {
         const summary = summarizeFanout(group);
         const count = group.length;
         const label = count === 1 ? 'this post' : `all ${count} posts in this fanout`;
@@ -941,9 +950,10 @@ function renderFanoutCard(group, idx) {
 
   const campaignName = hero?._campaignName || '—';
 
-   const actionsHtml = (() => {
+      const actionsHtml = (() => {
     const buttons = [
       `<button type="button" class="btn soft btn-sm" data-plib-action="view" data-plib-card-idx="${idx}">View</button>`,
+      `<button type="button" class="btn soft btn-sm" data-plib-action="copy" data-plib-card-idx="${idx}" title="Copy caption + hashtags + image"><i class="fa-solid fa-copy"></i></button>`,
     ];
     if (summary.aggregateStatus === 'published') {
       buttons.push(`<button type="button" class="btn soft btn-sm" data-plib-action="refresh" data-plib-card-idx="${idx}" title="Refresh stats"><i class="fa-solid fa-rotate"></i></button>`);
@@ -951,9 +961,6 @@ function renderFanoutCard(group, idx) {
     if (summary.aggregateStatus === 'draft' || summary.aggregateStatus === 'scheduled') {
       buttons.push(`<button type="button" class="btn primary btn-sm" data-plib-action="post-now" data-plib-card-idx="${idx}">Post now →</button>`);
     }
-    /* Delete is always available — user can remove drafts, failed posts,
-       or even published posts (they just won't be deleted from the
-       external platform). */
     buttons.push(
       `<button type="button" class="btn danger btn-sm" data-plib-action="delete" data-plib-card-idx="${idx}" title="Delete"><i class="fa-solid fa-trash"></i></button>`
     );
@@ -1238,7 +1245,10 @@ function renderFanoutModalBody(ctx, bodyEl, group, summary, activeTab) {
     ${historyHtml}
     ${compareHtml}
 
-    <div class="plib-modal-actions">
+       <div class="plib-modal-actions">
+      <button type="button" class="btn soft btn-sm" data-plib-copy title="Copy caption + hashtags + image">
+        <i class="fa-solid fa-copy"></i> Copy post
+      </button>
       <button type="button" class="btn soft btn-sm" data-plib-add-platform>
         <i class="fa-solid fa-plus"></i> Add another platform
       </button>
@@ -1316,6 +1326,10 @@ function renderFanoutModalBody(ctx, bodyEl, group, summary, activeTab) {
     } catch (e) {
       toast(ctx, 'Delete failed: ' + (e.message || 'unknown'), 'error');
     }
+  });
+
+  bodyEl.querySelector('[data-plib-copy]')?.addEventListener('click', () => {
+    copyPostToClipboard(ctx, activePost);
   });
 
   bodyEl.querySelector('[data-plib-add-platform]')?.addEventListener('click', () => {
@@ -3425,6 +3439,134 @@ async function deleteFanoutPosts(ctx, group) {
     return { ok: false, deleted, error: errors.join(' | ') };
   }
   return { ok: true, deleted };
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   COPY POST — copies caption + hashtags + image to clipboard
+   ─────────────────────────────────────────────────────────────
+   Used by every "Copy" button in the Post Library, Draft Library,
+   and Fanout Detail modal.
+
+   Behaviour:
+     • Builds `caption\n\n#tag1 #tag2\n\n<utmUrl>`
+     • Tries to copy the image via ClipboardItem (PNG only, Chrome
+       and Safari support this; Firefox falls back to download).
+     • If image copy fails, downloads the image as a file.
+     • Shows a toast telling the user what happened.
+
+   Returns a promise that resolves when done (or throws).
+   ═══════════════════════════════════════════════════════════════ */
+async function copyPostToClipboard(ctx, post) {
+  if (!post) {
+    toast(ctx, 'No post to copy.', 'warning');
+    return;
+  }
+
+  /* ── 1. Build the text block ── */
+  const caption = String(post.caption || '').trim();
+  const hashtags = Array.isArray(post.hashtags)
+    ? post.hashtags
+        .map(h => String(h || '').trim())
+        .filter(Boolean)
+        .map(h => h.startsWith('#') ? h : '#' + h)
+    : [];
+  const utmUrl = String(post.url || '').trim();
+
+  const parts = [];
+  if (caption) parts.push(caption);
+  if (hashtags.length) parts.push(hashtags.join(' '));
+  if (utmUrl) parts.push(utmUrl);
+
+  const text = parts.join('\n\n');
+
+  /* ── 2. Try to copy text + image ── */
+  let imageCopied = false;
+  let textCopied = false;
+  let imageDownloaded = false;
+
+  if (post.imageBase64) {
+    try {
+      /* Convert base64 → blob */
+      const res = await fetch(`data:${post.imageMime || 'image/png'};base64,${post.imageBase64}`);
+      const blob = await res.blob();
+
+      /* The Clipboard API only accepts image/png. Convert if needed. */
+      let pngBlob = blob;
+      if (blob.type !== 'image/png') {
+        pngBlob = await _convertBlobToPng(blob);
+      }
+
+      /* Build the clipboard payload — text + image together */
+      const items = {};
+      if (text) items['text/plain'] = new Blob([text], { type: 'text/plain' });
+      items['image/png'] = pngBlob;
+
+      await navigator.clipboard.write([new ClipboardItem(items)]);
+      imageCopied = true;
+      textCopied = true;
+    } catch (err) {
+      console.warn('[copy-post] clipboard image write failed:', err);
+
+      /* Fall back: copy text alone, download image */
+      try {
+        if (text) {
+          await navigator.clipboard.writeText(text);
+          textCopied = true;
+        }
+      } catch (e2) {
+        console.warn('[copy-post] text write failed:', e2);
+      }
+
+      try {
+        const a = document.createElement('a');
+        a.href = `data:${post.imageMime || 'image/png'};base64,${post.imageBase64}`;
+        a.download = `viora-${post.id || Date.now()}.${(post.imageMime || 'image/png').split('/')[1] || 'png'}`;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        imageDownloaded = true;
+      } catch (e3) {
+        console.warn('[copy-post] image download failed:', e3);
+      }
+    }
+  } else {
+    /* No image — just copy the text */
+    try {
+      if (text) {
+        await navigator.clipboard.writeText(text);
+        textCopied = true;
+      }
+    } catch (e) {
+      toast(ctx, 'Could not copy text. Your browser may have blocked clipboard access.', 'error');
+      return;
+    }
+  }
+
+  /* ── 3. Toast with what happened ── */
+  if (imageCopied && textCopied) {
+    toast(ctx, 'Post copied — caption, hashtags, and image are on your clipboard.', 'success');
+  } else if (textCopied && imageDownloaded) {
+    toast(ctx, 'Caption copied · image downloaded (clipboard images not supported here).', 'success');
+  } else if (textCopied) {
+    toast(ctx, 'Caption copied. No image on this post.', 'success');
+  } else if (imageDownloaded) {
+    toast(ctx, 'Image downloaded. Caption could not be copied.', 'warning');
+  } else {
+    toast(ctx, 'Nothing could be copied — check browser clipboard permissions.', 'error');
+  }
+}
+
+/* Convert any image blob to PNG via canvas (needed for clipboard). */
+async function _convertBlobToPng(blob) {
+  const bmp = await createImageBitmap(blob);
+  const canvas = document.createElement('canvas');
+  canvas.width = bmp.width;
+  canvas.height = bmp.height;
+  canvas.getContext('2d').drawImage(bmp, 0, 0);
+  return await new Promise((resolve, reject) => {
+    canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/png');
+  });
 }
 
 /* ═══════════════════════════════════════════════════════════════
