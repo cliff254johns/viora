@@ -1538,42 +1538,42 @@ tr:last-child td{border-bottom:0}
 </script>
 
 <script>
-(function () {
-  const $ = (id) => document.getElementById(id);
+  (() => {
+    const $ = (id) => document.getElementById(id);
 
-  const savedTheme = localStorage.getItem('viora-theme') || 'light';
-  document.documentElement.dataset.theme = savedTheme;
+    const savedTheme = localStorage.getItem('viora-theme') || 'light';
+    document.documentElement.dataset.theme = savedTheme;
 
-  $('themeBtn')?.addEventListener('click', () => {
-    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = next;
-    localStorage.setItem('viora-theme', next);
-    setTimeout(() => {
-      try { window.Orbit?.renderActiveOrbitModule?.(); } catch (_) {}
-    }, 60);
-  });
+    $('themeBtn')?.addEventListener('click', () => {
+      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next;
+      localStorage.setItem('viora-theme', next);
+      setTimeout(() => {
+        try { window.Orbit?.renderActiveOrbitModule?.(); } catch (_) {}
+      }, 60);
+    });
 
-  $('helpBtn')?.addEventListener('click', () => {
-    alert('Use the sidebar to navigate modules. All changes save to Firebase.');
-  });
+    $('helpBtn')?.addEventListener('click', () => {
+      alert('Use the sidebar to navigate modules. All changes save to Firebase.');
+    });
 
-  $('notifBtn')?.addEventListener('click', () => {
-    try {
-      window.Orbit?.navigate?.('inbox');
-    } catch (_) {
-      alert('Inbox not ready yet - try again in a moment.');
-    }
-  });
+    $('notifBtn')?.addEventListener('click', () => {
+      try {
+        window.Orbit?.navigate?.('inbox');
+      } catch (_) {
+        alert('Inbox not ready yet - try again in a moment.');
+      }
+    });
 
-  $('globalSearch')?.addEventListener('keydown', (e) => {
-    if (e.key !== 'Enter') return;
-    const q = (e.target.value || '').trim().toLowerCase();
-    if (!q) return;
-    const mod = window.Orbit?.findModuleByName?.(q);
-    if (mod) window.Orbit.navigate(mod);
-    else alert('No module matches "' + q + '"');
-  });
-})();
+    $('globalSearch')?.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      const q = (e.target.value || '').trim().toLowerCase();
+      if (!q) return;
+      const mod = window.Orbit?.findModuleByName?.(q);
+      if (mod) window.Orbit.navigate(mod);
+      else alert('No module matches "' + q + '"');
+    });
+  })();
 </script>
 </body>
 </html>
