@@ -1217,8 +1217,11 @@ export function renderDraftLibrary() {
                       ${esc(p.caption || '')}
                     </div>
                   </div>
-                               <button type="button" class="btn btn-primary btn-xs" data-draft-open="${esc(p.id)}" data-draft-camp="${esc(p.campaignId)}" title="Edit">
+                                         <button type="button" class="btn btn-primary btn-xs" data-draft-open="${esc(p.id)}" data-draft-camp="${esc(p.campaignId)}" title="Edit">
                     <i class="fa-solid fa-pen"></i>
+                  </button>
+                  <button type="button" class="btn soft btn-xs" data-draft-copy="${esc(p.id)}" data-draft-copy-camp="${esc(p.campaignId)}" title="Copy caption + hashtags + image">
+                    <i class="fa-solid fa-copy"></i>
                   </button>
                   <button type="button" class="btn danger btn-xs" data-draft-delete="${esc(p.id)}" data-draft-delete-camp="${esc(p.campaignId)}" title="Delete">
                     <i class="fa-solid fa-trash"></i>
@@ -1237,6 +1240,25 @@ export function renderDraftLibrary() {
       const camp = campaigns.find(c => c.id === campId);
       const post = camp && (camp.posts || []).find(p => p.id === postId);
       if (post) openComposerForDraft(post);
+    });
+  });
+
+   host.querySelectorAll('[data-draft-copy]').forEach(b => {
+    b.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const postId = b.getAttribute('data-draft-copy');
+      const campId = b.getAttribute('data-draft-copy-camp');
+      const campaigns = (SAFE.state?.data?.campaigns) || [];
+      const camp = campaigns.find(c => c.id === campId);
+      const post = camp && (camp.posts || []).find(p => p.id === postId);
+      if (!post) { SAFE.toast('Post not found.', 'error'); return; }
+
+      /* Reuse the shared helper — orbit-modules.js exposes it on window */
+      if (typeof window.__vioraCopyPost === 'function') {
+        await window.__vioraCopyPost(post);
+      } else {
+        SAFE.toast('Copy helper not available.', 'warning');
+      }
     });
   });
 
