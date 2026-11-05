@@ -50,29 +50,12 @@
 
 <link rel="stylesheet" href="main.css">
 <style>
-  /* Preloader styles — moved from body to head to avoid Quirks Mode */
-  #vioraPreloader{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#05060a;background-image:radial-gradient(ellipse at 50% 30%,#10131c 0%,#05060a 70%);transition:opacity .6s ease,visibility .6s ease;opacity:1;visibility:visible;overflow:hidden}
+  /* Preloader — video splash */
+  #vioraPreloader{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#05060a;transition:opacity .6s ease,visibility .6s ease;opacity:1;visibility:visible;overflow:hidden}
   #vioraPreloader.viora-preloader-hide{opacity:0;visibility:hidden;pointer-events:none}
-  #vioraPreloader .viora-lockup{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(28px,5vw,48px);width:min(92vw,640px);position:relative}
-  #vioraPreloader .viora-lockup::before{content:'';position:absolute;top:30%;left:50%;width:70vw;height:70vw;max-width:720px;max-height:720px;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(60,90,160,.16) 0%,transparent 62%);pointer-events:none;z-index:-1;filter:blur(46px);animation:ambient-pulse 6s ease-in-out infinite}
-  @keyframes ambient-pulse{0%,100%{opacity:.55}50%{opacity:1}}
-  #vioraPreloader .v-mark{width:min(44vw,260px);height:auto;display:block;filter:drop-shadow(0 22px 36px rgba(0,0,0,.85)) drop-shadow(0 8px 14px rgba(0,0,0,.55));animation:mark-in 1s cubic-bezier(.34,1.56,.64,1) both}
-  @keyframes mark-in{from{opacity:0;transform:scale(.88) translateY(-10px)}to{opacity:1;transform:none}}
-  #vioraPreloader .v-mark .v-shape{fill:url(#silverBrush);stroke:url(#silverEdge);stroke-width:1.2;stroke-linejoin:round}
-  #vioraPreloader .v-mark .specular{fill:url(#specularShine);opacity:.55;mix-blend-mode:screen;pointer-events:none}
-  #vioraPreloader .viora-wordmark{display:flex;align-items:center;justify-content:center;gap:clamp(4px,1.4vw,10px);font-family:'Space Grotesk','Inter',system-ui,sans-serif;font-weight:800;font-size:clamp(2.6rem,9.5vw,5.4rem);line-height:1;user-select:none}
-  #vioraPreloader .viora-wordmark .letter{display:inline-block;background:linear-gradient(180deg,#506a9a 0%,#2c3f68 22%,#152549 55%,#0a152e 82%,#040a18 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;-webkit-text-stroke:1.4px #c8ccd2;filter:drop-shadow(0 2px 0 #7a8088) drop-shadow(0 4px 0 #565c64) drop-shadow(0 6px 0 #343a42) drop-shadow(0 10px 14px rgba(0,0,0,.9)) drop-shadow(0 0 26px rgba(120,140,180,.14));opacity:0;transform:translateY(16px);animation:letter-in .7s cubic-bezier(.34,1.56,.64,1) both}
-  #vioraPreloader .viora-wordmark .letter.silver{background:linear-gradient(180deg,#fff 0%,#eaecef 16%,#a8aeb6 38%,#7d848c 56%,#b8bdc4 72%,#e0e3e8 88%,#8b9097 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;-webkit-text-stroke:1.4px #fff;filter:drop-shadow(0 2px 0 #8a8f96) drop-shadow(0 4px 0 #6a7078) drop-shadow(0 6px 0 #454a51) drop-shadow(0 10px 14px rgba(0,0,0,.85)) drop-shadow(0 0 30px rgba(200,220,255,.18))}
-  #vioraPreloader .viora-wordmark .letter:nth-child(1){animation-delay:.35s}
-  #vioraPreloader .viora-wordmark .letter:nth-child(2){animation-delay:.45s}
-  #vioraPreloader .viora-wordmark .letter:nth-child(3){animation-delay:.55s}
-  #vioraPreloader .viora-wordmark .letter:nth-child(4){animation-delay:.65s}
-  #vioraPreloader .viora-wordmark .letter:nth-child(5){animation-delay:.75s}
-  @keyframes letter-in{to{opacity:1;transform:none}}
-  #vioraPreloader .tagline{font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:clamp(.9rem,2.5vw,1.4rem);letter-spacing:clamp(1px,.35vw,3.2px);color:#c8ccd2;text-align:center;text-shadow:0 1px 0 rgba(255,255,255,.06);opacity:0;transform:translateY(10px);animation:tagline-in .8s 1.1s cubic-bezier(.34,1.56,.64,1) forwards}
-  @keyframes tagline-in{to{opacity:1;transform:none}}
-  @media (max-width:480px){#vioraPreloader .viora-lockup{gap:34px}#vioraPreloader .v-mark{width:min(52vw,180px)}}
-  @media (prefers-reduced-motion:reduce){#vioraPreloader .v-mark,#vioraPreloader .viora-wordmark .letter,#vioraPreloader .tagline,#vioraPreloader .viora-lockup::before{animation:none!important;opacity:1!important;transform:none!important}}
+  #vioraPreloader #vioraPreloaderVideo{width:100%;height:100%;object-fit:cover;display:block;background:#05060a;pointer-events:none}
+  @media (max-width:480px){#vioraPreloader #vioraPreloaderVideo{object-fit:contain}}
+  @media (prefers-reduced-motion:reduce){#vioraPreloader #vioraPreloaderVideo{animation:none!important}}
 </style>
 <style>
   /* ═══════════════════════════════════════════════════════════
@@ -191,22 +174,13 @@
 
 
 <div id="vioraPreloader" role="status" aria-live="polite" aria-label="Loading VIORA">
-  <div class="viora-lockup">
-    <svg class="v-mark" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-label="V">
-      <defs>
-        <linearGradient id="silverBrush" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff"/><stop offset="16%" stop-color="#eaecef"/><stop offset="38%" stop-color="#a8aeb6"/><stop offset="56%" stop-color="#7d848c"/><stop offset="72%" stop-color="#b8bdc4"/><stop offset="88%" stop-color="#e0e3e8"/><stop offset="100%" stop-color="#8b9097"/></linearGradient>
-        <linearGradient id="silverEdge" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff"/><stop offset="50%" stop-color="#5a6068"/><stop offset="100%" stop-color="#2e3338"/></linearGradient>
-        <linearGradient id="specularShine" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff" stop-opacity=".95"/><stop offset="45%" stop-color="#fff" stop-opacity="0"/></linearGradient>
-      </defs>
-      <path class="v-shape" d="M 30 40 L 120 40 L 150 200 L 180 40 L 270 40 L 165 265 L 135 265 Z"/>
-      <path class="specular" d="M 30 40 L 120 40 L 138 120 L 123 120 Z"/>
-      <path class="specular" d="M 180 40 L 270 40 L 255 120 L 240 120 Z"/>
-    </svg>
-    <div class="viora-wordmark" aria-label="VIORA">
-      <span class="letter">V</span><span class="letter">I</span><span class="letter silver">O</span><span class="letter">R</span><span class="letter">A</span>
-    </div>
-    <div class="tagline">Explore. Discover. Belong.</div>
-  </div>
+  <video id="vioraPreloaderVideo"
+         src="viora.mp4"
+         autoplay muted playsinline
+         preload="auto"
+         disablepictureinpicture
+         disableremoteplayback
+         aria-hidden="true"></video>
 </div>
 
 <script>
@@ -247,8 +221,42 @@
   }
   function hide(){ if(hidden||pendingHide) return; var rem = MIN_VISIBLE_MS - (Date.now()-startTime); if(rem<=0){doHide();} else {pendingHide=true; setTimeout(doHide,rem);} }
   if(document.readyState==='complete'){hide();} else {window.addEventListener('load',hide);}
-  setTimeout(function(){ if(!hidden) doHide(); }, SAFETY_MAX_MS);
+   setTimeout(function(){ if(!hidden) doHide(); }, SAFETY_MAX_MS);
   window.vioraHidePreloader = hide;
+})();
+</script>
+
+<script>
+/* Preloader video guard — additive only; does not touch hide logic */
+(function(){
+  'use strict';
+  var v = document.getElementById('vioraPreloaderVideo');
+  var preloader = document.getElementById('vioraPreloader');
+  if (!v || !preloader) return;
+
+  /* Enforce muted + playsinline (some browsers ignore the attribute) */
+  v.muted = true;
+  v.setAttribute('muted', '');
+  v.playsInline = true;
+  v.setAttribute('playsinline', '');
+
+  /* Try autoplay; swallow the rejection so it can't throw */
+  var p = v.play();
+  if (p && typeof p.catch === 'function') {
+    p.catch(function(){ /* autoplay blocked — first frame still paints */ });
+  }
+
+  /* Pause the video the moment the hide class is added,
+     then detach listeners — guarantees audio can never linger. */
+  if (window.MutationObserver) {
+    var obs = new MutationObserver(function(){
+      if (preloader.classList.contains('viora-preloader-hide')) {
+        try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) {}
+        obs.disconnect();
+      }
+    });
+    obs.observe(preloader, { attributes: true, attributeFilter: ['class'] });
+  }
 })();
 </script>
 
