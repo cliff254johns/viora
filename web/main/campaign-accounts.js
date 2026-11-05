@@ -4,7 +4,7 @@
 //
 // What it does:
 //   • Lets the admin register each platform once (handle + URL + IDs)
-//   • Stores everything in one Firebase node: socialAccounts/
+//   • Stores everything in one Firebase node: socialAccounts/     
 //   • Every campaign, composer post, and analytics query reads from here
 //   • Per-platform extras: page IDs, verification status, follower cache
 //
@@ -547,6 +547,22 @@ async function verifyAccount(id) {
         verified: true,
       };
       await set(ref(db, P(`socialAccounts/${id}`)), updated);
+            /* ── Append follower snapshot to account history ── */
+      try {
+        const historyPath = P(`socialAccounts/${id}/followersHistory`);
+        const historySnap = await get(ref(db, historyPath));
+        const history = historySnap.exists() ? (historySnap.val() || []) : [];
+        history.push({
+          ts: new Date().toISOString(),
+          followers: Number(res.followers) || 0,
+          source: res.source || 'verify',
+        });
+        /* Keep last 90 snapshots (~4.5 hours at 3-min cadence, or a few weeks if manual) */
+        if (history.length > 90) history.splice(0, history.length - 90);
+        await set(ref(db, historyPath), history);
+      } catch (histErr) {
+        console.warn('[verify] followers history append failed:', histErr.message);
+      }
       SAFE.toast(`Verified — ${Number(res.followers).toLocaleString()} followers.`, 'success');
       renderAccountsPanel();
     } else {
