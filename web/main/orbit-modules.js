@@ -441,34 +441,32 @@ export async function renderAccountsModule(ctx) {
 
   return {
     html,
-    mount(view) {
-      view.querySelectorAll('[data-acc-edit]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const key = btn.getAttribute('data-acc-edit');
-          _openAccountEditor(ctx, key, byPlatform[key] || null, PLATFORMS);
-        });
-      });
-      view.querySelectorAll('[data-acc-verify]').forEach(btn => {
-        btn.addEventListener('click', () => _verifyAccount(ctx, btn.getAttribute('data-acc-verify')));
-      });
-      view.querySelectorAll('[data-acc-sync]').forEach(btn => {
-        btn.addEventListener('click', () => _syncChannel(ctx, btn.getAttribute('data-acc-sync'), btn));
-      });
-      view.querySelectorAll('[data-acc-remove]').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const id = btn.getAttribute('data-acc-remove');
-          if (!id) return;
-          if (!confirm('Remove this account?')) return;
-          await _deleteAccountHelper(id);
-        });
-      });
-      view.querySelector('#orbitAddAccount')?.addEventListener('click', () => {
-        const key = prompt('Platform? (facebook/instagram/tiktok/youtube/linkedin/x/threads/pinterest/whatsapp/gbp)', 'facebook');
-        if (key) _openAccountEditor(ctx, key, null, PLATFORMS);
+       mount(view) {
+      /* Use event delegation on the view container instead of per-element
+         listeners. This survives innerHTML replacements, double mounts,
+         and detached-element issues. */
+      if (view._vioraCalBound) return;
+      view._vioraCalBound = true;
+
+      view.addEventListener('click', (e) => {
+        const dayEl = e.target.closest('[data-cal-day]');
+        if (!dayEl) return;
+
+        const postEl = e.target.closest('[data-cal-post]');
+        if (postEl) {
+          e.stopPropagation();
+          const postId = postEl.getAttribute('data-cal-post');
+          const campId = postEl.getAttribute('data-cal-camp');
+          const camp = campaigns.find(x => x.id === campId);
+          const post = camp && (camp.posts || []).find(p => p.id === postId);
+          if (post) openCalendarPostPreview(ctx, post, camp);
+          return;
+        }
+
+        const isoDate = dayEl.getAttribute('data-cal-day');
+        openCalendarCreateModal(ctx, isoDate);
       });
     }
-  };
-}
 
 function _openAccountEditor(ctx, platformKey, existing, PLATFORMS) {
   const platform = PLATFORMS.find(p => p.key === platformKey) || PLATFORMS[0];
