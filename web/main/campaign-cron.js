@@ -20,7 +20,6 @@ function ctx() { return _ctx || {}; }
 export function startCampaignCron() {
   if (_timer) return;
   _timer = setInterval(_tick, INTERVAL_MS);
-  // First pass after a short delay
   setTimeout(_tick, 8000);
   console.info('[campaign-cron] started, interval', INTERVAL_MS / 1000, 's');
 }
@@ -32,9 +31,6 @@ export function stopCampaignCron() {
 
 async function _tick() {
   if (_running) return;
-  /* REMOVED document.hidden check — stats should refresh even
-     when the tab is backgrounded (browsers throttle RAF but not
-     setInterval). We already have in-flight guards. */
   _running = true;
   try {
     await _refreshAllStats();
@@ -54,19 +50,22 @@ async function _refreshAllStats() {
   const now = Date.now();
   const campaigns = state.data.campaigns;
 
-  /* Collect every stale published post across all campaigns into one batch */
+  /* Collect every stale published post.
+     Accept posts that have EITHER a url OR an externalId — some
+     composer posts only carry the externalId after publishing. */
   const stale = [];
   for (const campaign of campaigns) {
     if (!campaign || !Array.isArray(campaign.posts)) continue;
     for (const post of campaign.posts) {
-      if (!post || post.status !== 'published' || !post.url) continue;
-      if (post.mode === 'compose-link') continue;  /* no stats available */
+      if (!post || post.status !== 'published') continue;
+      if (post.mode === 'compose-link') continue;
+      if (!post.url && !post.externalId) continue;
       const last = Date.parse(post.statsUpdatedAt || '') || 0;
       if (now - last < FRESH_MS) continue;
       stale.push({
         id: post.id,
         platform: post.platform,
-        url: post.url,
+        url: post.url || null,
         externalId: post.externalId || null,
       });
     }
@@ -75,7 +74,6 @@ async function _refreshAllStats() {
 
   let resultsById = {};
   try {
-    /* Worker accepts up to 40 posts per batch — chunk if more */
     const CHUNK = 40;
     for (let i = 0; i < stale.length; i += CHUNK) {
       const chunk = stale.slice(i, i + CHUNK);
@@ -89,6 +87,15 @@ async function _refreshAllStats() {
     return;
   }
 
+  /* Precompute peer pool once — reused across every post */
+  const allPublishedWithStats = [];
+  for (const cc of campaigns) {
+    if (!cc || !Array.isArray(cc.posts)) continue;
+    for (const p of cc.posts) {
+      if (p && p.status === 'published' && p.stats) allPublishedWithStats.push(p);
+    }
+  }
+
   const touchedCampaigns = new Set();
 
   for (const campaign of campaigns) {
@@ -98,22 +105,21 @@ async function _refreshAllStats() {
     for (const post of campaign.posts) {
       if (!post || !post.id) continue;
       const result = resultsById[post.id];
-      if (!result || result.ok === false) continue;
+      if (!result) {
+        /* No result at all — record a soft error so we retry next tick */
+        if (post.status === 'published' && (post.url || post.externalId)) {
+          post.statsError = 'No data returned by worker';
+          dirty = true;
+        }
+        continue;
+      }
+      if (result.ok === false) {
+        post.statsError = result.error || 'Worker reported failure';
+        post.statsUpdatedAt = new Date().toISOString();
+        dirty = true;
+        continue;
+      }
 
-      /* Precompute peer pool once — avoid O(n²) rebuild per stale post */
-  const allPublishedWithStats = [];
-  for (const cc of campaigns) {
-    if (!cc || !Array.isArray(cc.posts)) continue;
-    for (const p of cc.posts) {
-      if (p && p.status === 'published' && p.stats) allPublishedWithStats.push(p);
-    }
-  }
-
-            /* ── statsHistory append (capped at 30 snapshots ≈ 90 min at 3-min tick) ──
-         Powers the per-post trend chart in the Post Library / Fanout Detail modal.
-         Before overwriting post.stats, we push the *current* values onto a
-         rolling history array. Only push if this batch actually returned data
-         for at least one of the four tracked metrics. */
       const hasValues =
         result.views    != null ||
         result.likes    != null ||
@@ -129,7 +135,6 @@ async function _refreshAllStats() {
           comments: result.comments ?? null,
           shares:   result.shares   ?? null,
         });
-        /* Cap at last 30 snapshots — drop oldest */
         if (post.statsHistory.length > 30) {
           post.statsHistory.splice(0, post.statsHistory.length - 30);
         }
@@ -144,19 +149,26 @@ async function _refreshAllStats() {
       };
       post.statsUpdatedAt = new Date().toISOString();
       post.statsSource = result.source || null;
+      post.statsError = null;
 
-           const peers = allPublishedWithStats.filter(p => p.id !== post.id);
+      /* Backfill metadata on first fetch — lets Post Library show a real title */
+      if (result.publishedAt && !post.publishedAt) post.publishedAt = result.publishedAt;
+      if (result.title && !post.caption) post.caption = result.title;
+      if (result.thumbnail) post.thumbnailUrl = result.thumbnail;
+      if (result.externalId && !post.externalId) post.externalId = result.externalId;
+
+      const peers = allPublishedWithStats.filter(p => p.id !== post.id);
       const a = detectAnomaly(post, peers);
       if (a.type === 'spike') {
         _notify(
-          '📈 Spike detected',
-          `${post.caption?.slice(0, 60) || 'Post'} on ${post.platform} — ${a.multiple.toFixed(1)}× median engagement.`,
+          'Spike detected',
+          `${post.caption?.slice(0, 60) || 'Post'} on ${post.platform} — ${a.multiple.toFixed(1)}x median engagement.`,
           'success'
         );
       } else if (a.type === 'drop') {
         _notify(
-          '📉 Engagement drop',
-          `${post.caption?.slice(0, 60) || 'Post'} on ${post.platform} — ${(a.multiple).toFixed(2)}× median engagement.`,
+          'Engagement drop',
+          `${post.caption?.slice(0, 60) || 'Post'} on ${post.platform} — ${(a.multiple).toFixed(2)}x median engagement.`,
           'warning'
         );
       }
@@ -166,7 +178,6 @@ async function _refreshAllStats() {
     if (dirty) touchedCampaigns.add(campaign);
   }
 
-  /* Save each touched campaign once */
   for (const campaign of touchedCampaigns) {
     try {
       await upsertDoc('campaigns', campaign, campaign._rev);
@@ -177,6 +188,11 @@ async function _refreshAllStats() {
 
   if (touchedCampaigns.size > 0) {
     try { ctx().renderCampaigns?.(); } catch (_) {}
+    try {
+      /* If the user is looking at analytics, re-render so the charts update live */
+      const current = window.Orbit?.currentModule?.();
+      if (current === 'analytics') window.Orbit.renderActiveOrbitModule?.();
+    } catch (_) {}
     console.info(`[campaign-cron] refreshed ${Object.keys(resultsById).length} post stats across ${touchedCampaigns.size} campaign(s)`);
   }
 }
