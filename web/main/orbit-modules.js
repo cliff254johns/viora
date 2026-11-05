@@ -329,8 +329,9 @@ export async function renderAccountsModule(ctx) {
                 <i class="fa-solid fa-${isRegistered ? 'pen' : 'plus'}"></i>
                 ${isRegistered ? 'Edit' : 'Connect'}
               </button>
-              ${isRegistered ? `
+                           ${isRegistered ? `
                 <button class="btn" data-acc-verify="${esc(a.id)}" title="Verify"><i class="fa-solid fa-satellite-dish"></i></button>
+                ${p.key === 'youtube' ? `<button class="btn" data-acc-sync="${esc(a.id)}" title="Sync all videos from this channel"><i class="fa-solid fa-cloud-arrow-down"></i></button>` : ''}
                 <button class="btn danger" data-acc-remove="${esc(a.id)}" title="Remove"><i class="fa-solid fa-trash"></i></button>` : ''}
             </div>
           </div>`;
@@ -346,8 +347,11 @@ export async function renderAccountsModule(ctx) {
           _openAccountEditor(ctx, key, byPlatform[key] || null, PLATFORMS);
         });
       });
-      view.querySelectorAll('[data-acc-verify]').forEach(btn => {
+            view.querySelectorAll('[data-acc-verify]').forEach(btn => {
         btn.addEventListener('click', () => _verifyAccount(ctx, btn.getAttribute('data-acc-verify')));
+      });
+      view.querySelectorAll('[data-acc-sync]').forEach(btn => {
+        btn.addEventListener('click', () => _syncChannel(ctx, btn.getAttribute('data-acc-sync'), btn));
       });
       view.querySelectorAll('[data-acc-remove]').forEach(btn => {
         btn.addEventListener('click', async () => {
@@ -3421,4 +3425,193 @@ async function deleteFanoutPosts(ctx, group) {
     return { ok: false, deleted, error: errors.join(' | ') };
   }
   return { ok: true, deleted };
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SYNC CHANNEL — pulls every video from a YouTube channel and
+   imports them all as published posts in a chosen campaign.
+   Uses the worker's existing /social/syncChannel endpoint.
+   ═══════════════════════════════════════════════════════════════ */
+async function _syncChannel(ctx, accountId, btn) {
+  const c = C(ctx);
+  const state = c.state || { data: {} };
+  const callFn = c.callFn;
+  const upsertDoc = c.upsertDoc;
+
+  if (typeof callFn !== 'function') { toast(ctx, 'Worker not available.', 'warning'); return; }
+  if (typeof upsertDoc !== 'function') { toast(ctx, 'Write layer not available.', 'warning'); return; }
+
+  const accounts = Array.isArray(state.data?.socialAccounts) ? state.data.socialAccounts : [];
+  const account = accounts.find(a => a && a.id === accountId);
+  if (!account) { toast(ctx, 'Account not found.', 'error'); return; }
+
+  if (account.platform !== 'youtube') {
+    toast(ctx, 'Channel sync is only supported for YouTube.', 'info');
+    return;
+  }
+  if (!account.profileUrl && !account.handle) {
+    toast(ctx, 'Set the channel URL or @handle on this account first.', 'error');
+    return;
+  }
+
+  /* Pick which campaign the videos should be attached to */
+  const campaigns = Array.isArray(state.data?.campaigns) ? state.data.campaigns : [];
+  const sortedCampaigns = campaigns
+    .filter(cc => cc && cc.id)
+    .sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')));
+  if (!sortedCampaigns.length) {
+    toast(ctx, 'Create a campaign first — synced videos need a home.', 'warning');
+    window.Orbit?.navigate?.('campaigns');
+    return;
+  }
+
+  let targetCampaign = null;
+  if (sortedCampaigns.length === 1) {
+    targetCampaign = sortedCampaigns[0];
+  } else {
+    const options = sortedCampaigns.map((cc, i) => `${i + 1}. ${cc.name}`).join('\n');
+    const choice = prompt(`Import videos into which campaign?\n\n${options}\n\nEnter number (1-${sortedCampaigns.length}):`, '1');
+    if (choice === null) return;
+    const idx = parseInt(choice, 10) - 1;
+    if (isNaN(idx) || idx < 0 || idx >= sortedCampaigns.length) {
+      toast(ctx, 'Invalid campaign choice.', 'error');
+      return;
+    }
+    targetCampaign = sortedCampaigns[idx];
+  }
+
+  const originalHtml = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; }
+
+  toast(ctx, 'Fetching videos from ' + (account.handle || 'YouTube') + '… this can take 20-60 seconds for large channels.', 'info');
+
+  try {
+    const res = await callFn('social/syncChannel', {
+      platform: 'youtube',
+      url: account.profileUrl || account.handle,
+      maxResults: 500,
+    });
+
+    if (!res || res.ok === false) {
+      throw new Error(res?.error || 'Worker returned no data');
+    }
+
+    const videos = Array.isArray(res.videos) ? res.videos : [];
+    if (!videos.length) {
+      toast(ctx, 'Channel has no videos to sync.', 'info');
+      return;
+    }
+
+    /* Re-fetch campaign — it may have changed while we waited */
+    const freshCampaigns = Array.isArray(state.data?.campaigns) ? state.data.campaigns : [];
+    const camp = freshCampaigns.find(x => x.id === targetCampaign.id);
+    if (!camp) { toast(ctx, 'Campaign was deleted. Aborting.', 'error'); return; }
+
+    /* Dedupe by externalId + url */
+    const existing = Array.isArray(camp.posts) ? camp.posts : [];
+    const existingByExt = new Map();
+    const existingByUrl = new Map();
+    for (const p of existing) {
+      if (!p) continue;
+      if (p.externalId) existingByExt.set(String(p.externalId), p);
+      if (p.url) existingByUrl.set(String(p.url).toLowerCase(), p);
+    }
+
+    const now = new Date().toISOString();
+    const newPosts = [];
+    let duplicates = 0;
+
+    for (const v of videos) {
+      const ext = v.videoId ? String(v.videoId) : null;
+      if (!ext) continue;
+      const url = String(v.url || ('https://www.youtube.com/watch?v=' + ext)).toLowerCase();
+
+      if (existingByExt.has(ext) || existingByUrl.has(url)) {
+        duplicates++;
+        continue;
+      }
+
+      const s = v.stats || {};
+      const post = {
+        id: 'synced-yt-' + ext,
+        fanoutId: null,
+        campaignId: camp.id,
+        platform: 'youtube',
+        pillar: 'educational',
+        caption: String(v.title || '').slice(0, 5000),
+        hashtags: [],
+        imageBase64: null,
+        imageMime: 'image/png',
+        imageWidth: null,
+        imageHeight: null,
+        imagePrompt: null,
+        imageModel: null,
+        imageSource: 'synced',
+        imageSeed: null,
+        utm: {},
+        url: v.url || ('https://www.youtube.com/watch?v=' + ext),
+        status: 'published',
+        mode: 'auto',
+        scheduledFor: null,
+        scheduledForUtc: null,
+        publishedAt: v.publishedAt || now,
+        externalId: ext,
+        composeUrl: null,
+        lastError: null,
+        stats: {
+          views:     s.views     ?? null,
+          likes:     s.likes     ?? null,
+          comments:  s.comments  ?? null,
+          shares:    s.shares    ?? null,
+          followers: s.followers ?? null,
+        },
+        statsUpdatedAt: now,
+        statsHistory: [{
+          ts: now,
+          views:    s.views    ?? null,
+          likes:    s.likes    ?? null,
+          comments: s.comments ?? null,
+          shares:   s.shares   ?? null,
+        }],
+        statsSource: 'youtube-sync',
+        accountHandle: account.handle || null,
+        thumbnailUrl: v.thumbnail || null,
+        createdAt: now,
+        updatedAt: now,
+        createdBy: state.operator?.email || 'sync',
+        source: 'synced',
+      };
+      newPosts.push(post);
+      existingByExt.set(ext, post);
+    }
+
+    if (!newPosts.length) {
+      toast(ctx, `All ${duplicates} video${duplicates === 1 ? '' : 's'} already exist — nothing new to sync.`, 'info');
+      return;
+    }
+
+    camp.posts = [...existing, ...newPosts];
+    camp.updatedAt = now;
+    await upsertDoc('campaigns', camp, camp._rev);
+
+    const title = (res.channel && res.channel.title) || account.handle || 'your channel';
+    toast(
+      `Imported ${newPosts.length} video${newPosts.length === 1 ? '' : 's'} from ${title}${duplicates ? ` · ${duplicates} skipped (already existed)` : ''}.`,
+      'success'
+    );
+
+    try { window.Orbit?.renderActiveOrbitModule?.(); } catch (_) {}
+  } catch (e) {
+    console.error('[sync-channel] failed:', e);
+    const msg = String(e.message || 'unknown');
+    if (msg.toLowerCase().includes('youtube_api_key')) {
+      toast(ctx, 'Worker is missing the YouTube API key. Ask the admin to set YOUTUBE_API_KEY in Cloudflare.', 'error');
+    } else if (msg.toLowerCase().includes('not found')) {
+      toast(ctx, 'Channel not found. Check the Profile URL on this account.', 'error');
+    } else {
+      toast(ctx, 'Sync failed: ' + msg, 'error');
+    }
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
+  }
 }
