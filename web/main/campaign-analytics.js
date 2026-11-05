@@ -239,34 +239,156 @@ function _renderCharts(published) {
     });
   }
 
-  // Followers over time
-  const fMonths = Object.keys(followersByMonth).sort();
+  /* ═══════════════════════════════════════════════════════════════
+     Followers Over Time — CORRECTED
+     ─────────────────────────────────────────────────────────────
+     Reads followersHistory[] from each social account, merges
+     all account histories into a single timeline, sums followers
+     per timestamp.
+
+     Falls back to plotting the current `followers` value as a
+     single-point line if no history exists yet (so the chart
+     shows SOMETHING instead of being empty).
+     ═══════════════════════════════════════════════════════════════ */
+
+  const accounts = (ctx().state?.data?.socialAccounts) || [];
+
+  /* Build a merged timeline of {ts, followers} across all accounts */
+  const allSnapshots = [];
+  for (const acc of accounts) {
+    if (!acc || !Array.isArray(acc.followersHistory)) continue;
+    for (const snap of acc.followersHistory) {
+      if (!snap || !snap.ts) continue;
+      allSnapshots.push({
+        ts: snap.ts,
+        followers: Number(snap.followers) || 0,
+        platform: acc.platform,
+        handle: acc.handle,
+      });
+    }
+  }
+
+  /* Group by day (YYYY-MM-DD) to build a smooth daily line.
+     Sum followers across platforms for each day. */
+  const byDay = {};
+  for (const s of allSnapshots) {
+    const day = s.ts.slice(0, 10);  // "2026-11-04"
+    if (!byDay[day]) byDay[day] = {};
+    /* Same platform: last value wins (most recent snapshot of the day) */
+    byDay[day][s.platform] = s.followers;
+  }
+
+  const days = Object.keys(byDay).sort();
+  const platforms = Array.from(new Set(allSnapshots.map(s => s.platform)));
+
+  /* Forward-fill each platform's last known value across missing days */
+  const lastKnown = {};
+  const totalsByDay = days.map(day => {
+    let total = 0;
+    for (const p of platforms) {
+      if (byDay[day][p] != null) lastKnown[p] = byDay[day][p];
+      total += lastKnown[p] || 0;
+    }
+    return total;
+  });
+
   _destroy('caFollowersChart');
   const c4 = _canvas('caFollowersChart');
-  if (c4 && fMonths.length) {
+
+  if (c4 && days.length >= 2) {
+    /* We have history — plot the timeline */
     _charts['caFollowersChart'] = new Chart(c4, {
       type: 'line',
       data: {
-        labels: fMonths,
+        labels: days,
         datasets: [{
-          label: 'Followers',
-          data: fMonths.map(m => followersByMonth[m]),
+          label: 'Total followers',
+          data: totalsByDay,
           borderColor: '#a855f7',
           backgroundColor: 'rgba(168,85,247,0.15)',
           borderWidth: 2, tension: 0.3, fill: true,
+          pointRadius: 3, pointHoverRadius: 5,
         }],
       },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { labels: { color: tc, font: { size: 10 } } } },
+        plugins: {
+          legend: { labels: { color: tc, font: { size: 10 } } },
+          tooltip: {
+            callbacks: {
+              title: (items) => items[0]?.label || '',
+              label: (ctx2) => `Followers: ${Number(ctx2.raw).toLocaleString()}`,
+            },
+          },
+        },
         scales: {
-          y: { beginAtZero: true, ticks: { color: tc, callback: v => fmtNum(v) }, grid: { color: 'rgba(148,163,184,0.15)' } },
-          x: { ticks: { color: tc }, grid: { display: false } },
+          y: { beginAtZero: false, ticks: { color: tc, callback: v => fmtNum(v) }, grid: { color: 'rgba(148,163,184,0.15)' } },
+          x: { ticks: { color: tc, maxRotation: 45 }, grid: { display: false } },
         },
       },
     });
+  } else if (c4) {
+    /* No history — show current total as a single point with a label */
+    const totalNow = accounts.reduce((sum, a) => {
+      const fc =
+        a.followers        != null ? Number(a.followers) :
+        a.stats?.followers != null ? Number(a.stats.followers) :
+        a.followersCache   != null ? Number(a.followersCache) :
+        0;
+      return sum + fc;
+    }, 0);
+
+    if (totalNow > 0) {
+      /* Show a single-point line so the axis renders properly */
+      _charts['caFollowersChart'] = new Chart(c4, {
+        type: 'line',
+        data: {
+          labels: [new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })],
+          datasets: [{
+            label: 'Current followers',
+            data: [totalNow],
+            borderColor: '#a855f7',
+            backgroundColor: 'rgba(168,85,247,0.3)',
+            borderWidth: 2,
+            pointRadius: 8, pointHoverRadius: 10,
+            showLine: false,
+          }],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: tc, font: { size: 10 } } },
+            tooltip: {
+              callbacks: {
+                label: (ctx2) => `Total: ${Number(ctx2.raw).toLocaleString()}`,
+              },
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              suggestedMin: Math.max(0, totalNow - Math.max(10, totalNow * 0.2)),
+              suggestedMax: totalNow + Math.max(10, totalNow * 0.2),
+              ticks: { color: tc, callback: v => fmtNum(v) },
+              grid: { color: 'rgba(148,163,184,0.15)' },
+            },
+            x: { ticks: { color: tc }, grid: { display: false } },
+          },
+        },
+      });
+    } else {
+      /* Truly empty — draw an empty chart with a helpful message */
+      c4.parentElement.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--muted);text-align:center;padding:16px;">
+          <i class="fa-solid fa-chart-line" style="font-size:2rem;opacity:.35;margin-bottom:10px;"></i>
+          <div style="font-weight:800;margin-bottom:4px;">No follower history yet</div>
+          <div style="font-size:.8rem;">Verify a social account to start tracking follower growth</div>
+          <button class="btn soft btn-sm" style="margin-top:12px;" onclick="window.Orbit && window.Orbit.navigate && window.Orbit.navigate('accounts')">
+            Go to Social accounts →
+          </button>
+        </div>`;
+    }
   }
-}
 
 /* ═══════════════════════════════════════════════════════════════
    HEATMAP
