@@ -209,7 +209,7 @@ export async function renderOverview(ctx) {
     .sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')))
     .slice(0, 5);
 
-  return head('Overview', 'Live snapshot of your marketing command centre.', '') +
+    const html = head('Overview', 'Live snapshot of your marketing command centre.', '') +
     `<div class="grid kpis">
       ${kpi('Total Reach', fmtNumShort(social.views), social.totalPosts + ' published posts', '<i class="fa-solid fa-eye"></i>')}
       ${kpi('Engagement', fmtNumShort(social.interactions), social.engagementRate.toFixed(2) + '% ER', '<i class="fa-solid fa-heart"></i>')}
@@ -218,20 +218,23 @@ export async function renderOverview(ctx) {
     </div>
 
     <div class="grid two" style="margin-top:15px;">
-      <div class="card">
+            <div class="card">
         <div class="cardhead">
           <h3><i class="fa-solid fa-chart-simple"></i> Social performance</h3>
           <button class="btn soft btn-sm" data-orbit-goto="analytics">Details →</button>
         </div>
         ${platformRows.length === 0
           ? '<div class="empty">No published posts yet — their stats appear here after the first refresh cycle.</div>'
-          : `<div class="tablewrap"><table>
-              <thead><tr>
-                <th>Platform</th><th>Posts</th><th>Views</th><th>Likes</th>
-                <th>Comments</th><th>Shares</th><th>ER</th>
-              </tr></thead>
-              <tbody>${platformRows}</tbody>
-            </table></div>`}
+          : `<div style="height:320px;position:relative;"><canvas id="overviewSocialChart"></canvas></div>
+             <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;font-size:.7rem;">
+               ${Object.entries(byPlatform).sort((a,b)=>b[1].views-a[1].views).map(([k]) => {
+                 const m = platformMetaSafe(k);
+                 return `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border-color);">
+                   <i class="${m.icon}" style="color:${m.color};"></i>
+                   ${esc(m.label)}
+                 </span>`;
+               }).join('')}
+             </div>`}
       </div>
       <div class="card">
         <div class="cardhead">
@@ -257,7 +260,7 @@ export async function renderOverview(ctx) {
                 <div class="small">KSh ${Number(c.spend || 0).toLocaleString()} / ${Number(c.budget || 0).toLocaleString()}</div>
               </div>`).join('')}
       </div>
-      <div class="card">
+           <div class="card">
         <div class="cardhead"><h3>Revenue & leads</h3></div>
         <div style="padding:14px 0;">
           <div class="kpi-value">KSh ${revenue.toLocaleString()}</div>
@@ -270,6 +273,185 @@ export async function renderOverview(ctx) {
       </div>
     </div>
   `;
+
+  /* Render the social performance chart once the DOM is mounted */
+  const mount = function () {
+    if (platformRows.length === 0) return;
+    if (typeof Chart === 'undefined') return;
+
+    const canvas = document.getElementById('overviewSocialChart');
+    if (!canvas) return;
+
+    /* Destroy any previous instance so hot re-renders don't stack */
+    try {
+      if (canvas._vioraChart) { canvas._vioraChart.destroy(); canvas._vioraChart = null; }
+    } catch (_) {}
+
+    const c = C(ctx);
+    const state = c.state || { data: {} };
+    if (!state.charts) state.charts = {};
+    try { state.charts['overviewSocialChart']?.destroy(); } catch (_) {}
+
+    /* Sort platforms by views (largest first) so the bars make sense */
+    const sorted = Object.entries(byPlatform)
+      .sort((a, b) => b[1].views - a[1].views);
+
+    const labels = sorted.map(([k]) => platformMetaSafe(k).label);
+    const colors = sorted.map(([k]) => platformMetaSafe(k).color);
+
+    const postsData    = sorted.map(([, s]) => Number(s.posts)    || 0);
+    const viewsData    = sorted.map(([, s]) => Number(s.views)    || 0);
+    const likesData    = sorted.map(([, s]) => Number(s.likes)    || 0);
+    const commentsData = sorted.map(([, s]) => Number(s.comments) || 0);
+    const sharesData   = sorted.map(([, s]) => Number(s.shares)   || 0);
+    const erData       = sorted.map(([, s]) => {
+      const v = Number(s.views) || 0;
+      const i = (Number(s.likes)||0) + (Number(s.comments)||0) + (Number(s.shares)||0);
+      return v > 0 ? Math.round((i / v) * 10000) / 100 : 0;
+    });
+
+    const tc = (() => {
+      try { return getComputedStyle(document.documentElement).getPropertyValue('--chart-text').trim() || '#94a3b8'; }
+      catch (_) { return '#94a3b8'; }
+    })();
+    const gc = 'rgba(148,163,184,0.15)';
+
+    const chart = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Posts',
+            data: postsData,
+            backgroundColor: 'rgba(168,85,247,0.75)',
+            borderColor: '#a855f7',
+            borderWidth: 1,
+            borderRadius: 4,
+            yAxisID: 'y',
+          },
+          {
+            label: 'Views',
+            data: viewsData,
+            backgroundColor: 'rgba(0,212,255,0.75)',
+            borderColor: '#00d4ff',
+            borderWidth: 1,
+            borderRadius: 4,
+            yAxisID: 'y',
+          },
+          {
+            label: 'Likes',
+            data: likesData,
+            backgroundColor: 'rgba(255,92,124,0.75)',
+            borderColor: '#ff5c7c',
+            borderWidth: 1,
+            borderRadius: 4,
+            yAxisID: 'y',
+          },
+          {
+            label: 'Comments',
+            data: commentsData,
+            backgroundColor: 'rgba(34,230,160,0.75)',
+            borderColor: '#22e6a0',
+            borderWidth: 1,
+            borderRadius: 4,
+            yAxisID: 'y',
+          },
+          {
+            label: 'Shares',
+            data: sharesData,
+            backgroundColor: 'rgba(255,200,87,0.75)',
+            borderColor: '#ffc857',
+            borderWidth: 1,
+            borderRadius: 4,
+            yAxisID: 'y',
+          },
+          {
+            label: 'Engagement Rate %',
+            type: 'line',
+            data: erData,
+            borderColor: '#f97316',
+            backgroundColor: 'rgba(249,115,22,0.15)',
+            borderWidth: 2.5,
+            tension: 0.35,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            pointBackgroundColor: '#f97316',
+            fill: false,
+            yAxisID: 'y1',
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              color: tc,
+              font: { size: 11 },
+              boxWidth: 12,
+              usePointStyle: true,
+              padding: 12,
+            },
+          },
+          tooltip: {
+            callbacks: {
+              label: (ctx2) => {
+                const label = ctx2.dataset.label || '';
+                const v = Number(ctx2.raw) || 0;
+                if (label.includes('%')) return `${label}: ${v.toFixed(2)}%`;
+                return `${label}: ${v.toLocaleString()}`;
+              },
+            },
+          },
+        },
+        scales: {
+          x: {
+            ticks: { color: tc, font: { size: 11 } },
+            grid: { display: false },
+          },
+          y: {
+            type: 'linear',
+            position: 'left',
+            beginAtZero: true,
+            title: { display: true, text: 'Count', color: tc, font: { size: 10 } },
+            ticks: {
+              color: tc,
+              callback: v => {
+                if (v >= 1e9) return (v / 1e9).toFixed(1) + 'B';
+                if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
+                if (v >= 1e3) return (v / 1e3).toFixed(1) + 'K';
+                return String(v);
+              },
+            },
+            grid: { color: gc },
+          },
+          y1: {
+            type: 'linear',
+            position: 'right',
+            beginAtZero: true,
+            title: { display: true, text: 'Engagement rate (%)', color: '#f97316', font: { size: 10 } },
+            ticks: {
+              color: '#f97316',
+              callback: v => v + '%',
+            },
+            grid: { drawOnChartArea: false },
+          },
+        },
+      },
+    });
+
+    canvas._vioraChart = chart;
+    state.charts['overviewSocialChart'] = chart;
+  };
+
+  return {
+    html,
+    mount,
+  };
 }
 
 /* ═══════════════════════════════════════════════════════════════
