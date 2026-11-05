@@ -492,6 +492,14 @@ function _renderCompetitors() {
   }
 
   host.innerHTML =
+    '<div style="display:flex;gap:8px;margin-bottom:10px;">' +
+      '<button type="button" class="btn soft btn-sm" id="caRefreshAllCompetitors">' +
+        '<i class="fa-solid fa-rotate"></i> Refresh all stats' +
+      '</button>' +
+      '<span class="small muted" style="align-self:center;">' +
+        competitors.length + ' tracked · click refresh to update' +
+      '</span>' +
+    '</div>' +
     '<div style="display:flex;flex-direction:column;gap:6px;">' +
     competitors.map((c) => {
       const pm = platformMeta(c.platform);
@@ -538,6 +546,13 @@ function _renderCompetitors() {
     }).join('') +
     '</div>';
 
+   /* Insert the combined chart above the per-competitor list */
+  const chartHost = document.createElement('div');
+  chartHost.id = 'caCompetitorsChartHost';
+  chartHost.style.marginBottom = '14px';
+  host.insertBefore(chartHost, host.firstChild?.nextSibling || null);
+  _renderCompetitorsChart(chartHost, competitors);
+
   host.querySelectorAll('[data-comp-refresh]').forEach((b) => {
     b.addEventListener('click', () => _refreshCompetitor(b.getAttribute('data-comp-refresh')));
   });
@@ -560,13 +575,25 @@ function _renderCompetitors() {
           delete next[id];
           ctx().state.data.competitorBenchmarks = next;
         }
-        _renderCompetitors();
-        ctx().toast?.('Competitor removed.', 'success');
-      } catch (e) {
-        console.error('[analytics] competitor remove failed:', e);
-        ctx().toast?.('Remove failed: ' + (e.message || 'unknown'), 'error');
+             } catch (e) {
+        ctx().toast?.('Remove failed: ' + e.message, 'error');
       }
     });
+  });
+
+  host.querySelector('#caRefreshAllCompetitors')?.addEventListener('click', async () => {
+    const btn = host.querySelector('#caRefreshAllCompetitors');
+    const prev = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Refreshing…';
+    let ok = 0, fail = 0;
+    for (const c of competitors) {
+      try { await _refreshCompetitor(c.id); ok++; }
+      catch (_) { fail++; }
+    }
+    btn.disabled = false;
+    btn.innerHTML = prev;
+    ctx().toast?.(`Refreshed ${ok} competitor${ok === 1 ? '' : 's'}${fail ? ` · ${fail} failed` : ''}.`, 'success');
   });
 }
 
@@ -588,13 +615,12 @@ function _openAddCompetitor() {
 
   (async () => {
     try {
-      const db = ctx().db, ref = ctx().ref, update = ctx().update, P = ctx().P;
-      if (!db || !ref || !update || !P) throw new Error('Firebase update not wired');
+      /* update() adds ONE key to the node — never wipes existing competitors */
+      await ctx().update(ctx().ref(ctx().db, ctx().P('competitorBenchmarks')), {
+        [id]: entry,
+      });
 
-      /* update() adds ONE key and leaves all others intact */
-      await update(ref(db, P('competitorBenchmarks')), { [id]: entry });
-
-      /* Merge into local state */
+      /* Merge into local state too */
       const raw = ctx().state?.data?.competitorBenchmarks;
       if (Array.isArray(raw)) {
         ctx().state.data.competitorBenchmarks = [...raw, entry];
@@ -606,25 +632,26 @@ function _openAddCompetitor() {
       _refreshCompetitor(id);
       ctx().toast?.('Competitor added.', 'success');
     } catch (e) {
-      console.error('[analytics] competitor add failed:', e);
       ctx().toast?.('Add failed: ' + (e.message || 'unknown'), 'error');
     }
   })();
 }
 
+async function _competitorsAsArrayLocal() {
+  const raw = ctx().state?.data?.competitorBenchmarks;
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw.filter(Boolean);
+  return Object.entries(raw).map(([id, v]) => ({ id, ...(v || {}) }));
+}
+
 async function _refreshCompetitor(id) {
-  const list = _competitorsAsArray();
+  const list = _competitorsAsArrayLocal();
   const entry = list.find(x => x.id === id);
   if (!entry) return;
 
   try {
     const callFn = ctx().callFn;
-    if (typeof callFn !== 'function') throw new Error('callFn not wired');
-
-    const res = await callFn('competitor/stats', {
-      platform: entry.platform,
-      handle: entry.handle,
-    });
+    const res = await callFn('competitor/stats', { platform: entry.platform, handle: entry.handle });
 
     let nextEntry;
 
@@ -635,12 +662,12 @@ async function _refreshCompetitor(id) {
       );
       nextEntry = {
         ...entry,
-        stats: res || { error: 'unknown' },
+        lastError: res?.error || 'unknown',
         lastAttemptAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
       };
     } else {
       const { ok, ...cleanStats } = res;
+
       if (cleanStats.engagementRate == null &&
           Number(cleanStats.views) > 0 &&
           (cleanStats.likes != null || cleanStats.comments != null || cleanStats.shares != null)) {
@@ -651,6 +678,7 @@ async function _refreshCompetitor(id) {
         cleanStats.engagementRate =
           Math.round((interactions / Number(cleanStats.views)) * 10000) / 100;
       }
+
       nextEntry = {
         ...entry,
         stats: cleanStats,
@@ -660,10 +688,10 @@ async function _refreshCompetitor(id) {
       };
     }
 
-    /* update() writes only this one key — never touches others */
-    const db = ctx().db, ref = ctx().ref, update = ctx().update, P = ctx().P;
-    if (!db || !ref || !update || !P) throw new Error('Firebase update not wired');
-    await update(ref(db, P('competitorBenchmarks')), { [id]: nextEntry });
+    /* update() writes only this one key — never touches the others */
+    await ctx().update(ctx().ref(ctx().db, ctx().P('competitorBenchmarks')), {
+      [id]: nextEntry,
+    });
 
     /* Merge into local state */
     const raw = ctx().state?.data?.competitorBenchmarks;
@@ -678,7 +706,161 @@ async function _refreshCompetitor(id) {
       ctx().toast?.('Competitor stats refreshed.', 'success');
     }
   } catch (e) {
-    console.error('[analytics] competitor refresh failed:', e);
     ctx().toast?.('Refresh failed: ' + (e.message || 'unknown'), 'error');
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   COMPETITORS CHART — one combined bar+line chart showing every
+   competitor's followers (bars) and engagement rate (line).
+   Renders inside the Competitor Benchmarks card.
+   ═══════════════════════════════════════════════════════════════ */
+function _renderCompetitorsChart(host, competitors) {
+  if (!host) return;
+  if (typeof Chart === 'undefined') return;
+
+  const withData = competitors.filter(c => c && c.stats &&
+    (c.stats.followers != null || c.stats.engagementRate != null || c.stats.views != null)
+  );
+
+  if (!withData.length) {
+    host.innerHTML =
+      '<div class="empty-state" style="padding:16px;font-size:.82rem;">' +
+      'No competitor has stats yet — click Refresh to fetch them.' +
+      '</div>';
+    return;
+  }
+
+  const sorted = withData.slice().sort((a, b) =>
+    (Number(b.stats?.followers) || 0) - (Number(a.stats?.followers) || 0)
+  );
+
+  const labels = sorted.map(c => {
+    const pm = platformMeta(c.platform);
+    return (c.handle || pm.label || c.platform || '—');
+  });
+
+  const followerData = sorted.map(c => Number(c.stats?.followers) || 0);
+  const erData       = sorted.map(c =>
+    c.stats?.engagementRate != null ? Number(c.stats.engagementRate) : null
+  );
+  const viewsData    = sorted.map(c => Number(c.stats?.views) || 0);
+
+  const tc = (() => {
+    try { return getComputedStyle(document.documentElement).getPropertyValue('--chart-text').trim() || '#94a3b8'; }
+    catch (_) { return '#94a3b8'; }
+  })();
+  const gc = 'rgba(148,163,184,0.15)';
+
+  host.innerHTML = '<div style="height:300px;position:relative;"><canvas id="caCompetitorsChart"></canvas></div>';
+
+  const canvas = host.querySelector('#caCompetitorsChart');
+  if (!canvas) return;
+
+  /* Destroy any previous instance so hot re-renders don't stack */
+  if (_charts['caCompetitorsChart']) {
+    try { _charts['caCompetitorsChart'].destroy(); } catch (_) {}
+    delete _charts['caCompetitorsChart'];
+  }
+
+  _charts['caCompetitorsChart'] = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Followers',
+          data: followerData,
+          backgroundColor: 'rgba(168,85,247,0.75)',
+          borderColor: '#a855f7',
+          borderWidth: 1,
+          borderRadius: 6,
+          yAxisID: 'y',
+        },
+        {
+          label: 'Views',
+          data: viewsData,
+          backgroundColor: 'rgba(0,212,255,0.55)',
+          borderColor: '#00d4ff',
+          borderWidth: 1,
+          borderRadius: 6,
+          yAxisID: 'y',
+        },
+        {
+          label: 'Engagement Rate %',
+          type: 'line',
+          data: erData,
+          borderColor: '#f97316',
+          backgroundColor: 'rgba(249,115,22,0.15)',
+          borderWidth: 2.5,
+          tension: 0.35,
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          pointBackgroundColor: '#f97316',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          fill: false,
+          spanGaps: true,
+          yAxisID: 'y1',
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            color: tc,
+            font: { size: 11 },
+            boxWidth: 12,
+            usePointStyle: true,
+            padding: 12,
+          },
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx2) => {
+              const label = ctx2.dataset.label || '';
+              const v = Number(ctx2.raw) || 0;
+              if (label.includes('%')) return `${label}: ${v.toFixed(2)}%`;
+              return `${label}: ${v.toLocaleString()}`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: { color: tc, font: { size: 11 } },
+          grid: { display: false },
+        },
+        y: {
+          type: 'linear',
+          position: 'left',
+          beginAtZero: true,
+          title: { display: true, text: 'Count', color: tc, font: { size: 10 } },
+          ticks: {
+            color: tc,
+            callback: (v) => {
+              if (v >= 1e9) return (v / 1e9).toFixed(1) + 'B';
+              if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
+              if (v >= 1e3) return (v / 1e3).toFixed(1) + 'K';
+              return String(v);
+            },
+          },
+          grid: { color: gc },
+        },
+        y1: {
+          type: 'linear',
+          position: 'right',
+          beginAtZero: true,
+          title: { display: true, text: 'Engagement rate (%)', color: '#f97316', font: { size: 10 } },
+          ticks: { color: '#f97316', callback: (v) => v + '%' },
+          grid: { drawOnChartArea: false },
+        },
+      },
+    },
+  });
 }
