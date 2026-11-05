@@ -3557,7 +3557,6 @@ async function copyPostToClipboard(ctx, post) {
   }
 }
 
-/* Convert any image blob to PNG via canvas (needed for clipboard). */
 async function _convertBlobToPng(blob) {
   const bmp = await createImageBitmap(blob);
   const canvas = document.createElement('canvas');
@@ -3568,6 +3567,23 @@ async function _convertBlobToPng(blob) {
     canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/png');
   });
 }
+
+/* Expose the copy helper so campaign-ai.js (Draft Library) can call it
+   without importing. The helper only needs a `post` object. */
+window.__vioraCopyPost = async function (post) {
+  /* No ctx available across module boundary — pass a minimal shim that
+     just has `toast`. The real ctx is only used for the toast call. */
+  const shim = {
+    toast: (msg, type) => {
+      try {
+        if (typeof window.Viora?.toast === 'function') window.Viora.toast(msg, type);
+        else if (typeof window.vioraToast === 'function') window.vioraToast(msg, type);
+        else console.log('[copy-post]', msg);
+      } catch (_) {}
+    }
+  };
+  return copyPostToClipboard(shim, post);
+};
 
 /* ═══════════════════════════════════════════════════════════════
    SYNC CHANNEL — pulls every video from a YouTube channel and
