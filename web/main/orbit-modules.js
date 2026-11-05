@@ -621,11 +621,16 @@ export async function renderCampaignsModule(ctx) {
       });
       document.querySelectorAll('[data-camp-edit]').forEach(b =>
         b.addEventListener('click', () => window.Viora?.editCampaign?.(b.getAttribute('data-camp-edit'))));
-      document.querySelectorAll('[data-camp-del]').forEach(b =>
+          document.querySelectorAll('[data-camp-del]').forEach(b =>
         b.addEventListener('click', async () => {
           if (!confirm('Delete this campaign?')) return;
-          try { await C(ctx).deleteDoc('campaigns', b.getAttribute('data-camp-del')); toast(ctx, 'Deleted.', 'info'); }
-          catch (e) { toast(ctx, 'Delete failed: ' + e.message, 'error'); }
+          try {
+            await C(ctx).deleteDoc('campaigns', b.getAttribute('data-camp-del'));
+            toast(ctx, 'Deleted.', 'info');
+            window.Orbit?.renderActiveOrbitModule?.();
+          } catch (e) {
+            toast(ctx, 'Delete failed: ' + e.message, 'error');
+          }
         }));
       document.querySelectorAll('[data-camp-refresh]').forEach(b =>
         b.addEventListener('click', () => window.Viora?.refreshCampaignStats?.(b.getAttribute('data-camp-refresh'))));
@@ -855,7 +860,7 @@ export function renderPostLibrary(ctx) {
         refreshFanoutStats(ctx, group);
       } else if (action === 'post-now') {
         postFanoutNow(ctx, group);
-      } else if (action === 'delete') {
+        } else if (action === 'delete') {
         const summary = summarizeFanout(group);
         const count = group.length;
         const label = count === 1 ? 'this post' : `all ${count} posts in this fanout`;
@@ -864,6 +869,7 @@ export function renderPostLibrary(ctx) {
           const result = await deleteFanoutPosts(ctx, group);
           if (result.ok) {
             toast(ctx, `Deleted ${result.deleted} post${result.deleted === 1 ? '' : 's'}.`, 'success');
+            window.Orbit?.renderActiveOrbitModule?.();
           } else {
             toast(ctx, 'Delete failed: ' + (result.error || 'unknown'), 'error');
           }
@@ -1299,6 +1305,7 @@ function renderFanoutModalBody(ctx, bodyEl, group, summary, activeTab) {
       if (result.ok) {
         closeFanoutDetail(ctx);
         toast(ctx, `Deleted ${result.deleted} post${result.deleted === 1 ? '' : 's'}.`, 'success');
+        window.Orbit?.renderActiveOrbitModule?.();
       } else {
         toast(ctx, 'Delete failed: ' + (result.error || 'unknown'), 'error');
       }
