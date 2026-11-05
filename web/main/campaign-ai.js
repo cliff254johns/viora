@@ -561,8 +561,9 @@ function _bindComposerEvents() {
   g('ccCancelBtn')?.addEventListener('click', _closeComposer);
   g('ccSaveDraftBtn')?.addEventListener('click', () => _savePost('draft'));
   g('ccPublishBtn')?.addEventListener('click', () => {
-    const status = _state.composer?.status || 'draft';
-    _savePost(status);
+    /* The Publish button ALWAYS publishes — ignore the dropdown.
+       The dropdown only applies to Save Draft / scheduling behaviour. */
+    _savePost('published');
   });
   g('ccDownloadImageBtn')?.addEventListener('click', _downloadImage);
   g('ccCopyImageBtn')?.addEventListener('click', _copyImage);
