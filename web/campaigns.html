@@ -1474,102 +1474,147 @@ tr:last-child td{border-bottom:0}
 }
 </script>
 
+
+
 <script type="module">
   import { getAuth, onAuthStateChanged } from "firebase/auth";
   import { getDatabase, ref, get, forceLongPolling } from "firebase/database";
   import { initializeApp, getApps, getApp } from "firebase/app";
 
-  const firebaseConfig = {
+  var firebaseConfig = {
     apiKey: "AIzaSyC9gCBt-xR8t9n6rTGNvDZ5usUGiW-Dqxc",
     authDomain: "cliffclient-35ec5.firebaseapp.com",
     databaseURL: "https://cliffclient-35ec5-default-rtdb.europe-west1.firebasedatabase.app",
     projectId: "cliffclient-35ec5",
     storageBucket: "cliffclient-35ec5.firebasestorage.app",
     messagingSenderId: "519782791696",
-    appId: "1:519782791696:web:6e1a654ddeed14b72b2895",
+    appId: "1:519782791696:web:6e1a654ddeed14b72b2895"
   };
 
-  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getDatabase(app);
+  var app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  var auth = getAuth(app);
+  var db = getDatabase(app);
   forceLongPolling(db);
 
-  const ROOT = 'viora_data';
-  const ORG = 'orgs/viora';
-  const ALLOWED_ROLES = ['admin', 'exec', 'marketing'];
+  var ROOT = "viora_data";
+  var ORG = "orgs/viora";
+  var ALLOWED_ROLES = ["admin", "exec", "marketing"];
 
   function renderAccessRestricted() {
-    const wrapper = document.createElement('div');
-    wrapper.style.cssText = 'display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0a0a0f;color:#f0f4ff;font-family:Inter,sans-serif;padding:24px;text-align:center;';
-    wrapper.innerHTML = '<div style="max-width:420px;"><h1 style="font-size:1.4rem;margin-bottom:8px;">Access Restricted</h1><p style="color:#94a3b8;font-size:.9rem;line-height:1.6;">Campaigns are available to admin, exec, and marketing roles only.</p><a href="/main.html" style="display:inline-block;margin-top:20px;padding:11px 22px;background:#00d4ff;color:#0a0a0f;text-decoration:none;border-radius:10px;font-weight:700;font-size:.85rem;">&larr; Back to Dashboard</a></div>';
+    var wrapper = document.createElement("div");
+    wrapper.style.cssText = "display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0a0a0f;color:#f0f4ff;font-family:Inter,sans-serif;padding:24px;text-align:center;";
+    var inner = document.createElement("div");
+    inner.style.cssText = "max-width:420px;";
+    var h1 = document.createElement("h1");
+    h1.style.cssText = "font-size:1.4rem;margin-bottom:8px;";
+    h1.textContent = "Access Restricted";
+    var p = document.createElement("p");
+    p.style.cssText = "color:#94a3b8;font-size:.9rem;line-height:1.6;";
+    p.textContent = "Campaigns are available to admin, exec, and marketing roles only.";
+    var a = document.createElement("a");
+    a.href = "/main.html";
+    a.style.cssText = "display:inline-block;margin-top:20px;padding:11px 22px;background:#00d4ff;color:#0a0a0f;text-decoration:none;border-radius:10px;font-weight:700;font-size:.85rem;";
+    a.textContent = "\u2190 Back to Dashboard";
+    inner.appendChild(h1);
+    inner.appendChild(p);
+    inner.appendChild(a);
+    wrapper.appendChild(inner);
     document.body.replaceChildren(wrapper);
   }
 
   function bootCampaigns() {
-    import('/campaigns-bootstrap.js').catch((err) => {
-      console.error('[campaigns] bootstrap load failed:', err);
+    import("/campaigns-bootstrap.js").catch(function (err) {
+      console.error("[campaigns] bootstrap load failed:", err);
     });
   }
 
-  onAuthStateChanged(auth, (user) => {
-    if (!user) {
-      window.location.replace('/main.html#login');
+  function handleAuthError(e) {
+    console.warn("[campaigns] auth check failed, redirecting:", e);
+    window.location.replace("/main.html");
+  }
+
+  function handleUserRole(snap) {
+    var role = snap.exists() ? (snap.val().role || "member") : "member";
+    if (ALLOWED_ROLES.indexOf(role) === -1) {
+      renderAccessRestricted();
       return;
     }
-    get(ref(db, ROOT + '/' + ORG + '/users/' + user.uid))
-      .then((snap) => {
-        const role = snap.exists() ? (snap.val().role || 'member') : 'member';
-        if (!ALLOWED_ROLES.includes(role)) {
-          renderAccessRestricted();
-          return;
-        }
-        bootCampaigns();
-      })
-      .catch((e) => {
-        console.warn('[campaigns] auth check failed, redirecting:', e);
-        window.location.replace('/main.html');
-      });
+    bootCampaigns();
+  }
+
+  onAuthStateChanged(auth, function (user) {
+    if (!user) {
+      window.location.replace("/main.html#login");
+      return;
+    }
+    get(ref(db, ROOT + "/" + ORG + "/users/" + user.uid))
+      .then(handleUserRole)
+      .catch(handleAuthError);
   });
 </script>
 
 <script>
-  (() => {
-    const $ = (id) => document.getElementById(id);
-
-    const savedTheme = localStorage.getItem('viora-theme') || 'light';
+  (function () {
+    var themeBtn = document.getElementById("themeBtn");
+    if (themeBtn) {
+      themeBtn.addEventListener("click", function () {
+        var cur = document.documentElement.dataset.theme;
+        var next = cur === "dark" ? "light" : "dark";
+        document.documentElement.dataset.theme = next;
+        localStorage.setItem("viora-theme", next);
+        setTimeout(function () {
+          try {
+            if (window.Orbit && typeof window.Orbit.renderActiveOrbitModule === "function") {
+              window.Orbit.renderActiveOrbitModule();
+            }
+          } catch (e) {}
+        }, 60);
+      });
+    }
+    var helpBtn = document.getElementById("helpBtn");
+    if (helpBtn) {
+      helpBtn.addEventListener("click", function () {
+        alert("Use the sidebar to navigate modules. All changes save to Firebase.");
+      });
+    }
+    var notifBtn = document.getElementById("notifBtn");
+    if (notifBtn) {
+      notifBtn.addEventListener("click", function () {
+        try {
+          if (window.Orbit && typeof window.Orbit.navigate === "function") {
+            window.Orbit.navigate("inbox");
+          }
+        } catch (e) {
+          alert("Inbox not ready yet - try again in a moment.");
+        }
+      });
+    }
+    var searchInput = document.getElementById("globalSearch");
+    if (searchInput) {
+      searchInput.addEventListener("keydown", function (e) {
+        if (e.key !== "Enter") {
+          return;
+        }
+        var q = (e.target.value || "").trim().toLowerCase();
+        if (!q) {
+          return;
+        }
+        var mod = null;
+        if (window.Orbit && typeof window.Orbit.findModuleByName === "function") {
+          mod = window.Orbit.findModuleByName(q);
+        }
+        if (mod) {
+          window.Orbit.navigate(mod);
+        } else {
+          alert("No module matches \"" + q + "\"");
+        }
+      });
+    }
+    var savedTheme = localStorage.getItem("viora-theme") || "light";
     document.documentElement.dataset.theme = savedTheme;
-
-    $('themeBtn')?.addEventListener('click', () => {
-      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-      document.documentElement.dataset.theme = next;
-      localStorage.setItem('viora-theme', next);
-      setTimeout(() => {
-        try { window.Orbit?.renderActiveOrbitModule?.(); } catch (_) {}
-      }, 60);
-    });
-
-    $('helpBtn')?.addEventListener('click', () => {
-      alert('Use the sidebar to navigate modules. All changes save to Firebase.');
-    });
-
-    $('notifBtn')?.addEventListener('click', () => {
-      try {
-        window.Orbit?.navigate?.('inbox');
-      } catch (_) {
-        alert('Inbox not ready yet - try again in a moment.');
-      }
-    });
-
-    $('globalSearch')?.addEventListener('keydown', (e) => {
-      if (e.key !== 'Enter') return;
-      const q = (e.target.value || '').trim().toLowerCase();
-      if (!q) return;
-      const mod = window.Orbit?.findModuleByName?.(q);
-      if (mod) window.Orbit.navigate(mod);
-      else alert('No module matches "' + q + '"');
-    });
   })();
 </script>
 
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"da4051c1e9464e1b9047b31f384614ef","r":1,"spa":2}' crossorigin="anonymous"></script>
 </body>
 </html>
