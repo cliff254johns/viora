@@ -386,9 +386,10 @@ function _renderCharts(published) {
           <button class="btn soft btn-sm" style="margin-top:12px;" onclick="window.Orbit && window.Orbit.navigate && window.Orbit.navigate('accounts')">
             Go to Social accounts →
           </button>
-        </div>`;
+    </div>`;
     }
   }
+}
 
 /* ═══════════════════════════════════════════════════════════════
    HEATMAP
