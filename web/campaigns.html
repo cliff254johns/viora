@@ -1696,14 +1696,14 @@ tr:last-child td{border-bottom:0}
   });
 </script>
 
-<!-- ═══════════════ THEME + TOPBAR WIRING ═══════════════ -->
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
 
-  // Theme toggle (same storage key as the app)
+  // Theme toggle
   const savedTheme = localStorage.getItem('viora-theme') || 'light';
   document.documentElement.dataset.theme = savedTheme;
+
   $('themeBtn')?.addEventListener('click', () => {
     const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
     document.documentElement.dataset.theme = next;
@@ -1713,19 +1713,24 @@ tr:last-child td{border-bottom:0}
     }, 60);
   });
 
-  // Help + notifications (simple UX placeholders, no stub — real app owns this)
+  // Help
   $('helpBtn')?.addEventListener('click', () => {
     alert('Use the sidebar to navigate modules. All changes save to Firebase.');
   });
+
+  // Notifications
   $('notifBtn')?.addEventListener('click', () => {
-    try { window.Orbit?.navigate?.('inbox'); }
-    catch (_) { alert('Inbox not ready yet — try again in a moment.'); }
+    try {
+      window.Orbit?.navigate?.('inbox');
+    } catch (_) {
+      alert('Inbox not ready yet — try again in a moment.');
+    }
   });
 
-  // Search → jump to matching module
+  // Search
   $('globalSearch')?.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter') return;
-    const q = e.target.value.trim().toLowerCase();
+    const q = (e.target.value || '').trim().toLowerCase();
     if (!q) return;
     const mod = window.Orbit?.findModuleByName?.(q);
     if (mod) window.Orbit.navigate(mod);
