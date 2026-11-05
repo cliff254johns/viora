@@ -561,8 +561,6 @@ function _bindComposerEvents() {
   g('ccCancelBtn')?.addEventListener('click', _closeComposer);
   g('ccSaveDraftBtn')?.addEventListener('click', () => _savePost('draft'));
   g('ccPublishBtn')?.addEventListener('click', () => {
-    /* The Publish button ALWAYS publishes — ignore the dropdown.
-       The dropdown only applies to Save Draft / scheduling behaviour. */
     _savePost('published');
   });
   g('ccDownloadImageBtn')?.addEventListener('click', _downloadImage);
@@ -1085,10 +1083,11 @@ async function _postNow() {
           imageSeed: c.heroImageSeed,
           utm: { ...c.utm, source: c.utm.source || r.platform },
           url: buildUtmUrl(c.baseUrl, { ...c.utm, source: c.utm.source || r.platform }),
-          status: r.mode === 'auto' ? 'published'
-                : r.mode === 'compose-link' ? 'compose-only'
+                   status: r.mode === 'auto' ? 'published'
+                : r.mode === 'compose-link' ? 'published'
                 : 'failed',
           mode: r.mode,
+          needsManualPost: r.mode === 'compose-link' ? true : false,
           publishedAt: r.mode === 'auto' ? new Date().toISOString() : null,
           externalId: r.postId,
           composeUrl: r.composeUrl,
@@ -1118,15 +1117,13 @@ async function _postNow() {
     if (composeOnly) parts.push(`${composeOnly} composer${composeOnly === 1 ? '' : 's'} opened — press Ctrl+V to paste caption`);
     if (failed) parts.push(`${failed} failed`);
 
-    SAFE.toast(parts.join(' · ') || 'Done.', failed ? 'warning' : 'success');
+       SAFE.toast(parts.join(' · ') || 'Done.', failed ? 'warning' : 'success');
 
-     /* If only silent posts succeeded, close the composer immediately.
-       If any compose tabs are open, DON'T close the composer — the user
-       needs to see the fanoutLog to know which platforms to paste on. */
+    /* Refresh whatever module is visible */
     try { window.Orbit?.renderActiveOrbitModule?.(); } catch (_) {}
-    if (!composeOnly && !failed) {
-      setTimeout(_closeComposer, 600);
-    }
+
+    /* Always close the composer — even compose-only posts are saved. */
+    setTimeout(_closeComposer, 600);
   } catch (e) {
     console.error('[composer] post failed', e);
     SAFE.toast('Post failed: ' + (e.message || 'unknown'), 'error');
