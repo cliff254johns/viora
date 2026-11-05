@@ -1,4 +1,4 @@
-// main/orbit-modules.js — v3.1 (calendar create/preview + all prior fixes)
+// main/orbit-modules.js — v3.2 (calendar month nav + full composer)
 import {
   renderDraftLibrary,
   renderPromptLibrary,
@@ -80,6 +80,12 @@ function platformMetaSafe(key) {
   };
   return map[key] || { label: key || 'Unknown', icon: 'fa-solid fa-globe', color: '#94a3b8' };
 }
+
+/* ── Calendar month state (persists between renders) ── */
+const _calState = {
+  year:  new Date().getFullYear(),
+  month: new Date().getMonth(),
+};
 
 /* ═══════════════════════════════════════════════════════════════
    OVERVIEW
@@ -441,32 +447,34 @@ export async function renderAccountsModule(ctx) {
 
   return {
     html,
-       mount(view) {
-      /* Use event delegation on the view container instead of per-element
-         listeners. This survives innerHTML replacements, double mounts,
-         and detached-element issues. */
-      if (view._vioraCalBound) return;
-      view._vioraCalBound = true;
-
-      view.addEventListener('click', (e) => {
-        const dayEl = e.target.closest('[data-cal-day]');
-        if (!dayEl) return;
-
-        const postEl = e.target.closest('[data-cal-post]');
-        if (postEl) {
-          e.stopPropagation();
-          const postId = postEl.getAttribute('data-cal-post');
-          const campId = postEl.getAttribute('data-cal-camp');
-          const camp = campaigns.find(x => x.id === campId);
-          const post = camp && (camp.posts || []).find(p => p.id === postId);
-          if (post) openCalendarPostPreview(ctx, post, camp);
-          return;
-        }
-
-        const isoDate = dayEl.getAttribute('data-cal-day');
-        openCalendarCreateModal(ctx, isoDate);
+    mount(view) {
+      view.querySelectorAll('[data-acc-edit]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const key = btn.getAttribute('data-acc-edit');
+          _openAccountEditor(ctx, key, byPlatform[key] || null, PLATFORMS);
+        });
+      });
+      view.querySelectorAll('[data-acc-verify]').forEach(btn => {
+        btn.addEventListener('click', () => _verifyAccount(ctx, btn.getAttribute('data-acc-verify')));
+      });
+      view.querySelectorAll('[data-acc-sync]').forEach(btn => {
+        btn.addEventListener('click', () => _syncChannel(ctx, btn.getAttribute('data-acc-sync'), btn));
+      });
+      view.querySelectorAll('[data-acc-remove]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-acc-remove');
+          if (!id) return;
+          if (!confirm('Remove this account?')) return;
+          await _deleteAccountHelper(id);
+        });
+      });
+      view.querySelector('#orbitAddAccount')?.addEventListener('click', () => {
+        const key = prompt('Platform? (facebook/instagram/tiktok/youtube/linkedin/x/threads/pinterest/whatsapp/gbp)', 'facebook');
+        if (key) _openAccountEditor(ctx, key, null, PLATFORMS);
       });
     }
+  };
+}
 
 function _openAccountEditor(ctx, platformKey, existing, PLATFORMS) {
   const platform = PLATFORMS.find(p => p.key === platformKey) || PLATFORMS[0];
@@ -718,7 +726,7 @@ export async function renderCampaignsModule(ctx) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   POST LIBRARY (unchanged — included for completeness)
+   POST LIBRARY
    ═══════════════════════════════════════════════════════════════ */
 const _postLibState = {
   filterStatus: 'all',
@@ -2248,7 +2256,7 @@ export async function renderContentStudio(ctx) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   CONTENT CALENDAR — click a day to create, click a pill to preview
+   CONTENT CALENDAR — with prev/next month nav + full composer on click
    ═══════════════════════════════════════════════════════════════ */
 export async function renderCalendar(ctx) {
   const c = C(ctx);
@@ -2261,12 +2269,18 @@ export async function renderCalendar(ctx) {
     }
   }
 
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
+  const year = _calState.year;
+  const month = _calState.month;
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  const monthNames = ['January','February','March','April','May','June',
+                      'July','August','September','October','November','December'];
+
+  const today = new Date();
+  const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+  const todayDate = today.getDate();
 
   const byDay = {};
   for (const ev of events) {
@@ -2280,20 +2294,16 @@ export async function renderCalendar(ctx) {
   for (let i = 0; i < firstDay; i++) {
     cells += '<div class="day" style="opacity:.3;"></div>';
   }
-  const today = new Date();
-  const isThisMonth = today.getFullYear() === year && today.getMonth() === month;
-  const todayDate = today.getDate();
-
   for (let d = 1; d <= daysInMonth; d++) {
     const dayEvents = byDay[d] || [];
-    const isToday = isThisMonth && d === todayDate;
+    const isToday = isCurrentMonth && d === todayDate;
     const isoDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 
     cells += `
       <div class="day"
            data-cal-day="${isoDate}"
            style="cursor:pointer;position:relative;${isToday ? 'border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);' : ''}"
-           title="Click to schedule a post on ${isoDate}">
+           title="Click to open the AI composer for ${isoDate}">
         <b style="${isToday ? 'color:var(--accent);' : ''}">${d}${isToday ? ' · today' : ''}</b>
         ${dayEvents.map(ev => {
           const pm = platformMetaSafe(ev.platform);
@@ -2309,14 +2319,27 @@ export async function renderCalendar(ctx) {
                     ${time} · <i class="${pm.icon}" style="color:${pm.color};"></i> ${esc((ev.caption || pm.label || '').slice(0, 16))}
                   </div>`;
         }).join('')}
-        <div style="position:absolute;bottom:4px;right:6px;font-size:9px;color:var(--text-light);opacity:0;" class="day-hint">+ add</div>
+        <div style="position:absolute;bottom:4px;right:6px;font-size:9px;color:var(--text-light);opacity:0;" class="day-hint">+ compose</div>
       </div>`;
   }
 
-  const html = head('Content calendar', 'All scheduled posts across campaigns. Click any day to schedule a new post.', '') +
+  const html = head('Content calendar', 'All scheduled posts across campaigns. Click any day to open the full AI composer with that date pre-filled.', '') +
     `<div class="card">
-      <div class="cardhead">
-        <h3>${now.toLocaleString('en-US', { month: 'long', year: 'numeric' })}</h3>
+      <div class="cardhead" style="flex-wrap:wrap;gap:10px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button type="button" class="btn soft btn-sm" id="calPrevMonth" title="Previous month">
+            <i class="fa-solid fa-chevron-left"></i> Prev
+          </button>
+          <h3 style="margin:0;min-width:180px;text-align:center;">
+            ${esc(monthNames[month])} ${year}
+          </h3>
+          <button type="button" class="btn soft btn-sm" id="calNextMonth" title="Next month">
+            Next <i class="fa-solid fa-chevron-right"></i>
+          </button>
+          <button type="button" class="btn soft btn-sm" id="calTodayMonth" title="Jump to current month">
+            Today
+          </button>
+        </div>
         <span class="pill">${events.length} scheduled</span>
       </div>
       <div class="calendar">
@@ -2324,8 +2347,8 @@ export async function renderCalendar(ctx) {
         ${cells}
       </div>
       ${events.length === 0
-        ? '<div class="empty" style="margin-top:14px;">No scheduled posts yet. Click any day to create one.</div>'
-        : '<div class="small muted" style="margin-top:10px;">Click a day to add a post · click a post pill to preview</div>'}
+        ? '<div class="empty" style="margin-top:14px;">No scheduled posts this month. Click any day to open the composer.</div>'
+        : '<div class="small muted" style="margin-top:10px;">Click a day to open the composer with that date · click a post pill to preview / edit / post now</div>'}
     </div>
     <style>
       .day:hover { border-color: var(--accent) !important; }
@@ -2336,461 +2359,77 @@ export async function renderCalendar(ctx) {
   return {
     html,
     mount(view) {
-      view.querySelectorAll('[data-cal-day]').forEach(el => {
-        el.addEventListener('click', (e) => {
-          const postEl = e.target.closest('[data-cal-post]');
-          if (postEl) {
-            e.stopPropagation();
-            const postId = postEl.getAttribute('data-cal-post');
-            const campId = postEl.getAttribute('data-cal-camp');
-            const camp = campaigns.find(x => x.id === campId);
-            const post = camp && (camp.posts || []).find(p => p.id === postId);
-            if (post) openCalendarPostPreview(ctx, post, camp);
-            return;
-          }
-          const isoDate = el.getAttribute('data-cal-day');
-          openCalendarCreateModal(ctx, isoDate);
-        });
+      /* Prev month */
+      view.querySelector('#calPrevMonth')?.addEventListener('click', () => {
+        if (_calState.month === 0) {
+          _calState.month = 11;
+          _calState.year -= 1;
+        } else {
+          _calState.month -= 1;
+        }
+        renderCalendar(ctx);
+      });
+
+      /* Next month */
+      view.querySelector('#calNextMonth')?.addEventListener('click', () => {
+        if (_calState.month === 11) {
+          _calState.month = 0;
+          _calState.year += 1;
+        } else {
+          _calState.month += 1;
+        }
+        renderCalendar(ctx);
+      });
+
+      /* Today */
+      view.querySelector('#calTodayMonth')?.addEventListener('click', () => {
+        const now = new Date();
+        _calState.year = now.getFullYear();
+        _calState.month = now.getMonth();
+        renderCalendar(ctx);
+      });
+
+      /* Day click + post pill click — use delegation so re-renders can't
+         detach the listeners. Bind once per view container. */
+      if (view._vioraCalBound) return;
+      view._vioraCalBound = true;
+
+      view.addEventListener('click', (e) => {
+        /* Ignore clicks on the header nav buttons (prev/next/today) —
+           those are handled by their own listeners above and would
+           otherwise bubble to the day handler. */
+        if (e.target.closest('#calPrevMonth') || e.target.closest('#calNextMonth') || e.target.closest('#calTodayMonth')) {
+          return;
+        }
+
+        const dayEl = e.target.closest('[data-cal-day]');
+        if (!dayEl) return;
+
+        /* Existing post pill → open the full fanout detail modal */
+        const postEl = e.target.closest('[data-cal-post]');
+        if (postEl) {
+          e.stopPropagation();
+          const postId = postEl.getAttribute('data-cal-post');
+          const campId = postEl.getAttribute('data-cal-camp');
+          const camp = campaigns.find(x => x.id === campId);
+          const post = camp && (camp.posts || []).find(p => p.id === postId);
+          if (post) openFanoutDetail(ctx, [post]);
+          return;
+        }
+
+        /* Empty day → open the full AI composer with this date pre-filled */
+        const isoDate = dayEl.getAttribute('data-cal-day');
+        if (!isoDate) return;
+
+        try {
+          openComposer({ scheduledFor: `${isoDate}T09:00` });
+        } catch (err) {
+          console.error('[calendar] openComposer failed:', err);
+          toast(ctx, 'Could not open composer: ' + (err.message || 'unknown'), 'error');
+        }
       });
     }
   };
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   CREATE POST FROM CALENDAR
-   ═══════════════════════════════════════════════════════════════ */
-function openCalendarCreateModal(ctx, isoDate) {
-  const c = C(ctx);
-  const state = c.state || { data: {} };
-  const campaigns = Array.isArray(state.data?.campaigns) ? state.data.campaigns : [];
-
-  if (!campaigns.length) {
-    toast(ctx, 'Create a campaign first — posts need a home.', 'warning');
-    try { window.Orbit?.navigate?.('campaigns'); } catch (_) {}
-    return;
-  }
-
-  const defaultLocal = `${isoDate}T09:00`;
-
-  const platforms = [
-    { key: 'facebook',  label: 'Facebook',       icon: 'fa-facebook',  color: '#1877f2' },
-    { key: 'instagram', label: 'Instagram',      icon: 'fa-instagram', color: '#e1306c' },
-    { key: 'tiktok',    label: 'TikTok',         icon: 'fa-tiktok',    color: '#ff0050' },
-    { key: 'youtube',   label: 'YouTube',        icon: 'fa-youtube',   color: '#ff0033' },
-    { key: 'linkedin',  label: 'LinkedIn',       icon: 'fa-linkedin',  color: '#0a66c2' },
-    { key: 'x',         label: 'X / Twitter',    icon: 'fa-x-twitter', color: '#000000' },
-    { key: 'threads',   label: 'Threads',        icon: 'fa-threads',   color: '#000000' },
-    { key: 'pinterest', label: 'Pinterest',      icon: 'fa-pinterest', color: '#e60023' },
-    { key: 'whatsapp',  label: 'WhatsApp',       icon: 'fa-whatsapp',  color: '#25d366' },
-  ];
-
-  let modal = document.getElementById('calCreateModal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.id = 'calCreateModal';
-    document.body.appendChild(modal);
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) modal.classList.remove('active');
-    });
-  }
-
-  modal.innerHTML = `
-    <div class="modal large" style="max-width:640px;">
-      <div class="modalhead">
-        <h3><i class="fa-solid fa-calendar-plus"></i> Schedule post · ${esc(isoDate)}</h3>
-        <button type="button" class="close" data-cal-close>×</button>
-      </div>
-
-      <div class="field">
-        <label>Campaign *</label>
-        <select id="calCampaign">
-          ${campaigns
-            .filter(cc => cc && cc.id)
-            .sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')))
-            .map(cc => `<option value="${esc(cc.id)}">${esc(cc.name || 'Untitled')}</option>`)
-            .join('')}
-        </select>
-      </div>
-
-      <div class="field">
-        <label>Caption *</label>
-        <textarea id="calCaption" rows="4" placeholder="What are you posting?"></textarea>
-      </div>
-
-      <div class="field">
-        <label>Hashtags <span class="muted" style="font-weight:400;">(space-separated, # optional)</span></label>
-        <input id="calHashtags" placeholder="#viora #kenya launch" />
-      </div>
-
-      <div class="field">
-        <label>Platforms * <span class="muted" style="font-weight:400;">(select at least one)</span></label>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
-          ${platforms.map(p => `
-            <label class="cc-platform-chip" style="padding:6px 10px;font-size:11px;cursor:pointer;">
-              <input type="checkbox" data-cal-platform="${esc(p.key)}" ${p.key === 'facebook' ? 'checked' : ''} />
-              <span class="cc-platform-icon" style="color:${p.color};"><i class="fa-brands ${p.icon}"></i></span>
-              <span>${esc(p.label)}</span>
-            </label>
-          `).join('')}
-        </div>
-      </div>
-
-      <div class="formgrid">
-        <div class="field">
-          <label>Scheduled for *</label>
-          <input type="datetime-local" id="calScheduledFor" value="${esc(defaultLocal)}" />
-        </div>
-        <div class="field">
-          <label>Pillar</label>
-          <select id="calPillar">
-            <option value="educational">Educational</option>
-            <option value="promotional">Promotional</option>
-            <option value="behind_the_scenes">Behind the Scenes</option>
-            <option value="testimonial">Testimonial</option>
-            <option value="announcement">Announcement</option>
-            <option value="trending">Trending</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Image <span class="muted" style="font-weight:400;">(optional)</span></label>
-        <input type="file" id="calImageInput" accept="image/png,image/jpeg,image/webp" />
-        <div id="calImagePreview" style="margin-top:8px;"></div>
-      </div>
-
-      <div class="notice" style="margin-top:14px;margin-bottom:0;">
-        The post is saved as <b>scheduled</b>. To publish it, open the post from the calendar
-        and click "Post now", or let the worker's scheduler publish it at the scheduled time.
-      </div>
-
-      <div class="form-actions" style="margin-top:18px;">
-        <button type="button" class="btn soft" data-cal-close>Cancel</button>
-        <button type="button" class="btn primary" id="calSaveBtn">
-          <i class="fa-solid fa-check"></i> Schedule post
-        </button>
-      </div>
-    </div>
-  `;
-
-  modal.classList.add('active');
-
-  const fileInput = modal.querySelector('#calImageInput');
-  const previewEl = modal.querySelector('#calImagePreview');
-  let uploadedImage = null;
-
-  fileInput.addEventListener('change', async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) { uploadedImage = null; previewEl.innerHTML = ''; return; }
-    try {
-      const img = await readImageFile(file);
-      uploadedImage = img;
-      previewEl.innerHTML = `
-        <img src="data:${img.mime};base64,${img.b64}" style="max-width:100%;max-height:180px;border-radius:8px;border:1px solid var(--border-color);" />
-      `;
-    } catch (err) {
-      toast(ctx, 'Image upload failed: ' + (err.message || 'unknown'), 'error');
-      uploadedImage = null;
-      previewEl.innerHTML = '';
-    }
-  });
-
-  modal.querySelectorAll('[data-cal-close]').forEach(b => {
-    b.addEventListener('click', () => modal.classList.remove('active'));
-  });
-
-  modal.querySelector('#calSaveBtn').addEventListener('click', async () => {
-    const campaignId = modal.querySelector('#calCampaign').value;
-    const caption = modal.querySelector('#calCaption').value.trim();
-    const hashtagsRaw = modal.querySelector('#calHashtags').value.trim();
-    const scheduledFor = modal.querySelector('#calScheduledFor').value;
-    const pillar = modal.querySelector('#calPillar').value;
-
-    const selectedPlatforms = [];
-    modal.querySelectorAll('[data-cal-platform]:checked').forEach(cb => {
-      selectedPlatforms.push(cb.getAttribute('data-cal-platform'));
-    });
-
-    if (!campaignId) { toast(ctx, 'Pick a campaign.', 'warning'); return; }
-    if (!caption) { toast(ctx, 'Write a caption.', 'warning'); return; }
-    if (!selectedPlatforms.length) { toast(ctx, 'Select at least one platform.', 'warning'); return; }
-    if (!scheduledFor) { toast(ctx, 'Pick a date and time.', 'warning'); return; }
-
-    const hashtags = hashtagsRaw
-      .split(/\s+/)
-      .map(h => h.trim())
-      .filter(Boolean)
-      .map(h => h.startsWith('#') ? h : '#' + h);
-
-    const btn = modal.querySelector('#calSaveBtn');
-    const prev = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
-
-    try {
-      const campaign = campaigns.find(cc => cc.id === campaignId);
-      if (!campaign) throw new Error('Campaign not found');
-
-      const nowIso = new Date().toISOString();
-      const scheduledForUtc = new Date(scheduledFor).toISOString();
-      const fanoutId = 'fan-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-
-      const newPosts = selectedPlatforms.map((platformKey, i) => ({
-        id: 'cal-' + Date.now().toString(36) + '-' + i + '-' + Math.random().toString(36).slice(2, 6),
-        fanoutId,
-        campaignId,
-        platform: platformKey,
-        pillar,
-        caption,
-        hashtags,
-        imageBase64: uploadedImage?.b64 || null,
-        imageMime: uploadedImage?.mime || 'image/png',
-        imageWidth: uploadedImage?.width || null,
-        imageHeight: uploadedImage?.height || null,
-        imagePrompt: null,
-        imageModel: uploadedImage ? 'upload' : null,
-        imageSource: uploadedImage ? 'upload' : null,
-        imageSeed: null,
-        utm: {},
-        url: null,
-        status: 'scheduled',
-        mode: 'auto',
-        scheduledFor,
-        scheduledForUtc,
-        publishedAt: null,
-        externalId: null,
-        composeUrl: null,
-        lastError: null,
-        stats: null,
-        statsUpdatedAt: null,
-        statsHistory: [],
-        accountHandle: null,
-        createdAt: nowIso,
-        updatedAt: nowIso,
-        createdBy: state.operator?.email || 'calendar',
-        source: 'calendar',
-      }));
-
-      const existingPosts = Array.isArray(campaign.posts) ? campaign.posts.slice() : [];
-      campaign.posts = [...existingPosts, ...newPosts];
-      campaign.updatedAt = nowIso;
-
-      await c.upsertDoc('campaigns', campaign, campaign._rev);
-
-      modal.classList.remove('active');
-      toast(ctx, `Scheduled ${newPosts.length} post${newPosts.length === 1 ? '' : 's'} for ${new Date(scheduledFor).toLocaleString('en-GB')}.`, 'success');
-
-      window.Orbit?.renderActiveOrbitModule?.();
-    } catch (err) {
-      console.error('[calendar] save failed:', err);
-      toast(ctx, 'Save failed: ' + (err.message || 'unknown'), 'error');
-      btn.disabled = false;
-      btn.innerHTML = prev;
-    }
-  });
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   PREVIEW SCHEDULED POST FROM THE CALENDAR
-   ═══════════════════════════════════════════════════════════════ */
-function openCalendarPostPreview(ctx, post, campaign) {
-  const c = C(ctx);
-  const pm = platformMetaSafe(post.platform);
-
-  let modal = document.getElementById('calPreviewModal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.id = 'calPreviewModal';
-    document.body.appendChild(modal);
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) modal.classList.remove('active');
-    });
-  }
-
-  const timeLabel = (() => {
-    try {
-      return new Date(post.scheduledFor).toLocaleString('en-GB', {
-        weekday: 'short', day: '2-digit', month: 'short', year: 'numeric',
-        hour: '2-digit', minute: '2-digit',
-      });
-    } catch (_) { return post.scheduledFor || '—'; }
-  })();
-
-  modal.innerHTML = `
-    <div class="modal large" style="max-width:640px;">
-      <div class="modalhead">
-        <h3>
-          <span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9px;background:${pm.color}22;color:${pm.color};margin-right:8px;">
-            <i class="fa-brands ${pm.icon}"></i>
-          </span>
-          ${esc(pm.label || post.platform)} post preview
-        </h3>
-        <button type="button" class="close" data-cal-close>×</button>
-      </div>
-
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
-        <span class="status warn">${esc(post.status || 'scheduled')}</span>
-        <span class="pill"><i class="fa-solid fa-calendar"></i> ${esc(timeLabel)}</span>
-        <span class="pill"><i class="fa-solid fa-bullhorn"></i> ${esc(campaign?.name || '—')}</span>
-        ${post.pillar ? `<span class="pill"><i class="fa-solid fa-tag"></i> ${esc(post.pillar)}</span>` : ''}
-      </div>
-
-      ${post.imageBase64 ? `
-        <div style="text-align:center;margin-bottom:14px;">
-          <img src="data:${esc(post.imageMime || 'image/png')};base64,${esc(post.imageBase64)}"
-               style="max-width:100%;max-height:300px;border-radius:10px;border:1px solid var(--border-color);" />
-        </div>
-      ` : ''}
-
-      <div class="field" style="margin-top:0;">
-        <label>Caption</label>
-        <div style="padding:12px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:10px;font-size:13px;line-height:1.55;white-space:pre-wrap;">${esc(post.caption || '(no caption)')}</div>
-      </div>
-
-      ${(post.hashtags && post.hashtags.length) ? `
-        <div class="field">
-          <label>Hashtags</label>
-          <div style="display:flex;flex-wrap:wrap;gap:4px;">
-            ${post.hashtags.map(h => `<span class="badge">${esc(String(h).replace(/^#+/, '#'))}</span>`).join(' ')}
-          </div>
-        </div>
-      ` : ''}
-
-      <div class="form-actions" style="margin-top:18px;flex-wrap:wrap;">
-        <button type="button" class="btn soft" data-cal-close>Close</button>
-        <button type="button" class="btn soft" id="calPrevCopy"><i class="fa-solid fa-copy"></i> Copy</button>
-        <button type="button" class="btn soft" id="calPrevEdit"><i class="fa-solid fa-pen"></i> Edit in composer</button>
-        <button type="button" class="btn danger" id="calPrevDelete"><i class="fa-solid fa-trash"></i> Delete</button>
-        <button type="button" class="btn primary" id="calPrevPostNow">
-          <i class="fa-solid fa-paper-plane"></i> Post now
-        </button>
-      </div>
-    </div>
-  `;
-
-  modal.classList.add('active');
-
-  modal.querySelectorAll('[data-cal-close]').forEach(b => {
-    b.addEventListener('click', () => modal.classList.remove('active'));
-  });
-
-  modal.querySelector('#calPrevCopy').addEventListener('click', async () => {
-    try {
-      if (typeof window.__vioraCopyPost === 'function') {
-        await window.__vioraCopyPost(post);
-      } else {
-        await navigator.clipboard.writeText(
-          [post.caption || '', (post.hashtags || []).join(' ')].filter(Boolean).join('\n\n')
-        );
-        toast(ctx, 'Caption copied.', 'success');
-      }
-    } catch (e) {
-      toast(ctx, 'Copy failed: ' + (e.message || 'unknown'), 'error');
-    }
-  });
-
-  modal.querySelector('#calPrevEdit').addEventListener('click', () => {
-    modal.classList.remove('active');
-    try {
-      const composerFn = window.Viora?.openComposerForDraft;
-      if (typeof composerFn === 'function') {
-        composerFn(post);
-      } else {
-        window.Orbit?.navigate?.('campaigns');
-        toast(ctx, 'Open the post from the Post Library to edit.', 'info');
-      }
-    } catch (e) {
-      toast(ctx, 'Could not open composer: ' + (e.message || 'unknown'), 'error');
-    }
-  });
-
-  modal.querySelector('#calPrevDelete').addEventListener('click', async () => {
-    if (!confirm('Delete this scheduled post?')) return;
-    try {
-      const camp = campaignsArray().find(x => x.id === (post._campaignId || post.campaignId));
-      if (!camp) throw new Error('Campaign not found');
-      camp.posts = (camp.posts || []).filter(p => p.id !== post.id);
-      camp.updatedAt = new Date().toISOString();
-      await c.upsertDoc('campaigns', camp, camp._rev);
-      modal.classList.remove('active');
-      toast(ctx, 'Post deleted.', 'info');
-      window.Orbit?.renderActiveOrbitModule?.();
-    } catch (e) {
-      toast(ctx, 'Delete failed: ' + (e.message || 'unknown'), 'error');
-    }
-  });
-
-  modal.querySelector('#calPrevPostNow').addEventListener('click', async () => {
-    if (!confirm('Post this now? (ignores the scheduled time)')) return;
-    const btn = modal.querySelector('#calPrevPostNow');
-    const prev = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Posting…';
-
-    try {
-      const callFn = c.callFn;
-      if (typeof callFn !== 'function') throw new Error('Worker not available');
-
-      const res = await callFn('social/post/fanout', {
-        targets: [{
-          platform: post.platform,
-          caption: post.caption || '',
-          hashtags: post.hashtags || [],
-          imageBase64: post.imageBase64 || null,
-          imageMime: post.imageMime || 'image/png',
-          utmUrl: post.url || '',
-        }],
-      });
-
-      if (!res || !Array.isArray(res.results) || !res.results.length) {
-        throw new Error('Worker returned no results');
-      }
-
-      const r = res.results[0];
-      const trulyPosted = !!r.ok && (!!r.postId || !!r.post_id) && r.fallback !== 'compose-link';
-      const isComposeOnly = r.fallback === 'compose-link';
-
-      const camp = campaignsArray().find(x => x.id === (post._campaignId || post.campaignId));
-      if (camp) {
-        const live = camp.posts.find(x => x.id === post.id);
-        if (live) {
-          live.status = trulyPosted ? 'published' : (isComposeOnly ? 'compose-only' : 'failed');
-          live.mode = trulyPosted ? 'auto' : (isComposeOnly ? 'compose-link' : 'failed');
-          live.publishedAt = trulyPosted ? new Date().toISOString() : null;
-          live.externalId = r.postId || r.post_id || null;
-          live.composeUrl = r.fallbackUrl || r.composeUrl || null;
-          live.lastError = r.error || null;
-          live.updatedAt = new Date().toISOString();
-        }
-        await c.upsertDoc('campaigns', camp, camp._rev);
-      }
-
-      modal.classList.remove('active');
-
-      if (trulyPosted) {
-        toast(ctx, 'Posted successfully.', 'success');
-      } else if (isComposeOnly) {
-        toast(ctx, 'Composer opened — paste the caption in the new tab.', 'info');
-        if (r.fallbackUrl) window.open(r.fallbackUrl, '_blank');
-      } else {
-        toast(ctx, 'Post failed: ' + (r.error || 'unknown'), 'error');
-      }
-
-      window.Orbit?.renderActiveOrbitModule?.();
-    } catch (e) {
-      toast(ctx, 'Post failed: ' + (e.message || 'unknown'), 'error');
-      btn.disabled = false;
-      btn.innerHTML = prev;
-    }
-  });
-
-  function campaignsArray() {
-    const s = c.state || { data: {} };
-    return Array.isArray(s.data?.campaigns) ? s.data.campaigns : [];
-  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
