@@ -615,11 +615,28 @@ function _openAddCompetitor() {
 
   (async () => {
     try {
-      /* update() adds ONE key to the node — never wipes existing competitors */
-      await ctx().update(ctx().ref(ctx().db, ctx().P('competitorBenchmarks')), {
-        [id]: entry,
-      });
+         /* Guard: if the competitor was deleted while we were fetching,
+       do NOT write it back. Otherwise the delete gets undone. */
+    let stillExists = false;
+    try {
+      const db = ctx().db, ref = ctx().ref, get = ctx().get, P = ctx().P;
+      if (db && ref && get && P) {
+        const snap = await get(ref(db, P('competitorBenchmarks/' + id)));
+        stillExists = snap.exists();
+      } else {
+        stillExists = true; // can't check, proceed
+      }
+    } catch (_) { stillExists = true; }
 
+    if (!stillExists) {
+      console.info('[analytics] competitor ' + id + ' was deleted while refreshing — skipping write');
+      return;
+    }
+
+    /* update() writes only this one key — never touches the others */
+    await ctx().update(ctx().ref(ctx().db, ctx().P('competitorBenchmarks')), {
+      [id]: nextEntry,
+    });
       /* Merge into local state too */
       const raw = ctx().state?.data?.competitorBenchmarks;
       if (Array.isArray(raw)) {
