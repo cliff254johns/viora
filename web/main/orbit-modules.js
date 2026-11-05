@@ -468,6 +468,20 @@ async function _verifyAccount(ctx, id) {
     /* ── Write to Firebase ── */
     try {
       await set(ref(db, path), updated);
+            try {
+        const historyPath = path + '/followersHistory';
+        const historySnap = await get(ref(db, historyPath));
+        const history = historySnap.exists() ? (historySnap.val() || []) : [];
+        history.push({
+          ts: new Date().toISOString(),
+          followers: Number(res.followers) || 0,
+          source: res.source || 'verify',
+        });
+        if (history.length > 90) history.splice(0, history.length - 90);
+        await set(ref(db, historyPath), history);
+      } catch (histErr) {
+        console.warn('[verify] history append failed:', histErr.message);
+      }
       console.log('[verify] WRITE SUCCESS:', { followers: res.followers });
 
       /* Verify the write by reading back */
