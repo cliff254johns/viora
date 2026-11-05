@@ -1,8 +1,19 @@
 // main/campaign-analytics.js
 // ═══════════════════════════════════════════════════════════════
 // Campaign performance dashboard.
-// Charts: Views over time, Engagement comparison, Followers,
-// Top posts, Best-time heatmap, Competitor benchmarks.
+//
+// Charts:
+//   • Views & Engagement (30d)       — line, by month
+//   • Engagement Rate per Platform   — bar, by platform
+//   • Top 10 Posts by Engagement     — horizontal bar
+//   • Followers Over Time            — line
+//   • Best Time to Post heatmap      — table
+//   • Competitor Benchmarks          — combo: followers bars + views line + ER line
+//
+// Competitors:
+//   • Firebase key preserved as `_key` so deletes target the right node
+//   • Refresh aborts if the competitor was deleted mid-flight
+//   • Manual stats editor for platforms whose worker has no auto-fetch
 // ═══════════════════════════════════════════════════════════════
 import {
   engagementRate, fmtNum, fmtPercent, escHtml as esc,
@@ -13,9 +24,9 @@ let _ctx = null;
 
 const _charts = {};
 
-/* Tracks competitor ids whose refresh has been cancelled by a delete.
-   Checked before every write so a slow API call cannot resurrect a
-   deleted competitor. */
+/* Competitors whose refresh has been cancelled by a delete.
+   Checked before every write so a slow API call cannot resurrect
+   a deleted competitor. */
 const _cancelledCompetitorRefreshes = new Set();
 
 export function initCampaignAnalytics(deps) {
@@ -468,7 +479,6 @@ function _competitorsAsArray() {
   const raw = ctx().state?.data?.competitorBenchmarks;
   if (!raw) return [];
   if (Array.isArray(raw)) return raw.filter(Boolean);
-  /* Preserve the Firebase key as `_key` so deletes target the correct node. */
   return Object.entries(raw).map(([key, v]) => ({
     _key: key,
     ...(v || {}),
@@ -494,7 +504,7 @@ function _renderCompetitors() {
   }
 
   host.innerHTML =
-    '<div style="display:flex;gap:8px;margin-bottom:10px;">' +
+    '<div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">' +
       '<button type="button" class="btn soft btn-sm" id="caRefreshAllCompetitors">' +
         '<i class="fa-solid fa-rotate"></i> Refresh all stats' +
       '</button>' +
@@ -531,6 +541,9 @@ function _renderCompetitors() {
           : '<em style="color:var(--text-light);">Not fetched yet — click Refresh</em>';
       }
 
+      /* Show the manual-edit button for competitors whose auto-fetch failed */
+      const showEditBtn = !hasStats || (c.stats && c.stats.manualEntry !== true && c.stats.error);
+
       return (
         '<div style="display:flex;gap:10px;align-items:center;padding:8px 12px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:8px;">' +
           '<div style="width:32px;height:32px;border-radius:8px;background:' + pm.color + '22;color:' + pm.color + ';display:flex;align-items:center;justify-content:center;">' +
@@ -543,6 +556,9 @@ function _renderCompetitors() {
             '</div>' +
           '</div>' +
           '<button type="button" class="btn btn-outline btn-xs" data-comp-refresh="' + esc(c._key || c.id) + '" title="Refresh"><i class="fa-solid fa-rotate"></i></button>' +
+          (showEditBtn
+            ? '<button type="button" class="btn btn-outline btn-xs" data-comp-edit="' + esc(c._key || c.id) + '" title="Enter stats manually"><i class="fa-solid fa-pen"></i></button>'
+            : '') +
           '<button type="button" class="btn btn-danger btn-xs" data-comp-remove="' + esc(c._key || c.id) + '" title="Remove"><i class="fa-solid fa-trash"></i></button>' +
         '</div>'
       );
@@ -556,6 +572,11 @@ function _renderCompetitors() {
   /* Wire refresh buttons */
   host.querySelectorAll('[data-comp-refresh]').forEach((b) => {
     b.addEventListener('click', () => _refreshCompetitor(b.getAttribute('data-comp-refresh')));
+  });
+
+  /* Wire edit-stats buttons (manual entry fallback) */
+  host.querySelectorAll('[data-comp-edit]').forEach((b) => {
+    b.addEventListener('click', () => _openEditCompetitorStats(b.getAttribute('data-comp-edit')));
   });
 
   /* Wire delete buttons */
@@ -632,12 +653,10 @@ function _openAddCompetitor() {
 
   (async () => {
     try {
-      /* update() adds ONE key — never wipes existing competitors */
       await ctx().update(ctx().ref(ctx().db, ctx().P('competitorBenchmarks')), {
         [id]: entry,
       });
 
-      /* Merge into local state */
       const raw = ctx().state?.data?.competitorBenchmarks;
       if (Array.isArray(raw)) {
         ctx().state.data.competitorBenchmarks = [...raw, entry];
@@ -681,7 +700,6 @@ async function _refreshCompetitor(key) {
       handle: entry.handle,
     });
 
-    /* If deleted mid-flight, abandon before writing */
     if (_cancelledCompetitorRefreshes.has(key)) {
       console.info('[analytics] competitor ' + key + ' cancelled after API — skipping write');
       return;
@@ -716,14 +734,13 @@ async function _refreshCompetitor(key) {
 
       nextEntry = {
         ...entry,
-        stats: cleanStats,
+        stats: { ...cleanStats, fetchedAt: new Date().toISOString() },
         updatedAt: new Date().toISOString(),
         lastError: null,
         lastAttemptAt: new Date().toISOString(),
       };
     }
 
-    /* Firebase existence check — keyed on `key`, not `id` */
     let stillExists = true;
     try {
       const db = ctx().db, ref = ctx().ref, get = ctx().get, P = ctx().P;
@@ -731,25 +748,22 @@ async function _refreshCompetitor(key) {
         const check = await get(ref(db, P('competitorBenchmarks/' + key)));
         stillExists = check.exists();
       }
-    } catch (_) { /* can't check, proceed */ }
+    } catch (_) {}
 
     if (!stillExists) {
       console.info('[analytics] competitor ' + key + ' was deleted while refreshing — write skipped');
       return;
     }
 
-    /* Final re-check just before writing */
     if (_cancelledCompetitorRefreshes.has(key)) {
       console.info('[analytics] competitor ' + key + ' cancelled after existence check — write skipped');
       return;
     }
 
-    /* Write only this one key */
     await ctx().update(ctx().ref(ctx().db, ctx().P('competitorBenchmarks')), {
       [key]: nextEntry,
     });
 
-    /* Merge into local state — keyed on the Firebase key */
     const raw = ctx().state?.data?.competitorBenchmarks;
     if (Array.isArray(raw)) {
       ctx().state.data.competitorBenchmarks = raw.map(x =>
@@ -770,20 +784,133 @@ async function _refreshCompetitor(key) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   COMPETITORS CHART — combined bar + line
+   MANUAL STATS EDITOR — fallback for platforms whose worker
+   has no auto-fetch (TikTok / Facebook / Instagram)
+   ═══════════════════════════════════════════════════════════════ */
+function _openEditCompetitorStats(key) {
+  const list = _competitorsAsArray();
+  const entry = list.find(x => (x._key || x.id) === key);
+  if (!entry) return;
+
+  let dlg = document.getElementById('caEditStatsDialog');
+  if (!dlg) {
+    dlg = document.createElement('div');
+    dlg.className = 'modal-overlay';
+    dlg.id = 'caEditStatsDialog';
+    document.body.appendChild(dlg);
+    dlg.addEventListener('click', (e) => {
+      if (e.target === dlg) dlg.classList.remove('active');
+    });
+  }
+
+  const s = entry.stats || {};
+  dlg.innerHTML = `
+    <div class="modal" style="max-width:480px;">
+      <h2 style="margin-bottom:14px;">
+        <span class="modal-icon" style="background:linear-gradient(135deg,#d68b22,#f0b35c);">
+          <i class="fa-solid fa-pen"></i>
+        </span>
+        Edit stats — ${esc(entry.handle || '')}
+      </h2>
+      <div class="notice" style="margin-bottom:12px;">
+        Auto-fetch is not supported for this platform. Enter the stats manually from ${esc(entry.platform || '')}.
+      </div>
+      <div class="formgrid">
+        <div class="field"><label>Followers</label>
+          <input type="number" id="cesFollowers" value="${s.followers ?? ''}" min="0" /></div>
+        <div class="field"><label>Views</label>
+          <input type="number" id="cesViews" value="${s.views ?? ''}" min="0" /></div>
+        <div class="field"><label>Likes</label>
+          <input type="number" id="cesLikes" value="${s.likes ?? ''}" min="0" /></div>
+        <div class="field"><label>Comments</label>
+          <input type="number" id="cesComments" value="${s.comments ?? ''}" min="0" /></div>
+        <div class="field"><label>Engagement Rate % <span class="muted" style="font-weight:400;">(optional — computed if blank)</span></label>
+          <input type="number" id="cesER" value="${s.engagementRate ?? ''}" step="0.01" min="0" /></div>
+      </div>
+      <div class="form-actions" style="margin-top:16px;">
+        <button type="button" class="btn soft" id="cesCancel">Cancel</button>
+        <button type="button" class="btn primary" id="cesSave">Save</button>
+      </div>
+    </div>
+  `;
+  dlg.classList.add('active');
+
+  dlg.querySelector('#cesCancel').addEventListener('click', () => dlg.classList.remove('active'));
+
+  dlg.querySelector('#cesSave').addEventListener('click', async () => {
+    const num = (id) => {
+      const v = dlg.querySelector('#' + id).value;
+      const n = Number(v);
+      return v === '' || !Number.isFinite(n) ? null : n;
+    };
+    const followers      = num('cesFollowers');
+    const views          = num('cesViews');
+    const likes          = num('cesLikes');
+    const comments       = num('cesComments');
+    let   engagementRate = num('cesER');
+
+    if (engagementRate == null && views > 0 && (likes != null || comments != null)) {
+      engagementRate = Math.round(((likes || 0) + (comments || 0)) / views * 10000) / 100;
+    }
+
+    const updated = {
+      ...entry,
+      stats: {
+        followers,
+        views,
+        likes,
+        comments,
+        engagementRate,
+        source: 'manual',
+        manualEntry: true,
+        fetchedAt: new Date().toISOString(),
+      },
+      updatedAt: new Date().toISOString(),
+      lastError: null,
+    };
+
+    try {
+      await ctx().update(ctx().ref(ctx().db, ctx().P('competitorBenchmarks')), {
+        [key]: updated,
+      });
+      const raw = ctx().state?.data?.competitorBenchmarks;
+      if (Array.isArray(raw)) {
+        ctx().state.data.competitorBenchmarks = raw.map(x =>
+          (x._key || x.id) === key ? updated : x
+        );
+      } else {
+        ctx().state.data.competitorBenchmarks = { ...(raw || {}), [key]: updated };
+      }
+      dlg.classList.remove('active');
+      _renderCompetitors();
+      ctx().toast?.('Stats saved.', 'success');
+    } catch (e) {
+      ctx().toast?.('Save failed: ' + (e.message || 'unknown'), 'error');
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   COMPETITORS CHART — combo:
+     • Followers  → purple bars (left linear axis)
+     • Views      → cyan line with diamond markers (hidden log axis)
+     • ER         → orange line with circle markers (right % axis)
+   The log axis for views is what makes 145B and 45K both visible.
    ═══════════════════════════════════════════════════════════════ */
 function _renderCompetitorsChart(host, competitors) {
   if (!host) return;
   if (typeof Chart === 'undefined') return;
 
   const withData = competitors.filter(c => c && c.stats &&
-    (c.stats.followers != null || c.stats.engagementRate != null || c.stats.views != null)
+    (c.stats.followers != null ||
+     c.stats.views != null ||
+     c.stats.engagementRate != null)
   );
 
   if (!withData.length) {
     host.innerHTML =
       '<div class="empty-state" style="padding:16px;font-size:.82rem;">' +
-      'No competitor has stats yet — click Refresh to fetch them.' +
+      'No competitor has stats yet — click Refresh, or use the pencil to enter stats manually.' +
       '</div>';
     return;
   }
@@ -797,19 +924,25 @@ function _renderCompetitorsChart(host, competitors) {
     return (c.handle || pm.label || c.platform || '—');
   });
 
-  const followerData = sorted.map(c => Number(c.stats?.followers) || 0);
-  const erData       = sorted.map(c =>
+  const followerData = sorted.map(c =>
+    c.stats?.followers != null ? Number(c.stats.followers) : null
+  );
+  const viewsData = sorted.map(c =>
+    c.stats?.views != null && Number(c.stats.views) > 0 ? Number(c.stats.views) : null
+  );
+  const erData = sorted.map(c =>
     c.stats?.engagementRate != null ? Number(c.stats.engagementRate) : null
   );
-  const viewsData    = sorted.map(c => Number(c.stats?.views) || 0);
 
   const tc = (() => {
-    try { return getComputedStyle(document.documentElement).getPropertyValue('--chart-text').trim() || '#94a3b8'; }
-    catch (_) { return '#94a3b8'; }
+    try {
+      return getComputedStyle(document.documentElement)
+        .getPropertyValue('--chart-text').trim() || '#94a3b8';
+    } catch (_) { return '#94a3b8'; }
   })();
   const gc = 'rgba(148,163,184,0.15)';
 
-  host.innerHTML = '<div style="height:300px;position:relative;"><canvas id="caCompetitorsChart"></canvas></div>';
+  host.innerHTML = '<div style="height:340px;position:relative;"><canvas id="caCompetitorsChart"></canvas></div>';
 
   const canvas = host.querySelector('#caCompetitorsChart');
   if (!canvas) return;
@@ -826,21 +959,33 @@ function _renderCompetitorsChart(host, competitors) {
       datasets: [
         {
           label: 'Followers',
+          type: 'bar',
           data: followerData,
           backgroundColor: 'rgba(168,85,247,0.75)',
           borderColor: '#a855f7',
           borderWidth: 1,
           borderRadius: 6,
           yAxisID: 'y',
+          order: 3,
         },
         {
-          label: 'Views',
+          label: 'Views (log scale)',
+          type: 'line',
           data: viewsData,
-          backgroundColor: 'rgba(0,212,255,0.55)',
           borderColor: '#00d4ff',
-          borderWidth: 1,
-          borderRadius: 6,
-          yAxisID: 'y',
+          backgroundColor: 'rgba(0,212,255,0.15)',
+          borderWidth: 2.5,
+          tension: 0.35,
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          pointStyle: 'rectRot',
+          pointBackgroundColor: '#00d4ff',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          fill: false,
+          spanGaps: true,
+          yAxisID: 'yViews',
+          order: 2,
         },
         {
           label: 'Engagement Rate %',
@@ -852,12 +997,14 @@ function _renderCompetitorsChart(host, competitors) {
           tension: 0.35,
           pointRadius: 6,
           pointHoverRadius: 8,
+          pointStyle: 'circle',
           pointBackgroundColor: '#f97316',
           pointBorderColor: '#fff',
           pointBorderWidth: 2,
           fill: false,
           spanGaps: true,
           yAxisID: 'y1',
+          order: 1,
         },
       ],
     },
@@ -868,28 +1015,39 @@ function _renderCompetitorsChart(host, competitors) {
       plugins: {
         legend: {
           position: 'top',
-          labels: { color: tc, font: { size: 11 }, boxWidth: 12, usePointStyle: true, padding: 12 },
+          labels: {
+            color: tc,
+            font: { size: 11 },
+            boxWidth: 12,
+            usePointStyle: true,
+            padding: 12,
+          },
         },
         tooltip: {
           callbacks: {
             label: (ctx2) => {
               const label = ctx2.dataset.label || '';
-              const v = Number(ctx2.raw) || 0;
-              if (label.includes('%')) return `${label}: ${v.toFixed(2)}%`;
-              return `${label}: ${v.toLocaleString()}`;
+              const v = ctx2.raw;
+              if (v == null) return `${label}: —`;
+              const n = Number(v);
+              if (label.includes('%')) return `${label}: ${n.toFixed(2)}%`;
+              return `${label}: ${n.toLocaleString()}`;
             },
           },
         },
       },
       scales: {
-        x: { ticks: { color: tc, font: { size: 11 } }, grid: { display: false } },
+        x: {
+          ticks: { color: tc, font: { size: 11 } },
+          grid: { display: false },
+        },
         y: {
           type: 'linear',
           position: 'left',
           beginAtZero: true,
-          title: { display: true, text: 'Count', color: tc, font: { size: 10 } },
+          title: { display: true, text: 'Followers', color: '#a855f7', font: { size: 10 } },
           ticks: {
-            color: tc,
+            color: '#a855f7',
             callback: (v) => {
               if (v >= 1e9) return (v / 1e9).toFixed(1) + 'B';
               if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
@@ -906,6 +1064,12 @@ function _renderCompetitorsChart(host, competitors) {
           title: { display: true, text: 'Engagement rate (%)', color: '#f97316', font: { size: 10 } },
           ticks: { color: '#f97316', callback: (v) => v + '%' },
           grid: { drawOnChartArea: false },
+        },
+        yViews: {
+          type: 'logarithmic',
+          position: 'right',
+          display: false,
+          min: 1000,
         },
       },
     },
