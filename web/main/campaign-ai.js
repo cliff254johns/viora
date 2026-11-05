@@ -877,6 +877,7 @@ async function _persistPosts(status) {
     );
     _closeComposer();
     try { SAFE.renderCampaigns?.(); } catch (_) {}
+    try { window.Orbit?.renderActiveOrbitModule?.(); } catch (_) {}
   } catch (e) {
     console.error('[composer] save failed', e);
     SAFE.toast('Save failed: ' + (e.message || 'unknown'), 'error');
@@ -1118,9 +1119,10 @@ async function _postNow() {
 
     SAFE.toast(parts.join(' · ') || 'Done.', failed ? 'warning' : 'success');
 
-    /* If only silent posts succeeded, close the composer immediately.
+     /* If only silent posts succeeded, close the composer immediately.
        If any compose tabs are open, DON'T close the composer — the user
        needs to see the fanoutLog to know which platforms to paste on. */
+    try { window.Orbit?.renderActiveOrbitModule?.(); } catch (_) {}
     if (!composeOnly && !failed) {
       setTimeout(_closeComposer, 600);
     }
@@ -1261,6 +1263,7 @@ export function renderDraftLibrary() {
         SAFE.toast(`Deleted. ${before - after} post removed.`, 'success');
         renderDraftLibrary();
         try { ctx().renderCampaigns?.(); } catch (_) {}
+        try { window.Orbit?.renderActiveOrbitModule?.(); } catch (_) {}
       } catch (err) {
         SAFE.toast('Delete failed: ' + (err.message || 'unknown'), 'error');
       }
