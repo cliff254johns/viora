@@ -572,7 +572,7 @@ function renderTourStepDetail(host, buckets, families, industries) {
                 `).join('')}
               </div>
             ` : ''}
-            <div class="tour-detail-actions">
+                 <div class="tour-detail-actions">
               ${ind.previewUrl ? `
                 <a href="${escAttr(ind.previewUrl)}" target="_blank" rel="noopener" class="btn btn-outline">
                   <i class="fa-solid fa-eye"></i> View sample
@@ -590,6 +590,62 @@ function renderTourStepDetail(host, buckets, families, industries) {
             </div>
           </div>
         </div>
+
+        ${(() => {
+          /* Filter ALL products matching this industry's marketCategory */
+          const marketCat = String(ind.marketCategory || '').trim().toLowerCase();
+          const products = (S.products || []).filter(p => {
+            if (p.status === 'archived' || p.status === 'draft') return false;
+            return String(p.category || '').trim().toLowerCase() === marketCat;
+          });
+
+          if (products.length === 0) return '';
+
+          /* Sort by totalSold desc */
+          products.sort((a, b) => (Number(b.totalSold) || 0) - (Number(a.totalSold) || 0));
+
+          return `
+            <div class="tour-products-section">
+              <div class="tour-products-head">
+                <span class="tour-products-label">
+                  <i class="fa-solid fa-box-open"></i>
+                  ${products.length} product${products.length === 1 ? '' : 's'} in this industry
+                </span>
+              </div>
+              <div class="tour-products-grid">
+                ${products.map(p => {
+                  const kes = Math.round((Number(p.price) || 0) * KES_RATE);
+                  const image = p.image && String(p.image).trim();
+                  const icon = p.icon || 'fa-solid fa-cube';
+                  return `
+                    <article class="tour-product-card" data-product-id="${escAttr(p.id)}">
+                      <div class="tour-product-visual">
+                        ${image
+                          ? `<img src="${escAttr(image)}" alt="${escAttr(p.name || '')}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';" />
+                             <div class="tour-product-fallback" style="display:none;"><i class="${escAttr(icon)}"></i></div>`
+                          : `<div class="tour-product-fallback" style="display:grid;"><i class="${escAttr(icon)}"></i></div>`}
+                      </div>
+                      <div class="tour-product-body">
+                        <div class="tour-product-name">${escHtml(p.name || '')}</div>
+                        <div class="tour-product-price">KSh ${kes.toLocaleString('en-KE')}</div>
+                        <div class="tour-product-actions">
+                          <button type="button" class="tour-product-buy" onclick="event.stopPropagation(); App.openOrderModal({ productId: '${escAttr(p.id)}' })">
+                            <i class="fa-solid fa-bolt"></i> Buy
+                          </button>
+                          ${(p.previewUrl || p.link) ? `
+                            <a href="${escAttr(p.previewUrl || p.link)}" class="tour-product-preview" target="_blank" rel="noopener" onclick="event.stopPropagation();" title="Preview">
+                              <i class="fa-solid fa-eye"></i>
+                            </a>
+                          ` : ''}
+                        </div>
+                      </div>
+                    </article>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          `;
+        })()}
       </div>
     </div>
   `;
@@ -626,6 +682,14 @@ function renderTourStepDetail(host, buckets, families, industries) {
     });
   });
 }
+
+  /* Bind product cards in the tour detail */
+  host.querySelectorAll('.tour-product-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const pid = card.dataset.productId;
+      if (pid) openOrderModal({ productId: pid });
+    });
+  });
 
 /* ── Shared search input binder ── */
 function bindSearchInput(host) {
@@ -664,34 +728,30 @@ function renderProductCarousel() {
     if (ps.ctaLabel) ctaEl.textContent = ps.ctaLabel;
   }
 
-  const industries = Object.values(flattenNode(S.industries));
-  const selectedIndustry = industries.find(i => i.key === ps.industry);
-
   const stripSection = $('.product-strip');
-  if (!selectedIndustry) {
-    if (stripSection) stripSection.style.display = 'none';
-    return;
-  }
-  if (stripSection) stripSection.style.display = 'block';
+  if (!stripSection) return;
 
-  const marketCat = (selectedIndustry.marketCategory || '').toLowerCase().trim();
-  let list = S.products.filter(p => (p.category || '').toLowerCase().trim() === marketCat);
-
-  list.sort((a, b) => (Number(b.totalSold) || 0) - (Number(a.totalSold) || 0));
-
-  const limit = Number(ps.limit) || 12;
-  if (limit > 0) list = list.slice(0, limit);
+  /* v3.1 — Show ALL products, not filtered by industry.
+     Auto-rotating carousel. Products mixed across all categories. */
+  let list = (S.products || []).filter(p =>
+    p.status !== 'archived' && p.status !== 'draft'
+  );
 
   if (list.length === 0) {
-    host.innerHTML = `
-      <div class="strip-empty">
-        <i class="fa-solid fa-box-open"></i>
-        <p>No products in <strong>${escHtml(selectedIndustry.name || marketCat)}</strong> yet.</p>
-      </div>
-    `;
+    stripSection.style.display = 'none';
     return;
   }
+  stripSection.style.display = 'block';
 
+  /* Sort by totalSold desc to show best-sellers first */
+  list.sort((a, b) => (Number(b.totalSold) || 0) - (Number(a.totalSold) || 0));
+
+  /* Limit to a reasonable carousel size — but "auto-rotate" means we want
+     enough to keep it moving. Show up to `ps.limit` if set, else all. */
+  const limit = Number(ps.limit) || 0;
+  if (limit > 0) list = list.slice(0, limit);
+
+  /* Render cards */
   host.innerHTML = list.map(p => {
     const kes = Math.round((Number(p.price) || 0) * KES_RATE);
     const extras = (S.homeContent?.productExtras || {})[p.id] || {};
@@ -760,6 +820,41 @@ function renderProductCarousel() {
   });
 
   wireStripArrows(host);
+  startStripAutoplay(host);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STRIP AUTOPLAY (v3.1)
+   Auto-rotates the carousel every 4 seconds. Pauses on hover.
+   ═══════════════════════════════════════════════════════════════ */
+let _stripAutoplayTimer = null;
+let _stripPaused = false;
+
+function startStripAutoplay(host) {
+  if (_stripAutoplayTimer) clearInterval(_stripAutoplayTimer);
+
+  _stripPaused = false;
+  host.addEventListener('mouseenter', () => { _stripPaused = true; });
+  host.addEventListener('mouseleave', () => { _stripPaused = false; });
+  host.addEventListener('touchstart', () => { _stripPaused = true; }, { passive: true });
+  host.addEventListener('touchend', () => {
+    setTimeout(() => { _stripPaused = false; }, 3000);
+  }, { passive: true });
+
+  _stripAutoplayTimer = setInterval(() => {
+    if (_stripPaused || document.hidden) return;
+    const card = host.querySelector('.strip-card');
+    if (!card) return;
+    const step = card.getBoundingClientRect().width + 16;
+
+    /* Advance by 1 card; wrap to 0 when at end */
+    const maxScroll = host.scrollWidth - host.clientWidth;
+    if (host.scrollLeft >= maxScroll - 10) {
+      host.scrollTo({ left: 0, behavior: 'smooth' });
+    } else {
+      host.scrollBy({ left: step, behavior: 'smooth' });
+    }
+  }, 4000);
 }
 
 function wireStripArrows(host) {
@@ -1335,3 +1430,6 @@ setInterval(() => {
 }, 1000);
 
 window.VioraHome = { S, renderAll, openOrderModal, openCategoryModal };
+if (typeof window.App !== 'object' || !window.App) window.App = {};
+window.App.openOrderModal = openOrderModal;
+window.App.openCategoryModal = openCategoryModal;
