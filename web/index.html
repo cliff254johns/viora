@@ -148,21 +148,21 @@
   </div>
 </section>
 
-<!-- ═══════════ 4. TOUR ═══════════ -->
+<!-- ═══════════ 4. TOUR (ChatGPT-style drill-down) ═══════════ -->
 <section class="tour" id="tour">
   <div class="wrap">
     <div class="text-center reveal">
-      <span class="eyebrow" style="justify-content:center">What we build</span>
-      <h2 class="section-h">45+ solutions. One core.</h2>
-      <p class="section-sub" style="margin-left:auto;margin-right:auto">Every product in this tour is designed, built and supported by VIORA. You buy from us directly — no marketplace middlemen, no third-party vendors.</p>
+      <span class="eyebrow" style="justify-content:center" id="tour-eyebrow">What we build</span>
+      <h2 class="section-h" id="tour-heading">45+ solutions. One core.</h2>
+      <p class="section-sub" style="margin-left:auto;margin-right:auto" id="tour-sub">Every product in this tour is designed, built and supported by VIORA.</p>
     </div>
 
-    <div class="tour-buckets" id="tour-buckets" role="tablist" aria-label="Solution buckets">
-      <!-- rendered by index-home.js -->
-    </div>
-
-    <div id="tour-panels">
-      <!-- rendered by index-home.js -->
+    <div class="chat-tour" id="chat-tour">
+      <!-- Rendered entirely by index-home.js -->
+      <div class="chat-tour-empty">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        <p>Loading tour…</p>
+      </div>
     </div>
 
     <div class="tour-footer-links">
@@ -175,20 +175,32 @@
     </div>
   </div>
 </section>
-
-<!-- ═══════════ 5. PRODUCT STRIP ═══════════ -->
+</section>
+<!-- ═══════════ 5. PRODUCT STRIP (carousel) ═══════════ -->
 <section class="product-strip">
   <div class="wrap">
     <div class="product-strip-head">
       <div>
-        <span class="eyebrow">From the marketplace</span>
-        <h2 class="section-h">Buy the systems we build.</h2>
-        <p class="section-sub" style="margin-bottom:0">Live pricing in KES. Instant delivery.</p>
+        <span class="eyebrow" id="strip-eyebrow">From the marketplace</span>
+        <h2 class="section-h" id="strip-heading">Buy the systems we build.</h2>
+        <p class="section-sub" style="margin-bottom:0" id="strip-sub">Live pricing in KES. Instant delivery.</p>
       </div>
-      <a href="market.html" class="btn btn-ghost">Browse all products →</a>
+      <a href="market.html" class="btn btn-ghost" id="strip-cta">Browse all products →</a>
     </div>
-    <div class="product-strip-grid" id="product-strip-grid">
-      <div class="product-strip-loading"><i class="fa-solid fa-spinner"></i> Loading products…</div>
+
+    <div class="strip-carousel-wrap" id="strip-carousel-wrap">
+      <button type="button" class="strip-carousel-prev" id="strip-prev" aria-label="Previous products">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+      <button type="button" class="strip-carousel-next" id="strip-next" aria-label="Next products">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+      <div class="strip-carousel" id="strip-carousel">
+        <div class="strip-carousel-loading">
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          <p>Loading products…</p>
+        </div>
+      </div>
     </div>
   </div>
 </section>
