@@ -848,9 +848,6 @@ const App = {
     let list = this.products;
     if (this.activeCategory !== 'all') list = list.filter(p => p.category === this.activeCategory);
 
-         /* If the active category no longer exists (admin renamed/deleted an
-       industry), reset to 'all'. Prevents the grid from going empty
-       when a category is removed while a user has it selected. */
     if (this.activeCategory !== 'all') {
       const stillExists = Object.values(INDUSTRY_MAP).some(
         ind => ind.marketCategory === this.activeCategory
@@ -860,9 +857,6 @@ const App = {
         this.renderCategoryBar();
       }
     }
-
-    let list = this.products;
-    if (this.activeCategory !== 'all') list = list.filter(p => p.category === this.activeCategory);
      
     if (this.searchTerm) {
       const q = this.searchTerm;
