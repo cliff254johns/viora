@@ -875,8 +875,12 @@ const App = {
       return;
     }
 
-    grid.innerHTML = list.map(p => {
-      const iconClass = p.icon || 'fa-solid fa-cube';
+   grid.innerHTML = list.map(p => {
+  /* v3.1 — normalize icon class: ensure `fa-solid` prefix is present */
+  let iconClass = p.icon || 'fa-solid fa-cube';
+  if (!/^fa-(solid|regular|light|thin|brands|duotone)\s/.test(iconClass)) {
+    iconClass = 'fa-solid ' + iconClass.replace(/^fa-/, 'fa-');
+  }
       const priceKes = usdToKes(p.price || 0);
       const inWish = this.wishlist.includes(p.id);
       const stock = this.getProductStock(p.id);
@@ -985,9 +989,16 @@ const App = {
     const agg = this.getReviewAggregate(productId);
     this._activeReviewProductId = productId;
 
-    const heroVisual = (p.image && String(p.image).trim())
-      ? `<div class="pdm-visual"><img src="${this.escape(p.image)}" alt="${this.escape(p.name)}"></div>`
-      : `<div class="pdm-visual"><i class="${p.icon || 'fa-solid fa-cube'}"></i></div>`;
+  const iconClass = (() => {
+  let ic = p.icon || 'fa-solid fa-cube';
+  if (!/^fa-(solid|regular|light|thin|brands|duotone)\s/.test(ic)) {
+    ic = 'fa-solid ' + ic.replace(/^fa-/, 'fa-');
+  }
+  return ic;
+})();
+const heroVisual = (p.image && String(p.image).trim())
+  ? `<div class="pdm-visual"><img src="${this.escape(p.image)}" alt="${this.escape(p.name)}"></div>`
+  : `<div class="pdm-visual"><i class="${iconClass}"></i></div>`;
 
     const ctaRow = isCustom
       ? `<div class="pdm-cta-row">
@@ -1364,8 +1375,12 @@ const App = {
     // Destroy any previous autoplay before re-rendering
     this._stopCarouselAutoplay();
 
-    const cardHtml = (p, isClone) => {
-      const iconClass = p.icon || 'fa-solid fa-cube';
+   const cardHtml = (p, isClone) => {
+  /* v3.1 — normalize icon class */
+  let iconClass = p.icon || 'fa-solid fa-cube';
+  if (!/^fa-(solid|regular|light|thin|brands|duotone)\s/.test(iconClass)) {
+    iconClass = 'fa-solid ' + iconClass.replace(/^fa-/, 'fa-');
+  }
       const priceKes = usdToKes(p.price || 0);
       const inWish = this.wishlist.includes(p.id);
       const stock = this.getProductStock(p.id);
