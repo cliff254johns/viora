@@ -1102,3 +1102,49 @@
   color: #fff;
   border: none;
 }
+/* Modals created by order-modal.js and category-modal.js */
+.modal-overlay.active {
+  display: flex !important;
+  opacity: 1 !important;
+}
+.modal-overlay:not(.active) {
+  display: none !important;
+}
+
+/* The modal-card inside */
+.modal-overlay .modal-card {
+  position: relative;
+  background: var(--white, #fff);
+  border-radius: 20px;
+  box-shadow: 0 24px 60px -10px rgba(10, 25, 47, 0.35);
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: scale(0.96);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.modal-overlay.active .modal-card {
+  transform: scale(1);
+}
+
+/* Close buttons inside modals */
+.modal-overlay .close-modal {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-alt, #f1f5f9);
+  border: none;
+  color: var(--muted, #64748b);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  z-index: 10;
+}
+.modal-overlay .close-modal:hover {
+  background: var(--accent, #2267EE);
+  color: #fff;
+}
