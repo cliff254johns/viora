@@ -750,18 +750,26 @@ function wireSecondaryListeners(user) {
       }
     }));
 
-    /* ➕ NEW — Home Content (landing-page CMS) */
-    _track(onValue(ref(db, P('homeContent')), s => {
+      _track(onValue(ref(db, P('homeContent')), s => {
       state.data.homeContent = s.exists() ? s.val() : {};
       if (state.currentTab === 'home-content' && _ctx.renderHomeContent) {
+        /* ★ v9.5 — Skip re-render if an editor is open.
+           The next save/close will trigger the natural repaint. */
+        const _modalOpen =
+          (document.getElementById('hc-industry-panel')?.style.display === 'flex') ||
+          (document.getElementById('hc-modal-host')?.children.length > 0);
+        if (_modalOpen) return;
         try { _ctx.renderHomeContent(); } catch (e) {}
       }
     }));
 
-         /* ➕ NEW — Industries (tour + marketplace source of truth) */
-    _track(onValue(ref(db, P('industries')), s => {
+        _track(onValue(ref(db, P('industries')), s => {
       state.data.industries = s.exists() ? s.val() : {};
       if (state.currentTab === 'home-content' && _ctx.renderHomeContent) {
+        const _modalOpen =
+          (document.getElementById('hc-industry-panel')?.style.display === 'flex') ||
+          (document.getElementById('hc-modal-host')?.children.length > 0);
+        if (_modalOpen) return;
         try { _ctx.renderHomeContent(); } catch (e) {}
       }
     }));
