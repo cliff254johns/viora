@@ -417,9 +417,87 @@ function renderTourCard(key, cat) {
 
 function defaultBuckets() {
   return [
-    { key: 'run', name: 'Run my business', families: [] },
-    { key: 'sell', name: 'Sell more online', families: [] },
-    { key: 'build', name: 'Build something custom', families: [] },
+    {
+      key: 'run',
+      name: 'Run my business',
+      desc: 'Software systems that run your operation — designed, built and supported by VIORA.',
+      families: [
+        {
+          key: 'core',
+          name: 'Core business systems',
+          desc: 'The foundation — sales, stock, finance.',
+          items: ['business-mgmt', 'financial', 'operational', 'inventory-pos'],
+        },
+        {
+          key: 'vertical',
+          name: 'Vertical industry systems',
+          desc: 'Purpose-built for a specific sector.',
+          items: [
+            'retail', 'restaurant', 'clinic', 'hospital', 'pharmacy', 'school',
+            'hotel', 'salon', 'gym', 'garage', 'veterinary', 'farm',
+            'construction', 'real-estate', 'funeral', 'laundry', 'security',
+            'cleaning', 'greenhouse', 'photography', 'event', 'recruitment',
+            'travel', 'printing',
+          ],
+        },
+        {
+          key: 'professional',
+          name: 'Professional practice',
+          desc: 'Law, architecture, insurance.',
+          items: ['law', 'architecture', 'insurance'],
+        },
+      ],
+    },
+    {
+      key: 'sell',
+      name: 'Sell more online',
+      desc: 'Online presence and storefronts — designed, built and hosted by VIORA.',
+      families: [
+        {
+          key: 'storefront',
+          name: 'Storefronts',
+          desc: 'Sell online, connected to your stock.',
+          items: ['ecommerce', 'commerce', 'online-stores'],
+        },
+        {
+          key: 'web',
+          name: 'Web experiences',
+          desc: 'Custom websites and 3D experiences.',
+          items: ['web3d', 'web', 'entertainment-web'],
+        },
+        {
+          key: 'media',
+          name: 'Media & branding',
+          desc: 'Video, graphics, brand identity.',
+          items: ['video', 'graphics', 'branding'],
+        },
+      ],
+    },
+    {
+      key: 'build',
+      name: 'Build something custom',
+      desc: 'Bespoke systems, AI and mobile — architected and delivered by VIORA.',
+      families: [
+        {
+          key: 'software',
+          name: 'Custom software',
+          desc: 'Bespoke builds, integrations, APIs.',
+          items: ['custom', 'enterprise', 'api'],
+        },
+        {
+          key: 'intelligence',
+          name: 'AI & intelligence',
+          desc: 'Assistants, automation, analytics.',
+          items: ['ai-assistant', 'ai-automation', 'ai-analytics'],
+        },
+        {
+          key: 'mobile',
+          name: 'Mobile',
+          desc: 'Native and cross-platform apps.',
+          items: ['android', 'mobile-apps'],
+        },
+      ],
+    },
   ];
 }
 
