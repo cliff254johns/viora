@@ -1157,11 +1157,55 @@ window.computeCounterValue = computeCounterValue;
    ═══════════════════════════════════════════════════════════════ */
 let _scheduledRAF = null;
 
+/* ★ v9.5 — Central modal-open detector.
+   Covers every kind of overlay the app uses:
+     • .modal-overlay.active       (main.html modals)
+     • #hc-industry-panel visible  (home-content editor)
+     • #hc-modal-host > div        (home-content bucket/family/confirm modals)
+     • #hc-industry-backdrop       (editor backdrop)
+     • [role="dialog"][aria-modal="true"]  (vioraConfirm / vioraPrompt)
+   Returns true if ANY overlay is on screen. */
+function _isAnyOverlayOpen() {
+  try {
+    if (document.querySelector('.modal-overlay.active')) return true;
+    if (document.querySelector('[role="dialog"][aria-modal="true"]')) return true;
+    const panel = document.getElementById('hc-industry-panel');
+    if (panel && panel.style.display === 'flex') return true;
+    const backdrop = document.getElementById('hc-industry-backdrop');
+    if (backdrop && backdrop.style.display === 'block') return true;
+    const host = document.getElementById('hc-modal-host');
+    if (host && host.children.length > 0) return true;
+  } catch (_) {}
+  return false;
+}
+
 function scheduleRender(force = false) {
   /* ★ v9.4 — Only bail during the initial boot drain. After the
      watchdog releases the drain (6s max), force === true must
      always work. */
   if (state._bootDraining && !force) return;
+
+  /* ★ v9.5 — NEVER re-render while any modal/editor is open.
+     A re-render destroys the modal DOM (innerHTML = ''), which
+     closes the editor and loses the user's work. We defer instead
+     and retry after the modal closes.
+     `force === true` from a boot-drain release still bypasses this
+     guard so counters recover if a modal somehow got stuck open. */
+  if (!force && _isAnyOverlayOpen()) {
+    if (!window.__vioraDeferredRender) {
+      window.__vioraDeferredRender = setTimeout(() => {
+        window.__vioraDeferredRender = null;
+        if (!_isAnyOverlayOpen()) {
+          scheduleRender(true);
+        } else {
+          /* Still open — try again in 2 s. */
+          scheduleRender(true);
+        }
+      }, 2000);
+    }
+    return;
+  }
+
   if (force) state._forceRepaint = true;
   if (_scheduledRAF) return;
   _scheduledRAF = requestAnimationFrame(() => {
@@ -1171,6 +1215,7 @@ function scheduleRender(force = false) {
   });
 }
 window.scheduleRender = scheduleRender;
+window._isAnyOverlayOpen = _isAnyOverlayOpen;
 
 /* ═══════════════════════════════════════════════════════════════
    PER-COLLECTION COUNTER INVALIDATION
