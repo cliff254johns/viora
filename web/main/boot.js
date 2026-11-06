@@ -1,18 +1,14 @@
 // main/boot.js
 /* ═══════════════════════════════════════════════════════════
-   VIORA — BOOT ORCHESTRATOR  (v7.4)
+   VIORA — BOOT ORCHESTRATOR  (v7.5)
    ─────────────────────────────────────────────────────────────
-   Fixes over v7.3:
-     • Initialize _dirtyCollections once in boot()
-     • Guard undefined helpers (recomputeProjectProgress, etc.)
-     • Replace non-standard onValue({onlyOnce}) with get()
-     • Move boot-drain check before counter update in orders
-     • Guard scheduleMarketSync / recomputeProjectProgress
-     • Add listener-unsubscribe registry (prevents leaks across
-       sign-out → sign-in in the same session)
-     • Make backfillMirror a one-shot per session
-     • Cross-user reset of _lastMarketLeadIds on sign-out
-     • idleRun no longer silently caps fallback timeouts at 2000
+   v7.5 changes over v7.4:
+     • Removed the click-triggered AIRank.rerankByAI() block
+       (it re-rendered the page mid-modal and destroyed form state)
+     • Guarded homeContent + industries listeners so they no longer
+       re-render the home-content tab while the editor is open
+     • Guarded visibilitychange so it does not run background work
+       while a modal/editor is open
    ═══════════════════════════════════════════════════════════ */
 
 import { ref, get, set, remove, onValue, onChildAdded,
@@ -43,6 +39,21 @@ function _flushListeners() {
     const u = _unsubs.pop();
     try { u(); } catch (e) { /* ignore */ }
   }
+}
+
+/* ── Central modal/editor open detector ── */
+function _isModalOrEditorOpen() {
+  try {
+    if (document.querySelector('.modal-overlay.active')) return true;
+    if (document.querySelector('[role="dialog"][aria-modal="true"]')) return true;
+    const panel = document.getElementById('hc-industry-panel');
+    if (panel && panel.style.display === 'flex') return true;
+    const backdrop = document.getElementById('hc-industry-backdrop');
+    if (backdrop && backdrop.style.display === 'block') return true;
+    const host = document.getElementById('hc-modal-host');
+    if (host && host.children.length > 0) return true;
+  } catch (_) {}
+  return false;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -206,10 +217,13 @@ async function handleAuthChange(user) {
     } catch (e) {
       console.warn('role fetch failed or timed out, continuing as member:', e);
     }
-state.operator = { uid: user.uid, name, role, email: user.email,
-                   avatar, accent, tagline, orgId };
-state._operatorLoaded = true;   // ← add this line
-applyRoleGating();
+
+    state.operator = {
+      uid: user.uid, name, role, email: user.email,
+      avatar, accent, tagline, orgId
+    };
+    state._operatorLoaded = true;
+    applyRoleGating();
 
     const avatarEl = document.getElementById('operatorAvatar');
     if (avatarEl) {
@@ -253,7 +267,7 @@ applyRoleGating();
     }
 
     /* ── Ready ── */
-     setSyncStatus('online', 'Synced');
+    setSyncStatus('online', 'Synced');
     state.firebaseReady = true;
 
     if (typeof _ctx.updateSidebarCounters === 'function') {
@@ -726,7 +740,7 @@ function wireSecondaryListeners(user) {
     /* ── Track collections ── */
     wireTrackCollections();
 
-     /* ── Market content ── */
+    /* ── Market content ── */
     _track(onValue(ref(db, P('marketContent')), s => {
       state.data.marketContent = s.exists() ? s.val() : {};
       if (state.currentTab === 'market-content' && _ctx.renderMarketContent) {
@@ -734,7 +748,7 @@ function wireSecondaryListeners(user) {
       }
     }));
 
-    /* ➕ NEW — Promo codes (marketplace promo engine) */
+    /* ── Promo codes (marketplace promo engine) ── */
     _track(onValue(ref(db, P('promos')), s => {
       state.data.promos = s.exists() ? s.val() : {};
       if (state.currentTab === 'market-content' && _ctx.renderMarketContent) {
@@ -742,7 +756,7 @@ function wireSecondaryListeners(user) {
       }
     }));
 
-     /* ➕ NEW — Product extras (per-product marketplace config) */
+    /* ── Product extras (per-product marketplace config) ── */
     _track(onValue(ref(db, P('productExtras')), s => {
       state.data.productExtras = s.exists() ? s.val() : {};
       if (state.currentTab === 'market-content' && _ctx.renderMarketContent) {
@@ -750,31 +764,27 @@ function wireSecondaryListeners(user) {
       }
     }));
 
-      _track(onValue(ref(db, P('homeContent')), s => {
+    /* ── Home Content (landing-page CMS) ── */
+    _track(onValue(ref(db, P('homeContent')), s => {
       state.data.homeContent = s.exists() ? s.val() : {};
       if (state.currentTab === 'home-content' && _ctx.renderHomeContent) {
         /* ★ v9.5 — Skip re-render if an editor is open.
            The next save/close will trigger the natural repaint. */
-        const _modalOpen =
-          (document.getElementById('hc-industry-panel')?.style.display === 'flex') ||
-          (document.getElementById('hc-modal-host')?.children.length > 0);
-        if (_modalOpen) return;
+        if (_isModalOrEditorOpen()) return;
         try { _ctx.renderHomeContent(); } catch (e) {}
       }
     }));
 
-        _track(onValue(ref(db, P('industries')), s => {
+    /* ── Industries (tour + marketplace source of truth) ── */
+    _track(onValue(ref(db, P('industries')), s => {
       state.data.industries = s.exists() ? s.val() : {};
       if (state.currentTab === 'home-content' && _ctx.renderHomeContent) {
-        const _modalOpen =
-          (document.getElementById('hc-industry-panel')?.style.display === 'flex') ||
-          (document.getElementById('hc-modal-host')?.children.length > 0);
-        if (_modalOpen) return;
+        if (_isModalOrEditorOpen()) return;
         try { _ctx.renderHomeContent(); } catch (e) {}
       }
     }));
 
-    /* ➕ NEW — Employee profiles (public team directory) */
+    /* ── Employee profiles (public team directory) ── */
     _track(onValue(ref(db, P('employeeProfiles')), s => {
       state.data.employeeProfiles = s.exists() ? s.val() : {};
       if (state.currentTab === 'employee-profiles' && _ctx.renderEmployeeProfiles) {
@@ -1310,7 +1320,7 @@ export function registerNetworkEvents(deps) {
   if (registerNetworkEvents._done) return;
   registerNetworkEvents._done = true;
 
-    const { state, setSyncStatus, toast, scheduleFlush, PushNotifications } = deps;
+  const { state, setSyncStatus, toast, scheduleFlush, PushNotifications } = deps;
 
   window.addEventListener('online', () => {
     try { goOnline(); } catch (e) {}
@@ -1333,6 +1343,12 @@ export function registerNetworkEvents(deps) {
 
   document.addEventListener('visibilitychange', () => {
     if (document.hidden || !navigator.onLine) return;
+
+    /* ★ v9.5 — Never run background work while a modal is open.
+       Users switching tabs mid-modal (to grab an image, paste a
+       link, etc.) must not have their work destroyed by a re-render. */
+    if (_isModalOrEditorOpen()) return;
+
     const now = Date.now();
 
     if (now - window.__vioraLastFocusFlush >= 60000) {
@@ -1355,4 +1371,10 @@ export function registerNetworkEvents(deps) {
     }
   });
 
-
+  /* ★ v9.5 — The click-triggered AIRank.rerankByAI() block that used
+     to live here has been REMOVED. It fired 5 seconds after every
+     click, which called renderActiveTab() and destroyed any open
+     modal/editor mid-form. AI ranking now runs only when the user
+     explicitly visits the dashboard tab (respecting the 15-minute
+     cooldown built into AIRank itself). */
+}
