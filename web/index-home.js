@@ -1,25 +1,14 @@
 /* ═══════════════════════════════════════════════════════════════
-   VIORA — INDEX HOME CONTROLLER (v3.0)
+   VIORA — INDEX HOME CONTROLLER (v3.2)
    ═══════════════════════════════════════════════════════════════
 
-   Loads on index.html only. Requires:
-     - shared-app.js          (nav, drawer, theme, canvas network, reveal)
-     - order-modal.js         (shared purchase modal)
-     - category-modal.js      (tour "More" popup)
-     - Three.js r128+         (for the 3D globe)
-
-   Firebase subscriptions:
-     viora_data/orgs/viora/homeContent     → drives most landing sections
-     viora_data/orgs/viora/homeContent/tour/meta     → tour eyebrow/heading/sub
-     viora_data/orgs/viora/homeContent/tour/buckets  → flat node
-     viora_data/orgs/viora/homeContent/tour/families → flat node
-     viora_data/orgs/viora/homeContent/productStrip  → strip config
-     viora_data/orgs/viora/industries                → tour + strip source
-     viora_data/orgs/viora/marketContent   → stats, testimonials, FAQs, trust
-     viora_data/orgs/viora/products        → product strip
-
-   Public API (for debugging):
-     window.VioraHome
+   Bug fixes over v3.1:
+     • Moved "Bind product cards" block inside renderTourStepDetail
+       (was outside the function scope, threw ReferenceError at line 687)
+     • Added normalizeIcon() helper for FontAwesome class normalization
+     • Applied normalizeIcon to bucket/family chips, industry fallback,
+       tour product cards, and strip product cards
+     • Exposed App.openOrderModal and App.openCategoryModal globally
    ═══════════════════════════════════════════════════════════════ */
 
 import { initOrderModal, openOrderModal } from './order-modal.js';
@@ -66,6 +55,22 @@ const escHtml = (s) => String(s == null ? '' : s)
 
 const escAttr = escHtml;
 
+/* v3.2 — Normalize a FontAwesome icon class string.
+   Accepts: "fa-robot", "fa-solid fa-robot", "fas fa-robot", ""
+   Returns: "fa-solid fa-robot" or fallback */
+const normalizeIcon = (raw, fallback = 'fa-solid fa-cube') => {
+  let s = String(raw == null ? '' : raw).trim();
+  if (!s) return fallback;
+  s = s.replace(/\s+/g, ' ');
+  s = s.replace(/\bfas\b/g, 'fa-solid')
+       .replace(/\bfar\b/g, 'fa-regular')
+       .replace(/\bfal\b/g, 'fa-light')
+       .replace(/\bfab\b/g, 'fa-brands');
+  if (/^fa-(solid|regular|light|thin|brands|duotone)\s+/.test(s)) return s;
+  return 'fa-solid ' + s;
+};
+window.normalizeIcon = normalizeIcon;
+
 const fmtKSh = (usd) => 'KSh ' + Math.round((Number(usd) || 0) * KES_RATE).toLocaleString('en-KE');
 const fmtKShKes = (kes) => 'KSh ' + Math.round(Number(kes) || 0).toLocaleString('en-KE');
 
@@ -91,7 +96,6 @@ const flattenNode = (node) => {
    BOOT
    ═══════════════════════════════════════════════════════════════ */
 async function boot() {
-  /* Wire shared modals */
   initOrderModal({
     firebaseConfig: FIREBASE_CONFIG,
     P: (p) => `${ROOT}/${String(p || '').replace(/^\/+|\/+$/g, '')}`,
@@ -103,7 +107,6 @@ async function boot() {
   });
   window.__vioraOpenOrderModal = openOrderModal;
 
-  /* Load Firebase + subscribe */
   let fb;
   try {
     fb = await loadFirebase();
@@ -140,10 +143,7 @@ async function boot() {
     renderAll();
   }
 
-  /* Init 3D globe */
   initGlobe();
-
-  /* Wire contact form */
   wireContactForm();
 }
 
@@ -271,7 +271,7 @@ function renderIntentRouter() {
 
   host.innerHTML = tiles.map(t => `
     <a href="${escAttr(t.href)}" class="intent-tile">
-      <div class="intent-icon"><i class="fa-solid ${escAttr(t.icon || 'fa-cube')}"></i></div>
+      <div class="intent-icon"><i class="${escAttr(normalizeIcon(t.icon))}"></i></div>
       <h3>${escHtml(t.title)}</h3>
       <p>${escHtml(t.desc || '')}</p>
       <span class="intent-arrow">Open <i class="fa-solid fa-arrow-right"></i></span>
@@ -346,7 +346,7 @@ function renderTourStepBucket(host, buckets) {
             ? `<div class="chat-empty">No matches — try a different word.</div>`
             : visible.map(b => `
               <button type="button" class="chat-chip" data-bucket="${escAttr(b.key)}">
-                <i class="${escAttr(b.icon || 'fa-solid fa-cube')}" style="color:${escAttr(b.color || '#2267EE')}"></i>
+                <i class="${escAttr(normalizeIcon(b.icon))}" style="color:${escAttr(b.color || '#2267EE')}"></i>
                 <span>${escHtml(b.name || b.key)}</span>
               </button>
             `).join('')}
@@ -403,7 +403,7 @@ function renderTourStepFamily(host, buckets, families) {
             ? `<div class="chat-empty">No families here yet — check back soon.</div>`
             : visible.map(f => `
               <button type="button" class="chat-chip" data-family="${escAttr(f.key)}">
-                <i class="${escAttr(f.icon || 'fa-solid fa-folder')}" style="color:${escAttr(bucket.color || '#2267EE')}"></i>
+                <i class="${escAttr(normalizeIcon(f.icon, 'fa-solid fa-folder'))}" style="color:${escAttr(bucket.color || '#2267EE')}"></i>
                 <span>${escHtml(f.name || f.key)}</span>
               </button>
             `).join('')}
@@ -549,7 +549,7 @@ function renderTourStepDetail(host, buckets, families, industries) {
           <div class="tour-detail-visual" style="background:${escAttr(color)}15;">
             ${imageData
               ? `<img src="${escAttr(imageData)}" alt="${escAttr(ind.name || '')}" loading="lazy"/>`
-              : `<i class="${escAttr(ind.icon || 'fa-solid fa-cube')}" style="color:${escAttr(color)};font-size:64px;"></i>`}
+              : `<i class="${escAttr(normalizeIcon(ind.icon))}" style="color:${escAttr(color)};font-size:64px;"></i>`}
           </div>
           <div class="tour-detail-body">
             <div class="tour-detail-head">
@@ -572,7 +572,7 @@ function renderTourStepDetail(host, buckets, families, industries) {
                 `).join('')}
               </div>
             ` : ''}
-                 <div class="tour-detail-actions">
+            <div class="tour-detail-actions">
               ${ind.previewUrl ? `
                 <a href="${escAttr(ind.previewUrl)}" target="_blank" rel="noopener" class="btn btn-outline">
                   <i class="fa-solid fa-eye"></i> View sample
@@ -592,7 +592,6 @@ function renderTourStepDetail(host, buckets, families, industries) {
         </div>
 
         ${(() => {
-          /* Filter ALL products matching this industry's marketCategory */
           const marketCat = String(ind.marketCategory || '').trim().toLowerCase();
           const products = (S.products || []).filter(p => {
             if (p.status === 'archived' || p.status === 'draft') return false;
@@ -601,7 +600,6 @@ function renderTourStepDetail(host, buckets, families, industries) {
 
           if (products.length === 0) return '';
 
-          /* Sort by totalSold desc */
           products.sort((a, b) => (Number(b.totalSold) || 0) - (Number(a.totalSold) || 0));
 
           return `
@@ -622,14 +620,14 @@ function renderTourStepDetail(host, buckets, families, industries) {
                       <div class="tour-product-visual">
                         ${image
                           ? `<img src="${escAttr(image)}" alt="${escAttr(p.name || '')}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';" />
-                             <div class="tour-product-fallback" style="display:none;"><i class="${escAttr(icon)}"></i></div>`
-                          : `<div class="tour-product-fallback" style="display:grid;"><i class="${escAttr(icon)}"></i></div>`}
+                             <div class="tour-product-fallback" style="display:none;"><i class="${escAttr(normalizeIcon(icon))}"></i></div>`
+                          : `<div class="tour-product-fallback" style="display:grid;"><i class="${escAttr(normalizeIcon(icon))}"></i></div>`}
                       </div>
                       <div class="tour-product-body">
                         <div class="tour-product-name">${escHtml(p.name || '')}</div>
                         <div class="tour-product-price">KSh ${kes.toLocaleString('en-KE')}</div>
                         <div class="tour-product-actions">
-                          <button type="button" class="tour-product-buy" onclick="event.stopPropagation(); App.openOrderModal({ productId: '${escAttr(p.id)}' })">
+                          <button type="button" class="tour-product-buy" data-tour-buy="${escAttr(p.id)}">
                             <i class="fa-solid fa-bolt"></i> Buy
                           </button>
                           ${(p.previewUrl || p.link) ? `
@@ -650,6 +648,7 @@ function renderTourStepDetail(host, buckets, families, industries) {
     </div>
   `;
 
+  /* Wire back buttons */
   host.querySelector('[data-back="industry"]')?.addEventListener('click', () => {
     S.step = 'industry';
     S.activeIndustry = null;
@@ -664,9 +663,12 @@ function renderTourStepDetail(host, buckets, families, industries) {
     renderChatTour();
   });
 
+  /* Wire "Buy now" (category-level) */
   host.querySelector('[data-buy]')?.addEventListener('click', () => {
     openOrderModal({ category: ind.marketCategory || ind.name });
   });
+
+  /* Wire "More" */
   host.querySelector('[data-more]')?.addEventListener('click', () => {
     openCategoryModal(ind.key, {
       name: ind.name,
@@ -681,15 +683,16 @@ function renderTourStepDetail(host, buckets, families, industries) {
       viewSampleUrl: ind.previewUrl || '',
     });
   });
-}
 
-  /* Bind product cards in the tour detail */
-  host.querySelectorAll('.tour-product-card').forEach(card => {
-    card.addEventListener('click', () => {
-      const pid = card.dataset.productId;
+  /* Wire individual product "Buy" buttons (INSIDE this function's scope) */
+  host.querySelectorAll('[data-tour-buy]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const pid = btn.dataset.tourBuy;
       if (pid) openOrderModal({ productId: pid });
     });
   });
+}
 
 /* ── Shared search input binder ── */
 function bindSearchInput(host) {
@@ -731,8 +734,6 @@ function renderProductCarousel() {
   const stripSection = $('.product-strip');
   if (!stripSection) return;
 
-  /* v3.1 — Show ALL products, not filtered by industry.
-     Auto-rotating carousel. Products mixed across all categories. */
   let list = (S.products || []).filter(p =>
     p.status !== 'archived' && p.status !== 'draft'
   );
@@ -743,15 +744,11 @@ function renderProductCarousel() {
   }
   stripSection.style.display = 'block';
 
-  /* Sort by totalSold desc to show best-sellers first */
   list.sort((a, b) => (Number(b.totalSold) || 0) - (Number(a.totalSold) || 0));
 
-  /* Limit to a reasonable carousel size — but "auto-rotate" means we want
-     enough to keep it moving. Show up to `ps.limit` if set, else all. */
   const limit = Number(ps.limit) || 0;
   if (limit > 0) list = list.slice(0, limit);
 
-  /* Render cards */
   host.innerHTML = list.map(p => {
     const kes = Math.round((Number(p.price) || 0) * KES_RATE);
     const extras = (S.homeContent?.productExtras || {})[p.id] || {};
@@ -766,7 +763,7 @@ function renderProductCarousel() {
             ? `<img src="${escAttr(image)}" alt="${escAttr(p.name || '')}" loading="lazy" onerror="this.onerror=null;this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';"/>`
             : ''}
           <div class="strip-card-fallback" style="${image ? 'display:none;' : 'display:flex;'}">
-            <i class="${escAttr(p.icon || 'fa-solid fa-cube')}"></i>
+            <i class="${escAttr(normalizeIcon(p.icon))}"></i>
           </div>
         </div>
         <div class="strip-card-body">
@@ -824,8 +821,7 @@ function renderProductCarousel() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   STRIP AUTOPLAY (v3.1)
-   Auto-rotates the carousel every 4 seconds. Pauses on hover.
+   STRIP AUTOPLAY
    ═══════════════════════════════════════════════════════════════ */
 let _stripAutoplayTimer = null;
 let _stripPaused = false;
@@ -834,12 +830,15 @@ function startStripAutoplay(host) {
   if (_stripAutoplayTimer) clearInterval(_stripAutoplayTimer);
 
   _stripPaused = false;
-  host.addEventListener('mouseenter', () => { _stripPaused = true; });
-  host.addEventListener('mouseleave', () => { _stripPaused = false; });
-  host.addEventListener('touchstart', () => { _stripPaused = true; }, { passive: true });
-  host.addEventListener('touchend', () => {
-    setTimeout(() => { _stripPaused = false; }, 3000);
-  }, { passive: true });
+  if (!host._stripHoverBound) {
+    host._stripHoverBound = true;
+    host.addEventListener('mouseenter', () => { _stripPaused = true; });
+    host.addEventListener('mouseleave', () => { _stripPaused = false; });
+    host.addEventListener('touchstart', () => { _stripPaused = true; }, { passive: true });
+    host.addEventListener('touchend', () => {
+      setTimeout(() => { _stripPaused = false; }, 3000);
+    }, { passive: true });
+  }
 
   _stripAutoplayTimer = setInterval(() => {
     if (_stripPaused || document.hidden) return;
@@ -847,7 +846,6 @@ function startStripAutoplay(host) {
     if (!card) return;
     const step = card.getBoundingClientRect().width + 16;
 
-    /* Advance by 1 card; wrap to 0 when at end */
     const maxScroll = host.scrollWidth - host.clientWidth;
     if (host.scrollLeft >= maxScroll - 10) {
       host.scrollTo({ left: 0, behavior: 'smooth' });
@@ -1429,6 +1427,9 @@ setInterval(() => {
   }
 }, 1000);
 
+/* ═══════════════════════════════════════════════════════════════
+   EXPOSE GLOBALLY
+   ═══════════════════════════════════════════════════════════════ */
 window.VioraHome = { S, renderAll, openOrderModal, openCategoryModal };
 if (typeof window.App !== 'object' || !window.App) window.App = {};
 window.App.openOrderModal = openOrderModal;
