@@ -758,6 +758,14 @@ function wireSecondaryListeners(user) {
       }
     }));
 
+         /* ➕ NEW — Industries (tour + marketplace source of truth) */
+    _track(onValue(ref(db, P('industries')), s => {
+      state.data.industries = s.exists() ? s.val() : {};
+      if (state.currentTab === 'home-content' && _ctx.renderHomeContent) {
+        try { _ctx.renderHomeContent(); } catch (e) {}
+      }
+    }));
+
     /* ➕ NEW — Employee profiles (public team directory) */
     _track(onValue(ref(db, P('employeeProfiles')), s => {
       state.data.employeeProfiles = s.exists() ? s.val() : {};
