@@ -1,6 +1,7 @@
 /* ============================================================
    VIORA MARKETPLACE — v3.2 (carousel fixed + seamless loop)
    ============================================================ */
+import { initOrderModal, openOrderModal } from './order-modal.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyC9gCBt-xR8t9n6rTGNvDZ5usUGiW-Dqxc",
@@ -1783,27 +1784,11 @@ const App = {
     }
   },
 
-  openPurchaseModal(productId) {
+   openPurchaseModal(productId) {
     const p = this.products.find(x => x.id === productId);
     if (!p) { this.toast('Product not found.', 'error'); return; }
     if (this.isCustomProduct(p)) { this.openQuoteModal(productId); return; }
-
-    document.getElementById('purchaseMode').value = 'single';
-    document.getElementById('purchaseProductId').value = p.id;
-    document.getElementById('purchaseProductName').value = p.name;
-    document.getElementById('purchaseProductDisplay').value = p.name + ' — ' + (p.description || '');
-    document.getElementById('purchaseModalTitle').textContent = 'Complete Your Purchase';
-    document.getElementById('planField').style.display = 'none';
-    const baseKes = usdToKes(p.price || 0);
-    const planSel = document.getElementById('purchasePlan');
-    planSel.innerHTML = `
-      <option value="monthly">Monthly — ${fmtKShFromKes(baseKes)}</option>
-      <option value="yearly">Yearly — ${fmtKShFromKes(baseKes * 10.2)} (save 15%)</option>
-      <option value="lifetime">Lifetime — ${fmtKShFromKes(baseKes * 26.5)}</option>
-    `;
-    planSel.onchange = () => this.updateSummaryPricing();
-    this.updateSummaryPricing();
-    this.openModal('purchaseModal');
+    return openOrderModal({ productId, app: this });
   },
 
   async checkStockForLines(orderLines) {
@@ -2454,6 +2439,12 @@ let _appInitialized = false;
 function bootMarket() {
   if (_appInitialized) return;
   _appInitialized = true;
+  initOrderModal({
+    firebaseConfig,
+    P: (path) => `viora_data/orgs/viora/${String(path || '').replace(/^\/+|\/+$/g, '')}`,
+    toast: (m, t) => App.toast(m, t),
+    logActivity: (a, b, c) => { try { App.logActivity?.(a, b, c); } catch (e) {} },
+  });
   App.init();
 }
 if (document.readyState === 'loading') {
