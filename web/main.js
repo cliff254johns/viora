@@ -425,13 +425,13 @@ const ORG_COLLECTIONS = new Set([
   'orchestration','archives',
   'archivedClients','archivedDeals','archivedProjects',
   'subscriptions','licenses',
-  // ➕ NEW — marketplace promo engine + product extras
   'promos',
   'productExtras',
   'reviews',
   'socialAccounts',
   'competitorBenchmarks',
   'homeContent',
+  'industries',              // ★ NEW — v2.0
   'employeeProfiles'
 ]);
 
