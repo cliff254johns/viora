@@ -41,29 +41,72 @@
   --canvas-opacity:.55;
 }
 
-/* ---------- DARK THEME ---------- */
+/* ---------- DARK THEME — TRUE BLACK (Apple-inspired) ---------- */
 [data-theme="dark"]{
-  --navy:#0F172A;
-  --white:#0B1120;
-  --bg:#0F172A;
-  --bg-alt:#1E293B;
-  --ink:#FFFFFF;
-  --muted:#CBD5E1;
-  --line:#334155;
-  --line-soft:rgba(51,65,85,.5);
-  --silver-dark:#CBD5E1;
-  --nav-bg:rgba(11,17,32,.96);
+  /* True black background — not navy */
+  --navy:#000000;
+  --white:#000000;
+  --bg:#000000;
+  --bg-alt:#0A0A0A;
+  --bg-elev-1:#141414;
+  --bg-elev-2:#1C1C1E;
+  --bg-elev-3:#2C2C2E;
+
+  /* Apple's exact label colors */
+  --ink:#F5F5F7;
+  --text-primary:#F5F5F7;
+  --text-secondary:#98989D;
+  --muted:#98989D;
+  --text-muted:#98989D;
+  --text-light:#6E6E73;
+
+  /* Ultra-subtle hairlines — Apple's dark mode borders */
+  --line:rgba(255,255,255,.08);
+  --border-color:rgba(255,255,255,.08);
+  --line-soft:rgba(255,255,255,.04);
+  --border-subtle:rgba(255,255,255,.04);
+  --border-strong:rgba(255,255,255,.16);
+
+  --silver-dark:#6E6E73;
+
+  /* Frosted-glass nav */
+  --nav-bg:rgba(0,0,0,.85);
   --nav-ink:#FFFFFF;
-  --nav-ink-muted:rgba(203,213,225,.72);
-  --nav-border:rgba(255,255,255,.08);
+  --nav-ink-muted:rgba(245,245,247,.72);
+  --nav-border:rgba(255,255,255,.06);
   --nav-hover:rgba(255,255,255,.06);
-  --nav-toggle-border:rgba(255,255,255,.18);
+  --nav-toggle-border:rgba(255,255,255,.14);
   --nav-toggle-bg:rgba(255,255,255,.04);
-  --shadow:0 4px 6px -1px rgba(0,0,0,.4);
-  --shadow-md:0 10px 15px -3px rgba(0,0,0,.5);
-  --shadow-lg:0 20px 25px -5px rgba(0,0,0,.6);
-  --shadow-xl:0 25px 50px -12px rgba(0,0,0,.7);
-  --canvas-opacity:.32;
+
+  /* Accent — Apple Blue (softer than #2267EE) */
+  --accent:#0A84FF;
+  --accent-glow:rgba(10,132,255,.4);
+  --accent-2:#30D158;
+  --accent-3:#BF5AF2;
+  --accent-4:#30D158;
+  --accent-5:#FF9F0A;
+  --accent-6:#FF375F;
+
+  /* Apple system colors */
+  --sys-blue:#0A84FF;
+  --sys-green:#30D158;
+  --sys-indigo:#5E5CE6;
+  --sys-orange:#FF9F0A;
+  --sys-pink:#FF375F;
+  --sys-purple:#BF5AF2;
+  --sys-red:#FF453A;
+  --sys-teal:#64D2FF;
+  --sys-yellow:#FFD60A;
+  --sys-cyan:#64D2FF;
+  --sys-mint:#63E6E2;
+
+  /* Layered shadows — Apple's subtle depth */
+  --shadow:0 4px 6px -1px rgba(0,0,0,.5);
+  --shadow-md:0 10px 15px -3px rgba(0,0,0,.55);
+  --shadow-lg:0 20px 25px -5px rgba(0,0,0,.65);
+  --shadow-xl:0 25px 50px -12px rgba(0,0,0,.75);
+
+  --canvas-opacity:.24;
 }
 
 /* ---------- RESET ---------- */
@@ -550,3 +593,167 @@ h2.section-h{font-size:clamp(28px,3.6vw,42px);margin-bottom:16px;letter-spacing:
 /* ---------- DARK MODE FIXES ---------- */
 [data-theme="dark"] img[src*=".svg"]{filter:brightness(1.05)}
 [data-theme="dark"] .v-card::before{opacity:.6}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   APPLE COLORED ICONS — DARK THEME
+   Each semantic group gets an Apple system color.
+   Applies to: sidebar (main.html), feature cards, badges, alerts.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Semantic icon color variables (already in :root but re-declared for clarity) ── */
+[data-theme="dark"] .v-icon i,
+[data-theme="dark"] .v-icon svg {
+  color: var(--accent);
+}
+
+/* Colored v-icon variants — auto-colored by name class */
+[data-theme="dark"] .v-icon.blue   { color:#0A84FF; background:rgba(10,132,255,.15); }
+[data-theme="dark"] .v-icon.cyan   { color:#64D2FF; background:rgba(100,210,255,.15); }
+[data-theme="dark"] .v-icon.violet { color:#BF5AF2; background:rgba(191,90,242,.15); }
+[data-theme="dark"] .v-icon.green  { color:#30D158; background:rgba(48,209,88,.15); }
+[data-theme="dark"] .v-icon.amber  { color:#FF9F0A; background:rgba(255,159,10,.15); }
+[data-theme="dark"] .v-icon.pink   { color:#FF375F; background:rgba(255,55,95,.15); }
+
+/* ── Badge pills — Apple system colors ── */
+[data-theme="dark"] .badge-active,
+[data-theme="dark"] .badge-green {
+  background: rgba(48, 209, 88, 0.15);
+  color: #30D158;
+  border: 1px solid rgba(48, 209, 88, 0.3);
+}
+[data-theme="dark"] .badge-purple {
+  background: rgba(191, 90, 242, 0.15);
+  color: #BF5AF2;
+  border: 1px solid rgba(191, 90, 242, 0.3);
+}
+[data-theme="dark"] .badge-warning,
+[data-theme="dark"] .badge-gold {
+  background: rgba(255, 159, 10, 0.15);
+  color: #FF9F0A;
+  border: 1px solid rgba(255, 159, 10, 0.3);
+}
+[data-theme="dark"] .badge-danger {
+  background: rgba(255, 69, 58, 0.15);
+  color: #FF453A;
+  border: 1px solid rgba(255, 69, 58, 0.3);
+}
+
+/* ── Nav badges (sidebar counters) — Apple's alert red ── */
+[data-theme="dark"] .nav-badge {
+  background: #FF453A;
+  color: #FFFFFF;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 10px;
+  padding: 1px 6px;
+  min-width: 18px;
+  text-align: center;
+}
+[data-theme="dark"] .nav-badge.muted {
+  background: rgba(255, 255, 255, 0.15);
+  color: #98989D;
+}
+
+/* ── Sync status dots ── */
+[data-theme="dark"] .sync-dot.online   { background:#30D158; box-shadow:0 0 8px rgba(48,209,88,.6); }
+[data-theme="dark"] .sync-dot.syncing  { background:#FF9F0A; box-shadow:0 0 8px rgba(255,159,10,.6); }
+[data-theme="dark"] .sync-dot.offline  { background:#FF453A; box-shadow:0 0 8px rgba(255,69,58,.6); }
+[data-theme="dark"] .sync-dot.auth     { background:#6E6E73; }
+
+/* ── Toasts — Apple color-coded left border ── */
+[data-theme="dark"] .toast {
+  background: #1C1C1E;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 14px;
+  color: #F5F5F7;
+  box-shadow: 0 8px 24px rgba(0,0,0,.5);
+}
+[data-theme="dark"] .toast.success { border-left: 3px solid #30D158; }
+[data-theme="dark"] .toast.success i { color: #30D158; }
+[data-theme="dark"] .toast.error   { border-left: 3px solid #FF453A; }
+[data-theme="dark"] .toast.error i { color: #FF453A; }
+[data-theme="dark"] .toast.warning { border-left: 3px solid #FF9F0A; }
+[data-theme="dark"] .toast.warning i { color: #FF9F0A; }
+[data-theme="dark"] .toast.info    { border-left: 3px solid #0A84FF; }
+[data-theme="dark"] .toast.info i  { color: #0A84FF; }
+
+/* ── Form validation colors ── */
+[data-theme="dark"] .field.invalid input,
+[data-theme="dark"] .field.invalid select,
+[data-theme="dark"] .field.invalid textarea {
+  border-color: #FF453A;
+}
+[data-theme="dark"] .field .err { color: #FF453A; }
+[data-theme="dark"] .field label .req { color: #FF453A; }
+
+[data-theme="dark"] .form-status.err {
+  background: rgba(255, 69, 58, 0.1);
+  border: 1px solid rgba(255, 69, 58, 0.3);
+  color: #FF8A80;
+}
+[data-theme="dark"] .form-status.ok {
+  background: rgba(48, 209, 88, 0.1);
+  border: 1px solid rgba(48, 209, 88, 0.3);
+  color: #6EE7B7;
+}
+[data-theme="dark"] .form-status.warn {
+  background: rgba(10, 132, 255, 0.1);
+  border: 1px solid rgba(10, 132, 255, 0.3);
+  color: #7FB0FF;
+}
+
+/* ── Buttons — Apple-styled ── */
+[data-theme="dark"] .btn-primary {
+  background: #0A84FF;
+  color: #FFFFFF;
+  border: none;
+  box-shadow: 0 4px 12px -4px rgba(10, 132, 255, 0.5);
+}
+[data-theme="dark"] .btn-primary:hover {
+  background: #0070E0;
+  box-shadow: 0 8px 20px -6px rgba(10, 132, 255, 0.6);
+}
+[data-theme="dark"] .btn-ghost {
+  background: rgba(255, 255, 255, 0.06);
+  color: #F5F5F7;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+[data-theme="dark"] .btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+}
+
+/* ── Chat bubble user accent — iMessage blue ── */
+[data-theme="dark"] .chat-bubble.user .chat-bubble-body {
+  background: #0A84FF;
+  color: #FFFFFF;
+}
+
+/* ── Scrollbar — Apple thin grey ── */
+[data-theme="dark"] ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+
+/* ── Text selection ── */
+[data-theme="dark"] ::selection {
+  background: rgba(10, 132, 255, 0.35);
+  color: #FFFFFF;
+}
+
