@@ -413,10 +413,14 @@ function _close() {
   if (!_modalEl) return;
   _modalEl.classList.remove('active');
   document.body.style.overflow = '';
+  document.body.style.pointerEvents = '';
   _currentPayload = null;
-  _buildModalDOM();
-  _modalEl.querySelector('#om-form').innerHTML = _defaultFormHTML();
-  _bindDefaultForm();
+
+  /* Reset the form but DON'T remove the submit listener */
+  const form = _modalEl.querySelector('#om-form');
+  if (form) {
+    form.reset();
+  }
 }
 
 function _defaultFormHTML() {
