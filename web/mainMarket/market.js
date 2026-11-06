@@ -1,7 +1,7 @@
 /* ============================================================
    VIORA MARKETPLACE — v3.2 (carousel fixed + seamless loop)
    ============================================================ */
-import { initOrderModal, openOrderModal } from './order-modal.js';
+import { initOrderModal, openOrderModal } from '../order-modal.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyC9gCBt-xR8t9n6rTGNvDZ5usUGiW-Dqxc",
