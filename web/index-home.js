@@ -526,11 +526,29 @@ function renderProductStrip() {
 
   host.innerHTML = list.map(p => {
     const kes = Math.round((Number(p.price) || 0) * KES_RATE);
+    const extras = (S.homeContent?.productExtras || {})[p.id] || {};
+    const previewUrl = p.previewUrl || p.link || extras.previewUrl || '';
+    const isCustom = extras.productType === 'custom' || extras.productType === 'service' || p.pricing === 'quote';
+
     const visual = p.image
       ? `<img src="${esc(p.image)}" alt="${esc(p.name || '')}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';">`
       : '';
+
+    /* Primary CTA row — 3 buttons */
+    const actions = isCustom
+      ? `<button type="button" class="btn btn-primary" data-action="quote">Request quote</button>
+         <a href="client.html" class="btn btn-ghost">Subscribe</a>`
+      : `<button type="button" class="btn btn-primary" data-action="buy">Buy</button>
+         <a href="client.html" class="btn btn-ghost">Subscribe</a>`;
+
+    const viewBtn = previewUrl
+      ? `<a href="${esc(previewUrl)}" target="_blank" rel="noopener" class="btn btn-ghost" data-action="view">View</a>`
+      : '';
+
+    const moreBtn = `<button type="button" class="btn btn-ghost" data-action="more">More</button>`;
+
     return `
-      <a href="market.html" class="product-strip-card">
+      <article class="product-strip-card" data-product-id="${esc(p.id)}">
         <div class="product-strip-visual">
           ${visual}
           <i class="fa-solid ${esc(p.icon || 'fa-cube')}" style="${p.image ? 'display:none' : ''}"></i>
@@ -539,11 +557,46 @@ function renderProductStrip() {
           <span class="product-strip-cat">${esc(p.category || 'Solution')}</span>
           <h3 class="product-strip-name">${esc(p.name || '')}</h3>
           <p class="product-strip-desc">${esc((p.description || '').slice(0, 100))}</p>
-          <div class="product-strip-price">${fmtKShKes(kes)}</div>
+          <div class="product-strip-price">${isCustom ? 'Custom pricing' : fmtKShKes(kes)}</div>
+          <div class="product-strip-actions" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">
+            ${viewBtn}
+            ${actions}
+            ${moreBtn}
+          </div>
         </div>
-      </a>
+      </article>
     `;
   }).join('');
+
+  /* Wire buttons */
+  host.querySelectorAll('[data-product-id]').forEach(card => {
+    const pid = card.dataset.productId;
+    const product = list.find(p => p.id === pid);
+    if (!product) return;
+
+    card.querySelector('[data-action="buy"]')?.addEventListener('click', () => {
+      openOrderModal({ productId: pid });
+    });
+    card.querySelector('[data-action="quote"]')?.addEventListener('click', () => {
+      openOrderModal({ productId: pid });
+    });
+    card.querySelector('[data-action="more"]')?.addEventListener('click', () => {
+      /* Build a synthetic category-like object from the product */
+      const extras = (S.homeContent?.productExtras || {})[pid] || {};
+      openCategoryModal(pid, {
+        name: product.name,
+        icon: product.icon || 'fa-cube',
+        desc: product.description || '',
+        longDesc: extras.longDesc || product.description || '',
+        included: extras.included || [],
+        demoUrl: extras.demoEmbedUrl || product.previewUrl || '',
+        gallery: extras.gallery || [],
+        products: [],
+        faqs: extras.faqs || [],
+        viewSampleUrl: product.previewUrl || product.link || '',
+      });
+    });
+  });
 }
 
 /* ═══════════════════════════════════════════════════════════════
