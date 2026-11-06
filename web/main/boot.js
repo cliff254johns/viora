@@ -742,11 +742,27 @@ function wireSecondaryListeners(user) {
       }
     }));
 
-    /* ➕ NEW — Product extras (per-product marketplace config) */
+     /* ➕ NEW — Product extras (per-product marketplace config) */
     _track(onValue(ref(db, P('productExtras')), s => {
       state.data.productExtras = s.exists() ? s.val() : {};
       if (state.currentTab === 'market-content' && _ctx.renderMarketContent) {
         try { _ctx.renderMarketContent(); } catch (e) {}
+      }
+    }));
+
+    /* ➕ NEW — Home Content (landing-page CMS) */
+    _track(onValue(ref(db, P('homeContent')), s => {
+      state.data.homeContent = s.exists() ? s.val() : {};
+      if (state.currentTab === 'home-content' && _ctx.renderHomeContent) {
+        try { _ctx.renderHomeContent(); } catch (e) {}
+      }
+    }));
+
+    /* ➕ NEW — Employee profiles (public team directory) */
+    _track(onValue(ref(db, P('employeeProfiles')), s => {
+      state.data.employeeProfiles = s.exists() ? s.val() : {};
+      if (state.currentTab === 'employee-profiles' && _ctx.renderEmployeeProfiles) {
+        try { _ctx.renderEmployeeProfiles(); } catch (e) {}
       }
     }));
   };
