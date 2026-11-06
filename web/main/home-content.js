@@ -1,32 +1,16 @@
 /* ═══════════════════════════════════════════════════════════════
-   VIORA — HOME CONTENT EDITOR (v2.1)
+   VIORA — HOME CONTENT EDITOR (v3.0)
    ═══════════════════════════════════════════════════════════════
 
-   Admin editor for the landing page (index.html).
-
-   Reads / writes:
-     viora_data/orgs/viora/homeContent              → hero, intent, etc.
-     viora_data/orgs/viora/homeContent/tour/meta     → tour eyebrow/heading/sub
-     viora_data/orgs/viora/homeContent/tour/buckets  → flat node, per-key
-     viora_data/orgs/viora/homeContent/tour/families → flat node, per-key
-     viora_data/orgs/viora/homeContent/productStrip  → strip config
-     viora_data/orgs/viora/industries                → flat node, per-key
-
-   Public API:
-     initHomeContent({ db, ref, set, get, P, state, toast, logActivity, escapeHtml, $ })
-     renderHomeContent() → renders into #tab-home-content
-
-   v2.1 changes:
-     • Custom modals replace all native prompt()/confirm() calls
-     • Industries editor persists across tab switches (state-driven)
-     • Backdrop click does NOT close editors (only × or Cancel)
-     • Unsaved-changes guard on close
-     • Sticky header + footer inside the industry editor panel
-     • Drag-and-drop image upload + preview
-     • 24-swatch color palette with labels + custom color input
-     • Save buttons show spinner during async write
-     • Two-column form layout in industry editor
-     • Rich empty states everywhere
+   Bug fixes over v2.1:
+     • openIndustryEditor was missing its closing brace — module
+       wouldn't load
+     • Duplicate deleteBucket / deleteFamily declarations removed
+     • Delete buttons use native confirm() to avoid modal conflicts
+     • Grid delete buttons use event delegation (survive re-render)
+     • Industry modal: centered vertically, z-index 99999, safe-area
+       padding, scrolls the overlay when tall
+     • Removed unused confirmModal usage in industry delete path
    ═══════════════════════════════════════════════════════════════ */
 
 let D = null;
@@ -42,7 +26,6 @@ const STRIP_PATH      = 'homeContent/productStrip';
 const MAX_IMAGE_DIM   = 800;
 const JPEG_QUALITY    = 0.80;
 
-/* Named color palette with semantic labels */
 const COLOR_PALETTE = [
   { hex: '#2267EE', label: 'Royal Blue' },
   { hex: '#23C7D9', label: 'Cyan' },
@@ -70,7 +53,6 @@ const COLOR_PALETTE = [
   { hex: '#15803D', label: 'Forest' },
 ];
 
-/* Common FontAwesome icons for quick pick */
 const ICON_SUGGESTIONS = [
   'fa-cube', 'fa-store', 'fa-briefcase', 'fa-code', 'fa-globe',
   'fa-mobile-screen', 'fa-user', 'fa-bullhorn', 'fa-palette',
@@ -105,7 +87,6 @@ const INTENT_DEFAULTS = [
    ═══════════════════════════════════════════════════════════════ */
 export function initHomeContent(deps) {
   D = deps;
-  /* Restore editor state from prior tab visit */
   if (!D.state) D.state = {};
   if (!D.state._hce) D.state._hce = {};
 }
@@ -167,7 +148,7 @@ export function renderHomeContent() {
       <div id="hc-panels"></div>
     </div>
 
-    <!-- Modal host (industry editor + bucket/family editors + confirm dialogs) -->
+    <!-- Modal host (industry editor + bucket/family editors) -->
     <div id="hc-modal-host"></div>
   `;
 
@@ -195,7 +176,6 @@ export function renderHomeContent() {
 
   document.getElementById('hc-save-btn').addEventListener('click', saveAllTextSections);
 
-  /* Restore editor if it was open before tab switch */
   if (D.state._hce.editorOpenKey) {
     setTimeout(() => openIndustryEditor(D.state._hce.editorOpenKey, true), 50);
   }
@@ -431,11 +411,9 @@ function bindBucketsFamiliesPanel() {
     }
   });
 
-  /* Add bucket */
   document.getElementById('hc-add-bucket')?.addEventListener('click', () => openBucketEditor(null));
   document.getElementById('hc-add-bucket-empty')?.addEventListener('click', () => openBucketEditor(null));
 
-  /* Edit / Delete bucket */
   /* Delegate on the bucket list container so freshly-rendered
      cards still respond to clicks. */
   const bucketList = document.getElementById('hc-bucket-list');
@@ -584,13 +562,7 @@ function openFamilyEditor(key, presetBucketKey) {
 }
 
 async function deleteBucket(key) {
-  const ok = await confirmModal({
-    title: 'Delete bucket?',
-    text: `"${key}" will be removed. Industries assigned to it will need to be reassigned manually.`,
-    confirmLabel: 'Delete bucket',
-    danger: true
-  });
-  if (!ok) return;
+  if (!confirm(`Delete bucket "${key}"? Industries assigned to it will need to be reassigned manually.`)) return;
   try {
     await D.set(D.ref(D.db, `${D.P(BUCKETS_PATH)}/${key}`), null);
     if (D.state.data.homeContent?.tour?.buckets) delete D.state.data.homeContent.tour.buckets[key];
@@ -602,13 +574,7 @@ async function deleteBucket(key) {
 }
 
 async function deleteFamily(key) {
-  const ok = await confirmModal({
-    title: 'Delete family?',
-    text: `"${key}" will be removed. Industries assigned to it will need to be reassigned manually.`,
-    confirmLabel: 'Delete family',
-    danger: true
-  });
-  if (!ok) return;
+  if (!confirm(`Delete family "${key}"? Industries assigned to it will need to be reassigned manually.`)) return;
   try {
     await D.set(D.ref(D.db, `${D.P(FAMILIES_PATH)}/${key}`), null);
     if (D.state.data.homeContent?.tour?.families) delete D.state.data.homeContent.tour.families[key];
@@ -720,9 +686,7 @@ function bindIndustriesPanel() {
   document.getElementById('hc-add-industry')?.addEventListener('click', () => openIndustryEditor(null));
   document.getElementById('hc-add-industry-empty')?.addEventListener('click', () => openIndustryEditor(null));
 
-  /* Use event delegation so clicks on freshly-rendered cards still work.
-     Direct binding breaks every time renderIndustriesPanel() replaces
-     the grid HTML. */
+  /* Delegate clicks on the grid so newly-rendered cards still respond */
   const grid = document.getElementById('hc-industry-grid');
   if (grid && !grid._delegateBound) {
     grid._delegateBound = true;
@@ -764,12 +728,7 @@ function bindIndustriesPanel() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   INDUSTRY EDITOR — CENTERED WIDE MODAL (v3.0)
-   ─────────────────────────────────────────────────────────────
-   Two-column layout on ≥ 900px, single column below.
-   Sticky header + footer. Backdrop click does NOT close.
-   Unsaved-changes guard. Same visual language as bucket/family
-   editors, just wider and two-column.
+   INDUSTRY EDITOR — CENTERED WIDE MODAL
    ═══════════════════════════════════════════════════════════════ */
 function openIndustryEditor(key, isRestore = false) {
   const existing = key
@@ -802,13 +761,13 @@ function openIndustryEditor(key, isRestore = false) {
     .sort((a, b) => (Number(a.order) || 999) - (Number(b.order) || 999));
 
   host.innerHTML = `
-      <div id="hc-ind-modal" role="dialog" aria-modal="true" aria-labelledby="hc-ind-modal-title"
+    <div id="hc-ind-modal" role="dialog" aria-modal="true" aria-labelledby="hc-ind-modal-title"
          style="position:fixed;inset:0;background:rgba(10,25,47,.7);
                 display:flex;align-items:center;justify-content:center;
                 padding:max(24px, env(safe-area-inset-top, 24px)) 24px max(24px, env(safe-area-inset-bottom, 24px));
                 z-index:99999;animation:hcFadeIn .18s ease;overflow-y:auto;">
 
-        <div id="hc-ind-card" style="background:var(--bg-elev-1);border-radius:18px;box-shadow:0 32px 80px -16px rgba(0,0,0,.5);
+      <div id="hc-ind-card" style="background:var(--bg-elev-1);border-radius:18px;box-shadow:0 32px 80px -16px rgba(0,0,0,.5);
                   width:100%;max-width:820px;max-height:calc(100vh - 80px);
                   display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--border-color);
                   margin:auto;animation:hcSlideUp .22s cubic-bezier(0.34,1.56,0.64,1);">
@@ -990,19 +949,13 @@ function openIndustryEditor(key, isRestore = false) {
 
   /* Backdrop click does NOTHING (protects unsaved work) */
   modal.addEventListener('click', (e) => {
-    if (e.target === modal) { /* intentional — no-op */ }
+    if (e.target === modal) { /* no-op */ }
   });
 
   /* Close with unsaved-changes guard */
   const closeModalFn = async () => {
     if (D.state._hce.editorIsDirty) {
-      const ok = await confirmModal({
-        title: 'Discard changes?',
-        text: 'You have unsaved changes. Close anyway?',
-        confirmLabel: 'Discard',
-        danger: true
-      });
-      if (!ok) return;
+      if (!confirm('You have unsaved changes. Close anyway?')) return;
     }
     modal.style.transition = 'opacity .15s';
     modal.style.opacity = '0';
@@ -1017,7 +970,7 @@ function openIndustryEditor(key, isRestore = false) {
   document.getElementById('hc-ind-close')?.addEventListener('click', closeModalFn);
   document.getElementById('hc-ind-cancel')?.addEventListener('click', closeModalFn);
 
-  /* Escape closes (with guard) */
+  /* Escape closes */
   const escHandler = (e) => {
     if (e.key === 'Escape') {
       e.preventDefault();
@@ -1106,7 +1059,8 @@ function openIndustryEditor(key, isRestore = false) {
   }
   bindRemoveButtons();
 
-document.getElementById('hc-ind-delete')?.addEventListener('click', async () => {
+  /* Delete — native confirm to avoid modal layering conflicts */
+  document.getElementById('hc-ind-delete')?.addEventListener('click', async () => {
     if (!confirm(`Delete industry "${existing.name || key}"? This cannot be undone.`)) return;
     try {
       await D.set(D.ref(D.db, `${D.P(INDUSTRIES_PATH)}/${key}`), null);
@@ -1180,8 +1134,8 @@ document.getElementById('hc-ind-delete')?.addEventListener('click', async () => 
       color: val('hc-ind-color') || '#2267EE',
       image,
       imageUrl: imageUrlFinal,
-      previewUrl: val('hc-ind-preview-url'),
-      buyUrl: val('hc-ind-buy-url'),
+      previewUrl: val('hc-ind-previewUrl'),
+      buyUrl: val('hc-ind-buyUrl'),
       desc: val('hc-ind-desc'),
       longDesc: val('hc-ind-longDesc'),
       bullets,
@@ -1226,24 +1180,15 @@ document.getElementById('hc-ind-delete')?.addEventListener('click', async () => 
   });
 }
 
-async function deleteBucket(key) {
-  if (!confirm(`Delete bucket "${key}"? Industries assigned to it will need to be reassigned manually.`)) return;
+/* ═══════════════════════════════════════════════════════════════
+   DELETE INDUSTRY (from grid)
+   ═══════════════════════════════════════════════════════════════ */
+async function deleteIndustry(key) {
+  if (!confirm(`Delete industry "${key}"? This cannot be undone.`)) return;
   try {
-    await D.set(D.ref(D.db, `${D.P(BUCKETS_PATH)}/${key}`), null);
-    if (D.state.data.homeContent?.tour?.buckets) delete D.state.data.homeContent.tour.buckets[key];
-    toast('Bucket deleted.', 'success');
-    renderPanels();
-  } catch (e) {
-    toast('Delete failed: ' + e.message, 'error');
-  }
-}
-
-async function deleteFamily(key) {
-  if (!confirm(`Delete family "${key}"? Industries assigned to it will need to be reassigned manually.`)) return;
-  try {
-    await D.set(D.ref(D.db, `${D.P(FAMILIES_PATH)}/${key}`), null);
-    if (D.state.data.homeContent?.tour?.families) delete D.state.data.homeContent.tour.families[key];
-    toast('Family deleted.', 'success');
+    await D.set(D.ref(D.db, `${D.P(INDUSTRIES_PATH)}/${key}`), null);
+    if (D.state.data.industries) delete D.state.data.industries[key];
+    toast('Industry deleted.', 'success');
     renderPanels();
   } catch (e) {
     toast('Delete failed: ' + e.message, 'error');
@@ -1332,9 +1277,7 @@ function imagePickerField(id, label, value) {
   return `
     <div style="margin-top:16px;">
       <span style="display:block;font-size:.72rem;font-weight:700;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">${label}</span>
-      <div id="${id}-preview" style="width:100%;height:160px;border-radius:10px;background:var(--bg-elev-2);border:2px dashed var(--border-color);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:10px;position:relative;cursor:pointer;transition:border-color .15s;"
-        onmouseover="this.style.borderColor='var(--accent-blue)'"
-        onmouseout="this.style.borderColor='var(--border-color)'">
+      <div id="${id}-preview" style="width:100%;height:160px;border-radius:10px;background:var(--bg-elev-2);border:2px dashed var(--border-color);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:10px;position:relative;cursor:pointer;transition:border-color .15s;">
         ${value
           ? `<img src="${escAttr(value)}" style="width:100%;height:100%;object-fit:cover;"/>
              <button type="button" id="${id}-remove" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1;display:grid;place-items:center;">×</button>`
@@ -1351,7 +1294,6 @@ function imagePickerField(id, label, value) {
   `;
 }
 
-/* ── Color picker binding ── */
 function bindColorPicker(panel, id) {
   const textInput = document.getElementById(id);
   const colorInput = document.getElementById(id + '-picker');
@@ -1382,7 +1324,6 @@ function bindColorPicker(panel, id) {
   });
 }
 
-/* ── Icon picker binding ── */
 function bindIconPicker(panel, id) {
   const input = document.getElementById(id);
   const preview = document.getElementById(id + '-preview');
@@ -1405,7 +1346,6 @@ function bindIconPicker(panel, id) {
   });
 }
 
-/* ── Image picker binding ── */
 function bindImagePicker(panel, id, onUpload) {
   const preview = document.getElementById(id + '-preview');
   const fileInput = document.getElementById(id + '-file');
@@ -1541,7 +1481,7 @@ function resizeImageToBase64(file) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   GENERIC MODAL (for bucket/family editors + confirm dialogs)
+   GENERIC MODAL (for bucket/family editors)
    ═══════════════════════════════════════════════════════════════ */
 function openModal({ id, icon, title, body, footer, onSave }) {
   const host = document.getElementById('hc-modal-host');
@@ -1585,49 +1525,9 @@ function openModal({ id, icon, title, body, footer, onSave }) {
     }
   });
 
-  /* Bind color pickers and icon pickers that appear in modal body */
   bindColorPicker(modal, 'hc-bucket-color');
   bindIconPicker(modal, 'hc-bucket-icon');
   bindIconPicker(modal, 'hc-family-icon');
-}
-
-/* ── Confirm modal ── */
-function confirmModal({ title, text, confirmLabel = 'Confirm', danger = false }) {
-  return new Promise((resolve) => {
-    const host = document.getElementById('hc-modal-host');
-    if (!host) { resolve(false); return; }
-
-    const id = 'hc-confirm-' + Date.now();
-    host.innerHTML = `
-      <div id="${id}" style="position:fixed;inset:0;background:rgba(10,25,47,.6);display:flex;align-items:center;justify-content:center;padding:24px;z-index:10001;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);">
-        <div style="background:var(--bg-elev-1);border-radius:16px;box-shadow:0 32px 80px -16px rgba(0,0,0,.5);max-width:440px;width:100%;border:1px solid var(--border-color);overflow:hidden;">
-          <div style="padding:24px;">
-            <div style="display:flex;gap:14px;align-items:flex-start;">
-              <div style="width:44px;height:44px;border-radius:11px;background:${danger ? 'rgba(239,68,68,.15)' : 'rgba(34,103,238,.15)'};color:${danger ? 'var(--accent-red)' : 'var(--accent-blue)'};display:grid;place-items:center;font-size:20px;flex-shrink:0;">
-                <i class="fa-solid ${danger ? 'fa-triangle-exclamation' : 'fa-circle-question'}"></i>
-              </div>
-              <div style="flex:1;">
-                <h3 style="margin:0 0 6px;font-size:16px;">${escHtml(title)}</h3>
-                <p style="margin:0;font-size:.88rem;color:var(--text-muted);line-height:1.5;">${escHtml(text)}</p>
-              </div>
-            </div>
-          </div>
-          <div style="padding:14px 24px;background:var(--bg-elev-2);border-top:1px solid var(--border-color);display:flex;gap:8px;justify-content:flex-end;">
-            <button type="button" data-confirm-cancel class="btn btn-outline" style="padding:9px 16px;">Cancel</button>
-            <button type="button" data-confirm-ok class="btn ${danger ? 'btn-danger' : 'btn-primary'}" style="padding:9px 16px;">${escHtml(confirmLabel)}</button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    const modal = document.getElementById(id);
-    const finish = (result) => {
-      host.innerHTML = '';
-      resolve(result);
-    };
-    modal.querySelector('[data-confirm-cancel]')?.addEventListener('click', () => finish(false));
-    modal.querySelector('[data-confirm-ok]')?.addEventListener('click', () => finish(true));
-  });
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1896,6 +1796,5 @@ function closeModal() {
   const host = document.getElementById('hc-modal-host');
   if (host) host.innerHTML = '';
 }
+
 export default { initHomeContent, renderHomeContent };
-
-
