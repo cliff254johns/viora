@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   VIORA — HOME CONTENT EDITOR (v2.0)
+   VIORA — HOME CONTENT EDITOR (v2.1)
    ═══════════════════════════════════════════════════════════════
 
    Admin editor for the landing page (index.html).
@@ -16,11 +16,17 @@
      initHomeContent({ db, ref, set, get, P, state, toast, logActivity, escapeHtml, $ })
      renderHomeContent() → renders into #tab-home-content
 
-   v2.0 changes:
-     • Split old "Tour" into "Buckets & Families" + "Industries"
-     • Industries editor = full side panel with client-side image resize
-     • No hardcoded defaults — everything lives in Firebase
-     • Add Product category dropdown reads from `industries` node
+   v2.1 changes:
+     • Custom modals replace all native prompt()/confirm() calls
+     • Industries editor persists across tab switches (state-driven)
+     • Backdrop click does NOT close editors (only × or Cancel)
+     • Unsaved-changes guard on close
+     • Sticky header + footer inside the industry editor panel
+     • Drag-and-drop image upload + preview
+     • 24-swatch color palette with labels + custom color input
+     • Save buttons show spinner during async write
+     • Two-column form layout in industry editor
+     • Rich empty states everywhere
    ═══════════════════════════════════════════════════════════════ */
 
 let D = null;
@@ -36,15 +42,48 @@ const STRIP_PATH      = 'homeContent/productStrip';
 const MAX_IMAGE_DIM   = 800;
 const JPEG_QUALITY    = 0.80;
 
-/* 24-swatch color palette */
+/* Named color palette with semantic labels */
 const COLOR_PALETTE = [
-  '#2267EE','#23C7D9','#8B5CF6','#10B981','#F59E0B','#EC4899',
-  '#EF4444','#F97316','#14B8A6','#6366F1','#0EA5E9','#A855F7',
-  '#64748B','#DC2626','#059669','#D97706','#7C3AED','#DB2777',
-  '#0891B2','#65A30D','#EA580C','#4338CA','#BE123C','#15803D'
+  { hex: '#2267EE', label: 'Royal Blue' },
+  { hex: '#23C7D9', label: 'Cyan' },
+  { hex: '#8B5CF6', label: 'Purple' },
+  { hex: '#10B981', label: 'Emerald' },
+  { hex: '#F59E0B', label: 'Amber' },
+  { hex: '#EC4899', label: 'Pink' },
+  { hex: '#EF4444', label: 'Red' },
+  { hex: '#F97316', label: 'Orange' },
+  { hex: '#14B8A6', label: 'Teal' },
+  { hex: '#6366F1', label: 'Indigo' },
+  { hex: '#0EA5E9', label: 'Sky' },
+  { hex: '#A855F7', label: 'Violet' },
+  { hex: '#64748B', label: 'Slate' },
+  { hex: '#DC2626', label: 'Crimson' },
+  { hex: '#059669', label: 'Green' },
+  { hex: '#D97706', label: 'Gold' },
+  { hex: '#7C3AED', label: 'Deep Purple' },
+  { hex: '#DB2777', label: 'Rose' },
+  { hex: '#0891B2', label: 'Ocean' },
+  { hex: '#65A30D', label: 'Lime' },
+  { hex: '#EA580C', label: 'Rust' },
+  { hex: '#4338CA', label: 'Navy' },
+  { hex: '#BE123C', label: 'Maroon' },
+  { hex: '#15803D', label: 'Forest' },
 ];
 
-/* ── Defaults that must still render the page shell ── */
+/* Common FontAwesome icons for quick pick */
+const ICON_SUGGESTIONS = [
+  'fa-cube', 'fa-store', 'fa-briefcase', 'fa-code', 'fa-globe',
+  'fa-mobile-screen', 'fa-user', 'fa-bullhorn', 'fa-palette',
+  'fa-robot', 'fa-cloud', 'fa-screwdriver-wrench', 'fa-crown',
+  'fa-industry', 'fa-building', 'fa-hospital', 'fa-utensils',
+  'fa-graduation-cap', 'fa-hotel', 'fa-scissors', 'fa-dumbbell',
+  'fa-car', 'fa-paw', 'fa-seedling', 'fa-helmet-safety',
+  'fa-house', 'fa-cross', 'fa-shirt', 'fa-shield-halved',
+  'fa-broom', 'fa-leaf', 'fa-camera', 'fa-calendar',
+  'fa-user-tie', 'fa-plane', 'fa-print', 'fa-scale-balanced',
+  'fa-drafting-compass', 'fa-umbrella', 'fa-wand-magic-sparkles',
+];
+
 const HERO_DEFAULTS = {
   eyebrow: 'The VIORA Ecosystem',
   titleLine1: 'Everything Your Business Needs.',
@@ -66,6 +105,10 @@ const INTENT_DEFAULTS = [
    ═══════════════════════════════════════════════════════════════ */
 export function initHomeContent(deps) {
   D = deps;
+  /* Restore editor state from prior tab visit */
+  if (!D.state) D.state = {};
+  if (!D.state._hce = {}) {} // no-op guard
+  if (!D.state._hce) D.state._hce = {};
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -75,53 +118,65 @@ export function renderHomeContent() {
   const host = document.getElementById('tab-home-content');
   if (!host) return;
 
+  const state = D.state._hce = D.state._hce || {};
+  const activeTab = state.activeTab || 'hero';
+
   host.innerHTML = `
-    <div style="padding:24px;max-width:1200px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+    <div style="padding:24px;max-width:1280px;margin:0 auto;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
         <div>
-          <h2 style="margin:0 0 4px;font-size:22px;">Home Content</h2>
+          <h2 style="margin:0 0 4px;font-size:24px;letter-spacing:-0.02em;">Home Content</h2>
           <p style="margin:0;color:var(--text-muted);font-size:.85rem;">
-            Edit the landing page (index.html) and the industries catalog.
-            Changes save per-section.
+            Edit the landing page (index.html) and the industries catalog. Changes save per-section.
           </p>
         </div>
-        <button type="button" class="btn btn-success" id="hc-save-btn">
+        <button type="button" class="btn btn-success" id="hc-save-btn" style="padding:10px 18px;">
           <i class="fa-solid fa-check"></i> Save all text sections
         </button>
       </div>
 
       <div id="hc-status" style="margin-bottom:16px;font-size:.85rem;min-height:20px;"></div>
 
-      <div class="hc-tabs" style="display:flex;gap:4px;padding:4px;background:rgba(0,0,0,.2);border-radius:10px;margin-bottom:20px;flex-wrap:wrap;">
+      <div class="hc-tabs" style="display:flex;gap:4px;padding:4px;background:var(--bg-elev-2);border-radius:12px;margin-bottom:24px;flex-wrap:wrap;border:1px solid var(--border-color);">
         ${[
-          ['Hero','hero'],
-          ['Intent','intent'],
-          ['Buckets & Families','buckets'],
-          ['Industries','industries'],
-          ['Products','products'],
-          ['Ecosystem','ecosystem'],
-          ['Dashboard','dashboard'],
-          ['Cases','cases'],
-          ['Pricing','pricing'],
-          ['Academy','academy'],
-          ['Contact','contact']
-        ].map(([label, key], i) => `
-          <button type="button" class="btn btn-xs hc-tab-btn" data-tab="${key}"
-            style="border-radius:8px;padding:8px 14px;${i === 0 ? 'background:var(--accent-blue);color:#fff;border-color:var(--accent-blue);' : ''}">
-            ${label}
-          </button>
-        `).join('')}
+          ['Hero','hero','fa-heading'],
+          ['Intent','intent','fa-th-large'],
+          ['Buckets & Families','buckets','fa-sitemap'],
+          ['Industries','industries','fa-industry'],
+          ['Products','products','fa-box'],
+          ['Ecosystem','ecosystem','fa-circle-nodes'],
+          ['Dashboard','dashboard','fa-chart-pie'],
+          ['Cases','cases','fa-file-lines'],
+          ['Pricing','pricing','fa-tags'],
+          ['Academy','academy','fa-graduation-cap'],
+          ['Contact','contact','fa-envelope']
+        ].map(([label, key, icon]) => {
+          const isActive = activeTab === key;
+          return `
+            <button type="button" class="btn btn-xs hc-tab-btn" data-tab="${key}"
+              style="border-radius:9px;padding:8px 14px;font-size:.78rem;display:inline-flex;align-items:center;gap:6px;
+                ${isActive
+                  ? 'background:var(--accent-blue);color:#fff;border-color:var(--accent-blue);box-shadow:0 4px 12px -2px rgba(34,103,238,.4);'
+                  : 'background:transparent;border-color:transparent;'}">
+              <i class="fa-solid ${icon}" style="font-size:.72rem;"></i>
+              ${label}
+            </button>
+          `;
+        }).join('')}
       </div>
 
       <div id="hc-panels"></div>
     </div>
 
     <!-- Industry editor slide-in panel -->
-    <div id="hc-industry-panel" style="display:none;position:fixed;top:0;right:0;bottom:0;width:600px;max-width:100vw;
-      background:var(--bg-elev-1);border-left:1px solid var(--border-color);z-index:9999;overflow-y:auto;
-      box-shadow:-10px 0 40px rgba(0,0,0,.4);">
+    <div id="hc-industry-panel" style="display:none;position:fixed;top:0;right:0;bottom:0;width:640px;max-width:100vw;
+      background:var(--bg-elev-1);border-left:1px solid var(--border-color);z-index:9999;display:none;
+      flex-direction:column;box-shadow:-20px 0 60px rgba(0,0,0,.4);">
     </div>
-    <div id="hc-industry-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9998;"></div>
+    <div id="hc-industry-backdrop" style="display:none;position:fixed;inset:0;background:rgba(10,25,47,.6);z-index:9998;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);"></div>
+
+    <!-- Generic modal host (for bucket/family editors) -->
+    <div id="hc-modal-host"></div>
   `;
 
   renderPanels();
@@ -129,14 +184,17 @@ export function renderHomeContent() {
   /* Tab switching */
   host.querySelectorAll('.hc-tab-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
+      D.state._hce.activeTab = btn.dataset.tab;
       host.querySelectorAll('.hc-tab-btn').forEach(b => {
         b.style.background = '';
         b.style.color = '';
         b.style.borderColor = '';
+        b.style.boxShadow = '';
       });
       btn.style.background = 'var(--accent-blue)';
       btn.style.color = '#fff';
       btn.style.borderColor = 'var(--accent-blue)';
+      btn.style.boxShadow = '0 4px 12px -2px rgba(34,103,238,.4)';
       host.querySelectorAll('[data-panel]').forEach((p) => {
         p.style.display = p.dataset.panel === btn.dataset.tab ? 'block' : 'none';
       });
@@ -144,6 +202,11 @@ export function renderHomeContent() {
   });
 
   document.getElementById('hc-save-btn').addEventListener('click', saveAllTextSections);
+
+  /* Restore editor if it was open before tab switch */
+  if (D.state._hce.editorOpenKey) {
+    setTimeout(() => openIndustryEditor(D.state._hce.editorOpenKey, true), 50);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -152,19 +215,20 @@ export function renderHomeContent() {
 function renderPanels() {
   const host = document.getElementById('hc-panels');
   if (!host) return;
+  const activeTab = D.state._hce?.activeTab || 'hero';
 
   host.innerHTML = `
-    <div data-panel="hero" style="display:block;">${renderHeroPanel()}</div>
-    <div data-panel="intent" style="display:none;">${renderIntentPanel()}</div>
-    <div data-panel="buckets" style="display:none;">${renderBucketsFamiliesPanel()}</div>
-    <div data-panel="industries" style="display:none;">${renderIndustriesPanel()}</div>
-    <div data-panel="products" style="display:none;">${renderProductsPanel()}</div>
-    <div data-panel="ecosystem" style="display:none;">${renderStaticPanel('ecosystem')}</div>
-    <div data-panel="dashboard" style="display:none;">${renderStaticPanel('dashboard')}</div>
-    <div data-panel="cases" style="display:none;">${renderStaticPanel('cases')}</div>
-    <div data-panel="pricing" style="display:none;">${renderStaticPanel('pricing')}</div>
-    <div data-panel="academy" style="display:none;">${renderStaticPanel('academy')}</div>
-    <div data-panel="contact" style="display:none;">${renderStaticPanel('contact')}</div>
+    <div data-panel="hero" style="display:${activeTab === 'hero' ? 'block' : 'none'};">${renderHeroPanel()}</div>
+    <div data-panel="intent" style="display:${activeTab === 'intent' ? 'block' : 'none'};">${renderIntentPanel()}</div>
+    <div data-panel="buckets" style="display:${activeTab === 'buckets' ? 'block' : 'none'};">${renderBucketsFamiliesPanel()}</div>
+    <div data-panel="industries" style="display:${activeTab === 'industries' ? 'block' : 'none'};">${renderIndustriesPanel()}</div>
+    <div data-panel="products" style="display:${activeTab === 'products' ? 'block' : 'none'};">${renderProductsPanel()}</div>
+    <div data-panel="ecosystem" style="display:${activeTab === 'ecosystem' ? 'block' : 'none'};">${renderStaticPanel('ecosystem')}</div>
+    <div data-panel="dashboard" style="display:${activeTab === 'dashboard' ? 'block' : 'none'};">${renderStaticPanel('dashboard')}</div>
+    <div data-panel="cases" style="display:${activeTab === 'cases' ? 'block' : 'none'};">${renderStaticPanel('cases')}</div>
+    <div data-panel="pricing" style="display:${activeTab === 'pricing' ? 'block' : 'none'};">${renderStaticPanel('pricing')}</div>
+    <div data-panel="academy" style="display:${activeTab === 'academy' ? 'block' : 'none'};">${renderStaticPanel('academy')}</div>
+    <div data-panel="contact" style="display:${activeTab === 'contact' ? 'block' : 'none'};">${renderStaticPanel('contact')}</div>
   `;
 
   bindBucketsFamiliesPanel();
@@ -173,17 +237,28 @@ function renderPanels() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   PANEL: HERO (unchanged logic, trimmed)
+   PANEL: HERO
    ═══════════════════════════════════════════════════════════════ */
 function renderHeroPanel() {
   const h = (D.state?.data?.homeContent?.hero) || HERO_DEFAULTS;
   return `
-    <div class="hc-card" style="padding:20px;background:var(--bg-elev-1);border-radius:12px;border:1px solid var(--border-color);">
-      <h3 style="margin:0 0 16px;font-size:15px;">Hero</h3>
+    <div style="padding:24px;background:var(--bg-elev-1);border-radius:14px;border:1px solid var(--border-color);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border-color);">
+        <div style="width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--accent-blue),var(--accent-purple,#8B5CF6));display:grid;place-items:center;color:#fff;">
+          <i class="fa-solid fa-heading"></i>
+        </div>
+        <div>
+          <h3 style="margin:0;font-size:16px;">Hero section</h3>
+          <p style="margin:2px 0 0;font-size:.75rem;color:var(--text-muted);">The first thing visitors see.</p>
+        </div>
+      </div>
       ${field('hc-hero-eyebrow', 'Eyebrow', h.eyebrow)}
-      ${field('hc-hero-title1', 'Title line 1', h.titleLine1)}
-      ${field('hc-hero-title2', 'Title line 2', h.titleLine2)}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        ${field('hc-hero-title1', 'Title line 1', h.titleLine1)}
+        ${field('hc-hero-title2', 'Title line 2', h.titleLine2)}
+      </div>
       ${textarea('hc-hero-subtitle', 'Subtitle', h.subtitle)}
+      <h4 style="margin:20px 0 10px;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Call to action buttons</h4>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         ${field('hc-hero-cta1-label', 'Primary CTA label', h.primaryCta?.label || '')}
         ${field('hc-hero-cta1-href',  'Primary CTA href',  h.primaryCta?.href  || '')}
@@ -195,24 +270,35 @@ function renderHeroPanel() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   PANEL: INTENT (unchanged)
+   PANEL: INTENT
    ═══════════════════════════════════════════════════════════════ */
 function renderIntentPanel() {
   const tiles = (D.state?.data?.homeContent?.intentTiles) || INTENT_DEFAULTS;
   return `
-    <div class="hc-card" style="padding:20px;background:var(--bg-elev-1);border-radius:12px;border:1px solid var(--border-color);">
-      <h3 style="margin:0 0 16px;font-size:15px;">Intent Router — 4 tiles</h3>
-      ${tiles.map((t, i) => `
-        <div class="hc-card" style="padding:14px;background:var(--bg-card-solid);border-radius:10px;margin-bottom:10px;border:1px solid var(--border-color);">
-          <strong style="font-size:.82rem;color:var(--accent-blue);">Tile ${i + 1}</strong>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">
+    <div style="padding:24px;background:var(--bg-elev-1);border-radius:14px;border:1px solid var(--border-color);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border-color);">
+        <div style="width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--accent-blue),var(--accent-purple,#8B5CF6));display:grid;place-items:center;color:#fff;">
+          <i class="fa-solid fa-th-large"></i>
+        </div>
+        <div>
+          <h3 style="margin:0;font-size:16px;">Intent router</h3>
+          <p style="margin:2px 0 0;font-size:.75rem;color:var(--text-muted);">The four big cards below the hero.</p>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        ${tiles.map((t, i) => `
+          <div style="padding:16px;background:var(--bg-card-solid);border-radius:10px;border:1px solid var(--border-color);">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+              <span style="width:28px;height:28px;border-radius:6px;background:var(--accent-blue);color:#fff;display:grid;place-items:center;font-size:.7rem;font-weight:700;">${i + 1}</span>
+              <strong style="font-size:.88rem;">Tile ${i + 1}</strong>
+            </div>
             ${field(`hc-intent-${i}-title`, 'Title',       t.title)}
             ${field(`hc-intent-${i}-icon`,  'Icon class',  t.icon)}
             ${field(`hc-intent-${i}-desc`,  'Description', t.desc)}
             ${field(`hc-intent-${i}-href`,  'Link',        t.href)}
           </div>
-        </div>
-      `).join('')}
+        `).join('')}
+      </div>
     </div>
   `;
 }
@@ -229,34 +315,46 @@ function renderBucketsFamiliesPanel() {
     .sort((a, b) => (Number(a.order) || 999) - (Number(b.order) || 999));
 
   return `
-    <div class="hc-card" style="padding:20px;background:var(--bg-elev-1);border-radius:12px;border:1px solid var(--border-color);margin-bottom:16px;">
-      <h3 style="margin:0 0 16px;font-size:15px;">Tour meta</h3>
+    <div style="padding:24px;background:var(--bg-elev-1);border-radius:14px;border:1px solid var(--border-color);margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border-color);">
+        <div style="width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--accent-blue),var(--accent-purple,#8B5CF6));display:grid;place-items:center;color:#fff;">
+          <i class="fa-solid fa-message"></i>
+        </div>
+        <div>
+          <h3 style="margin:0;font-size:16px;">Tour intro text</h3>
+          <p style="margin:2px 0 0;font-size:.75rem;color:var(--text-muted);">Appears above the tour on the landing page.</p>
+        </div>
+      </div>
       ${field('hc-tour-meta-eyebrow', 'Eyebrow', meta.eyebrow || '')}
       ${field('hc-tour-meta-heading', 'Heading', meta.heading || '')}
       ${textarea('hc-tour-meta-sub', 'Subtitle', meta.sub || '')}
       <button type="button" class="btn btn-outline btn-sm" id="hc-save-tour-meta" style="margin-top:8px;">
-        <i class="fa-solid fa-check"></i> Save tour meta
+        <i class="fa-solid fa-check"></i> Save tour intro
       </button>
     </div>
 
-    <div class="hc-card" style="padding:20px;background:var(--bg-elev-1);border-radius:12px;border:1px solid var(--border-color);">
+    <div style="padding:24px;background:var(--bg-elev-1);border-radius:14px;border:1px solid var(--border-color);">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
-        <h3 style="margin:0;font-size:15px;">Buckets (${bucketList.length})</h3>
-        <button type="button" class="btn btn-primary btn-sm" id="hc-add-bucket">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--accent-blue),var(--accent-purple,#8B5CF6));display:grid;place-items:center;color:#fff;">
+            <i class="fa-solid fa-sitemap"></i>
+          </div>
+          <div>
+            <h3 style="margin:0;font-size:16px;">Buckets (${bucketList.length})</h3>
+            <p style="margin:2px 0 0;font-size:.75rem;color:var(--text-muted);">Top-level tour questions ("What are you trying to do?").</p>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" id="hc-add-bucket" style="padding:10px 16px;">
           <i class="fa-solid fa-plus"></i> Add bucket
         </button>
       </div>
-      <p style="margin:0 0 16px;font-size:.82rem;color:var(--text-muted);">
-        A bucket is a top-level tour tab ("Run my business"). Each bucket contains families,
-        each family contains industries.
-      </p>
       <div id="hc-bucket-list">
-        ${bucketList.length === 0 ? `
-          <div style="padding:32px;text-align:center;color:var(--text-muted);background:var(--bg-card-solid);border:1px dashed var(--border-color);border-radius:10px;">
-            <i class="fa-solid fa-inbox" style="font-size:32px;margin-bottom:8px;opacity:.5;"></i>
-            <p style="margin:0;">No buckets yet. Click <strong>Add bucket</strong> to begin.</p>
-          </div>
-        ` : bucketList.map(b => renderBucketCard(b, families)).join('')}
+        ${bucketList.length === 0 ? emptyState({
+          icon: 'fa-layer-group',
+          title: 'No buckets yet',
+          text: 'Buckets are the first thing visitors see in the tour. Start with something like "Run my business".',
+          action: { label: 'Add your first bucket', id: 'hc-add-bucket-empty' }
+        }) : bucketList.map(b => renderBucketCard(b, families)).join('')}
       </div>
     </div>
   `;
@@ -269,50 +367,52 @@ function renderBucketCard(bucket, allFamilies) {
 
   return `
     <div class="hc-bucket-card" data-bucket-key="${escAttr(bucket.key)}"
-         style="padding:16px;background:var(--bg-card-solid);border:1px solid var(--border-color);border-radius:10px;margin-bottom:12px;">
+         style="padding:18px;background:var(--bg-card-solid);border:1px solid var(--border-color);border-radius:12px;margin-bottom:12px;transition:border-color 0.15s;">
 
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px;">
-        <div style="flex:1;">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-            <i class="${escAttr(bucket.icon || 'fa-solid fa-cube')}" style="color:${escAttr(bucket.color || '#2267EE')};font-size:20px;"></i>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px;">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap;">
+            <span style="width:36px;height:36px;border-radius:9px;background:${escAttr(bucket.color || '#2267EE')}22;color:${escAttr(bucket.color || '#2267EE')};display:grid;place-items:center;flex-shrink:0;">
+              <i class="${escAttr(bucket.icon || 'fa-solid fa-cube')}" style="font-size:16px;"></i>
+            </span>
             <strong style="font-size:1rem;">${escHtml(bucket.name || '(unnamed)')}</strong>
-            <code style="font-size:.72rem;color:var(--text-muted);background:var(--bg-elev-2);padding:2px 6px;border-radius:4px;">${escHtml(bucket.key || '')}</code>
+            <code style="font-size:.7rem;color:var(--text-muted);background:var(--bg-elev-2);padding:2px 8px;border-radius:5px;font-family:monospace;">${escHtml(bucket.key || '')}</code>
           </div>
-          <p style="margin:0;font-size:.82rem;color:var(--text-muted);">${escHtml(bucket.desc || '')}</p>
+          <p style="margin:0;font-size:.82rem;color:var(--text-muted);line-height:1.5;">${escHtml(bucket.desc || '')}</p>
         </div>
-        <div style="display:flex;gap:4px;">
-          <button type="button" class="btn btn-outline btn-xs" data-edit-bucket="${escAttr(bucket.key)}">
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button type="button" class="btn btn-outline btn-xs" data-edit-bucket="${escAttr(bucket.key)}" title="Edit bucket" style="padding:8px 10px;">
             <i class="fa-solid fa-pen"></i>
           </button>
-          <button type="button" class="btn btn-danger btn-xs" data-delete-bucket="${escAttr(bucket.key)}">
+          <button type="button" class="btn btn-danger btn-xs" data-delete-bucket="${escAttr(bucket.key)}" title="Delete bucket" style="padding:8px 10px;">
             <i class="fa-solid fa-trash"></i>
           </button>
         </div>
       </div>
 
-      <div style="padding:12px;background:var(--bg-elev-2);border-radius:8px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <strong style="font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);">
-            Families in this bucket (${familiesInBucket.length})
+      <div style="padding:14px;background:var(--bg-elev-2);border-radius:10px;border:1px solid var(--border-color);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <strong style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">
+            Families (${familiesInBucket.length})
           </strong>
-          <button type="button" class="btn btn-outline btn-xs" data-add-family-in="${escAttr(bucket.key)}">
+          <button type="button" class="btn btn-outline btn-xs" data-add-family-in="${escAttr(bucket.key)}" style="padding:6px 10px;">
             <i class="fa-solid fa-plus"></i> Add family
           </button>
         </div>
         ${familiesInBucket.length === 0 ? `
           <p style="margin:0;font-size:.78rem;color:var(--text-muted);font-style:italic;">No families yet.</p>
         ` : familiesInBucket.map(f => `
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg-card-solid);border-radius:6px;margin-bottom:4px;">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <i class="${escAttr(f.icon || 'fa-solid fa-folder')}" style="color:${escAttr(bucket.color || '#2267EE')};font-size:14px;"></i>
-              <span style="font-size:.85rem;">${escHtml(f.name || '(unnamed)')}</span>
-              <code style="font-size:.68rem;color:var(--text-muted);">${escHtml(f.key || '')}</code>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg-card-solid);border-radius:8px;margin-bottom:4px;border:1px solid var(--border-color);">
+            <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+              <i class="${escAttr(f.icon || 'fa-solid fa-folder')}" style="color:${escAttr(bucket.color || '#2267EE')};font-size:14px;flex-shrink:0;"></i>
+              <span style="font-size:.85rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(f.name || '(unnamed)')}</span>
+              <code style="font-size:.68rem;color:var(--text-muted);font-family:monospace;">${escHtml(f.key || '')}</code>
             </div>
-            <div style="display:flex;gap:4px;">
-              <button type="button" class="btn btn-outline btn-xs" data-edit-family="${escAttr(f.key)}" title="Edit">
+            <div style="display:flex;gap:4px;flex-shrink:0;">
+              <button type="button" class="btn btn-outline btn-xs" data-edit-family="${escAttr(f.key)}" title="Edit family" style="padding:6px 8px;">
                 <i class="fa-solid fa-pen"></i>
               </button>
-              <button type="button" class="btn btn-danger btn-xs" data-delete-family="${escAttr(f.key)}" title="Delete">
+              <button type="button" class="btn btn-danger btn-xs" data-delete-family="${escAttr(f.key)}" title="Delete family" style="padding:6px 8px;">
                 <i class="fa-solid fa-trash"></i>
               </button>
             </div>
@@ -333,7 +433,7 @@ function bindBucketsFamiliesPanel() {
     };
     try {
       await D.set(D.ref(D.db, D.P(TOUR_META_PATH)), meta);
-      toast('Tour meta saved.', 'success');
+      toast('Tour intro saved.', 'success');
     } catch (e) {
       toast('Save failed: ' + e.message, 'error');
     }
@@ -341,6 +441,7 @@ function bindBucketsFamiliesPanel() {
 
   /* Add bucket */
   document.getElementById('hc-add-bucket')?.addEventListener('click', () => openBucketEditor(null));
+  document.getElementById('hc-add-bucket-empty')?.addEventListener('click', () => openBucketEditor(null));
 
   /* Edit / Delete bucket */
   document.querySelectorAll('[data-edit-bucket]').forEach(btn => {
@@ -362,42 +463,140 @@ function bindBucketsFamiliesPanel() {
   });
 }
 
-/* ── Bucket editor — simple prompt-based (we keep it lightweight) ── */
-async function openBucketEditor(key) {
+/* ═══════════════════════════════════════════════════════════════
+   BUCKET EDITOR MODAL
+   ═══════════════════════════════════════════════════════════════ */
+function openBucketEditor(key) {
   const existing = key
     ? flattenNode(D.state?.data?.homeContent?.tour?.buckets)[key] || {}
     : {};
+  const isNew = !key;
 
-  const name  = prompt('Bucket name:', existing.name || '');
-  if (name === null) return;
-  const newKey = key || (prompt('Bucket key (lowercase, no spaces):', (name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')) || '');
-  if (!newKey) { toast('Key required.', 'error'); return; }
-  const desc  = prompt('Description:', existing.desc || '') || '';
-  const icon  = prompt('Icon class (e.g. fa-briefcase):', existing.icon || 'fa-briefcase') || 'fa-briefcase';
-  const color = prompt('Color hex:', existing.color || '#2267EE') || '#2267EE';
-  const order = parseInt(prompt('Sort order:', String(existing.order || 99)), 10) || 99;
+  openModal({
+    id: 'hc-bucket-editor-modal',
+    icon: 'fa-layer-group',
+    title: isNew ? 'Add bucket' : `Edit "${existing.name || key}"`,
+    body: `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        ${formField('hc-bucket-name', 'Name *', existing.name || '', 'e.g. Run my business')}
+        ${formField('hc-bucket-key', 'Key *', existing.key || key || '', 'e.g. run', !isNew)}
+      </div>
+      ${formTextarea('hc-bucket-desc', 'Description', existing.desc || '', 'What does this bucket cover?')}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        ${iconPickerField('hc-bucket-icon', 'Icon', existing.icon || 'fa-briefcase')}
+        ${formField('hc-bucket-order', 'Sort order', String(existing.order || 1))}
+      </div>
+      ${colorPickerField('hc-bucket-color', 'Color', existing.color || '#2267EE')}
+    `,
+    footer: `
+      <button type="button" class="btn btn-outline" data-modal-cancel>Cancel</button>
+      <button type="button" class="btn btn-primary" data-modal-save>
+        <i class="fa-solid fa-check"></i> ${isNew ? 'Create bucket' : 'Save changes'}
+      </button>
+    `,
+    onSave: async () => {
+      const name = val('hc-bucket-name');
+      const keyVal = val('hc-bucket-key');
+      if (!name) { toast('Name is required.', 'error'); return; }
+      if (!keyVal || !/^[a-z0-9-]+$/.test(keyVal)) { toast('Key must be lowercase letters, numbers, hyphens.', 'error'); return; }
 
-  const bucket = { key: newKey, name, desc, icon, color, order };
-  try {
-    await D.set(D.ref(D.db, `${D.P(BUCKETS_PATH)}/${newKey}`), bucket);
-    if (!D.state.data.homeContent) D.state.data.homeContent = {};
-    if (!D.state.data.homeContent.tour) D.state.data.homeContent.tour = {};
-    if (!D.state.data.homeContent.tour.buckets) D.state.data.homeContent.tour.buckets = {};
-    D.state.data.homeContent.tour.buckets[newKey] = bucket;
-    toast(`Bucket "${name}" saved.`, 'success');
-    renderPanels();
-  } catch (e) {
-    toast('Save failed: ' + e.message, 'error');
+      const bucket = {
+        key: keyVal,
+        name,
+        desc: val('hc-bucket-desc'),
+        icon: val('hc-bucket-icon') || 'fa-briefcase',
+        color: val('hc-bucket-color') || '#2267EE',
+        order: parseInt(val('hc-bucket-order'), 10) || 1
+      };
+      await D.set(D.ref(D.db, `${D.P(BUCKETS_PATH)}/${keyVal}`), bucket);
+      if (!D.state.data.homeContent) D.state.data.homeContent = {};
+      if (!D.state.data.homeContent.tour) D.state.data.homeContent.tour = {};
+      if (!D.state.data.homeContent.tour.buckets) D.state.data.homeContent.tour.buckets = {};
+      D.state.data.homeContent.tour.buckets[keyVal] = bucket;
+      closeModal();
+      toast(`Bucket "${name}" saved.`, 'success');
+      renderPanels();
+      document.querySelectorAll('.hc-tab-btn[data-tab="buckets"]').forEach(b => b.click());
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FAMILY EDITOR MODAL
+   ═══════════════════════════════════════════════════════════════ */
+function openFamilyEditor(key, presetBucketKey) {
+  const existing = key
+    ? flattenNode(D.state?.data?.homeContent?.tour?.families)[key] || {}
+    : {};
+  const buckets = Object.values(flattenNode(D.state?.data?.homeContent?.tour?.buckets))
+    .sort((a, b) => (Number(a.order) || 999) - (Number(b.order) || 999));
+
+  if (!buckets.length) {
+    toast('Create a bucket first.', 'warning');
+    return;
   }
+
+  const currentBucket = existing.bucket || presetBucketKey || buckets[0].key;
+  const isNew = !key;
+
+  openModal({
+    id: 'hc-family-editor-modal',
+    icon: 'fa-folder',
+    title: isNew ? 'Add family' : `Edit "${existing.name || key}"`,
+    body: `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        ${formField('hc-family-name', 'Name *', existing.name || '', 'e.g. Core business systems')}
+        ${formField('hc-family-key', 'Key *', existing.key || key || '', 'e.g. core', !isNew)}
+      </div>
+      ${formTextarea('hc-family-desc', 'Description', existing.desc || '', 'What is this family about?')}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        ${formSelect('hc-family-bucket', 'Bucket *', buckets.map(b => ({ value: b.key, label: b.name || b.key })), currentBucket)}
+        ${formField('hc-family-order', 'Sort order', String(existing.order || 1))}
+      </div>
+      ${iconPickerField('hc-family-icon', 'Icon', existing.icon || 'fa-cube')}
+    `,
+    footer: `
+      <button type="button" class="btn btn-outline" data-modal-cancel>Cancel</button>
+      <button type="button" class="btn btn-primary" data-modal-save>
+        <i class="fa-solid fa-check"></i> ${isNew ? 'Create family' : 'Save changes'}
+      </button>
+    `,
+    onSave: async () => {
+      const name = val('hc-family-name');
+      const keyVal = val('hc-family-key');
+      if (!name) { toast('Name is required.', 'error'); return; }
+      if (!keyVal || !/^[a-z0-9-]+$/.test(keyVal)) { toast('Key must be lowercase letters, numbers, hyphens.', 'error'); return; }
+
+      const family = {
+        key: keyVal,
+        name,
+        desc: val('hc-family-desc'),
+        icon: val('hc-family-icon') || 'fa-cube',
+        bucket: val('hc-family-bucket'),
+        order: parseInt(val('hc-family-order'), 10) || 1
+      };
+      await D.set(D.ref(D.db, `${D.P(FAMILIES_PATH)}/${keyVal}`), family);
+      if (!D.state.data.homeContent.tour.families) D.state.data.homeContent.tour.families = {};
+      D.state.data.homeContent.tour.families[keyVal] = family;
+      closeModal();
+      toast(`Family "${name}" saved.`, 'success');
+      renderPanels();
+      document.querySelectorAll('.hc-tab-btn[data-tab="buckets"]').forEach(b => b.click());
+    }
+  });
 }
 
 async function deleteBucket(key) {
-  if (!confirm(`Delete bucket "${key}"? Industries assigned to it will keep their bucket reference (you'll need to reassign them).`)) return;
+  const ok = await confirmModal({
+    title: 'Delete bucket?',
+    text: `"${key}" will be removed. Industries assigned to it will need to be reassigned manually.`,
+    confirmLabel: 'Delete bucket',
+    danger: true
+  });
+  if (!ok) return;
   try {
     await D.set(D.ref(D.db, `${D.P(BUCKETS_PATH)}/${key}`), null);
-    if (D.state.data.homeContent?.tour?.buckets) {
-      delete D.state.data.homeContent.tour.buckets[key];
-    }
+    if (D.state.data.homeContent?.tour?.buckets) delete D.state.data.homeContent.tour.buckets[key];
     toast('Bucket deleted.', 'success');
     renderPanels();
   } catch (e) {
@@ -405,42 +604,17 @@ async function deleteBucket(key) {
   }
 }
 
-async function openFamilyEditor(key, bucketKey) {
-  const existing = key
-    ? flattenNode(D.state?.data?.homeContent?.tour?.families)[key] || {}
-    : { bucket: bucketKey };
-
-  const buckets = Object.values(flattenNode(D.state?.data?.homeContent?.tour?.buckets));
-  const bucketList = buckets.map(b => `${b.key} (${b.name})`).join('\n');
-
-  const name  = prompt('Family name:', existing.name || '');
-  if (name === null) return;
-  const newKey = key || (prompt('Family key (lowercase, no spaces):', (name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')) || '');
-  if (!newKey) { toast('Key required.', 'error'); return; }
-  const desc  = prompt('Description:', existing.desc || '') || '';
-  const icon  = prompt('Icon class:', existing.icon || 'fa-cube') || 'fa-cube';
-  const bucket = prompt(`Bucket key (existing buckets:\n${bucketList}):`, existing.bucket || bucketKey || '') || bucketKey;
-  const order = parseInt(prompt('Sort order:', String(existing.order || 99)), 10) || 99;
-
-  const family = { key: newKey, name, desc, icon, bucket, order };
-  try {
-    await D.set(D.ref(D.db, `${D.P(FAMILIES_PATH)}/${newKey}`), family);
-    if (!D.state.data.homeContent.tour.families) D.state.data.homeContent.tour.families = {};
-    D.state.data.homeContent.tour.families[newKey] = family;
-    toast(`Family "${name}" saved.`, 'success');
-    renderPanels();
-  } catch (e) {
-    toast('Save failed: ' + e.message, 'error');
-  }
-}
-
 async function deleteFamily(key) {
-  if (!confirm(`Delete family "${key}"?`)) return;
+  const ok = await confirmModal({
+    title: 'Delete family?',
+    text: `"${key}" will be removed. Industries assigned to it will need to be reassigned manually.`,
+    confirmLabel: 'Delete family',
+    danger: true
+  });
+  if (!ok) return;
   try {
     await D.set(D.ref(D.db, `${D.P(FAMILIES_PATH)}/${key}`), null);
-    if (D.state.data.homeContent?.tour?.families) {
-      delete D.state.data.homeContent.tour.families[key];
-    }
+    if (D.state.data.homeContent?.tour?.families) delete D.state.data.homeContent.tour.families[key];
     toast('Family deleted.', 'success');
     renderPanels();
   } catch (e) {
@@ -457,36 +631,45 @@ function renderIndustriesPanel() {
     .sort((a, b) => (Number(a.order) || 999) - (Number(b.order) || 999));
 
   return `
-    <div class="hc-card" style="padding:20px;background:var(--bg-elev-1);border-radius:12px;border:1px solid var(--border-color);">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
-        <h3 style="margin:0;font-size:15px;">Industries (${list.length})</h3>
-        <button type="button" class="btn btn-primary btn-sm" id="hc-add-industry">
+    <div style="padding:24px;background:var(--bg-elev-1);border-radius:14px;border:1px solid var(--border-color);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--accent-blue),var(--accent-purple,#8B5CF6));display:grid;place-items:center;color:#fff;">
+            <i class="fa-solid fa-industry"></i>
+          </div>
+          <div>
+            <h3 style="margin:0;font-size:16px;">Industries (${list.length})</h3>
+            <p style="margin:2px 0 0;font-size:.75rem;color:var(--text-muted);">Drive the tour AND the marketplace categories.</p>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" id="hc-add-industry" style="padding:10px 16px;">
           <i class="fa-solid fa-plus"></i> Add industry
         </button>
       </div>
 
-      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
-        <input type="text" id="hc-ind-search" placeholder="🔍 Search industries…"
-               style="flex:1;min-width:200px;padding:8px 12px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.85rem;"/>
-        <select id="hc-ind-filter-bucket" style="padding:8px 12px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.85rem;">
-          <option value="">All buckets</option>
-          ${Object.values(flattenNode(D.state?.data?.homeContent?.tour?.buckets)).map(b => `<option value="${escAttr(b.key)}">${escHtml(b.name || b.key)}</option>`).join('')}
-        </select>
-        <select id="hc-ind-filter-family" style="padding:8px 12px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.85rem;">
-          <option value="">All families</option>
-          ${Object.values(flattenNode(D.state?.data?.homeContent?.tour?.families)).map(f => `<option value="${escAttr(f.key)}">${escHtml(f.name || f.key)}</option>`).join('')}
-        </select>
-      </div>
+      ${list.length === 0 ? emptyState({
+        icon: 'fa-industry',
+        title: 'No industries yet',
+        text: 'Industries power both the tour and the marketplace categories. Start with one — like "Retail & Wholesale".',
+        action: { label: 'Add your first industry', id: 'hc-add-industry-empty' }
+      }) : `
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+          <input type="text" id="hc-ind-search" placeholder="🔍 Search industries…"
+                 style="flex:1;min-width:200px;padding:10px 14px;border-radius:10px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.85rem;font-family:inherit;"/>
+          <select id="hc-ind-filter-bucket" style="padding:10px 14px;border-radius:10px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.85rem;font-family:inherit;">
+            <option value="">All buckets</option>
+            ${Object.values(flattenNode(D.state?.data?.homeContent?.tour?.buckets)).map(b => `<option value="${escAttr(b.key)}">${escHtml(b.name || b.key)}</option>`).join('')}
+          </select>
+          <select id="hc-ind-filter-family" style="padding:10px 14px;border-radius:10px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.85rem;font-family:inherit;">
+            <option value="">All families</option>
+            ${Object.values(flattenNode(D.state?.data?.homeContent?.tour?.families)).map(f => `<option value="${escAttr(f.key)}">${escHtml(f.name || f.key)}</option>`).join('')}
+          </select>
+        </div>
 
-      <div id="hc-industry-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;">
-        ${list.length === 0 ? `
-          <div style="grid-column:1/-1;padding:48px;text-align:center;color:var(--text-muted);background:var(--bg-card-solid);border:1px dashed var(--border-color);border-radius:10px;">
-            <i class="fa-solid fa-industry" style="font-size:48px;margin-bottom:12px;opacity:.4;"></i>
-            <p style="margin:0 0 8px;">No industries yet.</p>
-            <p style="margin:0;font-size:.82rem;">Click <strong>Add industry</strong> to start building your catalog.</p>
-          </div>
-        ` : list.map(i => renderIndustryCard(i)).join('')}
-      </div>
+        <div id="hc-industry-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;">
+          ${list.map(i => renderIndustryCard(i)).join('')}
+        </div>
+      `}
     </div>
   `;
 }
@@ -499,35 +682,38 @@ function renderIndustryCard(ind) {
          data-search="${escAttr((ind.name || '').toLowerCase() + ' ' + (ind.marketCategory || '').toLowerCase())}"
          data-bucket="${escAttr(ind.bucket || '')}"
          data-family="${escAttr(ind.family || '')}"
-         style="padding:12px;background:var(--bg-card-solid);border:1px solid var(--border-color);border-radius:10px;display:flex;flex-direction:column;gap:8px;">
+         style="padding:0;background:var(--bg-card-solid);border:1px solid var(--border-color);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:all .15s;">
 
-      <div style="width:100%;height:100px;border-radius:6px;overflow:hidden;background:${color}22;display:flex;align-items:center;justify-content:center;">
+      <div style="width:100%;height:120px;overflow:hidden;background:${color}15;display:flex;align-items:center;justify-content:center;position:relative;">
         ${image
           ? `<img src="${escAttr(image)}" alt="${escAttr(ind.name || '')}" style="width:100%;height:100%;object-fit:cover;"/>`
-          : `<i class="${escAttr(ind.icon || 'fa-solid fa-cube')}" style="font-size:40px;color:${color};"></i>`}
+          : `<i class="${escAttr(ind.icon || 'fa-solid fa-cube')}" style="font-size:44px;color:${color};"></i>`}
+        ${!ind.active ? `<span style="position:absolute;top:8px;right:8px;background:var(--accent-red);color:#fff;font-size:.65rem;font-weight:700;letter-spacing:.06em;padding:3px 8px;border-radius:6px;">INACTIVE</span>` : ''}
       </div>
 
-      <div>
-        <div style="display:flex;align-items:center;gap:6px;">
-          <span style="font-size:18px;">${escHtml(ind.emoji || '📦')}</span>
-          <strong style="font-size:.88rem;flex:1;">${escHtml(ind.name || '(unnamed)')}</strong>
+      <div style="padding:14px;flex:1;display:flex;flex-direction:column;gap:8px;">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+            <span style="font-size:18px;line-height:1;">${escHtml(ind.emoji || '📦')}</span>
+            <strong style="font-size:.92rem;line-height:1.2;">${escHtml(ind.name || '(unnamed)')}</strong>
+          </div>
+          <div style="font-size:.7rem;color:var(--text-muted);">${escHtml(ind.marketCategory || '')}</div>
         </div>
-        <div style="font-size:.7rem;color:var(--text-muted);margin-top:2px;">${escHtml(ind.marketCategory || '')}</div>
-      </div>
 
-      <div style="display:flex;gap:6px;align-items:center;font-size:.68rem;color:var(--text-muted);">
-        <code>${escHtml(ind.bucket || '?')}</code> ›
-        <code>${escHtml(ind.family || '?')}</code>
-        ${!ind.active ? '<span style="color:var(--accent-red);margin-left:auto;">INACTIVE</span>' : ''}
-      </div>
+        <div style="display:flex;gap:4px;align-items:center;font-size:.68rem;color:var(--text-muted);font-family:monospace;">
+          <span>${escHtml(ind.bucket || '?')}</span>
+          <span>›</span>
+          <span>${escHtml(ind.family || '?')}</span>
+        </div>
 
-      <div style="display:flex;gap:6px;">
-        <button type="button" class="btn btn-outline btn-xs" data-edit-industry="${escAttr(ind.key)}" style="flex:1;">
-          <i class="fa-solid fa-pen"></i> Edit
-        </button>
-        <button type="button" class="btn btn-danger btn-xs" data-delete-industry="${escAttr(ind.key)}">
-          <i class="fa-solid fa-trash"></i>
-        </button>
+        <div style="display:flex;gap:6px;margin-top:auto;">
+          <button type="button" class="btn btn-outline btn-xs" data-edit-industry="${escAttr(ind.key)}" style="flex:1;padding:8px 10px;justify-content:center;">
+            <i class="fa-solid fa-pen"></i> Edit
+          </button>
+          <button type="button" class="btn btn-danger btn-xs" data-delete-industry="${escAttr(ind.key)}" style="padding:8px 10px;">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
       </div>
     </div>
   `;
@@ -535,6 +721,7 @@ function renderIndustryCard(ind) {
 
 function bindIndustriesPanel() {
   document.getElementById('hc-add-industry')?.addEventListener('click', () => openIndustryEditor(null));
+  document.getElementById('hc-add-industry-empty')?.addEventListener('click', () => openIndustryEditor(null));
 
   document.querySelectorAll('[data-edit-industry]').forEach(btn => {
     btn.addEventListener('click', () => openIndustryEditor(btn.dataset.editIndustry));
@@ -543,7 +730,6 @@ function bindIndustriesPanel() {
     btn.addEventListener('click', () => deleteIndustry(btn.dataset.deleteIndustry));
   });
 
-  /* Live filter */
   const search  = document.getElementById('hc-ind-search');
   const fbucket = document.getElementById('hc-ind-filter-bucket');
   const ffamily = document.getElementById('hc-ind-filter-family');
@@ -566,9 +752,9 @@ function bindIndustriesPanel() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   INDUSTRY EDITOR PANEL (slide-in)
+   INDUSTRY EDITOR (slide-in panel, persistent)
    ═══════════════════════════════════════════════════════════════ */
-function openIndustryEditor(key) {
+function openIndustryEditor(key, isRestore = false) {
   const existing = key
     ? flattenNode(D.state?.data?.industries)[key] || {}
     : {
@@ -584,205 +770,270 @@ function openIndustryEditor(key) {
   const backdrop = document.getElementById('hc-industry-backdrop');
   if (!panel || !backdrop) return;
 
-  panel.style.display = 'block';
+  /* Save state so the panel reopens after tab switch */
+  D.state._hce.editorOpenKey = key || '__new__';
+  D.state._hce.editorIsDirty = false;
+
+  panel.style.display = 'flex';
   backdrop.style.display = 'block';
 
   const isNew = !key;
   const imageData = existing.image || existing.imageUrl || '';
+  const buckets = Object.values(flattenNode(D.state?.data?.homeContent?.tour?.buckets));
+  const families = Object.values(flattenNode(D.state?.data?.homeContent?.tour?.families));
 
   panel.innerHTML = `
-    <div style="padding:20px;border-bottom:1px solid var(--border-color);position:sticky;top:0;background:var(--bg-elev-1);z-index:10;display:flex;justify-content:space-between;align-items:center;">
-      <h3 style="margin:0;font-size:16px;">${isNew ? 'Add Industry' : 'Edit Industry: ' + escHtml(existing.name || key)}</h3>
-      <button type="button" id="hc-ind-close" style="background:none;border:none;color:var(--text-muted);font-size:24px;cursor:pointer;line-height:1;">×</button>
+    <!-- Sticky header -->
+    <div style="padding:20px 24px;border-bottom:1px solid var(--border-color);background:var(--bg-elev-1);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+        <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--accent-blue),var(--accent-purple,#8B5CF6));display:grid;place-items:center;color:#fff;flex-shrink:0;">
+          <i class="fa-solid fa-industry"></i>
+        </div>
+        <div style="min-width:0;">
+          <h3 style="margin:0;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            ${isNew ? 'Add industry' : escHtml(existing.name || key)}
+          </h3>
+          <p style="margin:2px 0 0;font-size:.72rem;color:var(--text-muted);">
+            ${isNew ? 'New entry' : `<code style="font-family:monospace;">${escHtml(key)}</code>`}
+          </p>
+        </div>
+      </div>
+      <button type="button" id="hc-ind-close"
+        style="background:var(--bg-elev-2);border:1px solid var(--border-color);color:var(--text-muted);width:36px;height:36px;border-radius:9px;cursor:pointer;font-size:18px;display:grid;place-items:center;line-height:1;flex-shrink:0;"
+        title="Close without saving">
+        ×
+      </button>
     </div>
 
-    <div style="padding:20px;">
+    <!-- Scrollable body -->
+    <div style="flex:1;overflow-y:auto;padding:24px;">
 
-      <h4 style="margin:0 0 12px;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Identity</h4>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        ${field('hc-ind-key', 'Key * (lowercase, no spaces)', existing.key || '', isNew ? '' : 'readonly')}
-        ${field('hc-ind-name', 'Name *', existing.name || '')}
-      </div>
-      ${field('hc-ind-marketCategory', 'Market Category * (matches product.category)', existing.marketCategory || '')}
-      <div style="display:grid;grid-template-columns:80px 1fr;gap:12px;">
-        ${field('hc-ind-emoji', 'Emoji', existing.emoji || '📦')}
-        ${field('hc-ind-icon', 'Icon class', existing.icon || 'fa-cube')}
-      </div>
-
-      <h4 style="margin:24px 0 12px;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Appearance</h4>
-      <label style="display:block;margin-bottom:8px;">
-        <span style="display:block;font-size:.72rem;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;">Color</span>
-        <div id="hc-ind-palette" style="display:grid;grid-template-columns:repeat(12,1fr);gap:4px;margin-bottom:8px;">
-          ${COLOR_PALETTE.map(c => `
-            <button type="button" class="hc-color-swatch" data-color="${c}"
-              style="background:${c};aspect-ratio:1;border-radius:4px;border:2px solid ${existing.color === c ? '#fff' : 'transparent'};cursor:pointer;padding:0;">
-            </button>
-          `).join('')}
+      <!-- Identity -->
+      <section style="margin-bottom:28px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
+          <i class="fa-solid fa-id-card" style="color:var(--accent-blue);font-size:.85rem;"></i>
+          <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Identity</h4>
         </div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input type="color" id="hc-ind-color-picker" value="${escAttr(existing.color || '#2267EE')}" style="width:40px;height:32px;border:none;background:none;cursor:pointer;"/>
-          <input type="text" id="hc-ind-color" value="${escAttr(existing.color || '#2267EE')}" style="flex:1;padding:8px;border-radius:6px;background:var(--bg-elev-2);border:1px solid var(--border-color);color:var(--text-primary);font-size:.82rem;font-family:monospace;"/>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          ${formField('hc-ind-key', 'Key *', existing.key || '', 'lowercase, no spaces', !isNew)}
+          ${formField('hc-ind-name', 'Name *', existing.name || '', 'e.g. Retail & Wholesale')}
         </div>
-      </label>
-
-      <label style="display:block;margin-top:16px;">
-        <span style="display:block;font-size:.72rem;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;">Image</span>
-        <div id="hc-ind-image-preview" style="width:100%;height:160px;border-radius:8px;background:var(--bg-elev-2);border:1px dashed var(--border-color);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:8px;">
-          ${imageData
-            ? `<img src="${escAttr(imageData)}" style="width:100%;height:100%;object-fit:cover;"/>`
-            : `<span style="color:var(--text-muted);font-size:.82rem;">No image</span>`}
+        ${formField('hc-ind-marketCategory', 'Market Category *', existing.marketCategory || '', 'Must match product.category exactly')}
+        <div style="display:grid;grid-template-columns:90px 1fr;gap:14px;">
+          ${formField('hc-ind-emoji', 'Emoji', existing.emoji || '📦')}
+          ${iconPickerField('hc-ind-icon', 'Icon', existing.icon || 'fa-cube')}
         </div>
-        <input type="file" id="hc-ind-image-file" accept="image/*" style="margin-bottom:8px;font-size:.82rem;"/>
-        <input type="url" id="hc-ind-image-url" placeholder="OR paste image URL" value="${escAttr(existing.imageUrl || '')}" style="width:100%;padding:8px;border-radius:6px;background:var(--bg-elev-2);border:1px solid var(--border-color);color:var(--text-primary);font-size:.82rem;"/>
-        <p style="margin:6px 0 0;font-size:.7rem;color:var(--text-muted);">Uploads auto-resize to max ${MAX_IMAGE_DIM}×${MAX_IMAGE_DIM}px JPEG 80%.</p>
-      </label>
+      </section>
 
-      <h4 style="margin:24px 0 12px;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Placement in tour</h4>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <label style="display:block;">
-          <span style="display:block;font-size:.72rem;font-weight:700;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em;">Bucket *</span>
-          <select id="hc-ind-bucket" style="width:100%;padding:9px 12px;border-radius:8px;background:var(--bg-elev-2);border:1px solid var(--border-color);color:var(--text-primary);font-size:.85rem;">
-            <option value="">— Select bucket —</option>
-            ${Object.values(flattenNode(D.state?.data?.homeContent?.tour?.buckets)).map(b => `
-              <option value="${escAttr(b.key)}" ${existing.bucket === b.key ? 'selected' : ''}>${escHtml(b.name || b.key)}</option>
-            `).join('')}
-          </select>
-        </label>
-        <label style="display:block;">
-          <span style="display:block;font-size:.72rem;font-weight:700;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em;">Family *</span>
-          <select id="hc-ind-family" style="width:100%;padding:9px 12px;border-radius:8px;background:var(--bg-elev-2);border:1px solid var(--border-color);color:var(--text-primary);font-size:.85rem;">
-            <option value="">— Select family —</option>
-            ${Object.values(flattenNode(D.state?.data?.homeContent?.tour?.families)).map(f => `
-              <option value="${escAttr(f.key)}" data-bucket="${escAttr(f.bucket || '')}" ${existing.family === f.key ? 'selected' : ''}>${escHtml(f.name || f.key)}</option>
-            `).join('')}
-          </select>
-        </label>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
-        ${field('hc-ind-order', 'Sort order', String(existing.order || 99))}
-        <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;padding-top:24px;">
-          <input type="checkbox" id="hc-ind-active" ${existing.active !== false ? 'checked' : ''}> Active (visible in tour)
-        </label>
-      </div>
+      <!-- Appearance -->
+      <section style="margin-bottom:28px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
+          <i class="fa-solid fa-palette" style="color:var(--accent-blue);font-size:.85rem;"></i>
+          <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Appearance</h4>
+        </div>
+        ${colorPickerField('hc-ind-color', 'Color', existing.color || '#2267EE')}
+        ${imagePickerField('hc-ind-image', 'Image', imageData)}
+      </section>
 
-      <h4 style="margin:24px 0 12px;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Links</h4>
-      ${field('hc-ind-previewUrl', 'Preview URL (View sample)', existing.previewUrl || '')}
-      ${field('hc-ind-buyUrl', 'Buy URL', existing.buyUrl || '')}
+      <!-- Placement -->
+      <section style="margin-bottom:28px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
+          <i class="fa-solid fa-sitemap" style="color:var(--accent-blue);font-size:.85rem;"></i>
+          <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Placement in tour</h4>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          ${formSelect('hc-ind-bucket', 'Bucket *', buckets.map(b => ({ value: b.key, label: b.name || b.key })), existing.bucket, '— Select bucket —')}
+          ${formSelect('hc-ind-family', 'Family *', families.map(f => ({ value: f.key, label: f.name || f.key, bucket: f.bucket })), existing.family, '— Select family —')}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          ${formField('hc-ind-order', 'Sort order', String(existing.order || 99))}
+          <div style="display:flex;align-items:flex-end;">
+            <label style="display:flex;align-items:center;gap:8px;font-size:.88rem;padding:10px 0;cursor:pointer;">
+              <input type="checkbox" id="hc-ind-active" ${existing.active !== false ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer;"/>
+              Active (visible in tour & marketplace)
+            </label>
+          </div>
+        </div>
+      </section>
 
-      <h4 style="margin:24px 0 12px;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Copy</h4>
-      ${textarea('hc-ind-desc', 'Short description (card)', existing.desc || '')}
-      ${textarea('hc-ind-longDesc', 'Long description (More popup)', existing.longDesc || '')}
+      <!-- Links -->
+      <section style="margin-bottom:28px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
+          <i class="fa-solid fa-link" style="color:var(--accent-blue);font-size:.85rem;"></i>
+          <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Links</h4>
+        </div>
+        ${formField('hc-ind-previewUrl', 'Preview URL', existing.previewUrl || '', 'Opens when "View sample" is clicked')}
+        ${formField('hc-ind-buyUrl', 'Buy URL', existing.buyUrl || '', 'Optional override for "Buy now"')}
+      </section>
 
-      <h4 style="margin:24px 0 12px;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Bullets</h4>
-      <div id="hc-ind-bullets">
-        ${(existing.bullets || []).map((b, i) => bulletRow(b, i)).join('')}
-      </div>
-      <button type="button" class="btn btn-outline btn-xs" id="hc-ind-add-bullet"><i class="fa-solid fa-plus"></i> Add bullet</button>
+      <!-- Copy -->
+      <section style="margin-bottom:28px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
+          <i class="fa-solid fa-align-left" style="color:var(--accent-blue);font-size:.85rem;"></i>
+          <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Copy</h4>
+        </div>
+        ${formTextarea('hc-ind-desc', 'Short description', existing.desc || '', 'Shown on the tour card')}
+        ${formTextarea('hc-ind-longDesc', 'Long description', existing.longDesc || '', 'Shown in the "More" popup')}
+      </section>
 
-      <h4 style="margin:24px 0 12px;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Stats</h4>
-      <div id="hc-ind-stats">
-        ${(existing.stats || []).map((s, i) => statRow(s, i)).join('')}
-      </div>
-      <button type="button" class="btn btn-outline btn-xs" id="hc-ind-add-stat"><i class="fa-solid fa-plus"></i> Add stat</button>
+      <!-- Bullets -->
+      <section style="margin-bottom:28px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
+          <i class="fa-solid fa-list-check" style="color:var(--accent-blue);font-size:.85rem;"></i>
+          <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Bullets</h4>
+        </div>
+        <div id="hc-ind-bullets">
+          ${(existing.bullets || []).map((b) => bulletRow(b)).join('')}
+        </div>
+        <button type="button" class="btn btn-outline btn-xs" id="hc-ind-add-bullet" style="margin-top:8px;">
+          <i class="fa-solid fa-plus"></i> Add bullet
+        </button>
+      </section>
 
-      <h4 style="margin:24px 0 12px;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">What's included</h4>
-      <div id="hc-ind-included">
-        ${(existing.included || []).map((it, i) => includedRow(it, i)).join('')}
-      </div>
-      <button type="button" class="btn btn-outline btn-xs" id="hc-ind-add-included"><i class="fa-solid fa-plus"></i> Add feature</button>
+      <!-- Stats -->
+      <section style="margin-bottom:28px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
+          <i class="fa-solid fa-chart-simple" style="color:var(--accent-blue);font-size:.85rem;"></i>
+          <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Stats</h4>
+        </div>
+        <div id="hc-ind-stats">
+          ${(existing.stats || []).map((s) => statRow(s)).join('')}
+        </div>
+        <button type="button" class="btn btn-outline btn-xs" id="hc-ind-add-stat" style="margin-top:8px;">
+          <i class="fa-solid fa-plus"></i> Add stat
+        </button>
+      </section>
 
-      <h4 style="margin:24px 0 12px;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">FAQs</h4>
-      <div id="hc-ind-faqs">
-        ${(existing.faqs || []).map((f, i) => faqRow(f, i)).join('')}
-      </div>
-      <button type="button" class="btn btn-outline btn-xs" id="hc-ind-add-faq"><i class="fa-solid fa-plus"></i> Add FAQ</button>
+      <!-- Included -->
+      <section style="margin-bottom:28px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
+          <i class="fa-solid fa-circle-check" style="color:var(--accent-blue);font-size:.85rem;"></i>
+          <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">What's included</h4>
+        </div>
+        <div id="hc-ind-included">
+          ${(existing.included || []).map((it) => includedRow(it)).join('')}
+        </div>
+        <button type="button" class="btn btn-outline btn-xs" id="hc-ind-add-included" style="margin-top:8px;">
+          <i class="fa-solid fa-plus"></i> Add feature
+        </button>
+      </section>
+
+      <!-- FAQs -->
+      <section style="margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
+          <i class="fa-solid fa-circle-question" style="color:var(--accent-blue);font-size:.85rem;"></i>
+          <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">FAQs</h4>
+        </div>
+        <div id="hc-ind-faqs">
+          ${(existing.faqs || []).map((f) => faqRow(f)).join('')}
+        </div>
+        <button type="button" class="btn btn-outline btn-xs" id="hc-ind-add-faq" style="margin-top:8px;">
+          <i class="fa-solid fa-plus"></i> Add FAQ
+        </button>
+      </section>
 
     </div>
 
-    <div style="padding:20px;border-top:1px solid var(--border-color);position:sticky;bottom:0;background:var(--bg-elev-1);display:flex;gap:8px;justify-content:flex-end;">
-      ${!isNew ? `<button type="button" class="btn btn-danger" id="hc-ind-delete"><i class="fa-solid fa-trash"></i> Delete</button>` : ''}
+    <!-- Sticky footer -->
+    <div style="padding:16px 24px;border-top:1px solid var(--border-color);background:var(--bg-elev-1);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;">
+      ${!isNew ? `<button type="button" class="btn btn-danger" id="hc-ind-delete" style="margin-right:auto;">
+        <i class="fa-solid fa-trash"></i> Delete
+      </button>` : ''}
       <button type="button" class="btn btn-outline" id="hc-ind-cancel">Cancel</button>
-      <button type="button" class="btn btn-success" id="hc-ind-save"><i class="fa-solid fa-check"></i> Save industry</button>
+      <button type="button" class="btn btn-success" id="hc-ind-save">
+        <i class="fa-solid fa-check"></i> ${isNew ? 'Create industry' : 'Save changes'}
+      </button>
     </div>
   `;
 
-  /* Wire close / cancel / backdrop */
-  const close = () => {
+  /* ── Backdrop click does NOTHING (intentional — prevents data loss) ── */
+  backdrop.onclick = null;
+
+  /* ── Close with unsaved-changes guard ── */
+  const closeEditor = async () => {
+    if (D.state._hce.editorIsDirty) {
+      const ok = await confirmModal({
+        title: 'Discard changes?',
+        text: 'You have unsaved changes. Close anyway?',
+        confirmLabel: 'Discard',
+        danger: true
+      });
+      if (!ok) return;
+    }
     panel.style.display = 'none';
     backdrop.style.display = 'none';
     panel.innerHTML = '';
+    D.state._hce.editorOpenKey = null;
+    D.state._hce.editorIsDirty = false;
   };
-  document.getElementById('hc-ind-close')?.addEventListener('click', close);
-  document.getElementById('hc-ind-cancel')?.addEventListener('click', close);
-  backdrop.addEventListener('click', close, { once: true });
 
-  /* Palette swatches */
-  panel.querySelectorAll('.hc-color-swatch').forEach(sw => {
-    sw.addEventListener('click', () => {
-      panel.querySelectorAll('.hc-color-swatch').forEach(s => s.style.border = '2px solid transparent');
-      sw.style.border = '2px solid #fff';
-      const c = sw.dataset.color;
-      document.getElementById('hc-ind-color').value = c;
-      document.getElementById('hc-ind-color-picker').value = c;
-    });
+  document.getElementById('hc-ind-close')?.addEventListener('click', closeEditor);
+  document.getElementById('hc-ind-cancel')?.addEventListener('click', closeEditor);
+
+  /* ── Mark dirty on any input ── */
+  panel.querySelectorAll('input, textarea, select').forEach(inp => {
+    inp.addEventListener('input', () => { D.state._hce.editorIsDirty = true; });
+    inp.addEventListener('change', () => { D.state._hce.editorIsDirty = true; });
   });
 
-  /* Color picker sync */
-  document.getElementById('hc-ind-color-picker')?.addEventListener('input', (e) => {
-    document.getElementById('hc-ind-color').value = e.target.value;
+  /* ── Color palette ── */
+  bindColorPicker(panel, 'hc-ind-color');
+
+  /* ── Icon picker ── */
+  bindIconPicker(panel, 'hc-ind-icon');
+
+  /* ── Image picker ── */
+  bindImagePicker(panel, 'hc-ind-image', async (base64) => {
+    D.state._hce.uploadedImage = base64;
+    D.state._hce.editorIsDirty = true;
   });
-  document.getElementById('hc-ind-color')?.addEventListener('input', (e) => {
-    const v = e.target.value;
-    if (/^#[0-9a-fA-F]{6}$/.test(v)) {
-      document.getElementById('hc-ind-color-picker').value = v;
+
+  /* ── Family dropdown filters by bucket ── */
+  const bucketSel = document.getElementById('hc-ind-bucket');
+  const familySel = document.getElementById('hc-ind-family');
+  if (bucketSel && familySel) {
+    const applyFamilyFilter = () => {
+      const b = bucketSel.value;
+      const current = familySel.value;
+      let stillVisible = false;
+      Array.from(familySel.options).forEach(opt => {
+        if (!opt.value) return;
+        const optBucket = opt.dataset.bucket || '';
+        const visible = !b || optBucket === b;
+        opt.style.display = visible ? '' : 'none';
+        if (visible && opt.value === current) stillVisible = true;
+      });
+      if (!stillVisible) familySel.value = '';
+    };
+    bucketSel.addEventListener('change', applyFamilyFilter);
+    applyFamilyFilter();
+  }
+
+  /* ── Dynamic row adders ── */
+  const addHandlers = {
+    'hc-ind-add-bullet': () => {
+      document.getElementById('hc-ind-bullets').insertAdjacentHTML('beforeend', bulletRow(''));
+      bindRemoveButtons();
+      D.state._hce.editorIsDirty = true;
+    },
+    'hc-ind-add-stat': () => {
+      document.getElementById('hc-ind-stats').insertAdjacentHTML('beforeend', statRow({ v: '', l: '' }));
+      bindRemoveButtons();
+      D.state._hce.editorIsDirty = true;
+    },
+    'hc-ind-add-included': () => {
+      document.getElementById('hc-ind-included').insertAdjacentHTML('beforeend', includedRow(''));
+      bindRemoveButtons();
+      D.state._hce.editorIsDirty = true;
+    },
+    'hc-ind-add-faq': () => {
+      document.getElementById('hc-ind-faqs').insertAdjacentHTML('beforeend', faqRow({ q: '', a: '' }));
+      bindRemoveButtons();
+      D.state._hce.editorIsDirty = true;
     }
-  });
-
-  /* Image file upload → resize → base64 */
-  document.getElementById('hc-ind-image-file')?.addEventListener('change', async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const base64 = await resizeImageToBase64(file);
-      document.getElementById('hc-ind-image-preview').innerHTML =
-        `<img src="${base64}" style="width:100%;height:100%;object-fit:cover;"/>`;
-      panel.dataset.uploadedImage = base64;
-      toast('Image resized and ready.', 'success');
-    } catch (err) {
-      toast('Image failed: ' + err.message, 'error');
-    }
-  });
-
-  /* Image URL change */
-  document.getElementById('hc-ind-image-url')?.addEventListener('input', (e) => {
-    const url = e.target.value.trim();
-    if (url) {
-      document.getElementById('hc-ind-image-preview').innerHTML =
-        `<img src="${escAttr(url)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='<span style=&quot;color:var(--text-muted);font-size:.82rem;&quot;>Invalid URL</span>';"/>`;
-    }
-  });
-
-  /* Dynamic bullet/stat/included/faq add */
-  let bulletIdx = (existing.bullets || []).length;
-  let statIdx = (existing.stats || []).length;
-  let incIdx = (existing.included || []).length;
-  let faqIdx = (existing.faqs || []).length;
-
-  document.getElementById('hc-ind-add-bullet')?.addEventListener('click', () => {
-    document.getElementById('hc-ind-bullets').insertAdjacentHTML('beforeend', bulletRow('', bulletIdx++));
-    bindRemoveButtons();
-  });
-  document.getElementById('hc-ind-add-stat')?.addEventListener('click', () => {
-    document.getElementById('hc-ind-stats').insertAdjacentHTML('beforeend', statRow({ v: '', l: '' }, statIdx++));
-    bindRemoveButtons();
-  });
-  document.getElementById('hc-ind-add-included')?.addEventListener('click', () => {
-    document.getElementById('hc-ind-included').insertAdjacentHTML('beforeend', includedRow('', incIdx++));
-    bindRemoveButtons();
-  });
-  document.getElementById('hc-ind-add-faq')?.addEventListener('click', () => {
-    document.getElementById('hc-ind-faqs').insertAdjacentHTML('beforeend', faqRow({ q: '', a: '' }, faqIdx++));
-    bindRemoveButtons();
+  };
+  Object.entries(addHandlers).forEach(([id, fn]) => {
+    document.getElementById(id)?.addEventListener('click', fn);
   });
 
   function bindRemoveButtons() {
@@ -791,27 +1042,41 @@ function openIndustryEditor(key) {
       btn._bound = true;
       btn.addEventListener('click', () => {
         btn.closest('[data-row]')?.remove();
+        D.state._hce.editorIsDirty = true;
       });
     });
   }
   bindRemoveButtons();
 
-  /* Delete */
+  /* ── Delete ── */
   document.getElementById('hc-ind-delete')?.addEventListener('click', async () => {
-    if (!confirm(`Delete industry "${existing.name || key}"?`)) return;
+    const ok = await confirmModal({
+      title: 'Delete industry?',
+      text: `"${existing.name || key}" will be removed from the tour and marketplace.`,
+      confirmLabel: 'Delete industry',
+      danger: true
+    });
+    if (!ok) return;
     try {
       await D.set(D.ref(D.db, `${D.P(INDUSTRIES_PATH)}/${key}`), null);
       if (D.state.data.industries) delete D.state.data.industries[key];
       toast('Industry deleted.', 'success');
-      close();
+      panel.style.display = 'none';
+      backdrop.style.display = 'none';
+      panel.innerHTML = '';
+      D.state._hce.editorOpenKey = null;
+      D.state._hce.editorIsDirty = false;
       renderPanels();
     } catch (e) {
       toast('Delete failed: ' + e.message, 'error');
     }
   });
 
-  /* Save */
-  document.getElementById('hc-ind-save')?.addEventListener('click', async () => {
+  /* ── Save ── */
+  document.getElementById('hc-ind-save')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    const origHtml = btn.innerHTML;
+
     const keyVal = val('hc-ind-key');
     if (!keyVal) { toast('Key is required.', 'error'); return; }
     if (!/^[a-z0-9-]+$/.test(keyVal)) { toast('Key must be lowercase letters, numbers, hyphens.', 'error'); return; }
@@ -826,7 +1091,6 @@ function openIndustryEditor(key) {
     if (!bucket) { toast('Bucket is required.', 'error'); return; }
     if (!family) { toast('Family is required.', 'error'); return; }
 
-    /* Collect dynamic rows */
     const bullets = [];
     panel.querySelectorAll('#hc-ind-bullets [data-row] input').forEach(inp => {
       if (inp.value.trim()) bullets.push(inp.value.trim());
@@ -848,9 +1112,8 @@ function openIndustryEditor(key) {
       if (q) faqs.push({ q, a });
     });
 
-    /* Determine image: uploaded base64 wins, then URL */
-    const uploadedBase64 = panel.dataset.uploadedImage || '';
-    const imageUrl = val('hc-ind-image-url');
+    const uploadedBase64 = D.state._hce.uploadedImage || '';
+    const imageUrl = val('hc-ind-image-url') || '';
     const image = uploadedBase64 || (existing.image || '');
     const imageUrlFinal = uploadedBase64 ? '' : imageUrl;
 
@@ -879,38 +1142,42 @@ function openIndustryEditor(key) {
       updatedAt: new Date().toISOString()
     };
 
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
+
     try {
       await D.set(D.ref(D.db, `${D.P(INDUSTRIES_PATH)}/${keyVal}`), industry);
       if (!D.state.data.industries) D.state.data.industries = {};
       D.state.data.industries[keyVal] = industry;
+      D.state._hce.editorIsDirty = false;
+      D.state._hce.uploadedImage = null;
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Saved';
       toast(`Industry "${name}" saved.`, 'success');
-      close();
-      renderPanels();
-    } catch (e) {
-      toast('Save failed: ' + e.message, 'error');
-    }
-  });
 
-  /* Filter families by bucket */
-  document.getElementById('hc-ind-bucket')?.addEventListener('change', (e) => {
-    const b = e.target.value;
-    const familySel = document.getElementById('hc-ind-family');
-    if (!familySel) return;
-    const currentValue = familySel.value;
-    let stillVisible = false;
-    Array.from(familySel.options).forEach(opt => {
-      if (!opt.value) return;
-      const optBucket = opt.dataset.bucket || '';
-      const visible = !b || optBucket === b;
-      opt.style.display = visible ? '' : 'none';
-      if (visible && opt.value === currentValue) stillVisible = true;
-    });
-    if (!stillVisible) familySel.value = '';
+      setTimeout(() => {
+        panel.style.display = 'none';
+        backdrop.style.display = 'none';
+        panel.innerHTML = '';
+        D.state._hce.editorOpenKey = null;
+        renderPanels();
+        document.querySelectorAll('.hc-tab-btn[data-tab="industries"]').forEach(b => b.click());
+      }, 600);
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+      toast('Save failed: ' + err.message, 'error');
+    }
   });
 }
 
 async function deleteIndustry(key) {
-  if (!confirm(`Delete industry "${key}"?`)) return;
+  const ok = await confirmModal({
+    title: 'Delete industry?',
+    text: `"${key}" will be removed from the tour and marketplace.`,
+    confirmLabel: 'Delete industry',
+    danger: true
+  });
+  if (!ok) return;
   try {
     await D.set(D.ref(D.db, `${D.P(INDUSTRIES_PATH)}/${key}`), null);
     if (D.state.data.industries) delete D.state.data.industries[key];
@@ -921,44 +1188,257 @@ async function deleteIndustry(key) {
   }
 }
 
-/* Row templates */
-function bulletRow(value, idx) {
+/* ═══════════════════════════════════════════════════════════════
+   FORM COMPONENT HELPERS
+   ═══════════════════════════════════════════════════════════════ */
+function formField(id, label, value, placeholder = '', readonly = false) {
   return `
-    <div data-row style="display:flex;gap:6px;margin-bottom:6px;">
-      <input type="text" value="${escAttr(value)}" placeholder="Bullet text…"
-        style="flex:1;padding:8px;border-radius:6px;background:var(--bg-elev-2);border:1px solid var(--border-color);color:var(--text-primary);font-size:.82rem;"/>
-      <button type="button" class="btn btn-danger btn-xs" data-remove-row>×</button>
+    <label style="display:block;">
+      <span style="display:block;font-size:.72rem;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;">${label}</span>
+      <input type="text" id="${id}" value="${escAttr(value)}" ${placeholder ? `placeholder="${escAttr(placeholder)}"` : ''} ${readonly ? 'readonly' : ''}
+        style="width:100%;padding:10px 12px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.88rem;font-family:inherit;${readonly ? 'opacity:.65;cursor:not-allowed;' : ''}"/>
+    </label>
+  `;
+}
+
+function formTextarea(id, label, value, placeholder = '') {
+  return `
+    <label style="display:block;margin-top:14px;">
+      <span style="display:block;font-size:.72rem;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;">${label}</span>
+      <textarea id="${id}" rows="3" ${placeholder ? `placeholder="${escAttr(placeholder)}"` : ''}
+        style="width:100%;padding:10px 12px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.88rem;font-family:inherit;resize:vertical;">${escHtml(value)}</textarea>
+    </label>
+  `;
+}
+
+function formSelect(id, label, options, currentValue, placeholder = '') {
+  return `
+    <label style="display:block;">
+      <span style="display:block;font-size:.72rem;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;">${label}</span>
+      <select id="${id}"
+        style="width:100%;padding:10px 12px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.88rem;font-family:inherit;">
+        ${placeholder ? `<option value="">${escHtml(placeholder)}</option>` : ''}
+        ${options.map(o => `<option value="${escAttr(o.value)}" ${o.bucket ? `data-bucket="${escAttr(o.bucket)}"` : ''} ${currentValue === o.value ? 'selected' : ''}>${escHtml(o.label)}</option>`).join('')}
+      </select>
+    </label>
+  `;
+}
+
+function colorPickerField(id, label, value) {
+  return `
+    <div>
+      <span style="display:block;font-size:.72rem;font-weight:700;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">${label}</span>
+      <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:6px;margin-bottom:10px;">
+        ${COLOR_PALETTE.map(c => `
+          <button type="button" class="hc-color-swatch" data-color="${c.hex}" title="${c.label}"
+            style="background:${c.hex};aspect-ratio:1;border-radius:6px;border:3px solid ${value === c.hex ? '#fff' : 'transparent'};cursor:pointer;padding:0;box-shadow:${value === c.hex ? '0 0 0 2px ' + c.hex : 'none'};transition:transform .12s;"></button>
+        `).join('')}
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <input type="color" id="${id}-picker" value="${escAttr(value)}" style="width:48px;height:38px;border:none;background:none;cursor:pointer;border-radius:6px;"/>
+        <input type="text" id="${id}" value="${escAttr(value)}" placeholder="#2267EE"
+          style="flex:1;padding:10px 12px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.88rem;font-family:monospace;"/>
+      </div>
     </div>
   `;
 }
-function statRow(stat, idx) {
+
+function iconPickerField(id, label, value) {
   return `
-    <div data-row style="display:grid;grid-template-columns:1fr 2fr 40px;gap:6px;margin-bottom:6px;">
+    <div>
+      <span style="display:block;font-size:.72rem;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;">${label}</span>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+        <div id="${id}-preview" style="width:38px;height:38px;border-radius:8px;background:var(--bg-elev-2);border:1px solid var(--border-color);display:grid;place-items:center;color:var(--text-primary);flex-shrink:0;">
+          <i class="fa-solid ${escAttr(value.replace(/^fa-solid\s+/, '') || 'fa-cube')}"></i>
+        </div>
+        <input type="text" id="${id}" value="${escAttr(value)}" placeholder="fa-cube"
+          style="flex:1;padding:10px 12px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.88rem;font-family:monospace;"/>
+      </div>
+      <div id="${id}-suggestions" style="display:flex;flex-wrap:wrap;gap:4px;max-height:80px;overflow-y:auto;padding:6px;background:var(--bg-elev-2);border-radius:8px;border:1px solid var(--border-color);">
+        ${ICON_SUGGESTIONS.map(icon => `
+          <button type="button" class="hc-icon-suggest" data-icon="fa-solid ${icon}" title="${icon}"
+            style="width:32px;height:32px;border-radius:6px;border:1px solid transparent;background:var(--bg-card-solid);color:var(--text-primary);cursor:pointer;display:grid;place-items:center;font-size:.75rem;transition:all .1s;">
+            <i class="fa-solid ${icon}"></i>
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function imagePickerField(id, label, value) {
+  return `
+    <div style="margin-top:16px;">
+      <span style="display:block;font-size:.72rem;font-weight:700;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">${label}</span>
+      <div id="${id}-preview" style="width:100%;height:160px;border-radius:10px;background:var(--bg-elev-2);border:2px dashed var(--border-color);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:10px;position:relative;cursor:pointer;transition:border-color .15s;"
+        onmouseover="this.style.borderColor='var(--accent-blue)'"
+        onmouseout="this.style.borderColor='var(--border-color)'">
+        ${value
+          ? `<img src="${escAttr(value)}" style="width:100%;height:100%;object-fit:cover;"/>
+             <button type="button" id="${id}-remove" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1;display:grid;place-items:center;">×</button>`
+          : `<div style="text-align:center;color:var(--text-muted);">
+               <i class="fa-solid fa-cloud-arrow-up" style="font-size:28px;margin-bottom:8px;opacity:.5;"></i>
+               <p style="margin:0;font-size:.82rem;">Click or drag to upload</p>
+               <p style="margin:4px 0 0;font-size:.7rem;">Max 800×800px, JPEG 80%</p>
+             </div>`}
+      </div>
+      <input type="file" id="${id}-file" accept="image/*" style="display:none;"/>
+      <input type="url" id="${id}-url" placeholder="OR paste image URL" value="${escAttr(!value ? '' : (value.startsWith('data:') ? '' : value))}"
+        style="width:100%;padding:10px 12px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.82rem;font-family:inherit;"/>
+    </div>
+  `;
+}
+
+/* ── Color picker binding ── */
+function bindColorPicker(panel, id) {
+  const textInput = document.getElementById(id);
+  const colorInput = document.getElementById(id + '-picker');
+  const swatches = panel.querySelectorAll('.hc-color-swatch');
+
+  swatches.forEach(sw => {
+    sw.addEventListener('click', () => {
+      swatches.forEach(s => { s.style.border = '3px solid transparent'; s.style.boxShadow = 'none'; });
+      sw.style.border = '3px solid #fff';
+      sw.style.boxShadow = '0 0 0 2px ' + sw.dataset.color;
+      if (textInput) textInput.value = sw.dataset.color;
+      if (colorInput) colorInput.value = sw.dataset.color;
+      D.state._hce.editorIsDirty = true;
+    });
+  });
+
+  colorInput?.addEventListener('input', (e) => {
+    if (textInput) textInput.value = e.target.value;
+    swatches.forEach(s => {
+      s.style.border = s.dataset.color === e.target.value ? '3px solid #fff' : '3px solid transparent';
+      s.style.boxShadow = s.dataset.color === e.target.value ? '0 0 0 2px ' + s.dataset.color : 'none';
+    });
+  });
+
+  textInput?.addEventListener('input', (e) => {
+    const v = e.target.value;
+    if (/^#[0-9a-fA-F]{6}$/.test(v) && colorInput) colorInput.value = v;
+  });
+}
+
+/* ── Icon picker binding ── */
+function bindIconPicker(panel, id) {
+  const input = document.getElementById(id);
+  const preview = document.getElementById(id + '-preview');
+  const suggestions = panel.querySelectorAll('.hc-icon-suggest');
+
+  const updatePreview = (v) => {
+    if (!preview) return;
+    const clean = String(v || '').replace(/^fa-solid\s+/, '').replace(/^fa-/, '').trim();
+    preview.innerHTML = `<i class="fa-solid ${clean ? 'fa-' + clean : 'fa-cube'}"></i>`;
+  };
+
+  input?.addEventListener('input', (e) => updatePreview(e.target.value));
+
+  suggestions.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (input) input.value = btn.dataset.icon;
+      updatePreview(btn.dataset.icon);
+      D.state._hce.editorIsDirty = true;
+    });
+  });
+}
+
+/* ── Image picker binding ── */
+function bindImagePicker(panel, id, onUpload) {
+  const preview = document.getElementById(id + '-preview');
+  const fileInput = document.getElementById(id + '-file');
+  const urlInput = document.getElementById(id + '-url');
+  const removeBtn = document.getElementById(id + '-remove');
+
+  preview?.addEventListener('click', (e) => {
+    if (e.target.id === id + '-remove') return;
+    fileInput?.click();
+  });
+
+  fileInput?.addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const base64 = await resizeImageToBase64(file);
+      preview.innerHTML = `<img src="${base64}" style="width:100%;height:100%;object-fit:cover;"/>
+        <button type="button" id="${id}-remove" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1;display:grid;place-items:center;">×</button>`;
+      if (urlInput) urlInput.value = '';
+      document.getElementById(id + '-remove')?.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        preview.innerHTML = `<div style="text-align:center;color:var(--text-muted);">
+          <i class="fa-solid fa-cloud-arrow-up" style="font-size:28px;margin-bottom:8px;opacity:.5;"></i>
+          <p style="margin:0;font-size:.82rem;">Click or drag to upload</p>
+          <p style="margin:4px 0 0;font-size:.7rem;">Max 800×800px, JPEG 80%</p>
+        </div>`;
+        onUpload('');
+      });
+      onUpload(base64);
+      toast('Image resized and ready.', 'success');
+    } catch (err) {
+      toast('Image failed: ' + err.message, 'error');
+    }
+  });
+
+  urlInput?.addEventListener('input', (e) => {
+    const url = e.target.value.trim();
+    if (url) {
+      preview.innerHTML = `<img src="${escAttr(url)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='<span style=&quot;color:var(--text-muted);font-size:.82rem;&quot;>Invalid URL</span>';"/>`;
+      onUpload('');
+    }
+  });
+
+  removeBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    preview.innerHTML = `<div style="text-align:center;color:var(--text-muted);">
+      <i class="fa-solid fa-cloud-arrow-up" style="font-size:28px;margin-bottom:8px;opacity:.5;"></i>
+      <p style="margin:0;font-size:.82rem;">Click or drag to upload</p>
+      <p style="margin:4px 0 0;font-size:.7rem;">Max 800×800px, JPEG 80%</p>
+    </div>`;
+    if (urlInput) urlInput.value = '';
+    onUpload('');
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ROW TEMPLATES
+   ═══════════════════════════════════════════════════════════════ */
+function bulletRow(value) {
+  return `
+    <div data-row style="display:flex;gap:8px;margin-bottom:8px;">
+      <input type="text" value="${escAttr(value)}" placeholder="e.g. Point of sale"
+        style="flex:1;padding:10px 12px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.85rem;font-family:inherit;"/>
+      <button type="button" class="btn btn-danger btn-xs" data-remove-row style="padding:8px 10px;">×</button>
+    </div>
+  `;
+}
+function statRow(stat) {
+  return `
+    <div data-row style="display:grid;grid-template-columns:1fr 2fr auto;gap:8px;margin-bottom:8px;">
       <input type="text" data-stat-v value="${escAttr(stat.v || '')}" placeholder="+22%"
-        style="padding:8px;border-radius:6px;background:var(--bg-elev-2);border:1px solid var(--border-color);color:var(--text-primary);font-size:.82rem;"/>
+        style="padding:10px 12px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.85rem;font-family:inherit;"/>
       <input type="text" data-stat-l value="${escAttr(stat.l || '')}" placeholder="stock accuracy"
-        style="padding:8px;border-radius:6px;background:var(--bg-elev-2);border:1px solid var(--border-color);color:var(--text-primary);font-size:.82rem;"/>
-      <button type="button" class="btn btn-danger btn-xs" data-remove-row>×</button>
+        style="padding:10px 12px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.85rem;font-family:inherit;"/>
+      <button type="button" class="btn btn-danger btn-xs" data-remove-row style="padding:8px 10px;">×</button>
     </div>
   `;
 }
-function includedRow(value, idx) {
+function includedRow(value) {
   return `
-    <div data-row style="display:flex;gap:6px;margin-bottom:6px;">
-      <input type="text" value="${escAttr(value)}" placeholder="Feature name…"
-        style="flex:1;padding:8px;border-radius:6px;background:var(--bg-elev-2);border:1px solid var(--border-color);color:var(--text-primary);font-size:.82rem;"/>
-      <button type="button" class="btn btn-danger btn-xs" data-remove-row>×</button>
+    <div data-row style="display:flex;gap:8px;margin-bottom:8px;">
+      <input type="text" value="${escAttr(value)}" placeholder="e.g. Inventory"
+        style="flex:1;padding:10px 12px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.85rem;font-family:inherit;"/>
+      <button type="button" class="btn btn-danger btn-xs" data-remove-row style="padding:8px 10px;">×</button>
     </div>
   `;
 }
-function faqRow(faq, idx) {
+function faqRow(faq) {
   return `
-    <div data-row style="display:grid;grid-template-columns:1fr 2fr 40px;gap:6px;margin-bottom:6px;">
+    <div data-row style="display:grid;grid-template-columns:1fr 2fr auto;gap:8px;margin-bottom:8px;">
       <input type="text" data-faq-q value="${escAttr(faq.q || '')}" placeholder="Question"
-        style="padding:8px;border-radius:6px;background:var(--bg-elev-2);border:1px solid var(--border-color);color:var(--text-primary);font-size:.82rem;"/>
+        style="padding:10px 12px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.85rem;font-family:inherit;"/>
       <input type="text" data-faq-a value="${escAttr(faq.a || '')}" placeholder="Answer"
-        style="padding:8px;border-radius:6px;background:var(--bg-elev-2);border:1px solid var(--border-color);color:var(--text-primary);font-size:.82rem;"/>
-      <button type="button" class="btn btn-danger btn-xs" data-remove-row>×</button>
+        style="padding:10px 12px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.85rem;font-family:inherit;"/>
+      <button type="button" class="btn btn-danger btn-xs" data-remove-row style="padding:8px 10px;">×</button>
     </div>
   `;
 }
@@ -999,18 +1479,132 @@ function resizeImageToBase64(file) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   PANEL: PRODUCTS (strip config)
+   GENERIC MODAL (for bucket/family editors + confirm dialogs)
+   ═══════════════════════════════════════════════════════════════ */
+function openModal({ id, icon, title, body, footer, onSave }) {
+  const host = document.getElementById('hc-modal-host');
+  if (!host) return;
+
+  host.innerHTML = `
+    <div id="${id}" style="position:fixed;inset:0;background:rgba(10,25,47,.6);display:flex;align-items:center;justify-content:center;padding:24px;z-index:10000;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);animation:hcFadeIn .18s ease;">
+      <div style="background:var(--bg-elev-1);border-radius:16px;box-shadow:0 32px 80px -16px rgba(0,0,0,.5);max-width:560px;width:100%;max-height:calc(100vh - 48px);display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--border-color);">
+        <div style="padding:20px 24px;border-bottom:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--accent-blue),var(--accent-purple,#8B5CF6));display:grid;place-items:center;color:#fff;">
+              <i class="fa-solid ${icon}"></i>
+            </div>
+            <h3 style="margin:0;font-size:16px;">${escHtml(title)}</h3>
+          </div>
+          <button type="button" data-modal-close style="background:var(--bg-elev-2);border:1px solid var(--border-color);color:var(--text-muted);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:16px;display:grid;place-items:center;line-height:1;">×</button>
+        </div>
+        <div style="padding:20px 24px;overflow-y:auto;flex:1;">${body}</div>
+        <div style="padding:16px 24px;border-top:1px solid var(--border-color);display:flex;gap:8px;justify-content:flex-end;">${footer}</div>
+      </div>
+    </div>
+  `;
+
+  const modal = document.getElementById(id);
+  const closeFn = () => { host.innerHTML = ''; };
+
+  modal.querySelector('[data-modal-close]')?.addEventListener('click', closeFn);
+  modal.querySelector('[data-modal-cancel]')?.addEventListener('click', closeFn);
+
+  modal.querySelector('[data-modal-save]')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    const origHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
+    try {
+      await onSave();
+    } catch (err) {
+      toast('Save failed: ' + err.message, 'error');
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+    }
+  });
+
+  /* Bind color pickers and icon pickers that appear in modal body */
+  bindColorPicker(modal, 'hc-bucket-color');
+  bindIconPicker(modal, 'hc-bucket-icon');
+  bindIconPicker(modal, 'hc-family-icon');
+}
+
+/* ── Confirm modal ── */
+function confirmModal({ title, text, confirmLabel = 'Confirm', danger = false }) {
+  return new Promise((resolve) => {
+    const host = document.getElementById('hc-modal-host');
+    if (!host) { resolve(false); return; }
+
+    const id = 'hc-confirm-' + Date.now();
+    host.innerHTML = `
+      <div id="${id}" style="position:fixed;inset:0;background:rgba(10,25,47,.6);display:flex;align-items:center;justify-content:center;padding:24px;z-index:10001;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);">
+        <div style="background:var(--bg-elev-1);border-radius:16px;box-shadow:0 32px 80px -16px rgba(0,0,0,.5);max-width:440px;width:100%;border:1px solid var(--border-color);overflow:hidden;">
+          <div style="padding:24px;">
+            <div style="display:flex;gap:14px;align-items:flex-start;">
+              <div style="width:44px;height:44px;border-radius:11px;background:${danger ? 'rgba(239,68,68,.15)' : 'rgba(34,103,238,.15)'};color:${danger ? 'var(--accent-red)' : 'var(--accent-blue)'};display:grid;place-items:center;font-size:20px;flex-shrink:0;">
+                <i class="fa-solid ${danger ? 'fa-triangle-exclamation' : 'fa-circle-question'}"></i>
+              </div>
+              <div style="flex:1;">
+                <h3 style="margin:0 0 6px;font-size:16px;">${escHtml(title)}</h3>
+                <p style="margin:0;font-size:.88rem;color:var(--text-muted);line-height:1.5;">${escHtml(text)}</p>
+              </div>
+            </div>
+          </div>
+          <div style="padding:14px 24px;background:var(--bg-elev-2);border-top:1px solid var(--border-color);display:flex;gap:8px;justify-content:flex-end;">
+            <button type="button" data-confirm-cancel class="btn btn-outline" style="padding:9px 16px;">Cancel</button>
+            <button type="button" data-confirm-ok class="btn ${danger ? 'btn-danger' : 'btn-primary'}" style="padding:9px 16px;">${escHtml(confirmLabel)}</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const modal = document.getElementById(id);
+    const finish = (result) => {
+      host.innerHTML = '';
+      resolve(result);
+    };
+    modal.querySelector('[data-confirm-cancel]')?.addEventListener('click', () => finish(false));
+    modal.querySelector('[data-confirm-ok]')?.addEventListener('click', () => finish(true));
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   EMPTY STATE
+   ═══════════════════════════════════════════════════════════════ */
+function emptyState({ icon, title, text, action }) {
+  return `
+    <div style="padding:56px 24px;text-align:center;background:var(--bg-card-solid);border:2px dashed var(--border-color);border-radius:12px;">
+      <div style="width:64px;height:64px;border-radius:16px;background:var(--bg-elev-2);display:grid;place-items:center;margin:0 auto 16px;color:var(--text-muted);">
+        <i class="fa-solid ${icon}" style="font-size:28px;"></i>
+      </div>
+      <h3 style="margin:0 0 6px;font-size:1.05rem;">${escHtml(title)}</h3>
+      <p style="margin:0 0 ${action ? '20px' : '0'};font-size:.88rem;color:var(--text-muted);max-width:400px;margin-left:auto;margin-right:auto;line-height:1.5;">${escHtml(text)}</p>
+      ${action ? `<button type="button" class="btn btn-primary" id="${action.id}" style="padding:10px 20px;">
+        <i class="fa-solid fa-plus"></i> ${escHtml(action.label)}
+      </button>` : ''}
+    </div>
+  `;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PANEL: PRODUCTS
    ═══════════════════════════════════════════════════════════════ */
 function renderProductsPanel() {
   const ps = D.state?.data?.homeContent?.productStrip || {};
   const industries = Object.values(flattenNode(D.state?.data?.industries));
 
   return `
-    <div class="hc-card" style="padding:20px;background:var(--bg-elev-1);border-radius:12px;border:1px solid var(--border-color);">
-      <h3 style="margin:0 0 16px;font-size:15px;">Product strip</h3>
-      <p style="margin:0 0 16px;font-size:.82rem;color:var(--text-muted);">
-        The 12-product carousel below the tour. Products come from Firebase, filtered by the industry you pick below.
-      </p>
+    <div style="padding:24px;background:var(--bg-elev-1);border-radius:14px;border:1px solid var(--border-color);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border-color);">
+        <div style="width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--accent-blue),var(--accent-purple,#8B5CF6));display:grid;place-items:center;color:#fff;">
+          <i class="fa-solid fa-box"></i>
+        </div>
+        <div>
+          <h3 style="margin:0;font-size:16px;">Product strip</h3>
+          <p style="margin:2px 0 0;font-size:.75rem;color:var(--text-muted);">The 12-product carousel on the landing page.</p>
+        </div>
+      </div>
+
       ${field('hc-ps-eyebrow', 'Eyebrow', ps.eyebrow || '')}
       ${field('hc-ps-heading', 'Heading', ps.heading || '')}
       ${textarea('hc-ps-sub', 'Subtitle', ps.sub || '')}
@@ -1019,21 +1613,25 @@ function renderProductsPanel() {
         ${field('hc-ps-ctaHref',  'CTA href',  ps.ctaHref  || '')}
       </div>
 
-      <label style="display:block;margin-bottom:12px;">
-        <span style="display:block;font-size:.72rem;font-weight:700;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em;">Industry to show in strip</span>
-        <select id="hc-ps-industry" style="width:100%;padding:9px 12px;border-radius:8px;background:var(--bg-elev-2);border:1px solid var(--border-color);color:var(--text-primary);font-size:.85rem;">
-          <option value="">— Select an industry —</option>
-          ${industries.sort((a, b) => (a.name || '').localeCompare(b.name || '')).map(i => `
-            <option value="${escAttr(i.key)}" ${ps.industry === i.key ? 'selected' : ''}>
-              ${escHtml(i.name || i.key)} (${escHtml(i.marketCategory || '')})
-            </option>
-          `).join('')}
-        </select>
-      </label>
+      <div style="margin-top:16px;">
+        <label style="display:block;">
+          <span style="display:block;font-size:.72rem;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;">Industry to show in strip</span>
+          <select id="hc-ps-industry" style="width:100%;padding:10px 12px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.88rem;font-family:inherit;">
+            <option value="">— Select an industry —</option>
+            ${industries.sort((a, b) => (a.name || '').localeCompare(b.name || '')).map(i => `
+              <option value="${escAttr(i.key)}" ${ps.industry === i.key ? 'selected' : ''}>
+                ${escHtml(i.name || i.key)} (${escHtml(i.marketCategory || '')})
+              </option>
+            `).join('')}
+          </select>
+        </label>
+      </div>
 
-      ${field('hc-ps-limit', 'Limit (0 = all)', String(ps.limit || 12))}
+      <div style="margin-top:16px;">
+        ${field('hc-ps-limit', 'Limit (0 = all)', String(ps.limit || 12))}
+      </div>
 
-      <button type="button" class="btn btn-success btn-sm" id="hc-save-product-strip" style="margin-top:16px;">
+      <button type="button" class="btn btn-success btn-sm" id="hc-save-product-strip" style="margin-top:16px;padding:10px 18px;">
         <i class="fa-solid fa-check"></i> Save product strip
       </button>
     </div>
@@ -1041,7 +1639,12 @@ function renderProductsPanel() {
 }
 
 function bindProductsPanel() {
-  document.getElementById('hc-save-product-strip')?.addEventListener('click', async () => {
+  document.getElementById('hc-save-product-strip')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    const origHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
+
     const strip = {
       eyebrow: val('hc-ps-eyebrow'),
       heading: val('hc-ps-heading'),
@@ -1055,76 +1658,46 @@ function bindProductsPanel() {
       await D.set(D.ref(D.db, D.P(STRIP_PATH)), strip);
       if (!D.state.data.homeContent) D.state.data.homeContent = {};
       D.state.data.homeContent.productStrip = strip;
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Saved';
       toast('Product strip saved.', 'success');
-    } catch (e) {
-      toast('Save failed: ' + e.message, 'error');
+      setTimeout(() => { btn.disabled = false; btn.innerHTML = origHtml; }, 1200);
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+      toast('Save failed: ' + err.message, 'error');
     }
   });
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   STATIC PANELS (ecosystem, dashboard, cases, pricing, academy, contact)
-   — trimmed for brevity; they render inputs and are saved by saveAllTextSections
+   STATIC PANELS
    ═══════════════════════════════════════════════════════════════ */
 function renderStaticPanel(kind) {
   const all = D.state?.data?.homeContent || {};
   const section = all[kind] || {};
-  const label = kind.charAt(0).toUpperCase() + kind.slice(1);
 
-  if (kind === 'ecosystem') {
-    return `
-      <div class="hc-card" style="padding:20px;background:var(--bg-elev-1);border-radius:12px;border:1px solid var(--border-color);">
-        <h3 style="margin:0 0 16px;font-size:15px;">Ecosystem map</h3>
-        ${field('hc-ecosystem-eyebrow', 'Eyebrow', section.eyebrow || '')}
-        ${field('hc-ecosystem-heading', 'Heading', section.heading || '')}
-        ${textarea('hc-ecosystem-sub', 'Subtitle', section.sub || '')}
+  const iconMap = {
+    ecosystem: 'fa-circle-nodes', dashboard: 'fa-chart-pie', cases: 'fa-file-lines',
+    pricing: 'fa-tags', academy: 'fa-graduation-cap', contact: 'fa-envelope'
+  };
+  const labelMap = {
+    ecosystem: 'Ecosystem map', dashboard: 'Dashboard preview', cases: 'Case studies strip',
+    pricing: 'Pricing', academy: 'Academy teaser', contact: 'Contact'
+  };
+
+  const header = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border-color);">
+      <div style="width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--accent-blue),var(--accent-purple,#8B5CF6));display:grid;place-items:center;color:#fff;">
+        <i class="fa-solid ${iconMap[kind] || 'fa-cube'}"></i>
       </div>
-    `;
-  }
-  if (kind === 'dashboard') {
-    return `
-      <div class="hc-card" style="padding:20px;background:var(--bg-elev-1);border-radius:12px;border:1px solid var(--border-color);">
-        <h3 style="margin:0 0 16px;font-size:15px;">Dashboard preview</h3>
-        ${field('hc-dashboard-eyebrow', 'Eyebrow', section.eyebrow || '')}
-        ${field('hc-dashboard-heading', 'Heading', section.heading || '')}
-        ${textarea('hc-dashboard-sub', 'Subtitle', section.sub || '')}
-      </div>
-    `;
-  }
-  if (kind === 'cases') {
-    return `
-      <div class="hc-card" style="padding:20px;background:var(--bg-elev-1);border-radius:12px;border:1px solid var(--border-color);">
-        <h3 style="margin:0 0 16px;font-size:15px;">Case studies strip</h3>
-        ${field('hc-cases-eyebrow', 'Eyebrow', section.eyebrow || '')}
-        ${field('hc-cases-heading', 'Heading', section.heading || '')}
-        ${textarea('hc-cases-sub', 'Subtitle', section.sub || '')}
-      </div>
-    `;
-  }
-  if (kind === 'pricing') {
-    return `
-      <div class="hc-card" style="padding:20px;background:var(--bg-elev-1);border-radius:12px;border:1px solid var(--border-color);">
-        <h3 style="margin:0 0 16px;font-size:15px;">Pricing</h3>
-        ${field('hc-pricing-eyebrow', 'Eyebrow', section.eyebrow || '')}
-        ${field('hc-pricing-heading', 'Heading', section.heading || '')}
-        ${textarea('hc-pricing-sub', 'Subtitle', section.sub || '')}
-      </div>
-    `;
-  }
-  if (kind === 'academy') {
-    return `
-      <div class="hc-card" style="padding:20px;background:var(--bg-elev-1);border-radius:12px;border:1px solid var(--border-color);">
-        <h3 style="margin:0 0 16px;font-size:15px;">Academy teaser</h3>
-        ${field('hc-academy-eyebrow', 'Eyebrow', section.eyebrow || '')}
-        ${field('hc-academy-heading', 'Heading', section.heading || '')}
-        ${textarea('hc-academy-sub', 'Subtitle', section.sub || '')}
-      </div>
-    `;
-  }
+      <h3 style="margin:0;font-size:16px;">${labelMap[kind] || kind}</h3>
+    </div>
+  `;
+
   if (kind === 'contact') {
     return `
-      <div class="hc-card" style="padding:20px;background:var(--bg-elev-1);border-radius:12px;border:1px solid var(--border-color);">
-        <h3 style="margin:0 0 16px;font-size:15px;">Contact</h3>
+      <div style="padding:24px;background:var(--bg-elev-1);border-radius:14px;border:1px solid var(--border-color);">
+        ${header}
         ${field('hc-contact-eyebrow', 'Eyebrow', section.eyebrow || '')}
         ${field('hc-contact-heading', 'Heading', section.heading || '')}
         ${textarea('hc-contact-sub', 'Subtitle', section.sub || '')}
@@ -1136,7 +1709,15 @@ function renderStaticPanel(kind) {
       </div>
     `;
   }
-  return `<div class="hc-card" style="padding:20px;">Unknown panel: ${label}</div>`;
+
+  return `
+    <div style="padding:24px;background:var(--bg-elev-1);border-radius:14px;border:1px solid var(--border-color);">
+      ${header}
+      ${field(`hc-${kind}-eyebrow`, 'Eyebrow', section.eyebrow || '')}
+      ${field(`hc-${kind}-heading`, 'Heading', section.heading || '')}
+      ${textarea(`hc-${kind}-sub`, 'Subtitle', section.sub || '')}
+    </div>
+  `;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1146,6 +1727,7 @@ async function saveAllTextSections() {
   const statusEl = document.getElementById('hc-status');
   const btn = document.getElementById('hc-save-btn');
   if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…'; }
+  if (statusEl) { statusEl.textContent = ''; statusEl.style.color = ''; }
 
   try {
     const payload = {
@@ -1178,7 +1760,6 @@ async function saveAllTextSections() {
       }
     };
 
-    // Merge into existing homeContent — don't clobber tour/meta, buckets, families, productStrip
     const current = D.state?.data?.homeContent || {};
     const merged = { ...current, ...payload, updatedAt: new Date().toISOString() };
 
@@ -1203,22 +1784,22 @@ function val(id) {
   return el ? String(el.value || '').trim() : '';
 }
 
-function field(id, label, value, extra = '') {
+function field(id, label, value, placeholder = '') {
   return `
-    <label style="display:block;margin-bottom:12px;">
-      <span style="display:block;font-size:.72rem;font-weight:700;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em;">${label}</span>
-      <input type="text" id="${id}" value="${escAttr(value)}" ${extra}
-        style="width:100%;padding:9px 12px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.85rem;font-family:inherit;"/>
+    <label style="display:block;margin-bottom:14px;">
+      <span style="display:block;font-size:.72rem;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;">${label}</span>
+      <input type="text" id="${id}" value="${escAttr(value)}" ${placeholder ? `placeholder="${escAttr(placeholder)}"` : ''}
+        style="width:100%;padding:10px 12px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.88rem;font-family:inherit;"/>
     </label>
   `;
 }
 
 function textarea(id, label, value) {
   return `
-    <label style="display:block;margin-bottom:12px;">
-      <span style="display:block;font-size:.72rem;font-weight:700;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em;">${label}</span>
+    <label style="display:block;margin-bottom:14px;">
+      <span style="display:block;font-size:.72rem;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;">${label}</span>
       <textarea id="${id}" rows="3"
-        style="width:100%;padding:9px 12px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.85rem;font-family:inherit;resize:vertical;">${escAttr(value)}</textarea>
+        style="width:100%;padding:10px 12px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.88rem;font-family:inherit;resize:vertical;">${escHtml(value)}</textarea>
     </label>
   `;
 }
@@ -1247,6 +1828,11 @@ function flattenNode(node) {
 function toast(msg, type) {
   if (D?.toast) return D.toast(msg, type);
   try { window.toast?.(msg, type); } catch (_) {}
+}
+
+function closeModal() {
+  const host = document.getElementById('hc-modal-host');
+  if (host) host.innerHTML = '';
 }
 
 export default { initHomeContent, renderHomeContent };
