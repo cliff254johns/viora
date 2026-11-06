@@ -107,7 +107,6 @@ export function initHomeContent(deps) {
   D = deps;
   /* Restore editor state from prior tab visit */
   if (!D.state) D.state = {};
-  if (!D.state._hce = {}) {} // no-op guard
   if (!D.state._hce) D.state._hce = {};
 }
 
