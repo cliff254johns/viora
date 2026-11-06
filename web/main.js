@@ -1507,15 +1507,47 @@ function initSidebarGroups() {
     wrap.classList.toggle('open', isOpen);
     if (toggle) toggle.setAttribute('aria-expanded', String(isOpen));
   });
+  // ── Group toggle: exclusive accordion (opening one closes the rest) ──
   document.querySelectorAll('.sb-group-toggle').forEach(btn => {
     btn.addEventListener('click', () => {
       const wrap = btn.closest('.sb-group-wrap');
       const willOpen = !wrap.classList.contains('open');
+
+      // Close every other group first
+      document.querySelectorAll('.sb-group-wrap').forEach(other => {
+        if (other !== wrap) {
+          other.classList.remove('open');
+          const otherBtn = other.querySelector('.sb-group-toggle');
+          if (otherBtn) otherBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      // Toggle the clicked one
       wrap.classList.toggle('open', willOpen);
       btn.setAttribute('aria-expanded', String(willOpen));
       persistOpenGroups();
     });
   });
+
+  // ── Expand all / collapse all button ──
+  const expandAllBtn = document.getElementById('navExpandAll');
+  if (expandAllBtn) {
+    expandAllBtn.addEventListener('click', () => {
+      const allOpen = document.querySelectorAll('.sb-group-wrap.open').length;
+      const totalGroups = document.querySelectorAll('.sb-group-wrap:not(.rbac-hidden)').length;
+      const shouldExpand = allOpen < totalGroups;
+
+      document.querySelectorAll('.sb-group-wrap:not(.rbac-hidden)').forEach(wrap => {
+        wrap.classList.toggle('open', shouldExpand);
+        const btn = wrap.querySelector('.sb-group-toggle');
+        if (btn) btn.setAttribute('aria-expanded', String(shouldExpand));
+      });
+
+      expandAllBtn.classList.toggle('active', shouldExpand);
+      expandAllBtn.title = shouldExpand ? 'Collapse all groups' : 'Expand all groups';
+      persistOpenGroups();
+    });
+  }
 }
 window.initSidebarGroups = initSidebarGroups;
 

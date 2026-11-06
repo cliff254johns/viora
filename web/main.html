@@ -369,197 +369,217 @@
       <div class="brand-main" id="sidebarBrandMain"></div>
     </div>
 
-    <nav id="sidebarNav">
-      <!-- MODE SWITCHER -->
-      <div id="navModeSwitcher" class="nav-mode-switcher">
-        <button type="button" class="nav-mode-btn active" data-mode="queues">
-          <i class="fa-solid fa-bell"></i>
-          <span>Queues</span>
-          <span class="nav-mode-badge" id="queueModeBadge" style="display:none;">0</span>
-        </button>
-        <button type="button" class="nav-mode-btn" data-mode="registers">
-          <i class="fa-solid fa-table-list"></i>
-          <span>Navigation</span>
-        </button>
-        <button type="button" class="nav-mode-btn" data-mode="timeline">
-          <i class="fa-solid fa-clock-rotate-left"></i>
-          <span>Timeline</span>
-        </button>
+  <nav id="sidebarNav">
+  <!-- MODE SWITCHER -->
+  <div id="navModeSwitcher" class="nav-mode-switcher">
+    <button type="button" class="nav-mode-btn active" data-mode="queues">
+      <i class="fa-solid fa-bell"></i>
+      <span>Queues</span>
+      <span class="nav-mode-badge" id="queueModeBadge" style="display:none;">0</span>
+    </button>
+    <button type="button" class="nav-mode-btn" data-mode="registers">
+      <i class="fa-solid fa-table-list"></i>
+      <span>Navigation</span>
+    </button>
+    <button type="button" class="nav-mode-btn" data-mode="timeline">
+      <i class="fa-solid fa-clock-rotate-left"></i>
+      <span>Timeline</span>
+    </button>
+    <button type="button" class="nav-mode-btn nav-expand-all" id="navExpandAll" title="Expand all groups">
+      <i class="fa-solid fa-up-down-left-right"></i>
+      <span class="nav-expand-label">All</span>
+    </button>
+  </div>
+
+  <div id="navQueuesMode" class="nav-mode-panel" data-mode-panel="queues"></div>
+
+  <div id="navTimelineMode" class="nav-mode-panel" data-mode-panel="timeline" style="display:none;">
+    <div style="padding:24px 18px;text-align:center;color:var(--text-secondary);font-size:.78rem;line-height:1.6;">
+      <i class="fa-solid fa-clock-rotate-left" style="font-size:2rem;color:var(--accent-blue);opacity:.55;"></i>
+      <div style="margin-top:12px;font-weight:600;color:var(--text-primary);">Timeline coming next</div>
+      <div style="margin-top:6px;">Every automatic handoff the system performs, and the causality chains between records.</div>
+    </div>
+  </div>
+
+  <div id="navRegistersHint" class="nav-registers-hint"></div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GROUP 1 · OVERVIEW
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="sb-group-wrap" data-group="overview">
+    <button class="sb-group-toggle" data-toggle="overview" aria-expanded="false">
+      <i class="fa-solid fa-compass sb-group-icon"></i>
+      <span class="sb-group-label">Overview</span>
+      <i class="fa-solid fa-chevron-down sb-group-chevron"></i>
+    </button>
+    <div class="sb-group-items" data-group-items="overview">
+      <a data-tab="dashboard" data-roles="all" data-counter="dashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+      <a data-tab="activity" data-roles="admin,exec" data-counter="activityLog"><i class="fa-solid fa-scroll"></i> Activity Log</a>
+      <a data-tab="orchestration" data-roles="admin,exec" data-counter="none"><i class="fa-solid fa-diagram-project"></i> Orchestration <span class="badge badge-purple" style="font-size:8px;padding:1px 6px;margin-left:4px;">NEW</span></a>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GROUP 2 · CLIENTS
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="sb-group-wrap" data-group="clients">
+    <button class="sb-group-toggle" data-toggle="clients" aria-expanded="false">
+      <i class="fa-solid fa-fingerprint sb-group-icon"></i>
+      <span class="sb-group-label">Clients</span>
+      <i class="fa-solid fa-chevron-down sb-group-chevron"></i>
+    </button>
+    <div class="sb-group-items" data-group-items="clients">
+      <a data-tab="sales-clients" data-roles="admin,exec,sales,ops,finance" data-counter="clients"><i class="fa-solid fa-users"></i> Clients</a>
+      <a data-tab="client360" data-roles="admin,exec,sales,ops,finance" data-counter="clients"><i class="fa-solid fa-id-card-clip"></i> Client 360</a>
+      <a data-tab="portal-users" data-roles="exec,admin,sales" data-counter="portalUsers"><i class="fa-solid fa-user-check"></i> Portal Users <span class="nav-badge"></span></a>
+      <a data-tab="portal-requests" data-roles="admin,exec" data-counter="portalRequests"><i class="fa-solid fa-user-clock"></i> Portal Requests <span class="nav-badge" id="portalReqBadge" style="display:none;">0</span></a>
+      <a data-tab="communications" data-roles="admin,exec,sales,marketing" data-counter="commLog"><i class="fa-solid fa-comments"></i> Communications <span class="nav-badge" id="commNavBadge" style="display:none;">0</span></a>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GROUP 3 · REVENUE
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="sb-group-wrap" data-group="revenue">
+    <button class="sb-group-toggle" data-toggle="revenue" aria-expanded="false">
+      <i class="fa-solid fa-handshake sb-group-icon"></i>
+      <span class="sb-group-label">Revenue</span>
+      <i class="fa-solid fa-chevron-down sb-group-chevron"></i>
+    </button>
+    <div class="sb-group-items" data-group-items="revenue">
+      <a data-tab="sales-deals" data-roles="admin,exec,sales" data-counter="deals"><i class="fa-solid fa-handshake"></i> Deals &amp; Quotes</a>
+      <a data-tab="sales-pipeline" data-roles="admin,exec,sales" data-counter="dealsOpen"><i class="fa-solid fa-diagram-project"></i> Pipeline Kanban</a>
+      <a data-tab="sales-proposals" data-roles="admin,exec,sales,marketing" data-counter="proposals"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Proposal Studio</a>
+      <a data-tab="sales-contracts" data-roles="admin,exec,sales" data-counter="contracts"><i class="fa-solid fa-file-signature"></i> Contracts &amp; SLAs</a>
+      <a data-tab="fin-invoices" data-roles="admin,exec,finance,sales" data-counter="invoicesOpen"><i class="fa-solid fa-file-invoice"></i> Invoices</a>
+      <a data-tab="fin-payments" data-roles="admin,exec,finance" data-counter="payments"><i class="fa-solid fa-money-bill-wave"></i> Payments</a>
+      <a data-tab="fin-mpesa" data-roles="admin,exec,finance" data-counter="mpesaUnmatched"><i class="fa-solid fa-mobile-screen-button"></i> M-Pesa</a>
+      <a data-tab="ledger" data-roles="admin,exec,finance" data-counter="ledger"><i class="fa-solid fa-book"></i> General Ledger</a>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GROUP 4 · MARKETPLACE
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="sb-group-wrap" data-group="marketplace">
+    <button class="sb-group-toggle" data-toggle="marketplace" aria-expanded="false">
+      <i class="fa-solid fa-store sb-group-icon"></i>
+      <span class="sb-group-label">Marketplace</span>
+      <i class="fa-solid fa-chevron-down sb-group-chevron"></i>
+    </button>
+    <div class="sb-group-items" data-group-items="marketplace">
+      <a data-tab="marketplace-products" data-roles="all" data-counter="products"><i class="fa-solid fa-store"></i> Products &amp; Pricing</a>
+      <a data-tab="marketplace-orders" data-roles="admin,exec,finance,sales" data-counter="orders"><i class="fa-solid fa-receipt"></i> Orders <span class="nav-badge" id="ordersNavBadge" style="display:none;">0</span></a>
+      <a data-tab="marketplace-analytics" data-roles="admin,exec,finance,marketing" data-counter="none"><i class="fa-solid fa-chart-line"></i> Analytics</a>
+      <a data-tab="market-content" data-roles="admin,exec,marketing" data-counter="none"><i class="fa-solid fa-store"></i> Marketplace Content <span class="badge badge-purple" style="font-size:8px;padding:1px 6px;margin-left:4px;">NEW</span></a>
+      <a data-tab="subscriptions" data-roles="admin,exec,finance,sales" data-counter="subscriptions"><i class="fa-solid fa-key"></i> Subscriptions</a>
+      <a data-tab="subscription-plans" data-roles="admin,exec,finance,sales" data-counter="subscriptionRequestsPending"><i class="fa-solid fa-tags"></i> Subscription Plans <span class="nav-badge" id="subPlansNavBadge" style="display:none;">0</span></a>
+      <a data-tab="personal-wishlist" data-roles="all" data-counter="myWishlist"><i class="fa-solid fa-heart"></i> Wishlist</a>
+      <a data-tab="personal-orders" data-roles="all" data-counter="myOrders"><i class="fa-solid fa-bag-shopping"></i> My Orders</a>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GROUP 5 · OPERATIONS
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="sb-group-wrap" data-group="operations">
+    <button class="sb-group-toggle" data-toggle="operations" aria-expanded="false">
+      <i class="fa-solid fa-truck-fast sb-group-icon"></i>
+      <span class="sb-group-label">Operations</span>
+      <i class="fa-solid fa-chevron-down sb-group-chevron"></i>
+    </button>
+    <div class="sb-group-items" data-group-items="operations">
+      <a data-tab="ops-projects" data-roles="admin,exec,ops,sales" data-counter="projects"><i class="fa-solid fa-folder"></i> Projects</a>
+      <a data-tab="ops-tasks" data-roles="admin,exec,ops" data-counter="tasksOpen"><i class="fa-solid fa-calendar-check"></i> Tasks</a>
+      <a data-tab="ops-worklogs" data-roles="admin,exec,ops,finance" data-counter="worklogs"><i class="fa-solid fa-clock"></i> Work Logs</a>
+      <a data-tab="ops-inventory" data-roles="admin,exec,ops" data-counter="inventory"><i class="fa-solid fa-boxes-stacked"></i> Inventory</a>
+      <a data-tab="marketing-appointments" data-roles="admin,exec,marketing,sales" data-counter="appointments"><i class="fa-solid fa-calendar-check"></i> Appointments</a>
+      <a data-tab="documents" data-roles="admin,exec,sales,ops,finance" data-counter="documents"><i class="fa-solid fa-folder-tree"></i> Document Vault</a>
+      <a data-tab="smart-import" data-roles="admin,exec,sales,ops,finance,marketing" data-counter="none"><i class="fa-solid fa-file-import"></i> Smart Import <span class="badge badge-purple" style="font-size:8px;padding:1px 6px;margin-left:4px;">AI</span></a>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GROUP 6 · TEAM & TRAINING
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="sb-group-wrap" data-group="team">
+    <button class="sb-group-toggle" data-toggle="team" aria-expanded="false">
+      <i class="fa-solid fa-users-gear sb-group-icon"></i>
+      <span class="sb-group-label">Team &amp; Training</span>
+      <i class="fa-solid fa-chevron-down sb-group-chevron"></i>
+    </button>
+    <div class="sb-group-items" data-group-items="team">
+      <a data-tab="admin-employees" data-roles="admin,exec,hr" data-counter="employees"><i class="fa-solid fa-users-gear"></i> HR &amp; Staff</a>
+      <a data-tab="fin-payroll" data-roles="admin,exec,finance,hr" data-counter="payroll"><i class="fa-solid fa-money-check-dollar"></i> Payroll</a>
+      <a data-tab="admin-assets" data-roles="admin,exec,hr,ops" data-counter="assets"><i class="fa-solid fa-toolbox"></i> Asset Registry</a>
+      <a data-tab="admin-compliance" data-roles="admin,exec,hr" data-counter="compliance"><i class="fa-solid fa-scale-balanced"></i> Legal &amp; Compliance</a>
+      <a data-tab="training-overview" data-roles="admin,exec,hr,marketing,sales" data-counter="none"><i class="fa-solid fa-graduation-cap"></i> Training Dashboard</a>
+      <a data-tab="training-quizzes" data-roles="admin,exec,hr" data-counter="trainingQuizzesPending"><i class="fa-solid fa-file-circle-question"></i> Quiz Submissions <span class="nav-badge" id="quizzesNavBadge" style="display:none;">0</span></a>
+      <a data-tab="training-certificates" data-roles="admin,exec,hr" data-counter="trainingCertsPending"><i class="fa-solid fa-award"></i> Certificates <span class="nav-badge" id="certsNavBadge" style="display:none;">0</span></a>
+      <a data-tab="training-progress" data-roles="admin,exec,hr" data-counter="none"><i class="fa-solid fa-chart-line"></i> Training Progress</a>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GROUP 7 · CONTENT & GROWTH
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="sb-group-wrap" data-group="growth">
+    <button class="sb-group-toggle" data-toggle="growth" aria-expanded="false">
+      <i class="fa-solid fa-bullhorn sb-group-icon"></i>
+      <span class="sb-group-label">Content &amp; Growth</span>
+      <i class="fa-solid fa-chevron-down sb-group-chevron"></i>
+    </button>
+    <div class="sb-group-items" data-group-items="growth">
+      <a data-tab="marketing-leads" data-roles="admin,exec,marketing,sales" data-counter="leads"><i class="fa-solid fa-user-plus"></i> Leads</a>
+      <a data-tab="global-market" data-roles="admin,exec,sales,marketing,finance,ops" data-counter="none"><i class="fa-solid fa-earth-africa"></i> Global Market <span class="badge badge-purple" style="font-size:8px;padding:1px 6px;margin-left:4px;">AI</span></a>
+      <a href="/campaigns.html" data-external="true" data-roles="admin,exec,marketing"><i class="fa-solid fa-bullseye"></i> Campaigns <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.6rem;opacity:.5;margin-left:auto;"></i></a>
+      <a href="/campaigns.html#analytics" data-external="true" data-roles="admin,exec,marketing"><i class="fa-solid fa-chart-line"></i> Campaign Analytics <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.6rem;opacity:.5;margin-left:auto;"></i></a>
+      <a data-tab="clientsite" data-roles="admin,exec,marketing" data-counter="none"><i class="fa-solid fa-globe"></i> Public Site</a>
+      <a data-tab="home-content" data-roles="exec,admin,marketing"><i class="fa-solid fa-house"></i> Home Content <span class="badge badge-purple" style="font-size:8px;padding:1px 6px;margin-left:4px;">NEW</span></a>
+      <a data-tab="employee-profiles" data-roles="exec,admin"><i class="fa-solid fa-users"></i> Employee Profiles <span class="badge badge-purple" style="font-size:8px;padding:1px 6px;margin-left:4px;">NEW</span></a>
+      <a data-tab="product-presentation" data-roles="admin,exec,marketing" data-counter="none"><i class="fa-solid fa-window-restore"></i> Product Presentation</a>
+      <a data-tab="marketing-presentations" data-roles="admin,exec,marketing,sales,ops" data-counter="presentations"><i class="fa-solid fa-chalkboard-user"></i> Presentations</a>
+      <a data-tab="support-tickets" data-roles="admin,exec,sales,marketing" data-counter="ticketsOpen"><i class="fa-solid fa-headset"></i> Support Tickets <span class="nav-badge" id="ticketsNavBadge" style="display:none;">0</span></a>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GROUP 8 · SYSTEM & ME
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="sb-group-wrap" data-group="system">
+    <button class="sb-group-toggle" data-toggle="system" aria-expanded="false">
+      <i class="fa-solid fa-gear sb-group-icon"></i>
+      <span class="sb-group-label">System &amp; Me</span>
+      <i class="fa-solid fa-chevron-down sb-group-chevron"></i>
+    </button>
+    <div class="sb-group-items" data-group-items="system">
+      <!-- SYSTEM SUB-SECTION -->
+      <a data-tab="profile" data-roles="all" data-counter="none"><i class="fa-solid fa-building"></i> Company Profile</a>
+      <a data-tab="admin-users" data-roles="admin,exec" data-counter="users"><i class="fa-solid fa-user-shield"></i> User &amp; Role Admin</a>
+      <a data-tab="archives" data-roles="admin,exec" data-counter="none"><i class="fa-solid fa-box-archive"></i> Archives</a>
+      <a data-tab="trash" data-roles="admin,exec" data-counter="trash"><i class="fa-solid fa-trash-can"></i> Trash</a>
+
+      <!-- DIVIDER -->
+      <div class="sb-divider" style="margin:8px 4px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06);">
+        <span style="font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);padding:0 12px;font-weight:700;">My Space</span>
       </div>
 
-      <div id="navQueuesMode" class="nav-mode-panel" data-mode-panel="queues"></div>
-
-      <div id="navTimelineMode" class="nav-mode-panel" data-mode-panel="timeline" style="display:none;">
-        <div style="padding:24px 18px;text-align:center;color:var(--text-secondary);font-size:.78rem;line-height:1.6;">
-          <i class="fa-solid fa-clock-rotate-left" style="font-size:2rem;color:var(--accent-blue);opacity:.55;"></i>
-          <div style="margin-top:12px;font-weight:600;color:var(--text-primary);">Timeline coming next</div>
-          <div style="margin-top:6px;">Every automatic handoff the system performs, and the causality chains between records.</div>
-        </div>
-      </div>
-
-      <div id="navRegistersHint" class="nav-registers-hint"></div>
-
-      <!-- GROUP 1 · SYSTEM -->
-      <div class="sb-group-wrap" data-group="system">
-        <button class="sb-group-toggle" data-toggle="system" aria-expanded="false">
-          <i class="fa-solid fa-gear sb-group-icon"></i>
-          <span class="sb-group-label">System</span>
-          <i class="fa-solid fa-chevron-down sb-group-chevron"></i>
-        </button>
-        <div class="sb-group-items" data-group-items="system">
-          <a data-tab="profile" data-roles="all" data-counter="none"><i class="fa-solid fa-building"></i> Company Profile</a>
-          <a data-tab="admin-users" data-roles="admin,exec" data-counter="users"><i class="fa-solid fa-user-shield"></i> User &amp; Role Admin</a>
-          <a data-tab="admin-employees" data-roles="admin,exec,hr" data-counter="employees"><i class="fa-solid fa-users-gear"></i> HR &amp; Staff</a>
-          <a data-tab="admin-assets" data-roles="admin,exec,hr,ops" data-counter="assets"><i class="fa-solid fa-toolbox"></i> Asset Registry</a>
-          <a data-tab="admin-compliance" data-roles="admin,exec,hr" data-counter="compliance"><i class="fa-solid fa-scale-balanced"></i> Legal &amp; Compliance</a>
-          <a data-tab="activity" data-roles="admin,exec" data-counter="activityLog"><i class="fa-solid fa-scroll"></i> Activity Log</a>
-          <a data-tab="orchestration" data-roles="admin,exec" data-counter="none"><i class="fa-solid fa-diagram-project"></i> Orchestration <span class="badge badge-purple" style="font-size:8px;padding:1px 6px;margin-left:4px;">NEW</span></a>
-          <a data-tab="archives" data-roles="admin,exec" data-counter="none"><i class="fa-solid fa-box-archive"></i> Archives</a>
-          <a data-tab="trash" data-roles="admin,exec" data-counter="trash"><i class="fa-solid fa-trash-can"></i> Trash</a>
-        </div>
-      </div>
-
-      <!-- GROUP 2 · CLIENT -->
-      <div class="sb-group-wrap" data-group="client">
-        <button class="sb-group-toggle" data-toggle="client" aria-expanded="true">
-          <i class="fa-solid fa-fingerprint sb-group-icon"></i>
-          <span class="sb-group-label">Client</span>
-          <i class="fa-solid fa-chevron-down sb-group-chevron"></i>
-        </button>
-        <div class="sb-group-items" data-group-items="client">
-          <a data-tab="dashboard" data-roles="all" data-counter="dashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
-          <a data-tab="sales-clients" data-roles="admin,exec,sales,ops,finance" data-counter="clients"><i class="fa-solid fa-users"></i>Update Clients</a> 
-           
-          <a data-tab="client360" data-roles="admin,exec,sales,ops,finance" data-counter="clients"><i class="fa-solid fa-id-card-clip"></i> Client 360</a>
-          <a data-tab="marketing-leads" data-roles="admin,exec,marketing,sales" data-counter="leads"><i class="fa-solid fa-user-plus"></i> Lead Directory</a>
-          <a data-tab="marketing-appointments" data-roles="admin,exec,marketing,sales" data-counter="appointments"><i class="fa-solid fa-calendar-check"></i> Appointments</a>
-          <a data-tab="portal-requests" data-roles="admin,exec" data-counter="portalRequests"><i class="fa-solid fa-user-clock"></i> Portal Requests <span class="nav-badge" id="portalReqBadge" style="display:none;">0</span></a>
-         <a href="#" data-tab="portal-users" data-roles="exec,admin,sales" data-counter="portalUsers">
-  <i class="fa-solid fa-user-check"></i>
-  <span>Portal Users</span>
-  <span class="nav-badge"></span>
-</a>
-             <a data-tab="subscriptions" data-roles="admin,exec,finance,sales" data-counter="subscriptions"><i class="fa-solid fa-key"></i> Subscriptions</a>
-          <a data-tab="subscription-plans" data-roles="admin,exec,finance,sales" data-counter="subscriptionRequestsPending"><i class="fa-solid fa-tags"></i> Subscription Plans <span class="nav-badge" id="subPlansNavBadge" style="display:none;">0</span></a>
-          <a data-tab="support-tickets" data-roles="admin,exec,sales,marketing" data-counter="ticketsOpen"><i class="fa-solid fa-headset"></i> Support Tickets <span class="nav-badge" id="ticketsNavBadge" style="display:none;">0</span></a>
-          <a data-tab="communications" data-roles="admin,exec,sales,marketing" data-counter="commLog"><i class="fa-solid fa-comments"></i> Communications <span class="nav-badge" id="commNavBadge" style="display:none;">0</span></a>
-        </div>
-      </div>
-
-      <!-- GROUP 3 · MARKETING -->
-      <div class="sb-group-wrap" data-group="marketing">
-        <button class="sb-group-toggle" data-toggle="marketing" aria-expanded="false">
-          <i class="fa-solid fa-bullhorn sb-group-icon"></i>
-          <span class="sb-group-label">Marketing</span>
-          <i class="fa-solid fa-chevron-down sb-group-chevron"></i>
-        </button>
-        <div class="sb-group-items" data-group-items="marketing">
-          <a data-tab="global-market" data-roles="admin,exec,sales,marketing,finance,ops" data-counter="none"><i class="fa-solid fa-earth-africa"></i> Global Market <span class="badge badge-purple" style="font-size:8px;padding:1px 6px;margin-left:4px;">AI</span></a>
-          <a data-tab="marketplace-analytics" data-roles="admin,exec,finance,marketing" data-counter="none"><i class="fa-solid fa-chart-line"></i> Marketplace Analytics</a>
-          <a data-tab="personal-wishlist" data-roles="all" data-counter="myWishlist"><i class="fa-solid fa-heart"></i> Marketplace Wishlist</a>
-          
-               <a href="/campaigns.html" data-external="true" data-roles="admin,exec,marketing"><i class="fa-solid fa-bullseye"></i> Campaigns <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.6rem;opacity:.5;margin-left:auto;"></i></a>
-          <a href="/campaigns.html#analytics" data-external="true" data-roles="admin,exec,marketing"><i class="fa-solid fa-chart-line"></i> Campaign Analytics <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.6rem;opacity:.5;margin-left:auto;"></i></a>
-          
-          <a data-tab="product-presentation" data-roles="admin,exec,marketing" data-counter="none"><i class="fa-solid fa-window-restore"></i> Product Presentation</a>
-          <a data-tab="clientsite" data-roles="admin,exec,marketing" data-counter="none"><i class="fa-solid fa-globe"></i> Public Site</a>
-          <a data-tab="market-content" data-roles="admin,exec,marketing" data-counter="none"><i class="fa-solid fa-store"></i> Marketplace Content <span class="badge badge-purple" style="font-size:8px;padding:1px 6px;margin-left:4px;">NEW</span></a>
-          <a data-tab="home-content" data-roles="exec,admin,marketing"><i class="fa-solid fa-house"></i><span>Home Content</span></a>
-<a data-tab="employee-profiles" data-roles="exec,admin"><i class="fa-solid fa-users"></i><span>Employee Profiles</span></a>
-        </div>
-      </div>
-
-      <!-- GROUP 4 · SALES -->
-      <div class="sb-group-wrap" data-group="sales">
-        <button class="sb-group-toggle" data-toggle="sales" aria-expanded="false">
-          <i class="fa-solid fa-handshake sb-group-icon"></i>
-          <span class="sb-group-label">Sales</span>
-          <i class="fa-solid fa-chevron-down sb-group-chevron"></i>
-        </button>
-        <div class="sb-group-items" data-group-items="sales">
-          <a data-tab="sales-deals" data-roles="admin,exec,sales" data-counter="deals"><i class="fa-solid fa-handshake"></i> Deals &amp; Quotes</a>
-          <a data-tab="sales-pipeline" data-roles="admin,exec,sales" data-counter="dealsOpen"><i class="fa-solid fa-diagram-project"></i> Pipeline Kanban</a>
-          <a data-tab="sales-proposals" data-roles="admin,exec,sales,marketing" data-counter="proposals"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Proposal Studio</a>
-          <a data-tab="sales-contracts" data-roles="admin,exec,sales" data-counter="contracts"><i class="fa-solid fa-file-signature"></i> Contracts &amp; SLAs</a>
-          <a data-tab="personal-orders" data-roles="all" data-counter="myOrders"><i class="fa-solid fa-bag-shopping"></i> My Orders</a>
-          <a data-tab="marketplace-products" data-roles="all" data-counter="products"><i class="fa-solid fa-store"></i> Products &amp; Pricing</a>
-          <a data-tab="marketplace-orders" data-roles="admin,exec,finance,sales" data-counter="orders"><i class="fa-solid fa-receipt"></i> Marketplace Orders <span class="nav-badge" id="ordersNavBadge" style="display:none;">0</span></a>
-          <a data-tab="ops-inventory" data-roles="admin,exec,ops" data-counter="inventory"><i class="fa-solid fa-boxes-stacked"></i> Inventory</a>
-        </div>
-      </div>
-
-      <!-- GROUP 5 · DELIVERY -->
-      <div class="sb-group-wrap" data-group="delivery">
-        <button class="sb-group-toggle" data-toggle="delivery" aria-expanded="false">
-          <i class="fa-solid fa-truck-fast sb-group-icon"></i>
-          <span class="sb-group-label">Delivery</span>
-          <i class="fa-solid fa-chevron-down sb-group-chevron"></i>
-        </button>
-        <div class="sb-group-items" data-group-items="delivery">
-          <a data-tab="ops-projects" data-roles="admin,exec,ops,sales" data-counter="projects"><i class="fa-solid fa-folder"></i> Projects</a>
-          <a data-tab="ops-tasks" data-roles="admin,exec,ops" data-counter="tasksOpen"><i class="fa-solid fa-calendar-check"></i> Tasks</a>
-          <a data-tab="ops-worklogs" data-roles="admin,exec,ops,finance" data-counter="worklogs"><i class="fa-solid fa-clock"></i> Work Logs</a>
-          <a data-tab="marketing-presentations" data-roles="admin,exec,marketing,sales,ops" data-counter="presentations"><i class="fa-solid fa-chalkboard-user"></i> Presentations</a>
-          <a data-tab="smart-import" data-roles="admin,exec,sales,ops,finance,marketing" data-counter="none"><i class="fa-solid fa-file-import"></i> Smart Import <span class="badge badge-purple" style="font-size:8px;padding:1px 6px;margin-left:4px;">AI</span></a>
-          <a data-tab="documents" data-roles="admin,exec,sales,ops,finance" data-counter="documents"><i class="fa-solid fa-folder-tree"></i> Document Vault</a>
-        </div>
-      </div>
-
-      <!-- GROUP 6 · FINANCE -->
-      <div class="sb-group-wrap" data-group="finance">
-        <button class="sb-group-toggle" data-toggle="finance" aria-expanded="false">
-          <i class="fa-solid fa-coins sb-group-icon"></i>
-          <span class="sb-group-label">Finance</span>
-          <i class="fa-solid fa-chevron-down sb-group-chevron"></i>
-        </button>
-        <div class="sb-group-items" data-group-items="finance">
-          <a data-tab="fin-invoices" data-roles="admin,exec,finance,sales" data-counter="invoicesOpen"><i class="fa-solid fa-file-invoice"></i> Invoices</a>
-          <a data-tab="fin-payments" data-roles="admin,exec,finance" data-counter="payments"><i class="fa-solid fa-money-bill-wave"></i> Payments</a>
-          <a data-tab="fin-mpesa" data-roles="admin,exec,finance" data-counter="mpesaUnmatched"><i class="fa-solid fa-mobile-screen-button"></i> M-Pesa</a>
-          <a data-tab="fin-expenses" data-roles="admin,exec,finance" data-counter="expenses"><i class="fa-solid fa-money-bill-transfer"></i> Expenses</a>
-          <a data-tab="fin-payroll" data-roles="admin,exec,finance,hr" data-counter="payroll"><i class="fa-solid fa-money-check-dollar"></i> Payroll</a>
-          <a data-tab="ledger" data-roles="admin,exec,finance" data-counter="ledger"><i class="fa-solid fa-book"></i> General Ledger</a>
-        </div>
-      </div>
-
-      <!-- GROUP 7 · TRAINING -->
-      <div class="sb-group-wrap" data-group="training">
-        <button class="sb-group-toggle" data-toggle="training" aria-expanded="false">
-          <i class="fa-solid fa-graduation-cap sb-group-icon"></i>
-          <span class="sb-group-label">Training</span>
-          <i class="fa-solid fa-chevron-down sb-group-chevron"></i>
-        </button>
-        <div class="sb-group-items" data-group-items="training">
-          <a data-tab="training-overview" data-roles="admin,exec,hr,marketing,sales" data-counter="none"><i class="fa-solid fa-graduation-cap"></i> Training Dashboard</a>
-          <a data-tab="training-quizzes" data-roles="admin,exec,hr" data-counter="trainingQuizzesPending"><i class="fa-solid fa-file-circle-question"></i> Quiz Submissions <span class="nav-badge" id="quizzesNavBadge" style="display:none;">0</span></a>
-          <a data-tab="training-certificates" data-roles="admin,exec,hr" data-counter="trainingCertsPending"><i class="fa-solid fa-award"></i> Certificates <span class="nav-badge" id="certsNavBadge" style="display:none;">0</span></a>
-          <a data-tab="training-progress" data-roles="admin,exec,hr" data-counter="none"><i class="fa-solid fa-chart-line"></i> Training Progress</a>
-        </div>
-      </div>
-
-      <!-- GROUP 8 · PARTNER -->
-      <div class="sb-group-wrap" data-group="partnerui">
-        <button class="sb-group-toggle" data-toggle="partnerui" aria-expanded="false">
-          <i class="fa-solid fa-user-astronaut sb-group-icon"></i>
-          <span class="sb-group-label">Partner</span>
-          <i class="fa-solid fa-chevron-down sb-group-chevron"></i>
-        </button>
-        <div class="sb-group-items" data-group-items="partnerui">
-          <a data-tab="personal-todos" data-roles="all" data-counter="todosOpen"><i class="fa-solid fa-circle-check"></i> My To-Dos</a>
-          <a data-tab="personal-goals" data-roles="all" data-counter="goals"><i class="fa-solid fa-bullseye"></i> My Goals</a>
-          <a data-tab="personal-skills" data-roles="all" data-counter="skills"><i class="fa-solid fa-code-branch"></i> My Skills</a>
-          <a data-tab="partner-tasks" data-roles="all" data-counter="none"><i class="fa-solid fa-list-check"></i> Track Tasks</a>
-          <a data-tab="partner-hourly" data-roles="all" data-counter="none"><i class="fa-solid fa-clock-rotate-left"></i> Hourly Tracker</a>
-          <a data-tab="partner-schedule" data-roles="all" data-counter="none"><i class="fa-regular fa-calendar-days"></i> Track Schedule</a>
-          <a data-tab="partner-handoffs" data-roles="all" data-counter="none"><i class="fa-solid fa-arrows-rotate"></i> Handoffs</a>
-          <a data-tab="partner-financials" data-roles="all" data-counter="none"><i class="fa-solid fa-piggy-bank"></i> Personal Finance</a>
-          <a data-tab="partner-activities" data-roles="all" data-counter="none"><i class="fa-solid fa-wand-magic-sparkles"></i> Daily Activities</a>
-          <a data-tab="partner-chat" data-roles="all" data-counter="none"><i class="fa-solid fa-comments"></i> Partner Chat</a>
-          <a data-tab="partner-presence" data-roles="all" data-counter="none"><i class="fa-solid fa-wifi"></i> Presence</a>
-          <a data-tab="partner-games" data-roles="all" data-counter="none"><i class="fa-solid fa-dice"></i> Play Together</a>
-        </div>
-      </div>
-    </nav>
+      <!-- PERSONAL SUB-SECTION -->
+      <a data-tab="personal-todos" data-roles="all" data-counter="todosOpen"><i class="fa-solid fa-circle-check"></i> My To-Dos</a>
+      <a data-tab="personal-goals" data-roles="all" data-counter="goals"><i class="fa-solid fa-bullseye"></i> My Goals</a>
+      <a data-tab="personal-skills" data-roles="all" data-counter="skills"><i class="fa-solid fa-code-branch"></i> My Skills</a>
+      <a data-tab="partner-financials" data-roles="all" data-counter="none"><i class="fa-solid fa-piggy-bank"></i> My Personal Finance</a>
+      <a data-tab="partner-activities" data-roles="all" data-counter="none"><i class="fa-solid fa-wand-magic-sparkles"></i> My Daily Activities</a>
+      <a data-tab="partner-tasks" data-roles="all" data-counter="none"><i class="fa-solid fa-list-check"></i> Track Tasks</a>
+      <a data-tab="partner-hourly" data-roles="all" data-counter="none"><i class="fa-solid fa-clock-rotate-left"></i> Hourly Tracker</a>
+      <a data-tab="partner-schedule" data-roles="all" data-counter="none"><i class="fa-regular fa-calendar-days"></i> Track Schedule</a>
+      <a data-tab="partner-handoffs" data-roles="all" data-counter="none"><i class="fa-solid fa-arrows-rotate"></i> Handoffs</a>
+      <a data-tab="partner-chat" data-roles="all" data-counter="none"><i class="fa-solid fa-comments"></i> Partner Chat</a>
+      <a data-tab="partner-presence" data-roles="all" data-counter="none"><i class="fa-solid fa-wifi"></i> Presence</a>
+      <a data-tab="partner-games" data-roles="all" data-counter="none"><i class="fa-solid fa-dice"></i> Play Together</a>
+    </div>
+  </div>
+</nav>
 
     <div class="sidebar-footer">
       <button class="theme-toggle" id="themeToggle"><i class="fa-solid fa-moon"></i> Toggle Theme</button>
