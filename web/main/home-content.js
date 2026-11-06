@@ -436,23 +436,28 @@ function bindBucketsFamiliesPanel() {
   document.getElementById('hc-add-bucket-empty')?.addEventListener('click', () => openBucketEditor(null));
 
   /* Edit / Delete bucket */
-  document.querySelectorAll('[data-edit-bucket]').forEach(btn => {
-    btn.addEventListener('click', () => openBucketEditor(btn.dataset.editBucket));
-  });
-  document.querySelectorAll('[data-delete-bucket]').forEach(btn => {
-    btn.addEventListener('click', () => deleteBucket(btn.dataset.deleteBucket));
-  });
+  /* Delegate on the bucket list container so freshly-rendered
+     cards still respond to clicks. */
+  const bucketList = document.getElementById('hc-bucket-list');
+  if (bucketList && !bucketList._delegateBound) {
+    bucketList._delegateBound = true;
+    bucketList.addEventListener('click', (e) => {
+      const editB = e.target.closest('[data-edit-bucket]');
+      if (editB) { e.preventDefault(); openBucketEditor(editB.dataset.editBucket); return; }
 
-  /* Add family */
-  document.querySelectorAll('[data-add-family-in]').forEach(btn => {
-    btn.addEventListener('click', () => openFamilyEditor(null, btn.dataset.addFamilyIn));
-  });
-  document.querySelectorAll('[data-edit-family]').forEach(btn => {
-    btn.addEventListener('click', () => openFamilyEditor(btn.dataset.editFamily, null));
-  });
-  document.querySelectorAll('[data-delete-family]').forEach(btn => {
-    btn.addEventListener('click', () => deleteFamily(btn.dataset.deleteFamily));
-  });
+      const delB = e.target.closest('[data-delete-bucket]');
+      if (delB) { e.preventDefault(); deleteBucket(delB.dataset.deleteBucket); return; }
+
+      const addF = e.target.closest('[data-add-family-in]');
+      if (addF) { e.preventDefault(); openFamilyEditor(null, addF.dataset.addFamilyIn); return; }
+
+      const editF = e.target.closest('[data-edit-family]');
+      if (editF) { e.preventDefault(); openFamilyEditor(editF.dataset.editFamily, null); return; }
+
+      const delF = e.target.closest('[data-delete-family]');
+      if (delF) { e.preventDefault(); deleteFamily(delF.dataset.deleteFamily); return; }
+    });
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -715,12 +720,27 @@ function bindIndustriesPanel() {
   document.getElementById('hc-add-industry')?.addEventListener('click', () => openIndustryEditor(null));
   document.getElementById('hc-add-industry-empty')?.addEventListener('click', () => openIndustryEditor(null));
 
-  document.querySelectorAll('[data-edit-industry]').forEach(btn => {
-    btn.addEventListener('click', () => openIndustryEditor(btn.dataset.editIndustry));
-  });
-  document.querySelectorAll('[data-delete-industry]').forEach(btn => {
-    btn.addEventListener('click', () => deleteIndustry(btn.dataset.deleteIndustry));
-  });
+  /* Use event delegation so clicks on freshly-rendered cards still work.
+     Direct binding breaks every time renderIndustriesPanel() replaces
+     the grid HTML. */
+  const grid = document.getElementById('hc-industry-grid');
+  if (grid && !grid._delegateBound) {
+    grid._delegateBound = true;
+    grid.addEventListener('click', (e) => {
+      const editBtn = e.target.closest('[data-edit-industry]');
+      if (editBtn) {
+        e.preventDefault();
+        openIndustryEditor(editBtn.dataset.editIndustry);
+        return;
+      }
+      const delBtn = e.target.closest('[data-delete-industry]');
+      if (delBtn) {
+        e.preventDefault();
+        deleteIndustry(delBtn.dataset.deleteIndustry);
+        return;
+      }
+    });
+  }
 
   const search  = document.getElementById('hc-ind-search');
   const fbucket = document.getElementById('hc-ind-filter-bucket');
@@ -782,13 +802,16 @@ function openIndustryEditor(key, isRestore = false) {
     .sort((a, b) => (Number(a.order) || 999) - (Number(b.order) || 999));
 
   host.innerHTML = `
-    <div id="hc-ind-modal" role="dialog" aria-modal="true" aria-labelledby="hc-ind-modal-title"
-         style="position:fixed;inset:0;background:rgba(10,25,47,.6);display:flex;align-items:center;justify-content:center;padding:24px;z-index:10000;animation:hcFadeIn .18s ease;">
+      <div id="hc-ind-modal" role="dialog" aria-modal="true" aria-labelledby="hc-ind-modal-title"
+         style="position:fixed;inset:0;background:rgba(10,25,47,.7);
+                display:flex;align-items:center;justify-content:center;
+                padding:max(24px, env(safe-area-inset-top, 24px)) 24px max(24px, env(safe-area-inset-bottom, 24px));
+                z-index:99999;animation:hcFadeIn .18s ease;overflow-y:auto;">
 
-      <div id="hc-ind-card" style="background:var(--bg-elev-1);border-radius:18px;box-shadow:0 32px 80px -16px rgba(0,0,0,.5);
-                  width:100%;max-width:820px;max-height:calc(100vh - 48px);
+        <div id="hc-ind-card" style="background:var(--bg-elev-1);border-radius:18px;box-shadow:0 32px 80px -16px rgba(0,0,0,.5);
+                  width:100%;max-width:820px;max-height:calc(100vh - 80px);
                   display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--border-color);
-                  animation:hcSlideUp .22s cubic-bezier(0.34,1.56,0.64,1);">
+                  margin:auto;animation:hcSlideUp .22s cubic-bezier(0.34,1.56,0.64,1);">
 
         <!-- Sticky header -->
         <div style="padding:18px 24px;border-bottom:1px solid var(--border-color);
@@ -1083,15 +1106,8 @@ function openIndustryEditor(key, isRestore = false) {
   }
   bindRemoveButtons();
 
-  /* Delete */
-  document.getElementById('hc-ind-delete')?.addEventListener('click', async () => {
-    const ok = await confirmModal({
-      title: 'Delete industry?',
-      text: `"${existing.name || key}" will be removed from the tour and marketplace.`,
-      confirmLabel: 'Delete industry',
-      danger: true
-    });
-    if (!ok) return;
+document.getElementById('hc-ind-delete')?.addEventListener('click', async () => {
+    if (!confirm(`Delete industry "${existing.name || key}"? This cannot be undone.`)) return;
     try {
       await D.set(D.ref(D.db, `${D.P(INDUSTRIES_PATH)}/${key}`), null);
       if (D.state.data.industries) delete D.state.data.industries[key];
@@ -1210,18 +1226,24 @@ function openIndustryEditor(key, isRestore = false) {
   });
 }
 
-async function deleteIndustry(key) {
-  const ok = await confirmModal({
-    title: 'Delete industry?',
-    text: `"${key}" will be removed from the tour and marketplace.`,
-    confirmLabel: 'Delete industry',
-    danger: true
-  });
-  if (!ok) return;
+async function deleteBucket(key) {
+  if (!confirm(`Delete bucket "${key}"? Industries assigned to it will need to be reassigned manually.`)) return;
   try {
-    await D.set(D.ref(D.db, `${D.P(INDUSTRIES_PATH)}/${key}`), null);
-    if (D.state.data.industries) delete D.state.data.industries[key];
-    toast('Industry deleted.', 'success');
+    await D.set(D.ref(D.db, `${D.P(BUCKETS_PATH)}/${key}`), null);
+    if (D.state.data.homeContent?.tour?.buckets) delete D.state.data.homeContent.tour.buckets[key];
+    toast('Bucket deleted.', 'success');
+    renderPanels();
+  } catch (e) {
+    toast('Delete failed: ' + e.message, 'error');
+  }
+}
+
+async function deleteFamily(key) {
+  if (!confirm(`Delete family "${key}"? Industries assigned to it will need to be reassigned manually.`)) return;
+  try {
+    await D.set(D.ref(D.db, `${D.P(FAMILIES_PATH)}/${key}`), null);
+    if (D.state.data.homeContent?.tour?.families) delete D.state.data.homeContent.tour.families[key];
+    toast('Family deleted.', 'success');
     renderPanels();
   } catch (e) {
     toast('Delete failed: ' + e.message, 'error');
