@@ -96,20 +96,7 @@ const DEFAULTS = {
   newsletterDesc: 'Get notified about new products and exclusive KSh discounts.'
 };
 
-const CATEGORY_ICONS = {
-  'all': 'fa-solid fa-layer-group',
-  'Software Development': 'fa-solid fa-code',
-  'Website Development': 'fa-solid fa-globe',
-  'Application Development': 'fa-solid fa-mobile-screen',
-  'Personal Profile': 'fa-solid fa-user',
-  'Social Media': 'fa-solid fa-bullhorn',
-  'Graphics Design': 'fa-solid fa-palette',
-  'AI & Automation': 'fa-solid fa-robot',
-  'Cloud & DevOps': 'fa-solid fa-cloud',
-  'IT Support': 'fa-solid fa-screwdriver-wrench',
-  'Bundles': 'fa-solid fa-crown',
-  'Marketplace': 'fa-solid fa-store'
-};
+let INDUSTRY_MAP = {};
 
 let PROMO_CACHE = null;
 let REVIEW_CACHE = {};
@@ -329,6 +316,38 @@ const App = {
     if (!firebaseReady || !db) return;
     db.ref(P('promos')).on('value', snap => {
       PROMO_CACHE = snap.exists() ? (snap.val() || {}) : {};
+    });
+  },
+
+     watchIndustries() {
+    if (!firebaseReady || !db) {
+      INDUSTRY_MAP = {};
+      this.renderCategoryBar();
+      return;
+    }
+    db.ref(P('industries')).on('value', snap => {
+      const val = snap.exists() ? (snap.val() || {}) : {};
+      INDUSTRY_MAP = {};
+
+      Object.entries(val).forEach(([key, raw]) => {
+        const ind = raw || {};
+        if (ind.active === false) return;
+        const marketCat = String(ind.marketCategory || '').trim();
+        if (!marketCat) return;
+        INDUSTRY_MAP[marketCat] = {
+          key,
+          icon: ind.icon || 'fa-solid fa-tag',
+          color: ind.color || '#2267EE',
+          name: ind.name || marketCat,
+          marketCategory: marketCat,
+          order: Number(ind.order) || 999,
+        };
+      });
+
+      this.renderCategoryBar();
+    }, err => {
+      console.warn('[market] industries listener failed:', err);
+      setTimeout(() => this.watchIndustries(), 4000);
     });
   },
 
@@ -681,11 +700,27 @@ const App = {
   /* ═══════════════════════════════════════════════════════════
      CATEGORIES
      ═══════════════════════════════════════════════════════════ */
-  renderCategoryBar() {
+    renderCategoryBar() {
     const bar = document.getElementById('categoryBar');
     if (!bar) return;
 
-    const allCats = ['all', ...new Set(this.products.map(p => p.category).filter(Boolean))];
+    /* Build category list.
+       Primary source: INDUSTRY_MAP (populated from Firebase `industries`).
+       Fallback: compute from products if `industries` node is empty. */
+    const industryEntries = Object.values(INDUSTRY_MAP);
+    let allCats;
+
+    if (industryEntries.length > 0) {
+      /* Use market categories from industries, sorted by industry.order */
+      const sorted = industryEntries
+        .slice()
+        .sort((a, b) => a.order - b.order);
+      allCats = ['all', ...sorted.map(i => i.marketCategory)];
+    } else {
+      /* Fallback — categories directly from products */
+      allCats = ['all', ...new Set(this.products.map(p => p.category).filter(Boolean))];
+    }
+
     const q = (this._catSearch || '').toLowerCase().trim();
     const cats = q
       ? allCats.filter(c => c === 'all' || c.toLowerCase().includes(q))
@@ -696,11 +731,16 @@ const App = {
     const visible = collapsed ? cats.slice(0, 6) : cats;
 
     bar.innerHTML = visible.map(c => {
-      const icon = CATEGORY_ICONS[c] || 'fa-solid fa-tag';
+      const ind = INDUSTRY_MAP[c];
+      const icon = c === 'all'
+        ? 'fa-solid fa-layer-group'
+        : (ind ? ind.icon : 'fa-solid fa-tag');
+      const color = c === 'all' ? null : (ind ? ind.color : null);
       const label = c === 'all' ? 'All Products' : c;
       const active = this.activeCategory === c ? 'active' : '';
+
       return `<button class="cat-btn ${active}" data-cat="${this.escape(c)}" role="tab">
-        <i class="${icon}"></i> ${this.escape(label)}
+        <i class="${icon}"${color ? ` style="color:${color}"` : ''}></i> ${this.escape(label)}
       </button>`;
     }).join('');
 
@@ -807,6 +847,23 @@ const App = {
 
     let list = this.products;
     if (this.activeCategory !== 'all') list = list.filter(p => p.category === this.activeCategory);
+
+         /* If the active category no longer exists (admin renamed/deleted an
+       industry), reset to 'all'. Prevents the grid from going empty
+       when a category is removed while a user has it selected. */
+    if (this.activeCategory !== 'all') {
+      const stillExists = Object.values(INDUSTRY_MAP).some(
+        ind => ind.marketCategory === this.activeCategory
+      );
+      if (!stillExists && !this.products.some(p => p.category === this.activeCategory)) {
+        this.activeCategory = 'all';
+        this.renderCategoryBar();
+      }
+    }
+
+    let list = this.products;
+    if (this.activeCategory !== 'all') list = list.filter(p => p.category === this.activeCategory);
+     
     if (this.searchTerm) {
       const q = this.searchTerm;
       list = list.filter(p =>
@@ -2403,12 +2460,12 @@ const App = {
 
     this.renderCart();
     this.renderWishlistBadge();
-
     this.watchContent();
     this.watchProducts();
     this.watchInventory();
     this.watchProductExtras();
     this.watchPromos();
+    this.watchIndustries();
 
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden && firebaseReady && db) {
