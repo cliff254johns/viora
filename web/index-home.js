@@ -1,18 +1,22 @@
 /* ═══════════════════════════════════════════════════════════════
-   VIORA — INDEX HOME CONTROLLER
+   VIORA — INDEX HOME CONTROLLER (v3.0)
    ═══════════════════════════════════════════════════════════════
 
    Loads on index.html only. Requires:
      - shared-app.js          (nav, drawer, theme, canvas network, reveal)
      - order-modal.js         (shared purchase modal)
      - category-modal.js      (tour "More" popup)
-     - assets/default-categories.js  (fallback content)
      - Three.js r128+         (for the 3D globe)
 
    Firebase subscriptions:
      viora_data/orgs/viora/homeContent     → drives most landing sections
+     viora_data/orgs/viora/homeContent/tour/meta     → tour eyebrow/heading/sub
+     viora_data/orgs/viora/homeContent/tour/buckets  → flat node
+     viora_data/orgs/viora/homeContent/tour/families → flat node
+     viora_data/orgs/viora/homeContent/productStrip  → strip config
+     viora_data/orgs/viora/industries                → tour + strip source
      viora_data/orgs/viora/marketContent   → stats, testimonials, FAQs, trust
-     viora_data/orgs/viora/products        → product strip (top 6 by totalSold)
+     viora_data/orgs/viora/products        → product strip
 
    Public API (for debugging):
      window.VioraHome
@@ -43,21 +47,45 @@ const S = {
   homeContent: null,
   marketContent: null,
   products: [],
-  categories: {},           // merged homeContent.tour.categories + defaults
-  activeBucket: 'run',
+  industries: {},
+  activeBucket: null,
   activeFamily: null,
+  activeIndustry: null,
+  step: 'bucket',
+  search: '',
   ready: false,
 };
 
 /* ── Helpers ── */
 const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-const esc = (s) => String(s == null ? '' : s)
+
+const escHtml = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
+const escAttr = escHtml;
+
 const fmtKSh = (usd) => 'KSh ' + Math.round((Number(usd) || 0) * KES_RATE).toLocaleString('en-KE');
 const fmtKShKes = (kes) => 'KSh ' + Math.round(Number(kes) || 0).toLocaleString('en-KE');
+
+const debounceFn = (fn, ms) => {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn.apply(null, args), ms || 200);
+  };
+};
+
+const flattenNode = (node) => {
+  if (!node || typeof node !== 'object') return {};
+  if (Array.isArray(node)) {
+    const out = {};
+    node.forEach((item, i) => { if (item) out[item.key || i] = item; });
+    return out;
+  }
+  return node;
+};
 
 /* ═══════════════════════════════════════════════════════════════
    BOOT
@@ -87,7 +115,6 @@ async function boot() {
   if (fb) {
     fb.onValue(fb.ref(fb.db, `${ROOT}/homeContent`), snap => {
       S.homeContent = snap.exists() ? snap.val() : {};
-      mergeCategories();
       S.ready = true;
       renderAll();
     });
@@ -102,10 +129,13 @@ async function boot() {
         .filter(p => p.status !== 'archived' && p.status !== 'draft');
       renderAll();
     });
+    fb.onValue(fb.ref(fb.db, `${ROOT}/industries`), snap => {
+      S.industries = snap.exists() ? snap.val() : {};
+      renderAll();
+    });
   } else {
-    /* Offline fallback — render from defaults */
-    S.homeContent = window.__VIORA_DEFAULT_HOME || {};
-    mergeCategories();
+    S.homeContent = {};
+    S.industries = {};
     S.ready = true;
     renderAll();
   }
@@ -120,12 +150,11 @@ async function boot() {
 function toastFallback(msg, type = 'info') {
   try {
     if (window.Viora?.toast) { window.Viora.toast(msg, type); return; }
-    // shared-app.js doesn't ship a toast, so make one
     const el = document.createElement('div');
     el.textContent = msg;
     el.style.cssText = `position:fixed;bottom:24px;right:24px;z-index:9999;padding:12px 18px;border-radius:10px;
       background:${type === 'error' ? '#DC2626' : type === 'success' ? '#10B981' : '#2267EE'};color:#fff;
-      font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);animation:slideIn .25s ease;`;
+      font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);`;
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 4000);
   } catch (_) {}
@@ -150,29 +179,14 @@ async function loadFirebase() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   MERGE CATEGORIES — homeContent.tour.categories + defaults
-   ═══════════════════════════════════════════════════════════════ */
-function mergeCategories() {
-  const defaults = window.__VIORA_DEFAULT_CATEGORIES || {};
-  const fromAdmin = (S.homeContent?.tour?.categories) || {};
-  S.categories = {};
-  Object.keys(defaults).forEach(key => {
-    S.categories[key] = { ...defaults[key], ...(fromAdmin[key] || {}) };
-  });
-  Object.keys(fromAdmin).forEach(key => {
-    if (!S.categories[key]) S.categories[key] = { ...fromAdmin[key] };
-  });
-}
-
-/* ═══════════════════════════════════════════════════════════════
    RENDER ALL SECTIONS
    ═══════════════════════════════════════════════════════════════ */
 function renderAll() {
   renderHero();
   renderStatsStrip();
   renderIntentRouter();
-  renderTour();
-  renderProductStrip();
+  renderChatTour();
+  renderProductCarousel();
   renderEcoMap();
   renderDashboard();
   renderTestimonials();
@@ -225,15 +239,15 @@ function renderStatsStrip() {
   host.innerHTML = `
     <div class="stats-strip-item">
       <div class="stats-strip-value">${prodCount}+</div>
-      <div class="stats-strip-label">${esc(mc.statProductsLabel || 'Solutions')}</div>
+      <div class="stats-strip-label">${escHtml(mc.statProductsLabel || 'Solutions')}</div>
     </div>
     <div class="stats-strip-item">
       <div class="stats-strip-value">${clients}+</div>
-      <div class="stats-strip-label">${esc(mc.statClientsLabel || 'Happy Clients')}</div>
+      <div class="stats-strip-label">${escHtml(mc.statClientsLabel || 'Happy Clients')}</div>
     </div>
     <div class="stats-strip-item">
       <div class="stats-strip-value">${projects}+</div>
-      <div class="stats-strip-label">${esc(mc.statProjectsLabel || 'Delivered')}</div>
+      <div class="stats-strip-label">${escHtml(mc.statProjectsLabel || 'Delivered')}</div>
     </div>
     <div class="stats-strip-item">
       <div class="stats-strip-value">2022</div>
@@ -256,332 +270,479 @@ function renderIntentRouter() {
   ];
 
   host.innerHTML = tiles.map(t => `
-    <a href="${esc(t.href)}" class="intent-tile">
-      <div class="intent-icon"><i class="fa-solid ${esc(t.icon || 'fa-cube')}"></i></div>
-      <h3>${esc(t.title)}</h3>
-      <p>${esc(t.desc || '')}</p>
+    <a href="${escAttr(t.href)}" class="intent-tile">
+      <div class="intent-icon"><i class="fa-solid ${escAttr(t.icon || 'fa-cube')}"></i></div>
+      <h3>${escHtml(t.title)}</h3>
+      <p>${escHtml(t.desc || '')}</p>
       <span class="intent-arrow">Open <i class="fa-solid fa-arrow-right"></i></span>
     </a>
   `).join('');
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   4. TOUR
+   4. CHAT TOUR — ChatGPT-style drill-down
    ═══════════════════════════════════════════════════════════════ */
-function renderTour() {
-  const tour = S.homeContent?.tour || {};
-  const buckets = tour.buckets || defaultBuckets();
+function renderChatTour() {
+  const host = $('#chat-tour');
+  if (!host) return;
 
-  /* Bucket tabs */
-  const tabsHost = $('#tour-buckets');
-  if (tabsHost) {
-    tabsHost.innerHTML = buckets.map(b => `
-      <button type="button" class="tour-bucket-btn"
-              data-bucket="${esc(b.key)}"
-              aria-selected="${b.key === S.activeBucket ? 'true' : 'false'}"
-              role="tab">
-        ${esc(b.name)}
-      </button>
-    `).join('');
-    tabsHost.querySelectorAll('[data-bucket]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        S.activeBucket = btn.dataset.bucket;
-        renderTour();
-      });
-    });
+  const meta = S.homeContent?.tour?.meta || {};
+  const eyebrowEl = $('#tour-eyebrow');
+  const headingEl = $('#tour-heading');
+  const subEl     = $('#tour-sub');
+  if (eyebrowEl) eyebrowEl.textContent = meta.eyebrow || 'What we build';
+  if (headingEl) headingEl.textContent = meta.heading || '45+ solutions. One core.';
+  if (subEl)     subEl.textContent     = meta.sub     || 'Every product in this tour is designed, built and supported by VIORA.';
+
+  const buckets    = Object.values(flattenNode(S.homeContent?.tour?.buckets));
+  const families   = Object.values(flattenNode(S.homeContent?.tour?.families));
+  const industries = Object.values(flattenNode(S.industries)).filter(i => i.active !== false);
+
+  if (buckets.length === 0) {
+    const section = $('#tour');
+    if (section) section.style.display = 'none';
+    return;
+  }
+  const section = $('#tour');
+  if (section) section.style.display = 'block';
+
+  const step = S.step || 'bucket';
+
+  if (step === 'family' && !S.activeBucket) {
+    S.step = 'bucket'; S.activeFamily = null; S.activeIndustry = null;
+  }
+  if (step === 'industry' && (!S.activeBucket || !S.activeFamily)) {
+    S.step = S.activeBucket ? 'family' : 'bucket';
+    S.activeIndustry = null;
+  }
+  if (step === 'detail' && !S.activeIndustry) {
+    S.step = 'industry';
   }
 
-  /* Bucket panels */
-  const panelsHost = $('#tour-panels');
-  if (!panelsHost) return;
+  if (S.step === 'bucket')          renderTourStepBucket(host, buckets);
+  else if (S.step === 'family')     renderTourStepFamily(host, buckets, families);
+  else if (S.step === 'industry')   renderTourStepIndustry(host, buckets, families, industries);
+  else                              renderTourStepDetail(host, buckets, families, industries);
+}
 
-  panelsHost.innerHTML = buckets.map(b => {
-    const isActive = b.key === S.activeBucket;
-    const families = b.families || [];
-    return `
-      <div class="tour-bucket-panel" data-active="${isActive ? 'true' : 'false'}" data-bucket-panel="${esc(b.key)}">
-        <div class="tour-families">
-          ${families.map(f => `
-            <div class="tour-family">
-              <h3>${esc(f.name)}</h3>
-              <p>${esc(f.desc || '')}</p>
-              <div class="tour-family-list">
-                ${(f.items || []).map(key => {
-                  const cat = S.categories[key];
-                  if (!cat || cat.hidden) return '';
-                  return `
-                    <button type="button" class="tour-chip" data-category="${esc(key)}">
-                      <i class="fa-solid ${esc(cat.icon || 'fa-cube')}"></i>
-                      ${esc(cat.name || key)}
-                    </button>
-                  `;
-                }).join('')}
-              </div>
-            </div>
-          `).join('')}
+/* ── Step 1: Bucket selection ── */
+function renderTourStepBucket(host, buckets) {
+  const q = (S.search || '').toLowerCase().trim();
+  const visible = buckets
+    .filter(b => !q || (b.name || '').toLowerCase().includes(q) || (b.desc || '').toLowerCase().includes(q))
+    .sort((a, b) => (Number(a.order) || 999) - (Number(b.order) || 999));
+
+  host.innerHTML = `
+    <div class="chat-bubble assistant">
+      <div class="chat-bubble-icon"><i class="fa-solid fa-robot"></i></div>
+      <div class="chat-bubble-body">
+        <div class="chat-bubble-title">What are you trying to do?</div>
+        <div class="chat-search-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" class="chat-search" id="tour-search" placeholder="Search…" value="${escAttr(S.search)}" autocomplete="off"/>
         </div>
-
-        <div class="tour-cards">
-          ${families.flatMap(f => (f.items || [])).map(key => {
-            const cat = S.categories[key];
-            if (!cat || cat.hidden) return '';
-            return renderTourCard(key, cat);
-          }).join('')}
+        <div class="chat-chips">
+          ${visible.length === 0
+            ? `<div class="chat-empty">No matches — try a different word.</div>`
+            : visible.map(b => `
+              <button type="button" class="chat-chip" data-bucket="${escAttr(b.key)}">
+                <i class="${escAttr(b.icon || 'fa-solid fa-cube')}" style="color:${escAttr(b.color || '#2267EE')}"></i>
+                <span>${escHtml(b.name || b.key)}</span>
+              </button>
+            `).join('')}
         </div>
       </div>
-    `;
-  }).join('');
+    </div>
+  `;
 
-  /* Wire chips → scroll to card */
-  panelsHost.querySelectorAll('.tour-chip[data-category]').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const key = chip.dataset.category;
-      const card = panelsHost.querySelector(`[data-tour-card="${key}"]`);
-      if (card) {
-        card.scrollIntoView({ behavior: prefersReduce() ? 'auto' : 'smooth', block: 'center' });
-        card.style.boxShadow = '0 0 0 3px var(--accent)';
-        setTimeout(() => { card.style.boxShadow = ''; }, 1200);
-      }
+  host.querySelectorAll('[data-bucket]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      S.activeBucket = btn.dataset.bucket;
+      S.activeFamily = null;
+      S.activeIndustry = null;
+      S.step = 'family';
+      S.search = '';
+      renderChatTour();
     });
   });
 
-  /* Wire tour card buttons */
-  panelsHost.querySelectorAll('[data-tour-card]').forEach(card => {
-    const key = card.dataset.tourCard;
-    const cat = S.categories[key];
+  bindSearchInput(host);
+}
 
-    const sampleBtn = card.querySelector('[data-action="sample"]');
-    if (sampleBtn && cat?.viewSampleUrl) {
-      sampleBtn.addEventListener('click', () => {
-        window.open(cat.viewSampleUrl, '_blank', 'noopener,noreferrer');
-      });
-    } else if (sampleBtn) {
-      sampleBtn.style.display = 'none';
-    }
+/* ── Step 2: Family selection ── */
+function renderTourStepFamily(host, buckets, families) {
+  const bucket = buckets.find(b => b.key === S.activeBucket);
+  if (!bucket) { S.step = 'bucket'; return renderChatTour(); }
 
-    const orderBtn = card.querySelector('[data-action="order"]');
-    if (orderBtn) {
-      orderBtn.addEventListener('click', () => {
-        openOrderModal({
-          category: cat?.marketCategory || cat?.name || key,
-        });
-      });
-    }
+  const q = (S.search || '').toLowerCase().trim();
+  const visible = families
+    .filter(f => f.bucket === S.activeBucket)
+    .filter(f => !q || (f.name || '').toLowerCase().includes(q) || (f.desc || '').toLowerCase().includes(q))
+    .sort((a, b) => (Number(a.order) || 999) - (Number(b.order) || 999));
 
-    const moreBtn = card.querySelector('[data-action="more"]');
-    if (moreBtn) {
-      moreBtn.addEventListener('click', () => {
-        openCategoryModal(key, cat);
-      });
-    }
+  host.innerHTML = `
+    <div class="chat-bubble user">
+      <div class="chat-bubble-body">
+        <div class="chat-bubble-title">${escHtml(bucket.name)}</div>
+        <button type="button" class="chat-back" data-back="bucket">
+          <i class="fa-solid fa-arrow-left"></i> Back
+        </button>
+      </div>
+    </div>
+
+    <div class="chat-bubble assistant">
+      <div class="chat-bubble-icon"><i class="fa-solid fa-robot"></i></div>
+      <div class="chat-bubble-body">
+        <div class="chat-bubble-title">Got it — what area?</div>
+        <div class="chat-search-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" class="chat-search" id="tour-search" placeholder="Search…" value="${escAttr(S.search)}" autocomplete="off"/>
+        </div>
+        <div class="chat-chips">
+          ${visible.length === 0
+            ? `<div class="chat-empty">No families here yet — check back soon.</div>`
+            : visible.map(f => `
+              <button type="button" class="chat-chip" data-family="${escAttr(f.key)}">
+                <i class="${escAttr(f.icon || 'fa-solid fa-folder')}" style="color:${escAttr(bucket.color || '#2267EE')}"></i>
+                <span>${escHtml(f.name || f.key)}</span>
+              </button>
+            `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+
+  host.querySelector('[data-back="bucket"]')?.addEventListener('click', () => {
+    S.step = 'bucket';
+    S.activeBucket = null;
+    S.activeFamily = null;
+    S.search = '';
+    renderChatTour();
+  });
+
+  host.querySelectorAll('[data-family]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      S.activeFamily = btn.dataset.family;
+      S.activeIndustry = null;
+      S.step = 'industry';
+      S.search = '';
+      renderChatTour();
+    });
+  });
+
+  bindSearchInput(host);
+}
+
+/* ── Step 3: Industry selection ── */
+function renderTourStepIndustry(host, buckets, families, industries) {
+  const bucket = buckets.find(b => b.key === S.activeBucket);
+  const family = families.find(f => f.key === S.activeFamily);
+  if (!bucket || !family) { S.step = 'bucket'; return renderChatTour(); }
+
+  const q = (S.search || '').toLowerCase().trim();
+  const visible = industries
+    .filter(i => i.bucket === S.activeBucket && i.family === S.activeFamily)
+    .filter(i => !q || (i.name || '').toLowerCase().includes(q) || (i.desc || '').toLowerCase().includes(q))
+    .sort((a, b) => (Number(a.order) || 999) - (Number(b.order) || 999));
+
+  host.innerHTML = `
+    <div class="chat-bubble user">
+      <div class="chat-bubble-body">
+        <div class="chat-bubble-title">
+          <span style="opacity:.6;">${escHtml(bucket.name)}</span>
+          <span style="opacity:.4;margin:0 6px;">›</span>
+          ${escHtml(family.name)}
+        </div>
+        <button type="button" class="chat-back" data-back="family">
+          <i class="fa-solid fa-arrow-left"></i> Back
+        </button>
+        <button type="button" class="chat-back" data-back="start" style="margin-left:8px;">
+          <i class="fa-solid fa-house"></i> Start over
+        </button>
+      </div>
+    </div>
+
+    <div class="chat-bubble assistant">
+      <div class="chat-bubble-icon"><i class="fa-solid fa-robot"></i></div>
+      <div class="chat-bubble-body">
+        <div class="chat-bubble-title">Which industry?</div>
+        <div class="chat-search-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" class="chat-search" id="tour-search" placeholder="Search…" value="${escAttr(S.search)}" autocomplete="off"/>
+        </div>
+        <div class="chat-chips">
+          ${visible.length === 0
+            ? `<div class="chat-empty">No industries here yet — check back soon.</div>`
+            : visible.map(i => `
+              <button type="button" class="chat-chip" data-industry="${escAttr(i.key)}">
+                <span style="font-size:16px;">${escHtml(i.emoji || '📦')}</span>
+                <span>${escHtml(i.name || i.key)}</span>
+              </button>
+            `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+
+  host.querySelector('[data-back="family"]')?.addEventListener('click', () => {
+    S.step = 'family';
+    S.activeFamily = null;
+    S.search = '';
+    renderChatTour();
+  });
+  host.querySelector('[data-back="start"]')?.addEventListener('click', () => {
+    S.step = 'bucket';
+    S.activeBucket = null;
+    S.activeFamily = null;
+    S.activeIndustry = null;
+    S.search = '';
+    renderChatTour();
+  });
+  host.querySelectorAll('[data-industry]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      S.activeIndustry = btn.dataset.industry;
+      S.step = 'detail';
+      S.search = '';
+      renderChatTour();
+    });
+  });
+
+  bindSearchInput(host);
+}
+
+/* ── Step 4: Industry detail card ── */
+function renderTourStepDetail(host, buckets, families, industries) {
+  const bucket = buckets.find(b => b.key === S.activeBucket);
+  const family = families.find(f => f.key === S.activeFamily);
+  const ind = industries.find(i => i.key === S.activeIndustry);
+  if (!ind) { S.step = 'industry'; return renderChatTour(); }
+
+  const imageData = ind.image || ind.imageUrl || '';
+  const color = ind.color || '#2267EE';
+  const bullets = Array.isArray(ind.bullets) ? ind.bullets : [];
+  const stats   = Array.isArray(ind.stats)   ? ind.stats   : [];
+
+  host.innerHTML = `
+    <div class="chat-bubble user">
+      <div class="chat-bubble-body">
+        <div class="chat-bubble-title">
+          <span style="opacity:.6;">${escHtml(bucket?.name || '')}</span>
+          <span style="opacity:.4;margin:0 6px;">›</span>
+          <span style="opacity:.6;">${escHtml(family?.name || '')}</span>
+          <span style="opacity:.4;margin:0 6px;">›</span>
+          ${escHtml(ind.name)}
+        </div>
+        <button type="button" class="chat-back" data-back="industry">
+          <i class="fa-solid fa-arrow-left"></i> Back
+        </button>
+        <button type="button" class="chat-back" data-back="start" style="margin-left:8px;">
+          <i class="fa-solid fa-house"></i> Start over
+        </button>
+      </div>
+    </div>
+
+    <div class="chat-bubble assistant">
+      <div class="chat-bubble-icon"><i class="fa-solid fa-robot"></i></div>
+      <div class="chat-bubble-body">
+        <div class="chat-bubble-title">Here's your ${escHtml(ind.name)} solution</div>
+        <div class="tour-detail-card" style="border-color:${escAttr(color)}33;">
+          <div class="tour-detail-visual" style="background:${escAttr(color)}15;">
+            ${imageData
+              ? `<img src="${escAttr(imageData)}" alt="${escAttr(ind.name || '')}" loading="lazy"/>`
+              : `<i class="${escAttr(ind.icon || 'fa-solid fa-cube')}" style="color:${escAttr(color)};font-size:64px;"></i>`}
+          </div>
+          <div class="tour-detail-body">
+            <div class="tour-detail-head">
+              <span class="tour-detail-emoji">${escHtml(ind.emoji || '📦')}</span>
+              <h3>${escHtml(ind.name)}</h3>
+            </div>
+            <p class="tour-detail-desc">${escHtml(ind.desc || '')}</p>
+            ${bullets.length ? `
+              <ul class="tour-detail-bullets">
+                ${bullets.map(b => `<li><i class="fa-solid fa-check"></i> ${escHtml(b)}</li>`).join('')}
+              </ul>
+            ` : ''}
+            ${stats.length ? `
+              <div class="tour-detail-stats">
+                ${stats.map(s => `
+                  <div class="tour-detail-stat">
+                    <div class="tour-detail-stat-v">${escHtml(s.v || '')}</div>
+                    <div class="tour-detail-stat-l">${escHtml(s.l || '')}</div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+            <div class="tour-detail-actions">
+              ${ind.previewUrl ? `
+                <a href="${escAttr(ind.previewUrl)}" target="_blank" rel="noopener" class="btn btn-outline">
+                  <i class="fa-solid fa-eye"></i> View sample
+                </a>
+              ` : ''}
+              <button type="button" class="btn btn-primary" data-buy>
+                <i class="fa-solid fa-bolt"></i> Buy now
+              </button>
+              <a href="client.html" class="btn btn-ghost">
+                <i class="fa-solid fa-crown"></i> Subscribe
+              </a>
+              <button type="button" class="btn btn-ghost" data-more>
+                <i class="fa-solid fa-circle-info"></i> More
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  host.querySelector('[data-back="industry"]')?.addEventListener('click', () => {
+    S.step = 'industry';
+    S.activeIndustry = null;
+    renderChatTour();
+  });
+  host.querySelector('[data-back="start"]')?.addEventListener('click', () => {
+    S.step = 'bucket';
+    S.activeBucket = null;
+    S.activeFamily = null;
+    S.activeIndustry = null;
+    S.search = '';
+    renderChatTour();
+  });
+
+  host.querySelector('[data-buy]')?.addEventListener('click', () => {
+    openOrderModal({ category: ind.marketCategory || ind.name });
+  });
+  host.querySelector('[data-more]')?.addEventListener('click', () => {
+    openCategoryModal(ind.key, {
+      name: ind.name,
+      icon: ind.icon || 'fa-cube',
+      desc: ind.desc || '',
+      longDesc: ind.longDesc || ind.desc || '',
+      included: ind.included || [],
+      demoUrl: ind.previewUrl || '',
+      gallery: [],
+      products: [],
+      faqs: ind.faqs || [],
+      viewSampleUrl: ind.previewUrl || '',
+    });
   });
 }
 
-function renderTourCard(key, cat) {
-  const bullets = (cat.bullets || []).slice(0, 3);
-  const stats = (cat.stats || []).slice(0, 3);
-  return `
-    <article class="tour-card" data-tour-card="${esc(key)}">
-      <div class="tour-card-icon"><i class="fa-solid ${esc(cat.icon || 'fa-cube')}"></i></div>
-      <h4>${esc(cat.name || key)}</h4>
-      <p class="tour-card-desc">${esc(cat.desc || '')}</p>
-      ${bullets.length ? `
-        <ul class="tour-card-bullets">
-          ${bullets.map(b => `<li>${esc(b)}</li>`).join('')}
-        </ul>
-      ` : ''}
-      ${stats.length ? `
-        <div class="tour-card-stats">
-          ${stats.map(s => `
-            <div class="tour-card-stat">
-              <span class="tour-card-stat-v">${esc(s.v || '')}</span>
-              <span class="tour-card-stat-l">${esc(s.l || '')}</span>
-            </div>
-          `).join('')}
-        </div>
-      ` : ''}
-      <div class="tour-card-actions">
-        <button type="button" class="btn btn-ghost" data-action="sample">
-          <i class="fa-solid fa-eye"></i> View sample
-        </button>
-        <button type="button" class="btn btn-primary" data-action="order">
-          <i class="fa-solid fa-bolt"></i> Order now
-        </button>
-        <button type="button" class="btn btn-ghost btn-icon-only" data-action="more" title="More details">
-          <i class="fa-solid fa-circle-info"></i>
-        </button>
-      </div>
-    </article>
-  `;
-}
-
-function defaultBuckets() {
-  return [
-    {
-      key: 'run',
-      name: 'Run my business',
-      desc: 'Software systems that run your operation — designed, built and supported by VIORA.',
-      families: [
-        {
-          key: 'core',
-          name: 'Core business systems',
-          desc: 'The foundation — sales, stock, finance.',
-          items: ['business-mgmt', 'financial', 'operational', 'inventory-pos'],
-        },
-        {
-          key: 'vertical',
-          name: 'Vertical industry systems',
-          desc: 'Purpose-built for a specific sector.',
-          items: [
-            'retail', 'restaurant', 'clinic', 'hospital', 'pharmacy', 'school',
-            'hotel', 'salon', 'gym', 'garage', 'veterinary', 'farm',
-            'construction', 'real-estate', 'funeral', 'laundry', 'security',
-            'cleaning', 'greenhouse', 'photography', 'event', 'recruitment',
-            'travel', 'printing',
-          ],
-        },
-        {
-          key: 'professional',
-          name: 'Professional practice',
-          desc: 'Law, architecture, insurance.',
-          items: ['law', 'architecture', 'insurance'],
-        },
-      ],
-    },
-    {
-      key: 'sell',
-      name: 'Sell more online',
-      desc: 'Online presence and storefronts — designed, built and hosted by VIORA.',
-      families: [
-        {
-          key: 'storefront',
-          name: 'Storefronts',
-          desc: 'Sell online, connected to your stock.',
-          items: ['ecommerce', 'commerce', 'online-stores'],
-        },
-        {
-          key: 'web',
-          name: 'Web experiences',
-          desc: 'Custom websites and 3D experiences.',
-          items: ['web3d', 'web', 'entertainment-web'],
-        },
-        {
-          key: 'media',
-          name: 'Media & branding',
-          desc: 'Video, graphics, brand identity.',
-          items: ['video', 'graphics', 'branding'],
-        },
-      ],
-    },
-    {
-      key: 'build',
-      name: 'Build something custom',
-      desc: 'Bespoke systems, AI and mobile — architected and delivered by VIORA.',
-      families: [
-        {
-          key: 'software',
-          name: 'Custom software',
-          desc: 'Bespoke builds, integrations, APIs.',
-          items: ['custom', 'enterprise', 'api'],
-        },
-        {
-          key: 'intelligence',
-          name: 'AI & intelligence',
-          desc: 'Assistants, automation, analytics.',
-          items: ['ai-assistant', 'ai-automation', 'ai-analytics'],
-        },
-        {
-          key: 'mobile',
-          name: 'Mobile',
-          desc: 'Native and cross-platform apps.',
-          items: ['android', 'mobile-apps'],
-        },
-      ],
-    },
-  ];
-}
-
-function prefersReduce() {
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+/* ── Shared search input binder ── */
+function bindSearchInput(host) {
+  const searchEl = host.querySelector('#tour-search');
+  if (!searchEl) return;
+  const handler = debounceFn((e) => {
+    S.search = e.target.value;
+    renderChatTour();
+    const newSearch = document.getElementById('tour-search');
+    if (newSearch) {
+      newSearch.focus();
+      const len = newSearch.value.length;
+      newSearch.setSelectionRange(len, len);
+    }
+  }, 200);
+  searchEl.addEventListener('input', handler);
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   5. PRODUCT STRIP — LIVE from Firebase
+   5. PRODUCT CAROUSEL
    ═══════════════════════════════════════════════════════════════ */
-function renderProductStrip() {
-  const host = $('#product-strip-grid');
+function renderProductCarousel() {
+  const host = $('#strip-carousel');
   if (!host) return;
+
   const ps = S.homeContent?.productStrip || {};
-  const limit = Number(ps.limit) || 6;
+  const eyebrowEl = $('#strip-eyebrow');
+  const headingEl = $('#strip-heading');
+  const subEl     = $('#strip-sub');
+  const ctaEl     = $('#strip-cta');
+  if (eyebrowEl && ps.eyebrow) eyebrowEl.textContent = ps.eyebrow;
+  if (headingEl && ps.heading) headingEl.textContent = ps.heading;
+  if (subEl && ps.sub)         subEl.textContent     = ps.sub;
+  if (ctaEl && ps.ctaHref) {
+    ctaEl.href = ps.ctaHref;
+    if (ps.ctaLabel) ctaEl.textContent = ps.ctaLabel;
+  }
 
-  const list = S.products
-    .slice()
-    .sort((a, b) => (Number(b.totalSold) || 0) - (Number(a.totalSold) || 0))
-    .slice(0, limit);
+  const industries = Object.values(flattenNode(S.industries));
+  const selectedIndustry = industries.find(i => i.key === ps.industry);
 
-  if (!list.length) {
-    host.innerHTML = `<div class="product-strip-loading"><i class="fa-solid fa-spinner"></i> Loading products…</div>`;
+  const stripSection = $('.product-strip');
+  if (!selectedIndustry) {
+    if (stripSection) stripSection.style.display = 'none';
+    return;
+  }
+  if (stripSection) stripSection.style.display = 'block';
+
+  const marketCat = (selectedIndustry.marketCategory || '').toLowerCase().trim();
+  let list = S.products.filter(p => (p.category || '').toLowerCase().trim() === marketCat);
+
+  list.sort((a, b) => (Number(b.totalSold) || 0) - (Number(a.totalSold) || 0));
+
+  const limit = Number(ps.limit) || 12;
+  if (limit > 0) list = list.slice(0, limit);
+
+  if (list.length === 0) {
+    host.innerHTML = `
+      <div class="strip-empty">
+        <i class="fa-solid fa-box-open"></i>
+        <p>No products in <strong>${escHtml(selectedIndustry.name || marketCat)}</strong> yet.</p>
+      </div>
+    `;
     return;
   }
 
   host.innerHTML = list.map(p => {
     const kes = Math.round((Number(p.price) || 0) * KES_RATE);
     const extras = (S.homeContent?.productExtras || {})[p.id] || {};
-    const previewUrl = p.previewUrl || p.link || extras.previewUrl || '';
     const isCustom = extras.productType === 'custom' || extras.productType === 'service' || p.pricing === 'quote';
-
-    const visual = p.image
-      ? `<img src="${esc(p.image)}" alt="${esc(p.name || '')}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';">`
-      : '';
-
-    /* Primary CTA row — 3 buttons */
-    const actions = isCustom
-      ? `<button type="button" class="btn btn-primary" data-action="quote">Request quote</button>
-         <a href="client.html" class="btn btn-ghost">Subscribe</a>`
-      : `<button type="button" class="btn btn-primary" data-action="buy">Buy</button>
-         <a href="client.html" class="btn btn-ghost">Subscribe</a>`;
-
-    const viewBtn = previewUrl
-      ? `<a href="${esc(previewUrl)}" target="_blank" rel="noopener" class="btn btn-ghost" data-action="view">View</a>`
-      : '';
-
-    const moreBtn = `<button type="button" class="btn btn-ghost" data-action="more">More</button>`;
+    const previewUrl = p.previewUrl || p.link || extras.previewUrl || '';
+    const image = p.image || '';
 
     return `
-      <article class="product-strip-card" data-product-id="${esc(p.id)}">
-        <div class="product-strip-visual">
-          ${visual}
-          <i class="fa-solid ${esc(p.icon || 'fa-cube')}" style="${p.image ? 'display:none' : ''}"></i>
+      <article class="strip-card" data-product-id="${escAttr(p.id)}">
+        <div class="strip-card-visual">
+          ${image
+            ? `<img src="${escAttr(image)}" alt="${escAttr(p.name || '')}" loading="lazy" onerror="this.onerror=null;this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';"/>`
+            : ''}
+          <div class="strip-card-fallback" style="${image ? 'display:none;' : 'display:flex;'}">
+            <i class="${escAttr(p.icon || 'fa-solid fa-cube')}"></i>
+          </div>
         </div>
-        <div class="product-strip-body">
-          <span class="product-strip-cat">${esc(p.category || 'Solution')}</span>
-          <h3 class="product-strip-name">${esc(p.name || '')}</h3>
-          <p class="product-strip-desc">${esc((p.description || '').slice(0, 100))}</p>
-          <div class="product-strip-price">${isCustom ? 'Custom pricing' : fmtKShKes(kes)}</div>
-          <div class="product-strip-actions" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">
-            ${viewBtn}
-            ${actions}
-            ${moreBtn}
+        <div class="strip-card-body">
+          <div class="strip-card-cat">${escHtml(p.category || '')}</div>
+          <h3 class="strip-card-name">${escHtml(p.name || '')}</h3>
+          <p class="strip-card-desc">${escHtml((p.description || '').slice(0, 90))}${(p.description || '').length > 90 ? '…' : ''}</p>
+          <div class="strip-card-price">${isCustom ? 'Custom pricing' : 'KSh ' + kes.toLocaleString('en-KE')}</div>
+          <div class="strip-card-actions">
+            ${previewUrl ? `
+              <a href="${escAttr(previewUrl)}" target="_blank" rel="noopener" class="strip-btn strip-btn-outline" title="Preview">
+                <i class="fa-solid fa-eye"></i>
+              </a>
+            ` : ''}
+            <button type="button" class="strip-btn strip-btn-primary" data-buy>
+              <i class="fa-solid fa-bolt"></i> ${isCustom ? 'Quote' : 'Buy'}
+            </button>
+            <button type="button" class="strip-btn strip-btn-outline" data-more title="More">
+              <i class="fa-solid fa-circle-info"></i>
+            </button>
           </div>
         </div>
       </article>
     `;
   }).join('');
 
-  /* Wire buttons */
   host.querySelectorAll('[data-product-id]').forEach(card => {
     const pid = card.dataset.productId;
     const product = list.find(p => p.id === pid);
     if (!product) return;
 
-    card.querySelector('[data-action="buy"]')?.addEventListener('click', () => {
+    card.querySelector('[data-buy]')?.addEventListener('click', (e) => {
+      e.stopPropagation();
       openOrderModal({ productId: pid });
     });
-    card.querySelector('[data-action="quote"]')?.addEventListener('click', () => {
-      openOrderModal({ productId: pid });
-    });
-    card.querySelector('[data-action="more"]')?.addEventListener('click', () => {
-      /* Build a synthetic category-like object from the product */
+    card.querySelector('[data-more]')?.addEventListener('click', (e) => {
+      e.stopPropagation();
       const extras = (S.homeContent?.productExtras || {})[pid] || {};
       openCategoryModal(pid, {
         name: product.name,
@@ -597,17 +758,36 @@ function renderProductStrip() {
       });
     });
   });
+
+  wireStripArrows(host);
+}
+
+function wireStripArrows(host) {
+  const prev = $('#strip-prev');
+  const next = $('#strip-next');
+  if (!prev || !next || prev._bound) return;
+  prev._bound = true;
+  next._bound = true;
+
+  const step = () => {
+    const card = host.querySelector('.strip-card');
+    if (!card) return 300;
+    const gap = 16;
+    return card.getBoundingClientRect().width + gap;
+  };
+  prev.addEventListener('click', () => host.scrollBy({ left: -step() * 2, behavior: 'smooth' }));
+  next.addEventListener('click', () => host.scrollBy({ left:  step() * 2, behavior: 'smooth' }));
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   6. ECO MAP — 10 nodes, SVG
+   6. ECO MAP
    ═══════════════════════════════════════════════════════════════ */
 function renderEcoMap() {
   const svg = $('#eco-svg');
   const infoHost = $('#eco-info');
   if (!svg) return;
 
-  const em = S.homeContent?.ecosystemMap || {};
+  const em = S.homeContent?.ecosystem || {};
   const nodes = em.nodes || [
     { name: 'Business',     color: '#2267EE', desc: 'ERP, POS, accounting, inventory — business operations feed the core.' },
     { name: 'Marketplace',  color: '#23C7D9', desc: 'Products, promos, orders — where customers buy.' },
@@ -629,7 +809,6 @@ function renderEcoMap() {
     return { x: cx + R * Math.cos(angle), y: cy + R * Math.sin(angle) };
   });
 
-  /* SVG defs */
   let svgHTML = `
     <defs>
       <radialGradient id="ecoHubGrad" cx="36%" cy="30%" r="68%">
@@ -642,48 +821,43 @@ function renderEcoMap() {
     </defs>
   `;
 
-  /* Connecting lines */
   svgHTML += `<g id="eco-lines">${positions.map((p, i) =>
     `<line class="eco-line" data-line="${i}" x1="${cx}" y1="${cy}" x2="${p.x}" y2="${p.y}"/>`
   ).join('')}</g>`;
 
-  /* Core pulses */
   svgHTML += `
     <circle class="eco-pulse" cx="${cx}" cy="${cy}" r="46"/>
     <circle class="eco-pulse" cx="${cx}" cy="${cy}" r="46"/>
     <circle class="eco-pulse" cx="${cx}" cy="${cy}" r="46"/>
   `;
 
-  /* Hub */
   svgHTML += `
     <circle class="eco-hub" cx="${cx}" cy="${cy}" r="46"/>
     <circle cx="${cx - 15}" cy="${cy - 15}" r="10" fill="rgba(255,255,255,.55)"/>
     <text class="eco-hub-txt" x="${cx}" y="${cy + 5}">VIORA</text>
   `;
 
-  /* Nodes */
   svgHTML += `<g id="eco-nodes">${nodes.map((n, i) => {
     const p = positions[i];
     const labelY = p.y < cy ? p.y - 22 : p.y + 30;
     return `
-      <g class="eco-node" data-idx="${i}" tabindex="0" role="button" aria-label="${esc(n.name)}" style="color:${esc(n.color)}">
-        <circle cx="${p.x}" cy="${p.y}" r="11" fill="${esc(n.color)}" opacity="0.95"/>
+      <g class="eco-node" data-idx="${i}" tabindex="0" role="button" aria-label="${escAttr(n.name)}" style="color:${escAttr(n.color)}">
+        <circle cx="${p.x}" cy="${p.y}" r="11" fill="${escAttr(n.color)}" opacity="0.95"/>
         <circle cx="${p.x - 3}" cy="${p.y - 4}" r="3.5" fill="rgba(255,255,255,0.7)"/>
         <circle cx="${p.x}" cy="${p.y}" r="18" fill="transparent"/>
-        <text x="${p.x}" y="${labelY}">${esc(n.name)}</text>
+        <text x="${p.x}" y="${labelY}">${escHtml(n.name)}</text>
       </g>
     `;
   }).join('')}</g>`;
 
   svg.innerHTML = svgHTML;
 
-  /* Wire node clicks */
   function selectNode(i) {
     $$('.eco-node', svg).forEach((el, idx) => el.classList.toggle('active', idx === i));
     $$('.eco-line', svg).forEach((el, idx) => el.classList.toggle('active', idx === i));
     if (infoHost) {
       const n = nodes[i];
-      infoHost.innerHTML = `<h3 style="color:${esc(n.color)}">${esc(n.name)}</h3><p>${esc(n.desc || '')}</p>`;
+      infoHost.innerHTML = `<h3 style="color:${escAttr(n.color)}">${escHtml(n.name)}</h3><p>${escHtml(n.desc || '')}</p>`;
     }
   }
 
@@ -697,17 +871,16 @@ function renderEcoMap() {
     });
   });
 
-  /* Default selection */
-  if (infoHost && em.heading) {
-    infoHost.innerHTML = `<h3>VIORA Core</h3><p>${esc(em.sub || 'Select any node to see how that domain connects to the ecosystem.')}</p>`;
+  if (infoHost) {
+    infoHost.innerHTML = `<h3>VIORA Core</h3><p>${escHtml(em.sub || 'Select any node to see how that domain connects to the ecosystem.')}</p>`;
   }
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   7. DASHBOARD PREVIEW (static demo)
+   7. DASHBOARD PREVIEW
    ═══════════════════════════════════════════════════════════════ */
 function renderDashboard() {
-  const dp = S.homeContent?.dashboardPreview || {};
+  const dp = S.homeContent?.dashboard || {};
   const rev = Number(dp.revenue) || 4280000;
   const sales = Number(dp.sales) || 1284;
   const revEl = $('#dash-revenue');
@@ -717,7 +890,7 @@ function renderDashboard() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   8. TESTIMONIALS — LIVE from marketContent
+   8. TESTIMONIALS
    ═══════════════════════════════════════════════════════════════ */
 function renderTestimonials() {
   const host = $('#testimonials-grid');
@@ -739,12 +912,12 @@ function renderTestimonials() {
     const bg = colors[i % colors.length];
     return `
       <figure class="testi">
-        <blockquote>${esc(t.text || '')}</blockquote>
+        <blockquote>${escHtml(t.text || '')}</blockquote>
         <figcaption>
           <span class="avatar" style="background:${bg};width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0;">${initials}</span>
           <div>
-            <strong>${esc(t.name || 'Client')}</strong>
-            <small>${esc(t.role || '')}</small>
+            <strong>${escHtml(t.name || 'Client')}</strong>
+            <small>${escHtml(t.role || '')}</small>
           </div>
         </figcaption>
       </figure>
@@ -756,7 +929,7 @@ function renderTestimonials() {
    9. CASES
    ═══════════════════════════════════════════════════════════════ */
 function renderCases() {
-  const cs = S.homeContent?.caseStrip || {};
+  const cs = S.homeContent?.cases || {};
   const heading = $('#cases-heading');
   if (heading && cs.heading) heading.textContent = cs.heading;
 }
@@ -778,10 +951,10 @@ function renderPricing() {
     return `
       <div class="price-card ${cls}">
         ${t.featured ? '<div class="badge" style="background:var(--accent-2);color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:999px;position:absolute;top:-12px;left:50%;transform:translateX(-50%);">Most popular</div>' : ''}
-        <h3>${esc(t.name)}</h3>
-        <p class="price-sub">${esc(t.tagline || '')}</p>
-        <ul>${(t.bullets || []).map(b => `<li>${esc(b)}</li>`).join('')}</ul>
-        <a href="${esc(t.ctaHref || 'contact_us.html')}" class="btn ${t.featured ? 'btn-primary' : 'btn-ghost'}">${esc(t.cta || 'Subscribe')}</a>
+        <h3>${escHtml(t.name)}</h3>
+        <p class="price-sub">${escHtml(t.tagline || '')}</p>
+        <ul>${(t.bullets || []).map(b => `<li>${escHtml(b)}</li>`).join('')}</ul>
+        <a href="${escAttr(t.ctaHref || 'contact_us.html')}" class="btn ${t.featured ? 'btn-primary' : 'btn-ghost'}">${escHtml(t.cta || 'Subscribe')}</a>
       </div>
     `;
   }).join('');
@@ -791,7 +964,7 @@ function renderPricing() {
    11. ACADEMY
    ═══════════════════════════════════════════════════════════════ */
 function renderAcademy() {
-  const at = S.homeContent?.academyTeaser || {};
+  const at = S.homeContent?.academy || {};
   const h = $('#academy-heading');
   const p = $('#academy-sub');
   const cta = $('#academy-cta');
@@ -804,7 +977,7 @@ function renderAcademy() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   12. FAQ — LIVE from marketContent
+   12. FAQ
    ═══════════════════════════════════════════════════════════════ */
 function renderFaq() {
   const host = $('#faq-list');
@@ -819,10 +992,10 @@ function renderFaq() {
   host.innerHTML = faqs.map((f, i) => `
     <details class="faq-item" style="border:1px solid var(--line);border-radius:12px;margin-bottom:10px;background:var(--white);">
       <summary style="padding:18px 20px;cursor:pointer;font-weight:600;font-size:15px;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;">
-        <span>${esc(f.q || '')}</span>
+        <span>${escHtml(f.q || '')}</span>
         <i class="fa-solid fa-chevron-down" style="font-size:12px;color:var(--muted);transition:transform .25s;"></i>
       </summary>
-      <div style="padding:0 20px 20px;color:var(--muted);font-size:14px;line-height:1.7;">${esc(f.a || '')}</div>
+      <div style="padding:0 20px 20px;color:var(--muted);font-size:14px;line-height:1.7;">${escHtml(f.a || '')}</div>
     </details>
   `).join('');
 }
@@ -846,12 +1019,13 @@ function renderContact() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   CONTACT FORM → Firebase `leads`
+   CONTACT FORM
    ═══════════════════════════════════════════════════════════════ */
 function wireContactForm() {
   const form = $('#contact-form');
   const status = $('#contact-status');
-  if (!form) return;
+  if (!form || form._bound) return;
+  form._bound = true;
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -887,7 +1061,6 @@ function wireContactForm() {
       };
       await fb.set(fb.ref(fb.db, `${ROOT}/leads/${leadId}`), lead);
 
-      /* Mirror to marketLeads so it flows into the marketplace pipeline */
       try {
         const mktId = 'mkt-' + leadId;
         await fb.set(fb.ref(fb.db, `${ROOT}/marketLeads/${mktId}`), {
@@ -901,12 +1074,11 @@ function wireContactForm() {
 
       if (status) {
         status.className = 'form-status show ok';
-        status.innerHTML = `✅ Thanks ${esc(name.split(' ')[0])}! We'll be in touch within one business day.`;
+        status.innerHTML = `✅ Thanks ${escHtml(name.split(' ')[0])}! We'll be in touch within one business day.`;
       }
       form.reset();
       if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = origHTML; }
 
-      /* Notify admin */
       try {
         if (typeof window.vioraNotify === 'function') {
           await window.vioraNotify({
@@ -930,7 +1102,7 @@ function wireContactForm() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   3D GLOBE — preserved from current script.js
+   3D GLOBE
    ═══════════════════════════════════════════════════════════════ */
 function initGlobe() {
   const container = document.getElementById('globe-container');
@@ -971,7 +1143,7 @@ function initGlobe() {
 
   const earthRadius = 100;
   const textureLoader = new THREE.TextureLoader();
-  const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const prefersReduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const earthMat = new THREE.MeshPhongMaterial({
     color: 0xffffff,
@@ -1008,7 +1180,6 @@ function initGlobe() {
   });
   globeGroup.add(new THREE.Mesh(new THREE.SphereGeometry(earthRadius * 1.025, 64, 64), atmMat));
 
-  /* Grid lines */
   const gratMat = new THREE.LineBasicMaterial({ color: 0x2a4a7a, transparent: true, opacity: 0.35 });
   const gratGroup = new THREE.Group();
   globeGroup.add(gratGroup);
@@ -1034,7 +1205,6 @@ function initGlobe() {
     gratGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), gratMat));
   }
 
-  /* Simple animated arcs — a handful of representative connections */
   const arcGroup = new THREE.Group();
   globeGroup.add(arcGroup);
 
@@ -1068,7 +1238,6 @@ function initGlobe() {
     }
   }
 
-  /* Drag controls */
   let isDragging = false;
   let prevPointer = { x: 0, y: 0 };
   let targetRotX = globeGroup.rotation.x;
@@ -1110,11 +1279,11 @@ function initGlobe() {
 
   const clock = new THREE.Clock();
   let rafId = 0;
-  let autoRotate = !prefersReduce;
+  const autoRotate = !prefersReduceMotion;
 
   function animate() {
     rafId = requestAnimationFrame(animate);
-    const t = clock.getElapsedTime();
+    clock.getElapsedTime();
     if (autoRotate && !isDragging) targetRotY += 0.0012;
     currentRotX += (targetRotX - currentRotX) * 0.08;
     currentRotY += (targetRotY - currentRotY) * 0.08;
@@ -1138,11 +1307,10 @@ if (document.readyState === 'loading') {
 } else {
   boot();
 }
+
 /* ═══════════════════════════════════════════════════════════════
    MODAL SAFETY NETS
    ═══════════════════════════════════════════════════════════════ */
-
-/* 1. Escape closes any active modal */
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
   document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
@@ -1150,7 +1318,6 @@ document.addEventListener('keydown', (e) => {
   document.body.style.pointerEvents = '';
 }, true);
 
-/* 2. Backdrop click closes any active modal */
 document.addEventListener('click', (e) => {
   if (e.target.classList && e.target.classList.contains('modal-overlay') && e.target.classList.contains('active')) {
     e.target.classList.remove('active');
@@ -1159,16 +1326,12 @@ document.addEventListener('click', (e) => {
   }
 }, true);
 
-/* 3. Auto-recovery: if no modal should be open but body is locked */
 setInterval(() => {
   const anyActive = document.querySelector('.modal-overlay.active');
   if (!anyActive && document.body.style.overflow === 'hidden') {
     document.body.style.overflow = '';
     document.body.style.pointerEvents = '';
-    console.info('[viora-home] auto-unlocked body overflow');
   }
 }, 1000);
-
-
 
 window.VioraHome = { S, renderAll, openOrderModal, openCategoryModal };
