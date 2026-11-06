@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Team Member — VIORA Ecosystems</title>
+<meta name="description" content="VIORA Ecosystems — meet the team.">
+<meta name="theme-color" content="#0A192F">
+
+<link rel="icon" type="image/png" href="https://viora.co.ke/viora.png">
+<link rel="apple-touch-icon" href="https://viora.co.ke/viora.png">
+<meta property="og:type" content="profile">
+
+<!-- ── THE ONLY LINE YOU CHANGE PER EMPLOYEE ── -->
+<script>window.__VIORA_PROFILE_SLUG__ = "cliff";</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<link rel="stylesheet" href="shared-app.css">
+<link rel="stylesheet" href="public-profile.css">
+</head>
+<body>
+
+<a href="#main" class="skip">Skip to content</a>
+
+<canvas id="globalNetwork" aria-hidden="true"></canvas>
+<div class="bg-aurora" aria-hidden="true"></div>
+
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand">
+      <div class="brand-logo" aria-hidden="true"></div>
+      <div class="brand-text"><strong>VIORA</strong><small>ECOSYSTEMS</small></div>
+    </a>
+    <nav aria-label="Primary">
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="support.html">Solutions</a></li>
+        <li><a href="market.html">Marketplace</a></li>
+        <li><a href="training.html">Academy</a></li>
+        <li><a href="client.html">Client Portal</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact_us.html">Contact</a></li>
+      </ul>
+    </nav>
+    <div class="nav-actions">
+      <button class="theme-toggle" data-theme-toggle aria-label="Toggle theme">
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      </button>
+      <a href="contact_us.html" class="btn btn-primary btn-sm">Talk to VIORA</a>
+      <button class="burger" id="burger" aria-expanded="false" aria-controls="drawer" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="mobile-appbar" role="banner">
+  <div class="mab-brand"><div class="mab-logo">V</div><span>VIORA</span></div>
+  <div class="mab-actions">
+    <button class="mab-btn" data-theme-toggle aria-label="Theme">
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+    </button>
+    <a href="contact_us.html" class="mab-btn" aria-label="Contact">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    </a>
+  </div>
+</div>
+
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <ul>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="support.html">Solutions</a></li>
+    <li><a href="market.html">Marketplace</a></li>
+    <li><a href="training.html">Academy</a></li>
+    <li><a href="client.html">Client Portal</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="contact_us.html">Contact</a></li>
+  </ul>
+  <a href="contact_us.html" class="btn btn-primary">Talk to VIORA</a>
+</aside>
+
+<main id="main">
+<div id="profile-root">
+  <section class="profile-hero profile-loading">
+    <div class="wrap">
+      <div style="text-align:center;padding:120px 20px;color:var(--muted);">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size:32px;color:var(--accent);margin-bottom:16px;display:inline-block;"></i>
+        <p>Loading profile…</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<template id="profile-not-found">
+  <section class="profile-hero" style="padding:160px 0 100px;">
+    <div class="wrap" style="text-align:center;max-width:560px;">
+      <span class="eyebrow" style="justify-content:center">Team member not found</span>
+      <h1 style="font-size:clamp(28px,4vw,42px);margin-bottom:16px;">That profile doesn't exist.</h1>
+      <p style="color:var(--muted);font-size:16px;line-height:1.7;margin-bottom:32px;">The page you're looking for isn't here. It may have moved, or the profile was unpublished.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <a href="about.html#team" class="btn btn-primary btn-lg">See the whole team →</a>
+        <a href="index.html" class="btn btn-ghost btn-lg">Back to home</a>
+      </div>
+    </div>
+  </section>
+</template>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <a href="index.html" class="brand">
+          <div class="brand-logo" aria-hidden="true"></div>
+          <div class="brand-text"><strong>VIORA</strong><small>ECOSYSTEMS</small></div>
+        </a>
+        <p class="foot-tag">Connect People. Empower Businesses.</p>
+        <p style="color:rgba(255,255,255,.5);font-size:13px;line-height:1.7;max-width:300px;">An integrated technology ecosystem for business management, commerce, digital services and support. Founded 2022.</p>
+      </div>
+      <div class="foot-col">
+        <h5>Ecosystem</h5>
+        <ul>
+          <li><a href="market.html">Marketplace</a></li>
+          <li><a href="client.html">Subscriptions</a></li>
+          <li><a href="training.html">Academy</a></li>
+          <li><a href="support.html">Support</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h5>Solutions</h5>
+        <ul>
+          <li><a href="support.html">Business Management</a></li>
+          <li><a href="support.html">ERP Systems</a></li>
+          <li><a href="support.html">POS Systems</a></li>
+          <li><a href="support.html">Accounting</a></li>
+          <li><a href="support.html">Custom Software</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h5>Company</h5>
+        <ul>
+          <li><a href="about.html">About VIORA</a></li>
+          <li><a href="about.html#team">Meet the team</a></li>
+          <li><a href="contact_us.html">Contact</a></li>
+          <li><a href="client.html">Client Portal</a></li>
+          <li><a href="training.html">Academy</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h5>Contact</h5>
+        <ul>
+          <li><a href="mailto:support@viora.co.ke">support@viora.co.ke</a></li>
+          <li><a href="tel:+254713428774">+254 713 428 774</a></li>
+          <li><a href="https://wa.me/254713428774" target="_blank" rel="noopener">WhatsApp</a></li>
+          <li><a href="contact_us.html">Book a demo</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© <span id="yr"></span> VIORA Ecosystems. All rights reserved.</span>
+      <span>
+        <a href="privacy.html">Privacy</a> ·
+        <a href="terms.html">Terms</a> ·
+        <a href="cookies.html">Cookies</a> ·
+        <a href="accessibility.html">Accessibility</a> ·
+        <a href="dpa.html">DPA</a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+  <a href="index.html" class="mnav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Home</span>
+  </a>
+  <a href="support.html" class="mnav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    <span>Solutions</span>
+  </a>
+  <a href="market.html" class="mnav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h18v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"/><path d="M3 9l3-6h12l3 6"/></svg>
+    <span>Market</span>
+  </a>
+  <a href="client.html" class="mnav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+    <span>Portal</span>
+  </a>
+  <a href="about.html" class="mnav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v.01M11 12h1v4h1"/></svg>
+    <span>About</span>
+  </a>
+</nav>
+
+<script src="shared-app.js" defer></script>
+<script type="module" src="public-profile.js"></script>
+<script>
+  document.getElementById('yr').textContent = new Date().getFullYear();
+</script>
+
+</body>
+</html>

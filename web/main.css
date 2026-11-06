@@ -5793,6 +5793,13 @@ canvas { border-radius: var(--r-sm); }
   }
 }
 
+.sidebar nav a.from-queue::after {
+  content: "↗";
+  font-size: 11px;
+  color: var(--accent-blue);
+  margin-left: auto;
+  opacity: 0.7;
+}
 /* ═══════════════════════════════════════════════════════════════
    END v5.3 PATCH
    ═══════════════════════════════════════════════════════════════ */

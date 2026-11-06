@@ -430,7 +430,9 @@ const ORG_COLLECTIONS = new Set([
   'productExtras',
   'reviews',
   'socialAccounts',
-  'competitorBenchmarks'
+  'competitorBenchmarks',
+  'homeContent',
+  'employeeProfiles'
 ]);
 
 const TRACK_COLLECTIONS = new Set([
@@ -1006,6 +1008,38 @@ function computeCounterValue(key) {
   const d = state.data;
   switch (key) {
     case 'dashboard': return (d.projects || []).filter(p => p.status === 'active').length;
+        // ── Pending-only overrides for the 8 Client Requests sources ──
+    // (sidebar badges must agree with the queues panel)
+    case 'portalRequests': return (d.portalRequests || []).filter(r => r && r.status === 'pending').length;
+    case 'portalUsers':    return (d.portalUsers || []).filter(u => u && (u.status === 'pending' || u.approved === false)).length;
+    case 'subscriptions': {
+      const raw = d.subscriptions || {};
+      const arr = Array.isArray(raw) ? raw : Object.values(raw);
+      return arr.filter(s => s && (s.status === 'pending' || s.status === 'awaiting_approval')).length;
+    }
+    case 'subscriptionRequestsPending': {
+      const raw = d.subscriptionRequests || {};
+      const arr = Array.isArray(raw) ? raw : Object.values(raw);
+      return arr.filter(r => r && r.status === 'pending').length;
+    }
+    case 'trainingQuizzesPending':
+      return Object.values(d.trainingQuizSubmissions || {})
+        .flatMap(byCourse => Object.values(byCourse || {}))
+        .filter(q => q && (q.status || 'submitted') === 'submitted').length;
+    case 'trainingCertsPending':
+      return Object.values(d.trainingCertificates || {})
+        .filter(c => c && (c.status === 'requested' || c.status === 'pending_approval')).length;
+    case 'ticketsOpen': {
+      const a = d.supportTickets || [];
+      const b = d.tickets || [];
+      const seen = new Set();
+      const all = [...a, ...b].filter(t => { if (!t) return false; const k = t.id || t._id; if (k && seen.has(k)) return false; if (k) seen.add(k); return t.status !== 'closed' && t.status !== 'resolved'; });
+      return all.length;
+    }
+    case 'orders': {
+      const arr = d.orders || [];
+      return arr.filter(o => o && (o.status === 'submitted' || o.status === 'awaiting_acceptance' || o.status === 'refund_requested')).length;
+    }
    case 'portalRequests': return (d.portalRequests || []).filter(r => r.status === 'pending').length;
 case 'portalUsers': return (d.portalUsers || []).length;
         case 'clients': {
@@ -1441,7 +1475,7 @@ function applyRoleGating() {
 /* ═══════════════════════════════════════════════════════════════
    SIDEBAR GROUPS
    ═══════════════════════════════════════════════════════════════ */
-const SIDEBAR_GROUPS_STORAGE_KEY = 'viora_open_groups_v4';
+const SIDEBAR_GROUPS_STORAGE_KEY = 'viora_open_groups_v5';
 const SIDEBAR_DEFAULT_OPEN = 'client';
 
 function initSidebarGroups() {
@@ -1457,7 +1491,8 @@ function initSidebarGroups() {
     btn.addEventListener('click', () => setNavMode(btn.dataset.mode));
   });
   setNavMode(savedMode, { silent: true });
-  let openGroups = ['client', 'system', 'delivery', 'finance'];
+  // All groups start collapsed on load. Per-tab opening still works.
+  let openGroups = [];
   try {
     const saved = localStorage.getItem(SIDEBAR_GROUPS_STORAGE_KEY);
     if (saved) {
@@ -1527,36 +1562,48 @@ const NAV_MODES = ['queues', 'registers', 'timeline'];
 const NAV_MODE_STORAGE_KEY = 'viora_nav_mode';
 
 const NAV_QUEUES = [
-  { id: 'q-invoices-unpaid', label: 'Unpaid Invoices', icon: 'fa-file-invoice', group: 'revenue', tab: 'fin-invoices', filter: () => (state.data.invoices || []).filter(i => getInvoiceStatusDerived(i) !== 'paid'), severity: 'auto' },
-  { id: 'q-invoices-overdue', label: 'Overdue Invoices', icon: 'fa-triangle-exclamation', group: 'revenue', tab: 'fin-invoices', filter: () => (state.data.invoices || []).filter(i => { const st = getInvoiceStatusDerived(i); return st !== 'paid' && st !== 'draft' && i.dueDate && new Date(i.dueDate) < new Date(); }), severity: 'danger' },
-  { id: 'q-mpesa-unmatched', label: 'M-Pesa Unmatched', icon: 'fa-mobile-screen-button', group: 'revenue', tab: 'fin-mpesa', filter: () => (state.data.mpesaTransactions || []).filter(t => !t.matchedInvoiceId), severity: 'auto' },
-  { id: 'q-installments-overdue', label: 'Overdue Installments', icon: 'fa-coins', group: 'revenue', tab: 'sales-clients', filter: () => getOverdueInstallments(), severity: 'danger' },
-  { id: 'q-installments-soon', label: 'Installments Due ≤7d', icon: 'fa-calendar-day', group: 'revenue', tab: 'sales-clients', filter: () => getUpcomingInstallments(7), severity: 'warn' },
-  { id: 'q-tasks-overdue', label: 'Overdue Tasks', icon: 'fa-calendar-xmark', group: 'delivery', tab: 'ops-tasks', filter: () => (state.data.tasks || []).filter(t => t.status === 'pending' && isOverdue(t.dueDate)), severity: 'danger' },
-  { id: 'q-tasks-today', label: 'Tasks Due Today', icon: 'fa-calendar-day', group: 'delivery', tab: 'ops-tasks', filter: () => (state.data.tasks || []).filter(t => t.status === 'pending' && t.dueDate === todayStr()), severity: 'warn' },
-  { id: 'q-projects-stalled', label: 'Stalled Projects', icon: 'fa-folder-exclamation', group: 'delivery', tab: 'ops-projects', filter: () => (state.data.projects || []).filter(p => p.status === 'active' && p.deadline && p.deadline < todayStr() && (p.progress || 0) < 90), severity: 'danger' },
-  { id: 'q-worklogs-unbilled', label: 'Unbilled Work Logs', icon: 'fa-clock', group: 'delivery', tab: 'ops-worklogs', filter: () => (state.data.worklogs || []).filter(w => { if (!w.isBilled) return false; const used = new Set(); (state.data.invoices || []).forEach(inv => (inv.items || []).forEach(it => { if (it.worklogId) used.add(it.worklogId); })); return !used.has(w.id); }), severity: 'warn' },
-  { id: 'q-appointments-today', label: 'Appointments Today', icon: 'fa-calendar-check', group: 'delivery', tab: 'marketing-appointments', filter: () => (state.data.appointments || []).filter(a => a.date === todayStr() && a.status === 'scheduled'), severity: 'warn' },
-  { id: 'q-leads-qualified', label: 'Qualified Leads', icon: 'fa-user-check', group: 'pipeline', tab: 'marketing-leads', filter: () => (state.data.leads || []).filter(l => l.status === 'Qualified' && !l._fromMarket), severity: 'warn' },
-  { id: 'q-deals-stale', label: 'Deals Stale >14d', icon: 'fa-handshake-slash', group: 'pipeline', tab: 'sales-deals', filter: () => (state.data.deals || []).filter(d => { if (d.stage === 'Won' || d.stage === 'Lost') return false; const last = d._updatedAt || d.createdAt; if (!last) return false; return (Date.now() - new Date(last).getTime()) > 14 * 86400000; }), severity: 'auto' },
-  { id: 'q-contracts-expiring', label: 'Contracts Expiring ≤30d', icon: 'fa-file-signature', group: 'pipeline', tab: 'sales-contracts', filter: () => (state.data.contracts || []).filter(c => { if (!c.expiryDate || c.status === 'Terminated') return false; const d = daysBetween(c.expiryDate); return d >= 0 && d <= 30; }), severity: 'warn' },
-  { id: 'q-proposals-draft', label: 'Unsent Proposals', icon: 'fa-wand-magic-sparkles', group: 'pipeline', tab: 'sales-proposals', filter: () => (state.data.proposals || []).filter(p => !p.sentAt), severity: null },
-  { id: 'q-compliance-expiring', label: 'Compliance Expiring ≤60d', icon: 'fa-scale-balanced', group: 'compliance', tab: 'admin-compliance', filter: () => (state.data.compliance || []).filter(c => { if (!c.expiryDate) return false; const d = daysBetween(c.expiryDate); return d >= 0 && d <= 60; }), severity: 'warn' },
-  { id: 'q-inventory-low', label: 'Low Stock', icon: 'fa-boxes-stacked', group: 'compliance', tab: 'ops-inventory', filter: () => (state.data.inventory || []).filter(i => i.qty <= i.reorder), severity: 'warn' },
-  { id: 'q-tickets-urgent', label: 'Urgent Tickets', icon: 'fa-headset', group: 'compliance', tab: 'support-tickets', filter: () => (state.data.tickets || []).filter(t => t.status !== 'closed' && t.priority === 'urgent'), severity: 'danger' },
-  { id: 'q-tickets-open', label: 'Open Tickets', icon: 'fa-headset', group: 'compliance', tab: 'support-tickets', filter: () => (state.data.tickets || []).filter(t => t.status !== 'closed'), severity: 'auto' },
-  { id: 'q-quizzes-pending', label: 'Quiz Submissions', icon: 'fa-file-circle-question', group: 'compliance', tab: 'training-quizzes', filter: () => Object.values(state.data.trainingQuizSubmissions || {}).flatMap(byCourse => Object.values(byCourse || {})).filter(q => (q.status || 'submitted') === 'submitted'), severity: 'warn' },
-  { id: 'q-portal-pending', label: 'Portal Requests', icon: 'fa-user-clock', group: 'growth', tab: 'portal-requests', filter: () => (state.data.portalRequests || []).filter(r => r.status === 'pending'), severity: 'warn' },
-  { id: 'q-market-new', label: 'New Market Signups', icon: 'fa-store', group: 'growth', tab: 'marketplace-analytics', filter: () => (state.data.marketLeads || []).filter(m => m.isNewClient), severity: 'warn' },
-  { id: 'q-orders-pending', label: 'Pending Orders', icon: 'fa-shopping-cart', group: 'growth', tab: 'marketplace-orders', filter: () => (state.data.orders || []).filter(o => o.paymentStatus === 'pending'), severity: 'warn' },
+  /* ── Client Requests (external party → we act) ── */
+  { id: 'q-portal-requests-pending', label: 'Portal Requests',      icon: 'fa-user-clock',           group: 'clientRequests', tab: 'portal-requests',         roles: ['exec','admin'], filter: () => (state.data.portalRequests || []).filter(r => r && r.status === 'pending'), severity: 'warn' },
+  { id: 'q-portal-users-pending',    label: 'Portal Users',         icon: 'fa-user-check',           group: 'clientRequests', tab: 'portal-users',            roles: ['exec','admin'], filter: () => (state.data.portalUsers || []).filter(u => u && (u.status === 'pending' || u.approved === false)), severity: 'warn' },
+  { id: 'q-subscriptions-pending',   label: 'Subscriptions',        icon: 'fa-crown',                group: 'clientRequests', tab: 'subscriptions',           roles: ['exec','admin'], filter: () => { const raw = state.data.subscriptions || {}; const arr = Array.isArray(raw) ? raw : Object.values(raw); return arr.filter(s => s && (s.status === 'pending' || s.status === 'awaiting_approval')); }, severity: 'warn' },
+  { id: 'q-plan-changes-pending',    label: 'Plan Changes',         icon: 'fa-arrows-rotate',        group: 'clientRequests', tab: 'subscription-plans',      roles: ['exec','admin'], filter: () => { const raw = state.data.subscriptionRequests || {}; const arr = Array.isArray(raw) ? raw : Object.values(raw); return arr.filter(r => r && r.status === 'pending'); }, severity: 'warn' },
+  { id: 'q-quiz-pending',            label: 'Quiz Submissions',     icon: 'fa-file-circle-question', group: 'clientRequests', tab: 'training-quizzes',        roles: ['exec','admin'], filter: () => Object.values(state.data.trainingQuizSubmissions || {}).flatMap(byCourse => Object.values(byCourse || {})).filter(q => q && (q.status || 'submitted') === 'submitted'), severity: 'warn' },
+  { id: 'q-certificates-pending',    label: 'Certificate Requests', icon: 'fa-award',                group: 'clientRequests', tab: 'training-certificates',   roles: ['exec','admin'], filter: () => Object.values(state.data.trainingCertificates || {}).filter(c => c && (c.status === 'requested' || c.status === 'pending_approval')), severity: 'warn' },
+  { id: 'q-support-tickets-pending', label: 'Support Tickets',      icon: 'fa-headset',              group: 'clientRequests', tab: 'support-tickets',         roles: ['exec','admin'], filter: () => { const a = state.data.supportTickets || []; const b = state.data.tickets || []; const seen = new Set(); return [...a, ...b].filter(t => { if (!t) return false; const k = t.id || t._id; if (k && seen.has(k)) return false; if (k) seen.add(k); return t.status !== 'closed' && t.status !== 'resolved'; }); }, severity: 'warn' },
+  { id: 'q-orders-awaiting',         label: 'Awaiting Orders',      icon: 'fa-receipt',              group: 'clientRequests', tab: 'marketplace-orders',      roles: ['exec','admin'], filter: () => (state.data.orders || []).filter(o => o && (o.status === 'submitted' || o.status === 'awaiting_acceptance' || o.status === 'refund_requested')), severity: 'warn' },
+
+  /* ── Revenue ── */
+  { id: 'q-invoices-unpaid',         label: 'Unpaid Invoices',      icon: 'fa-file-invoice',         group: 'revenue',        tab: 'fin-invoices',            roles: ['exec','admin'], filter: () => (state.data.invoices || []).filter(i => getInvoiceStatusDerived(i) !== 'paid'), severity: 'auto' },
+  { id: 'q-mpesa-unmatched',         label: 'M-Pesa Unmatched',     icon: 'fa-mobile-screen-button', group: 'revenue',        tab: 'fin-mpesa',               roles: ['exec','admin'], filter: () => (state.data.mpesaTransactions || []).filter(t => !t.matchedInvoiceId), severity: 'auto' },
+  { id: 'q-installments-overdue',    label: 'Overdue Installments', icon: 'fa-coins',                group: 'revenue',        tab: 'sales-clients',           roles: ['exec','admin'], filter: () => getOverdueInstallments(), severity: 'danger' },
+
+  /* ── Delivery ── */
+  { id: 'q-tasks-overdue',           label: 'Overdue Tasks',        icon: 'fa-calendar-xmark',       group: 'delivery',       tab: 'ops-tasks',               roles: ['exec','admin'], filter: () => (state.data.tasks || []).filter(t => t.status === 'pending' && isOverdue(t.dueDate)), severity: 'danger' },
+  { id: 'q-projects-stalled',        label: 'Stalled Projects',     icon: 'fa-folder-exclamation',   group: 'delivery',       tab: 'ops-projects',            roles: ['exec','admin'], filter: () => (state.data.projects || []).filter(p => p.status === 'active' && p.deadline && p.deadline < todayStr() && (p.progress || 0) < 90), severity: 'danger' },
+  { id: 'q-worklogs-unbilled',       label: 'Unbilled Work Logs',   icon: 'fa-clock',                group: 'delivery',       tab: 'ops-worklogs',            roles: ['exec','admin'], filter: () => (state.data.worklogs || []).filter(w => { if (!w.isBilled) return false; const used = new Set(); (state.data.invoices || []).forEach(inv => (inv.items || []).forEach(it => { if (it.worklogId) used.add(it.worklogId); })); return !used.has(w.id); }), severity: 'warn' },
+
+  /* ── Pipeline ── */
+  { id: 'q-leads-qualified',         label: 'Qualified Leads',      icon: 'fa-user-check',           group: 'pipeline',       tab: 'marketing-leads',         roles: ['exec','admin'], filter: () => (state.data.leads || []).filter(l => l.status === 'Qualified' && !l._fromMarket), severity: 'warn' },
+  { id: 'q-deals-stale',             label: 'Deals Stale >14d',     icon: 'fa-handshake-slash',      group: 'pipeline',       tab: 'sales-deals',             roles: ['exec','admin'], filter: () => (state.data.deals || []).filter(d => { if (d.stage === 'Won' || d.stage === 'Lost') return false; const last = d._updatedAt || d.createdAt; if (!last) return false; return (Date.now() - new Date(last).getTime()) > 14 * 86400000; }), severity: 'auto' },
+  { id: 'q-contracts-expiring',      label: 'Contracts Expiring ≤30d', icon: 'fa-file-signature',    group: 'pipeline',       tab: 'sales-contracts',         roles: ['exec','admin'], filter: () => (state.data.contracts || []).filter(c => { if (!c.expiryDate || c.status === 'Terminated') return false; const d = daysBetween(c.expiryDate); return d >= 0 && d <= 30; }), severity: 'warn' },
+  { id: 'q-proposals-draft',         label: 'Unsent Proposals',     icon: 'fa-wand-magic-sparkles',  group: 'pipeline',       tab: 'sales-proposals',         roles: ['exec','admin'], filter: () => (state.data.proposals || []).filter(p => !p.sentAt), severity: null },
+
+  /* ── Compliance ── */
+  { id: 'q-compliance-expiring',     label: 'Compliance Expiring ≤60d', icon: 'fa-scale-balanced',  group: 'compliance',     tab: 'admin-compliance',        roles: ['exec','admin'], filter: () => (state.data.compliance || []).filter(c => { if (!c.expiryDate) return false; const d = daysBetween(c.expiryDate); return d >= 0 && d <= 60; }), severity: 'warn' },
+  { id: 'q-inventory-low',           label: 'Low Stock',            icon: 'fa-boxes-stacked',        group: 'compliance',     tab: 'ops-inventory',           roles: ['exec','admin'], filter: () => (state.data.inventory || []).filter(i => i.qty <= i.reorder), severity: 'warn' },
+
+  /* ── Growth ── */
+  { id: 'q-market-new',              label: 'New Market Signups',   icon: 'fa-store',                group: 'growth',         tab: 'marketplace-analytics',   roles: ['exec','admin'], filter: () => (state.data.marketLeads || []).filter(m => m.isNewClient), severity: 'warn' },
+  { id: 'q-orders-pending',          label: 'Pending Payments',     icon: 'fa-shopping-cart',        group: 'growth',         tab: 'marketplace-orders',      roles: ['exec','admin'], filter: () => (state.data.orders || []).filter(o => o.paymentStatus === 'pending'), severity: 'warn' },
 ];
 
 const NAV_QUEUE_GROUPS = {
-  revenue:    { label: 'Revenue',    icon: 'fa-coins' },
-  delivery:   { label: 'Delivery',   icon: 'fa-truck-fast' },
-  pipeline:   { label: 'Pipeline',   icon: 'fa-diagram-project' },
-  compliance: { label: 'Compliance', icon: 'fa-shield-halved' },
-  growth:     { label: 'Growth',     icon: 'fa-arrow-trend-up' },
+  clientRequests: { label: 'Client Requests', icon: 'fa-inbox' },
+  revenue:        { label: 'Revenue',        icon: 'fa-coins' },
+  delivery:       { label: 'Delivery',       icon: 'fa-truck-fast' },
+  pipeline:       { label: 'Pipeline',       icon: 'fa-diagram-project' },
+  compliance:     { label: 'Compliance',     icon: 'fa-shield-halved' },
+  growth:         { label: 'Growth',         icon: 'fa-arrow-trend-up' },
 };
 
 function evaluateQueue(q) {
@@ -1572,12 +1619,23 @@ function evaluateQueue(q) {
 
 function evaluateAllQueues() {
   const now = Date.now();
+  const role = state.operator?.role || 'exec';
+  // Invalidate cache if role changed
+  if (state._queueCacheRole !== role) {
+    state._queueCache = null;
+    state._queueCacheRole = role;
+  }
   if (state._queueCache && (now - state._queueCacheTime) < 5000) {
     return state._queueCache;
   }
   const out = {};
   let total = 0;
   NAV_QUEUES.forEach(q => {
+    // Role filter: skip queues this role can't see
+    if (Array.isArray(q.roles) && q.roles.length) {
+      const allowed = q.roles.includes(role) || role === 'exec' || role === 'admin';
+      if (!allowed) return;
+    }
     const r = evaluateQueue(q);
     out[q.id] = r;
     total += r.count;
@@ -1617,12 +1675,23 @@ function renderNavQueues() {
 
   if (!host._vioraQueueBound) {
     host._vioraQueueBound = true;
-    host.addEventListener('click', (e) => {
+       host.addEventListener('click', (e) => {
       const el = e.target.closest('.nav-queue-item');
       if (!el) return;
       state._activeQueueId = el.dataset.queueId;
+
+      // Highlight the destination sidebar link
+      document.querySelectorAll('.sidebar nav a[data-tab]').forEach(a => a.classList.remove('from-queue'));
+      const destTab = el.dataset.tab;
+      const destLink = document.querySelector(`.sidebar nav a[data-tab="${destTab}"]`);
+      if (destLink) {
+        destLink.classList.add('from-queue');
+        // Auto-clear after 6s so it doesn't linger
+        setTimeout(() => destLink.classList.remove('from-queue'), 6000);
+      }
+
       if (window.Viora && typeof Viora.navigate === 'function') {
-        Viora.navigate(el.dataset.tab, { fromQueue: true });
+        Viora.navigate(destTab, { fromQueue: true });
       }
     });
   }
@@ -2428,11 +2497,13 @@ async function bootApp() {
     usdToKes,
     global: window,
 
-    renderDocuments:     renderDocumentVault,
+       renderDocuments:     renderDocumentVault,
     renderTrainingUsers: renderTrainingUsers,
     renderMyWishlist:    renderMyWishlist,
     renderUsers:         renderUsers,
     renderMarketContent: renderMarketContent,
+    renderHomeContent:   window.__vioraRenderHomeContent || null,
+    renderEmployeeProfiles: window.__vioraRenderEmployeeProfiles || null,
     EventBus,
   };
 
@@ -2862,13 +2933,34 @@ function startApp() {
       });
     } catch (e) { console.error('[viora] initPP:', e); }
 
-    // 17. Market content
+      // 17. Market content
     try {
       initMarketContent({
         db, ref, set, P,
         state, toast, logActivity, escapeHtml, $,
       });
     } catch (e) { console.error('[viora] initMarketContent:', e); }
+
+    // 17b. Home content (landing page CMS)
+    try {
+      const { initHomeContent, renderHomeContent } = await import('./main/home-content.js');
+      initHomeContent({
+        db, ref, set, get, P,
+        state, toast, logActivity, escapeHtml, $,
+        uploadToStorage: window.uploadToStorage || null,
+      });
+      window.__vioraRenderHomeContent = renderHomeContent;
+    } catch (e) { console.error('[viora] initHomeContent:', e); }
+
+    // 17c. Employee profiles (public team directory)
+    try {
+      const { initEmployeeProfiles, renderEmployeeProfiles } = await import('./main/employee-profiles.js');
+      initEmployeeProfiles({
+        db, ref, set, get, P,
+        state, toast, logActivity, escapeHtml, $,
+      });
+      window.__vioraRenderEmployeeProfiles = renderEmployeeProfiles;
+    } catch (e) { console.error('[viora] initEmployeeProfiles:', e); }
 
     // 18. Global market
     try {
@@ -3089,7 +3181,9 @@ try {
                 case 'personal-wishlist':       renderMyWishlist(); break;
           case 'product-presentation':    try { PP?.subscribe?.(); } catch (e) {} break;
           case 'clientsite':              renderClientsite(); break;
-          case 'market-content':          renderMarketContent(); break;
+            case 'market-content':          renderMarketContent(); break;
+          case 'home-content':            window.__vioraRenderHomeContent?.(); break;
+          case 'employee-profiles':       window.__vioraRenderEmployeeProfiles?.(); break;
 
           // ── Sales ──
           case 'sales-deals':             renderDeals(); break;
