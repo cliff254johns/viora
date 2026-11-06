@@ -1139,4 +1139,39 @@ if (document.readyState === 'loading') {
   boot();
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   MODAL SAFETY NETS
+   If a modal opens and something goes wrong, these guarantee
+   the page never stays frozen.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* 1. Escape key closes ANY open modal */
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  document.querySelectorAll('.modal-overlay.active').forEach(m => {
+    m.classList.remove('active');
+  });
+  document.body.style.overflow = '';
+  document.body.style.pointerEvents = '';
+}, true);
+
+/* 2. Clicking the backdrop closes ANY open modal */
+document.addEventListener('click', (e) => {
+  if (e.target.classList && e.target.classList.contains('modal-overlay') && e.target.classList.contains('active')) {
+    e.target.classList.remove('active');
+    document.body.style.overflow = '';
+    document.body.style.pointerEvents = '';
+  }
+}, true);
+
+/* 3. Safety: every 1s, if no modal is active but body is locked, unlock it */
+setInterval(() => {
+  const anyActive = document.querySelector('.modal-overlay.active, #cm-categoryModal.active, #om-purchaseModal.active');
+  if (!anyActive && document.body.style.overflow === 'hidden') {
+    document.body.style.overflow = '';
+    document.body.style.pointerEvents = '';
+    console.info('[viora-home] auto-unlocked body overflow (no active modal)');
+  }
+}, 1000);
+
 window.VioraHome = { S, renderAll, openOrderModal, openCategoryModal };
