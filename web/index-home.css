@@ -1084,3 +1084,21 @@
     transform:none;
   }
 }
+.product-strip-card {
+  cursor: default !important;
+}
+.product-strip-card:hover {
+  transform: translateY(-2px);
+}
+.product-strip-actions .btn {
+  padding: 8px 14px;
+  font-size: 12px;
+  min-height: 34px;
+  flex: 1;
+  min-width: 80px;
+}
+.product-strip-actions .btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+}
