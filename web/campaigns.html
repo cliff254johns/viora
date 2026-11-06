@@ -1536,6 +1536,7 @@ tr:last-child td{border-bottom:0}
   function handleUserRole(snap) {
     var role = snap.exists() ? (snap.val().role || "member") : "member";
     if (ALLOWED_ROLES.indexOf(role) === -1) {
+      console.warn("[campaigns] role '" + role + "' not allowed. Allowed:", ALLOWED_ROLES.join(", "));
       renderAccessRestricted();
       return;
     }
@@ -1547,8 +1548,36 @@ tr:last-child td{border-bottom:0}
       window.location.replace("/main.html#login");
       return;
     }
-    get(ref(db, ROOT + "/" + ORG + "/users/" + user.uid))
-      .then(handleUserRole)
+
+    /* Try the org-level path first (where admin records usually live),
+       then fall back to the top-level users node. This handles both
+       admin (org-level) and exec (top-level) users. */
+    var orgPath = ROOT + "/" + ORG + "/users/" + user.uid;
+    var topPath = ROOT + "/users/" + user.uid;
+
+    var orgRead    = get(ref(db, orgPath)).catch(function () { return null; });
+    var topRead    = get(ref(db, topPath)).catch(function () { return null; });
+
+    Promise.all([orgRead, topRead])
+      .then(function (results) {
+        var orgSnap = results[0];
+        var topSnap = results[1];
+
+        var snap = null;
+        if (orgSnap && orgSnap.exists()) {
+          snap = orgSnap;
+          console.log("[campaigns] role read from " + orgPath);
+        } else if (topSnap && topSnap.exists()) {
+          snap = topSnap;
+          console.log("[campaigns] role read from " + topPath + " (org-level record missing)");
+        } else {
+          console.warn("[campaigns] no user record found at either path for uid " + user.uid);
+          renderAccessRestricted();
+          return;
+        }
+
+        handleUserRole(snap);
+      })
       .catch(handleAuthError);
   });
 </script>
