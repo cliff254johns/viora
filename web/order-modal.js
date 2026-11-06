@@ -470,36 +470,7 @@ function _defaultFormHTML() {
   `;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   MODAL SAFETY NETS
-   ═══════════════════════════════════════════════════════════════ */
 
-/* 1. Escape closes any active modal */
-document.addEventListener('keydown', (e) => {
-  if (e.key !== 'Escape') return;
-  document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
-  document.body.style.overflow = '';
-  document.body.style.pointerEvents = '';
-}, true);
-
-/* 2. Backdrop click closes any active modal */
-document.addEventListener('click', (e) => {
-  if (e.target.classList && e.target.classList.contains('modal-overlay') && e.target.classList.contains('active')) {
-    e.target.classList.remove('active');
-    document.body.style.overflow = '';
-    document.body.style.pointerEvents = '';
-  }
-}, true);
-
-/* 3. Auto-recovery: if no modal should be open but body is locked */
-setInterval(() => {
-  const anyActive = document.querySelector('.modal-overlay.active');
-  if (!anyActive && document.body.style.overflow === 'hidden') {
-    document.body.style.overflow = '';
-    document.body.style.pointerEvents = '';
-    console.info('[viora-home] auto-unlocked body overflow');
-  }
-}, 1000);
 
 function _bindDefaultForm() {
   if (!_modalEl) return;
