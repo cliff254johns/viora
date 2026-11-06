@@ -1302,7 +1302,7 @@ export function registerNetworkEvents(deps) {
   if (registerNetworkEvents._done) return;
   registerNetworkEvents._done = true;
 
-  const { state, setSyncStatus, toast, scheduleFlush, PushNotifications, AIRank } = deps;
+    const { state, setSyncStatus, toast, scheduleFlush, PushNotifications } = deps;
 
   window.addEventListener('online', () => {
     try { goOnline(); } catch (e) {}
@@ -1347,12 +1347,4 @@ export function registerNetworkEvents(deps) {
     }
   });
 
-  let _aiRankThrottleTimer = null;
-  document.addEventListener('click', () => {
-    if (_aiRankThrottleTimer) return;
-    _aiRankThrottleTimer = setTimeout(() => {
-      _aiRankThrottleTimer = null;
-      try { AIRank?.rerankByAI?.(); } catch (e) {}
-    }, 5000);
-  }, { passive: true });
-}
+
