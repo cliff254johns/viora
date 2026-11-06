@@ -175,7 +175,7 @@ export const AIFiling = (function () {
    AI PRIORITY RE-RANKING
    ═══════════════════════════════════════════════════════════════ */
 export const AIRank = (function () {
-  const COOLDOWN_MS = 5 * 60 * 1000;
+  const COOLDOWN_MS = 15 * 60 * 1000;     // ★ v9.5 — 15 min (was 5 min)
   const MAX_TASKS = 20;
   const MAX_DEALS = 20;
   const STUCK_MS  = 60 * 1000;            // auto-release in-flight flag
@@ -279,7 +279,15 @@ export const AIRank = (function () {
       state._aiRankLastRun = Date.now();
 
       if (typeof toast === 'function') toast('AI re-ranked priorities.', 'success');
-      if (typeof renderActiveTab === 'function') renderActiveTab();
+      const _modalOpen =
+        document.querySelector('.modal-overlay.active') ||
+        document.querySelector('[role="dialog"][aria-modal="true"]') ||
+        (document.getElementById('hc-industry-panel')?.style.display === 'flex') ||
+        (document.getElementById('hc-modal-host')?.children.length > 0);
+
+      if (typeof renderActiveTab === 'function' && !_modalOpen) {
+        renderActiveTab();
+      }
     } catch (e) {
       console.warn('[AIRank] rerankByAI failed', e);
     } finally {
