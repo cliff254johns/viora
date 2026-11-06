@@ -2327,3 +2327,330 @@
   .tour-product-name { font-size: 12px; }
   .tour-product-price { font-size: 13px; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   APPLE BLACK — LANDING PAGE SPECIFIC OVERRIDES (v1.0)
+   These target selectors that only exist on index.html.
+   shared-app.css already handles global theme tokens.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Hero ── */
+[data-theme="dark"] .hero {
+  background: #000000;
+}
+
+/* ── Stats strip ── */
+[data-theme="dark"] .stats-strip {
+  background: #000000;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+[data-theme="dark"] .stats-strip-value {
+  color: #0A84FF;
+}
+
+/* ── Intent tiles ── */
+[data-theme="dark"] .intent-router {
+  background: #000000;
+}
+[data-theme="dark"] .intent-tile {
+  background: #0A0A0A;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+[data-theme="dark"] .intent-tile:hover {
+  background: #141414;
+  border-color: #0A84FF;
+}
+[data-theme="dark"] .intent-icon {
+  background: rgba(10, 132, 255, 0.15);
+  color: #0A84FF;
+}
+
+/* ── Tour ── */
+[data-theme="dark"] .tour {
+  background: #000000;
+}
+[data-theme="dark"] .tour-family,
+[data-theme="dark"] .tour-card {
+  background: #0A0A0A;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+[data-theme="dark"] .tour-card:hover,
+[data-theme="dark"] .tour-family:hover {
+  background: #141414;
+  border-color: #0A84FF;
+}
+[data-theme="dark"] .tour-card-icon {
+  background: rgba(10, 132, 255, 0.15);
+  color: #0A84FF;
+}
+[data-theme="dark"] .tour-chip {
+  background: rgba(10, 132, 255, 0.1);
+  color: #64D2FF;
+  border-color: rgba(100, 210, 255, 0.2);
+}
+[data-theme="dark"] .tour-chip:hover {
+  background: #0A84FF;
+  color: #FFFFFF;
+}
+
+/* ── Chat tour bubbles — iMessage style ── */
+[data-theme="dark"] .chat-bubble.assistant .chat-bubble-body {
+  background: #1C1C1E;
+  border: none;
+  border-radius: 18px 18px 18px 4px;
+  color: #F5F5F7;
+}
+[data-theme="dark"] .chat-bubble.user .chat-bubble-body {
+  background: #0A84FF;
+  border: none;
+  border-radius: 18px 18px 4px 18px;
+  color: #FFFFFF;
+}
+[data-theme="dark"] .chat-bubble-icon {
+  background: #0A84FF;
+  box-shadow: 0 2px 8px rgba(10, 132, 255, 0.4);
+}
+[data-theme="dark"] .chat-chip {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #F5F5F7;
+}
+[data-theme="dark"] .chat-chip:hover {
+  background: rgba(10, 132, 255, 0.2);
+  border-color: #0A84FF;
+  color: #FFFFFF;
+}
+[data-theme="dark"] .chat-search {
+  background: #0A0A0A;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #F5F5F7;
+}
+[data-theme="dark"] .chat-search:focus {
+  border-color: #0A84FF;
+  box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2);
+}
+
+/* ── Tour detail card ── */
+[data-theme="dark"] .tour-detail-card {
+  background: #141414;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+[data-theme="dark"] .tour-detail-visual {
+  background: #0A0A0A;
+}
+
+/* ── Tour product cards ── */
+[data-theme="dark"] .tour-product-card {
+  background: #0A0A0A;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+[data-theme="dark"] .tour-product-card:hover {
+  background: #141414;
+  border-color: #0A84FF;
+}
+[data-theme="dark"] .tour-product-visual {
+  background: #000000;
+}
+[data-theme="dark"] .tour-product-name {
+  color: #F5F5F7;
+}
+[data-theme="dark"] .tour-product-price {
+  color: #0A84FF;
+}
+[data-theme="dark"] .tour-product-buy {
+  background: #0A84FF;
+}
+[data-theme="dark"] .tour-product-buy:hover {
+  background: #0070E0;
+}
+[data-theme="dark"] .tour-product-preview {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #98989D;
+}
+[data-theme="dark"] .tour-product-preview:hover {
+  background: rgba(10, 132, 255, 0.15);
+  border-color: #0A84FF;
+  color: #0A84FF;
+}
+
+/* ── Product strip ── */
+[data-theme="dark"] .product-strip {
+  background: #000000;
+}
+[data-theme="dark"] .strip-card {
+  background: #0A0A0A;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+[data-theme="dark"] .strip-card:hover {
+  background: #141414;
+  border-color: #0A84FF;
+}
+[data-theme="dark"] .strip-card-visual {
+  background: #000000;
+}
+[data-theme="dark"] .strip-card-name {
+  color: #F5F5F7;
+}
+[data-theme="dark"] .strip-card-price {
+  color: #0A84FF;
+}
+[data-theme="dark"] .strip-btn-primary {
+  background: #0A84FF;
+}
+[data-theme="dark"] .strip-btn-primary:hover {
+  background: #0070E0;
+}
+[data-theme="dark"] .strip-btn-outline {
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #98989D;
+}
+[data-theme="dark"] .strip-btn-outline:hover {
+  border-color: #0A84FF;
+  color: #0A84FF;
+}
+
+/* ── Strip carousel arrows ── */
+[data-theme="dark"] .strip-carousel-prev,
+[data-theme="dark"] .strip-carousel-next {
+  background: #1C1C1E;
+  color: #F5F5F7;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+[data-theme="dark"] .strip-carousel-prev:hover,
+[data-theme="dark"] .strip-carousel-next:hover {
+  background: #0A84FF;
+  color: #FFFFFF;
+}
+
+/* ── Subscribe band ── */
+[data-theme="dark"] .subscribe-band {
+  background: linear-gradient(135deg, rgba(10, 132, 255, 0.08), rgba(191, 90, 242, 0.08));
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Ecosystem map ── */
+[data-theme="dark"] .ecosystem {
+  background: #000000;
+}
+[data-theme="dark"] .eco-info {
+  background: #0A0A0A;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+[data-theme="dark"] .eco-node text {
+  fill: #F5F5F7;
+}
+[data-theme="dark"] .eco-line {
+  stroke: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Dashboard preview ── */
+[data-theme="dark"] .dash-demo {
+  background: #0A0A0A;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+[data-theme="dark"] .dash-demo-side {
+  background: #000000;
+}
+[data-theme="dark"] .dash-demo-main {
+  background: #000000;
+}
+[data-theme="dark"] .dash-card {
+  background: #0A0A0A;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+[data-theme="dark"] .dash-card .big {
+  color: #F5F5F7;
+}
+[data-theme="dark"] .dash-donut::after {
+  background: #0A0A0A;
+}
+[data-theme="dark"] .dash-bars div {
+  background: linear-gradient(180deg, #0A84FF, rgba(10, 132, 255, 0.4));
+}
+
+/* ── Case strip ── */
+[data-theme="dark"] .case-strip {
+  background: #000000;
+}
+[data-theme="dark"] .case-strip-card {
+  background: #0A0A0A;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Pricing cards ── */
+[data-theme="dark"] .price-card {
+  background: #0A0A0A;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+[data-theme="dark"] .price-card.growth {
+  border-top-color: #30D158;
+  box-shadow: 0 20px 40px -20px rgba(48, 209, 88, 0.3);
+}
+
+/* ── Academy teaser ── */
+[data-theme="dark"] .academy-teaser {
+  background: #000000;
+}
+
+/* ── FAQ ── */
+[data-theme="dark"] .faq-item,
+[data-theme="dark"] details.faq-item {
+  background: #0A0A0A !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ── Testimonials ── */
+[data-theme="dark"] .testi {
+  background: #0A0A0A;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+[data-theme="dark"] .testi blockquote {
+  color: #F5F5F7;
+}
+
+/* ── Contact form ── */
+[data-theme="dark"] .form-card {
+  background: #0A0A0A;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+[data-theme="dark"] .field input,
+[data-theme="dark"] .field select,
+[data-theme="dark"] .field textarea {
+  background: #1C1C1E;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #F5F5F7;
+}
+[data-theme="dark"] .field input:focus,
+[data-theme="dark"] .field select:focus,
+[data-theme="dark"] .field textarea:focus {
+  border-color: #0A84FF;
+  box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2);
+}
+
+/* ── Footer ── */
+[data-theme="dark"] .foot {
+  background: #000000;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ── Modals — Apple sheet ── */
+[data-theme="dark"] .modal-overlay {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+[data-theme="dark"] .modal-overlay .modal-card,
+[data-theme="dark"] .modal-panel {
+  background: #1C1C1E;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7), 0 8px 24px rgba(0, 0, 0, 0.5);
+  color: #F5F5F7;
+}
+[data-theme="dark"] .modal-overlay .modal-field input,
+[data-theme="dark"] .modal-overlay .modal-field select,
+[data-theme="dark"] .modal-overlay .modal-field textarea {
+  background: #0A0A0A;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #F5F5F7;
+}
