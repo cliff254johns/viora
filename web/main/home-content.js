@@ -167,14 +167,7 @@ export function renderHomeContent() {
       <div id="hc-panels"></div>
     </div>
 
-    <!-- Industry editor slide-in panel -->
-    <div id="hc-industry-panel" style="display:none;position:fixed;top:0;right:0;bottom:0;width:640px;max-width:100vw;
-      background:var(--bg-elev-1);border-left:1px solid var(--border-color);z-index:9999;display:none;
-      flex-direction:column;box-shadow:-20px 0 60px rgba(0,0,0,.4);">
-    </div>
-    <div id="hc-industry-backdrop" style="display:none;position:fixed;inset:0;background:rgba(10,25,47,.6);z-index:9998;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);"></div>
-
-    <!-- Generic modal host (for bucket/family editors) -->
+    <!-- Modal host (industry editor + bucket/family editors + confirm dialogs) -->
     <div id="hc-modal-host"></div>
   `;
 
@@ -751,7 +744,12 @@ function bindIndustriesPanel() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   INDUSTRY EDITOR (slide-in panel, persistent)
+   INDUSTRY EDITOR — CENTERED WIDE MODAL (v3.0)
+   ─────────────────────────────────────────────────────────────
+   Two-column layout on ≥ 900px, single column below.
+   Sticky header + footer. Backdrop click does NOT close.
+   Unsaved-changes guard. Same visual language as bucket/family
+   editors, just wider and two-column.
    ═══════════════════════════════════════════════════════════════ */
 function openIndustryEditor(key, isRestore = false) {
   const existing = key
@@ -765,191 +763,215 @@ function openIndustryEditor(key, isRestore = false) {
         bucket: '', family: '', order: 99, active: true
       };
 
-  const panel = document.getElementById('hc-industry-panel');
-  const backdrop = document.getElementById('hc-industry-backdrop');
-  if (!panel || !backdrop) return;
+  const host = document.getElementById('hc-modal-host');
+  if (!host) {
+    console.warn('[openIndustryEditor] #hc-modal-host not found');
+    return;
+  }
 
-  /* Save state so the panel reopens after tab switch */
+  D.state._hce = D.state._hce || {};
   D.state._hce.editorOpenKey = key || '__new__';
   D.state._hce.editorIsDirty = false;
-
-  panel.style.display = 'flex';
-  backdrop.style.display = 'block';
+  D.state._hce.uploadedImage = null;
 
   const isNew = !key;
   const imageData = existing.image || existing.imageUrl || '';
-  const buckets = Object.values(flattenNode(D.state?.data?.homeContent?.tour?.buckets));
-  const families = Object.values(flattenNode(D.state?.data?.homeContent?.tour?.families));
+  const buckets = Object.values(flattenNode(D.state?.data?.homeContent?.tour?.buckets))
+    .sort((a, b) => (Number(a.order) || 999) - (Number(b.order) || 999));
+  const families = Object.values(flattenNode(D.state?.data?.homeContent?.tour?.families))
+    .sort((a, b) => (Number(a.order) || 999) - (Number(b.order) || 999));
 
-  panel.innerHTML = `
-    <!-- Sticky header -->
-    <div style="padding:20px 24px;border-bottom:1px solid var(--border-color);background:var(--bg-elev-1);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
-      <div style="display:flex;align-items:center;gap:12px;min-width:0;">
-        <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--accent-blue),var(--accent-purple,#8B5CF6));display:grid;place-items:center;color:#fff;flex-shrink:0;">
-          <i class="fa-solid fa-industry"></i>
-        </div>
-        <div style="min-width:0;">
-          <h3 style="margin:0;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-            ${isNew ? 'Add industry' : escHtml(existing.name || key)}
-          </h3>
-          <p style="margin:2px 0 0;font-size:.72rem;color:var(--text-muted);">
-            ${isNew ? 'New entry' : `<code style="font-family:monospace;">${escHtml(key)}</code>`}
-          </p>
-        </div>
-      </div>
-      <button type="button" id="hc-ind-close"
-        style="background:var(--bg-elev-2);border:1px solid var(--border-color);color:var(--text-muted);width:36px;height:36px;border-radius:9px;cursor:pointer;font-size:18px;display:grid;place-items:center;line-height:1;flex-shrink:0;"
-        title="Close without saving">
-        ×
-      </button>
-    </div>
+  host.innerHTML = `
+    <div id="hc-ind-modal" role="dialog" aria-modal="true" aria-labelledby="hc-ind-modal-title"
+         style="position:fixed;inset:0;background:rgba(10,25,47,.6);display:flex;align-items:center;justify-content:center;padding:24px;z-index:10000;animation:hcFadeIn .18s ease;">
 
-    <!-- Scrollable body -->
-    <div style="flex:1;overflow-y:auto;padding:24px;">
+      <div id="hc-ind-card" style="background:var(--bg-elev-1);border-radius:18px;box-shadow:0 32px 80px -16px rgba(0,0,0,.5);
+                  width:100%;max-width:820px;max-height:calc(100vh - 48px);
+                  display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--border-color);
+                  animation:hcSlideUp .22s cubic-bezier(0.34,1.56,0.64,1);">
 
-      <!-- Identity -->
-      <section style="margin-bottom:28px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
-          <i class="fa-solid fa-id-card" style="color:var(--accent-blue);font-size:.85rem;"></i>
-          <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Identity</h4>
+        <!-- Sticky header -->
+        <div style="padding:18px 24px;border-bottom:1px solid var(--border-color);
+                    display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:var(--bg-elev-1);">
+          <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+            <div style="width:38px;height:38px;border-radius:10px;
+                        background:linear-gradient(135deg,var(--accent-blue),var(--accent-purple,#8B5CF6));
+                        display:grid;place-items:center;color:#fff;flex-shrink:0;">
+              <i class="fa-solid fa-industry"></i>
+            </div>
+            <div style="min-width:0;">
+              <h3 id="hc-ind-modal-title" style="margin:0;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                ${isNew ? 'Add industry' : escHtml(existing.name || key)}
+              </h3>
+              <p style="margin:2px 0 0;font-size:.72rem;color:var(--text-muted);">
+                ${isNew ? 'New entry' : `<code style="font-family:monospace;">${escHtml(key)}</code>`}
+              </p>
+            </div>
+          </div>
+          <button type="button" id="hc-ind-close" aria-label="Close"
+                  style="background:var(--bg-elev-2);border:1px solid var(--border-color);color:var(--text-muted);
+                         width:34px;height:34px;border-radius:9px;cursor:pointer;font-size:18px;
+                         display:grid;place-items:center;line-height:1;flex-shrink:0;">×</button>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-          ${formField('hc-ind-key', 'Key *', existing.key || '', 'lowercase, no spaces', !isNew)}
-          ${formField('hc-ind-name', 'Name *', existing.name || '', 'e.g. Retail & Wholesale')}
-        </div>
-        ${formField('hc-ind-marketCategory', 'Market Category *', existing.marketCategory || '', 'Must match product.category exactly')}
-        <div style="display:grid;grid-template-columns:90px 1fr;gap:14px;">
-          ${formField('hc-ind-emoji', 'Emoji', existing.emoji || '📦')}
-          ${iconPickerField('hc-ind-icon', 'Icon', existing.icon || 'fa-cube')}
-        </div>
-      </section>
 
-      <!-- Appearance -->
-      <section style="margin-bottom:28px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
-          <i class="fa-solid fa-palette" style="color:var(--accent-blue);font-size:.85rem;"></i>
-          <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Appearance</h4>
-        </div>
-        ${colorPickerField('hc-ind-color', 'Color', existing.color || '#2267EE')}
-        ${imagePickerField('hc-ind-image', 'Image', imageData)}
-      </section>
+        <!-- Scroll body (2-column on ≥ 900px) -->
+        <div style="flex:1;overflow-y:auto;padding:24px;background:var(--bg-elev-1);">
+          <div id="hc-ind-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
 
-      <!-- Placement -->
-      <section style="margin-bottom:28px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
-          <i class="fa-solid fa-sitemap" style="color:var(--accent-blue);font-size:.85rem;"></i>
-          <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Placement in tour</h4>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-          ${formSelect('hc-ind-bucket', 'Bucket *', buckets.map(b => ({ value: b.key, label: b.name || b.key })), existing.bucket, '— Select bucket —')}
-          ${formSelect('hc-ind-family', 'Family *', families.map(f => ({ value: f.key, label: f.name || f.key, bucket: f.bucket })), existing.family, '— Select family —')}
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-          ${formField('hc-ind-order', 'Sort order', String(existing.order || 99))}
-          <div style="display:flex;align-items:flex-end;">
-            <label style="display:flex;align-items:center;gap:8px;font-size:.88rem;padding:10px 0;cursor:pointer;">
-              <input type="checkbox" id="hc-ind-active" ${existing.active !== false ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer;"/>
-              Active (visible in tour & marketplace)
-            </label>
+            <!-- IDENTITY -->
+            <section>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
+                <i class="fa-solid fa-id-card" style="color:var(--accent-blue);font-size:.85rem;"></i>
+                <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Identity</h4>
+              </div>
+              ${formField('hc-ind-key', 'Key *', existing.key || '', 'lowercase, no spaces', !isNew)}
+              ${formField('hc-ind-name', 'Name *', existing.name || '', 'e.g. Retail & Wholesale')}
+              ${formField('hc-ind-marketCategory', 'Market Category *', existing.marketCategory || '', 'Must match product.category exactly')}
+              <div style="display:grid;grid-template-columns:80px 1fr;gap:12px;">
+                ${formField('hc-ind-emoji', 'Emoji', existing.emoji || '📦')}
+                ${iconPickerField('hc-ind-icon', 'Icon', existing.icon || 'fa-cube')}
+              </div>
+            </section>
+
+            <!-- APPEARANCE -->
+            <section>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
+                <i class="fa-solid fa-palette" style="color:var(--accent-blue);font-size:.85rem;"></i>
+                <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Appearance</h4>
+              </div>
+              ${colorPickerField('hc-ind-color', 'Color', existing.color || '#2267EE')}
+              ${imagePickerField('hc-ind-image', 'Image', imageData)}
+            </section>
+
+            <!-- PLACEMENT -->
+            <section>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
+                <i class="fa-solid fa-sitemap" style="color:var(--accent-blue);font-size:.85rem;"></i>
+                <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Placement in tour</h4>
+              </div>
+              ${formSelect('hc-ind-bucket', 'Bucket *', buckets.map(b => ({ value: b.key, label: b.name || b.key })), existing.bucket, '— Select bucket —')}
+              ${formSelect('hc-ind-family', 'Family *', families.map(f => ({ value: f.key, label: f.name || f.key, bucket: f.bucket })), existing.family, '— Select family —')}
+              ${formField('hc-ind-order', 'Sort order', String(existing.order || 99))}
+              <label style="display:flex;align-items:center;gap:8px;font-size:.88rem;padding:6px 0;cursor:pointer;">
+                <input type="checkbox" id="hc-ind-active" ${existing.active !== false ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer;"/>
+                Active (visible in tour &amp; marketplace)
+              </label>
+            </section>
+
+            <!-- LINKS -->
+            <section>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
+                <i class="fa-solid fa-link" style="color:var(--accent-blue);font-size:.85rem;"></i>
+                <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Links</h4>
+              </div>
+              ${formField('hc-ind-previewUrl', 'Preview URL', existing.previewUrl || '', 'Opens when "View sample" is clicked')}
+              ${formField('hc-ind-buyUrl', 'Buy URL', existing.buyUrl || '', 'Optional override for "Buy now"')}
+            </section>
+
+            <!-- COPY -->
+            <section>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
+                <i class="fa-solid fa-align-left" style="color:var(--accent-blue);font-size:.85rem;"></i>
+                <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Copy</h4>
+              </div>
+              ${formTextarea('hc-ind-desc', 'Short description', existing.desc || '', 'Shown on the tour card')}
+              ${formTextarea('hc-ind-longDesc', 'Long description', existing.longDesc || '', 'Shown in the "More" popup')}
+            </section>
+
+            <!-- BULLETS -->
+            <section>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
+                <i class="fa-solid fa-list-check" style="color:var(--accent-blue);font-size:.85rem;"></i>
+                <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Bullets</h4>
+              </div>
+              <div id="hc-ind-bullets">
+                ${(existing.bullets || []).map((b) => bulletRow(b)).join('')}
+              </div>
+              <button type="button" class="btn btn-outline btn-xs" id="hc-ind-add-bullet" style="margin-top:8px;">
+                <i class="fa-solid fa-plus"></i> Add bullet
+              </button>
+            </section>
+
+            <!-- STATS -->
+            <section>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
+                <i class="fa-solid fa-chart-simple" style="color:var(--accent-blue);font-size:.85rem;"></i>
+                <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Stats</h4>
+              </div>
+              <div id="hc-ind-stats">
+                ${(existing.stats || []).map((s) => statRow(s)).join('')}
+              </div>
+              <button type="button" class="btn btn-outline btn-xs" id="hc-ind-add-stat" style="margin-top:8px;">
+                <i class="fa-solid fa-plus"></i> Add stat
+              </button>
+            </section>
+
+            <!-- INCLUDED -->
+            <section>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
+                <i class="fa-solid fa-circle-check" style="color:var(--accent-blue);font-size:.85rem;"></i>
+                <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">What's included</h4>
+              </div>
+              <div id="hc-ind-included">
+                ${(existing.included || []).map((it) => includedRow(it)).join('')}
+              </div>
+              <button type="button" class="btn btn-outline btn-xs" id="hc-ind-add-included" style="margin-top:8px;">
+                <i class="fa-solid fa-plus"></i> Add feature
+              </button>
+            </section>
+
+            <!-- FAQS -->
+            <section>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
+                <i class="fa-solid fa-circle-question" style="color:var(--accent-blue);font-size:.85rem;"></i>
+                <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">FAQs</h4>
+              </div>
+              <div id="hc-ind-faqs">
+                ${(existing.faqs || []).map((f) => faqRow(f)).join('')}
+              </div>
+              <button type="button" class="btn btn-outline btn-xs" id="hc-ind-add-faq" style="margin-top:8px;">
+                <i class="fa-solid fa-plus"></i> Add FAQ
+              </button>
+            </section>
+
           </div>
         </div>
-      </section>
 
-      <!-- Links -->
-      <section style="margin-bottom:28px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
-          <i class="fa-solid fa-link" style="color:var(--accent-blue);font-size:.85rem;"></i>
-          <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Links</h4>
+        <!-- Sticky footer -->
+        <div style="padding:14px 24px;border-top:1px solid var(--border-color);
+                    display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;background:var(--bg-elev-1);">
+          ${!isNew ? `<button type="button" class="btn btn-danger" id="hc-ind-delete" style="margin-right:auto;">
+            <i class="fa-solid fa-trash"></i> Delete
+          </button>` : ''}
+          <button type="button" class="btn btn-outline" id="hc-ind-cancel">Cancel</button>
+          <button type="button" class="btn btn-success" id="hc-ind-save">
+            <i class="fa-solid fa-check"></i> ${isNew ? 'Create industry' : 'Save changes'}
+          </button>
         </div>
-        ${formField('hc-ind-previewUrl', 'Preview URL', existing.previewUrl || '', 'Opens when "View sample" is clicked')}
-        ${formField('hc-ind-buyUrl', 'Buy URL', existing.buyUrl || '', 'Optional override for "Buy now"')}
-      </section>
 
-      <!-- Copy -->
-      <section style="margin-bottom:28px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
-          <i class="fa-solid fa-align-left" style="color:var(--accent-blue);font-size:.85rem;"></i>
-          <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Copy</h4>
-        </div>
-        ${formTextarea('hc-ind-desc', 'Short description', existing.desc || '', 'Shown on the tour card')}
-        ${formTextarea('hc-ind-longDesc', 'Long description', existing.longDesc || '', 'Shown in the "More" popup')}
-      </section>
-
-      <!-- Bullets -->
-      <section style="margin-bottom:28px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
-          <i class="fa-solid fa-list-check" style="color:var(--accent-blue);font-size:.85rem;"></i>
-          <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Bullets</h4>
-        </div>
-        <div id="hc-ind-bullets">
-          ${(existing.bullets || []).map((b) => bulletRow(b)).join('')}
-        </div>
-        <button type="button" class="btn btn-outline btn-xs" id="hc-ind-add-bullet" style="margin-top:8px;">
-          <i class="fa-solid fa-plus"></i> Add bullet
-        </button>
-      </section>
-
-      <!-- Stats -->
-      <section style="margin-bottom:28px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
-          <i class="fa-solid fa-chart-simple" style="color:var(--accent-blue);font-size:.85rem;"></i>
-          <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Stats</h4>
-        </div>
-        <div id="hc-ind-stats">
-          ${(existing.stats || []).map((s) => statRow(s)).join('')}
-        </div>
-        <button type="button" class="btn btn-outline btn-xs" id="hc-ind-add-stat" style="margin-top:8px;">
-          <i class="fa-solid fa-plus"></i> Add stat
-        </button>
-      </section>
-
-      <!-- Included -->
-      <section style="margin-bottom:28px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
-          <i class="fa-solid fa-circle-check" style="color:var(--accent-blue);font-size:.85rem;"></i>
-          <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">What's included</h4>
-        </div>
-        <div id="hc-ind-included">
-          ${(existing.included || []).map((it) => includedRow(it)).join('')}
-        </div>
-        <button type="button" class="btn btn-outline btn-xs" id="hc-ind-add-included" style="margin-top:8px;">
-          <i class="fa-solid fa-plus"></i> Add feature
-        </button>
-      </section>
-
-      <!-- FAQs -->
-      <section style="margin-bottom:8px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color);">
-          <i class="fa-solid fa-circle-question" style="color:var(--accent-blue);font-size:.85rem;"></i>
-          <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">FAQs</h4>
-        </div>
-        <div id="hc-ind-faqs">
-          ${(existing.faqs || []).map((f) => faqRow(f)).join('')}
-        </div>
-        <button type="button" class="btn btn-outline btn-xs" id="hc-ind-add-faq" style="margin-top:8px;">
-          <i class="fa-solid fa-plus"></i> Add FAQ
-        </button>
-      </section>
-
+      </div>
     </div>
 
-    <!-- Sticky footer -->
-    <div style="padding:16px 24px;border-top:1px solid var(--border-color);background:var(--bg-elev-1);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;">
-      ${!isNew ? `<button type="button" class="btn btn-danger" id="hc-ind-delete" style="margin-right:auto;">
-        <i class="fa-solid fa-trash"></i> Delete
-      </button>` : ''}
-      <button type="button" class="btn btn-outline" id="hc-ind-cancel">Cancel</button>
-      <button type="button" class="btn btn-success" id="hc-ind-save">
-        <i class="fa-solid fa-check"></i> ${isNew ? 'Create industry' : 'Save changes'}
-      </button>
-    </div>
+    <style>
+      @keyframes hcFadeIn { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes hcSlideUp { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+      @media (max-width: 900px) {
+        #hc-ind-grid { grid-template-columns: 1fr !important; }
+        #hc-ind-card { max-width: calc(100vw - 24px) !important; max-height: calc(100vh - 24px) !important; border-radius: 14px !important; }
+      }
+    </style>
   `;
 
-  /* ── Backdrop click does NOTHING (intentional — prevents data loss) ── */
-  backdrop.onclick = null;
+  const modal = document.getElementById('hc-ind-modal');
+  const card = document.getElementById('hc-ind-card');
 
-  /* ── Close with unsaved-changes guard ── */
-  const closeEditor = async () => {
+  /* Backdrop click does NOTHING (protects unsaved work) */
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) { /* intentional — no-op */ }
+  });
+
+  /* Close with unsaved-changes guard */
+  const closeModalFn = async () => {
     if (D.state._hce.editorIsDirty) {
       const ok = await confirmModal({
         title: 'Discard changes?',
@@ -959,35 +981,49 @@ function openIndustryEditor(key, isRestore = false) {
       });
       if (!ok) return;
     }
-    panel.style.display = 'none';
-    backdrop.style.display = 'none';
-    panel.innerHTML = '';
-    D.state._hce.editorOpenKey = null;
-    D.state._hce.editorIsDirty = false;
+    modal.style.transition = 'opacity .15s';
+    modal.style.opacity = '0';
+    setTimeout(() => {
+      host.innerHTML = '';
+      D.state._hce.editorOpenKey = null;
+      D.state._hce.editorIsDirty = false;
+      D.state._hce.uploadedImage = null;
+    }, 150);
   };
 
-  document.getElementById('hc-ind-close')?.addEventListener('click', closeEditor);
-  document.getElementById('hc-ind-cancel')?.addEventListener('click', closeEditor);
+  document.getElementById('hc-ind-close')?.addEventListener('click', closeModalFn);
+  document.getElementById('hc-ind-cancel')?.addEventListener('click', closeModalFn);
 
-  /* ── Mark dirty on any input ── */
-  panel.querySelectorAll('input, textarea, select').forEach(inp => {
+  /* Escape closes (with guard) */
+  const escHandler = (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeModalFn();
+    }
+  };
+  document.addEventListener('keydown', escHandler);
+  const observer = new MutationObserver(() => {
+    if (!document.getElementById('hc-ind-modal')) {
+      document.removeEventListener('keydown', escHandler);
+      observer.disconnect();
+    }
+  });
+  observer.observe(host, { childList: true });
+
+  /* Mark dirty on any input */
+  card.querySelectorAll('input, textarea, select').forEach(inp => {
     inp.addEventListener('input', () => { D.state._hce.editorIsDirty = true; });
     inp.addEventListener('change', () => { D.state._hce.editorIsDirty = true; });
   });
 
-  /* ── Color palette ── */
-  bindColorPicker(panel, 'hc-ind-color');
-
-  /* ── Icon picker ── */
-  bindIconPicker(panel, 'hc-ind-icon');
-
-  /* ── Image picker ── */
-  bindImagePicker(panel, 'hc-ind-image', async (base64) => {
+  bindColorPicker(card, 'hc-ind-color');
+  bindIconPicker(card, 'hc-ind-icon');
+  bindImagePicker(card, 'hc-ind-image', async (base64) => {
     D.state._hce.uploadedImage = base64;
     D.state._hce.editorIsDirty = true;
   });
 
-  /* ── Family dropdown filters by bucket ── */
+  /* Family dropdown filters by bucket */
   const bucketSel = document.getElementById('hc-ind-bucket');
   const familySel = document.getElementById('hc-ind-family');
   if (bucketSel && familySel) {
@@ -1008,7 +1044,7 @@ function openIndustryEditor(key, isRestore = false) {
     applyFamilyFilter();
   }
 
-  /* ── Dynamic row adders ── */
+  /* Dynamic row adders */
   const addHandlers = {
     'hc-ind-add-bullet': () => {
       document.getElementById('hc-ind-bullets').insertAdjacentHTML('beforeend', bulletRow(''));
@@ -1036,7 +1072,7 @@ function openIndustryEditor(key, isRestore = false) {
   });
 
   function bindRemoveButtons() {
-    panel.querySelectorAll('[data-remove-row]').forEach(btn => {
+    card.querySelectorAll('[data-remove-row]').forEach(btn => {
       if (btn._bound) return;
       btn._bound = true;
       btn.addEventListener('click', () => {
@@ -1047,7 +1083,7 @@ function openIndustryEditor(key, isRestore = false) {
   }
   bindRemoveButtons();
 
-  /* ── Delete ── */
+  /* Delete */
   document.getElementById('hc-ind-delete')?.addEventListener('click', async () => {
     const ok = await confirmModal({
       title: 'Delete industry?',
@@ -1060,18 +1096,21 @@ function openIndustryEditor(key, isRestore = false) {
       await D.set(D.ref(D.db, `${D.P(INDUSTRIES_PATH)}/${key}`), null);
       if (D.state.data.industries) delete D.state.data.industries[key];
       toast('Industry deleted.', 'success');
-      panel.style.display = 'none';
-      backdrop.style.display = 'none';
-      panel.innerHTML = '';
-      D.state._hce.editorOpenKey = null;
-      D.state._hce.editorIsDirty = false;
-      renderPanels();
+      modal.style.transition = 'opacity .15s';
+      modal.style.opacity = '0';
+      setTimeout(() => {
+        host.innerHTML = '';
+        D.state._hce.editorOpenKey = null;
+        D.state._hce.editorIsDirty = false;
+        D.state._hce.uploadedImage = null;
+        renderPanels();
+      }, 150);
     } catch (e) {
       toast('Delete failed: ' + e.message, 'error');
     }
   });
 
-  /* ── Save ── */
+  /* Save */
   document.getElementById('hc-ind-save')?.addEventListener('click', async (e) => {
     const btn = e.currentTarget;
     const origHtml = btn.innerHTML;
@@ -1091,21 +1130,21 @@ function openIndustryEditor(key, isRestore = false) {
     if (!family) { toast('Family is required.', 'error'); return; }
 
     const bullets = [];
-    panel.querySelectorAll('#hc-ind-bullets [data-row] input').forEach(inp => {
+    card.querySelectorAll('#hc-ind-bullets [data-row] input').forEach(inp => {
       if (inp.value.trim()) bullets.push(inp.value.trim());
     });
     const stats = [];
-    panel.querySelectorAll('#hc-ind-stats [data-row]').forEach(row => {
+    card.querySelectorAll('#hc-ind-stats [data-row]').forEach(row => {
       const v = row.querySelector('[data-stat-v]')?.value.trim() || '';
       const l = row.querySelector('[data-stat-l]')?.value.trim() || '';
       if (v || l) stats.push({ v, l });
     });
     const included = [];
-    panel.querySelectorAll('#hc-ind-included [data-row] input').forEach(inp => {
+    card.querySelectorAll('#hc-ind-included [data-row] input').forEach(inp => {
       if (inp.value.trim()) included.push(inp.value.trim());
     });
     const faqs = [];
-    panel.querySelectorAll('#hc-ind-faqs [data-row]').forEach(row => {
+    card.querySelectorAll('#hc-ind-faqs [data-row]').forEach(row => {
       const q = row.querySelector('[data-faq-q]')?.value.trim() || '';
       const a = row.querySelector('[data-faq-a]')?.value.trim() || '';
       if (q) faqs.push({ q, a });
@@ -1125,8 +1164,8 @@ function openIndustryEditor(key, isRestore = false) {
       color: val('hc-ind-color') || '#2267EE',
       image,
       imageUrl: imageUrlFinal,
-      previewUrl: val('hc-ind-previewUrl'),
-      buyUrl: val('hc-ind-buyUrl'),
+      previewUrl: val('hc-ind-preview-url'),
+      buyUrl: val('hc-ind-buy-url'),
       desc: val('hc-ind-desc'),
       longDesc: val('hc-ind-longDesc'),
       bullets,
@@ -1154,13 +1193,15 @@ function openIndustryEditor(key, isRestore = false) {
       toast(`Industry "${name}" saved.`, 'success');
 
       setTimeout(() => {
-        panel.style.display = 'none';
-        backdrop.style.display = 'none';
-        panel.innerHTML = '';
-        D.state._hce.editorOpenKey = null;
-        renderPanels();
-        document.querySelectorAll('.hc-tab-btn[data-tab="industries"]').forEach(b => b.click());
-      }, 600);
+        modal.style.transition = 'opacity .15s';
+        modal.style.opacity = '0';
+        setTimeout(() => {
+          host.innerHTML = '';
+          D.state._hce.editorOpenKey = null;
+          renderPanels();
+          document.querySelectorAll('.hc-tab-btn[data-tab="industries"]').forEach(b => b.click());
+        }, 150);
+      }, 500);
     } catch (err) {
       btn.disabled = false;
       btn.innerHTML = origHtml;
@@ -1833,5 +1874,6 @@ function closeModal() {
   const host = document.getElementById('hc-modal-host');
   if (host) host.innerHTML = '';
 }
-
 export default { initHomeContent, renderHomeContent };
+
+
