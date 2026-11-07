@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="theme-color" content="#0a0a0f" />
-<title>VIORA Scholar — Trainer Portal</title>
+<title>VIORA Scholar — Admin Console</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,39 +13,41 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <link rel="icon" type="image/png" href="https://viora.co.ke/viora.png">
 
+<!-- New Shared CSS -->
 <link rel="stylesheet" href="scholar-shared.css" />
 
 </head>
 <body>
 
-<div id="trSplash" style="position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0a0a0f;color:#fff;">
+<div id="saSplash" style="position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0a0a0f;color:#fff;">
   <div style="width:44px;height:44px;border:3px solid rgba(0,212,255,.2);border-top-color:#00d4ff;border-radius:50%;animation:saSpin .8s linear infinite;"></div>
-  <h1 style="margin-top:20px;font-family:'Space Grotesk';font-size:1.4rem;">Verifying Trainer Access…</h1>
+  <h1 style="margin-top:20px;font-family:'Space Grotesk';font-size:1.4rem;">Verifying access…</h1>
   <style>@keyframes saSpin { to { transform: rotate(360deg); } }</style>
 </div>
 
-<div class="sch-app" id="trShell" style="display:none;">
-  <div class="sch-overlay" id="trSidebarOverlay"></div>
+<div class="sch-app" id="saShell" style="display:none;">
+  <div class="sch-overlay" id="saSidebarOverlay"></div>
 
-  <aside class="sch-sidebar" id="trSidebar">
+  <aside class="sch-sidebar" id="saSidebar">
     <div class="sch-brand">
       <img src="https://viora.co.ke/viora.png" alt="VIORA" />
-      <div>VIORA Scholar<small>Trainer Workspace</small></div>
+      <div>VIORA Scholar<small>Admin Console</small></div>
     </div>
     
     <div class="sch-nav">
-      <button class="sch-nav-item active" data-tr-tab="overview"><i class="fa-solid fa-house"></i> Overview</button>
-      <button class="sch-nav-item" data-tr-tab="courses"><i class="fa-solid fa-book-open"></i> My Courses</button>
-      <button class="sch-nav-item" data-tr-tab="builder"><i class="fa-solid fa-hammer"></i> Course Builder</button>
-      <button class="sch-nav-item" data-tr-tab="learners"><i class="fa-solid fa-users"></i> My Learners</button>
-      <button class="sch-nav-item" data-tr-tab="grading"><i class="fa-solid fa-file-signature"></i> Gradebook</button>
+      <button class="sch-nav-item active" data-sa-tab="overview"><i class="fa-solid fa-graduation-cap"></i> Dashboard</button>
+      <button class="sch-nav-item" data-sa-tab="requests"><i class="fa-solid fa-user-clock"></i> Access Requests <span class="nav-badge" id="saReqBadge" style="display:none; margin-left:auto;">0</span></button>
+      <button class="sch-nav-item" data-sa-tab="users"><i class="fa-solid fa-users"></i> Users</button>
+      <button class="sch-nav-item" data-sa-tab="progress"><i class="fa-solid fa-chart-line"></i> Progress</button>
+      <button class="sch-nav-item" data-sa-tab="quizzes"><i class="fa-solid fa-file-circle-question"></i> Quizzes <span class="nav-badge" id="saQuizBadge" style="display:none; margin-left:auto;">0</span></button>
+      <button class="sch-nav-item" data-sa-tab="certificates"><i class="fa-solid fa-award"></i> Certificates</button>
     </div>
 
     <div class="sch-sidebar-footer">
-      <span class="badge badge-purple" id="trWhoami" style="font-size:.7rem; background:rgba(168,85,247,.15); color:#c4b5fd; padding:4px 10px; border-radius:12px;">—</span>
+      <span class="badge badge-purple" id="saWhoami" style="font-size:.7rem; background:rgba(168,85,247,.15); color:#c4b5fd; padding:4px 10px; border-radius:12px;">—</span>
       <div style="display:flex; gap:8px;">
-        <button class="btn btn-outline btn-sm" id="trThemeBtn" style="border-color:var(--border-color); background:var(--bg-input); color:#fff;"><i class="fa-solid fa-moon"></i></button>
-        <button class="btn btn-danger btn-sm" id="trSignOutBtn" style="background:#d92b4b; border:none; color:#fff;"><i class="fa-solid fa-right-from-bracket"></i></button>
+        <button class="btn btn-outline btn-sm" id="saThemeBtn" style="border-color:var(--border-color); background:var(--bg-input); color:#fff;"><i class="fa-solid fa-moon"></i></button>
+        <button class="btn btn-danger btn-sm" id="saSignOutBtn" style="background:#d92b4b; border:none; color:#fff;"><i class="fa-solid fa-right-from-bracket"></i></button>
       </div>
     </div>
   </aside>
@@ -53,57 +55,112 @@
   <div class="sch-wrapper">
     <header class="sch-topbar">
       <div class="sch-topbar-left">
-        <button class="sch-mobile-toggle" id="trMobileToggle"><i class="fa-solid fa-bars"></i></button>
-        <span style="font-family:'Space Grotesk';font-weight:700;font-size:.9rem;">Trainer Dashboard</span>
+        <button class="sch-mobile-toggle" id="saMobileToggle"><i class="fa-solid fa-bars"></i></button>
+        <span style="font-family:'Space Grotesk';font-weight:700;font-size:.9rem;">Scholar Dashboard</span>
       </div>
       <div class="sch-topbar-right">
-        <span class="live-sync" style="display:inline-flex;align-items:center;gap:6px;font-size:.7rem;color:var(--accent-green);background:rgba(34,230,160,.1);padding:4px 10px;border-radius:20px;border:1px solid rgba(34,230,160,.3);"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent-green);"></span> Live sync</span>
+        <span class="live-sync" style="display:inline-flex;align-items:center;gap:6px;font-size:.7rem;color:var(--accent-green);background:rgba(34,230,160,.1);padding:4px 10px;border-radius:20px;border:1px solid rgba(34,230,160,.3);">
+          <span style="width:7px;height:7px;border-radius:50%;background:var(--accent-green);box-shadow:0 0 8px rgba(34,230,160,.9);"></span> Live sync
+        </span>
       </div>
     </header>
 
     <main class="sch-main">
       <div class="sch-content">
 
-        <section id="tr-pane-overview" class="sch-pane active">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
-            <div><h1 style="display:flex; align-items:center; gap:10px;"><span style="width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#a855f7,#00d4ff); color:#fff;"><i class="fa-solid fa-chalkboard-user"></i></span> <span style="background:linear-gradient(135deg,#a855f7,#00d4ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Trainer Overview</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Welcome back. Here is a summary of your teaching activity.</p></div>
+        <section id="sa-pane-overview" class="sch-pane active">
+          <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+            <div>
+              <h1 style="display:flex; align-items:center; gap:10px;"><span class="pillar-icon" style="width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#a855f7,#00d4ff); color:#fff;"><i class="fa-solid fa-graduation-cap"></i></span> <span style="background:linear-gradient(135deg,#a855f7,#00d4ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Training Dashboard</span></h1>
+              <p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Courses, checklists, and resources published to the learner portal.</p>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn btn-outline btn-sm" onclick="window.open('/trainingportal.html','_blank')" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Learner Portal</button>
+              <button class="btn btn-primary" id="addCourseBtn" style="background:linear-gradient(135deg,#00d4ff,#7c3aed); border:none; color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-plus"></i> New Course</button>
+              <button class="btn btn-success" id="addChecklistBtn" style="background:linear-gradient(135deg,#22e6a0,#0d9e6e); border:none; color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-list-check"></i> New Checklist</button>
+              <button class="btn btn-purple" id="addResourceBtn" style="background:linear-gradient(135deg,#a855f7,#7c3aed); border:none; color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-folder-plus"></i> New Resource</button>
+            </div>
           </div>
-          <div id="trOverviewKpi" class="kpi-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px;"></div>
-          <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:18px; margin-top:16px;">
-            <h4 style="font-size:.82rem; font-weight:700; color:var(--text-secondary); margin-bottom:12px; text-transform:uppercase;"><i class="fa-solid fa-clock-rotate-left"></i> Recent Student Activity</h4>
-            <div id="trRecentActivity" style="padding:14px;"></div>
+          <div class="kpi-grid" id="trainingOverviewKpi" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px;"></div>
+          <div class="kpi-grid" id="trainingPendingSnapshot" style="margin-top:12px; display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px;"></div>
+          <div class="card" id="trainingRecentActivity" style="padding:16px;margin-top:16px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius);"></div>
+          
+          <div style="display:grid; grid-template-columns:1fr; gap:20px; margin-top:20px;">
+            <div class="chart-box" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:18px;">
+              <h4 style="font-size:.82rem; font-weight:700; color:var(--text-secondary); margin-bottom:12px; text-transform:uppercase;"><i class="fa-solid fa-book-open"></i> Courses</h4>
+              <div class="table-wrapper" style="background:transparent; border:none; box-shadow:none; overflow-x:auto;"><table style="width:100%; border-collapse:collapse; min-width:600px;"><thead><tr style="border-bottom:1px solid var(--border-color); text-align:left;"><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Title</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Category</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Level</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Modules</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase; text-align:right;">Actions</th></tr></thead><tbody id="trainingCoursesBody"></tbody></table></div>
+            </div>
+            <div class="chart-box" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:18px;">
+              <h4 style="font-size:.82rem; font-weight:700; color:var(--text-secondary); margin-bottom:12px; text-transform:uppercase;"><i class="fa-solid fa-list-check"></i> Onboarding Checklists</h4>
+              <div class="table-wrapper" style="background:transparent; border:none; box-shadow:none; overflow-x:auto;"><table style="width:100%; border-collapse:collapse; min-width:600px;"><thead><tr style="border-bottom:1px solid var(--border-color); text-align:left;"><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Title</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Target Role</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Tasks</th></tr></thead><tbody id="trainingChecklistsBody"></tbody></table></div>
+            </div>
+            <div class="chart-box" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:18px;">
+              <h4 style="font-size:.82rem; font-weight:700; color:var(--text-secondary); margin-bottom:12px; text-transform:uppercase;"><i class="fa-solid fa-folder-tree"></i> Resources</h4>
+              <div class="table-wrapper" style="background:transparent; border:none; box-shadow:none; overflow-x:auto;"><table style="width:100%; border-collapse:collapse; min-width:600px;"><thead><tr style="border-bottom:1px solid var(--border-color); text-align:left;"><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Title</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Category</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Type</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Added</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase; text-align:right;">Actions</th></tr></thead><tbody id="trainingResourcesBody"></tbody></table></div>
+            </div>
           </div>
         </section>
 
-        <section id="tr-pane-courses" class="sch-pane">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
-            <div><h1 style="display:flex; align-items:center; gap:10px;"><span style="width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#22e6a0,#0d9e6e); color:#fff;"><i class="fa-solid fa-book-open"></i></span> <span style="background:linear-gradient(135deg,#22e6a0,#0d9e6e);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">My Courses</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Courses assigned to you.</p></div>
-            <div><button class="btn btn-primary btn-sm" id="trNewCourseBtn" style="background:linear-gradient(135deg,#00d4ff,#7c3aed); border:none; color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-plus"></i> Create Draft</button></div>
+        <section id="sa-pane-requests" class="sch-pane">
+          <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+            <div><h1 style="display:flex; align-items:center; gap:10px;"><span class="pillar-icon" style="width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#ffc857,#b8860b); color:#fff;"><i class="fa-solid fa-user-clock"></i></span> <span style="background:linear-gradient(135deg,#ffc857,#b8860b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Access Requests</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Learners who signed up and are awaiting approval.</p></div>
+            <div><button class="btn btn-outline btn-sm" id="trainingRequestsRefreshBtn" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-rotate"></i> Refresh</button></div>
           </div>
-          <div id="trCoursesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;"></div>
+          <div class="kpi-grid" id="trainingRequestsKpi" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px;"></div>
+          <div class="toolbar" style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+            <div class="search-box" style="display:flex; align-items:center; background:var(--bg-input); border:1px solid var(--border-color); border-radius:8px; padding:8px 12px; flex:1; min-width:200px;"><i class="fa-solid fa-magnifying-glass" style="color:var(--text-secondary); margin-right:8px;"></i><input id="trainingRequestsSearch" placeholder="Search by name or email..." style="background:none; border:none; outline:none; color:var(--text-primary); width:100%;" /></div>
+            <select id="trainingRequestsFilter" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-primary);"><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="all">All</option></select>
+            <button class="btn btn-outline btn-sm" id="trainingRequestsClearSearch" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:8px 16px; border-radius:8px;">Clear</button>
+          </div>
+          <div class="table-wrapper" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); overflow-x:auto;"><table style="width:100%; border-collapse:collapse; min-width:800px;"><thead><tr style="border-bottom:1px solid var(--border-color); text-align:left;"><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Requested</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Name</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Email</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Phone</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Status</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Client</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase; text-align:right;">Actions</th></tr></thead><tbody id="trainingRequestsBody"></tbody></table></div>
         </section>
 
-        <section id="tr-pane-builder" class="sch-pane">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
-            <div><h1 style="display:flex; align-items:center; gap:10px;"><span style="width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#ffc857,#b8860b); color:#fff;"><i class="fa-solid fa-hammer"></i></span> <span style="background:linear-gradient(135deg,#ffc857,#b8860b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Course Builder</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Build modules, add quizzes, and submit for admin approval.</p></div>
+        <section id="sa-pane-users" class="sch-pane">
+          <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+            <div><h1 style="display:flex; align-items:center; gap:10px;"><span class="pillar-icon" style="width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#00d4ff,#7c3aed); color:#fff;"><i class="fa-solid fa-users"></i></span> <span style="background:linear-gradient(135deg,#00d4ff,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Training Users</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Every learner and trainer in the Scholar system.</p></div>
+            <div><button class="btn btn-outline btn-sm" id="trainingUsersRefreshBtn" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-rotate"></i> Refresh</button></div>
           </div>
-          <div id="trBuilderHost" style="background:var(--bg-card); border-radius:12px; border:1px solid var(--border-color); padding:24px; text-align:center; color:var(--text-secondary);">
-            Select a course from <strong>My Courses</strong> to start editing.
+          <div class="toolbar" style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+            <div class="search-box" style="display:flex; align-items:center; background:var(--bg-input); border:1px solid var(--border-color); border-radius:8px; padding:8px 12px; flex:1; min-width:200px;"><i class="fa-solid fa-magnifying-glass" style="color:var(--text-secondary); margin-right:8px;"></i><input id="trainingUserSearch" placeholder="Search by name or email..." style="background:none; border:none; outline:none; color:var(--text-primary); width:100%;" /></div>
+            <select id="trainingUserRoleFilter" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-primary);"><option value="all">All Roles</option><option value="admin">Admin</option><option value="exec">Exec</option><option value="trainer">Trainer</option><option value="learner">Learner</option></select>
+            <select id="trainingUserCourseFilter" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-primary);"><option value="all">Any Course</option></select>
+            <button class="btn btn-outline btn-sm" id="trainingClearFilters" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-xmark"></i> Clear</button>
+          </div>
+          <div class="kpi-grid" id="trainingUsersKpi" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px;"></div>
+          <div class="table-wrapper" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); overflow-x:auto; margin-top:14px;"><table style="width:100%; border-collapse:collapse; min-width:900px;"><thead><tr style="border-bottom:1px solid var(--border-color); text-align:left;"><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">User</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Role</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Type</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Enrolled</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Progress</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Avg Score</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Certificates</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase; text-align:right;">Actions</th></tr></thead><tbody id="trainingUsersBody"></tbody></table></div>
+        </section>
+
+        <section id="sa-pane-progress" class="sch-pane">
+          <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+            <div><h1 style="display:flex; align-items:center; gap:10px;"><span class="pillar-icon" style="width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#22e6a0,#0d9e6e); color:#fff;"><i class="fa-solid fa-chart-line"></i></span> <span style="background:linear-gradient(135deg,#22e6a0,#0d9e6e);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Training Progress</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Per-user enrollment, completion, and certificate tracking.</p></div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;"><button class="btn btn-outline btn-sm" id="trainingRefreshBtn" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-rotate"></i> Refresh</button><button class="btn btn-primary btn-sm" id="trainingEnrollUserBtn" style="background:linear-gradient(135deg,#00d4ff,#7c3aed); border:none; color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-user-plus"></i> Enroll User</button></div>
+          </div>
+          <div class="kpi-grid" id="trainingProgressKpi" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px;"></div>
+          <div class="chart-box" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:18px; margin-top:16px;">
+            <h4 style="font-size:.82rem; font-weight:700; color:var(--text-secondary); margin-bottom:12px; text-transform:uppercase;"><i class="fa-solid fa-certificate"></i> Issued Certificates</h4>
+            <div class="table-wrapper" style="background:transparent; border:none; box-shadow:none; overflow-x:auto;"><table style="width:100%; border-collapse:collapse; min-width:800px;"><thead><tr style="border-bottom:1px solid var(--border-color); text-align:left;"><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">User</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Course</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Score</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Issued</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Certificate ID</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase; text-align:right;">Actions</th></tr></thead><tbody id="trainingCertsBody"></tbody></table></div>
           </div>
         </section>
 
-        <section id="tr-pane-learners" class="sch-pane">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
-            <div><h1 style="display:flex; align-items:center; gap:10px;"><span style="width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#00d4ff,#7c3aed); color:#fff;"><i class="fa-solid fa-users"></i></span> <span style="background:linear-gradient(135deg,#00d4ff,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">My Learners</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Students enrolled in your courses.</p></div>
+        <section id="sa-pane-quizzes" class="sch-pane">
+          <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+            <div><h1 style="display:flex; align-items:center; gap:10px;"><span class="pillar-icon" style="width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#a855f7,#00d4ff); color:#fff;"><i class="fa-solid fa-file-circle-question"></i></span> <span style="background:linear-gradient(135deg,#a855f7,#00d4ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Quiz Submissions</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Grade submissions and award certificates.</p></div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;"><button class="btn btn-outline btn-sm" id="quizzesRefreshBtn" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-rotate"></i> Refresh</button><select id="quizFilterStatus" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-primary);"><option value="all">All Statuses</option><option value="submitted">Submitted</option><option value="graded">Graded</option><option value="awarded">Awarded</option></select></div>
           </div>
-          <div class="table-wrapper" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); overflow-x:auto;"><table style="width:100%; border-collapse:collapse; min-width:600px;"><thead><tr style="border-bottom:1px solid var(--border-color); text-align:left;"><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Learner</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Course</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Progress</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Last Active</th></tr></thead><tbody id="trLearnersBody"></tbody></table></div>
+          <div class="kpi-grid" id="quizzesKpi" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px;"></div>
+          <div class="toolbar" style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;"><div class="search-box" style="display:flex; align-items:center; background:var(--bg-input); border:1px solid var(--border-color); border-radius:8px; padding:8px 12px; flex:1; min-width:200px;"><i class="fa-solid fa-magnifying-glass" style="color:var(--text-secondary); margin-right:8px;"></i><input id="quizzesSearch" placeholder="Search by trainee, email, or course..." style="background:none; border:none; outline:none; color:var(--text-primary); width:100%;" /></div><button class="btn btn-outline btn-sm" id="quizzesClearSearch" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:8px 16px; border-radius:8px;">Clear</button></div>
+          <div class="table-wrapper" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); overflow-x:auto;"><table style="width:100%; border-collapse:collapse; min-width:800px;"><thead><tr style="border-bottom:1px solid var(--border-color); text-align:left;"><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Submitted</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Trainee</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Course</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Auto-Score</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Status</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase; text-align:right;">Actions</th></tr></thead><tbody id="quizzesBody"></tbody></table></div>
         </section>
 
-        <section id="tr-pane-grading" class="sch-pane">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
-            <div><h1 style="display:flex; align-items:center; gap:10px;"><span style="width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#ff5c7c,#d92b4b); color:#fff;"><i class="fa-solid fa-file-signature"></i></span> <span style="background:linear-gradient(135deg,#ff5c7c,#d92b4b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Gradebook</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Review quiz submissions and provide feedback.</p></div>
+        <section id="sa-pane-certificates" class="sch-pane">
+          <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+            <div><h1 style="display:flex; align-items:center; gap:10px;"><span class="pillar-icon" style="width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#ffc857,#b8860b); color:#fff;"><i class="fa-solid fa-award"></i></span> <span style="background:linear-gradient(135deg,#ffc857,#b8860b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Training Certificates</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Award, review, and revoke certificates.</p></div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;"><button class="btn btn-outline btn-sm" id="certsRefreshBtn" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-rotate"></i> Refresh</button><button class="btn btn-purple btn-sm" id="rerunAutoAwardBtn" style="background:linear-gradient(135deg,#a855f7,#7c3aed); border:none; color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Award</button><button class="btn btn-gold" id="manualAwardCertBtn" style="background:linear-gradient(135deg,#ffc857,#b8860b); border:none; color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-plus"></i> Manual Award</button><button class="btn btn-primary btn-sm" id="newCertTemplateBtn" style="background:linear-gradient(135deg,#00d4ff,#7c3aed); border:none; color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-image"></i> New Template</button></div>
           </div>
-          <div class="table-wrapper" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); overflow-x:auto;"><table style="width:100%; border-collapse:collapse; min-width:600px;"><thead><tr style="border-bottom:1px solid var(--border-color); text-align:left;"><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Date</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Learner</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Course</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Score</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Status</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase; text-align:right;">Action</th></tr></thead><tbody id="trGradingBody"></tbody></table></div>
+          <div class="kpi-grid" id="certsKpi" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px;"></div>
+          <div id="certTemplateGrid" class="card-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:20px;"></div>
+          <div class="toolbar" style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;"><div class="search-box" style="display:flex; align-items:center; background:var(--bg-input); border:1px solid var(--border-color); border-radius:8px; padding:8px 12px; flex:1; min-width:200px;"><i class="fa-solid fa-magnifying-glass" style="color:var(--text-secondary); margin-right:8px;"></i><input id="certsSearch" placeholder="Search by trainee or certificate ID..." style="background:none; border:none; outline:none; color:var(--text-primary); width:100%;" /></div><button class="btn btn-outline btn-sm" id="certsClearSearch" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:8px 16px; border-radius:8px;">Clear</button></div>
+          <div class="table-wrapper" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); overflow-x:auto;"><table style="width:100%; border-collapse:collapse; min-width:800px;"><thead><tr style="border-bottom:1px solid var(--border-color); text-align:left;"><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Issued</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Trainee</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Course</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Score</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Certificate ID</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase; text-align:right;">Actions</th></tr></thead><tbody id="certsBody"></tbody></table></div>
         </section>
 
       </div>
@@ -111,13 +168,16 @@
   </div>
 
   <nav class="sch-bottom-nav">
-    <button class="sch-bnav-item active" data-tr-tab="overview"><i class="fa-solid fa-house"></i><span>Home</span></button>
-    <button class="sch-bnav-item" data-tr-tab="courses"><i class="fa-solid fa-book-open"></i><span>Courses</span></button>
-    <button class="sch-bnav-item" data-tr-tab="learners"><i class="fa-solid fa-users"></i><span>Learners</span></button>
-    <button class="sch-bnav-item" data-tr-tab="grading"><i class="fa-solid fa-file-signature"></i><span>Grades</span></button>
+    <button class="sch-bnav-item active" data-sa-tab="overview"><i class="fa-solid fa-house"></i><span>Home</span></button>
+    <button class="sch-bnav-item" data-sa-tab="requests"><i class="fa-solid fa-user-clock"></i><span>Requests</span></button>
+    <button class="sch-bnav-item" data-sa-tab="users"><i class="fa-solid fa-users"></i><span>Users</span></button>
+    <button class="sch-bnav-item" data-sa-tab="quizzes"><i class="fa-solid fa-file-circle-question"></i><span>Quizzes</span></button>
+    <button class="sch-bnav-item" data-sa-tab="certificates"><i class="fa-solid fa-award"></i><span>Certs</span></button>
   </nav>
+
 </div>
 
+<!-- Modals (Verbatim from main.html, required by training.js) -->
 <div class="modal-overlay" id="courseEditorModal"><div class="modal xl" style="background:#12121a; border:1px solid rgba(0,212,255,.14); border-radius:20px; padding:24px; width:100%; max-width:800px; max-height:90vh; overflow-y:auto;">
   <h2 style="display:flex; align-items:center; gap:10px; font-size:1.2rem; margin-bottom:20px;"><span class="modal-icon" style="width:36px;height:36px;border-radius:12px;background:rgba(0,212,255,.1);color:#00d4ff;display:inline-flex;align-items:center;justify-content:center;"><i class="fa-solid fa-book-open"></i></span><span id="courseEditorTitle">New Course</span></h2>
   <input type="hidden" id="ceCourseId" />
@@ -142,7 +202,7 @@
 }
 </script>
 
-<script type="module" src="mainTraining/trainer.js"></script>
+<script type="module" src="scholar-admin-boot.js"></script>
 
 </body>
 </html>
