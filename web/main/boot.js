@@ -56,25 +56,6 @@ function _isModalOrEditorOpen() {
   return false;
 }
 
-/* ── Preloader gate ──────────────────────────────────────────
-   boot.js runs before the 3-second video preloader finishes.
-   If we touch #loginScreen / #appShell now, the browser paints
-   them behind the video. So we defer every DOM class change
-   until the 'viora:preloader-done' event fires (or 8 s, as a
-   safety net matching the preloader's own SAFETY_MAX_MS). */
-function _whenPreloaderDone(fn) {
-  if (!document.body.classList.contains('preloader-active')) {
-    try { fn(); } catch (e) { console.warn('[boot] preloader-gated fn threw', e); }
-    return;
-  }
-  const run = () => {
-    try { fn(); } catch (e) { console.warn('[boot] preloader-gated fn threw', e); }
-    window.removeEventListener('viora:preloader-done', run);
-  };
-  window.addEventListener('viora:preloader-done', run, { once: true });
-  /* Safety net — matches the preloader's SAFETY_MAX_MS = 8000 */
-  setTimeout(run, 8500);
-}
 
 /* ═══════════════════════════════════════════════════════════
    PUBLIC ENTRY POINT
@@ -158,9 +139,9 @@ async function handleAuthChange(user) {
        SIGNED OUT
        ═══════════════════════════════════════════════════════ */
       if (!user) {
-      _whenPreloaderDone(() => {
-        document.getElementById('loginScreen')?.classList.remove('hidden');
-        document.getElementById('appShell')?.classList.add('hidden');
+   document.getElementById('loginScreen')?.classList.add('hidden');
+document.getElementById('appShell')?.classList.remove('hidden');
+applyRoleGating();
       });
       setSyncStatus('auth', 'Signed out');
 
