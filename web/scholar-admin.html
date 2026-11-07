@@ -13,9 +13,100 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <link rel="icon" type="image/png" href="https://viora.co.ke/viora.png">
 
-<!-- New Shared CSS -->
+<!-- Use only the shared CSS (not main.css) so KPIs render correctly -->
 <link rel="stylesheet" href="scholar-shared.css" />
 
+<style>
+  /* Extra KPI polish since main.css isn't loaded */
+  .stat-card {
+    background: rgba(18,18,26,.72);
+    border: 1px solid rgba(0,212,255,.14);
+    border-radius: 16px;
+    padding: 18px 16px;
+    box-shadow: 0 10px 30px -8px rgba(0,0,0,.75);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s;
+  }
+  .stat-card:hover { transform: translateY(-4px); }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 3px;
+    background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%);
+  }
+  .stat-card .stat-icon {
+    font-size: 1.4rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(0,212,255,.1);
+    color: #00d4ff;
+    margin-bottom: 12px;
+  }
+  .stat-card .number {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 800;
+    line-height: 1.2;
+    background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .stat-card .label {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-top: 4px;
+    font-weight: 600;
+  }
+  
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .page-header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .page-header .pillar-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; color: #fff;
+    background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%);
+    box-shadow: 0 4px 14px rgba(0,212,255,.35);
+    margin-right: 8px;
+  }
+  .page-header .highlight {
+    background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Table polish */
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left; padding: 12px 14px; font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 0.7rem; text-transform: uppercase;
+    letter-spacing: 0.6px; color: #94a3b8;
+    border-bottom: 1px solid rgba(0,212,255,.14);
+  }
+  td {
+    padding: 12px 14px; border-bottom: 1px solid rgba(0,212,255,.14);
+    font-size: 0.85rem;
+  }
+  tr:hover td { background: rgba(0,212,255,.05); }
+</style>
 </head>
 <body>
 
@@ -35,12 +126,12 @@
     </div>
     
     <div class="sch-nav">
-      <button class="sch-nav-item active" data-sa-tab="overview"><i class="fa-solid fa-graduation-cap"></i> Dashboard</button>
-      <button class="sch-nav-item" data-sa-tab="requests"><i class="fa-solid fa-user-clock"></i> Access Requests <span class="nav-badge" id="saReqBadge" style="display:none; margin-left:auto;">0</span></button>
-      <button class="sch-nav-item" data-sa-tab="users"><i class="fa-solid fa-users"></i> Users</button>
-      <button class="sch-nav-item" data-sa-tab="progress"><i class="fa-solid fa-chart-line"></i> Progress</button>
-      <button class="sch-nav-item" data-sa-tab="quizzes"><i class="fa-solid fa-file-circle-question"></i> Quizzes <span class="nav-badge" id="saQuizBadge" style="display:none; margin-left:auto;">0</span></button>
-      <button class="sch-nav-item" data-sa-tab="certificates"><i class="fa-solid fa-award"></i> Certificates</button>
+      <button class="sa-nav-item active" data-sa-tab="overview"><i class="fa-solid fa-graduation-cap"></i> Dashboard</button>
+      <button class="sa-nav-item" data-sa-tab="requests"><i class="fa-solid fa-user-clock"></i> Access Requests <span class="nav-badge" id="saReqBadge" style="display:none; margin-left:auto;">0</span></button>
+      <button class="sa-nav-item" data-sa-tab="users"><i class="fa-solid fa-users"></i> Users</button>
+      <button class="sa-nav-item" data-sa-tab="progress"><i class="fa-solid fa-chart-line"></i> Progress</button>
+      <button class="sa-nav-item" data-sa-tab="quizzes"><i class="fa-solid fa-file-circle-question"></i> Quizzes <span class="nav-badge" id="saQuizBadge" style="display:none; margin-left:auto;">0</span></button>
+      <button class="sa-nav-item" data-sa-tab="certificates"><i class="fa-solid fa-award"></i> Certificates</button>
     </div>
 
     <div class="sch-sidebar-footer">
@@ -68,99 +159,106 @@
     <main class="sch-main">
       <div class="sch-content">
 
-        <section id="sa-pane-overview" class="sch-pane active">
-          <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+        <section id="sa-pane-overview" class="sa-pane active">
+          <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
             <div>
-              <h1 style="display:flex; align-items:center; gap:10px;"><span class="pillar-icon" style="width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#a855f7,#00d4ff); color:#fff;"><i class="fa-solid fa-graduation-cap"></i></span> <span style="background:linear-gradient(135deg,#a855f7,#00d4ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Training Dashboard</span></h1>
+              <h1 style="display:flex; align-items:center; gap:10px;">
+                <span class="pillar-icon"><i class="fa-solid fa-graduation-cap"></i></span>
+                <span class="highlight">Training Dashboard</span>
+              </h1>
               <p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Courses, checklists, and resources published to the learner portal.</p>
             </div>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
-              <button class="btn btn-outline btn-sm" onclick="window.open('/trainingportal.html','_blank')" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Learner Portal</button>
-              <button class="btn btn-primary" id="addCourseBtn" style="background:linear-gradient(135deg,#00d4ff,#7c3aed); border:none; color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-plus"></i> New Course</button>
-              <button class="btn btn-success" id="addChecklistBtn" style="background:linear-gradient(135deg,#22e6a0,#0d9e6e); border:none; color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-list-check"></i> New Checklist</button>
-              <button class="btn btn-purple" id="addResourceBtn" style="background:linear-gradient(135deg,#a855f7,#7c3aed); border:none; color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-folder-plus"></i> New Resource</button>
+              <button class="btn btn-outline btn-sm" onclick="window.open('/trainingportal.html','_blank')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Learner Portal</button>
+              <button class="btn btn-primary" id="addCourseBtn"><i class="fa-solid fa-plus"></i> New Course</button>
+              <button class="btn btn-success" id="addChecklistBtn"><i class="fa-solid fa-list-check"></i> New Checklist</button>
+              <button class="btn btn-purple" id="addResourceBtn"><i class="fa-solid fa-folder-plus"></i> New Resource</button>
             </div>
           </div>
-          <div class="kpi-grid" id="trainingOverviewKpi" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px;"></div>
-          <div class="kpi-grid" id="trainingPendingSnapshot" style="margin-top:12px; display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px;"></div>
-          <div class="card" id="trainingRecentActivity" style="padding:16px;margin-top:16px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius);"></div>
           
-          <div style="display:grid; grid-template-columns:1fr; gap:20px; margin-top:20px;">
-            <div class="chart-box" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:18px;">
+          <div class="kpi-grid" id="trainingOverviewKpi"></div>
+          <div class="kpi-grid" id="trainingPendingSnapshot" style="margin-top:-8px;"></div>
+          
+          <div class="card" id="trainingRecentActivity" style="padding:18px;margin-top:24px; background:rgba(18,18,26,.72); border:1px solid var(--border-color); border-radius:16px;"></div>
+          
+          <div style="display:grid; grid-template-columns:1fr; gap:20px; margin-top:24px;">
+            <div class="card" style="background:rgba(18,18,26,.72); border:1px solid var(--border-color); border-radius:16px; padding:18px;">
               <h4 style="font-size:.82rem; font-weight:700; color:var(--text-secondary); margin-bottom:12px; text-transform:uppercase;"><i class="fa-solid fa-book-open"></i> Courses</h4>
-              <div class="table-wrapper" style="background:transparent; border:none; box-shadow:none; overflow-x:auto;"><table style="width:100%; border-collapse:collapse; min-width:600px;"><thead><tr style="border-bottom:1px solid var(--border-color); text-align:left;"><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Title</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Category</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Level</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Modules</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase; text-align:right;">Actions</th></tr></thead><tbody id="trainingCoursesBody"></tbody></table></div>
+              <div class="table-wrapper" style="overflow-x:auto;"><table><thead><tr><th>Title</th><th>Category</th><th>Level</th><th>Modules</th><th>Required For</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="trainingCoursesBody"></tbody></table></div>
             </div>
-            <div class="chart-box" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:18px;">
+            
+            <div class="card" style="background:rgba(18,18,26,.72); border:1px solid var(--border-color); border-radius:16px; padding:18px;">
               <h4 style="font-size:.82rem; font-weight:700; color:var(--text-secondary); margin-bottom:12px; text-transform:uppercase;"><i class="fa-solid fa-list-check"></i> Onboarding Checklists</h4>
-              <div class="table-wrapper" style="background:transparent; border:none; box-shadow:none; overflow-x:auto;"><table style="width:100%; border-collapse:collapse; min-width:600px;"><thead><tr style="border-bottom:1px solid var(--border-color); text-align:left;"><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Title</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Target Role</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Tasks</th></tr></thead><tbody id="trainingChecklistsBody"></tbody></table></div>
+              <div class="table-wrapper" style="overflow-x:auto;"><table><thead><tr><th>Title</th><th>Target Role</th><th>Tasks</th></tr></thead><tbody id="trainingChecklistsBody"></tbody></table></div>
             </div>
-            <div class="chart-box" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:18px;">
+            
+            <div class="card" style="background:rgba(18,18,26,.72); border:1px solid var(--border-color); border-radius:16px; padding:18px;">
               <h4 style="font-size:.82rem; font-weight:700; color:var(--text-secondary); margin-bottom:12px; text-transform:uppercase;"><i class="fa-solid fa-folder-tree"></i> Resources</h4>
-              <div class="table-wrapper" style="background:transparent; border:none; box-shadow:none; overflow-x:auto;"><table style="width:100%; border-collapse:collapse; min-width:600px;"><thead><tr style="border-bottom:1px solid var(--border-color); text-align:left;"><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Title</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Category</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Type</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Added</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase; text-align:right;">Actions</th></tr></thead><tbody id="trainingResourcesBody"></tbody></table></div>
+              <div class="table-wrapper" style="overflow-x:auto;"><table><thead><tr><th>Title</th><th>Category</th><th>Type</th><th>Added</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="trainingResourcesBody"></tbody></table></div>
             </div>
           </div>
         </section>
 
-        <section id="sa-pane-requests" class="sch-pane">
-          <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
-            <div><h1 style="display:flex; align-items:center; gap:10px;"><span class="pillar-icon" style="width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#ffc857,#b8860b); color:#fff;"><i class="fa-solid fa-user-clock"></i></span> <span style="background:linear-gradient(135deg,#ffc857,#b8860b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Access Requests</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Learners who signed up and are awaiting approval.</p></div>
-            <div><button class="btn btn-outline btn-sm" id="trainingRequestsRefreshBtn" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-rotate"></i> Refresh</button></div>
+        <section id="sa-pane-requests" class="sa-pane">
+          <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
+            <div><h1 style="display:flex; align-items:center; gap:10px;"><span class="pillar-icon" style="background:linear-gradient(135deg,#ffc857,#b8860b);"><i class="fa-solid fa-user-clock"></i></span> <span style="background:linear-gradient(135deg,#ffc857,#b8860b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Access Requests</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Learners who signed up and are awaiting approval.</p></div>
+            <div><button class="btn btn-outline btn-sm" id="trainingRequestsRefreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button></div>
           </div>
-          <div class="kpi-grid" id="trainingRequestsKpi" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px;"></div>
-          <div class="toolbar" style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
-            <div class="search-box" style="display:flex; align-items:center; background:var(--bg-input); border:1px solid var(--border-color); border-radius:8px; padding:8px 12px; flex:1; min-width:200px;"><i class="fa-solid fa-magnifying-glass" style="color:var(--text-secondary); margin-right:8px;"></i><input id="trainingRequestsSearch" placeholder="Search by name or email..." style="background:none; border:none; outline:none; color:var(--text-primary); width:100%;" /></div>
+          <div class="kpi-grid" id="trainingRequestsKpi"></div>
+          <div style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; background:var(--bg-input); border:1px solid var(--border-color); border-radius:8px; padding:8px 12px; flex:1; min-width:200px;"><i class="fa-solid fa-magnifying-glass" style="color:var(--text-secondary); margin-right:8px;"></i><input id="trainingRequestsSearch" placeholder="Search by name or email..." style="background:none; border:none; outline:none; color:var(--text-primary); width:100%;" /></div>
             <select id="trainingRequestsFilter" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-primary);"><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="all">All</option></select>
-            <button class="btn btn-outline btn-sm" id="trainingRequestsClearSearch" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:8px 16px; border-radius:8px;">Clear</button>
+            <button class="btn btn-outline btn-sm" id="trainingRequestsClearSearch">Clear</button>
           </div>
-          <div class="table-wrapper" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); overflow-x:auto;"><table style="width:100%; border-collapse:collapse; min-width:800px;"><thead><tr style="border-bottom:1px solid var(--border-color); text-align:left;"><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Requested</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Name</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Email</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Phone</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Status</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Client</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase; text-align:right;">Actions</th></tr></thead><tbody id="trainingRequestsBody"></tbody></table></div>
+          <div class="table-wrapper" style="background:rgba(18,18,26,.72); border:1px solid var(--border-color); border-radius:16px; overflow-x:auto;"><table><thead><tr><th>Requested</th><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Client</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="trainingRequestsBody"></tbody></table></div>
         </section>
 
-        <section id="sa-pane-users" class="sch-pane">
-          <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
-            <div><h1 style="display:flex; align-items:center; gap:10px;"><span class="pillar-icon" style="width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#00d4ff,#7c3aed); color:#fff;"><i class="fa-solid fa-users"></i></span> <span style="background:linear-gradient(135deg,#00d4ff,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Training Users</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Every learner and trainer in the Scholar system.</p></div>
-            <div><button class="btn btn-outline btn-sm" id="trainingUsersRefreshBtn" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-rotate"></i> Refresh</button></div>
+        <section id="sa-pane-users" class="sa-pane">
+          <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
+            <div><h1 style="display:flex; align-items:center; gap:10px;"><span class="pillar-icon" style="background:linear-gradient(135deg,#00d4ff,#7c3aed);"><i class="fa-solid fa-users"></i></span> <span style="background:linear-gradient(135deg,#00d4ff,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Training Users</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Every learner and trainer in the Scholar system.</p></div>
+            <div><button class="btn btn-outline btn-sm" id="trainingUsersRefreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button></div>
           </div>
-          <div class="toolbar" style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
-            <div class="search-box" style="display:flex; align-items:center; background:var(--bg-input); border:1px solid var(--border-color); border-radius:8px; padding:8px 12px; flex:1; min-width:200px;"><i class="fa-solid fa-magnifying-glass" style="color:var(--text-secondary); margin-right:8px;"></i><input id="trainingUserSearch" placeholder="Search by name or email..." style="background:none; border:none; outline:none; color:var(--text-primary); width:100%;" /></div>
+          <div style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; background:var(--bg-input); border:1px solid var(--border-color); border-radius:8px; padding:8px 12px; flex:1; min-width:200px;"><i class="fa-solid fa-magnifying-glass" style="color:var(--text-secondary); margin-right:8px;"></i><input id="trainingUserSearch" placeholder="Search by name or email..." style="background:none; border:none; outline:none; color:var(--text-primary); width:100%;" /></div>
             <select id="trainingUserRoleFilter" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-primary);"><option value="all">All Roles</option><option value="admin">Admin</option><option value="exec">Exec</option><option value="trainer">Trainer</option><option value="learner">Learner</option></select>
             <select id="trainingUserCourseFilter" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-primary);"><option value="all">Any Course</option></select>
-            <button class="btn btn-outline btn-sm" id="trainingClearFilters" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-xmark"></i> Clear</button>
+            <button class="btn btn-outline btn-sm" id="trainingClearFilters"><i class="fa-solid fa-xmark"></i> Clear</button>
           </div>
-          <div class="kpi-grid" id="trainingUsersKpi" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px;"></div>
-          <div class="table-wrapper" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); overflow-x:auto; margin-top:14px;"><table style="width:100%; border-collapse:collapse; min-width:900px;"><thead><tr style="border-bottom:1px solid var(--border-color); text-align:left;"><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">User</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Role</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Type</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Enrolled</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Progress</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Avg Score</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Certificates</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase; text-align:right;">Actions</th></tr></thead><tbody id="trainingUsersBody"></tbody></table></div>
+          <div class="kpi-grid" id="trainingUsersKpi"></div>
+          <div class="table-wrapper" style="background:rgba(18,18,26,.72); border:1px solid var(--border-color); border-radius:16px; overflow-x:auto; margin-top:14px;"><table><thead><tr><th>User</th><th>Role</th><th>Type</th><th>Enrolled</th><th>Progress</th><th>Avg Score</th><th>Certificates</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="trainingUsersBody"></tbody></table></div>
         </section>
 
-        <section id="sa-pane-progress" class="sch-pane">
-          <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
-            <div><h1 style="display:flex; align-items:center; gap:10px;"><span class="pillar-icon" style="width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#22e6a0,#0d9e6e); color:#fff;"><i class="fa-solid fa-chart-line"></i></span> <span style="background:linear-gradient(135deg,#22e6a0,#0d9e6e);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Training Progress</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Per-user enrollment, completion, and certificate tracking.</p></div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;"><button class="btn btn-outline btn-sm" id="trainingRefreshBtn" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-rotate"></i> Refresh</button><button class="btn btn-primary btn-sm" id="trainingEnrollUserBtn" style="background:linear-gradient(135deg,#00d4ff,#7c3aed); border:none; color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-user-plus"></i> Enroll User</button></div>
+        <section id="sa-pane-progress" class="sa-pane">
+          <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
+            <div><h1 style="display:flex; align-items:center; gap:10px;"><span class="pillar-icon" style="background:linear-gradient(135deg,#22e6a0,#0d9e6e);"><i class="fa-solid fa-chart-line"></i></span> <span style="background:linear-gradient(135deg,#22e6a0,#0d9e6e);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Training Progress</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Per-user enrollment, completion, and certificate tracking.</p></div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;"><button class="btn btn-outline btn-sm" id="trainingRefreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button><button class="btn btn-primary btn-sm" id="trainingEnrollUserBtn"><i class="fa-solid fa-user-plus"></i> Enroll User</button></div>
           </div>
-          <div class="kpi-grid" id="trainingProgressKpi" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px;"></div>
-          <div class="chart-box" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:18px; margin-top:16px;">
+          <div class="kpi-grid" id="trainingProgressKpi"></div>
+          <div class="card" style="background:rgba(18,18,26,.72); border:1px solid var(--border-color); border-radius:16px; padding:18px; margin-top:16px;">
             <h4 style="font-size:.82rem; font-weight:700; color:var(--text-secondary); margin-bottom:12px; text-transform:uppercase;"><i class="fa-solid fa-certificate"></i> Issued Certificates</h4>
-            <div class="table-wrapper" style="background:transparent; border:none; box-shadow:none; overflow-x:auto;"><table style="width:100%; border-collapse:collapse; min-width:800px;"><thead><tr style="border-bottom:1px solid var(--border-color); text-align:left;"><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">User</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Course</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Score</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Issued</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Certificate ID</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase; text-align:right;">Actions</th></tr></thead><tbody id="trainingCertsBody"></tbody></table></div>
+            <div class="table-wrapper" style="overflow-x:auto;"><table><thead><tr><th>User</th><th>Course</th><th>Score</th><th>Issued</th><th>Certificate ID</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="trainingCertsBody"></tbody></table></div>
           </div>
         </section>
 
-        <section id="sa-pane-quizzes" class="sch-pane">
-          <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
-            <div><h1 style="display:flex; align-items:center; gap:10px;"><span class="pillar-icon" style="width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#a855f7,#00d4ff); color:#fff;"><i class="fa-solid fa-file-circle-question"></i></span> <span style="background:linear-gradient(135deg,#a855f7,#00d4ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Quiz Submissions</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Grade submissions and award certificates.</p></div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;"><button class="btn btn-outline btn-sm" id="quizzesRefreshBtn" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-rotate"></i> Refresh</button><select id="quizFilterStatus" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-primary);"><option value="all">All Statuses</option><option value="submitted">Submitted</option><option value="graded">Graded</option><option value="awarded">Awarded</option></select></div>
+        <section id="sa-pane-quizzes" class="sa-pane">
+          <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
+            <div><h1 style="display:flex; align-items:center; gap:10px;"><span class="pillar-icon" style="background:linear-gradient(135deg,#a855f7,#00d4ff);"><i class="fa-solid fa-file-circle-question"></i></span> <span style="background:linear-gradient(135deg,#a855f7,#00d4ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Quiz Submissions</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Grade submissions and award certificates.</p></div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;"><button class="btn btn-outline btn-sm" id="quizzesRefreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button><select id="quizFilterStatus" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-primary);"><option value="all">All Statuses</option><option value="submitted">Submitted</option><option value="graded">Graded</option><option value="awarded">Awarded</option></select></div>
           </div>
-          <div class="kpi-grid" id="quizzesKpi" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px;"></div>
-          <div class="toolbar" style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;"><div class="search-box" style="display:flex; align-items:center; background:var(--bg-input); border:1px solid var(--border-color); border-radius:8px; padding:8px 12px; flex:1; min-width:200px;"><i class="fa-solid fa-magnifying-glass" style="color:var(--text-secondary); margin-right:8px;"></i><input id="quizzesSearch" placeholder="Search by trainee, email, or course..." style="background:none; border:none; outline:none; color:var(--text-primary); width:100%;" /></div><button class="btn btn-outline btn-sm" id="quizzesClearSearch" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:8px 16px; border-radius:8px;">Clear</button></div>
-          <div class="table-wrapper" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); overflow-x:auto;"><table style="width:100%; border-collapse:collapse; min-width:800px;"><thead><tr style="border-bottom:1px solid var(--border-color); text-align:left;"><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Submitted</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Trainee</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Course</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Auto-Score</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Status</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase; text-align:right;">Actions</th></tr></thead><tbody id="quizzesBody"></tbody></table></div>
+          <div class="kpi-grid" id="quizzesKpi"></div>
+          <div style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;"><div style="display:flex; align-items:center; background:var(--bg-input); border:1px solid var(--border-color); border-radius:8px; padding:8px 12px; flex:1; min-width:200px;"><i class="fa-solid fa-magnifying-glass" style="color:var(--text-secondary); margin-right:8px;"></i><input id="quizzesSearch" placeholder="Search by trainee, email, or course..." style="background:none; border:none; outline:none; color:var(--text-primary); width:100%;" /></div><button class="btn btn-outline btn-sm" id="quizzesClearSearch">Clear</button></div>
+          <div class="table-wrapper" style="background:rgba(18,18,26,.72); border:1px solid var(--border-color); border-radius:16px; overflow-x:auto;"><table><thead><tr><th>Submitted</th><th>Trainee</th><th>Course</th><th>Auto-Score</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="quizzesBody"></tbody></table></div>
         </section>
 
-        <section id="sa-pane-certificates" class="sch-pane">
-          <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
-            <div><h1 style="display:flex; align-items:center; gap:10px;"><span class="pillar-icon" style="width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#ffc857,#b8860b); color:#fff;"><i class="fa-solid fa-award"></i></span> <span style="background:linear-gradient(135deg,#ffc857,#b8860b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Training Certificates</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Award, review, and revoke certificates.</p></div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;"><button class="btn btn-outline btn-sm" id="certsRefreshBtn" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-rotate"></i> Refresh</button><button class="btn btn-purple btn-sm" id="rerunAutoAwardBtn" style="background:linear-gradient(135deg,#a855f7,#7c3aed); border:none; color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Award</button><button class="btn btn-gold" id="manualAwardCertBtn" style="background:linear-gradient(135deg,#ffc857,#b8860b); border:none; color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-plus"></i> Manual Award</button><button class="btn btn-primary btn-sm" id="newCertTemplateBtn" style="background:linear-gradient(135deg,#00d4ff,#7c3aed); border:none; color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-image"></i> New Template</button></div>
+        <section id="sa-pane-certificates" class="sa-pane">
+          <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
+            <div><h1 style="display:flex; align-items:center; gap:10px;"><span class="pillar-icon" style="background:linear-gradient(135deg,#ffc857,#b8860b);"><i class="fa-solid fa-award"></i></span> <span style="background:linear-gradient(135deg,#ffc857,#b8860b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Training Certificates</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Award, review, and revoke certificates.</p></div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;"><button class="btn btn-outline btn-sm" id="certsRefreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button><button class="btn btn-purple btn-sm" id="rerunAutoAwardBtn"><i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Award</button><button class="btn btn-gold" id="manualAwardCertBtn"><i class="fa-solid fa-plus"></i> Manual Award</button><button class="btn btn-primary btn-sm" id="newCertTemplateBtn"><i class="fa-solid fa-image"></i> New Template</button></div>
           </div>
-          <div class="kpi-grid" id="certsKpi" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px;"></div>
+          <div class="kpi-grid" id="certsKpi"></div>
           <div id="certTemplateGrid" class="card-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:20px;"></div>
-          <div class="toolbar" style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;"><div class="search-box" style="display:flex; align-items:center; background:var(--bg-input); border:1px solid var(--border-color); border-radius:8px; padding:8px 12px; flex:1; min-width:200px;"><i class="fa-solid fa-magnifying-glass" style="color:var(--text-secondary); margin-right:8px;"></i><input id="certsSearch" placeholder="Search by trainee or certificate ID..." style="background:none; border:none; outline:none; color:var(--text-primary); width:100%;" /></div><button class="btn btn-outline btn-sm" id="certsClearSearch" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:8px 16px; border-radius:8px;">Clear</button></div>
-          <div class="table-wrapper" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); overflow-x:auto;"><table style="width:100%; border-collapse:collapse; min-width:800px;"><thead><tr style="border-bottom:1px solid var(--border-color); text-align:left;"><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Issued</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Trainee</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Course</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Score</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Certificate ID</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase; text-align:right;">Actions</th></tr></thead><tbody id="certsBody"></tbody></table></div>
+          <div style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;"><div style="display:flex; align-items:center; background:var(--bg-input); border:1px solid var(--border-color); border-radius:8px; padding:8px 12px; flex:1; min-width:200px;"><i class="fa-solid fa-magnifying-glass" style="color:var(--text-secondary); margin-right:8px;"></i><input id="certsSearch" placeholder="Search by trainee or certificate ID..." style="background:none; border:none; outline:none; color:var(--text-primary); width:100%;" /></div><button class="btn btn-outline btn-sm" id="certsClearSearch">Clear</button></div>
+          <div class="table-wrapper" style="background:rgba(18,18,26,.72); border:1px solid var(--border-color); border-radius:16px; overflow-x:auto;"><table><thead><tr><th>Issued</th><th>Trainee</th><th>Course</th><th>Score</th><th>Certificate ID</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="certsBody"></tbody></table></div>
         </section>
 
       </div>
@@ -177,7 +275,7 @@
 
 </div>
 
-<!-- Modals (Verbatim from main.html, required by training.js) -->
+<!-- Modals (Verbatim from main.html) -->
 <div class="modal-overlay" id="courseEditorModal"><div class="modal xl" style="background:#12121a; border:1px solid rgba(0,212,255,.14); border-radius:20px; padding:24px; width:100%; max-width:800px; max-height:90vh; overflow-y:auto;">
   <h2 style="display:flex; align-items:center; gap:10px; font-size:1.2rem; margin-bottom:20px;"><span class="modal-icon" style="width:36px;height:36px;border-radius:12px;background:rgba(0,212,255,.1);color:#00d4ff;display:inline-flex;align-items:center;justify-content:center;"><i class="fa-solid fa-book-open"></i></span><span id="courseEditorTitle">New Course</span></h2>
   <input type="hidden" id="ceCourseId" />
@@ -188,6 +286,65 @@
   <div style="display:flex;justify-content:space-between;align-items:center;margin:22px 0 10px;"><h4 style="font-size:.82rem;text-transform:uppercase;color:var(--text-secondary);margin:0;"><i class="fa-solid fa-cubes"></i> Modules (<span id="ceModuleCount">0</span>)</h4><button type="button" class="btn btn-outline btn-sm" id="ceAddModuleBtn" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:6px 12px; border-radius:8px;"><i class="fa-solid fa-plus"></i> Add Module</button></div>
   <div id="ceModulesList" style="max-height:520px;overflow-y:auto;padding:4px;"></div>
   <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;"><button type="button" class="btn btn-outline" data-close="courseEditorModal" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:10px 20px; border-radius:8px;">Cancel</button><button type="button" class="btn btn-success" id="ceSaveBtn" style="background:linear-gradient(135deg,#22e6a0,#0d9e6e); border:none; color:#fff; padding:10px 20px; border-radius:8px;"><i class="fa-solid fa-check"></i> Save Course</button></div>
+</div></div>
+
+<div class="modal-overlay" id="checklistEditorModal"><div class="modal" style="background:#12121a; border:1px solid rgba(0,212,255,.14); border-radius:20px; padding:24px; width:100%; max-width:600px; max-height:90vh; overflow-y:auto;">
+  <h2 style="display:flex; align-items:center; gap:10px; font-size:1.2rem; margin-bottom:20px;"><span class="modal-icon" style="width:36px;height:36px;border-radius:12px;background:rgba(0,212,255,.1);color:#00d4ff;display:inline-flex;align-items:center;justify-content:center;"><i class="fa-solid fa-list-check"></i></span><span id="checklistEditorTitle">New Checklist</span></h2>
+  <input type="hidden" id="cleChecklistId" />
+  <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px;"><div style="flex:1; min-width:160px;"><label style="display:block; font-size:.8rem; color:var(--text-secondary); margin-bottom:4px;">Checklist ID *</label><input id="cleId" placeholder="sales-onboarding" required style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:#0a0a0f; color:#fff;" /></div><div style="flex:1; min-width:160px;"><label style="display:block; font-size:.8rem; color:var(--text-secondary); margin-bottom:4px;">Target Role</label><select id="cleTargetRole" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:#0a0a0f; color:#fff;"><option value="">All</option><option value="exec">Exec</option><option value="admin">Admin</option><option value="sales">Sales</option><option value="marketing">Marketing</option><option value="ops">Ops</option><option value="finance">Finance</option><option value="hr">HR</option></select></div></div>
+  <label style="display:block; font-size:.8rem; color:var(--text-secondary); margin-bottom:4px;">Title *</label><input id="cleTitle" placeholder="e.g. Sales Onboarding" required style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:#0a0a0f; color:#fff; margin-bottom:12px;" />
+  <label style="display:block; font-size:.8rem; color:var(--text-secondary); margin-bottom:4px;">Description</label><textarea id="cleDescription" rows="2" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:#0a0a0f; color:#fff;"></textarea>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 8px;"><h4 style="font-size:.78rem;text-transform:uppercase;color:var(--text-secondary);letter-spacing:.5px;margin:0;">Tasks (<span id="cleTaskCount">0</span>)</h4><button type="button" class="btn btn-outline btn-sm" id="cleAddTaskBtn" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:6px 12px; border-radius:8px;"><i class="fa-solid fa-plus"></i> Add Task</button></div>
+  <div id="cleTasksList"></div>
+  <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;"><button type="button" class="btn btn-outline" data-close="checklistEditorModal" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:10px 20px; border-radius:8px;">Cancel</button><button type="button" class="btn btn-success" id="cleSaveBtn" style="background:linear-gradient(135deg,#22e6a0,#0d9e6e); border:none; color:#fff; padding:10px 20px; border-radius:8px;"><i class="fa-solid fa-check"></i> Save Checklist</button></div>
+</div></div>
+
+<div class="modal-overlay" id="resourceEditorModal"><div class="modal" style="background:#12121a; border:1px solid rgba(0,212,255,.14); border-radius:20px; padding:24px; width:100%; max-width:600px; max-height:90vh; overflow-y:auto;">
+  <h2 style="display:flex; align-items:center; gap:10px; font-size:1.2rem; margin-bottom:20px;"><span class="modal-icon" style="width:36px;height:36px;border-radius:12px;background:rgba(0,212,255,.1);color:#00d4ff;display:inline-flex;align-items:center;justify-content:center;"><i class="fa-solid fa-folder-plus"></i></span><span id="resourceEditorTitle">New Resource</span></h2>
+  <input type="hidden" id="reResourceId" />
+  <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px;"><div style="flex:1; min-width:160px;"><label style="display:block; font-size:.8rem; color:var(--text-secondary); margin-bottom:4px;">Resource ID *</label><input id="reId" placeholder="sales-playbook-2026" required style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:#0a0a0f; color:#fff;" /></div><div style="flex:1; min-width:160px;"><label style="display:block; font-size:.8rem; color:var(--text-secondary); margin-bottom:4px;">Type</label><select id="reType" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:#0a0a0f; color:#fff;"><option>PDF</option><option>Video</option><option>Link</option><option>Document</option><option>Spreadsheet</option><option>Slides</option><option>Other</option></select></div></div>
+  <label style="display:block; font-size:.8rem; color:var(--text-secondary); margin-bottom:4px;">Title *</label><input id="reTitle" placeholder="e.g. Sales Playbook 2026" required style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:#0a0a0f; color:#fff; margin-bottom:12px;" />
+  <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px;"><div style="flex:1; min-width:160px;"><label style="display:block; font-size:.8rem; color:var(--text-secondary); margin-bottom:4px;">Category</label><select id="reCategory" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:#0a0a0f; color:#fff;"><option>Onboarding</option><option>Sales</option><option>Marketing</option><option>Operations</option><option>Finance</option><option>Product</option><option>Compliance</option><option>Reference</option><option>Other</option></select></div><div style="flex:1; min-width:160px;"><label style="display:block; font-size:.8rem; color:var(--text-secondary); margin-bottom:4px;">URL / Link</label><input id="reUrl" placeholder="https://..." style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:#0a0a0f; color:#fff;" /></div></div>
+  <label style="display:block; font-size:.8rem; color:var(--text-secondary); margin-bottom:4px;">Description</label><textarea id="reDescription" rows="2" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:#0a0a0f; color:#fff; margin-bottom:12px;"></textarea>
+  <label style="display:block; font-size:.8rem; color:var(--text-secondary); margin-bottom:4px;">Or upload a file (max 5 MB)</label>
+  <div id="reUploadZone" style="padding:14px; border:1px dashed var(--border-color); border-radius:8px; text-align:center; cursor:pointer;"><i class="fa-solid fa-cloud-arrow-up" style="font-size:1.6rem;color:var(--accent-blue);"></i><div style="font-weight:600;margin-top:6px;font-size:.82rem;">Click or drag &amp; drop</div><input type="file" id="reFileInput" style="display:none;" /></div>
+  <div id="reUploadPreview" style="margin-top:8px;font-size:.78rem;color:var(--text-secondary);"></div>
+  <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;"><button type="button" class="btn btn-outline" data-close="resourceEditorModal" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:10px 20px; border-radius:8px;">Cancel</button><button type="button" class="btn btn-success" id="reSaveBtn" style="background:linear-gradient(135deg,#22e6a0,#0d9e6e); border:none; color:#fff; padding:10px 20px; border-radius:8px;"><i class="fa-solid fa-check"></i> Save Resource</button></div>
+</div></div>
+
+<!-- Certificate Template Editor -->
+<div class="modal-overlay" id="certTemplateEditorModal"><div class="modal xl" style="background:#12121a; border:1px solid rgba(0,212,255,.14); border-radius:20px; padding:24px; width:100%; max-width:800px; max-height:90vh; overflow-y:auto;">
+  <h2 style="display:flex; align-items:center; gap:10px; font-size:1.2rem; margin-bottom:20px;"><span class="modal-icon" style="width:36px;height:36px;border-radius:12px;background:rgba(0,212,255,.1);color:#00d4ff;display:inline-flex;align-items:center;justify-content:center;"><i class="fa-solid fa-image"></i></span><span id="certTemplateEditorTitle">Certificate Template</span></h2>
+  <input type="hidden" id="cteTemplateId" />
+  <label style="display:block; font-size:.8rem; color:var(--text-secondary); margin-bottom:4px;">Title *</label><input id="cteTitle" required style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:#0a0a0f; color:#fff; margin-bottom:12px;" />
+  <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px;"><div style="flex:1; min-width:160px;"><label style="display:block; font-size:.8rem; color:var(--text-secondary); margin-bottom:4px;">Course *</label><select id="cteCourseId" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:#0a0a0f; color:#fff;"></select></div><div style="flex:1; min-width:160px;"><label style="display:block; font-size:.8rem; color:var(--text-secondary); margin-bottom:4px;">Module (optional)</label><select id="cteModuleId" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:#0a0a0f; color:#fff;"><option value="">— Whole Course —</option></select></div></div>
+  <label style="display:block; font-size:.8rem; color:var(--text-secondary); margin-bottom:4px;">Description</label><textarea id="cteDescription" rows="2" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:#0a0a0f; color:#fff; margin-bottom:12px;"></textarea>
+  <label style="display:block; font-size:.8rem; color:var(--text-secondary); margin-bottom:4px;">Certificate Image (PNG/JPG, max 500 KB)</label>
+  <div id="cteUploadZone" style="padding:14px; border:1px dashed var(--border-color); border-radius:8px; text-align:center; cursor:pointer;"><i class="fa-solid fa-cloud-arrow-up" style="font-size:1.6rem;color:var(--accent-blue);"></i><div style="font-weight:600;margin-top:6px;font-size:.82rem;">Click or drag &amp; drop</div><input type="file" id="cteImageInput" accept="image/*" style="display:none;" /></div>
+  <div id="ctePreviewWrap" style="display:none;margin-top:14px;"><div id="ctePreviewStage" style="position:relative;width:100%;max-width:700px;margin:0 auto;border-radius:12px;overflow:hidden;background:var(--bg-input);"><img id="ctePreviewImage" style="width:100%;display:block;" /><div class="cte-stamp" data-stamp="name" style="position:absolute;transform:translate(-50%,-50%);cursor:grab;user-select:none;white-space:nowrap;">Jane Doe</div><div class="cte-stamp" data-stamp="date" style="position:absolute;transform:translate(-50%,-50%);cursor:grab;user-select:none;white-space:nowrap;">01 Jan 2026</div><div class="cte-stamp" data-stamp="code" style="position:absolute;transform:translate(-50%,-50%);cursor:grab;user-select:none;white-space:nowrap;">VIORA-ABC123</div></div></div>
+  <div id="cteLayoutControls" style="display:none;margin-top:14px;"><div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:8px;"><div style="flex:1;"><label>Name Size</label><input type="range" id="cteNameSize" min="0.02" max="0.12" step="0.002" value="0.055" style="width:100%;" /></div><div style="flex:1;"><label>Name Color</label><input type="color" id="cteNameColor" value="#0a0a0f" style="width:100%;" /></div></div><div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:8px;"><div style="flex:1;"><label>Date Size</label><input type="range" id="cteDateSize" min="0.01" max="0.05" step="0.001" value="0.022" style="width:100%;" /></div><div style="flex:1;"><label>Date Color</label><input type="color" id="cteDateColor" value="#4a5568" style="width:100%;" /></div></div><div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:8px;"><div style="flex:1;"><label>Code Size</label><input type="range" id="cteCodeSize" min="0.008" max="0.03" step="0.001" value="0.014" style="width:100%;" /></div><div style="flex:1;"><label>Code Color</label><input type="color" id="cteCodeColor" value="#94a3b8" style="width:100%;" /></div></div></div>
+  <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;"><button type="button" class="btn btn-outline" data-close="certTemplateEditorModal" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:10px 20px; border-radius:8px;">Cancel</button><button type="button" class="btn btn-danger" id="cteDeleteBtn" style="display:none; background:#d92b4b; border:none; color:#fff; padding:10px 20px; border-radius:8px;"><i class="fa-solid fa-trash"></i> Delete</button><button type="button" class="btn btn-success" id="cteSaveBtn" style="background:linear-gradient(135deg,#22e6a0,#0d9e6e); border:none; color:#fff; padding:10px 20px; border-radius:8px;"><i class="fa-solid fa-check"></i> Save Template</button></div>
+</div></div>
+
+<div class="modal-overlay" id="trainingUserModal"><div class="modal xl" style="background:#12121a; border:1px solid rgba(0,212,255,.14); border-radius:20px; padding:24px; width:100%; max-width:800px; max-height:90vh; overflow-y:auto;">
+  <h2 style="display:flex; align-items:center; gap:10px; font-size:1.2rem; margin-bottom:20px;"><span class="modal-icon" style="width:36px;height:36px;border-radius:12px;background:rgba(0,212,255,.1);color:#00d4ff;display:inline-flex;align-items:center;justify-content:center;"><i class="fa-solid fa-user-graduate"></i></span> Training — <span id="tumUserName">User</span></h2>
+  <div id="tumUserHeader" style="padding:14px; background:var(--bg-input); border-radius:12px; margin-bottom:18px; border:1px solid var(--border-color);"></div>
+  <div id="tumUserBody"></div>
+  <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;"><button type="button" class="btn btn-outline" data-close="trainingUserModal" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:10px 20px; border-radius:8px;">Close</button></div>
+</div></div>
+
+<div class="modal-overlay" id="trainingEnrollModal"><div class="modal" style="background:#12121a; border:1px solid rgba(0,212,255,.14); border-radius:20px; padding:24px; width:100%; max-width:600px;">
+  <h2 style="display:flex; align-items:center; gap:10px; font-size:1.2rem; margin-bottom:20px;"><span class="modal-icon" style="width:36px;height:36px;border-radius:12px;background:rgba(0,212,255,.1);color:#00d4ff;display:inline-flex;align-items:center;justify-content:center;"><i class="fa-solid fa-user-plus"></i></span> Enroll User in Course</h2>
+  <label style="display:block; font-size:.8rem; color:var(--text-secondary); margin-bottom:4px;">User *</label><select id="teuUser" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:#0a0a0f; color:#fff; margin-bottom:12px;"></select>
+  <label style="display:block; font-size:.8rem; color:var(--text-secondary); margin-bottom:4px;">Course *</label><select id="teuCourse" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:#0a0a0f; color:#fff; margin-bottom:12px;"></select>
+  <label style="display:flex;align-items:center;gap:8px;margin-top:14px;cursor:pointer;"><input type="checkbox" id="teuMarkRequired" style="width:auto;" /><span>Mark as required</span></label>
+  <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;"><button type="button" class="btn btn-outline" data-close="trainingEnrollModal" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:10px 20px; border-radius:8px;">Cancel</button><button type="button" class="btn btn-success" id="teuConfirmBtn" style="background:linear-gradient(135deg,#22e6a0,#0d9e6e); border:none; color:#fff; padding:10px 20px; border-radius:8px;"><i class="fa-solid fa-check"></i> Enroll</button></div>
+</div></div>
+
+<div class="modal-overlay" id="certPreviewModal"><div class="modal xl" style="background:#12121a; border:1px solid rgba(0,212,255,.14); border-radius:20px; padding:24px; width:100%; max-width:800px; max-height:90vh; overflow-y:auto;">
+  <h2 style="display:flex; align-items:center; gap:10px; font-size:1.2rem; margin-bottom:20px;"><span class="modal-icon" style="width:36px;height:36px;border-radius:12px;background:rgba(0,212,255,.1);color:#00d4ff;display:inline-flex;align-items:center;justify-content:center;"><i class="fa-solid fa-award"></i></span> Certificate Preview</h2>
+  <div style="background:var(--bg-input); border-radius:12px; padding:14px; text-align:center;"><img id="certPreviewImg" style="max-width:100%; border-radius:8px;" /></div>
+  <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;"><button type="button" class="btn btn-outline" data-close="certPreviewModal" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:10px 20px; border-radius:8px;">Close</button><button type="button" class="btn btn-success" id="certPreviewDownloadBtn" style="background:linear-gradient(135deg,#22e6a0,#0d9e6e); border:none; color:#fff; padding:10px 20px; border-radius:8px;"><i class="fa-solid fa-download"></i> Download</button></div>
 </div></div>
 
 <div class="toast-container" id="toastContainer" style="position:fixed; bottom:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:8px;"></div>
