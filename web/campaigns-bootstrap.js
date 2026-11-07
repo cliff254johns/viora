@@ -492,7 +492,20 @@ async function initModules() {
     state, callFn, upsertDoc,
     renderCampaigns: () => renderCampaigns(),
   });
-  startCampaignCron();
+  /* Only start the cron AFTER state.data.campaigns is populated from
+     Firebase. Otherwise the cron can run on an empty/stale campaigns
+     array and write back a version that's missing every post. */
+  let cronStarted = false;
+  const _startCronWhenReady = () => {
+    if (cronStarted) return;
+    if (state.firebaseReady && Array.isArray(state.data.campaigns) && state.data.campaigns.length > 0) {
+      cronStarted = true;
+      startCampaignCron();
+    } else {
+      setTimeout(_startCronWhenReady, 1000);
+    }
+  };
+  setTimeout(_startCronWhenReady, 2000);
 }
 
 /* ═══════════════════════════════════════════════════════════════
