@@ -413,6 +413,11 @@ function _renderComposer() {
     </div>
   `;
 
+  const campaignSelect = host.querySelector('#ccCampaign');
+  if (campaignSelect && campaignSelect.value) {
+    c.campaignId = campaignSelect.value;
+  }
+
   _bindComposerEvents();
   _renderFanoutLog();
 }
@@ -803,7 +808,19 @@ async function _copyImage() {
 async function _savePost(status = 'draft') {
   const c = _state.composer;
   if (!c) return;
-  if (!c.campaignId) { SAFE.toast('Pick a campaign first.', 'error'); return; }
+   /* Read the current dropdown value directly — in case c.campaignId
+     is stale from before the user changed the select. */
+  const campaignSelectEl = document.getElementById('ccCampaign');
+  if (campaignSelectEl && campaignSelectEl.value) {
+    c.campaignId = campaignSelectEl.value;
+  }
+
+  if (!c.campaignId) {
+    SAFE.toast('Pick a campaign first.', 'error');
+    const el = document.getElementById('ccCampaign');
+    if (el) el.focus();
+    return;
+  }
 
   const emptyCaptions = c.platforms.filter(k =>
     !c.perPlatform[k] || !String(c.perPlatform[k].caption || '').trim()
