@@ -212,26 +212,7 @@ import {
 } from './main/main-subscription-plans.js';
 
 /* ── Training ── */
-import {
-  initTraining, renderTrainingOverview, renderTrainingRequests,
-  renderTrainingUsers, renderTrainingProgress, renderTrainingQuizzes,
-  renderTrainingCertificates, viewQuizSubmission, openCourseEditor,
-  renderCeModules, toggleCeQuiz, addQuizQuestion, removeQuizQuestion,
-  updateQuizQuestion, updateQuizOption, setQuizAnswer, addQuizOption,
-  removeQuizOption, updateCeModule, addCeModule, removeCeModule, moveCeModule,
-  saveCourse, deleteCourse, openChecklistEditor, renderCleTasks, updateCleTask,
-  addCleTask, removeCleTask, saveChecklist, openResourceEditor, handleReFile,
-  saveResource, deleteResource, openResourceFile, awardTrainingCertificate,
-  viewTrainingCert, revokeTrainingCertImpl, renderCertTemplatesGrid,
-  openCertTemplateEditor, refreshCertTemplateModules, showCertTemplatePreview,
-  paintCertTemplateStamps, saveCertTemplate, deleteCertTemplate,
-  renderCertificateImage, openManualAwardModal,
-  AutoCertification,
-  setupCertStampDragging,
-  TrainingVioraAPI,
-  setTrainingContext,
-  bindTrainingEvents
-} from './main/training.js';
+
 
 /* ── PP + Market Content ── */
 import { initPP, PP, bindPPEvents } from './main/pp.js';
@@ -3306,26 +3287,7 @@ function startApp() {
       });
     } catch (e) { console.error('[viora] initAIServices:', e); }
 
-    // 15. Training
-    try {
-      initTraining({
-        $, state, toast,
-        escapeHtml, timeAgo, fmtDate, fmtBytes, fmtKES, uid, todayStr,
-        db, ref, set, update, remove, push, get, onValue,
-        P, ROOT,
-        logActivity, callFn,
-        openModal, closeModal,
-        getClient, getClientName,
-        getTextColor, destroyChart, safeCanvas,
-        MAX_FILE_SIZE,
-        AutoCertification,
-        setupCertStampDragging,
-        renderTrainingCertificates,
-        renderTrainingProgress,
-        renderTrainingQuizzes,
-        updateSidebarCounters,
-      });
-    } catch (e) { console.error('[viora] initTraining:', e); }
+ 
 
     // 16. PP editor
     try {
@@ -3515,8 +3477,7 @@ function startApp() {
         renderClients, renderClient360Page,
         renderCommunications, renderMpesaInline,
         renderSubscriptions,
-        renderTrainingOverview, renderTrainingRequests, renderTrainingUsers,
-        renderTrainingProgress, renderTrainingQuizzes, renderTrainingCertificates,
+       
         renderOrchestrationPanel, renderArchivesPanel,
         renderNotifications, refreshRecommendations,
         renderDashboardNotifications: window.renderDashboardNotifications,
@@ -3613,11 +3574,15 @@ try {
           case 'fin-payroll':             renderPayroll(); break;
           case 'ledger':                  renderLedger(); break;
 
-          // ── Training ──
-          case 'training-overview':       renderTrainingOverview(); break;
-          case 'training-quizzes':        renderTrainingQuizzes(); break;
-          case 'training-certificates':   renderTrainingCertificates(); break;
-          case 'training-progress':       renderTrainingProgress(); break;
+         // ── Training moved to scholar-admin.html ──
+case 'training-overview':
+case 'training-quizzes':
+case 'training-certificates':
+case 'training-progress':
+  window.open('scholar-admin.html', '_blank', 'noopener');
+  toast('Scholar admin has moved — opening in a new tab.', 'info');
+  state.currentTab = 'dashboard';
+  break;
 
           // ── Partner / Personal ──
           case 'personal-todos':          renderPersonalTodos(); break;
@@ -4256,10 +4221,6 @@ try {
         console.error('[viora] sub-module wiring failed (continuing):', e);
       }
 
-      setTimeout(() => {
-        try { bindTrainingEvents(); console.info('[viora] training events bound'); }
-        catch (e) { console.warn('[viora] bindTrainingEvents failed:', e); }
-      }, 100);
 
        try {
         if (_wiring) {
