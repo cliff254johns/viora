@@ -586,8 +586,8 @@ async function handleAuthState(user) {
   startPortalSession(bridge);
 }
 
-/* ─── Sign in ─── */
-$('pLoginBtn').onclick = async () => {
+/* Sign-in handler — bound in wireStaticHandlers() after DOMContentLoaded */
+async function handleLoginClick() {
   const email = $('pEmail').value.trim();
   const password = $('pPassword').value;
   if (!email || !password) { showLoginMessage('Email and password required.', 'error'); return; }
@@ -611,13 +611,10 @@ $('pLoginBtn').onclick = async () => {
     btn.disabled = false;
     btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i>&nbsp; Sign In';
   }
-};
-$('pPassword').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') $('pLoginBtn').click();
-});
+}
 
 /* ─── Register ─── */
-$('pRegisterBtn').onclick = async () => {
+async function handleRegisterClick() {
   const name = $('pRegName').value.trim();
   const email = $('pRegEmail').value.trim().toLowerCase();
   const phone = $('pRegPhone').value.trim();
@@ -699,7 +696,7 @@ $('pRegisterBtn').onclick = async () => {
   btn.disabled = false;
   btn.innerHTML = '<i class="fa-solid fa-user-plus"></i>&nbsp; Request Portal Access';
   await handleAuthState(cred.user);
-};
+}
 
 async function autoMatchClient(name, email, phone) {
   const normEmail = (s) => String(s || '').toLowerCase().trim();
@@ -752,9 +749,25 @@ const doSignOut = async () => {
   try { await signOut(auth); } catch (e) {}
   location.reload();
 };
-$('pendingLogout').onclick = doSignOut;
-$('pLogout').onclick = doSignOut;
-$('mobileLogoutBtn').onclick = doSignOut;
+
+/* ─── Static DOM wiring (deferred) ───
+   All top-level $() binds live here so the module can never throw
+   at parse time if the DOM isn't ready yet. */
+function wireStaticHandlers() {
+  if ($('pLoginBtn'))        $('pLoginBtn').onclick        = handleLoginClick;
+  if ($('pPassword'))        $('pPassword').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') $('pLoginBtn')?.click();
+  });
+  if ($('pRegisterBtn'))     $('pRegisterBtn').onclick     = handleRegisterClick;
+  if ($('pendingLogout'))    $('pendingLogout').onclick    = doSignOut;
+  if ($('pLogout'))          $('pLogout').onclick          = doSignOut;
+  if ($('mobileLogoutBtn'))  $('mobileLogoutBtn').onclick  = doSignOut;
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', wireStaticHandlers);
+} else {
+  wireStaticHandlers();
+}
 
 /* ═══════════════════════════════════════════════════════════════
    PORTAL SESSION
