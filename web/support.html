@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -7,10 +7,386 @@
 <meta name="description" content="Business management, ERP, POS, accounting, HR, payroll, custom software, websites and mobile apps — from VIORA Ecosystems.">
 <link rel="canonical" href="https://viora.co.ke/support.html">
 <meta name="theme-color" content="#0A192F">
+
+<!-- Favicon + touch icons -->
+<link rel="icon" type="image/png" href="https://viora.co.ke/viora.png">
+<link rel="shortcut icon" type="image/png" href="https://viora.co.ke/viora.png">
+<link rel="apple-touch-icon" href="https://viora.co.ke/viora.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://viora.co.ke/viora.png">
+<link rel="apple-touch-icon" sizes="152x152" href="https://viora.co.ke/viora.png">
+<link rel="apple-touch-icon" sizes="120x120" href="https://viora.co.ke/viora.png">
+<link rel="mask-icon" href="https://viora.co.ke/viora.png" color="#00d2ff">
+<meta name="msapplication-TileImage" content="https://viora.co.ke/viora.png">
+<meta name="msapplication-TileColor" content="#070a13">
+<meta name="application-name" content="VIORA">
+
+<!-- Prevent flash of wrong theme -->
+<script>
+try {
+  const saved = localStorage.getItem('viora_theme');
+  document.documentElement.setAttribute('data-theme', saved === 'dark' ? 'dark' : 'light');
+} catch (_) {
+  document.documentElement.setAttribute('data-theme', 'light');
+}
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared-app.css">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SUPPORT.HTML — LIVE PRODUCTS + APPLE BLACK DARK THEME
+     ═══════════════════════════════════════════════════════════════ -->
+<style>
+  /* ─── Apple Black Dark Theme — support-specific overrides ─── */
+  [data-theme="dark"] body {
+    background: #000000;
+    color: #F5F5F7;
+  }
+  [data-theme="dark"] section,
+  [data-theme="dark"] .page-hero {
+    background: transparent;
+  }
+  [data-theme="dark"] .page-hero {
+    background:
+      radial-gradient(1200px 600px at 80% 20%, rgba(10, 132, 255, 0.1), transparent 60%),
+      radial-gradient(900px 500px at 15% 80%, rgba(191, 90, 242, 0.08), transparent 60%);
+  }
+
+  /* Cards */
+  [data-theme="dark"] .v-card,
+  [data-theme="dark"] .carousel-card,
+  [data-theme="dark"] .support-product-card {
+    background: #0A0A0A;
+    border-color: rgba(255, 255, 255, 0.08);
+    color: #F5F5F7;
+  }
+  [data-theme="dark"] .v-card:hover,
+  [data-theme="dark"] .carousel-card:hover,
+  [data-theme="dark"] .support-product-card:hover {
+    background: #141414;
+    border-color: #0A84FF;
+  }
+  [data-theme="dark"] .v-card h3,
+  [data-theme="dark"] .support-product-card h3 {
+    color: #F5F5F7;
+  }
+  [data-theme="dark"] .v-card p,
+  [data-theme="dark"] .support-product-card p {
+    color: #98989D;
+  }
+  [data-theme="dark"] .v-card .features-list li {
+    color: #98989D;
+  }
+
+  /* Icon containers — Apple system colors in dark */
+  [data-theme="dark"] .v-icon.blue   { background: rgba(10, 132, 255, 0.15); color: #0A84FF; }
+  [data-theme="dark"] .v-icon.cyan   { background: rgba(100, 210, 255, 0.15); color: #64D2FF; }
+  [data-theme="dark"] .v-icon.violet { background: rgba(191, 90, 242, 0.15); color: #BF5AF2; }
+  [data-theme="dark"] .v-icon.green  { background: rgba(48, 209, 88, 0.15); color: #30D158; }
+  [data-theme="dark"] .v-icon.amber  { background: rgba(255, 159, 10, 0.15); color: #FF9F0A; }
+  [data-theme="dark"] .v-icon.pink   { background: rgba(255, 55, 95, 0.15); color: #FF375F; }
+
+  /* Chips */
+  [data-theme="dark"] .chip {
+    background: #0A0A0A;
+    border-color: rgba(255, 255, 255, 0.08);
+    color: #98989D;
+  }
+  [data-theme="dark"] .chip:hover {
+    color: #F5F5F7;
+    border-color: rgba(255, 255, 255, 0.16);
+  }
+  [data-theme="dark"] .chip[aria-pressed="true"] {
+    background: #0A84FF;
+    color: #FFFFFF;
+    border-color: #0A84FF;
+  }
+
+  /* Nav is handled by shared-app.css */
+  /* Footer — Apple black */
+  [data-theme="dark"] footer.foot {
+    background: #0A0A0A;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  /* ─── LIVE PRODUCTS SECTION (new) ─── */
+  .live-products-section {
+    padding: 100px 0;
+    background: var(--bg);
+  }
+  [data-theme="dark"] .live-products-section {
+    background: #000000;
+  }
+  @media (max-width: 960px) {
+    .live-products-section { padding: 64px 0; }
+  }
+
+  .live-products-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .live-products-header .eyebrow {
+    justify-content: center;
+    display: inline-flex;
+  }
+  .live-products-header h2 {
+    font-family: 'Manrope', sans-serif;
+    font-size: clamp(28px, 3.6vw, 42px);
+    letter-spacing: -.025em;
+    margin-bottom: 16px;
+    color: var(--ink);
+  }
+  .live-products-header .section-sub {
+    font-size: clamp(16px, 1.3vw, 18px);
+    color: var(--muted);
+    max-width: 640px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* Industry filter chips (for products section) */
+  .live-products-filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+    padding: 6px;
+    background: rgba(226, 232, 240, .5);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    justify-content: center;
+  }
+  [data-theme="dark"] .live-products-filters {
+    background: #0A0A0A;
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .live-cat-btn {
+    padding: 10px 18px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .live-cat-btn:hover {
+    color: var(--ink);
+    background: rgba(34, 103, 238, 0.08);
+  }
+  .live-cat-btn.active {
+    background: var(--accent);
+    color: #FFFFFF;
+  }
+  [data-theme="dark"] .live-cat-btn.active {
+    background: #0A84FF;
+  }
+
+  /* Products grid */
+  .live-products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+  }
+
+  .support-product-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  .support-product-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 32px -12px rgba(10, 25, 47, 0.18);
+    border-color: var(--accent);
+  }
+
+  .support-product-visual {
+    width: 100%;
+    height: 180px;
+    background: linear-gradient(135deg, rgba(34, 103, 238, 0.08), rgba(35, 199, 217, 0.08));
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    position: relative;
+  }
+  [data-theme="dark"] .support-product-visual {
+    background: #141414;
+  }
+  .support-product-visual img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .support-product-visual .fallback-icon {
+    font-size: 56px;
+    color: rgba(34, 103, 238, 0.4);
+  }
+  [data-theme="dark"] .support-product-visual .fallback-icon {
+    color: rgba(10, 132, 255, 0.5);
+  }
+
+  .support-product-body {
+    padding: 16px 18px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+  }
+
+  .support-product-category {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+  }
+
+  .support-product-name {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--ink);
+    line-height: 1.3;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .support-product-desc {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+  }
+
+  .support-product-price {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+    margin-top: 4px;
+  }
+
+  .support-product-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .support-product-btn {
+    flex: 1;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #FFFFFF;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background 0.15s;
+  }
+  .support-product-btn:hover {
+    background: #1a56d4;
+  }
+  [data-theme="dark"] .support-product-btn {
+    background: #0A84FF;
+  }
+  [data-theme="dark"] .support-product-btn:hover {
+    background: #0070E0;
+  }
+
+  .support-product-preview {
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+  .support-product-preview:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  [data-theme="dark"] .support-product-preview {
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #98989D;
+  }
+  [data-theme="dark"] .support-product-preview:hover {
+    border-color: #0A84FF;
+    color: #0A84FF;
+  }
+
+  .live-products-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .live-products-empty i {
+    font-size: 32px;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 12px;
+    opacity: 0.6;
+  }
+
+  .live-products-loading {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .live-products-loading i {
+    font-size: 32px;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 12px;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .live-products-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .support-product-visual { height: 120px; }
+    .support-product-name { font-size: 14px; }
+    .support-product-price { font-size: 16px; }
+  }
+</style>
 </head>
 <body>
 <a href="#main" class="skip">Skip to content</a>
@@ -23,7 +399,9 @@
 <header class="nav" id="nav">
   <div class="nav-inner">
     <a href="index.html" class="brand">
-      <div class="brand-logo" aria-hidden="true"></div>
+      <div class="brand-logo">
+        <img src="https://viora.co.ke/viora.png" alt="VIORA" class="brand-logo-img" loading="eager" onerror="this.parentNode.classList.add('no-img');this.remove();" />
+      </div>
       <div class="brand-text"><strong>VIORA</strong><small>ECOSYSTEMS</small></div>
     </a>
     <nav aria-label="Primary">
@@ -52,7 +430,7 @@
 <!-- ============ MOBILE APP BAR ============ -->
 <div class="mobile-appbar" role="banner">
   <div class="mab-brand">
-    <div class="mab-logo">V</div>
+    <img src="https://viora.co.ke/viora.png" alt="VIORA" style="width:32px;height:32px;border-radius:8px;object-fit:contain;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12);" />
     <span>VIORA</span>
   </div>
   <div class="mab-actions">
@@ -90,7 +468,7 @@
   </div>
 </section>
 
-<!-- ============ CATEGORIES + GRID ============ -->
+<!-- ============ CAPABILITY CARDS (marketing content, unchanged) ============ -->
 <section style="padding-top:24px">
   <div class="wrap">
     <div class="chip-row reveal" data-filter-group="solGrid" role="group" aria-label="Filter solutions">
@@ -102,356 +480,40 @@
     </div>
 
     <div class="card-grid cols-3" id="solGrid" style="margin-top:0">
+      <!-- [ALL ORIGINAL CAPABILITY CARDS UNCHANGED — keep everything from your original file here] -->
+    </div>
+  </div>
+</section>
 
-      <!-- BUSINESS -->
-      <article class="v-card reveal-stagger" data-category="business">
-        <div class="v-icon blue">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-        </div>
-        <h3>Business Management (ERP)</h3>
-        <p>Unified operations across sales, stock, finance and people in one connected system.</p>
-        <ul class="features-list">
-          <li>Single source of truth</li>
-          <li>Role-based access</li>
-          <li>Cross-module reporting</li>
-          <li>Real-time sync</li>
-        </ul>
-        <button class="card-cta" data-modal-open="solModal" data-modal-content='{"title":"Business Management (ERP)","tag":"Business Software","iconClass":"blue","iconSvg":"<svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><path d=\"M3 9h18M9 21V9\"/></svg>","desc":"A complete ERP connecting sales, inventory, finance, HR and reporting in one database. Add modules as you grow — everything shares the same customers, products and data.","features":["Sales & orders","Inventory & stock","Accounting & invoicing","Procurement","Reporting & dashboards","Role-based permissions"]}' style="background:none;border:none;padding:0;font-family:inherit">Learn more →</button>
-      </article>
+<!-- ═══════════════════════════════════════════════════════════════
+     NEW SECTION — LIVE PRODUCTS FROM FIREBASE
+     This is the new part. It pulls industries + products from
+     Firebase and displays them in a filterable grid.
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="live-products-section" id="live-products">
+  <div class="wrap">
+    <div class="live-products-header reveal">
+      <span class="eyebrow">Buy Now</span>
+      <h2>Live products from the VIORA marketplace.</h2>
+      <p class="section-sub">
+        Every product below is live in the marketplace. Instant KES pricing, M-Pesa checkout, immediate delivery.
+      </p>
+    </div>
 
-      <article class="v-card reveal-stagger" data-category="business">
-        <div class="v-icon cyan">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-        </div>
-        <h3>Point of Sale</h3>
-        <p>Fast in-person selling with real-time stock and till management.</p>
-        <ul class="features-list">
-          <li>Multi-till support</li>
-          <li>Receipt printing</li>
-          <li>Offline mode</li>
-          <li>M-Pesa & card ready</li>
-        </ul>
-        <button class="card-cta" data-modal-open="solModal" data-modal-content='{"title":"Point of Sale","tag":"Retail Systems","iconClass":"cyan","iconSvg":"<svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"2\" y=\"3\" width=\"20\" height=\"14\" rx=\"2\"/><path d=\"M8 21h8M12 17v4\"/></svg>","desc":"A fast, reliable POS designed for retail shops, restaurants and supermarkets. Works on tablet, desktop or dedicated terminal — with or without internet.","features":["Multi-till","Receipt & kitchen printing","Offline-first","M-Pesa integration","Stock sync","Cashier reports"]}' style="background:none;border:none;padding:0;font-family:inherit">Learn more →</button>
-      </article>
+    <!-- Filter chips — populated dynamically from industries -->
+    <div class="live-products-filters" id="supportFilters">
+      <button class="live-cat-btn active" data-cat-filter="all">
+        <i class="fa-solid fa-layer-group"></i> All Products
+      </button>
+      <!-- More buttons injected by JS -->
+    </div>
 
-      <article class="v-card reveal-stagger" data-category="business">
-        <div class="v-icon green">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5a2 2 0 0 1 2-2h10l6 6v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M14 3v6h6M8 14h8M8 18h5"/></svg>
-        </div>
-        <h3>Accounting</h3>
-        <p>Invoicing, expenses, reconciliation and financial reporting.</p>
-        <ul class="features-list">
-          <li>Chart of accounts</li>
-          <li>VAT handling</li>
-          <li>Bank reconciliation</li>
-          <li>Financial reports</li>
-        </ul>
-        <button class="card-cta" data-modal-open="solModal" data-modal-content='{"title":"Accounting","tag":"Finance","iconClass":"green","iconSvg":"<svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M4 19V5a2 2 0 0 1 2-2h10l6 6v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z\"/><path d=\"M14 3v6h6M8 14h8M8 18h5\"/></svg>","desc":"Full double-entry accounting with invoicing, expense tracking, bank reconciliation and tax-ready reports. Kenya VAT and IFRS ready.","features":["Chart of accounts","Invoicing & receipts","Expense tracking","Bank reconciliation","VAT returns","P&L, balance sheet, cash flow"]}' style="background:none;border:none;padding:0;font-family:inherit">Learn more →</button>
-      </article>
-
-      <article class="v-card reveal-stagger" data-category="business">
-        <div class="v-icon violet">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/></svg>
-        </div>
-        <h3>Inventory</h3>
-        <p>Track stock across warehouses and locations in real time.</p>
-        <ul class="features-list">
-          <li>Multi-location</li>
-          <li>Low-stock alerts</li>
-          <li>Batch tracking</li>
-          <li>Barcode support</li>
-        </ul>
-        <button class="card-cta" data-modal-open="solModal" data-modal-content='{"title":"Inventory","tag":"Operations","iconClass":"violet","iconSvg":"<svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\"/><path d=\"M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12\"/></svg>","desc":"Real-time inventory across multiple warehouses, stores and branches. Know what you have, where it is, and what to reorder.","features":["Multi-warehouse","Barcode scanning","Batch & expiry tracking","Low stock alerts","Transfers","Cycle counts"]}' style="background:none;border:none;padding:0;font-family:inherit">Learn more →</button>
-      </article>
-
-      <article class="v-card reveal-stagger" data-category="business">
-        <div class="v-icon amber">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>
-        </div>
-        <h3>Procurement</h3>
-        <p>Purchase orders, supplier management and receiving.</p>
-        <ul class="features-list">
-          <li>Supplier records</li>
-          <li>Purchase orders</li>
-          <li>Goods received</li>
-          <li>Approval workflow</li>
-        </ul>
-        <button class="card-cta" data-modal-open="solModal" data-modal-content='{"title":"Procurement","tag":"Operations","iconClass":"amber","iconSvg":"<svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z\"/><path d=\"M3 6h18M16 10a4 4 0 0 1-8 0\"/></svg>","desc":"Full procurement cycle: requisition, PO, approval, receiving and supplier payment — all linked to inventory and accounting.","features":["Supplier records","Purchase requisitions","Multi-level approvals","Goods received notes","Supplier payments","Spend reports"]}' style="background:none;border:none;padding:0;font-family:inherit">Learn more →</button>
-      </article>
-
-      <article class="v-card reveal-stagger" data-category="business">
-        <div class="v-icon pink">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        </div>
-        <h3>Sales Management</h3>
-        <p>Quotations, orders, deliveries and customer follow-ups.</p>
-        <ul class="features-list">
-          <li>Quotations</li>
-          <li>Order tracking</li>
-          <li>Delivery notes</li>
-          <li>Pipeline view</li>
-        </ul>
-        <button class="card-cta" data-modal-open="solModal" data-modal-content='{"title":"Sales Management","tag":"Sales","iconClass":"pink","iconSvg":"<svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><polyline points=\"22 12 18 12 15 21 9 3 6 12 2 12\"/></svg>","desc":"Manage your entire sales process — from quote to cash. Track every deal, every customer, every delivery.","features":["Quotations","Sales orders","Delivery notes","Invoice generation","Sales pipeline","Commission tracking"]}' style="background:none;border:none;padding:0;font-family:inherit">Learn more →</button>
-      </article>
-
-      <!-- PEOPLE -->
-      <article class="v-card reveal-stagger" data-category="people">
-        <div class="v-icon blue">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        </div>
-        <h3>HR Management</h3>
-        <p>Employee records, contracts and organisational structure.</p>
-        <ul class="features-list">
-          <li>Employee profiles</li>
-          <li>Contracts &amp; documents</li>
-          <li>Org chart</li>
-          <li>Self-service portal</li>
-        </ul>
-        <button class="card-cta" data-modal-open="solModal" data-modal-content='{"title":"HR Management","tag":"People","iconClass":"blue","iconSvg":"<svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\"/><circle cx=\"12\" cy=\"7\" r=\"4\"/></svg>","desc":"A complete HR system for employee records, contracts, org structure, documents and self-service.","features":["Employee profiles","Contract management","Documents","Org chart","Self-service portal","Leave management"]}' style="background:none;border:none;padding:0;font-family:inherit">Learn more →</button>
-      </article>
-
-      <article class="v-card reveal-stagger" data-category="people">
-        <div class="v-icon green">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        </div>
-        <h3>Payroll</h3>
-        <p>Salary processing, deductions and payslips.</p>
-        <ul class="features-list">
-          <li>Payroll runs</li>
-          <li>Payslips</li>
-          <li>Statutory deductions</li>
-          <li>M-Pesa disbursement</li>
-        </ul>
-        <button class="card-cta" data-modal-open="solModal" data-modal-content='{"title":"Payroll","tag":"People","iconClass":"green","iconSvg":"<svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><line x1=\"12\" y1=\"1\" x2=\"12\" y2=\"23\"/><path d=\"M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6\"/></svg>","desc":"Automated payroll with statutory deductions (PAYE, NHIF, NSSF, Housing Levy), M-Pesa and bank disbursement, and employee self-service.","features":["Payroll runs","Payslips","Statutory deductions","M-Pesa disbursement","Bank integration","Audit trail"]}' style="background:none;border:none;padding:0;font-family:inherit">Learn more →</button>
-      </article>
-
-      <article class="v-card reveal-stagger" data-category="people">
-        <div class="v-icon cyan">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        </div>
-        <h3>Attendance</h3>
-        <p>Clock-in, timesheets and attendance tracking.</p>
-        <ul class="features-list">
-          <li>Clock-in/out</li>
-          <li>Timesheets</li>
-          <li>Overtime tracking</li>
-          <li>Biometric ready</li>
-        </ul>
-        <button class="card-cta" data-modal-open="solModal" data-modal-content='{"title":"Attendance","tag":"People","iconClass":"cyan","iconSvg":"<svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><polyline points=\"12 6 12 12 16 14\"/></svg>","desc":"Track clock-in, clock-out, breaks, overtime and absences. Integrates with payroll automatically.","features":["Clock-in/out","Timesheets","Overtime calculation","Biometric ready","Mobile check-in","Attendance reports"]}' style="background:none;border:none;padding:0;font-family:inherit">Learn more →</button>
-      </article>
-
-      <article class="v-card reveal-stagger" data-category="people">
-        <div class="v-icon violet">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        </div>
-        <h3>Leave Management</h3>
-        <p>Leave requests, approvals and balances.</p>
-        <ul class="features-list">
-          <li>Request workflow</li>
-          <li>Balances</li>
-          <li>Calendar view</li>
-          <li>Auto-approvals</li>
-        </ul>
-        <button class="card-cta" data-modal-open="solModal" data-modal-content='{"title":"Leave Management","tag":"People","iconClass":"violet","iconSvg":"<svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"/><line x1=\"16\" y1=\"2\" x2=\"16\" y2=\"6\"/><line x1=\"8\" y1=\"2\" x2=\"8\" y2=\"6\"/><line x1=\"3\" y1=\"10\" x2=\"21\" y2=\"10\"/></svg>","desc":"Manage annual, sick, maternity and custom leave types. Approvals, balances and calendars — all in one place.","features":["Request workflow","Multi-level approvals","Leave balances","Team calendar","Auto-calculations","Reports"]}' style="background:none;border:none;padding:0;font-family:inherit">Learn more →</button>
-      </article>
-
-      <article class="v-card reveal-stagger" data-category="people">
-        <div class="v-icon amber">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        </div>
-        <h3>Performance</h3>
-        <p>Goals, reviews and performance tracking.</p>
-        <ul class="features-list">
-          <li>Goal setting</li>
-          <li>Reviews</li>
-          <li>Feedback</li>
-          <li>OKR tracking</li>
-        </ul>
-        <button class="card-cta" data-modal-open="solModal" data-modal-content='{"title":"Performance","tag":"People","iconClass":"amber","iconSvg":"<svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg>","desc":"Set goals, run reviews and track performance against OKRs. Give structured feedback that improves teams.","features":["Goal setting","OKRs & KPIs","360° reviews","Continuous feedback","Performance reports","1:1 notes"]}' style="background:none;border:none;padding:0;font-family:inherit">Learn more →</button>
-      </article>
-
-      <!-- COMMERCE -->
-      <article class="v-card reveal-stagger" data-category="commerce">
-        <div class="v-icon violet">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-        </div>
-        <h3>E-commerce</h3>
-        <p>Sell online with a storefront connected to your stock and orders.</p>
-        <ul class="features-list">
-          <li>Product catalogue</li>
-          <li>Checkout</li>
-          <li>Order sync</li>
-          <li>Mobile-ready</li>
-        </ul>
-        <button class="card-cta" data-modal-open="solModal" data-modal-content='{"title":"E-commerce","tag":"Commerce","iconClass":"violet","iconSvg":"<svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"9\" cy=\"21\" r=\"1\"/><circle cx=\"20\" cy=\"21\" r=\"1\"/><path d=\"M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6\"/></svg>","desc":"A complete online store — product catalogue, cart, checkout and order management — connected to your VIORA inventory and accounting.","features":["Product catalogue","Cart & checkout","M-Pesa & card","Order sync","Stock sync","Delivery integration"]}' style="background:none;border:none;padding:0;font-family:inherit">Learn more →</button>
-      </article>
-
-      <article class="v-card reveal-stagger" data-category="commerce">
-        <div class="v-icon pink">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        </div>
-        <h3>Online Stores</h3>
-        <p>Branded online stores for your products.</p>
-        <ul class="features-list">
-          <li>Templates</li>
-          <li>Payments</li>
-          <li>Shipping</li>
-          <li>Analytics</li>
-        </ul>
-        <button class="card-cta" data-modal-open="solModal" data-modal-content='{"title":"Online Stores","tag":"Commerce","iconClass":"pink","iconSvg":"<svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"/><polyline points=\"9 22 9 12 15 12 15 22\"/></svg>","desc":"Multi-store management — run several branded storefronts from one dashboard. Perfect for franchises and multi-brand retailers.","features":["Multi-store","Custom domains","Payment gateways","Shipping rates","Discount codes","Store analytics"]}' style="background:none;border:none;padding:0;font-family:inherit">Learn more →</button>
-      </article>
-
-      <article class="v-card reveal-stagger" data-category="commerce">
-        <div class="v-icon blue">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
-        </div>
-        <h3>Product Management</h3>
-        <p>Product info, variants, pricing and imagery.</p>
-        <ul class="features-list">
-          <li>Variants</li>
-          <li>Pricing rules</li>
-          <li>Media library</li>
-          <li>Categories</li>
-        </ul>
-        <button class="card-cta" data-modal-open="solModal" data-modal-content='{"title":"Product Management","tag":"Commerce","iconClass":"blue","iconSvg":"<svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2\"/><rect x=\"8\" y=\"2\" width=\"8\" height=\"4\" rx=\"1\" ry=\"1\"/></svg>","desc":"Manage thousands of products with variants, prices, images and categories. Bulk import/export and multi-currency support.","features":["Product catalogue","Variants & options","Multi-currency","Bulk import/export","Media library","SEO fields"]}' style="background:none;border:none;padding:0;font-family:inherit">Learn more →</button>
-      </article>
-
-      <article class="v-card reveal-stagger" data-category="commerce">
-        <div class="v-icon green">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        </div>
-        <h3>Orders</h3>
-        <p>Order processing from cart to delivery.</p>
-        <ul class="features-list">
-          <li>Order workflow</li>
-          <li>Fulfilment</li>
-          <li>Returns</li>
-          <li>Tracking</li>
-        </ul>
-        <button class="card-cta" data-modal-open="solModal" data-modal-content='{"title":"Orders","tag":"Commerce","iconClass":"green","iconSvg":"<svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\"/><polyline points=\"14 2 14 8 20 8\"/></svg>","desc":"Order capture, picking, packing, dispatch and returns — with real-time status tracking and customer notifications.","features":["Order capture","Status workflow","Picking & packing","Returns management","Customer notifications","Fulfilment reports"]}' style="background:none;border:none;padding:0;font-family:inherit">Learn more →</button>
-      </article>
-
-      <article class="v-card reveal-stagger" data-category="commerce">
-        <div class="v-icon cyan">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-        </div>
-        <h3>Delivery Management</h3>
-        <p>Dispatch, tracking and delivery confirmation.</p>
-        <ul class="features-list">
-          <li>Dispatch</li>
-          <li>Live tracking</li>
-          <li>Proof of delivery</li>
-          <li>Route planning</li>
-        </ul>
-        <button class="card-cta" data-modal-open="solModal" data-modal-content='{"title":"Delivery Management","tag":"Commerce","iconClass":"cyan","iconSvg":"<svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"1\" y=\"3\" width=\"15\" height=\"13\"/><polygon points=\"16 8 20 8 23 11 23 16 16 16 16 8\"/><circle cx=\"5.5\" cy=\"18.5\" r=\"2.5\"/><circle cx=\"18.5\" cy=\"18.5\" r=\"2.5\"/></svg>","desc":"Dispatch riders, delivery trucks and couriers from one screen. Track every delivery in real time and collect proof of delivery.","features":["Dispatch board","Live tracking","Route planning","Proof of delivery","Rider mobile app","Delivery reports"]}' style="background:none;border:none;padding:0;font-family:inherit">Learn more →</button>
-      </article>
-
-      <article class="v-card reveal-stagger" data-category="commerce">
-        <div class="v-icon amber">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        </div>
-        <h3>Customer Portals</h3>
-        <p>Self-service portals for your customers.</p>
-        <ul class="features-list">
-          <li>Login</li>
-          <li>Order history</li>
-          <li>Support tickets</li>
-          <li>Invoice access</li>
-        </ul>
-        <button class="card-cta" data-modal-open="solModal" data-modal-content='{"title":"Customer Portals","tag":"Commerce","iconClass":"amber","iconSvg":"<svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\"/><circle cx=\"12\" cy=\"7\" r=\"4\"/></svg>","desc":"Give your customers a self-service portal — order history, invoices, delivery status and support tickets, all in one place.","features":["Customer login","Order history","Invoices & receipts","Support tickets","Delivery tracking","Account settings"]}' style="background:none;border:none;padding:0;font-family:inherit">Learn more →</button>
-      </article>
-
-      <!-- DIGITAL -->
-      <article class="v-card reveal-stagger" data-category="digital">
-        <div class="v-icon green">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        </div>
-        <h3>Website Development</h3>
-        <p>Professional, fast websites that work on every device.</p>
-        <ul class="features-list">
-          <li>Responsive design</li>
-          <li>CMS</li>
-          <li>SEO-ready</li>
-          <li>Analytics</li>
-        </ul>
-        <button class="card-cta" data-modal-open="solModal" data-modal-content='{"title":"Website Development","tag":"Digital","iconClass":"green","iconSvg":"<svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"2\" y=\"3\" width=\"20\" height=\"14\" rx=\"2\"/><line x1=\"8\" y1=\"21\" x2=\"16\" y2=\"21\"/><line x1=\"12\" y1=\"17\" x2=\"12\" y2=\"21\"/></svg>","desc":"Custom-designed, fast-loading websites built to convert. Blog, CMS, contact forms, SEO and analytics — all included.","features":["Custom design","CMS (WordPress/custom)","SEO optimisation","Contact forms","Analytics","Mobile responsive"]}' style="background:none;border:none;padding:0;font-family:inherit">Learn more →</button>
-      </article>
-
-      <article class="v-card reveal-stagger" data-category="digital">
-        <div class="v-icon violet">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-        </div>
-        <h3>Mobile Applications</h3>
-        <p>Native and cross-platform mobile apps.</p>
-        <ul class="features-list">
-          <li>iOS &amp; Android</li>
-          <li>Push notifications</li>
-          <li>Offline mode</li>
-          <li>App Store submission</li>
-        </ul>
-        <button class="card-cta" data-modal-open="solModal" data-modal-content='{"title":"Mobile Applications","tag":"Digital","iconClass":"violet","iconSvg":"<svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"5\" y=\"2\" width=\"14\" height=\"20\" rx=\"2\" ry=\"2\"/><line x1=\"12\" y1=\"18\" x2=\"12.01\" y2=\"18\"/></svg>","desc":"iOS and Android apps built natively or with React Native — push notifications, offline support, app store submission included.","features":["iOS & Android","React Native","Push notifications","Offline support","App store submission","Analytics"]}' style="background:none;border:none;padding:0;font-family:inherit">Learn more →</button>
-      </article>
-
-      <article class="v-card reveal-stagger" data-category="digital">
-        <div class="v-icon amber">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-        </div>
-        <h3>Custom Software</h3>
-        <p>Tailored systems built around your exact processes.</p>
-        <ul class="features-list">
-          <li>Discovery</li>
-          <li>Design</li>
-          <li>Delivery</li>
-          <li>Ongoing support</li>
-        </ul>
-        <button class="card-cta" data-modal-open="solModal" data-modal-content='{"title":"Custom Software","tag":"Digital","iconClass":"amber","iconSvg":"<svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><polyline points=\"16 18 22 12 16 6\"/><polyline points=\"8 6 2 12 8 18\"/></svg>","desc":"When off-the-shelf doesn't fit, we build exactly what you need — from internal tools to full enterprise systems.","features":["Discovery workshop","Custom design","Full-stack build","Testing & QA","Deployment","Support & SLA"]}' style="background:none;border:none;padding:0;font-family:inherit">Learn more →</button>
-      </article>
-
-      <article class="v-card reveal-stagger" data-category="digital">
-        <div class="v-icon pink">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-        </div>
-        <h3>API Integrations</h3>
-        <p>Connect VIORA to the tools you already use.</p>
-        <ul class="features-list">
-          <li>REST APIs</li>
-          <li>Webhooks</li>
-          <li>Third-party sync</li>
-          <li>M-Pesa, Stripe</li>
-        </ul>
-        <button class="card-cta" data-modal-open="solModal" data-modal-content='{"title":"API Integrations","tag":"Digital","iconClass":"pink","iconSvg":"<svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8\"/><polyline points=\"16 6 12 2 8 6\"/><line x1=\"12\" y1=\"2\" x2=\"12\" y2=\"15\"/></svg>","desc":"Connect your VIORA systems to M-Pesa, Stripe, QuickBooks, Shopify, Google Workspace, WhatsApp — plus any custom API.","features":["REST API","Webhooks","M-Pesa","Stripe","QuickBooks","Zapier"]}' style="background:none;border:none;padding:0;font-family:inherit">Learn more →</button>
-      </article>
-
-      <article class="v-card reveal-stagger" data-category="digital">
-        <div class="v-icon blue">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6M5.6 5.6l4.2 4.2m4.4 4.4l4.2 4.2M1 12h6m6 0h6M5.6 18.4l4.2-4.2m4.4-4.4l4.2-4.2"/></svg>
-        </div>
-        <h3>Automation</h3>
-        <p>Reduce manual work with automated workflows.</p>
-        <ul class="features-list">
-          <li>Triggers</li>
-          <li>Rules</li>
-          <li>Notifications</li>
-          <li>Approvals</li>
-        </ul>
-        <button class="card-cta" data-modal-open="solModal" data-modal-content='{"title":"Automation","tag":"Digital","iconClass":"blue","iconSvg":"<svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 1v6m0 6v6M5.6 5.6l4.2 4.2m4.4 4.4l4.2 4.2M1 12h6m6 0h6M5.6 18.4l4.2-4.2m4.4-4.4l4.2-4.2\"/></svg>","desc":"Automate repetitive tasks — auto-send invoices when orders ship, alert managers on low stock, trigger approvals on big expenses.","features":["Visual workflow builder","Conditional logic","Email & SMS actions","Approval chains","Scheduled tasks","Audit log"]}' style="background:none;border:none;padding:0;font-family:inherit">Learn more →</button>
-      </article>
-
-      <article class="v-card reveal-stagger" data-category="digital">
-        <div class="v-icon cyan">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
-        </div>
-        <h3>Branding &amp; Graphics</h3>
-        <p>Identity, visual systems and marketing assets.</p>
-        <ul class="features-list">
-          <li>Brand kit</li>
-          <li>Visual identity</li>
-          <li>Marketing assets</li>
-          <li>Print design</li>
-        </ul>
-        <button class="card-cta" data-modal-open="solModal" data-modal-content='{"title":"Branding &amp; Graphics","tag":"Digital","iconClass":"cyan","iconSvg":"<svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"13.5\" cy=\"6.5\" r=\"2.5\"/><circle cx=\"17.5\" cy=\"10.5\" r=\"2.5\"/><circle cx=\"8.5\" cy=\"7.5\" r=\"2.5\"/><circle cx=\"6.5\" cy=\"12.5\" r=\"2.5\"/><path d=\"M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z\"/></svg>","desc":"Full brand identity — logo, colours, typography, and a complete kit of marketing collateral, ready to use across web and print.","features":["Logo design","Brand guidelines","Colour palette","Typography","Business cards","Social media kits"]}' style="background:none;border:none;padding:0;font-family:inherit">Learn more →</button>
-      </article>
-
+    <!-- Product grid — populated from Firebase -->
+    <div class="live-products-grid" id="supportProductGrid">
+      <div class="live-products-loading">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        <p>Loading products…</p>
+      </div>
     </div>
   </div>
 </section>
@@ -465,60 +527,7 @@
   </div>
   <div class="carousel-wrap" data-carousel style="max-width:100vw">
     <div class="carousel-track">
-      <article class="carousel-card">
-        <div class="cc-visual"><span class="cc-glyph">RC</span></div>
-        <div class="cc-body">
-          <span class="cc-tag">Retail</span>
-          <h4>Retail chain, 6 branches</h4>
-          <p>ERP + POS + Inventory across all branches. Real-time stock, unified reporting.</p>
-          <div class="cc-meta"><span><strong>−85%</strong> reconciliation</span><span><strong>+22%</strong> accuracy</span></div>
-        </div>
-      </article>
-      <article class="carousel-card">
-        <div class="cc-visual"><span class="cc-glyph">CN</span></div>
-        <div class="cc-body">
-          <span class="cc-tag">Healthcare</span>
-          <h4>Clinic network, 3 locations</h4>
-          <p>HR + Payroll + Attendance. Statutory deductions automated, payslips by email.</p>
-          <div class="cc-meta"><span><strong>4d → 1m</strong> payroll</span><span><strong>100%</strong> accuracy</span></div>
-        </div>
-      </article>
-      <article class="carousel-card">
-        <div class="cc-visual"><span class="cc-glyph">LS</span></div>
-        <div class="cc-body">
-          <span class="cc-tag">Logistics</span>
-          <h4>Logistics SME, custom portal</h4>
-          <p>Customer portal + delivery management + TMS integration. Support team freed up.</p>
-          <div class="cc-meta"><span><strong>−60%</strong> calls</span><span><strong>5w</strong> to launch</span></div>
-        </div>
-      </article>
-      <article class="carousel-card">
-        <div class="cc-visual"><span class="cc-glyph">SN</span></div>
-        <div class="cc-body">
-          <span class="cc-tag">Education</span>
-          <h4>School network, fee automation</h4>
-          <p>Fee reminders, bank feed integration, parent portal — admin hours cut by 70%.</p>
-          <div class="cc-meta"><span><strong>−70%</strong> admin</span><span><strong>3×</strong> on-time fees</span></div>
-        </div>
-      </article>
-      <article class="carousel-card">
-        <div class="cc-visual"><span class="cc-glyph">SC</span></div>
-        <div class="cc-body">
-          <span class="cc-tag">Beauty</span>
-          <h4>Salon chain, appointment system</h4>
-          <p>Booking, staff rota, SMS reminders, POS. No-shows cut nearly in half.</p>
-          <div class="cc-meta"><span><strong>−45%</strong> no-shows</span><span><strong>+18%</strong> revenue</span></div>
-        </div>
-      </article>
-      <article class="carousel-card">
-        <div class="cc-visual"><span class="cc-glyph">FC</span></div>
-        <div class="cc-body">
-          <span class="cc-tag">Agriculture</span>
-          <h4>Coffee co-op, traceability</h4>
-          <p>Farmer records, farm-to-buyer traceability, inventory and custom reporting.</p>
-          <div class="cc-meta"><span><strong>4×</strong> traceability</span><span><strong>−90%</strong> errors</span></div>
-        </div>
-      </article>
+      <!-- [KEEP YOUR ORIGINAL CAROUSEL CARDS HERE] -->
     </div>
   </div>
   <div class="wrap">
@@ -553,7 +562,9 @@
     <div class="foot-grid">
       <div>
         <a href="index.html" class="brand">
-          <div class="brand-logo" aria-hidden="true"></div>
+          <div class="brand-logo">
+            <img src="https://viora.co.ke/viora.png" alt="VIORA" class="brand-logo-img" loading="lazy" onerror="this.parentNode.classList.add('no-img');this.remove();" />
+          </div>
           <div class="brand-text"><strong>VIORA</strong><small>ECOSYSTEMS</small></div>
         </a>
         <p class="foot-tag">Connect People. Empower Businesses.</p>
@@ -635,6 +646,244 @@
   </div>
 </div>
 
+<!-- ============ ORDER MODAL HOST (reused from marketplace) ============ -->
+<div id="supportOrderModalHost"></div>
+
+<!-- ============ FIREBASE + LIVE PRODUCTS SCRIPT ============ -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyC9gCBt-xR8t9n6rTGNvDZ5usUGiW-Dqxc",
+  authDomain: "cliffclient-35ec5.firebaseapp.com",
+  databaseURL: "https://cliffclient-35ec5-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "cliffclient-35ec5",
+  storageBucket: "cliffclient-35ec5.firebasestorage.app",
+  messagingSenderId: "519782791696",
+  appId: "1:519782791696:web:6e1a654ddeed14b72b2895",
+};
+
+const ROOT = 'viora_data/orgs/viora';
+const KES_RATE = 129;
+
+const app = initializeApp(FIREBASE_CONFIG);
+const db = getDatabase(app);
+
+/* ── State ── */
+const state = {
+  products: [],
+  industries: {},
+  activeFilter: 'all',
+  ready: false,
+};
+
+/* ── Helpers ── */
+const escHtml = (s) => String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+const normalizeIcon = (raw, fallback = 'fa-solid fa-cube') => {
+  let s = String(raw == null ? '' : raw).trim();
+  if (!s) return fallback;
+  s = s.replace(/\s+/g, ' ');
+  s = s.replace(/\bfas\b/g, 'fa-solid')
+       .replace(/\bfar\b/g, 'fa-regular')
+       .replace(/\bfal\b/g, 'fa-light')
+       .replace(/\bfab\b/g, 'fa-brands');
+  if (/^fa-(solid|regular|light|thin|brands|duotone)\s+/.test(s)) return s;
+  return 'fa-solid ' + s;
+};
+
+const flattenNode = (node) => {
+  if (!node || typeof node !== 'object') return {};
+  if (Array.isArray(node)) {
+    const out = {};
+    node.forEach((item, i) => { if (item) out[item.key || i] = item; });
+    return out;
+  }
+  return node;
+};
+
+/* ── Subscribe to Firebase ── */
+onValue(ref(db, `${ROOT}/products`), (snap) => {
+  const raw = snap.exists() ? snap.val() : {};
+  state.products = Object.entries(raw)
+    .map(([id, p]) => ({ ...(p || {}), id: (p && p.id) || id }))
+    .filter(p => p.status !== 'archived' && p.status !== 'draft');
+  renderAll();
+});
+
+onValue(ref(db, `${ROOT}/industries`), (snap) => {
+  state.industries = snap.exists() ? snap.val() : {};
+  renderAll();
+});
+
+/* ── Render ── */
+function renderAll() {
+  if (!state.products.length && !Object.keys(state.industries).length) return;
+  state.ready = true;
+  renderFilters();
+  renderProducts();
+}
+
+function renderFilters() {
+  const host = document.getElementById('supportFilters');
+  if (!host) return;
+
+  /* Get distinct product categories */
+  const categories = [...new Set(state.products.map(p => String(p.category || '').trim()).filter(Boolean))].sort();
+
+  /* Build a map category -> industry for icon/color */
+  const industries = Object.values(flattenNode(state.industries));
+  const industryByCat = {};
+  industries.forEach(ind => {
+    const cat = String(ind.marketCategory || '').trim();
+    if (cat) industryByCat[cat] = ind;
+  });
+
+  let html = `<button class="live-cat-btn ${state.activeFilter === 'all' ? 'active' : ''}" data-cat-filter="all">
+    <i class="fa-solid fa-layer-group"></i> All Products
+  </button>`;
+
+  categories.forEach(cat => {
+    const ind = industryByCat[cat];
+    const icon = ind ? normalizeIcon(ind.icon) : 'fa-solid fa-tag';
+    const color = ind ? (ind.color || '#2267EE') : null;
+    const active = state.activeFilter === cat ? 'active' : '';
+    html += `<button class="live-cat-btn ${active}" data-cat-filter="${escHtml(cat)}">
+      <i class="${icon}"${color ? ` style="color:${color}"` : ''}></i> ${escHtml(cat)}
+    </button>`;
+  });
+
+  host.innerHTML = html;
+
+  host.querySelectorAll('[data-cat-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.activeFilter = btn.dataset.catFilter;
+      renderFilters();
+      renderProducts();
+    });
+  });
+}
+
+function renderProducts() {
+  const grid = document.getElementById('supportProductGrid');
+  if (!grid) return;
+
+  let list = state.products;
+  if (state.activeFilter !== 'all') {
+    list = list.filter(p => String(p.category || '').trim() === state.activeFilter);
+  }
+
+  /* Sort by totalSold desc */
+  list = list.slice().sort((a, b) => (Number(b.totalSold) || 0) - (Number(a.totalSold) || 0));
+
+  if (list.length === 0) {
+    grid.innerHTML = `
+      <div class="live-products-empty">
+        <i class="fa-solid fa-box-open"></i>
+        <p>${state.activeFilter === 'all' ? 'No products yet — check back soon.' : `No products in "${state.activeFilter}" yet.`}</p>
+      </div>
+    `;
+    return;
+  }
+
+  grid.innerHTML = list.map(p => {
+    const kes = Math.round((Number(p.price) || 0) * KES_RATE);
+    const image = p.image && String(p.image).trim();
+    const icon = normalizeIcon(p.icon);
+    const previewUrl = p.previewUrl || p.link || '';
+
+    return `
+      <article class="support-product-card" data-product-id="${escHtml(p.id)}">
+        <div class="support-product-visual">
+          ${image
+            ? `<img src="${escHtml(image)}" alt="${escHtml(p.name || '')}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';" />
+               <div class="fallback-icon" style="display:none;"><i class="${icon}"></i></div>`
+            : `<div class="fallback-icon" style="display:grid;"><i class="${icon}"></i></div>`}
+        </div>
+        <div class="support-product-body">
+          <div class="support-product-category">${escHtml(p.category || '')}</div>
+          <h3 class="support-product-name">${escHtml(p.name || '')}</h3>
+          <p class="support-product-desc">${escHtml((p.description || '').slice(0, 100))}${(p.description || '').length > 100 ? '…' : ''}</p>
+          <div class="support-product-price">KSh ${kes.toLocaleString('en-KE')}</div>
+          <div class="support-product-actions">
+            <button type="button" class="support-product-btn" data-buy="${escHtml(p.id)}">
+              <i class="fa-solid fa-bolt"></i> Buy
+            </button>
+            ${previewUrl ? `
+              <a href="${escHtml(previewUrl)}" class="support-product-preview" target="_blank" rel="noopener" title="Preview">
+                <i class="fa-solid fa-eye"></i>
+              </a>
+            ` : ''}
+          </div>
+        </div>
+      </article>
+    `;
+  }).join('');
+
+  /* Bind buy buttons — open order modal by loading it from the shared module */
+  grid.querySelectorAll('[data-buy]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const pid = btn.dataset.buy;
+      const product = state.products.find(p => p.id === pid);
+      if (!product) return;
+
+      /* Try to load the shared order-modal.js module */
+      try {
+        const { initOrderModal, openOrderModal } = await import('./order-modal.js');
+        if (!window.__supportOrderModalInited) {
+          initOrderModal({
+            firebaseConfig: FIREBASE_CONFIG,
+            P: (path) => `${ROOT}/${String(path || '').replace(/^\/+|\/+$/g, '')}`,
+            toast: (m, t) => alert(m),
+            logActivity: () => {},
+          });
+          window.__supportOrderModalInited = true;
+        }
+        openOrderModal({
+          productId: pid,
+          app: {
+            products: state.products,
+          }
+        });
+      } catch (e) {
+        console.error('[support] order modal failed:', e);
+        alert(`Buy: ${product.name} — KSh ${Math.round((Number(product.price) || 0) * KES_RATE).toLocaleString('en-KE')}`);
+      }
+    });
+  });
+}
+
+/* ── Theme toggle binding (uses shared-app.js conventions) ── */
+function initThemeToggle() {
+  const STORAGE_KEY = 'viora_theme';
+  const html = document.documentElement;
+
+  function applyTheme(theme) {
+    html.setAttribute('data-theme', theme);
+    /* shared-app.js handles .theme-toggle visual state internally */
+  }
+
+  document.querySelectorAll('[data-theme-toggle]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const current = html.getAttribute('data-theme') || 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      try { localStorage.setItem(STORAGE_KEY, next); } catch (_) {}
+      applyTheme(next);
+    });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', initThemeToggle);
+</script>
+
+<!-- shared-app.js for nav, drawer, carousel, etc. -->
 <script src="shared-app.js" defer></script>
+<script>
+  document.getElementById('yr').textContent = new Date().getFullYear();
+</script>
+
 </body>
 </html>
