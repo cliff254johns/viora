@@ -2848,12 +2848,12 @@ function startApp() {
       });
     } catch (e) { console.error('[viora] initRenderMarketplace:', e); }
     
-
     // 11. Misc helpers
     try {
       initMiscHelpers({
         state, $, toast, openModal, closeModal,
-        todayStr, fmtKES, callFn, upsertDoc, logActivity,
+        todayStr, fmtKES, escapeHtml,
+        callFn, upsertDoc, logActivity,
         getClient, generateInvoiceNumber,
         renderLedger, renderProposals, renderDocumentVault, renderInvoices,
       });
