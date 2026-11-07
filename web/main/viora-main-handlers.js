@@ -4295,25 +4295,49 @@ export function buildVioraHandlers(d) {
      DOCUMENTS
      ═══════════════════════════════════════════════════════════ */
   Viora.openDocUpload = function (system, category) {
+    /* ── Personal-document mode: parentless uploads ──
+       Fixes: previously the modal required a parent for every upload,
+       so 'Personal Document' uploads were silently blocked or, worse,
+       saved with an empty parentId but a category the modal select
+       didn't contain, causing the save to reject on validation. */
+    const isPersonal = String(category || '').toLowerCase().includes('personal');
+
     $('docSystem').value = system;
     $('docCategory').value = category;
     $('docTitle').value = '';
     $('docPreview').innerHTML = '';
     $('docFileInput').value = '';
     if (state) state.pendingDoc = null;
+
+    /* Reset + repopulate the parent dropdown */
     const ps = $('docParent');
-    ps.innerHTML = '<option value="">— Standalone —</option>';
-    const options = [];
-    if (system === 'Marketing')  options.push(...(state?.data?.campaigns  || []).map(c => ({ id: c.id, label: 'Campaign: ' + c.name })));
-    if (system === 'Sales')      options.push(...(state?.data?.contracts  || []).map(c => ({ id: c.id, label: 'Contract: ' + c.title })));
-    if (system === 'Operations') options.push(...(state?.data?.projects   || []).map(p => ({ id: p.id, label: 'Project: '  + p.title })));
-    if (system === 'Finance')    options.push(...(state?.data?.invoices   || []).map(i => ({ id: i.id, label: 'Invoice: '  + i.number })));
-    options.forEach(o => {
-      const opt = document.createElement('option');
-      opt.value = o.id;
-      opt.textContent = o.label;
-      ps.appendChild(opt);
-    });
+    if (ps) {
+      ps.innerHTML = '<option value="">— Standalone —</option>';
+      /* Personal docs never link to a parent — hide the parent row entirely */
+      const parentLabel = ps.previousElementSibling;
+      if (isPersonal) {
+        if (parentLabel && parentLabel.tagName === 'LABEL') parentLabel.style.display = 'none';
+        ps.style.display = 'none';
+        ps.disabled = true;
+      } else {
+        if (parentLabel && parentLabel.tagName === 'LABEL') parentLabel.style.display = '';
+        ps.style.display = '';
+        ps.disabled = false;
+
+        const options = [];
+        if (system === 'Marketing')  options.push(...(state?.data?.campaigns  || []).map(c => ({ id: c.id, label: 'Campaign: ' + c.name })));
+        if (system === 'Sales')      options.push(...(state?.data?.contracts  || []).map(c => ({ id: c.id, label: 'Contract: ' + c.title })));
+        if (system === 'Operations') options.push(...(state?.data?.projects   || []).map(p => ({ id: p.id, label: 'Project: '  + p.title })));
+        if (system === 'Finance')    options.push(...(state?.data?.invoices   || []).map(i => ({ id: i.id, label: 'Invoice: '  + i.number })));
+        options.forEach(o => {
+          const opt = document.createElement('option');
+          opt.value = o.id;
+          opt.textContent = o.label;
+          ps.appendChild(opt);
+        });
+      }
+    }
+
     _openModal('docUploadModal');
   };
 
