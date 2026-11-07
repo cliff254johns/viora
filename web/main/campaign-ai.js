@@ -383,11 +383,11 @@ function _renderComposer() {
         ` : ''}
 
         <label style="margin-top:16px;">Status</label>
-        <select id="ccStatus">
-          <option value="draft" ${c.status === 'draft' ? 'selected' : ''}>Save as Draft</option>
-          <option value="published" ${c.status === 'published' ? 'selected' : ''}>Post Now</option>
-          <option value="scheduled" ${c.status === 'scheduled' ? 'selected' : ''}>Schedule</option>
-        </select>
+      <select id="ccStatus">
+  <option value="draft" ${c.status === 'draft' ? 'selected' : ''}>Save as Draft</option>
+  <option value="published" ${c.status === 'published' ? 'selected' : ''}>Post Now</option>
+  <option value="scheduled" ${(c.status === 'scheduled' || (c.scheduledFor && c.status === 'draft')) ? 'selected' : ''}>Schedule</option>
+</select>
 
         <div id="ccScheduleRow" style="display:${c.status === 'scheduled' ? 'block' : 'none'};margin-top:8px;">
           <label>Schedule for</label>
