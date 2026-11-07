@@ -573,21 +573,39 @@
         </div>
       </div>
 
-      <!-- ═══════════════════════════════════════════════════════════
-           GROUP 7 · TRAINING
-           ═══════════════════════════════════════════════════════════ -->
-      <div class="sb-group-wrap" data-group="training">
-        <button class="sb-group-toggle" data-toggle="training" aria-expanded="false" style="--group-color:#f472b6;">
-          <i class="fa-solid fa-graduation-cap sb-group-icon"></i>
-          <span class="sb-group-label">Training</span>
-          <i class="fa-solid fa-chevron-down sb-group-chevron"></i>
-        </button>
-        <div class="sb-group-items" data-group-items="training">
-          <a data-tab="training-overview" data-roles="admin,exec,hr,marketing,sales" data-counter="none" style="--icon-color:#00d4ff;"><i class="fa-solid fa-graduation-cap"></i> Training Dashboard</a>
-          <a data-tab="training-quizzes" data-roles="admin,exec,hr" data-counter="trainingQuizzesPending" style="--icon-color:#ffc857;"><i class="fa-solid fa-file-circle-question"></i> Quiz Submissions <span class="nav-badge" id="quizzesNavBadge" style="display:none;">0</span></a>
-          <a data-tab="training-certificates" data-roles="admin,exec,hr" data-counter="trainingCertsPending" style="--icon-color:#ff9f0a;"><i class="fa-solid fa-award"></i> Certificates <span class="nav-badge" id="certsNavBadge" style="display:none;">0</span></a>
-        </div>
-      </div>
+  
+ <!-- ═══════════════════════════════════════════════════════════
+     GROUP 7 · SCHOLAR (external link to stand-alone admin)
+     ═══════════════════════════════════════════════════════════ -->
+<div class="sb-group-wrap" data-group="training">
+  <button class="sb-group-toggle" data-toggle="training" aria-expanded="false" style="--group-color:#f472b6;">
+    <i class="fa-solid fa-graduation-cap sb-group-icon"></i>
+    <span class="sb-group-label">Scholar</span>
+    <i class="fa-solid fa-chevron-down sb-group-chevron"></i>
+  </button>
+  <div class="sb-group-items" data-group-items="training">
+    <a href="scholar-admin.html" target="_blank" rel="noopener"
+       data-external="true"
+       data-roles="admin,exec,hr"
+       style="--icon-color:#ffc857;">
+      <i class="fa-solid fa-graduation-cap"></i> Scholar Admin
+      <i class="fa-solid fa-arrow-up-right-from-square"
+         style="font-size:.6rem;opacity:.5;margin-left:auto;"></i>
+    </a>
+    <a href="training.html" target="_blank" rel="noopener"
+       data-external="true"
+       data-roles="admin,exec,hr,marketing,sales"
+       style="--icon-color:#00d4ff;">
+      <i class="fa-solid fa-arrow-up-right-from-square"></i> Academy Landing
+      <i class="fa-solid fa-arrow-up-right-from-square"
+         style="font-size:.6rem;opacity:.5;margin-left:auto;"></i>
+    </a>
+    <a data-tab="portal-requests" data-roles="admin,exec" data-counter="portalRequests" style="--icon-color:#ffc857;">
+      <i class="fa-solid fa-user-clock"></i> Portal Requests
+      <span class="nav-badge" id="portalReqBadge" style="display:none;">0</span>
+    </a>
+  </div>
+</div>
 
       <!-- ═══════════════════════════════════════════════════════════
            GROUP 8 · SYSTEM
@@ -2024,61 +2042,7 @@
       <div class="orch-panel"><h4><i class="fa-solid fa-folder"></i> Archived Projects</h4><div id="archProjectsList"></div></div>
     </section>
 
-    <!-- TRAINING DASHBOARD -->
-    <section id="tab-training-overview" class="tab-content">
-    <div id="trainingOverviewKpi" class="kpi-grid"></div>
-<div id="trainingPendingSnapshot" class="kpi-grid" style="margin-top:12px;"></div>
-<div id="trainingRecentActivity" class="card" style="padding:16px;margin-top:16px;"></div>
-      <div class="page-header">
-        <div><h1><span class="pillar-icon" style="background:linear-gradient(135deg,#a855f7,#00d4ff);"><i class="fa-solid fa-graduation-cap"></i></span> <span class="highlight">Training Dashboard</span></h1><p class="page-desc">Courses, checklists, and resources published to the training portal.</p></div>
-        <div class="actions">
-          <button class="btn btn-outline btn-sm" onclick="window.open('/training.html', '_blank')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Training Portal</button>
-          <button class="btn btn-primary" id="addCourseBtn"><i class="fa-solid fa-plus"></i> New Course</button>
-          <button class="btn btn-success" id="addChecklistBtn"><i class="fa-solid fa-list-check"></i> New Checklist</button>
-          <button class="btn btn-purple" id="addResourceBtn"><i class="fa-solid fa-folder-plus"></i> New Resource</button>
-        </div>
-      </div>
-      <div class="kpi-grid" id="trainingKpi"></div>
-      <div class="chart-grid">
-        <div class="chart-box"><h4><i class="fa-solid fa-book-open"></i> Courses</h4><div class="table-wrapper" style="background:transparent;border:none;box-shadow:none;"><table><thead><tr><th>Title</th><th>Category</th><th>Level</th><th>Modules</th><th>Required For</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="trainingCoursesBody"></tbody></table></div></div>
-        <div class="chart-box"><h4><i class="fa-solid fa-list-check"></i> Onboarding Checklists</h4><div class="table-wrapper" style="background:transparent;border:none;box-shadow:none;"><table><thead><tr><th>Title</th><th>Target Role</th><th>Tasks</th></tr></thead><tbody id="trainingChecklistsBody"></tbody></table></div></div>
-        <div class="chart-box chart-full"><h4><i class="fa-solid fa-folder-tree"></i> Resources</h4><div class="table-wrapper" style="background:transparent;border:none;box-shadow:none;"><table><thead><tr><th>Title</th><th>Category</th><th>Type</th><th>Added</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="trainingResourcesBody"></tbody></table></div></div>
-      </div>
-    </section>
-
-    <!-- TRAINING: QUIZ SUBMISSIONS -->
-    <section id="tab-training-quizzes" class="tab-content">
-      <div class="page-header">
-        <div><h1><span class="pillar-icon" style="background:linear-gradient(135deg,#a855f7,#00d4ff);"><i class="fa-solid fa-file-circle-question"></i></span> <span class="highlight">Quiz Submissions</span></h1><p class="page-desc">Trainees who completed the final module of a course and submitted their quiz. Grade them and award certificates.</p></div>
-        <div class="actions">
-          <button class="btn btn-outline btn-sm" id="quizzesRefreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button>
-          <select id="quizFilterStatus" class="btn btn-outline btn-sm" style="padding:6px 12px;">
-            <option value="all">All Statuses</option><option value="submitted">Submitted (pending)</option><option value="graded">Graded</option><option value="awarded">Certificate Awarded</option>
-          </select>
-        </div>
-      </div>
-      <div class="kpi-grid" id="quizzesKpi"></div>
-      <div class="toolbar"><div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input id="quizzesSearch" placeholder="Search by trainee, email, or course..." /></div><button class="btn btn-outline btn-sm" id="quizzesClearSearch">Clear</button></div>
-      <div class="table-wrapper"><table><thead><tr><th>Submitted</th><th>Trainee</th><th>Course</th><th>Auto-Score</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="quizzesBody"></tbody></table></div>
-    </section>
-
-    <!-- TRAINING: CERTIFICATES -->
-    <section id="tab-training-certificates" class="tab-content">
-    <div id="certTemplateGrid" class="card-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:20px;"></div>
-      <div class="page-header">
-        <div><h1><span class="pillar-icon" style="background:linear-gradient(135deg,#ffc857,#b8860b);"><i class="fa-solid fa-award"></i></span> <span class="highlight">Training Certificates</span></h1><p class="page-desc">Award, review, and revoke training certificates. Every issued certificate appears instantly in the trainee's portal.</p></div>
-        <div class="actions">
-          <button class="btn btn-outline btn-sm" id="certsRefreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button>
-          <button class="btn btn-purple btn-sm" id="rerunAutoAwardBtn"><i class="fa-solid fa-wand-magic-sparkles"></i> Re-run Auto-Award</button>
-          <button class="btn btn-gold" id="manualAwardCertBtn"><i class="fa-solid fa-plus"></i> Manual Award</button>
-        </div>
-      </div>
-      <div class="kpi-grid" id="certsKpi"></div>
-      <div class="toolbar"><div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input id="certsSearch" placeholder="Search by trainee or certificate ID..." /></div><button class="btn btn-outline btn-sm" id="certsClearSearch">Clear</button></div>
-      <div class="table-wrapper"><table><thead><tr><th>Issued</th><th>Trainee</th><th>Course</th><th>Score</th><th>Certificate ID</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="certsBody"></tbody></table></div>
-    </section>
-
-    <!-- TRAINING PROGRESS -->
+       <!-- TRAINING PROGRESS -->
     <section id="tab-training-progress" class="tab-content">
       <div class="page-header">
         <div><h1><span class="pillar-icon" style="background:linear-gradient(135deg,#00d4ff,#7c3aed);"><i class="fa-solid fa-chart-line"></i></span> <span class="highlight">Training Progress</span></h1><p class="page-desc">Per-user enrollment, completion, and certificate tracking. Click any user to manage their training.</p></div>
