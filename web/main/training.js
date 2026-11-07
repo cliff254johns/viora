@@ -76,7 +76,12 @@ function slugId(raw, fallbackPrefix) {
 
 function indexBy(arr, keyFn) {
   const m = new Map();
-  for (const item of arr || []) m.set(keyFn(item), item);
+  // Safely handle objects, arrays, nulls, and undefined
+  if (!arr) return m;
+  const list = Array.isArray(arr) ? arr : Object.values(arr);
+  for (const item of list) {
+    if (item && typeof item === 'object') m.set(keyFn(item), item);
+  }
   return m;
 }
 
@@ -800,12 +805,13 @@ export function renderTrainingCertificates() {
     const total = all.length;
     const nowMonth = new Date().getMonth();
     let thisMonth = 0, scoreSum = 0;
-    const uniqueUids = new Set();
-    for (const c of all) {
-      if (c.issuedAt && new Date(c.issuedAt).getMonth() === nowMonth) thisMonth++;
-      scoreSum += c.score || 0;
-      if (c.uid) uniqueUids.add(c.uid);
-    }
+ const uniqueUids = new Set();
+for (const c of certs) {
+  if (!c) continue;
+  if (c.issuedAt && new Date(c.issuedAt).getMonth() === nowMonth) thisMonth++;
+  scoreSum += c.score || 0;
+  if (c.uid) uniqueUids.add(c.uid);
+}
     const avgScore = total ? Math.round(scoreSum / total) : 0;
 
     const kpi = D.$('certsKpi');
