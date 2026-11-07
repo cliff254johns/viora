@@ -13,72 +13,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <link rel="icon" type="image/png" href="https://viora.co.ke/viora.png">
 
-<!-- Reuse the master admin styles for cards/tables/buttons -->
-<link rel="stylesheet" href="main.css" />
+<link rel="stylesheet" href="scholar-shared.css" />
 
-<style>
-  /* ── RESET & APP SHELL ── */
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; background: var(--bg-body, #0a0a0f); color: var(--text-primary, #f0f4ff); font-family: 'Inter', sans-serif; overflow-x: hidden; }
-  .sa-app { display: flex; height: 100vh; overflow: hidden; }
-
-  /* ── SIDEBAR (Desktop) ── */
-  .sa-sidebar {
-    width: 260px; flex-shrink: 0; background: rgba(18,18,26,.85); backdrop-filter: blur(20px);
-    border-right: 1px solid var(--border-color, rgba(0,212,255,.14)); display: flex; flex-direction: column;
-    z-index: 100; transition: transform .3s ease;
-  }
-  .sa-brand { display: flex; align-items: center; gap: 12px; padding: 24px 20px; border-bottom: 1px solid var(--border-color); }
-  .sa-brand img { width: 36px; height: 36px; border-radius: 10px; object-fit: contain; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.35); }
-  .sa-brand div { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 1.05rem; color: var(--text-primary); line-height: 1.2; }
-  .sa-brand small { display: block; font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.2px; font-weight: 600; margin-top: 2px; }
-
-  .sa-nav { flex: 1; overflow-y: auto; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; scrollbar-width: none; }
-  .sa-nav::-webkit-scrollbar { display: none; }
-  
-  .sa-nav-item {
-    display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px;
-    color: var(--text-secondary); font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: .85rem;
-    background: transparent; border: none; cursor: pointer; transition: all .2s;
-  }
-  .sa-nav-item:hover { background: rgba(255,255,255,.05); color: var(--text-primary); }
-  .sa-nav-item.active { background: linear-gradient(135deg, rgba(0,212,255,.15), rgba(124,58,237,.15)); color: var(--accent-blue, #00d4ff); border-left: 3px solid var(--accent-blue); }
-  .sa-nav-item i { font-size: 1.1rem; width: 20px; text-align: center; }
-  
-  .sa-sidebar-footer { padding: 16px; border-top: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
-
-  /* ── MAIN CONTENT ── */
-  .sa-wrapper { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg-body); }
-  .sa-topbar { height: 60px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; background: rgba(18,18,26,.6); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-color); }
-  .sa-topbar-left { display: flex; align-items: center; gap: 16px; }
-  .sa-mobile-toggle { display: none; background: none; border: none; color: var(--text-primary); font-size: 1.2rem; cursor: pointer; }
-  .sa-topbar-right { display: flex; align-items: center; gap: 12px; }
-
-  .sa-main { flex: 1; overflow-y: auto; padding: 32px 24px; position: relative; scroll-behavior: smooth; }
-  .sa-content { max-width: 1200px; margin: 0 auto; width: 100%; }
-
-  .sa-pane { display: none; animation: saFade .3s ease; }
-  .sa-pane.active { display: block; }
-  @keyframes saFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-
-  /* ── STATUS BADGES ── */
-  .status-draft { background: rgba(148, 163, 184, .15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, .3); }
-  .status-review { background: rgba(255, 200, 87, .15); color: #ffc857; border: 1px solid rgba(255, 200, 87, .3); }
-  .status-published { background: rgba(34, 230, 160, .15); color: #22e6a0; border: 1px solid rgba(34, 230, 160, .3); }
-  
-  /* ── RESPONSIVE ── */
-  @media (max-width: 768px) {
-    .sa-sidebar { position: fixed; top: 0; bottom: 0; left: 0; transform: translateX(-100%); }
-    .sa-sidebar.open { transform: translateX(0); }
-    .sa-mobile-toggle { display: block; }
-    .sa-main { padding: 20px 16px 100px; }
-    .sa-topbar { padding: 0 16px; }
-    .sa-brand { padding: 16px; }
-    .table-wrapper { overflow-x: auto; }
-    table { min-width: 700px; }
-    .kpi-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
-  }
-</style>
 </head>
 <body>
 
@@ -88,116 +24,113 @@
   <style>@keyframes saSpin { to { transform: rotate(360deg); } }</style>
 </div>
 
-<div class="sa-app" id="trShell" style="display:none;">
-  <div class="sa-overlay" id="trSidebarOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:90;display:none;"></div>
+<div class="sch-app" id="trShell" style="display:none;">
+  <div class="sch-overlay" id="trSidebarOverlay"></div>
 
-  <aside class="sa-sidebar" id="trSidebar">
-    <div class="sa-brand">
+  <aside class="sch-sidebar" id="trSidebar">
+    <div class="sch-brand">
       <img src="https://viora.co.ke/viora.png" alt="VIORA" />
       <div>VIORA Scholar<small>Trainer Workspace</small></div>
     </div>
     
-    <div class="sa-nav">
-      <button class="sa-nav-item active" data-tr-tab="overview"><i class="fa-solid fa-house"></i> Overview</button>
-      <button class="sa-nav-item" data-tr-tab="courses"><i class="fa-solid fa-book-open"></i> My Courses</button>
-      <button class="sa-nav-item" data-tr-tab="builder"><i class="fa-solid fa-hammer"></i> Course Builder</button>
-      <button class="sa-nav-item" data-tr-tab="learners"><i class="fa-solid fa-users"></i> My Learners</button>
-      <button class="sa-nav-item" data-tr-tab="grading"><i class="fa-solid fa-file-signature"></i> Gradebook</button>
+    <div class="sch-nav">
+      <button class="sch-nav-item active" data-tr-tab="overview"><i class="fa-solid fa-house"></i> Overview</button>
+      <button class="sch-nav-item" data-tr-tab="courses"><i class="fa-solid fa-book-open"></i> My Courses</button>
+      <button class="sch-nav-item" data-tr-tab="builder"><i class="fa-solid fa-hammer"></i> Course Builder</button>
+      <button class="sch-nav-item" data-tr-tab="learners"><i class="fa-solid fa-users"></i> My Learners</button>
+      <button class="sch-nav-item" data-tr-tab="grading"><i class="fa-solid fa-file-signature"></i> Gradebook</button>
     </div>
 
-    <div class="sa-sidebar-footer">
-      <span class="badge badge-purple" id="trWhoami" style="font-size:.7rem;">—</span>
+    <div class="sch-sidebar-footer">
+      <span class="badge badge-purple" id="trWhoami" style="font-size:.7rem; background:rgba(168,85,247,.15); color:#c4b5fd; padding:4px 10px; border-radius:12px;">—</span>
       <div style="display:flex; gap:8px;">
-        <button class="btn btn-outline btn-sm" id="trThemeBtn"><i class="fa-solid fa-moon"></i></button>
-        <button class="btn btn-danger btn-sm" id="trSignOutBtn"><i class="fa-solid fa-right-from-bracket"></i></button>
+        <button class="btn btn-outline btn-sm" id="trThemeBtn" style="border-color:var(--border-color); background:var(--bg-input); color:#fff;"><i class="fa-solid fa-moon"></i></button>
+        <button class="btn btn-danger btn-sm" id="trSignOutBtn" style="background:#d92b4b; border:none; color:#fff;"><i class="fa-solid fa-right-from-bracket"></i></button>
       </div>
     </div>
   </aside>
 
-  <div class="sa-wrapper">
-    <header class="sa-topbar">
-      <div class="sa-topbar-left">
-        <button class="sa-mobile-toggle" id="trMobileToggle"><i class="fa-solid fa-bars"></i></button>
+  <div class="sch-wrapper">
+    <header class="sch-topbar">
+      <div class="sch-topbar-left">
+        <button class="sch-mobile-toggle" id="trMobileToggle"><i class="fa-solid fa-bars"></i></button>
         <span style="font-family:'Space Grotesk';font-weight:700;font-size:.9rem;">Trainer Dashboard</span>
       </div>
-      <div class="sa-topbar-right">
+      <div class="sch-topbar-right">
         <span class="live-sync" style="display:inline-flex;align-items:center;gap:6px;font-size:.7rem;color:var(--accent-green);background:rgba(34,230,160,.1);padding:4px 10px;border-radius:20px;border:1px solid rgba(34,230,160,.3);"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent-green);"></span> Live sync</span>
       </div>
     </header>
 
-    <main class="sa-main">
-      <div class="sa-content">
+    <main class="sch-main">
+      <div class="sch-content">
 
-        <!-- ═══ OVERVIEW ═══ -->
-        <section id="tr-pane-overview" class="sa-pane active">
-          <div class="page-header">
-            <div><h1><span class="pillar-icon" style="background:linear-gradient(135deg,#a855f7,#00d4ff);"><i class="fa-solid fa-chalkboard-user"></i></span> <span class="highlight">Trainer Overview</span></h1><p class="page-desc">Welcome back. Here is a summary of your teaching activity.</p></div>
+        <section id="tr-pane-overview" class="sch-pane active">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+            <div><h1 style="display:flex; align-items:center; gap:10px;"><span style="width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#a855f7,#00d4ff); color:#fff;"><i class="fa-solid fa-chalkboard-user"></i></span> <span style="background:linear-gradient(135deg,#a855f7,#00d4ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Trainer Overview</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Welcome back. Here is a summary of your teaching activity.</p></div>
           </div>
-          <div class="kpi-grid" id="trOverviewKpi"></div>
-          <div class="chart-box">
-            <h4><i class="fa-solid fa-clock-rotate-left"></i> Recent Student Activity</h4>
+          <div id="trOverviewKpi" class="kpi-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px;"></div>
+          <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:18px; margin-top:16px;">
+            <h4 style="font-size:.82rem; font-weight:700; color:var(--text-secondary); margin-bottom:12px; text-transform:uppercase;"><i class="fa-solid fa-clock-rotate-left"></i> Recent Student Activity</h4>
             <div id="trRecentActivity" style="padding:14px;"></div>
           </div>
         </section>
 
-        <!-- ═══ MY COURSES ═══ -->
-        <section id="tr-pane-courses" class="sa-pane">
-          <div class="page-header">
-            <div><h1><span class="pillar-icon" style="background:linear-gradient(135deg,#22e6a0,#0d9e6e);"><i class="fa-solid fa-book-open"></i></span> <span class="highlight">My Courses</span></h1><p class="page-desc">Courses assigned to you.</p></div>
-            <div class="actions"><button class="btn btn-primary btn-sm" id="trNewCourseBtn"><i class="fa-solid fa-plus"></i> Create Draft</button></div>
+        <section id="tr-pane-courses" class="sch-pane">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+            <div><h1 style="display:flex; align-items:center; gap:10px;"><span style="width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#22e6a0,#0d9e6e); color:#fff;"><i class="fa-solid fa-book-open"></i></span> <span style="background:linear-gradient(135deg,#22e6a0,#0d9e6e);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">My Courses</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Courses assigned to you.</p></div>
+            <div><button class="btn btn-primary btn-sm" id="trNewCourseBtn" style="background:linear-gradient(135deg,#00d4ff,#7c3aed); border:none; color:#fff; padding:8px 16px; border-radius:8px;"><i class="fa-solid fa-plus"></i> Create Draft</button></div>
           </div>
-          <div class="card-grid" id="trCoursesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;"></div>
+          <div id="trCoursesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;"></div>
         </section>
 
-        <!-- ═══ COURSE BUILDER ═══ -->
-        <section id="tr-pane-builder" class="sa-pane">
-          <div class="page-header">
-            <div><h1><span class="pillar-icon" style="background:linear-gradient(135deg,#ffc857,#b8860b);"><i class="fa-solid fa-hammer"></i></span> <span class="highlight">Course Builder</span></h1><p class="page-desc">Build modules, add quizzes, and submit for admin approval.</p></div>
+        <section id="tr-pane-builder" class="sch-pane">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+            <div><h1 style="display:flex; align-items:center; gap:10px;"><span style="width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#ffc857,#b8860b); color:#fff;"><i class="fa-solid fa-hammer"></i></span> <span style="background:linear-gradient(135deg,#ffc857,#b8860b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Course Builder</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Build modules, add quizzes, and submit for admin approval.</p></div>
           </div>
-          <div id="trBuilderHost" style="background:var(--bg-input);border-radius:12px;border:1px solid var(--border-color);padding:24px;text-align:center;color:var(--text-secondary);">
+          <div id="trBuilderHost" style="background:var(--bg-card); border-radius:12px; border:1px solid var(--border-color); padding:24px; text-align:center; color:var(--text-secondary);">
             Select a course from <strong>My Courses</strong> to start editing.
           </div>
         </section>
 
-        <!-- ═══ MY LEARNERS ═══ -->
-        <section id="tr-pane-learners" class="sa-pane">
-          <div class="page-header">
-            <div><h1><span class="pillar-icon" style="background:linear-gradient(135deg,#00d4ff,#7c3aed);"><i class="fa-solid fa-users"></i></span> <span class="highlight">My Learners</span></h1><p class="page-desc">Students enrolled in your courses.</p></div>
+        <section id="tr-pane-learners" class="sch-pane">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+            <div><h1 style="display:flex; align-items:center; gap:10px;"><span style="width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#00d4ff,#7c3aed); color:#fff;"><i class="fa-solid fa-users"></i></span> <span style="background:linear-gradient(135deg,#00d4ff,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">My Learners</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Students enrolled in your courses.</p></div>
           </div>
-          <div class="table-wrapper"><table><thead><tr><th>Learner</th><th>Course</th><th>Progress</th><th>Last Active</th></tr></thead><tbody id="trLearnersBody"></tbody></table></div>
+          <div class="table-wrapper" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); overflow-x:auto;"><table style="width:100%; border-collapse:collapse; min-width:600px;"><thead><tr style="border-bottom:1px solid var(--border-color); text-align:left;"><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Learner</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Course</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Progress</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Last Active</th></tr></thead><tbody id="trLearnersBody"></tbody></table></div>
         </section>
 
-        <!-- ═══ GRADING ═══ -->
-        <section id="tr-pane-grading" class="sa-pane">
-          <div class="page-header">
-            <div><h1><span class="pillar-icon" style="background:linear-gradient(135deg,#ff5c7c,#d92b4b);"><i class="fa-solid fa-file-signature"></i></span> <span class="highlight">Gradebook</span></h1><p class="page-desc">Review quiz submissions and provide feedback.</p></div>
+        <section id="tr-pane-grading" class="sch-pane">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+            <div><h1 style="display:flex; align-items:center; gap:10px;"><span style="width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#ff5c7c,#d92b4b); color:#fff;"><i class="fa-solid fa-file-signature"></i></span> <span style="background:linear-gradient(135deg,#ff5c7c,#d92b4b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Gradebook</span></h1><p style="font-size:.85rem; color:var(--text-secondary); margin-top:6px;">Review quiz submissions and provide feedback.</p></div>
           </div>
-          <div class="table-wrapper"><table><thead><tr><th>Date</th><th>Learner</th><th>Course</th><th>Score</th><th>Status</th><th style="text-align:right;">Action</th></tr></thead><tbody id="trGradingBody"></tbody></table></div>
+          <div class="table-wrapper" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); overflow-x:auto;"><table style="width:100%; border-collapse:collapse; min-width:600px;"><thead><tr style="border-bottom:1px solid var(--border-color); text-align:left;"><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Date</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Learner</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Course</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Score</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase;">Status</th><th style="padding:12px; color:var(--text-secondary); font-size:.75rem; text-transform:uppercase; text-align:right;">Action</th></tr></thead><tbody id="trGradingBody"></tbody></table></div>
         </section>
 
       </div>
     </main>
   </div>
+
+  <nav class="sch-bottom-nav">
+    <button class="sch-bnav-item active" data-tr-tab="overview"><i class="fa-solid fa-house"></i><span>Home</span></button>
+    <button class="sch-bnav-item" data-tr-tab="courses"><i class="fa-solid fa-book-open"></i><span>Courses</span></button>
+    <button class="sch-bnav-item" data-tr-tab="learners"><i class="fa-solid fa-users"></i><span>Learners</span></button>
+    <button class="sch-bnav-item" data-tr-tab="grading"><i class="fa-solid fa-file-signature"></i><span>Grades</span></button>
+  </nav>
 </div>
 
-<!-- Modals imported from main/training.js need to exist in the DOM for the trainer to use them -->
-<!-- (Same as scholar-admin, we just duplicate the ones a trainer needs) -->
-<div class="modal-overlay" id="courseEditorModal"><div class="modal xl">
-  <h2><span class="modal-icon"><i class="fa-solid fa-book-open"></i></span><span id="courseEditorTitle">New Course</span></h2>
+<div class="modal-overlay" id="courseEditorModal"><div class="modal xl" style="background:#12121a; border:1px solid rgba(0,212,255,.14); border-radius:20px; padding:24px; width:100%; max-width:800px; max-height:90vh; overflow-y:auto;">
+  <h2 style="display:flex; align-items:center; gap:10px; font-size:1.2rem; margin-bottom:20px;"><span class="modal-icon" style="width:36px;height:36px;border-radius:12px;background:rgba(0,212,255,.1);color:#00d4ff;display:inline-flex;align-items:center;justify-content:center;"><i class="fa-solid fa-book-open"></i></span><span id="courseEditorTitle">New Course</span></h2>
   <input type="hidden" id="ceCourseId" />
-  <div class="form-row"><div><label>Course ID *</label><input id="ceId" placeholder="intro-to-viora" required /></div><div><label>Level</label><select id="ceLevel"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></div></div>
-  <label>Title *</label><input id="ceTitle" required />
-  <label>Description</label><textarea id="ceDescription" rows="2"></textarea>
-  <div class="form-row"><div><label>Category</label><select id="ceCategory"><option>Onboarding</option><option>Sales</option><option>Marketing</option><option>Operations</option><option>Finance</option><option>Product</option><option>Compliance</option><option>Leadership</option><option>Technical</option><option>Other</option></select></div><div><label>Required For</label><input id="ceRequiredFor" placeholder="sales,marketing" /></div></div>
-  <div style="display:flex;justify-content:space-between;align-items:center;margin:22px 0 10px;"><h4 style="font-size:.82rem;text-transform:uppercase;color:var(--text-secondary);margin:0;"><i class="fa-solid fa-cubes"></i> Modules (<span id="ceModuleCount">0</span>)</h4><button type="button" class="btn btn-outline btn-sm" id="ceAddModuleBtn"><i class="fa-solid fa-plus"></i> Add Module</button></div>
+  <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px;"><div style="flex:1; min-width:160px;"><label style="display:block; font-size:.8rem; color:var(--text-secondary); margin-bottom:4px;">Course ID *</label><input id="ceId" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:#0a0a0f; color:#fff;" required /></div><div style="flex:1; min-width:160px;"><label style="display:block; font-size:.8rem; color:var(--text-secondary); margin-bottom:4px;">Level</label><select id="ceLevel" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:#0a0a0f; color:#fff;"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></div></div>
+  <label style="display:block; font-size:.8rem; color:var(--text-secondary); margin-bottom:4px;">Title *</label><input id="ceTitle" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:#0a0a0f; color:#fff; margin-bottom:12px;" required />
+  <label style="display:block; font-size:.8rem; color:var(--text-secondary); margin-bottom:4px;">Description</label><textarea id="ceDescription" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:#0a0a0f; color:#fff; margin-bottom:12px;" rows="2"></textarea>
+  <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px;"><div style="flex:1; min-width:160px;"><label style="display:block; font-size:.8rem; color:var(--text-secondary); margin-bottom:4px;">Category</label><select id="ceCategory" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:#0a0a0f; color:#fff;"><option>Onboarding</option><option>Sales</option><option>Marketing</option><option>Operations</option><option>Finance</option><option>Product</option><option>Compliance</option><option>Leadership</option><option>Technical</option><option>Other</option></select></div><div style="flex:1; min-width:160px;"><label style="display:block; font-size:.8rem; color:var(--text-secondary); margin-bottom:4px;">Required For</label><input id="ceRequiredFor" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:#0a0a0f; color:#fff;" placeholder="sales,marketing" /></div></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin:22px 0 10px;"><h4 style="font-size:.82rem;text-transform:uppercase;color:var(--text-secondary);margin:0;"><i class="fa-solid fa-cubes"></i> Modules (<span id="ceModuleCount">0</span>)</h4><button type="button" class="btn btn-outline btn-sm" id="ceAddModuleBtn" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:6px 12px; border-radius:8px;"><i class="fa-solid fa-plus"></i> Add Module</button></div>
   <div id="ceModulesList" style="max-height:520px;overflow-y:auto;padding:4px;"></div>
-  <div class="form-actions" style="margin-top:20px;">
-    <button type="button" class="btn btn-outline" data-close="courseEditorModal">Cancel</button>
-    <button type="button" class="btn btn-success" id="ceSaveBtn"><i class="fa-solid fa-check"></i> Save Draft</button>
-  </div>
+  <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;"><button type="button" class="btn btn-outline" data-close="courseEditorModal" style="background:transparent; border:1px solid var(--border-color); color:#fff; padding:10px 20px; border-radius:8px;">Cancel</button><button type="button" class="btn btn-success" id="ceSaveBtn" style="background:linear-gradient(135deg,#22e6a0,#0d9e6e); border:none; color:#fff; padding:10px 20px; border-radius:8px;"><i class="fa-solid fa-check"></i> Save Course</button></div>
 </div></div>
 
-<div class="toast-container" id="toastContainer"></div>
+<div class="toast-container" id="toastContainer" style="position:fixed; bottom:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:8px;"></div>
 
 <script type="importmap">
 {
