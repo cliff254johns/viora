@@ -225,9 +225,9 @@
   var preloader = document.getElementById('vioraPreloader');
   if (!preloader) return;
 
-  var MIN_VISIBLE_MS = 5000,
+  var MIN_VISIBLE_MS = 10000,
       FADE_OUT_MS = 700,
-      SAFETY_MAX_MS = 8000;
+      SAFETY_MAX_MS = 15000;
   var startTime = Date.now(),
       hidden = false,
       pendingHide = false;
