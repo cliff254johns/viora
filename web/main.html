@@ -191,22 +191,47 @@
     color: #e2e8f0;
     letter-spacing: 0.01em;
   }
-</style>
-  <style>
-  /* Login stays hidden until preloader fully completes */
+<style>
+  /* ─────────────────────────────────────────────────────────
+     PRELOADER GATE — login + app shell stay invisible until
+     the preloader script removes body.preloader-active.
+     This prevents boot.js's handleAuthChange() from flashing
+     the login screen behind/over the still-playing video.
+     ───────────────────────────────────────────────────────── */
   #loginScreen {
     opacity: 0;
-    transition: opacity 500ms cubic-bezier(0.25, 0.1, 0.25, 1);
+    visibility: hidden;
+    transition: opacity 500ms cubic-bezier(0.25, 0.1, 0.25, 1),
+                visibility 0s linear 500ms;
   }
   body.viora-preloader-done #loginScreen {
     opacity: 1;
+    visibility: visible;
+    transition: opacity 500ms cubic-bezier(0.25, 0.1, 0.25, 1),
+                visibility 0s linear 0s;
   }
-  /* Also hide the app shell until auth resolves (it's already .hidden) */
-  #appShell { opacity: 0; transition: opacity 400ms ease; }
-  #appShell:not(.hidden) { opacity: 1; }
+
+  /* App shell also gated — it's already .hidden until auth, but
+     this stops an eager .hidden removal from flashing it. */
+  #appShell {
+    opacity: 0;
+    transition: opacity 400ms ease;
+  }
+  #appShell:not(.hidden) {
+    opacity: 1;
+  }
+
+  /* While preloader is active: hide both, no matter what class
+     boot.js tries to toggle. */
+  body.preloader-active #loginScreen,
+  body.preloader-active #appShell {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
 </style>
 </head>
-<body>
+<body class="preloader-active">
 
 
 
@@ -234,9 +259,13 @@
       pendingHide = false;
 
   function revealLogin() {
-    /* Set the flag BEFORE hiding, so the login's opacity transition
-       starts on the same frame the preloader fades out. */
+    /* Drop the hard gate first — this is what un-hides the login
+       screen and app shell. `viora-preloader-done` drives the fade. */
+    document.body.classList.remove('preloader-active');
     document.body.classList.add('viora-preloader-done');
+
+    /* Tell boot.js it may now paint the login. */
+    try { window.dispatchEvent(new Event('viora:preloader-done')); } catch (e) {}
   }
 
   function doHide() {
