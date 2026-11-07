@@ -192,10 +192,9 @@
     var tz = opts.tz || state.tz || detectFallbackTz();
     var t0 = Date.now();
 
-    var sources = [
-      function () { return fetchWorldTimeApi(tz); },
-      function () { return fetchTimeApiIo(tz); },
+   var sources = [
       function () { return fetchCloudflare(); },
+      function () { return fetchTimeApiIo(tz); },
       function () { return fetchWorldTimeApiIp(); }
     ];
 
@@ -292,7 +291,7 @@
 
   /* ── Public API ── */
   var api = {
-    version: '1.2',
+    version: '1.3',
 
     init: function (opts) {
       opts = opts || {};
