@@ -823,9 +823,32 @@ async function _savePost(status = 'draft') {
 async function _persistPosts(status) {
   const c = _state.composer;
   if (!c) return;
+let campaign = (SAFE.state?.data?.campaigns || []).find(x => x.id === c.campaignId);
 
-  const campaign = (SAFE.state?.data?.campaigns || []).find(x => x.id === c.campaignId);
-  if (!campaign) { SAFE.toast('Campaign not found.', 'error'); return; }
+/* Fallback: fetch the campaign from Firebase directly if it's not in
+   memory yet. This is the fix for "scheduled post disappears on reload"
+   — the composer used to silently bail when state.data.campaigns was
+   still empty or stale. */
+if (!campaign && c.campaignId) {
+  try {
+    const callFn = SAFE.callFn;
+    const db = ctx().db, ref = ctx().ref, get = ctx().get, P = ctx().P;
+    if (db && ref && get && P) {
+      const snap = await get(ref(db, P('campaigns/' + c.campaignId)));
+      if (snap.exists()) {
+        const val = snap.val();
+        campaign = { ...val, id: val.id || c.campaignId };
+      }
+    }
+  } catch (e) {
+    console.warn('[composer] campaign fetch fallback failed:', e);
+  }
+}
+
+if (!campaign) {
+  SAFE.toast('Campaign not found in Firebase. Reload the page and try again.', 'error');
+  return;
+}
 
   const existingIds = c._existingPostIds || {};
 
@@ -874,15 +897,45 @@ async function _persistPosts(status) {
   campaign.posts = [...filtered, ...fanout.posts];
   campaign.updatedAt = new Date().toISOString();
 
+ try {
+  if (typeof SAFE.upsertDoc !== 'function') throw new Error('upsertDoc unavailable');
+  await SAFE.upsertDoc('campaigns', campaign, campaign._rev);
+
+  /* Verify the write actually landed. This is the difference between
+     "the write succeeded" and "the toast said success but nothing was
+     actually saved" — which was causing the disappearing-posts bug. */
+  let verified = false;
   try {
-    if (typeof SAFE.upsertDoc !== 'function') throw new Error('upsertDoc unavailable');
-    await SAFE.upsertDoc('campaigns', campaign, campaign._rev);
-    SAFE.toast(
-      status === 'draft'
-        ? `Saved ${fanout.posts.length} draft${fanout.posts.length === 1 ? '' : 's'}.`
-        : `Scheduled ${fanout.posts.length} post${fanout.posts.length === 1 ? '' : 's'} for ${new Date(c.scheduledFor).toLocaleString('en-GB')}.`,
-      'success'
-    );
+    const db = ctx().db, ref = ctx().ref, get = ctx().get, P = ctx().P;
+    if (db && ref && get && P) {
+      const check = await get(ref(db, P('campaigns/' + c.campaignId)));
+      if (check.exists()) {
+        const saved = check.val();
+        const savedPosts = Array.isArray(saved.posts) ? saved.posts : [];
+        const foundIds = new Set(savedPosts.map(p => p && p.id).filter(Boolean));
+        const allThere = fanout.posts.every(p => foundIds.has(p.id));
+        verified = allThere;
+      }
+    }
+  } catch (verifyErr) {
+    console.warn('[composer] write verification failed:', verifyErr);
+  }
+
+  if (!verified) {
+    SAFE.toast('Save reported success but the posts did not appear in Firebase. Check rules and reload.', 'warning');
+    console.warn('[composer] verification failed — saved campaign does not contain the new posts', {
+      campaignId: c.campaignId,
+      expectedPostIds: fanout.posts.map(p => p.id),
+    });
+    return;
+  }
+
+  SAFE.toast(
+    status === 'draft'
+      ? `Saved ${fanout.posts.length} draft${fanout.posts.length === 1 ? '' : 's'}.`
+      : `Scheduled ${fanout.posts.length} post${fanout.posts.length === 1 ? '' : 's'} for ${new Date(c.scheduledFor).toLocaleString('en-GB')}.`,
+    'success'
+  );
     _closeComposer();
     try { SAFE.renderCampaigns?.(); } catch (_) {}
     try { window.Orbit?.renderActiveOrbitModule?.(); } catch (_) {}
