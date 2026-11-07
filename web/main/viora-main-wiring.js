@@ -938,10 +938,23 @@ export function attachEvents() {
   on($('vaultRefreshBtn'), 'click', () => { d.renderDocumentVault?.(); toast('Refreshed.', 'info'); });
   on($('vaultSearch'), 'input', () => d.renderDocumentVault?.());
   on($('vaultFilterCategory'), 'change', () => d.renderDocumentVault?.());
-  on($('vaultClearSearch'), 'click', () => {
+   on($('vaultClearSearch'), 'click', () => {
     const s = $('vaultSearch'); if (s) s.value = '';
     const c = $('vaultFilterCategory'); if (c) c.value = 'all';
     d.renderDocumentVault?.();
+  });
+
+  /* Personal Docs */
+  on($('personalDocsUploadBtn'), 'click', () => d.Viora?.openDocUpload?.('Admin', 'Personal Document'));
+
+  /* Client Docs */
+  on($('clientDocsRefreshBtn'), 'click', () => { try { renderClientDocs(); toast('Refreshed.', 'info'); } catch (_) {} });
+  on($('clientDocsSearch'), 'input', () => { try { renderClientDocs(); } catch (_) {} });
+  on($('clientDocsFilterClient'), 'change', () => { try { renderClientDocs(); } catch (_) {} });
+  on($('clientDocsClear'), 'click', () => {
+    const s = $('clientDocsSearch'); if (s) s.value = '';
+    const f = $('clientDocsFilterClient'); if (f) f.value = 'all';
+    try { renderClientDocs(); } catch (_) {}
   });
 
   /* Proposal studio */
