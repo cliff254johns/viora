@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
-// scholar.js — VIORA Scholar Admin Console
-// Single-file bootstrap. Robust data shape. Event-delegated nav.
+// scholar-admin-boot.js
+// Stand-alone bootstrap for VIORA Scholar Admin Console.
 // ═══════════════════════════════════════════════════════════════
 
 import { initializeApp, getApps, getApp } from "firebase/app";
@@ -48,8 +48,7 @@ function openModal(id) { const el = $(id); if (el) { el.classList.add("active");
 function closeModal(id) { const el = $(id); if (el) { el.classList.remove("active"); el.style.display = "none"; document.body.style.overflow = ""; } }
 document.addEventListener("click", (e) => { const closer = e.target.closest("[data-close]"); if (closer) { closeModal(closer.dataset.close); return; } if (e.target.classList && e.target.classList.contains("modal-overlay") && e.target.classList.contains("active")) closeModal(e.target.id); });
 
-const _charts = {};
-function destroyChart(id) { if (_charts[id]) { try { _charts[id].destroy(); } catch (e) {} delete _charts[id]; } }
+const _charts = {}; function destroyChart(id) { if (_charts[id]) { try { _charts[id].destroy(); } catch (e) {} delete _charts[id]; } }
 function safeCanvas(c) { try { c.getContext("2d"); return c; } catch { return null; } }
 function getTextColor() { return document.documentElement.getAttribute("data-theme") === "light" ? "#0a0a0f" : "#94a3b8"; }
 
@@ -71,7 +70,6 @@ const state = {
   operator: null, currentTab: "training-overview", charts: _charts
 };
 
-// ── D CONTEXT (built FIRST, then passed to initTraining) ──
 const D = {
   $, state, toast, escapeHtml, timeAgo, fmtDate, fmtBytes, fmtKES, uid,
   todayStr: () => new Date().toISOString().slice(0, 10),
@@ -83,12 +81,13 @@ const D = {
   setupCertStampDragging, renderTrainingCertificates, renderTrainingProgress, renderTrainingQuizzes, updateSidebarCounters: () => {}
 };
 
-// INIT TRAINING IMMEDIATELY (before any renderer can run)
 initTraining(D);
 try { D.AutoCertification = AutoCertification; } catch (e) {}
-bindTrainingEvents();
 
-// ── SPLASH ──
+// Step 3 — Wrap so one bad handler doesn't kill the shell
+try { bindTrainingEvents(); }
+catch (e) { console.warn("[sa] bindTrainingEvents failed:", e); }
+
 function showSplash(kind, title, subtitle) {
   const splash = $("saSplash"); if (!splash) return;
   splash.classList.remove("hidden"); splash.style.display = "flex";
@@ -99,12 +98,12 @@ function showSplash(kind, title, subtitle) {
     $("saDenyOut")?.addEventListener("click", () => signOut(auth).then(() => location.reload()));
   }
 }
+
 function hideSplash() {
   const s = $("saSplash"); if (s) s.style.display = "none";
   const shell = $("saShell"); if (shell) shell.style.display = "flex";
 }
 
-// ── TAB SWITCHER ──
 function switchTab(name) {
   const key = "training-" + name;
   state.currentTab = key;
@@ -133,7 +132,6 @@ function updateBadges() {
   if ($("saReqBadge")) { $("saReqBadge").textContent = requests; $("saReqBadge").style.display = requests > 0 ? "inline-block" : "none"; }
 }
 
-// ── DATA SUBSCRIPTIONS ──
 function subscribeTraining() {
   const PATHS = {
     trainingAccessRequests: "training/accessRequests", trainingCourses: "training/courses", trainingChecklists: "training/checklists",
@@ -174,7 +172,6 @@ function subscribeTraining() {
   });
 }
 
-// ── BOOT ADMIN ──
 function bootAdmin() {
   const bind = (id, evt, fn) => { const el = $(id); if (el && !el._saBound) { el._saBound = true; el.addEventListener(evt, fn); } };
 
@@ -190,15 +187,9 @@ function bootAdmin() {
   bind("rerunAutoAwardBtn", "click", () => AutoCertification?.backfillAll());
   bind("newCertTemplateBtn", "click", () => openCertTemplateEditor());
 
-  bind("saSignOutBtn", "click", () => { if (confirm("Sign out of Scholar Admin?")) signOut(auth).then(() => location.reload()); });
-  bind("saThemeBtn", "click", () => { const cur = document.documentElement.getAttribute("data-theme") || "dark"; const next = cur === "dark" ? "light" : "dark"; document.documentElement.setAttribute("data-theme", next); try { localStorage.setItem("viora_theme", next); } catch (e) {} $("saThemeBtn").querySelector("i").className = next === "dark" ? "fa-solid fa-moon" : "fa-solid fa-sun"; });
-  bind("saMobileToggle", "click", () => $("saSidebar")?.classList.toggle("open"));
-  bind("saSidebarOverlay", "click", () => $("saSidebar")?.classList.remove("open"));
-
-  // ── NAV CLICKS: Event delegation (works even if DOM changes) ──
+  // Bind Sidebar & Bottom Nav
   document.querySelectorAll("[data-sa-tab]").forEach((b) => {
-    if (b._saNavBound) return;
-    b._saNavBound = true;
+    if (b._saNavBound) return; b._saNavBound = true;
     b.addEventListener("click", (e) => {
       e.preventDefault();
       const tab = b.dataset.saTab;
@@ -206,13 +197,23 @@ function bootAdmin() {
     });
   });
 
+  bind("saSignOutBtn", "click", () => { if (confirm("Sign out of Scholar Admin?")) signOut(auth).then(() => location.reload()); });
+  bind("saThemeBtn", "click", () => { const cur = document.documentElement.getAttribute("data-theme") || "dark"; const next = cur === "dark" ? "light" : "dark"; document.documentElement.setAttribute("data-theme", next); try { localStorage.setItem("viora_theme", next); } catch (e) {} $("saThemeBtn").querySelector("i").className = next === "dark" ? "fa-solid fa-moon" : "fa-solid fa-sun"; });
+  bind("saMobileToggle", "click", () => $("saSidebar")?.classList.toggle("open"));
+  bind("saSidebarOverlay", "click", () => $("saSidebar")?.classList.remove("open"));
+
   try { const saved = localStorage.getItem("viora_theme"); if (saved) document.documentElement.setAttribute("data-theme", saved); } catch (e) {}
 
   subscribeTraining();
   switchTab("overview");
+
+  // Step 3: Bind training events again after shell & modals are parsed
+  setTimeout(() => {
+    try { bindTrainingEvents(); console.info("[sa] training events re-bound"); }
+    catch (e) { console.warn("[sa] late bindTrainingEvents failed:", e); }
+  }, 300);
 }
 
-// ── AUTH GATE ──
 onAuthStateChanged(auth, async (user) => {
   if (!user) { showSplash("deny", "Not signed in", "Scholar Admin requires an active VIORA session."); return; }
   try {
@@ -241,5 +242,3 @@ window.VioraTraining = {
   updateCeModule, addCeModule, removeCeModule, moveCeModule, updateCleTask, addCleTask, removeCleTask, handleReFile, openResourceFile,
   TrainingVioraAPI, debug: { state, db, auth }
 };
-
-console.info("[scholar-admin] booted — default Firebase app, session shared with main.html");
