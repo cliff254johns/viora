@@ -35,6 +35,265 @@
   --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
+/* ══════════════════════════════════════════════════════════════
+   DARK THEME
+   Every color token redefined for dark mode. Because the entire
+   stylesheet is driven by these variables, this single block
+   flips the whole site — including the announcement bar, all
+   sections, cards, modals, forms, dropdowns, and the cart drawer.
+   ══════════════════════════════════════════════════════════════ */
+[data-theme="dark"] {
+  /* Surfaces */
+  --primary: #0a0a0f;         /* page background */
+  --secondary: #16161c;       /* card / surface background */
+  --surface: #16161c;
+  --surface-2: #1f1f28;       /* elevated surface */
+
+  /* Accent */
+  --accent: #4b9eff;          /* brighter Apple blue for dark backgrounds */
+  --accent-glow: rgba(75, 158, 255, 0.22);
+  --accent-dim: rgba(75, 158, 255, 0.08);
+
+  /* Text — critical for legibility */
+  --text-primary: #f5f5f7;    /* near-white body text */
+  --text-secondary: #b8b8c0;  /* mid grey secondary text */
+  --text-muted: #8a8a94;      /* muted captions */
+
+  /* Semantic colors — brightened for dark backgrounds */
+  --success: #34d97e;
+  --warning: #ffa940;
+  --danger: #ff5c72;
+  --gold: #ffd24d;
+  --purple: #c084fc;
+  --pink: #ff4d7a;
+
+  /* Borders */
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.18);
+
+  /* Shadows — heavier in dark mode */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.65);
+}
+
+/* A few overrides that use hard-coded colors in the original CSS */
+
+/* Announcement bar — currently no theme vars */
+[data-theme="dark"] .announce-bar {
+  background: var(--secondary);
+  border-bottom-color: var(--border);
+  color: var(--text-secondary);
+}
+
+/* Main nav — background was hardcoded rgba(255,255,255,...) */
+[data-theme="dark"] .main-nav {
+  background: rgba(10, 10, 15, 0.72);
+  border-bottom-color: var(--border);
+}
+[data-theme="dark"] .main-nav.scrolled {
+  background: rgba(10, 10, 15, 0.9);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Login card in the HTML — hardcoded white */
+[data-theme="dark"] .login-card {
+  background: #16161c;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+}
+[data-theme="dark"] .login-card h1 { color: var(--text-primary); }
+[data-theme="dark"] .login-card p,
+[data-theme="dark"] .login-note { color: var(--text-secondary); }
+[data-theme="dark"] .login-card label { color: var(--text-primary); }
+[data-theme="dark"] .login-card input {
+  background: #1f1f28;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+}
+[data-theme="dark"] .login-card input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Section headers — the "Products" strip and any hardcoded white bg */
+[data-theme="dark"] .section {
+  background: var(--primary);
+}
+[data-theme="dark"] .section-dark {
+  background: var(--secondary);
+}
+
+/* Search bar — dropdown suggestion panel */
+[data-theme="dark"] .search-suggestions {
+  background: var(--secondary);
+  border-color: var(--border-strong);
+}
+
+/* Modals — the overlay tint is already dark, but ensure text inside */
+[data-theme="dark"] .modal-card {
+  background: var(--secondary);
+  border-color: var(--border-strong);
+}
+
+/* Product cards, carousels, case studies, faq, testimonials, steps */
+[data-theme="dark"] .product-card,
+[data-theme="dark"] .carousel-card,
+[data-theme="dark"] .case-card,
+[data-theme="dark"] .faq-item,
+[data-theme="dark"] .testi-card,
+[data-theme="dark"] .step-card,
+[data-theme="dark"] .newsletter,
+[data-theme="dark"] .hero-featured {
+  background: var(--secondary);
+  border-color: var(--border);
+}
+
+/* Product visual / carousel image fallbacks */
+[data-theme="dark"] .product-visual,
+[data-theme="dark"] .carousel-image,
+[data-theme="dark"] .product-visual-fallback,
+[data-theme="dark"] .carousel-image-fallback,
+[data-theme="dark"] .case-image,
+[data-theme="dark"] .crown-wrap {
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+
+/* Cart drawer + items */
+[data-theme="dark"] .cart-drawer {
+  background: var(--secondary);
+  border-left-color: var(--border);
+}
+[data-theme="dark"] .cart-item {
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+[data-theme="dark"] .cart-footer {
+  background: var(--secondary);
+  border-top-color: var(--border);
+}
+
+/* Reviews */
+[data-theme="dark"] .rev-summary,
+[data-theme="dark"] .rev-item,
+[data-theme="dark"] .rev-form {
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+[data-theme="dark"] .rev-empty {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+}
+[data-theme="dark"] .rev-star-select .rev-star {
+  color: rgba(255, 255, 255, 0.2);
+}
+[data-theme="dark"] .rev-star-select .rev-star.active {
+  color: var(--gold);
+}
+
+/* Toast — background is dark already, but ensure border reads */
+[data-theme="dark"] .toast {
+  background: var(--secondary);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+/* Mobile bottom nav — hardcoded rgba(255,255,255,0.92) */
+[data-theme="dark"] .mobile-bottom-nav {
+  background: rgba(10, 10, 15, 0.92);
+  border-top-color: var(--border);
+}
+
+/* Footer — light grey in light mode, needs dark swap */
+[data-theme="dark"] footer {
+  background: var(--surface-2);
+  border-top-color: var(--border);
+  color: var(--text-muted);
+}
+
+/* Trust strip */
+[data-theme="dark"] .trust-strip {
+  background: var(--secondary);
+  border-color: var(--border);
+}
+
+/* Announcement marquee — text should stay legible */
+[data-theme="dark"] .announce-track {
+  color: var(--text-secondary);
+}
+
+/* Buttons that used `background: var(--secondary)` on white */
+[data-theme="dark"] .btn-primary {
+  background: var(--accent);
+  color: #0a0a0f;
+}
+[data-theme="dark"] .btn-primary:hover {
+  background: #66aaff;
+}
+[data-theme="dark"] .btn-secondary,
+[data-theme="dark"] .btn-outline,
+[data-theme="dark"] .preview-btn,
+[data-theme="dark"] .btn-ghost {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+[data-theme="dark"] .btn-secondary:hover,
+[data-theme="dark"] .btn-outline:hover,
+[data-theme="dark"] .preview-btn:hover,
+[data-theme="dark"] .btn-ghost:hover {
+  background: var(--secondary);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Category buttons */
+[data-theme="dark"] .cat-btn {
+  background: var(--secondary);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+[data-theme="dark"] .cat-btn.active {
+  background: var(--accent);
+  color: #0a0a0f;
+  border-color: transparent;
+}
+[data-theme="dark"] .cat-btn.active i { color: #0a0a0f; }
+
+/* Inputs everywhere */
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background: var(--surface-2);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: var(--text-muted);
+}
+[data-theme="dark"] select option {
+  background: var(--secondary);
+  color: var(--text-primary);
+}
+
+/* Scrollbar — dark mode */
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.32);
+  background-clip: content-box;
+}
+
+/* Selection color */
+[data-theme="dark"] ::selection {
+  background: rgba(75, 158, 255, 0.3);
+  color: var(--text-primary);
+}
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 90px; }
 
