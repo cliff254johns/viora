@@ -4158,9 +4158,9 @@ case 'training-progress':
         openOrderDetail,
         viewTicket, closeTicketView, sendTicketReply, toggleTicketStatus,
         markTicketResolved, deleteTicket, getViewingTicketId,
-        TrainingVioraAPI,
+        
         openUserTraining:       (...a) => Viora.openUserTraining?.(...a),
-        revokeTrainingCertImpl,
+       
         approveTrainingRequest: (id) => Viora.approveTrainingRequest?.(id),
         rejectTrainingRequest:  (id) => Viora.rejectTrainingRequest?.(id),
         reopenTrainingRequest:  (id) => Viora.reopenTrainingRequest?.(id),
