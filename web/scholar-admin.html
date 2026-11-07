@@ -4,378 +4,289 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="theme-color" content="#0a0a0f" />
-<title>VIORA Scholar — Admin</title>
+<title>VIORA Scholar — Admin Console</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-
 <link rel="icon" type="image/png" href="https://viora.co.ke/viora.png">
-<link rel="apple-touch-icon" href="https://viora.co.ke/viora.png">
 
-<!-- Reuse the master admin styles -->
+<!-- Reuse the master admin styles for cards/tables/buttons -->
 <link rel="stylesheet" href="main.css" />
 
 <style>
-  /* Compact overrides — Scholar admin runs thinner than master admin */
-  body { margin: 0; padding: 0; background: var(--bg-body, #0a0a0f); color: var(--text-primary, #f0f4ff); font-family: 'Inter', sans-serif; }
-  .sa-shell { min-height: 100vh; display: flex; flex-direction: column; }
+  /* ── RESET & APP SHELL ── */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg-body, #0a0a0f); color: var(--text-primary, #f0f4ff); font-family: 'Inter', sans-serif; overflow-x: hidden; }
+  
+  .sa-app { display: flex; height: 100vh; overflow: hidden; }
 
+  /* ── SIDEBAR (Desktop) ── */
+  .sa-sidebar {
+    width: 260px; flex-shrink: 0; background: rgba(18,18,26,.85); backdrop-filter: blur(20px);
+    border-right: 1px solid var(--border-color, rgba(0,212,255,.14)); display: flex; flex-direction: column;
+    z-index: 100; transition: transform .3s ease;
+  }
+  .sa-brand { display: flex; align-items: center; gap: 12px; padding: 24px 20px; border-bottom: 1px solid var(--border-color, rgba(0,212,255,.14)); }
+  .sa-brand img { width: 36px; height: 36px; border-radius: 10px; object-fit: contain; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.35); }
+  .sa-brand div { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 1.05rem; color: var(--text-primary); line-height: 1.2; }
+  .sa-brand small { display: block; font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.2px; font-weight: 600; margin-top: 2px; }
+
+  .sa-nav { flex: 1; overflow-y: auto; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; scrollbar-width: none; }
+  .sa-nav::-webkit-scrollbar { display: none; }
+  
+  .sa-nav-item {
+    display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px;
+    color: var(--text-secondary); font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: .85rem;
+    background: transparent; border: none; cursor: pointer; transition: all .2s;
+  }
+  .sa-nav-item:hover { background: rgba(255,255,255,.05); color: var(--text-primary); }
+  .sa-nav-item.active { background: linear-gradient(135deg, rgba(0,212,255,.15), rgba(124,58,237,.15)); color: var(--accent-blue, #00d4ff); border-left: 3px solid var(--accent-blue, #00d4ff); }
+  .sa-nav-item i { font-size: 1.1rem; width: 20px; text-align: center; }
+  
+  .sa-sidebar-footer { padding: 16px; border-top: 1px solid var(--border-color, rgba(0,212,255,.14)); display: flex; align-items: center; justify-content: space-between; }
+
+  /* ── MAIN CONTENT ── */
+  .sa-wrapper { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg-body, #0a0a0f); }
+  
   .sa-topbar {
-    position: sticky; top: 0; z-index: 50;
-    display: flex; align-items: center; justify-content: space-between; gap: 16px;
-    padding: 14px 24px;
-    background: rgba(18,18,26,.72);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border-bottom: 1px solid var(--border-color, rgba(0,212,255,.14));
+    height: 60px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 24px;
+    background: rgba(18,18,26,.6); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-color, rgba(0,212,255,.14));
   }
-  .sa-brand { display: flex; align-items: center; gap: 12px; font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 1.05rem; color: var(--text-primary, #f0f4ff); }
-  .sa-brand img { width: 32px; height: 32px; border-radius: 10px; object-fit: contain; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.35); }
-  .sa-brand small { display: block; font-size: 10px; color: var(--text-secondary, #94a3b8); text-transform: uppercase; letter-spacing: 1.2px; font-weight: 600; margin-top: 2px; }
-  .sa-topbar-actions { display: flex; align-items: center; gap: 8px; }
-  .sa-topbar-actions .btn { font-size: .78rem; }
+  .sa-topbar-left { display: flex; align-items: center; gap: 16px; }
+  .sa-mobile-toggle { display: none; background: none; border: none; color: var(--text-primary); font-size: 1.2rem; cursor: pointer; }
+  .sa-topbar-right { display: flex; align-items: center; gap: 12px; }
 
-  .sa-tabs {
-    position: sticky; top: 62px; z-index: 49;
-    display: flex; gap: 4px; padding: 10px 24px; overflow-x: auto; scrollbar-width: none;
-    background: rgba(18,18,26,.55); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-    border-bottom: 1px solid var(--border-color, rgba(0,212,255,.14));
-  }
-  .sa-tabs::-webkit-scrollbar { display: none; }
-  .sa-tab {
-    flex-shrink: 0; background: transparent; border: 1px solid transparent;
-    color: var(--text-secondary, #94a3b8); padding: 9px 16px; border-radius: 40px;
-    font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: .8rem;
-    display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; cursor: pointer;
-    transition: all .22s ease;
-  }
-  .sa-tab:hover { background: var(--bg-input, rgba(26,26,46,.65)); color: var(--text-primary, #f0f4ff); }
-  .sa-tab.active {
-    background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%); color: #fff;
-    box-shadow: 0 6px 20px rgba(0,212,255,.35);
-  }
+  .sa-main { flex: 1; overflow-y: auto; padding: 32px 24px; position: relative; scroll-behavior: smooth; }
+  .sa-content { max-width: 1200px; margin: 0 auto; width: 100%; }
 
-  .sa-main { flex: 1; padding: 24px; max-width: 1400px; margin: 0 auto; width: 100%; }
-  .sa-pane { display: none; }
-  .sa-pane.active { display: block; animation: saFade .3s ease; }
+  .sa-pane { display: none; animation: saFade .3s ease; }
+  .sa-pane.active { display: block; }
   @keyframes saFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-  /* Access-denied / loading splash */
-  .sa-splash {
-    position: fixed; inset: 0; z-index: 1000;
-    display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px;
-    background: radial-gradient(circle at 20% 20%, #1E1B4B 0%, #0B1220 60%, #060913 100%);
-    color: #e2e8f0; text-align: center; padding: 24px;
-  }
-  .sa-splash.hidden { display: none; }
-  .sa-splash .icon { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
-  .sa-splash .icon.ok { background: linear-gradient(135deg,#22e6a0,#0d9e6e); color: #fff; }
-  .sa-splash .icon.deny { background: linear-gradient(135deg,#ff5c7c,#d92b4b); color: #fff; }
-  .sa-splash h1 { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; margin: 0; color: #F8FAFC; }
-  .sa-splash p { max-width: 420px; font-size: .9rem; line-height: 1.6; color: #94a3b8; margin: 0; }
-  .sa-spinner {
-    width: 44px; height: 44px; border: 3px solid rgba(0,212,255,.2);
-    border-top-color: #00d4ff; border-radius: 50%; animation: saSpin .8s linear infinite;
-  }
-  @keyframes saSpin { to { transform: rotate(360deg); } }
+  /* ── OVERLAY (for mobile sidebar) ── */
+  .sa-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); z-index: 90; display: none; opacity: 0; transition: opacity .3s; }
+  .sa-overlay.active { display: block; opacity: 1; }
 
-  /* Mobile */
+  /* ── MOBILE BOTTOM NAV ── */
+  .sa-bottom-nav {
+    display: none; position: fixed; bottom: 0; left: 0; right: 0; height: calc(64px + env(safe-area-inset-bottom));
+    background: rgba(18,18,26,.95); backdrop-filter: blur(20px); border-top: 1px solid var(--border-color); z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom); justify-content: space-around; align-items: center;
+  }
+  .sa-bnav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: none; color: var(--text-secondary); font-size: .65rem; font-weight: 600; cursor: pointer; padding: 8px 0; flex: 1; }
+  .sa-bnav-item i { font-size: 1.2rem; }
+  .sa-bnav-item.active { color: var(--accent-blue, #00d4ff); }
+
+  /* ── RESPONSIVE ── */
   @media (max-width: 768px) {
-    .sa-topbar { padding: 10px 14px; gap: 8px; flex-wrap: wrap; }
-    .sa-brand { font-size: .95rem; }
-    .sa-brand small { display: none; }
-    .sa-tabs { top: auto; padding: 8px 12px; }
-    .sa-main { padding: 14px; }
-  }
-    /* ── FIX 1 & 3: Force page scroll and fix tab overlap ── */
-  html, body {
-    height: auto !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-    background: #0a0a0f;
-  }
-  
-  .sa-tabs {
-    position: sticky !important;
-    top: 60px !important; /* Sits perfectly under the topbar */
-    z-index: 100 !important;
-    background: rgba(18,18,26,0.95) !important;
-    backdrop-filter: blur(20px) !important;
-  }
-
-  .sa-main {
-    padding-top: 20px !important;
-    min-height: calc(100vh - 150px) !important;
-  }
-
-  /* Ensure the KPI grid doesn't overflow the screen width */
-  .kpi-grid {
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
-    gap: 14px !important;
+    .sa-sidebar { position: fixed; top: 0; bottom: 0; left: 0; transform: translateX(-100%); }
+    .sa-sidebar.open { transform: translateX(0); }
+    .sa-mobile-toggle { display: block; }
+    .sa-main { padding: 20px 16px 100px; }
+    .sa-bottom-nav { display: flex; }
+    .sa-topbar { padding: 0 16px; }
+    .sa-brand { padding: 16px; }
+    
+    /* Make tables scroll horizontally on mobile */
+    .table-wrapper { overflow-x: auto; }
+    table { min-width: 700px; }
+    
+    .kpi-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
   }
 </style>
 </head>
-<body data-scholar-admin="true">
+<body>
 
-<!-- ═══ SPLASH (shown until auth verifies) ═══ -->
-<div id="saSplash" class="sa-splash">
-  <div class="sa-spinner"></div>
-  <h1>Verifying access…</h1>
-  <p>Confirming your admin permissions on VIORA Scholar.</p>
+<div id="saSplash" class="sa-overlay active" style="display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:1000;">
+  <div class="sa-spinner" style="width:44px;height:44px;border:3px solid rgba(0,212,255,.2);border-top-color:#00d4ff;border-radius:50%;animation:saSpin .8s linear infinite;"></div>
+  <h1 style="margin-top:20px;font-family:'Space Grotesk';font-size:1.4rem;">Verifying access…</h1>
 </div>
 
-<!-- ═══ SHELL (hidden until auth verifies) ═══ -->
-<div id="saShell" class="sa-shell" style="display:none;">
+<div class="sa-app" id="saShell" style="display:none;">
+  
+  <!-- SIDEBAR OVERLAY (Mobile) -->
+  <div class="sa-overlay" id="saSidebarOverlay"></div>
 
-  <header class="sa-topbar">
+  <!-- SIDEBAR -->
+  <aside class="sa-sidebar" id="saSidebar">
     <div class="sa-brand">
       <img src="https://viora.co.ke/viora.png" alt="VIORA" />
-      <div>
-        VIORA Scholar
-        <small>Admin Console</small>
+      <div>VIORA Scholar<small>Admin Console</small></div>
+    </div>
+    
+    <div class="sa-nav">
+      <button class="sa-nav-item active" data-sa-tab="overview"><i class="fa-solid fa-graduation-cap"></i> Dashboard</button>
+      <button class="sa-nav-item" data-sa-tab="requests"><i class="fa-solid fa-user-clock"></i> Access Requests <span class="nav-badge" id="saReqBadge" style="display:none; margin-left:auto;">0</span></button>
+      <button class="sa-nav-item" data-sa-tab="users"><i class="fa-solid fa-users"></i> Users</button>
+      <button class="sa-nav-item" data-sa-tab="progress"><i class="fa-solid fa-chart-line"></i> Progress</button>
+      <button class="sa-nav-item" data-sa-tab="quizzes"><i class="fa-solid fa-file-circle-question"></i> Quizzes <span class="nav-badge" id="saQuizBadge" style="display:none; margin-left:auto;">0</span></button>
+      <button class="sa-nav-item" data-sa-tab="certificates"><i class="fa-solid fa-award"></i> Certificates</button>
+    </div>
+
+    <div class="sa-sidebar-footer">
+      <span class="badge badge-purple" id="saWhoami" style="font-size:.7rem;">—</span>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-outline btn-sm" id="saThemeBtn" title="Toggle theme"><i class="fa-solid fa-moon"></i></button>
+        <button class="btn btn-danger btn-sm" id="saSignOutBtn" title="Sign out"><i class="fa-solid fa-right-from-bracket"></i></button>
       </div>
     </div>
-    <div class="sa-topbar-actions">
-      <span class="live-sync" style="display:inline-flex;align-items:center;gap:6px;font-size:.7rem;color:var(--accent-green,#22e6a0);background:rgba(34,230,160,.1);padding:4px 10px;border-radius:20px;border:1px solid rgba(34,230,160,.3);">
-        <span style="width:7px;height:7px;border-radius:50%;background:var(--accent-green,#22e6a0);box-shadow:0 0 8px rgba(34,230,160,.9);"></span>
-        Live sync
-      </span>
-      <span class="badge badge-purple" id="saWhoami" style="font-size:.7rem;">—</span>
-      <button class="btn btn-outline btn-sm" id="saThemeBtn" title="Toggle theme">
-        <i class="fa-solid fa-moon"></i>
-      </button>
-      <button class="btn btn-danger btn-sm" id="saSignOutBtn" title="Sign out">
-        <i class="fa-solid fa-right-from-bracket"></i>
-      </button>
-    </div>
-  </header>
+  </aside>
 
-  <nav class="sa-tabs" role="tablist">
-    <button class="sa-tab active" data-sa-tab="overview"     role="tab"><i class="fa-solid fa-graduation-cap"></i> Overview</button>
-    <button class="sa-tab"        data-sa-tab="requests"     role="tab"><i class="fa-solid fa-user-clock"></i> Requests <span class="nav-badge" id="saReqBadge" style="display:none;">0</span></button>
-    <button class="sa-tab"        data-sa-tab="users"        role="tab"><i class="fa-solid fa-users"></i> Users</button>
-    <button class="sa-tab"        data-sa-tab="progress"     role="tab"><i class="fa-solid fa-chart-line"></i> Progress</button>
-    <button class="sa-tab"        data-sa-tab="quizzes"      role="tab"><i class="fa-solid fa-file-circle-question"></i> Quizzes <span class="nav-badge" id="saQuizBadge" style="display:none;">0</span></button>
-    <button class="sa-tab"        data-sa-tab="certificates" role="tab"><i class="fa-solid fa-award"></i> Certificates</button>
+  <!-- MAIN WRAPPER -->
+  <div class="sa-wrapper">
+    <header class="sa-topbar">
+      <div class="sa-topbar-left">
+        <button class="sa-mobile-toggle" id="saMobileToggle"><i class="fa-solid fa-bars"></i></button>
+        <span style="font-family:'Space Grotesk';font-weight:700;font-size:.9rem;">Scholar Dashboard</span>
+      </div>
+      <div class="sa-topbar-right">
+        <span class="live-sync" style="display:inline-flex;align-items:center;gap:6px;font-size:.7rem;color:var(--accent-green,#22e6a0);background:rgba(34,230,160,.1);padding:4px 10px;border-radius:20px;border:1px solid rgba(34,230,160,.3);">
+          <span style="width:7px;height:7px;border-radius:50%;background:var(--accent-green,#22e6a0);box-shadow:0 0 8px rgba(34,230,160,.9);"></span> Live sync
+        </span>
+      </div>
+    </header>
+
+    <main class="sa-main">
+      <div class="sa-content">
+
+        <!-- ═══ OVERVIEW ═══ -->
+        <section id="sa-pane-overview" class="sa-pane active">
+          <div class="page-header">
+            <div>
+              <h1><span class="pillar-icon" style="background:linear-gradient(135deg,#a855f7,#00d4ff);"><i class="fa-solid fa-graduation-cap"></i></span> <span class="highlight">Training Dashboard</span></h1>
+              <p class="page-desc">Courses, checklists, and resources published to the learner portal.</p>
+            </div>
+            <div class="actions">
+              <button class="btn btn-outline btn-sm" onclick="window.open('/trainingportal.html','_blank')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Learner Portal</button>
+              <button class="btn btn-primary" id="addCourseBtn"><i class="fa-solid fa-plus"></i> New Course</button>
+              <button class="btn btn-success" id="addChecklistBtn"><i class="fa-solid fa-list-check"></i> New Checklist</button>
+              <button class="btn btn-purple" id="addResourceBtn"><i class="fa-solid fa-folder-plus"></i> New Resource</button>
+            </div>
+          </div>
+          <div class="kpi-grid" id="trainingOverviewKpi"></div>
+          <div class="kpi-grid" id="trainingPendingSnapshot" style="margin-top:12px;"></div>
+          <div class="card" id="trainingRecentActivity" style="padding:16px;margin-top:16px;"></div>
+          <div class="chart-grid" style="margin-top:16px;">
+            <div class="chart-box">
+              <h4><i class="fa-solid fa-book-open"></i> Courses</h4>
+              <div class="table-wrapper" style="background:transparent;border:none;box-shadow:none;"><table><thead><tr><th>Title</th><th>Category</th><th>Level</th><th>Modules</th><th>Required For</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="trainingCoursesBody"></tbody></table></div>
+            </div>
+            <div class="chart-box">
+              <h4><i class="fa-solid fa-list-check"></i> Onboarding Checklists</h4>
+              <div class="table-wrapper" style="background:transparent;border:none;box-shadow:none;"><table><thead><tr><th>Title</th><th>Target Role</th><th>Tasks</th></tr></thead><tbody id="trainingChecklistsBody"></tbody></table></div>
+            </div>
+            <div class="chart-box chart-full">
+              <h4><i class="fa-solid fa-folder-tree"></i> Resources</h4>
+              <div class="table-wrapper" style="background:transparent;border:none;box-shadow:none;"><table><thead><tr><th>Title</th><th>Category</th><th>Type</th><th>Added</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="trainingResourcesBody"></tbody></table></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══ REQUESTS ═══ -->
+        <section id="sa-pane-requests" class="sa-pane">
+          <div class="page-header">
+            <div><h1><span class="pillar-icon" style="background:linear-gradient(135deg,#ffc857,#b8860b);"><i class="fa-solid fa-user-clock"></i></span> <span class="highlight">Access Requests</span></h1><p class="page-desc">Learners who signed up and are awaiting approval.</p></div>
+            <div class="actions"><button class="btn btn-outline btn-sm" id="trainingRequestsRefreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button></div>
+          </div>
+          <div class="kpi-grid" id="trainingRequestsKpi"></div>
+          <div class="toolbar">
+            <div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input id="trainingRequestsSearch" placeholder="Search by name or email..." /></div>
+            <select id="trainingRequestsFilter"><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="all">All</option></select>
+            <button class="btn btn-outline btn-sm" id="trainingRequestsClearSearch">Clear</button>
+          </div>
+          <div class="table-wrapper"><table><thead><tr><th>Requested</th><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Client</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="trainingRequestsBody"></tbody></table></div>
+        </section>
+
+        <!-- ═══ USERS ═══ -->
+        <section id="sa-pane-users" class="sa-pane">
+          <div class="page-header">
+            <div><h1><span class="pillar-icon" style="background:linear-gradient(135deg,#00d4ff,#7c3aed);"><i class="fa-solid fa-users"></i></span> <span class="highlight">Training Users</span></h1><p class="page-desc">Every learner and trainer in the Scholar system.</p></div>
+            <div class="actions"><button class="btn btn-outline btn-sm" id="trainingUsersRefreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button></div>
+          </div>
+          <div class="toolbar">
+            <div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input id="trainingUserSearch" placeholder="Search by name or email..." /></div>
+            <select id="trainingUserRoleFilter"><option value="all">All Roles</option><option value="admin">Admin</option><option value="exec">Exec</option><option value="trainer">Trainer</option><option value="learner">Learner</option></select>
+            <select id="trainingUserCourseFilter"><option value="all">Any Course</option></select>
+            <button class="btn btn-outline btn-sm" id="trainingClearFilters"><i class="fa-solid fa-xmark"></i> Clear</button>
+          </div>
+          <div class="kpi-grid" id="trainingUsersKpi"></div>
+          <div class="table-wrapper"><table><thead><tr><th>User</th><th>Role</th><th>Type</th><th>Enrolled</th><th>Progress</th><th>Avg Score</th><th>Certificates</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="trainingUsersBody"></tbody></table></div>
+        </section>
+
+        <!-- ═══ PROGRESS ═══ -->
+        <section id="sa-pane-progress" class="sa-pane">
+          <div class="page-header">
+            <div><h1><span class="pillar-icon" style="background:linear-gradient(135deg,#22e6a0,#0d9e6e);"><i class="fa-solid fa-chart-line"></i></span> <span class="highlight">Training Progress</span></h1><p class="page-desc">Per-user enrollment, completion, and certificate tracking.</p></div>
+            <div class="actions"><button class="btn btn-outline btn-sm" id="trainingRefreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button><button class="btn btn-primary btn-sm" id="trainingEnrollUserBtn"><i class="fa-solid fa-user-plus"></i> Enroll User</button></div>
+          </div>
+          <div class="kpi-grid" id="trainingProgressKpi"></div>
+          <div class="chart-box">
+            <h4><i class="fa-solid fa-certificate"></i> Issued Certificates</h4>
+            <div class="table-wrapper" style="background:transparent;border:none;box-shadow:none;"><table><thead><tr><th>User</th><th>Course</th><th>Score</th><th>Issued</th><th>Certificate ID</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="trainingCertsBody"></tbody></table></div>
+          </div>
+        </section>
+
+        <!-- ═══ QUIZZES ═══ -->
+        <section id="sa-pane-quizzes" class="sa-pane">
+          <div class="page-header">
+            <div><h1><span class="pillar-icon" style="background:linear-gradient(135deg,#a855f7,#00d4ff);"><i class="fa-solid fa-file-circle-question"></i></span> <span class="highlight">Quiz Submissions</span></h1><p class="page-desc">Grade submissions and award certificates.</p></div>
+            <div class="actions">
+              <button class="btn btn-outline btn-sm" id="quizzesRefreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button>
+              <select id="quizFilterStatus" class="btn btn-outline btn-sm" style="padding:6px 12px;"><option value="all">All Statuses</option><option value="submitted">Submitted</option><option value="graded">Graded</option><option value="awarded">Awarded</option></select>
+            </div>
+          </div>
+          <div class="kpi-grid" id="quizzesKpi"></div>
+          <div class="toolbar"><div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input id="quizzesSearch" placeholder="Search by trainee, email, or course..." /></div><button class="btn btn-outline btn-sm" id="quizzesClearSearch">Clear</button></div>
+          <div class="table-wrapper"><table><thead><tr><th>Submitted</th><th>Trainee</th><th>Course</th><th>Auto-Score</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="quizzesBody"></tbody></table></div>
+        </section>
+
+        <!-- ═══ CERTIFICATES ═══ -->
+        <section id="sa-pane-certificates" class="sa-pane">
+          <div class="page-header">
+            <div><h1><span class="pillar-icon" style="background:linear-gradient(135deg,#ffc857,#b8860b);"><i class="fa-solid fa-award"></i></span> <span class="highlight">Training Certificates</span></h1><p class="page-desc">Award, review, and revoke certificates.</p></div>
+            <div class="actions">
+              <button class="btn btn-outline btn-sm" id="certsRefreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button>
+              <button class="btn btn-purple btn-sm" id="rerunAutoAwardBtn"><i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Award</button>
+              <button class="btn btn-gold" id="manualAwardCertBtn"><i class="fa-solid fa-plus"></i> Manual Award</button>
+              <button class="btn btn-primary btn-sm" id="newCertTemplateBtn"><i class="fa-solid fa-image"></i> New Template</button>
+            </div>
+          </div>
+          <div class="kpi-grid" id="certsKpi"></div>
+          <div id="certTemplateGrid" class="card-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:20px;"></div>
+          <div class="toolbar"><div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input id="certsSearch" placeholder="Search by trainee or certificate ID..." /></div><button class="btn btn-outline btn-sm" id="certsClearSearch">Clear</button></div>
+          <div class="table-wrapper"><table><thead><tr><th>Issued</th><th>Trainee</th><th>Course</th><th>Score</th><th>Certificate ID</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="certsBody"></tbody></table></div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="sa-bottom-nav">
+    <button class="sa-bnav-item active" data-sa-tab="overview"><i class="fa-solid fa-house"></i><span>Home</span></button>
+    <button class="sa-bnav-item" data-sa-tab="requests"><i class="fa-solid fa-user-clock"></i><span>Requests</span></button>
+    <button class="sa-bnav-item" data-sa-tab="users"><i class="fa-solid fa-users"></i><span>Users</span></button>
+    <button class="sa-bnav-item" data-sa-tab="quizzes"><i class="fa-solid fa-file-circle-question"></i><span>Quizzes</span></button>
+    <button class="sa-bnav-item" data-sa-tab="certificates"><i class="fa-solid fa-award"></i><span>Certs</span></button>
   </nav>
 
-  <main class="sa-main">
-
-    <!-- ═══ OVERVIEW ═══ -->
-    <section id="sa-pane-overview" class="sa-pane active">
-      <div class="page-header">
-        <div>
-          <h1><span class="pillar-icon" style="background:linear-gradient(135deg,#a855f7,#00d4ff);"><i class="fa-solid fa-graduation-cap"></i></span> <span class="highlight">Training Dashboard</span></h1>
-          <p class="page-desc">Courses, checklists, and resources published to the learner portal.</p>
-        </div>
-        <div class="actions">
-          <button class="btn btn-outline btn-sm" onclick="window.open('/trainingportal.html','_blank')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Learner Portal</button>
-          <button class="btn btn-primary" id="addCourseBtn"><i class="fa-solid fa-plus"></i> New Course</button>
-          <button class="btn btn-success" id="addChecklistBtn"><i class="fa-solid fa-list-check"></i> New Checklist</button>
-          <button class="btn btn-purple" id="addResourceBtn"><i class="fa-solid fa-folder-plus"></i> New Resource</button>
-        </div>
-      </div>
-      <div class="kpi-grid" id="trainingOverviewKpi"></div>
-      <div class="kpi-grid" id="trainingPendingSnapshot" style="margin-top:12px;"></div>
-      <div class="card" id="trainingRecentActivity" style="padding:16px;margin-top:16px;"></div>
-      <div class="chart-grid" style="margin-top:16px;">
-        <div class="chart-box">
-          <h4><i class="fa-solid fa-book-open"></i> Courses</h4>
-          <div class="table-wrapper" style="background:transparent;border:none;box-shadow:none;">
-            <table><thead><tr><th>Title</th><th>Category</th><th>Level</th><th>Modules</th><th>Required For</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="trainingCoursesBody"></tbody></table>
-          </div>
-        </div>
-        <div class="chart-box">
-          <h4><i class="fa-solid fa-list-check"></i> Onboarding Checklists</h4>
-          <div class="table-wrapper" style="background:transparent;border:none;box-shadow:none;">
-            <table><thead><tr><th>Title</th><th>Target Role</th><th>Tasks</th></tr></thead><tbody id="trainingChecklistsBody"></tbody></table>
-          </div>
-        </div>
-        <div class="chart-box chart-full">
-          <h4><i class="fa-solid fa-folder-tree"></i> Resources</h4>
-          <div class="table-wrapper" style="background:transparent;border:none;box-shadow:none;">
-            <table><thead><tr><th>Title</th><th>Category</th><th>Type</th><th>Added</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="trainingResourcesBody"></tbody></table>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══ REQUESTS ═══ -->
-    <section id="sa-pane-requests" class="sa-pane">
-      <div class="page-header">
-        <div>
-          <h1><span class="pillar-icon" style="background:linear-gradient(135deg,#ffc857,#b8860b);"><i class="fa-solid fa-user-clock"></i></span> <span class="highlight">Access Requests</span></h1>
-          <p class="page-desc">Learners who signed up and are awaiting approval.</p>
-        </div>
-        <div class="actions">
-          <button class="btn btn-outline btn-sm" id="trainingRequestsRefreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button>
-        </div>
-      </div>
-      <div class="kpi-grid" id="trainingRequestsKpi"></div>
-      <div class="toolbar">
-        <div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input id="trainingRequestsSearch" placeholder="Search by name or email..." /></div>
-        <select id="trainingRequestsFilter">
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-          <option value="all">All</option>
-        </select>
-        <button class="btn btn-outline btn-sm" id="trainingRequestsClearSearch">Clear</button>
-      </div>
-      <div class="table-wrapper">
-        <table>
-          <thead><tr><th>Requested</th><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Client</th><th style="text-align:right;">Actions</th></tr></thead>
-          <tbody id="trainingRequestsBody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- ═══ USERS ═══ -->
-    <section id="sa-pane-users" class="sa-pane">
-      <div class="page-header">
-        <div>
-          <h1><span class="pillar-icon" style="background:linear-gradient(135deg,#00d4ff,#7c3aed);"><i class="fa-solid fa-users"></i></span> <span class="highlight">Training Users</span></h1>
-          <p class="page-desc">Every learner and trainer in the Scholar system.</p>
-        </div>
-        <div class="actions">
-          <button class="btn btn-outline btn-sm" id="trainingUsersRefreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button>
-        </div>
-      </div>
-      <div class="toolbar">
-        <div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input id="trainingUserSearch" placeholder="Search by name or email..." /></div>
-        <select id="trainingUserRoleFilter">
-          <option value="all">All Roles</option>
-          <option value="admin">Admin</option>
-          <option value="exec">Exec</option>
-          <option value="trainer">Trainer</option>
-          <option value="learner">Learner</option>
-        </select>
-        <select id="trainingUserCourseFilter"><option value="all">Any Course</option></select>
-        <button class="btn btn-outline btn-sm" id="trainingClearFilters"><i class="fa-solid fa-xmark"></i> Clear</button>
-      </div>
-      <div class="kpi-grid" id="trainingUsersKpi"></div>
-      <div class="table-wrapper">
-        <table>
-          <thead><tr><th>User</th><th>Role</th><th>Type</th><th>Enrolled</th><th>Progress</th><th>Avg Score</th><th>Certificates</th><th style="text-align:right;">Actions</th></tr></thead>
-          <tbody id="trainingUsersBody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- ═══ PROGRESS ═══ -->
-    <section id="sa-pane-progress" class="sa-pane">
-      <div class="page-header">
-        <div>
-          <h1><span class="pillar-icon" style="background:linear-gradient(135deg,#22e6a0,#0d9e6e);"><i class="fa-solid fa-chart-line"></i></span> <span class="highlight">Training Progress</span></h1>
-          <p class="page-desc">Per-user enrollment, completion, and certificate tracking.</p>
-        </div>
-        <div class="actions">
-          <button class="btn btn-outline btn-sm" id="trainingRefreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button>
-          <button class="btn btn-primary btn-sm" id="trainingEnrollUserBtn"><i class="fa-solid fa-user-plus"></i> Enroll User</button>
-        </div>
-      </div>
-      <div class="kpi-grid" id="trainingProgressKpi"></div>
-      <div class="chart-box" style="margin-bottom:20px;">
-        <h4><i class="fa-solid fa-users"></i> Registered Users <span style="color:var(--text-light);font-weight:400;">— click any row to manage</span></h4>
-        <div class="table-wrapper" style="background:transparent;border:none;box-shadow:none;">
-          <table><thead><tr><th>User</th><th>Role</th><th>Enrolled</th><th>Progress</th><th>Avg Score</th><th>Certificates</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="trainingUsersBodyProgress"></tbody></table>
-        </div>
-      </div>
-      <div class="chart-box">
-        <h4><i class="fa-solid fa-certificate"></i> Issued Certificates</h4>
-        <div class="table-wrapper" style="background:transparent;border:none;box-shadow:none;">
-          <table><thead><tr><th>User</th><th>Course</th><th>Score</th><th>Issued</th><th>Certificate ID</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="trainingCertsBody"></tbody></table>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══ QUIZZES ═══ -->
-    <section id="sa-pane-quizzes" class="sa-pane">
-      <div class="page-header">
-        <div>
-          <h1><span class="pillar-icon" style="background:linear-gradient(135deg,#a855f7,#00d4ff);"><i class="fa-solid fa-file-circle-question"></i></span> <span class="highlight">Quiz Submissions</span></h1>
-          <p class="page-desc">Grade submissions and award certificates.</p>
-        </div>
-        <div class="actions">
-          <button class="btn btn-outline btn-sm" id="quizzesRefreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button>
-          <select id="quizFilterStatus" class="btn btn-outline btn-sm" style="padding:6px 12px;">
-            <option value="all">All Statuses</option>
-            <option value="submitted">Submitted (pending)</option>
-            <option value="graded">Graded</option>
-            <option value="awarded">Certificate Awarded</option>
-          </select>
-        </div>
-      </div>
-      <div class="kpi-grid" id="quizzesKpi"></div>
-      <div class="toolbar">
-        <div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input id="quizzesSearch" placeholder="Search by trainee, email, or course..." /></div>
-        <button class="btn btn-outline btn-sm" id="quizzesClearSearch">Clear</button>
-      </div>
-      <div class="table-wrapper">
-        <table>
-          <thead><tr><th>Submitted</th><th>Trainee</th><th>Course</th><th>Auto-Score</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
-          <tbody id="quizzesBody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- ═══ CERTIFICATES ═══ -->
-    <section id="sa-pane-certificates" class="sa-pane">
-      <div class="page-header">
-        <div>
-          <h1><span class="pillar-icon" style="background:linear-gradient(135deg,#ffc857,#b8860b);"><i class="fa-solid fa-award"></i></span> <span class="highlight">Training Certificates</span></h1>
-          <p class="page-desc">Award, review, and revoke certificates.</p>
-        </div>
-        <div class="actions">
-          <button class="btn btn-outline btn-sm" id="certsRefreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button>
-          <button class="btn btn-purple btn-sm" id="rerunAutoAwardBtn"><i class="fa-solid fa-wand-magic-sparkles"></i> Re-run Auto-Award</button>
-          <button class="btn btn-gold" id="manualAwardCertBtn"><i class="fa-solid fa-plus"></i> Manual Award</button>
-          <button class="btn btn-primary btn-sm" id="newCertTemplateBtn"><i class="fa-solid fa-image"></i> New Template</button>
-        </div>
-      </div>
-      <div class="kpi-grid" id="certsKpi"></div>
-      <div id="certTemplateGrid" class="card-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:20px;"></div>
-      <div class="toolbar">
-        <div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input id="certsSearch" placeholder="Search by trainee or certificate ID..." /></div>
-        <button class="btn btn-outline btn-sm" id="certsClearSearch">Clear</button>
-      </div>
-      <div class="table-wrapper">
-        <table>
-          <thead><tr><th>Issued</th><th>Trainee</th><th>Course</th><th>Score</th><th>Certificate ID</th><th style="text-align:right;">Actions</th></tr></thead>
-          <tbody id="certsBody"></tbody>
-        </table>
-      </div>
-    </section>
-
-  </main>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
-     MODALS — copied verbatim from main.html
-     (courseEditor, checklistEditor, resourceEditor, certTemplateEditor,
-      trainingUserModal, trainingEnrollModal, certPreviewModal)
+     MODALS (Verbatim from main.html, required by training.js)
      ═══════════════════════════════════════════════════════════ -->
 
 <div class="modal-overlay" id="courseEditorModal"><div class="modal xl">
   <h2><span class="modal-icon"><i class="fa-solid fa-book-open"></i></span><span id="courseEditorTitle">New Course</span></h2>
   <input type="hidden" id="ceCourseId" />
-  <div class="form-row">
-    <div><label>Course ID *</label><input id="ceId" placeholder="intro-to-viora" required /></div>
-    <div><label>Level</label><select id="ceLevel"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></div>
-  </div>
-  <label>Title *</label><input id="ceTitle" placeholder="e.g. Introduction to Viora" required />
+  <div class="form-row"><div><label>Course ID *</label><input id="ceId" placeholder="intro-to-viora" required /></div><div><label>Level</label><select id="ceLevel"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></div></div>
+  <label>Title *</label><input id="ceTitle" required />
   <label>Description</label><textarea id="ceDescription" rows="2"></textarea>
-  <div class="form-row">
-    <div><label>Category</label><select id="ceCategory"><option>Onboarding</option><option>Sales</option><option>Marketing</option><option>Operations</option><option>Finance</option><option>Product</option><option>Compliance</option><option>Leadership</option><option>Technical</option><option>Other</option></select></div>
-    <div><label>Required For (roles, comma-separated)</label><input id="ceRequiredFor" placeholder="sales,marketing" /></div>
-  </div>
-  <div style="display:flex;justify-content:space-between;align-items:center;margin:22px 0 10px;">
-    <h4 style="font-size:.82rem;text-transform:uppercase;color:var(--text-secondary);letter-spacing:.6px;margin:0;"><i class="fa-solid fa-cubes"></i> Modules (<span id="ceModuleCount">0</span>)</h4>
-    <button type="button" class="btn btn-outline btn-sm" id="ceAddModuleBtn"><i class="fa-solid fa-plus"></i> Add Module</button>
-  </div>
+  <div class="form-row"><div><label>Category</label><select id="ceCategory"><option>Onboarding</option><option>Sales</option><option>Marketing</option><option>Operations</option><option>Finance</option><option>Product</option><option>Compliance</option><option>Leadership</option><option>Technical</option><option>Other</option></select></div><div><label>Required For</label><input id="ceRequiredFor" placeholder="sales,marketing" /></div></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin:22px 0 10px;"><h4 style="font-size:.82rem;text-transform:uppercase;color:var(--text-secondary);margin:0;"><i class="fa-solid fa-cubes"></i> Modules (<span id="ceModuleCount">0</span>)</h4><button type="button" class="btn btn-outline btn-sm" id="ceAddModuleBtn"><i class="fa-solid fa-plus"></i> Add Module</button></div>
   <div id="ceModulesList" style="max-height:520px;overflow-y:auto;padding:4px;"></div>
   <div class="form-actions" style="margin-top:20px;"><button type="button" class="btn btn-outline" data-close="courseEditorModal">Cancel</button><button type="button" class="btn btn-success" id="ceSaveBtn"><i class="fa-solid fa-check"></i> Save Course</button></div>
 </div></div>
@@ -383,16 +294,10 @@
 <div class="modal-overlay" id="checklistEditorModal"><div class="modal">
   <h2><span class="modal-icon"><i class="fa-solid fa-list-check"></i></span><span id="checklistEditorTitle">New Checklist</span></h2>
   <input type="hidden" id="cleChecklistId" />
-  <div class="form-row">
-    <div><label>Checklist ID *</label><input id="cleId" placeholder="sales-onboarding" required /></div>
-    <div><label>Target Role</label><select id="cleTargetRole"><option value="">All</option><option value="exec">Exec</option><option value="admin">Admin</option><option value="sales">Sales</option><option value="marketing">Marketing</option><option value="ops">Ops</option><option value="finance">Finance</option><option value="hr">HR</option></select></div>
-  </div>
-  <label>Title *</label><input id="cleTitle" placeholder="e.g. Sales Onboarding" required />
+  <div class="form-row"><div><label>Checklist ID *</label><input id="cleId" required /></div><div><label>Target Role</label><select id="cleTargetRole"><option value="">All</option><option value="exec">Exec</option><option value="admin">Admin</option><option value="sales">Sales</option><option value="marketing">Marketing</option><option value="ops">Ops</option><option value="finance">Finance</option><option value="hr">HR</option></select></div></div>
+  <label>Title *</label><input id="cleTitle" required />
   <label>Description</label><textarea id="cleDescription" rows="2"></textarea>
-  <div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 8px;">
-    <h4 style="font-size:.78rem;text-transform:uppercase;color:var(--text-secondary);letter-spacing:.5px;margin:0;">Tasks (<span id="cleTaskCount">0</span>)</h4>
-    <button type="button" class="btn btn-outline btn-sm" id="cleAddTaskBtn"><i class="fa-solid fa-plus"></i> Add Task</button>
-  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 8px;"><h4 style="font-size:.78rem;text-transform:uppercase;color:var(--text-secondary);margin:0;">Tasks (<span id="cleTaskCount">0</span>)</h4><button type="button" class="btn btn-outline btn-sm" id="cleAddTaskBtn"><i class="fa-solid fa-plus"></i> Add Task</button></div>
   <div id="cleTasksList"></div>
   <div class="form-actions" style="margin-top:20px;"><button type="button" class="btn btn-outline" data-close="checklistEditorModal">Cancel</button><button type="button" class="btn btn-success" id="cleSaveBtn"><i class="fa-solid fa-check"></i> Save Checklist</button></div>
 </div></div>
@@ -400,15 +305,9 @@
 <div class="modal-overlay" id="resourceEditorModal"><div class="modal">
   <h2><span class="modal-icon"><i class="fa-solid fa-folder-plus"></i></span><span id="resourceEditorTitle">New Resource</span></h2>
   <input type="hidden" id="reResourceId" />
-  <div class="form-row">
-    <div><label>Resource ID *</label><input id="reId" placeholder="sales-playbook-2026" required /></div>
-    <div><label>Type</label><select id="reType"><option>PDF</option><option>Video</option><option>Link</option><option>Document</option><option>Spreadsheet</option><option>Slides</option><option>Other</option></select></div>
-  </div>
+  <div class="form-row"><div><label>Resource ID *</label><input id="reId" required /></div><div><label>Type</label><select id="reType"><option>PDF</option><option>Video</option><option>Link</option><option>Document</option><option>Spreadsheet</option><option>Slides</option><option>Other</option></select></div></div>
   <label>Title *</label><input id="reTitle" required />
-  <div class="form-row">
-    <div><label>Category</label><select id="reCategory"><option>Onboarding</option><option>Sales</option><option>Marketing</option><option>Operations</option><option>Finance</option><option>Product</option><option>Compliance</option><option>Reference</option><option>Other</option></select></div>
-    <div><label>URL / Link</label><input id="reUrl" placeholder="https://..." /></div>
-  </div>
+  <div class="form-row"><div><label>Category</label><select id="reCategory"><option>Onboarding</option><option>Sales</option><option>Marketing</option><option>Operations</option><option>Finance</option><option>Product</option><option>Compliance</option><option>Reference</option><option>Other</option></select></div><div><label>URL / Link</label><input id="reUrl" placeholder="https://..." /></div></div>
   <label>Description</label><textarea id="reDescription" rows="2"></textarea>
   <label>Or upload a file (max 5 MB)</label>
   <div class="doc-upload-zone" id="reUploadZone" style="padding:14px;"><i class="fa-solid fa-cloud-arrow-up" style="font-size:1.6rem;color:var(--accent-blue);"></i><div style="font-weight:600;margin-top:6px;font-size:.82rem;">Click or drag &amp; drop</div><input type="file" id="reFileInput" class="file-input-hidden" /></div>
@@ -420,40 +319,13 @@
   <h2><span class="modal-icon"><i class="fa-solid fa-image"></i></span><span id="certTemplateEditorTitle">Certificate Template</span></h2>
   <input type="hidden" id="cteTemplateId" />
   <label>Title *</label><input id="cteTitle" required />
-  <div class="form-row">
-    <div><label>Course *</label><select id="cteCourseId"></select></div>
-    <div><label>Module (optional)</label><select id="cteModuleId"><option value="">— Whole Course —</option></select></div>
-  </div>
+  <div class="form-row"><div><label>Course *</label><select id="cteCourseId"></select></div><div><label>Module (optional)</label><select id="cteModuleId"><option value="">— Whole Course —</option></select></div></div>
   <label>Description</label><textarea id="cteDescription" rows="2"></textarea>
   <label>Certificate Image (PNG/JPG, max 500 KB)</label>
   <div class="doc-upload-zone" id="cteUploadZone" style="padding:14px;"><i class="fa-solid fa-cloud-arrow-up" style="font-size:1.6rem;color:var(--accent-blue);"></i><div style="font-weight:600;margin-top:6px;font-size:.82rem;">Click or drag &amp; drop</div><input type="file" id="cteImageInput" accept="image/*" class="file-input-hidden" /></div>
-  <div id="ctePreviewWrap" style="display:none;margin-top:14px;">
-    <div id="ctePreviewStage" style="position:relative;width:100%;max-width:700px;margin:0 auto;border-radius:12px;overflow:hidden;background:var(--bg-input);">
-      <img id="ctePreviewImage" style="width:100%;display:block;" />
-      <div class="cte-stamp" data-stamp="name" style="position:absolute;transform:translate(-50%,-50%);cursor:grab;user-select:none;white-space:nowrap;">Jane Doe</div>
-      <div class="cte-stamp" data-stamp="date" style="position:absolute;transform:translate(-50%,-50%);cursor:grab;user-select:none;white-space:nowrap;">01 Jan 2026</div>
-      <div class="cte-stamp" data-stamp="code" style="position:absolute;transform:translate(-50%,-50%);cursor:grab;user-select:none;white-space:nowrap;">VIORA-ABC123</div>
-    </div>
-  </div>
-  <div id="cteLayoutControls" style="display:none;margin-top:14px;">
-    <div class="form-row">
-      <div><label>Name Size</label><input type="range" id="cteNameSize" min="0.02" max="0.12" step="0.002" value="0.055" /></div>
-      <div><label>Name Color</label><input type="color" id="cteNameColor" value="#0a0a0f" /></div>
-    </div>
-    <div class="form-row">
-      <div><label>Date Size</label><input type="range" id="cteDateSize" min="0.01" max="0.05" step="0.001" value="0.022" /></div>
-      <div><label>Date Color</label><input type="color" id="cteDateColor" value="#4a5568" /></div>
-    </div>
-    <div class="form-row">
-      <div><label>Code Size</label><input type="range" id="cteCodeSize" min="0.008" max="0.03" step="0.001" value="0.014" /></div>
-      <div><label>Code Color</label><input type="color" id="cteCodeColor" value="#94a3b8" /></div>
-    </div>
-  </div>
-  <div class="form-actions" style="margin-top:20px;">
-    <button type="button" class="btn btn-outline" data-close="certTemplateEditorModal">Cancel</button>
-    <button type="button" class="btn btn-danger" id="cteDeleteBtn" style="display:none;"><i class="fa-solid fa-trash"></i> Delete</button>
-    <button type="button" class="btn btn-success" id="cteSaveBtn"><i class="fa-solid fa-check"></i> Save Template</button>
-  </div>
+  <div id="ctePreviewWrap" style="display:none;margin-top:14px;"><div id="ctePreviewStage" style="position:relative;width:100%;max-width:700px;margin:0 auto;border-radius:12px;overflow:hidden;background:var(--bg-input);"><img id="ctePreviewImage" style="width:100%;display:block;" /><div class="cte-stamp" data-stamp="name" style="position:absolute;transform:translate(-50%,-50%);cursor:grab;user-select:none;white-space:nowrap;">Jane Doe</div><div class="cte-stamp" data-stamp="date" style="position:absolute;transform:translate(-50%,-50%);cursor:grab;user-select:none;white-space:nowrap;">01 Jan 2026</div><div class="cte-stamp" data-stamp="code" style="position:absolute;transform:translate(-50%,-50%);cursor:grab;user-select:none;white-space:nowrap;">VIORA-ABC123</div></div></div>
+  <div id="cteLayoutControls" style="display:none;margin-top:14px;"><div class="form-row"><div><label>Name Size</label><input type="range" id="cteNameSize" min="0.02" max="0.12" step="0.002" value="0.055" /></div><div><label>Name Color</label><input type="color" id="cteNameColor" value="#0a0a0f" /></div></div><div class="form-row"><div><label>Date Size</label><input type="range" id="cteDateSize" min="0.01" max="0.05" step="0.001" value="0.022" /></div><div><label>Date Color</label><input type="color" id="cteDateColor" value="#4a5568" /></div></div><div class="form-row"><div><label>Code Size</label><input type="range" id="cteCodeSize" min="0.008" max="0.03" step="0.001" value="0.014" /></div><div><label>Code Color</label><input type="color" id="cteCodeColor" value="#94a3b8" /></div></div></div>
+  <div class="form-actions" style="margin-top:20px;"><button type="button" class="btn btn-outline" data-close="certTemplateEditorModal">Cancel</button><button type="button" class="btn btn-danger" id="cteDeleteBtn" style="display:none;"><i class="fa-solid fa-trash"></i> Delete</button><button type="button" class="btn btn-success" id="cteSaveBtn"><i class="fa-solid fa-check"></i> Save Template</button></div>
 </div></div>
 
 <div class="modal-overlay" id="trainingUserModal"><div class="modal xl">
@@ -473,16 +345,10 @@
 
 <div class="modal-overlay" id="certPreviewModal"><div class="modal xl">
   <h2><span class="modal-icon"><i class="fa-solid fa-award"></i></span> Certificate Preview</h2>
-  <div style="background:var(--bg-input);border-radius:12px;padding:14px;text-align:center;">
-    <img id="certPreviewImg" style="max-width:100%;border-radius:8px;" />
-  </div>
-  <div class="form-actions" style="margin-top:16px;">
-    <button type="button" class="btn btn-outline" data-close="certPreviewModal">Close</button>
-    <button type="button" class="btn btn-success" id="certPreviewDownloadBtn"><i class="fa-solid fa-download"></i> Download</button>
-  </div>
+  <div style="background:var(--bg-input);border-radius:12px;padding:14px;text-align:center;"><img id="certPreviewImg" style="max-width:100%;border-radius:8px;" /></div>
+  <div class="form-actions" style="margin-top:16px;"><button type="button" class="btn btn-outline" data-close="certPreviewModal">Close</button><button type="button" class="btn btn-success" id="certPreviewDownloadBtn"><i class="fa-solid fa-download"></i> Download</button></div>
 </div></div>
 
-<!-- Toast + importmap -->
 <div class="toast-container" id="toastContainer"></div>
 
 <script type="importmap">
