@@ -1,12 +1,14 @@
 // ═══════════════════════════════════════════════════════════════
-// scholar-admin-boot.js
-// Stand-alone bootstrap for VIORA Scholar admin console.
+// scholar.js
+// Stand-alone bootstrap for VIORA Scholar Admin Console.
+// Handles routing, data normalization, and admin authentication.
 // ═══════════════════════════════════════════════════════════════
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 import { getDatabase, ref, set, get, update, remove, push, onValue, forceLongPolling } from "firebase/database";
 
+// Import all training module functions
 import {
   initTraining, bindTrainingEvents, renderTrainingOverview, renderTrainingRequests, renderTrainingUsers, renderTrainingProgress,
   renderTrainingQuizzes, renderTrainingCertificates, viewQuizSubmission, openCourseEditor, openChecklistEditor, openResourceEditor,
@@ -66,7 +68,7 @@ function normalize(val, forceArray = false) {
 const state = {
   data: {
     trainingCourses: {}, trainingChecklists: {}, trainingResources: {}, trainingEnrollments: {},
-    trainingProgress: {}, trainingCertificates: [], trainingQuizSubmissions: {}, trainingAccessRequests: {},
+    trainingProgress: {}, trainingCertificates: [], trainingQuizSubmissions: {}, trainingAccessRequests: [],
     trainingCertTemplates: {}, trainingCourseCompletions: {}, users: [], portalUsers: [], entities: []
   },
   operator: null, currentTab: "training-overview", charts: _charts
@@ -84,7 +86,8 @@ const D = {
 };
 
 function showSplash(kind, title, subtitle) {
-  const splash = $("saSplash"); if (!splash) return; splash.classList.remove("hidden");
+  const splash = $("saSplash"); if (!splash) return; 
+  splash.classList.remove("hidden");
   if (kind === "ok") {
     splash.innerHTML = `<div class="icon ok"><i class="fa-solid fa-check"></i></div><h1>${escapeHtml(title || "Access granted")}</h1><p>${escapeHtml(subtitle || "")}</p>`;
   } else if (kind === "deny") {
@@ -92,25 +95,44 @@ function showSplash(kind, title, subtitle) {
     $("saDenyOut")?.addEventListener("click", () => signOut(auth).then(() => location.reload()));
   }
 }
-function hideSplash() { $("saSplash")?.classList.add("hidden"); $("saShell").style.display = "flex"; }
+
+function hideSplash() { 
+  const s = $("saSplash");
+  if (s) s.style.display = "none";
+  const shell = $("saShell"); 
+  if (shell) shell.style.display = "flex"; 
+}
 
 function switchTab(name) {
   state.currentTab = "training-" + (name === "overview" ? "overview" : name === "requests" ? "requests" : name === "users" ? "users" : name === "progress" ? "progress" : name === "quizzes" ? "quizzes" : "certificates");
+  
   document.querySelectorAll(".sa-nav-item").forEach((b) => b.classList.toggle("active", b.dataset.saTab === name));
+  document.querySelectorAll(".sch-bnav-item").forEach((b) => b.classList.toggle("active", b.dataset.saTab === name));
   document.querySelectorAll(".sa-pane").forEach((p) => p.classList.toggle("active", p.id === "sa-pane-" + name));
+  
+  if (window.innerWidth <= 768) $("saSidebar")?.classList.remove("open");
+
   try {
     switch (name) {
-      case "overview": renderTrainingOverview(); break; case "requests": renderTrainingRequests(); break;
-      case "users": renderTrainingUsers(); break; case "progress": renderTrainingProgress(); break;
-      case "quizzes": renderTrainingQuizzes(); break; case "certificates": renderTrainingCertificates(); break;
+      case "overview": renderTrainingOverview(); break; 
+      case "requests": renderTrainingRequests(); break;
+      case "users": renderTrainingUsers(); break; 
+      case "progress": renderTrainingProgress(); break;
+      case "quizzes": renderTrainingQuizzes(); break; 
+      case "certificates": renderTrainingCertificates(); break;
     }
-  } catch (e) { console.error("[sa] render failed for", name, e); toast("Render failed: " + e.message, "error"); }
+  } catch (e) { 
+    console.error("[sa] render failed for", name, e); 
+    toast("Render error: " + e.message, "error"); 
+  }
+  
   updateBadges();
 }
 
 function updateBadges() {
   const quizzes = normalize(state.data.trainingQuizSubmissions, true).length ? Object.values(state.data.trainingQuizSubmissions).flatMap(Object.values).filter(q => (q.status || "submitted") === "submitted").length : 0;
   const requests = normalize(state.data.trainingAccessRequests, true).length ? Object.values(state.data.trainingAccessRequests).filter(r => (r.status || "pending") === "pending").length : 0;
+  
   if ($("saQuizBadge")) { $("saQuizBadge").textContent = quizzes; $("saQuizBadge").style.display = quizzes > 0 ? "inline-block" : "none"; }
   if ($("saReqBadge")) { $("saReqBadge").textContent = requests; $("saReqBadge").style.display = requests > 0 ? "inline-block" : "none"; }
 }
@@ -135,8 +157,9 @@ function subscribeTraining() {
       }
       
       if (key === "trainingUsers") {
-        state.data.users = state.data.trainingUsers.filter(u => u.role === "trainer" || !u.role);
-        state.data.portalUsers = state.data.trainingUsers.filter(u => u.role !== "trainer" && u.role);
+        const usersList = Array.isArray(state.data.trainingUsers) ? state.data.trainingUsers : Object.values(state.data.trainingUsers || {});
+        state.data.users = usersList.filter(u => u && (u.role === "trainer" || !u.role));
+        state.data.portalUsers = usersList.filter(u => u && u.role !== "trainer" && u.role);
       }
 
       updateBadges();
@@ -157,7 +180,10 @@ function subscribeTraining() {
 }
 
 function bootAdmin() {
-  initTraining(D); try { D.AutoCertification = AutoCertification; } catch (e) {} bindTrainingEvents();
+  initTraining(D); 
+  try { D.AutoCertification = AutoCertification; } catch (e) {} 
+  bindTrainingEvents();
+  
   const bind = (id, evt, fn) => { const el = $(id); if (el && !el._saBound) { el._saBound = true; el.addEventListener(evt, fn); } };
 
   bind("trainingRequestsRefreshBtn", "click", () => { renderTrainingRequests(); toast("Refreshed.", "info"); });
@@ -174,7 +200,12 @@ function bootAdmin() {
 
   document.querySelectorAll(".sa-nav-item").forEach((b) => {
     if (b._saBound) return; b._saBound = true;
-    b.addEventListener("click", () => { if (window.innerWidth <= 768) $("saSidebar")?.classList.remove("open"); switchTab(b.dataset.saTab); });
+    b.addEventListener("click", () => switchTab(b.dataset.saTab));
+  });
+  
+  document.querySelectorAll(".sch-bnav-item").forEach((b) => {
+    if (b._saBound) return; b._saBound = true;
+    b.addEventListener("click", () => switchTab(b.dataset.saTab));
   });
 
   bind("saSignOutBtn", "click", () => { if (confirm("Sign out of Scholar Admin?")) signOut(auth).then(() => location.reload()); });
@@ -184,18 +215,37 @@ function bootAdmin() {
 
   try { const saved = localStorage.getItem("viora_theme"); if (saved) document.documentElement.setAttribute("data-theme", saved); } catch (e) {}
 
-  subscribeTraining(); switchTab("overview");
+  subscribeTraining(); 
+  
+  // Safely switch to overview to avoid splash hangs
+  try {
+    switchTab("overview");
+  } catch (e) {
+    console.error("Failed to switch to overview on boot", e);
+  }
 }
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) { showSplash("deny", "Not signed in", "Scholar Admin requires an active VIORA session."); return; }
   try {
     const snap = await get(ref(db, `${ROOT}/users/${user.uid}`));
-    const profile = snap.exists() ? snap.val() : null; const role = profile?.role || null;
-    if (role !== "admin" && role !== "exec") { showSplash("deny", "Access denied", `Your role (${role || "unknown"}) does not have Scholar admin access.`); return; }
-    state.operator = { uid: user.uid, ...profile }; $("saWhoami").textContent = profile.name || user.email || "Admin";
-    showSplash("ok", "Access granted", `Welcome, ${profile.name || user.email}.`); setTimeout(() => { hideSplash(); bootAdmin(); }, 500);
-  } catch (e) { console.error("[sa] auth check failed", e); showSplash("deny", "Verification failed", e.message || "Could not verify permissions."); }
+    const profile = snap.exists() ? snap.val() : null; 
+    const role = profile?.role || null;
+    
+    if (role !== "admin" && role !== "exec") { 
+      showSplash("deny", "Access denied", `Your role (${role || "unknown"}) does not have Scholar admin access.`); 
+      return; 
+    }
+    
+    state.operator = { uid: user.uid, ...profile }; 
+    if($("saWhoami")) $("saWhoami").textContent = profile.name || user.email || "Admin";
+    
+    showSplash("ok", "Access granted", `Welcome, ${profile.name || user.email}.`); 
+    setTimeout(() => { hideSplash(); bootAdmin(); }, 500);
+  } catch (e) { 
+    console.error("[sa] auth check failed", e); 
+    showSplash("deny", "Verification failed", e.message || "Could not verify permissions."); 
+  }
 });
 
 window.VioraTraining = {
@@ -206,4 +256,5 @@ window.VioraTraining = {
   updateCeModule, addCeModule, removeCeModule, moveCeModule, updateCleTask, addCleTask, removeCleTask, handleReFile, openResourceFile,
   TrainingVioraAPI, debug: { state, db, auth }
 };
-console.info("[scholar-admin] booted — default Firebase app, session shared with main.html");
+
+console.info("[scholar-admin] booted successfully — default Firebase app.");
