@@ -399,7 +399,7 @@ export function applyLogoEverywhere(a, b) {
     else url = a;
   }
   if (typeof b === 'string' && /^[\d.]+$/.test(b)) appVersion = b;
-  if (!appVersion) appVersion = _ctx?.state?.appVersion || '3.7.1';
+   if (!appVersion) appVersion = _ctx?.state?.appVersion || '';
 
   if (!url) {
     const s = (typeof window !== 'undefined' && window.state) || null;
@@ -420,10 +420,12 @@ export function applyLogoEverywhere(a, b) {
       sb.appendChild(icon);
     }
     sb.appendChild(document.createTextNode(' VIORA '));
-    const ver = document.createElement('span');
-    ver.className = 'brand-version';
-    ver.textContent = 'v' + appVersion;
-    sb.appendChild(ver);
+       if (appVersion) {
+      const ver = document.createElement('span');
+      ver.className = 'brand-version';
+      ver.textContent = 'v' + appVersion;
+      sb.appendChild(ver);
+    }
   }
 
   /* ── Mobile app bar ── */
