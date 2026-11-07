@@ -138,7 +138,6 @@ async function handleAuthChange(user) {
     /* ═══════════════════════════════════════════════════════
        SIGNED OUT
        ═══════════════════════════════════════════════════════ */
-      if (!user) {
    document.getElementById('loginScreen')?.classList.add('hidden');
 document.getElementById('appShell')?.classList.remove('hidden');
 applyRoleGating();
