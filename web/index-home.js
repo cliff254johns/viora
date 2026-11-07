@@ -1194,15 +1194,17 @@ function wireContactForm() {
   });
 }
 
+
 /* ═══════════════════════════════════════════════════════════════
-   REAL FIBRE CABLE GLOBE (v4.0)
+   REAL FIBRE CABLE GLOBE (v4.1)
    ─────────────────────────────────────────────────────────────
-   · Real submarine cable routes (EASSy, SEACOM, 2Africa,
-     MainOne, SAT-3, Europe India Gateway, FLAG, etc.)
-   · Country hub nodes with glowing markers
-   · Animated data pulses travelling along each cable in
-     both directions
-   · Distinguishes submarine (ocean) from inland (land) legs
+   v4.1 changes over v4.0:
+     · Realistic NASA Blue Marble earth texture (4096×2048)
+     · Bump map for terrain relief
+     · Specular map so oceans reflect, land is matte
+     · Night lights layer for the dark side
+     · Cables lifted slightly higher for land visibility
+     · Multi-layer atmosphere (soft outer + thin inner rim)
    ═══════════════════════════════════════════════════════════════ */
 function initGlobe() {
   const container = document.getElementById('globe-container');
@@ -1220,8 +1222,7 @@ function initGlobe() {
     return;
   }
 
-  /* ── 1. Country hub cities ──
-     [name, lat, lon, isPrimary (bigger marker)] */
+  /* ── Country hub cities ── */
   const HUBS = [
     ['Nairobi',    -1.292, 36.822, true],
     ['Mombasa',    -4.043, 39.668, true],
@@ -1250,190 +1251,113 @@ function initGlobe() {
     ['Suez',       29.966, 32.549, false],
   ];
 
-  /* ── 2. Real submarine cables ──
-     Each entry: { name, color, waypoints: [[lat, lon], ...] }
-     Waypoints are approximate landing points + mid-ocean bends.
-     Sources: TeleGeography Submarine Cable Map. */
+  /* ── Real submarine cables ── */
   const CABLES = [
-    /* ═══ AFRICAN CABLES ═══ */
     {
       name: '2Africa',
       color: 0x00E0FF,
       waypoints: [
-        [51.507, -0.128],   // London
-        [38.722, -9.139],   // Lisbon
-        [36.000, -6.000],   // Gibraltar
-        [33.500, 10.000],   // Tunisia
-        [31.200, 32.200],   // Port Said
-        [29.900, 32.500],   // Suez
-        [15.500, 40.500],   // Red Sea
-        [11.588, 43.145],   // Djibouti
-        [2.000, 45.500],    // Mogadishu coast
-        [-4.043, 39.668],   // Mombasa
-        [-11.000, 41.000],  // Tanzania coast
-        [-19.000, 36.000],  // Mozambique
-        [-25.966, 32.573],  // Maputo
-        [-29.858, 31.021],  // Durban
-        [-33.925, 18.424],  // Cape Town
-        [-6.000, 4.000],    // Atlantic bend
-        [5.604, -0.187],    // Accra
-        [6.524, 3.379],     // Lagos
-        [14.716, -17.467],  // Dakar
-        [28.000, -14.000],  // Canaries
-        [36.000, -6.000],   // Gibraltar
-        [43.297, 5.369],    // Marseille
-        [51.507, -0.128],   // London
+        [51.507, -0.128], [38.722, -9.139], [36.000, -6.000],
+        [33.500, 10.000], [31.200, 32.200], [29.900, 32.500],
+        [15.500, 40.500], [11.588, 43.145], [2.000, 45.500],
+        [-4.043, 39.668], [-11.000, 41.000], [-19.000, 36.000],
+        [-25.966, 32.573], [-29.858, 31.021], [-33.925, 18.424],
+        [-6.000, 4.000], [5.604, -0.187], [6.524, 3.379],
+        [14.716, -17.467], [28.000, -14.000], [36.000, -6.000],
+        [43.297, 5.369], [51.507, -0.128],
       ],
     },
     {
       name: 'SEACOM',
       color: 0x23C7D9,
       waypoints: [
-        [-4.043, 39.668],   // Mombasa
-        [-11.000, 41.500],  // Tanzania coast
-        [-19.000, 40.000],  // Mozambique Channel
-        [-25.966, 32.573],  // Maputo
-        [-29.858, 31.021],  // Durban
-        [-33.925, 18.424],  // Cape Town
-        [5.000, 3.000],     // Gulf of Guinea bend
-        [14.716, -17.467],  // Dakar
-        [28.000, -15.000],  // Canaries
-        [36.000, -6.000],   // Gibraltar
-        [43.297, 5.369],    // Marseille
-        [51.507, -0.128],   // London
-        [25.205, 55.271],   // Dubai (branch)
-        [19.076, 72.878],   // Mumbai
+        [-4.043, 39.668], [-11.000, 41.500], [-19.000, 40.000],
+        [-25.966, 32.573], [-29.858, 31.021], [-33.925, 18.424],
+        [5.000, 3.000], [14.716, -17.467], [28.000, -15.000],
+        [36.000, -6.000], [43.297, 5.369], [51.507, -0.128],
+        [25.205, 55.271], [19.076, 72.878],
       ],
     },
     {
       name: 'EASSy',
       color: 0x8B5CF6,
       waypoints: [
-        [-29.858, 31.021],  // Durban
-        [-25.966, 32.573],  // Maputo
-        [-19.000, 40.000],  // Mozambique Channel
-        [-11.000, 41.500],  // Tanzania coast
-        [-4.043, 39.668],   // Mombasa
-        [2.000, 45.500],    // Mogadishu coast
-        [11.588, 43.145],   // Djibouti
-        [15.500, 40.500],   // Red Sea
-        [29.900, 32.500],   // Suez
-        [31.200, 32.200],   // Port Said
-        [33.500, 10.000],   // Tunisia
-        [43.297, 5.369],    // Marseille
-        [51.507, -0.128],   // London
+        [-29.858, 31.021], [-25.966, 32.573], [-19.000, 40.000],
+        [-11.000, 41.500], [-4.043, 39.668], [2.000, 45.500],
+        [11.588, 43.145], [15.500, 40.500], [29.900, 32.500],
+        [31.200, 32.200], [33.500, 10.000], [43.297, 5.369],
+        [51.507, -0.128],
       ],
     },
     {
       name: 'MainOne',
       color: 0x10B981,
       waypoints: [
-        [5.604, -0.187],    // Accra
-        [6.524, 3.379],     // Lagos
-        [14.716, -17.467],  // Dakar
-        [22.000, -18.000],  // Canaries
-        [36.000, -6.000],   // Gibraltar
-        [38.722, -9.139],   // Lisbon
-        [51.507, -0.128],   // London
+        [5.604, -0.187], [6.524, 3.379], [14.716, -17.467],
+        [22.000, -18.000], [36.000, -6.000], [38.722, -9.139],
+        [51.507, -0.128],
       ],
     },
     {
       name: 'SAT-3',
       color: 0xF59E0B,
       waypoints: [
-        [14.716, -17.467],  // Dakar
-        [6.524, 3.379],     // Lagos
-        [5.604, -0.187],    // Accra
-        [-22.960, 14.510],  // Namibia coast
-        [-33.925, 18.424],  // Cape Town
-        [-25.966, 32.573],  // Maputo
-        [-4.043, 39.668],   // Mombasa
+        [14.716, -17.467], [6.524, 3.379], [5.604, -0.187],
+        [-22.960, 14.510], [-33.925, 18.424], [-25.966, 32.573],
+        [-4.043, 39.668],
       ],
     },
     {
       name: 'Europe India Gateway',
       color: 0xEC4899,
       waypoints: [
-        [43.297, 5.369],    // Marseille
-        [38.000, 15.000],   // Sicily
-        [32.000, 30.000],   // Egypt coast
-        [29.900, 32.500],   // Suez
-        [15.500, 40.500],   // Red Sea
-        [11.588, 43.145],   // Djibouti
-        [12.500, 45.000],   // Gulf of Aden
-        [23.588, 58.408],   // Muscat
-        [25.205, 55.271],   // Dubai
-        [24.861, 67.010],   // Karachi
-        [19.076, 72.878],   // Mumbai
+        [43.297, 5.369], [38.000, 15.000], [32.000, 30.000],
+        [29.900, 32.500], [15.500, 40.500], [11.588, 43.145],
+        [12.500, 45.000], [23.588, 58.408], [25.205, 55.271],
+        [24.861, 67.010], [19.076, 72.878],
       ],
     },
     {
       name: 'FLAG Europe Asia',
       color: 0xEF4444,
       waypoints: [
-        [51.507, -0.128],   // London
-        [36.000, -6.000],   // Gibraltar
-        [38.000, 15.000],   // Sicily
-        [31.200, 32.200],   // Port Said
-        [29.900, 32.500],   // Suez
-        [15.500, 40.500],   // Red Sea
-        [11.588, 43.145],   // Djibouti
-        [23.588, 58.408],   // Muscat
-        [25.205, 55.271],   // Dubai
-        [24.861, 67.010],   // Karachi
-        [19.076, 72.878],   // Mumbai
-        [6.927, 79.861],    // Colombo
-        [1.352, 103.820],   // Singapore
-        [22.000, 114.000],  // Hong Kong
-        [35.676, 139.650],  // Tokyo
+        [51.507, -0.128], [36.000, -6.000], [38.000, 15.000],
+        [31.200, 32.200], [29.900, 32.500], [15.500, 40.500],
+        [11.588, 43.145], [23.588, 58.408], [25.205, 55.271],
+        [24.861, 67.010], [19.076, 72.878], [6.927, 79.861],
+        [1.352, 103.820], [22.000, 114.000], [35.676, 139.650],
       ],
     },
-    /* ═══ GLOBAL TRANS-OCEAN CABLES ═══ */
     {
       name: 'America Movil SAm-1',
       color: 0x14B8A6,
       waypoints: [
-        [40.713, -74.006],  // New York
-        [25.000, -75.000],  // Caribbean
-        [12.000, -70.000],  // Venezuela coast
-        [-8.000, -35.000],  // Brazil coast
-        [-23.551, -46.633], // Sao Paulo
-        [-34.000, -55.000], // Uruguay
-        [-34.607, -58.382], // Buenos Aires
+        [40.713, -74.006], [25.000, -75.000], [12.000, -70.000],
+        [-8.000, -35.000], [-23.551, -46.633], [-34.000, -55.000],
+        [-34.607, -58.382],
       ],
     },
     {
       name: 'SEA-ME-WE 5',
       color: 0x6366F1,
       waypoints: [
-        [43.297, 5.369],    // Marseille
-        [36.000, -6.000],   // Gibraltar
-        [31.200, 32.200],   // Port Said
-        [29.900, 32.500],   // Suez
-        [15.500, 40.500],   // Red Sea
-        [11.588, 43.145],   // Djibouti
-        [23.588, 58.408],   // Muscat
-        [25.205, 55.271],   // Dubai
-        [24.861, 67.010],   // Karachi
-        [19.076, 72.878],   // Mumbai
-        [6.927, 79.861],    // Colombo
-        [1.352, 103.820],   // Singapore
+        [43.297, 5.369], [36.000, -6.000], [31.200, 32.200],
+        [29.900, 32.500], [15.500, 40.500], [11.588, 43.145],
+        [23.588, 58.408], [25.205, 55.271], [24.861, 67.010],
+        [19.076, 72.878], [6.927, 79.861], [1.352, 103.820],
       ],
     },
     {
       name: 'Australia-Singapore Cable',
       color: 0xF97316,
       waypoints: [
-        [1.352, 103.820],   // Singapore
-        [-6.208, 106.845],  // Jakarta
-        [-12.000, 115.000], // Indian Ocean
-        [-31.952, 115.861], // Perth
-        [-33.868, 151.209], // Sydney
+        [1.352, 103.820], [-6.208, 106.845], [-12.000, 115.000],
+        [-31.952, 115.861], [-33.868, 151.209],
       ],
     },
   ];
 
-  /* ── 3. Scene setup ── */
+  /* ── Scene setup ── */
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 2000);
   camera.position.set(0, 0, 300);
@@ -1448,11 +1372,14 @@ function initGlobe() {
   globeGroup.rotation.x = 0.15;
   scene.add(globeGroup);
 
-  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-  const sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
-  sunLight.position.set(300, 120, 240);
+  /* ── Lighting — soft directional from the "sun", subtle ambient ── */
+  scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+
+  const sunLight = new THREE.DirectionalLight(0xffffff, 1.4);
+  sunLight.position.set(300, 80, 240);
   scene.add(sunLight);
-  const rimLight = new THREE.DirectionalLight(0x2267EE, 0.5);
+
+  const rimLight = new THREE.DirectionalLight(0x4a7ff7, 0.6);
   rimLight.position.set(-300, -100, -260);
   scene.add(rimLight);
 
@@ -1460,42 +1387,96 @@ function initGlobe() {
   const textureLoader = new THREE.TextureLoader();
   const prefersReduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ── 4. Earth base (dark blue, minimal texture — cables are the star) ── */
+  /* ── Earth material — full realism ──
+     · map         → NASA Blue Marble satellite photo (day side)
+     · bumpMap     → terrain relief (mountains)
+     · specularMap → oceans reflect light, land stays matte
+     · emissiveMap → night lights on the dark side */
   const earthMat = new THREE.MeshPhongMaterial({
-    color: 0x0A192F,
-    emissive: 0x051020,
-    specular: new THREE.Color(0x111111),
-    shininess: 8,
+    color: 0xffffff,
+    specular: new THREE.Color(0x333333),
+    shininess: 15,
+    emissive: new THREE.Color(0xffffff),
+    emissiveIntensity: 0.55,
   });
 
+  /* Day-side satellite texture — high resolution */
   textureLoader.load(
-    'https://unpkg.com/three-globe/example/img/earth-dark.jpg',
-    (tex) => { earthMat.map = tex; earthMat.needsUpdate = true; },
+    'https://unpkg.com/three-globe@2.30.0/example/img/earth-blue-marble.jpg',
+    (tex) => {
+      tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      earthMat.map = tex;
+      earthMat.needsUpdate = true;
+    },
+    undefined,
+    () => {
+      /* Fallback: solid ocean blue if texture fails */
+      earthMat.color.set(0x1a4a7a);
+    }
+  );
+
+  /* Night-side city lights */
+  textureLoader.load(
+    'https://unpkg.com/three-globe@2.30.0/example/img/earth-night.jpg',
+    (tex) => {
+      earthMat.emissiveMap = tex;
+      earthMat.needsUpdate = true;
+    },
     undefined,
     () => {}
   );
 
-  const earthMesh = new THREE.Mesh(new THREE.SphereGeometry(earthRadius, 96, 96), earthMat);
+  /* Terrain bump for mountain relief */
+  textureLoader.load(
+    'https://unpkg.com/three-globe@2.30.0/example/img/earth-topology.png',
+    (tex) => {
+      earthMat.bumpMap = tex;
+      earthMat.bumpScale = 1.5;
+      earthMat.needsUpdate = true;
+    },
+    undefined,
+    () => {}
+  );
+
+  /* Specular map — oceans reflect, land is matte */
+  textureLoader.load(
+    'https://unpkg.com/three-globe@2.30.0/example/img/earth-water.png',
+    (tex) => {
+      earthMat.specularMap = tex;
+      earthMat.specular = new THREE.Color(0x444444);
+      earthMat.needsUpdate = true;
+    },
+    undefined,
+    () => {}
+  );
+
+  const earthMesh = new THREE.Mesh(new THREE.SphereGeometry(earthRadius, 128, 128), earthMat);
   globeGroup.add(earthMesh);
 
-  /* Soft atmosphere */
-  const atmMat = new THREE.MeshBasicMaterial({
-    color: 0x2267EE,
+  /* ── Multi-layer atmosphere ──
+     Outer glow: soft blue haze (what you see from space)
+     Inner rim: thin bright edge right on the limb */
+  const outerAtmMat = new THREE.MeshBasicMaterial({
+    color: 0x4a7ff7,
     transparent: true,
-    opacity: 0.15,
+    opacity: 0.08,
     side: THREE.BackSide,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
   });
-  globeGroup.add(new THREE.Mesh(new THREE.SphereGeometry(earthRadius * 1.03, 64, 64), atmMat));
+  globeGroup.add(new THREE.Mesh(new THREE.SphereGeometry(earthRadius * 1.10, 64, 64), outerAtmMat));
 
-  /* ── 5. Faint grid ── */
-  const gratMat = new THREE.LineBasicMaterial({
-    color: 0x1a3a5c,
+  const innerAtmMat = new THREE.MeshBasicMaterial({
+    color: 0x88aaff,
     transparent: true,
-    opacity: 0.2,
+    opacity: 0.12,
+    side: THREE.BackSide,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
   });
-  const gratGroup = new THREE.Group();
-  globeGroup.add(gratGroup);
+  globeGroup.add(new THREE.Mesh(new THREE.SphereGeometry(earthRadius * 1.02, 64, 64), innerAtmMat));
 
+  /* ── Coordinate helper ── */
   function latLonToVec3(lat, lon, radius) {
     const phi = (90 - lat) * Math.PI / 180;
     const theta = (lon + 180) * Math.PI / 180;
@@ -1506,57 +1487,44 @@ function initGlobe() {
     );
   }
 
-  for (let lat = -75; lat <= 75; lat += 15) {
-    const pts = [];
-    for (let lon = -180; lon <= 180; lon += 3) {
-      pts.push(latLonToVec3(lat, lon, earthRadius * 1.001));
-    }
-    gratGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), gratMat));
-  }
-  for (let lon = -180; lon < 180; lon += 15) {
-    const pts = [];
-    for (let lat = -90; lat <= 90; lat += 3) {
-      pts.push(latLonToVec3(lat, lon, earthRadius * 1.001));
-    }
-    gratGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), gratMat));
-  }
-
-  /* ── 6. Draw each cable as a smooth arc, plus store its points for pulses ── */
-  const cableCurves = [];       // [{ curve, color, pulses[] }]
+  /* ── Cables ── */
+  const cableCurves = [];
   const cableLayer = new THREE.Group();
   globeGroup.add(cableLayer);
+
+  /* Lift cables slightly above the surface so they're visible
+     on land AND sea. Realistic without hiding continents. */
+  const CABLE_RADIUS = earthRadius * 1.012;   // ~1.2% above surface
 
   CABLES.forEach(cable => {
     const waypoints = cable.waypoints;
     if (waypoints.length < 2) return;
 
-    /* Convert to 3D, lifted above surface for visibility */
     const vecPoints = waypoints.map(([lat, lon]) =>
-      latLonToVec3(lat, lon, earthRadius * 1.008)
+      latLonToVec3(lat, lon, CABLE_RADIUS)
     );
 
-    /* Build a smooth curve through all waypoints */
+    /* Smooth arc through waypoints */
     const curve = new THREE.CatmullRomCurve3(vecPoints, false, 'catmullrom', 0.5);
-    const points = curve.getPoints(waypoints.length * 20);   // enough resolution for smooth arc
+    const points = curve.getPoints(waypoints.length * 25);
 
     /* Draw the cable line */
     const geo = new THREE.BufferGeometry().setFromPoints(points);
     const mat = new THREE.LineBasicMaterial({
       color: cable.color,
       transparent: true,
-      opacity: 0.75,
-      linewidth: 2,
+      opacity: 0.72,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
     const line = new THREE.Line(geo, mat);
     cableLayer.add(line);
 
-    /* Add glowing pulses that travel along this cable */
+    /* Glowing pulses along the cable */
     const pulses = [];
     const PULSE_COUNT = 4;
     for (let i = 0; i < PULSE_COUNT; i++) {
-      const pulseGeo = new THREE.SphereGeometry(1.1, 6, 6);
+      const pulseGeo = new THREE.SphereGeometry(1.2, 8, 8);
       const pulseMat = new THREE.MeshBasicMaterial({
         color: cable.color,
         transparent: true,
@@ -1572,27 +1540,23 @@ function initGlobe() {
       pulses.push(pulse);
     }
 
-    cableCurves.push({
-      curve,
-      color: cable.color,
-      pulses,
-    });
+    cableCurves.push({ curve, color: cable.color, pulses });
   });
 
-  /* ── 7. Hub nodes — glowing markers at major landing points ── */
+  /* ── Hub nodes ── */
   const hubGroup = new THREE.Group();
   globeGroup.add(hubGroup);
 
   HUBS.forEach(([name, lat, lon, primary]) => {
-    const pos = latLonToVec3(lat, lon, earthRadius * 1.012);
-    const radius = primary ? 2.2 : 1.5;
+    const pos = latLonToVec3(lat, lon, earthRadius * 1.015);
+    const radius = primary ? 2.0 : 1.3;
 
     /* Outer glow */
-    const glowGeo = new THREE.SphereGeometry(radius * 2.5, 12, 12);
+    const glowGeo = new THREE.SphereGeometry(radius * 2.6, 12, 12);
     const glowMat = new THREE.MeshBasicMaterial({
       color: primary ? 0x00E0FF : 0x23C7D9,
       transparent: true,
-      opacity: 0.25,
+      opacity: 0.22,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
@@ -1609,7 +1573,7 @@ function initGlobe() {
     node.position.copy(pos);
     hubGroup.add(node);
 
-    /* Inner bright center for primaries */
+    /* Inner bright core for primary hubs */
     if (primary) {
       const centerGeo = new THREE.SphereGeometry(radius * 0.5, 8, 8);
       const centerMat = new THREE.MeshBasicMaterial({ color: 0x00FFFF });
@@ -1619,7 +1583,7 @@ function initGlobe() {
     }
   });
 
-  /* ── 8. Drag controls ── */
+  /* ── Drag controls ── */
   let isDragging = false;
   let prevPointer = { x: 0, y: 0 };
   let targetRotX = globeGroup.rotation.x;
@@ -1644,7 +1608,7 @@ function initGlobe() {
   container.addEventListener('pointerup', () => { isDragging = false; });
   container.addEventListener('pointercancel', () => { isDragging = false; });
 
-  /* ── 9. Resize ── */
+  /* ── Resize ── */
   function resize() {
     const w = container.clientWidth;
     const h = container.clientHeight;
@@ -1660,7 +1624,7 @@ function initGlobe() {
   }
   resize();
 
-  /* ── 10. Animate ── */
+  /* ── Animate ── */
   const clock = new THREE.Clock();
   let rafId = 0;
   const autoRotate = !prefersReduceMotion;
@@ -1681,21 +1645,14 @@ function initGlobe() {
         const offset = pulse.userData.offset;
         const speed = pulse.userData.speed;
         const direction = pulse.userData.direction;
-
-        /* progress cycles 0 → 1 → 0 continuously */
         const progress = (offset + t * speed * direction) % 1;
         const wrapped = progress < 0 ? progress + 1 : progress;
-
         try {
           const point = curve.getPoint(wrapped);
           pulse.position.copy(point);
-
-          /* Fade near the ends so pulses appear to enter/exit the cable */
           const edgeFade = Math.min(1, Math.min(wrapped, 1 - wrapped) * 6);
           pulse.material.opacity = 0.4 + edgeFade * 0.6;
-        } catch (_) {
-          /* curve.getPoint can throw if wrapped lands exactly on 0/1 */
-        }
+        } catch (_) {}
       });
     });
 
@@ -1703,7 +1660,7 @@ function initGlobe() {
   }
   animate();
 
-  /* ── 11. Pause when hidden ── */
+  /* ── Pause when tab hidden ── */
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
@@ -1712,6 +1669,15 @@ function initGlobe() {
     }
   });
 }
+
+
+
+
+
+
+
+
+
 /* ═══════════════════════════════════════════════════════════════
    START
    ═══════════════════════════════════════════════════════════════ */
