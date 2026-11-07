@@ -891,8 +891,8 @@ if (!campaign) {
       url: buildUtmUrl(c.baseUrl, { ...c.utm, source: c.utm.source || key }),
       status,
       mode: PLATFORMS[key].canPost ? 'auto' : 'compose-link',
-      scheduledFor: status === 'scheduled' ? c.scheduledFor : null,
-      scheduledForUtc: status === 'scheduled' && c.scheduledFor ? toUtcIso(c.scheduledFor) : null,
+  scheduledFor: (status === 'scheduled' || status === 'draft') && c.scheduledFor ? c.scheduledFor : null,
+scheduledForUtc: (status === 'scheduled' || status === 'draft') && c.scheduledFor ? toUtcIso(c.scheduledFor) : null,
       createdBy: SAFE.state?.operator?.name || null,
     });
   });
