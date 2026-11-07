@@ -499,13 +499,26 @@ async function initModules() {
    LIVE DATA LISTENERS (only what campaigns needs)
    ═══════════════════════════════════════════════════════════════ */
 function attachListeners() {
-  /* campaigns */
-  onValue(ref(db, P('campaigns')), (snap) => {
-    const val = snap.exists() ? snap.val() : {};
-    state.data.campaigns = Object.entries(val).map(([k, v]) => ({ ...(v || {}), id: v?.id || k }));
-    if (state.firebaseReady && state.currentTab === 'marketing-campaigns') renderCampaigns();
-    if (state.firebaseReady && state.currentTab === 'campaign-analytics') renderAnalyticsDashboard();
-  });
+
+/* campaigns */
+onValue(ref(db, P('campaigns')), (snap) => {
+  const val = snap.exists() ? snap.val() : {};
+  state.data.campaigns = Object.entries(val).map(([k, v]) => ({ ...(v || {}), id: v?.id || k }));
+
+  /* If the calendar module is currently visible, re-render it so
+     scheduled posts appear immediately after a save. Same for the
+     other campaign-reading modules. */
+  if (state.firebaseReady) {
+    const current = window.Orbit?.currentModule?.();
+    if (current === 'calendar' || current === 'campaigns' || current === 'analytics' || current === 'publishing') {
+      try { window.Orbit?.renderActiveOrbitModule?.(); } catch (_) {}
+    } else if (state.currentTab === 'marketing-campaigns') {
+      try { renderCampaigns(); } catch (_) {}
+    } else if (state.currentTab === 'campaign-analytics') {
+      try { renderAnalyticsDashboard(); } catch (_) {}
+    }
+  }
+});
 
   /* leads — needed for the "Leads" column in the campaigns table */
   onValue(ref(db, P('leads')), (snap) => {
