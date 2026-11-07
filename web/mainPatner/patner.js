@@ -2849,6 +2849,21 @@ function goTab(tab) {
 function openSidebar() { $('sidebar')?.classList.remove('-translate-x-full'); $('backdrop')?.classList.remove('hidden'); }
 function closeSidebar() { $('sidebar')?.classList.add('-translate-x-full'); $('backdrop')?.classList.add('hidden'); }
 
+
+function initSubtabs() {
+  document.querySelectorAll('[data-subgroup]').forEach(g => {
+    const subs = g.querySelectorAll('.subtab');
+    subs.forEach(st => st.onclick = () => {
+      subs.forEach(x => x.classList.remove('active'));
+      st.classList.add('active');
+      const gn = g.dataset.subgroup;
+      document.querySelectorAll(`[id^="subpanel-${gn}-"]`).forEach(p => p.classList.remove('active'));
+      const t = $(`subpanel-${st.dataset.subtab}`);
+      if (t) t.classList.add('active');
+      if (gn === 'hr') renderHourly();
+    });
+  });
+}
 /* ═══════════════════════════════════════════════════════════
    DOM WIRING — runs ONCE, after DOMContentLoaded
    ═══════════════════════════════════════════════════════════ */
@@ -3254,7 +3269,8 @@ function startDomWiring() {
   });
 
   /* History filters, subtabs, sync banner */
-  initSubtabs?.();
+ 
+  initSubtabs();
   initHistoryFilters();
   updateSyncBanner();
 }
