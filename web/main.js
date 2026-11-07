@@ -3986,10 +3986,7 @@ case 'training-progress':
         'subscriptions':           'renderSubscriptions',
         'market-content':          'renderMarketContent',
         'clientsite':              'renderClientsite',
-        'training-overview':       'renderTrainingOverview',
-        'training-quizzes':        'renderTrainingQuizzes',
-        'training-certificates':   'renderTrainingCertificates',
-        'training-progress':       'renderTrainingProgress',
+     
         'orchestration':           'renderOrchestrationPanel',
         'archives':                'renderArchivesPanel',
         'personal-todos':          'renderPersonalTodos',
