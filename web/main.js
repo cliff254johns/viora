@@ -2454,8 +2454,7 @@ async function bootApp() {
     scheduleRender,
     updateSidebarCounters, invalidateCountersFor,
     applyRoleGating, applyLogoEverywhere,
-    renderDashboard, renderTrainingOverview, renderTrainingRequests,
-    renderTrainingProgress, renderTrainingCertificates, renderTrainingQuizzes,
+     renderDashboard,
     renderPortalRequests, renderPortalUsers, renderClientsite,
     renderProfile, renderTrash, renderCommunications,
     renderActivity, renderTasks, renderProjects, renderMyWishlist,
@@ -4512,21 +4511,7 @@ window.__vioraWireSubModules = function () {
     renderPersonalTodos, renderPersonalGoals, renderPersonalSkills,
     renderGoalMilestoneEditor, computeGoalProgress, personalOwnerFilter,
 
-    // ── training ──
-    renderTrainingOverview, renderTrainingRequests, renderTrainingUsers,
-    renderTrainingProgress, renderTrainingQuizzes, renderTrainingCertificates,
-    viewQuizSubmission, openCourseEditor, renderCeModules, toggleCeQuiz,
-    addQuizQuestion, removeQuizQuestion, updateQuizQuestion, updateQuizOption,
-    setQuizAnswer, addQuizOption, removeQuizOption,
-    updateCeModule, addCeModule, removeCeModule, moveCeModule,
-    saveCourse, deleteCourse, openChecklistEditor, renderCleTasks,
-    updateCleTask, addCleTask, removeCleTask, saveChecklist,
-    openResourceEditor, handleReFile, saveResource, deleteResource,
-    openResourceFile, awardTrainingCertificate, viewTrainingCert,
-    renderCertTemplatesGrid, openCertTemplateEditor, refreshCertTemplateModules,
-    showCertTemplatePreview, paintCertTemplateStamps, saveCertTemplate,
-    deleteCertTemplate, renderCertificateImage, openManualAwardModal,
-    setupCertStampDragging, bindTrainingEvents, setTrainingContext,
+
 
     // ── command palette ──
     openCmdPalette, setupCommandPalette,
@@ -4623,48 +4608,7 @@ window.__vioraWireSubModules = function () {
   }
 })();
 
-try {
-  Object.assign(Viora, {
-    updateCeModule:      (...a) => updateCeModule(...a),
-    addCeModule:         (...a) => addCeModule(...a),
-    removeCeModule:      (...a) => removeCeModule(...a),
-    moveCeModule:        (...a) => moveCeModule(...a),
-    toggleCeQuiz:        (...a) => toggleCeQuiz(...a),
-    addQuizQuestion:     (...a) => addQuizQuestion(...a),
-    removeQuizQuestion:  (...a) => removeQuizQuestion(...a),
-    updateQuizQuestion:  (...a) => updateQuizQuestion(...a),
-    updateQuizOption:    (...a) => updateQuizOption(...a),
-    setQuizAnswer:       (...a) => setQuizAnswer(...a),
-    addQuizOption:       (...a) => addQuizOption(...a),
-    removeQuizOption:    (...a) => removeQuizOption(...a),
-    updateCleTask:       (...a) => updateCleTask(...a),
-    addCleTask:          (...a) => addCleTask(...a),
-    removeCleTask:       (...a) => removeCleTask(...a),
-    editCourse:          (id) => openCourseEditor(id),
-    editChecklist:       (id) => openChecklistEditor(id),
-    editResource:        (id) => openResourceEditor(id),
-    saveCourse:          (...a) => saveCourse(...a),
-    deleteCourse:        (...a) => deleteCourse(...a),
-    saveChecklist:       (...a) => saveChecklist(...a),
-    saveResource:        (...a) => saveResource(...a),
-    deleteResource:      (...a) => deleteResource(...a),
-    openResourceFile:    (...a) => openResourceFile(...a),
-    handleReFile:        (...a) => handleReFile(...a),
-    viewQuizSubmission:  (...a) => viewQuizSubmission(...a),
-    openCertTemplateEditor:     (...a) => openCertTemplateEditor(...a),
-    saveCertTemplate:           (...a) => saveCertTemplate(...a),
-    deleteCertTemplate:         (...a) => deleteCertTemplate(...a),
-    refreshCertTemplateModules: (...a) => refreshCertTemplateModules(...a),
-    showCertTemplatePreview:    (...a) => showCertTemplatePreview(...a),
-    paintCertTemplateStamps:    (...a) => paintCertTemplateStamps(...a),
-    openManualAwardModal:       (...a) => openManualAwardModal(...a),
-    awardTrainingCertificate:   (...a) => awardTrainingCertificate(...a),
-    viewTrainingCert:           (...a) => viewTrainingCert(...a),
-    revokeTrainingCert:         (id) => revokeTrainingCertImpl(id),
-  });
-} catch (e) {
-  console.error('[viora] Viora exposure failed:', e);
-}
+
 
 /* ═══════════════════════════════════════════════════════════════
    NAMESPACE UNIFICATION — expose utility functions on Viora.*
