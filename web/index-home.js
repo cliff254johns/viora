@@ -873,7 +873,13 @@ function wireStripArrows(host) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   6. ECO MAP
+   ECOSYSTEM MAP (v2.0)
+   ─────────────────────────────────────────────────────────────
+   10 connected domains around VIORA Core, with:
+     · Per-node color coding (each domain has its own color)
+     · Animated data pulses flowing node → core → other nodes
+     · Controllable via click — click any node to highlight its flows
+     · Click VIORA Core to reset
    ═══════════════════════════════════════════════════════════════ */
 function renderEcoMap() {
   const svg = $('#eco-svg');
@@ -881,18 +887,41 @@ function renderEcoMap() {
   if (!svg) return;
 
   const em = S.homeContent?.ecosystem || {};
-  const nodes = em.nodes || [
-    { name: 'Business',     color: '#2267EE', desc: 'ERP, POS, accounting, inventory — business operations feed the core.' },
-    { name: 'Marketplace',  color: '#23C7D9', desc: 'Products, promos, orders — where customers buy.' },
-    { name: 'Clients',      color: '#8B5CF6', desc: 'Businesses running on VIORA, streaming operational data.' },
-    { name: 'Partners',     color: '#F59E0B', desc: 'Channel and delivery partners implementing VIORA.' },
-    { name: 'Products',     color: '#10B981', desc: 'Catalogue synced in real time.' },
-    { name: 'Training',     color: '#EF4444', desc: 'Academy courses, checklists, certificates.' },
-    { name: 'Finance',      color: '#EC4899', desc: 'Invoicing, payments, reconciliation.' },
-    { name: 'Analytics',    color: '#6366F1', desc: 'Reports and business insight.' },
-    { name: 'Integrations', color: '#14B8A6', desc: 'APIs and connectors.' },
-    { name: 'Security',     color: '#F97316', desc: 'Identity, access, compliance.' },
+
+  /* Per-node definitions — each domain gets its own color.
+     Order matters: node[0] gets color[0], etc. */
+  const NODE_PALETTE = [
+    { color: '#0A84FF', glow: 'rgba(10,132,255,0.6)' },   // 0 — Business
+    { color: '#00E0FF', glow: 'rgba(0,224,255,0.6)' },    // 1 — Marketplace
+    { color: '#BF5AF2', glow: 'rgba(191,90,242,0.6)' },   // 2 — Clients
+    { color: '#FF9F0A', glow: 'rgba(255,159,10,0.6)' },   // 3 — Partners
+    { color: '#30D158', glow: 'rgba(48,209,88,0.6)' },    // 4 — Products
+    { color: '#FF453A', glow: 'rgba(255,69,58,0.6)' },    // 5 — Training
+    { color: '#FF375F', glow: 'rgba(255,55,95,0.6)' },    // 6 — Finance
+    { color: '#5E5CE6', glow: 'rgba(94,92,230,0.6)' },    // 7 — Analytics
+    { color: '#14B8A6', glow: 'rgba(20,184,166,0.6)' },   // 8 — Integrations
+    { color: '#F97316', glow: 'rgba(249,115,22,0.6)' },   // 9 — Security
   ];
+
+  const DEFAULT_NODES = [
+    { name: 'Business',     desc: 'ERP, POS, accounting, inventory — business operations feed the core.' },
+    { name: 'Marketplace',  desc: 'Products, promos, orders — where customers buy.' },
+    { name: 'Clients',      desc: 'Businesses running on VIORA, streaming operational data.' },
+    { name: 'Partners',     desc: 'Channel and delivery partners implementing VIORA.' },
+    { name: 'Products',     desc: 'Catalogue synced in real time.' },
+    { name: 'Training',     desc: 'Academy courses, checklists, certificates.' },
+    { name: 'Finance',      desc: 'Invoicing, payments, reconciliation.' },
+    { name: 'Analytics',    desc: 'Reports and business insight.' },
+    { name: 'Integrations', desc: 'APIs and connectors.' },
+    { name: 'Security',     desc: 'Identity, access, compliance.' },
+  ];
+
+  const nodes = (Array.isArray(em.nodes) && em.nodes.length ? em.nodes : DEFAULT_NODES)
+    .map((n, i) => ({
+      ...n,
+      color: NODE_PALETTE[i % NODE_PALETTE.length].color,
+      glow:  NODE_PALETTE[i % NODE_PALETTE.length].glow,
+    }));
 
   const cx = 200, cy = 200, R = 150;
   const N = nodes.length;
@@ -902,55 +931,186 @@ function renderEcoMap() {
     return { x: cx + R * Math.cos(angle), y: cy + R * Math.sin(angle) };
   });
 
-  let svgHTML = `
+  /* ── Build SVG with defs, paths, nodes, and animation styles ── */
+  const svgHTML = `
     <defs>
+      <!-- Hub gradient -->
       <radialGradient id="ecoHubGrad" cx="36%" cy="30%" r="68%">
         <stop offset="0%" stop-color="#ffffff"/>
         <stop offset="18%" stop-color="#7fb0ff"/>
-        <stop offset="42%" stop-color="#2267EE"/>
+        <stop offset="42%" stop-color="#0A84FF"/>
         <stop offset="78%" stop-color="#0b2a66"/>
         <stop offset="100%" stop-color="#050d22"/>
       </radialGradient>
+
+      <!-- Per-node gradients for line + glow -->
+      ${nodes.map((n, i) => `
+        <linearGradient id="ecoGrad${i}" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="${n.color}" stop-opacity="0.15"/>
+          <stop offset="50%" stop-color="${n.color}" stop-opacity="0.85"/>
+          <stop offset="100%" stop-color="${n.color}" stop-opacity="0.15"/>
+        </linearGradient>
+        <radialGradient id="ecoNodeGlow${i}" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="${n.color}" stop-opacity="0.6"/>
+          <stop offset="100%" stop-color="${n.color}" stop-opacity="0"/>
+        </radialGradient>
+      `).join('')}
+
+      <!-- Filter for glow effect on pulses -->
+      <filter id="ecoPulseGlow" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="2" result="blur"/>
+        <feMerge>
+          <feMergeNode in="blur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
     </defs>
-  `;
 
-  svgHTML += `<g id="eco-lines">${positions.map((p, i) =>
-    `<line class="eco-line" data-line="${i}" x1="${cx}" y1="${cy}" x2="${p.x}" y2="${p.y}"/>`
-  ).join('')}</g>`;
+    <!-- Connecting lines: one per node, in that node's color -->
+    <g id="eco-lines">
+      ${positions.map((p, i) => `
+        <line
+          class="eco-line eco-line-${i}"
+          data-line="${i}"
+          x1="${cx}" y1="${cy}"
+          x2="${p.x}" y2="${p.y}"
+          stroke="url(#ecoGrad${i})"
+          stroke-width="1.5"
+          stroke-linecap="round"
+        />
+      `).join('')}
+    </g>
 
-  svgHTML += `
-    <circle class="eco-pulse" cx="${cx}" cy="${cy}" r="46"/>
-    <circle class="eco-pulse" cx="${cx}" cy="${cy}" r="46"/>
-    <circle class="eco-pulse" cx="${cx}" cy="${cy}" r="46"/>
-  `;
+    <!-- Animated pulse particles travelling node → core → node -->
+    <g id="eco-pulses">
+      ${positions.map((p, i) => {
+        const dur1 = 3.2 + (i % 5) * 0.35;  // 3.2s – 4.6s
+        const dur2 = dur1 + 0.6;
+        const delay1 = -(i * 0.35);
+        const delay2 = -(i * 0.35 + dur2 / 2);
+        return `
+          <!-- Pulse 1: node → core -->
+          <circle r="2.6" fill="${nodes[i].color}" filter="url(#ecoPulseGlow)" opacity="0.9">
+            <animateMotion
+              dur="${dur1}s"
+              begin="${delay1}s"
+              repeatCount="indefinite"
+              path="M ${p.x} ${p.y} L ${cx} ${cy}"
+              calcMode="spline"
+              keyTimes="0;1"
+              keySplines="0.4 0 0.6 1"
+            />
+            <animate attributeName="opacity" values="0.15;1;1;0.15" keyTimes="0;0.15;0.85;1" dur="${dur1}s" begin="${delay1}s" repeatCount="indefinite"/>
+            <animate attributeName="r" values="1.8;2.8;1.8" dur="${dur1}s" begin="${delay1}s" repeatCount="indefinite"/>
+          </circle>
 
-  svgHTML += `
+          <!-- Pulse 2: core → node (returns) -->
+          <circle r="2.6" fill="${nodes[i].color}" filter="url(#ecoPulseGlow)" opacity="0.9">
+            <animateMotion
+              dur="${dur2}s"
+              begin="${delay2}s"
+              repeatCount="indefinite"
+              path="M ${cx} ${cy} L ${p.x} ${p.y}"
+              calcMode="spline"
+              keyTimes="0;1"
+              keySplines="0.4 0 0.6 1"
+            />
+            <animate attributeName="opacity" values="0.15;1;1;0.15" keyTimes="0;0.15;0.85;1" dur="${dur2}s" begin="${delay2}s" repeatCount="indefinite"/>
+            <animate attributeName="r" values="1.8;2.8;1.8" dur="${dur2}s" begin="${delay2}s" repeatCount="indefinite"/>
+          </circle>
+        `;
+      }).join('')}
+    </g>
+
+    <!-- Core pulse rings -->
+    <circle class="eco-pulse" cx="${cx}" cy="${cy}" r="46" stroke="#00E0FF"/>
+    <circle class="eco-pulse" cx="${cx}" cy="${cy}" r="46" stroke="#0A84FF"/>
+    <circle class="eco-pulse" cx="${cx}" cy="${cy}" r="46" stroke="#BF5AF2"/>
+
+    <!-- Central hub -->
     <circle class="eco-hub" cx="${cx}" cy="${cy}" r="46"/>
     <circle cx="${cx - 15}" cy="${cy - 15}" r="10" fill="rgba(255,255,255,.55)"/>
     <text class="eco-hub-txt" x="${cx}" y="${cy + 5}">VIORA</text>
-  `;
 
-  svgHTML += `<g id="eco-nodes">${nodes.map((n, i) => {
-    const p = positions[i];
-    const labelY = p.y < cy ? p.y - 22 : p.y + 30;
-    return `
-      <g class="eco-node" data-idx="${i}" tabindex="0" role="button" aria-label="${escAttr(n.name)}" style="color:${escAttr(n.color)}">
-        <circle cx="${p.x}" cy="${p.y}" r="11" fill="${escAttr(n.color)}" opacity="0.95"/>
-        <circle cx="${p.x - 3}" cy="${p.y - 4}" r="3.5" fill="rgba(255,255,255,0.7)"/>
-        <circle cx="${p.x}" cy="${p.y}" r="18" fill="transparent"/>
-        <text x="${p.x}" y="${labelY}">${escHtml(n.name)}</text>
-      </g>
-    `;
-  }).join('')}</g>`;
+    <!-- Nodes with per-node color -->
+    <g id="eco-nodes">
+      ${nodes.map((n, i) => {
+        const p = positions[i];
+        const labelY = p.y < cy ? p.y - 22 : p.y + 30;
+        return `
+          <g class="eco-node eco-node-${i}" data-idx="${i}" tabindex="0" role="button"
+             aria-label="${escAttr(n.name)}" style="color:${escAttr(n.color)};cursor:pointer;">
+            <!-- Outer glow -->
+            <circle cx="${p.x}" cy="${p.y}" r="26" fill="url(#ecoNodeGlow${i})" opacity="0.9"/>
+            <!-- Main node -->
+            <circle cx="${p.x}" cy="${p.y}" r="11" fill="${escAttr(n.color)}" opacity="0.95" class="eco-node-circle"/>
+            <!-- Specular highlight -->
+            <circle cx="${p.x - 3}" cy="${p.y - 4}" r="3.5" fill="rgba(255,255,255,0.85)"/>
+            <!-- Clickable area -->
+            <circle cx="${p.x}" cy="${p.y}" r="20" fill="transparent"/>
+            <!-- Label -->
+            <text x="${p.x}" y="${labelY}">${escHtml(n.name)}</text>
+          </g>
+        `;
+      }).join('')}
+    </g>
+
+    <style>
+      /* Subtle pulse on default state — dims unrelated flows when a node is active */
+      .eco-line {
+        transition: stroke-width 0.3s ease, opacity 0.3s ease;
+      }
+      .eco-line.dimmed {
+        opacity: 0.15;
+      }
+      .eco-line.active {
+        stroke-width: 2.5;
+      }
+      .eco-node.dimmed .eco-node-circle {
+        opacity: 0.35;
+      }
+      .eco-node.active .eco-node-circle {
+        filter: drop-shadow(0 0 8px currentColor);
+      }
+      .eco-node text {
+        transition: fill 0.3s ease, font-weight 0.3s ease;
+      }
+    </style>
+  `;
 
   svg.innerHTML = svgHTML;
 
+  /* ── Node selection state ── */
+  let selectedNode = null;
+
   function selectNode(i) {
-    $$('.eco-node', svg).forEach((el, idx) => el.classList.toggle('active', idx === i));
-    $$('.eco-line', svg).forEach((el, idx) => el.classList.toggle('active', idx === i));
+    const isDeselect = (i === null) || (selectedNode === i);
+    selectedNode = isDeselect ? null : i;
+
+    $$('.eco-node', svg).forEach((el, idx) => {
+      el.classList.toggle('active',  !isDeselect && idx === i);
+      el.classList.toggle('dimmed',  !isDeselect && idx !== i);
+    });
+
+    $$('.eco-line', svg).forEach((el, idx) => {
+      el.classList.toggle('active',  !isDeselect && idx === i);
+      el.classList.toggle('dimmed',  !isDeselect && idx !== i);
+    });
+
     if (infoHost) {
-      const n = nodes[i];
-      infoHost.innerHTML = `<h3 style="color:${escAttr(n.color)}">${escHtml(n.name)}</h3><p>${escHtml(n.desc || '')}</p>`;
+      if (isDeselect) {
+        infoHost.innerHTML = `<h3>VIORA Core</h3><p>${escHtml(em.sub || 'Select any node to see how that domain connects to the ecosystem.')}</p>`;
+      } else {
+        const n = nodes[i];
+        infoHost.innerHTML = `
+          <h3 style="color:${escAttr(n.color)}">${escHtml(n.name)}</h3>
+          <p>${escHtml(n.desc || '')}</p>
+          <p style="margin-top:16px;font-size:12px;color:var(--text-muted);">
+            <i class="fa-solid fa-circle" style="color:${escAttr(n.color)};font-size:8px;"></i>
+            Data flows continuously between <strong style="color:${escAttr(n.color)}">${escHtml(n.name)}</strong> and VIORA Core in both directions.
+          </p>
+        `;
+      }
     }
   }
 
@@ -964,10 +1124,15 @@ function renderEcoMap() {
     });
   });
 
+  /* Click the hub to reset */
+  svg.querySelector('.eco-hub')?.addEventListener('click', () => selectNode(null));
+
+  /* Default state */
   if (infoHost) {
     infoHost.innerHTML = `<h3>VIORA Core</h3><p>${escHtml(em.sub || 'Select any node to see how that domain connects to the ecosystem.')}</p>`;
   }
 }
+
 
 /* ═══════════════════════════════════════════════════════════════
    7. DASHBOARD PREVIEW
