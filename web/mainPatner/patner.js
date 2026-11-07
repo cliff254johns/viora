@@ -2,6 +2,9 @@ import { initializeApp } from "firebase/app";
 import { getDatabase, ref, onValue, set, push, remove, update, onDisconnect, goOnline, goOffline } from "firebase/database";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
 
+/* ═══════════════════════════════════════════════════════════
+   FIREBASE
+   ═══════════════════════════════════════════════════════════ */
 const firebaseConfig = {
   apiKey: "AIzaSyC9gCBt-xR8t9n6rTGNvDZ5usUGiW-Dqxc",
   authDomain: "cliffclient-35ec5.firebaseapp.com",
@@ -12,21 +15,13 @@ const firebaseConfig = {
   appId: "1:519782791696:web:6e1a654ddeed14b72b2895",
   measurementId: "G-G0NB6JGQVF"
 };
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+const app  = initializeApp(firebaseConfig);
+const db   = getDatabase(app);
 const auth = getAuth(app);
 
-/* ------------------------------------------------------------------
-   PATH LAYOUT â€” interacts with index.html (Viora Intercollective System)
-   ------------------------------------------------------------------
-   Users (SHARED with index.html and their role-gating):
-       viora_data/users/{uid}
-   Public Site mirror (SHARED with cliff.html â†’ index.html):
-       viora_data/orgs/viora/clientsite
-   Track's private collections (kept in a "track" subfolder so they
-   DO NOT collide with index.html's flat collections at viora_data/{col}):
-       viora_data/orgs/viora/track/{col}/{...}
-------------------------------------------------------------------- */
+/* ═══════════════════════════════════════════════════════════
+   PATHS
+   ═══════════════════════════════════════════════════════════ */
 const ROOT = 'viora_data';
 const ORG  = 'orgs/viora';
 const TRACK_SEGMENT = 'track';
@@ -35,10 +30,6 @@ const ORG_COLLECTIONS = new Set([
   'goals','skills','handoffs','activities','hourly','games','chat','typing','history',
   'inventory','schedule','financials','trash'
 ]);
-
-// P('tasks/abc')   â†’ 'viora_data/orgs/viora/track/tasks/abc'
-// P('users/xyz')   â†’ 'viora_data/users/xyz'  (shared with index.html)
-// P('clientsite')  â†’ 'viora_data/clientsite'  (not used here)
 function P(path) {
   const clean = String(path || '').replace(/^\/+|\/+$/g, '');
   const [col, ...rest] = clean.split('/');
@@ -49,13 +40,16 @@ function P(path) {
 
 let WORKER_URL = 'https://vioratrack.cliff254johns.workers.dev';
 
+/* ═══════════════════════════════════════════════════════════
+   HELPERS
+   ═══════════════════════════════════════════════════════════ */
 const $ = id => document.getElementById(id);
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const pad = n => String(n).padStart(2, '0');
 const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
 const dateStr = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-const fmtDate = s => { if(!s) return 'â€”'; const d = new Date(s + 'T00:00:00'); return isNaN(d) ? s : d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); };
+const fmtDate = s => { if(!s) return '—'; const d = new Date(s + 'T00:00:00'); return isNaN(d) ? s : d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); };
 const fmtMoney = n => 'KSh ' + Number(n||0).toLocaleString('en-US',{maximumFractionDigits:0});
 const timeAgo = iso => { if(!iso) return ''; const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff/60000); if(m<1) return 'just now'; if(m<60) return m+'m'; const h = Math.floor(m/60); if(h<24) return h+'h'; const d = Math.floor(h/24); if(d<7) return d+'d';
@@ -67,7 +61,7 @@ const isMobile = () => window.innerWidth < 768;
 
 function toast(msg, type = 'info') {
   const colors = { success:'#34d399', error:'#fb7185', info:'#38bdf8', warning:'#fbbf24' };
-  const icons = { success:'fa-circle-check', error:'fa-circle-exclamation', info:'fa-circle-info', warning:'fa-triangle-exclamation' };
+  const icons  = { success:'fa-circle-check', error:'fa-circle-exclamation', info:'fa-circle-info', warning:'fa-triangle-exclamation' };
   const el = document.createElement('div');
   el.className = 'toast-item rounded-2xl px-4 py-3.5 flex items-start gap-3 shadow-2xl';
   el.style.cssText = `background:#0b1220;border:1px solid rgba(148,163,184,.18);border-left:4px solid ${colors[type]};z-index:9999`;
@@ -92,7 +86,7 @@ function formatCountdown(ms) {
   const h = Math.floor((abs % 86400000) / 3600000);
   const m = Math.floor((abs % 3600000) / 60000);
   const s = Math.floor((abs % 60000) / 1000);
-  const pre = ms < 0 ? 'âš  ' : '';
+  const pre = ms < 0 ? '⚠ ' : '';
   if (d > 0) return `${pre}${d}d ${h}h`;
   if (h > 0) return `${pre}${h}h ${m}m`;
   if (m > 0) return `${pre}${m}m ${s}s`;
@@ -119,6 +113,9 @@ function startCountdownTicker() {
   window._cdTicker = setInterval(tick, 1000);
 }
 
+/* ═══════════════════════════════════════════════════════════
+   IMAGE / FILE HELPERS
+   ═══════════════════════════════════════════════════════════ */
 const MAX_PHOTO = 3 * 1024 * 1024;
 function readAsDataURL(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = e => res(e.target.result); r.onerror = rej; r.readAsDataURL(file); }); }
 function resizeImage(file, max = 800) {
@@ -146,7 +143,7 @@ async function captureCompletionPhoto(type, id) {
     if (!f.type.startsWith('image/')) return toast('Pick an image.', 'error');
     if (f.size > MAX_PHOTO) return toast('Max 3 MB.', 'error');
     try {
-      toast('Compressing photoâ€¦', 'info');
+      toast('Compressing photo…', 'info');
       const b64 = await resizeImage(f, 800);
       const meta = { completionPhoto: b64, photoAddedAt: new Date().toISOString() };
       let title = '';
@@ -164,35 +161,21 @@ async function captureCompletionPhoto(type, id) {
 }
 function viewCompletionPhoto(b64, name = 'completion.jpg') {
   if (!b64) return toast('No photo attached.', 'warning');
-  $('previewTitle').textContent = name;
-  $('previewBody').innerHTML = `<div class="text-center">
+  const pt = $('previewTitle'), pb = $('previewBody'), pdb = $('previewDownloadBtn');
+  if (pt) pt.textContent = name;
+  if (pb) pb.innerHTML = `<div class="text-center">
     <img src="${b64}" class="max-w-full max-h-[70vh] rounded-xl shadow-2xl" />
     <a href="${b64}" download="${name}" class="inline-flex items-center gap-2 mt-4 px-5 py-2.5 rounded-xl glass text-[12.5px] font-semibold text-slate-300 hover:text-white"><i class="fa-solid fa-download"></i> Download</a></div>`;
-  $('previewDownloadBtn').onclick = () => { const a = document.createElement('a'); a.href = b64; a.download = name; a.click(); };
+  if (pdb) pdb.onclick = () => { const a = document.createElement('a'); a.href = b64; a.download = name; a.click(); };
   showModal('previewModal');
 }
 function photoButton(type, id, hasPhoto) {
   return `<button data-photo="${type}:${id}" class="photo-btn ${hasPhoto ? 'has' : ''}" title="${hasPhoto ? 'View photo' : 'Add completion photo'}"><i class="fa-solid ${hasPhoto ? 'fa-image' : 'fa-camera'}"></i></button>`;
 }
-document.addEventListener('click', e => {
-  const btn = e.target.closest('[data-photo]'); if (!btn) return;
-  e.stopPropagation();
-  const [type, id] = btn.dataset.photo.split(':');
-  let item = null;
-  if (type === 'task') item = state.tasks[state.user?.uid]?.[id];
-  else if (type === 'todo') item = state.todos[state.user?.uid]?.[id];
-  else if (type === 'goal') item = state.goals?.[id];
-  else if (type === 'event') item = state.schedule[state.user?.uid]?.[id];
-  else if (type === 'activity') {
-    const comp = state.activities[state.user?.uid]?.completions?.[id];
-    if (comp?.photo) return viewCompletionPhoto(comp.photo, `activity-${id}.jpg`);
-    return captureCompletionPhoto(type, id);
-  }
-  if (!state.user) return;
-  if (item?.completionPhoto) viewCompletionPhoto(item.completionPhoto, `${type}-${id}.jpg`);
-  else captureCompletionPhoto(type, id);
-});
 
+/* ═══════════════════════════════════════════════════════════
+   NOTIFICATIONS
+   ═══════════════════════════════════════════════════════════ */
 function startNotificationScheduler() {
   const check = () => {
     if (!state.settings.notifEnabled) return;
@@ -205,8 +188,8 @@ function startNotificationScheduler() {
       const diff = due.getTime() - now;
       const key = `${type}-${item.id}-${Math.floor(due.getTime() / 1800000)}`;
       if (fired[key]) return;
-      if (diff > 0 && diff <= 30 * 60000) { showNotification('â° Due in ' + formatCountdown(diff), item[titleField] || ''); fired[key] = true; }
-      else if (diff < 0 && diff > -2 * 3600000) { showNotification('âš ï¸ Overdue: ' + (item[titleField] || ''), 'Was due ' + formatCountdown(diff)); fired[key] = true; }
+      if (diff > 0 && diff <= 30 * 60000) { showNotification('⏰ Due in ' + formatCountdown(diff), item[titleField] || ''); fired[key] = true; }
+      else if (diff < 0 && diff > -2 * 3600000) { showNotification('⚠️ Overdue: ' + (item[titleField] || ''), 'Was due ' + formatCountdown(diff)); fired[key] = true; }
     };
     myTasks().forEach(t => checkItem(t, 'task', 'title'));
     myTodos().forEach(t => checkItem(t, 'todo', 'text'));
@@ -239,6 +222,9 @@ function buildNotifications() {
   return out;
 }
 
+/* ═══════════════════════════════════════════════════════════
+   VAULT
+   ═══════════════════════════════════════════════════════════ */
 async function vaultSave({ id, name, mime, size, data, source, sourceLabel, parentId, tags, uploadedBy }) {
   if (!state.user) return;
   const vid = id || uid();
@@ -305,6 +291,9 @@ async function mirrorChatToVault(msgId, name, mime, size, b64) {
   });
 }
 
+/* ═══════════════════════════════════════════════════════════
+   IDB + OFFLINE QUEUE
+   ═══════════════════════════════════════════════════════════ */
 const IDB_NAME = 'viora_track_db';
 const IDB_STORE = 'cache';
 let _idb = null;
@@ -343,7 +332,7 @@ async function hydrateFromMirror() {
 const QUEUE_KEY = 'viora_track_queue';
 function getQueue() { try { return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); } catch { return []; } }
 function setQueue(q) { try { localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); } catch {} updateSyncBanner(); if ($('queueState')) $('queueState').textContent = q.length; updateMobileSyncBanner(); }
-function queueWrite(op) { const q = getQueue(); q.push({ ...op, id: uid(), ts: Date.now() }); setQueue(q); toast('Saved offline â€” will sync', 'warning'); }
+function queueWrite(op) { const q = getQueue(); q.push({ ...op, id: uid(), ts: Date.now() }); setQueue(q); toast('Saved offline — will sync', 'warning'); }
 
 async function safeSet(path, payload) {
   const fullPath = P(path);
@@ -362,7 +351,7 @@ async function safeRemove(path) {
 }
 async function flushQueue() {
   const q = getQueue(); if (!q.length) return;
-  updateSyncBanner('syncing', `Syncing ${q.length} change${q.length>1?'s':''}â€¦`);
+  updateSyncBanner('syncing', `Syncing ${q.length} change${q.length>1?'s':''}…`);
   const remaining = []; let synced = 0;
   for (const op of q) {
     try {
@@ -380,10 +369,10 @@ function updateSyncBanner(force, msg) {
   const el = $('syncBanner'); if (!el) return;
   const q = getQueue().length;
   el.className = '';
-  if (force === 'syncing') { el.classList.add('syncing'); $('syncBannerText').textContent = msg || 'Syncingâ€¦'; $('syncBannerBtn').style.display = 'none'; }
-  else if (!navigator.onLine) { el.classList.add('offline'); $('syncBannerText').textContent = `Offline â€” ${q} change${q===1?'':'s'} queued`; $('syncBannerBtn').style.display = q ? 'inline-block' : 'none'; }
-  else if (q > 0) { el.classList.add('syncing'); $('syncBannerText').textContent = `${q} change${q===1?'':'s'} waiting to sync`; $('syncBannerBtn').style.display = 'inline-block'; }
-  else { el.classList.add('online'); $('syncBannerText').textContent = 'Online â€” live sync active'; $('syncBannerBtn').style.display = 'none'; }
+  if (force === 'syncing') { el.classList.add('syncing'); const t=$('syncBannerText'); if(t)t.textContent = msg || 'Syncing…'; const b=$('syncBannerBtn'); if(b)b.style.display = 'none'; }
+  else if (!navigator.onLine) { el.classList.add('offline'); const t=$('syncBannerText'); if(t)t.textContent = `Offline — ${q} change${q===1?'':'s'} queued`; const b=$('syncBannerBtn'); if(b)b.style.display = q ? 'inline-block' : 'none'; }
+  else if (q > 0) { el.classList.add('syncing'); const t=$('syncBannerText'); if(t)t.textContent = `${q} change${q===1?'':'s'} waiting to sync`; const b=$('syncBannerBtn'); if(b)b.style.display = 'inline-block'; }
+  else { el.classList.add('online'); const t=$('syncBannerText'); if(t)t.textContent = 'Online — live sync active'; const b=$('syncBannerBtn'); if(b)b.style.display = 'none'; }
   if ($('queueState')) $('queueState').textContent = q;
   updateMobileSyncBanner();
 }
@@ -391,16 +380,25 @@ function updateMobileSyncBanner() {
   const b = $('mSyncBanner'); if (!b) return;
   const q = getQueue().length;
   const offline = !navigator.onLine;
-  const txt = $('mSyncText');
+  const txt = $('mSyncText'); if (!txt) return;
+  const inner = b.querySelector('div');
   if (offline || q > 0) {
     b.style.display = 'block';
-    if (offline) { txt.textContent = `Offline â€” ${q} change${q===1?'':'s'} queued`; b.querySelector('div').style.background = 'rgba(251,191,36,.12)'; b.querySelector('div').style.borderColor = 'rgba(251,191,36,.35)'; b.querySelector('div').style.color = '#fbbf24'; }
-    else { txt.textContent = `${q} change${q===1?'':'s'} waiting to sync`; b.querySelector('div').style.background = 'rgba(56,189,248,.12)'; b.querySelector('div').style.borderColor = 'rgba(56,189,248,.35)'; b.querySelector('div').style.color = '#38bdf8'; }
+    if (offline) {
+      txt.textContent = `Offline — ${q} change${q===1?'':'s'} queued`;
+      if (inner) { inner.style.background = 'rgba(251,191,36,.12)'; inner.style.borderColor = 'rgba(251,191,36,.35)'; inner.style.color = '#fbbf24'; }
+    } else {
+      txt.textContent = `${q} change${q===1?'':'s'} waiting to sync`;
+      if (inner) { inner.style.background = 'rgba(56,189,248,.12)'; inner.style.borderColor = 'rgba(56,189,248,.35)'; inner.style.color = '#38bdf8'; }
+    }
   } else b.style.display = 'none';
 }
 
+/* ═══════════════════════════════════════════════════════════
+   HISTORY
+   ═══════════════════════════════════════════════════════════ */
 const HIST_COLORS = { task:'#38bdf8', todo:'#fbbf24', goal:'#fb923c', activity:'#d946ef', expense:'#f59e0b', savings:'#34d399', subscription:'#a855f7', skill:'#818cf8', event:'#fb7185', handoff:'#14b8a6', chat:'#22d3ee', presence:'#64748b', hourly:'#10b981', document:'#22d3ee' };
-const HIST_ICONS = { task:'fa-list-check', todo:'fa-circle-check', goal:'fa-bullseye', activity:'fa-wand-magic-sparkles', expense:'fa-receipt', savings:'fa-piggy-bank', subscription:'fa-repeat', skill:'fa-code-branch', event:'fa-calendar', handoff:'fa-arrows-rotate', chat:'fa-comments', presence:'fa-wifi', hourly:'fa-clock', document:'fa-file' };
+const HIST_ICONS  = { task:'fa-list-check', todo:'fa-circle-check', goal:'fa-bullseye', activity:'fa-wand-magic-sparkles', expense:'fa-receipt', savings:'fa-piggy-bank', subscription:'fa-repeat', skill:'fa-code-branch', event:'fa-calendar', handoff:'fa-arrows-rotate', chat:'fa-comments', presence:'fa-wifi', hourly:'fa-clock', document:'fa-file' };
 async function logHistory(action, entity, entityId, title, details = {}) {
   if (!state.user) return;
   const entry = { id: uid(), uid: state.user.uid, action, entity, entityId: String(entityId || ''), title: String(title || '').slice(0, 200), details, ts: Date.now() };
@@ -412,10 +410,13 @@ async function logHistory(action, entity, entityId, title, details = {}) {
   return entry;
 }
 
+/* ═══════════════════════════════════════════════════════════
+   SERVICE WORKER
+   ═══════════════════════════════════════════════════════════ */
 function registerSW() {
   if (!('serviceWorker' in navigator)) return;
   const sw = `
-    const C = 'viora-track-v73';
+    const C = 'viora-track-v74';
     const ASSETS = [
       'https://cdn.tailwindcss.com',
       'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
@@ -439,6 +440,9 @@ function registerSW() {
   try { const blob = new Blob([sw], { type: 'application/javascript' }); navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {}); } catch(e) {}
 }
 
+/* ═══════════════════════════════════════════════════════════
+   CHARTS
+   ═══════════════════════════════════════════════════════════ */
 function rr(ctx,x,y,w,h,r){ r = Math.min(r,w/2,h/2); ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
 const bar3DPlugin = { id:'bar3D', beforeDatasetsDraw(chart){
   const ctx = chart.ctx;
@@ -472,11 +476,16 @@ const doughnut3DPlugin = { id:'doughnut3D', beforeDatasetsDraw(chart){
     ctx.restore();
   });
 }};
-Chart.register(bar3DPlugin, doughnut3DPlugin);
-Chart.defaults.font.family = "'Inter', sans-serif";
-Chart.defaults.font.size = 11;
-Chart.defaults.color = '#94a3b8';
+if (typeof Chart !== 'undefined') {
+  Chart.register(bar3DPlugin, doughnut3DPlugin);
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  Chart.defaults.font.size = 11;
+  Chart.defaults.color = '#94a3b8';
+}
 
+/* ═══════════════════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════════════════ */
 const state = {
   user: null, profile: null,
   profiles:{}, tasks:{}, todos:{}, schedule:{}, documents:{},
@@ -497,20 +506,21 @@ const state = {
 };
 const ACCENTS = ['#38bdf8','#a855f7','#34d399','#fbbf24','#fb7185','#22d3ee','#f472b6','#818cf8'];
 
-const myTasks = () => Object.values(state.tasks[state.user?.uid] || {});
-const myTodos = () => Object.values(state.todos[state.user?.uid] || {});
-const mySchedule = () => Object.values(state.schedule[state.user?.uid] || {});
-const myDocs = () => Object.values(state.documents || {});
-const myHourly = () => Object.values(state.hourly[state.user?.uid] || {});
-const tasksOf = u => Object.values(state.tasks[u] || {});
-const todosOf = u => Object.values(state.todos[u] || {});
-const hourlyOf = u => Object.values(state.hourly[u] || {});
-const allGoals = () => Object.values(state.goals || {});
+const myTasks   = () => Object.values(state.tasks[state.user?.uid] || {});
+const myTodos   = () => Object.values(state.todos[state.user?.uid] || {});
+const mySchedule= () => Object.values(state.schedule[state.user?.uid] || {});
+const myDocs    = () => Object.values(state.documents || {});
+const myHourly  = () => Object.values(state.hourly[state.user?.uid] || {});
+const tasksOf   = u => Object.values(state.tasks[u] || {});
+const todosOf   = u => Object.values(state.todos[u] || {});
+const hourlyOf  = u => Object.values(state.hourly[u] || {});
+const allGoals  = () => Object.values(state.goals || {});
 const allSkills = () => Object.values(state.skills || {});
-const allExpenses = () => Object.values(state.financials.expenses || {});
-const allSavings = () => Object.values(state.financials.savings || {});
-const allSubs = () => Object.values(state.financials.subscriptions || {});
-const allHandoffs = () => Object.values(state.handoffs || {});
+const allExpenses   = () => Object.values(state.financials.expenses || {});
+const allSavings    = () => Object.values(state.financials.savings || {});
+const allSubs       = () => Object.values(state.financials.subscriptions || {});
+const allHandoffs   = () => Object.values(state.handoffs || {});
+
 function partnerUid() {
   const sel = state.settings.activePartnerId;
   if (sel && state.profiles[sel]) return sel;
@@ -519,39 +529,65 @@ function partnerUid() {
 function isOnline(u) { return !!(state.presence[u] && state.presence[u].online); }
 function profileName(u) { return state.profiles[u]?.name || 'Unknown'; }
 
+/* ═══════════════════════════════════════════════════════════
+   AI
+   ═══════════════════════════════════════════════════════════ */
 async function ai(path, payload) {
   if (!WORKER_URL || WORKER_URL.includes('YOUR-SUBDOMAIN')) { toast('Set Worker URL in Settings.', 'warning'); throw new Error('Worker URL not configured'); }
   const res = await fetch(`${WORKER_URL}${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
   if (!res.ok) throw new Error(`AI ${res.status}: ${(await res.text()).slice(0,120)}`);
   return res.json();
 }
+async function checkAIHealth() {
+  try { const res = await fetch(`${WORKER_URL}/health`); if (!res.ok) throw new Error('HTTP ' + res.status); return await res.json(); }
+  catch(e) { console.warn('AI Worker unreachable:', e.message); return null; }
+}
+window.checkAIHealth = checkAIHealth;
 
-$('tabSignIn').onclick = () => setAuthMode(false);
-$('tabSignUp').onclick = () => setAuthMode(true);
+/* ═══════════════════════════════════════════════════════════
+   MODAL HELPERS
+   ═══════════════════════════════════════════════════════════ */
+function showModal(id) { const el = $(id); if (!el) return; el.classList.remove('hidden'); el.classList.add('flex'); }
+function hideModal(id) { const el = $(id); if (!el) return; el.classList.add('hidden'); el.classList.remove('flex'); }
+window.showModal = showModal;
+window.hideModal = hideModal;
+
+/* ═══════════════════════════════════════════════════════════
+   AUTH MODE
+   ═══════════════════════════════════════════════════════════ */
 function setAuthMode(s) {
   state.signupMode = s;
-  $('tabSignIn').className = s ? 'flex-1 py-2.5 rounded-xl text-[13px] font-semibold text-slate-400 transition-all hover:text-white' : 'flex-1 py-2.5 rounded-xl text-[13px] font-semibold transition-all bg-gradient-to-r from-sky-500 to-violet-600 text-white';
-  $('tabSignUp').className = s ? 'flex-1 py-2.5 rounded-xl text-[13px] font-semibold transition-all bg-gradient-to-r from-sky-500 to-violet-600 text-white' : 'flex-1 py-2.5 rounded-xl text-[13px] font-semibold text-slate-400 transition-all hover:text-white';
-  $('nameField').classList.toggle('hidden', !s);
-  $('authBtnText').textContent = s ? 'Create Account' : 'Sign In';
+  const ts = $('tabSignIn'), tu = $('tabSignUp');
+  if (ts) ts.className = s ? 'flex-1 py-2.5 rounded-xl text-[13px] font-semibold text-slate-400 transition-all hover:text-white' : 'flex-1 py-2.5 rounded-xl text-[13px] font-semibold transition-all bg-gradient-to-r from-sky-500 to-violet-600 text-white';
+  if (tu) tu.className = s ? 'flex-1 py-2.5 rounded-xl text-[13px] font-semibold transition-all bg-gradient-to-r from-sky-500 to-violet-600 text-white' : 'flex-1 py-2.5 rounded-xl text-[13px] font-semibold text-slate-400 transition-all hover:text-white';
+  if ($('nameField')) $('nameField').classList.toggle('hidden', !s);
+  if ($('authBtnText')) $('authBtnText').textContent = s ? 'Create Account' : 'Sign In';
 }
-$('authBtn').onclick = async () => {
-  const email = $('authEmail').value.trim(), pass = $('authPassword').value, name = $('authName').value.trim();
+
+async function handleAuthSubmit() {
+  const email = ($('authEmail')?.value || '').trim();
+  const pass  = $('authPassword')?.value || '';
+  const name  = ($('authName')?.value || '').trim();
+
   if (!email || !pass) return toast('Email + password required.', 'error');
   if (state.signupMode && !name) return toast('Name required.', 'error');
   if (state.signupMode && pass.length < 6) return toast('Min 6 chars.', 'error');
-  $('authBtn').disabled = true; $('authBtnText').textContent = state.signupMode ? 'Creatingâ€¦' : 'Signing inâ€¦';
+
+  const btn = $('authBtn');
+  const btnText = $('authBtnText');
+  if (btn) btn.disabled = true;
+  if (btnText) btnText.textContent = state.signupMode ? 'Creating…' : 'Signing in…';
+
   try {
     if (state.signupMode) {
       const cred = await createUserWithEmailAndPassword(auth, email, pass);
-      // Writes to SHARED users node â€” index.html reads this at viora_data/users/{uid}
       await set(ref(db, `${ROOT}/users/${cred.user.uid}`), {
         uid: cred.user.uid,
         name,
         email,
         tagline: 'Just getting started',
         hobbies: '',
-        accent: ACCENTS[Math.floor(Math.random()*ACCENTS.length)],
+        accent: ACCENTS[Math.floor(Math.random() * ACCENTS.length)],
         avatar: null,
         role: 'member',
         orgId: 'viora',
@@ -562,28 +598,34 @@ $('authBtn').onclick = async () => {
     } else {
       await signInWithEmailAndPassword(auth, email, pass);
     }
-  } catch(e) {
-    const m = (e.code||'').replace('auth/','').replace(/-/g,' ');
+  } catch (e) {
+    const m = (e.code || '').replace('auth/', '').replace(/-/g, ' ');
     toast('Failed: ' + (m || e.message), 'error');
-    $('authBtn').disabled = false; $('authBtnText').textContent = state.signupMode ? 'Create Account' : 'Sign In';
+    if (btn) btn.disabled = false;
+    if (btnText) btnText.textContent = state.signupMode ? 'Create Account' : 'Sign In';
   }
-};
-$('authPassword').onkeydown = e => { if (e.key === 'Enter') $('authBtn').click(); };
-$('signOutBtn').onclick = async () => { if (!confirm('Sign out?')) return;
-  try { await remove(ref(db, P(`presence/${state.user.uid}`))); } catch(e) {}
-  await signOut(auth); location.reload(); };
+}
 
+async function handleSignOut() {
+  if (!confirm('Sign out?')) return;
+  try { await remove(ref(db, P(`presence/${state.user.uid}`))); } catch (e) {}
+  await signOut(auth);
+  location.reload();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   AUTH OBSERVER
+   ═══════════════════════════════════════════════════════════ */
 onAuthStateChanged(auth, async user => {
   if (!user) {
     state.user = null;
-    $('authScreen').classList.remove('hidden');
-    $('desktopShell').classList.add('hidden');
-    $('mobileAppShell').style.display = 'none';
-    $('loading').classList.add('hidden');
+    $('authScreen')?.classList.remove('hidden');
+    $('desktopShell')?.classList.add('hidden');
+    const mas = $('mobileAppShell'); if (mas) mas.style.display = 'none';
+    $('loading')?.classList.add('hidden');
     return;
   }
   state.user = user;
-  // Read from SHARED users path â€” same path index.html uses.
   const pRef = ref(db, `${ROOT}/users/${user.uid}`);
   const snap = await new Promise(res => onValue(pRef, s => res(s), { onlyOnce: true }));
   if (!snap.exists()) {
@@ -608,10 +650,10 @@ onAuthStateChanged(auth, async user => {
     if (state.settings.chatHistory) state.chatHistory = state.settings.chatHistory;
     if (state.settings.lastChatSeenTs) state.lastChatSeenTs = state.settings.lastChatSeenTs;
   } catch(e){}
-  $('authScreen').classList.add('hidden');
-  if (isMobile()) { $('mobileAppShell').style.display = 'grid'; $('desktopShell').classList.add('hidden'); }
-  else { $('desktopShell').classList.remove('hidden'); $('mobileAppShell').style.display = 'none'; }
-  $('loading').classList.add('hidden');
+  $('authScreen')?.classList.add('hidden');
+  if (isMobile()) { const mas = $('mobileAppShell'); if (mas) mas.style.display = 'grid'; $('desktopShell')?.classList.add('hidden'); }
+  else { $('desktopShell')?.classList.remove('hidden'); const mas = $('mobileAppShell'); if (mas) mas.style.display = 'none'; }
+  $('loading')?.classList.add('hidden');
   const hydrated = await hydrateFromMirror();
   if (hydrated) { renderChrome(); renderAll(); }
   subscribeAll();
@@ -631,8 +673,10 @@ onAuthStateChanged(auth, async user => {
   checkAIHealth().then(r => { if (r && r.ok) console.log('AI ready:', r.model); });
 });
 
+/* ═══════════════════════════════════════════════════════════
+   SUBSCRIPTIONS
+   ═══════════════════════════════════════════════════════════ */
 function subscribeAll() {
-  // Track collections live under viora_data/orgs/viora/track/{col}/...
   ['tasks','todos','schedule','documents','goals','skills','handoffs',
    'presence','activities','hourly','games','chat','typing','history','inventory']
     .forEach(p => onValue(ref(db, P(p)), snap => {
@@ -642,7 +686,6 @@ function subscribeAll() {
       scheduleRender();
     }));
 
-  // SHARED with index.html â€” read straight from viora_data/users
   onValue(ref(db, `${ROOT}/users`), snap => {
     state.profiles = snap.val() || {};
     state.profile = state.profiles[state.user?.uid] || state.profile || null;
@@ -659,17 +702,18 @@ function subscribeAll() {
 
   onValue(ref(db, '.info/connected'), s => {
     const on = s.val() === true;
-    $('syncDot').className = 'w-1.5 h-1.5 rounded-full ' + (on ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500');
-    $('syncLabel').textContent = on ? 'Live Sync' : 'Offline';
+    if ($('syncDot')) $('syncDot').className = 'w-1.5 h-1.5 rounded-full ' + (on ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500');
+    if ($('syncLabel')) $('syncLabel').textContent = on ? 'Live Sync' : 'Offline';
     const cs = $('connState');
     if (cs) { cs.textContent = on ? 'Connected' : 'Offline'; cs.className = on ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold'; }
     updateMobileSyncBanner();
   });
 
   window.addEventListener('online', () => { goOnline(); toast('Back online', 'success'); updateSyncBanner(); flushQueue(); });
-  window.addEventListener('offline', () => { toast('Offline â€” changes sync later', 'warning'); updateSyncBanner(); });
+  window.addEventListener('offline', () => { toast('Offline — changes sync later', 'warning'); updateSyncBanner(); });
   setInterval(() => { if (navigator.onLine && getQueue().length) flushQueue(); }, 30000);
 }
+
 function scheduleRender() {
   clearTimeout(state.renderTimer);
   state.renderTimer = setTimeout(() => {
@@ -680,6 +724,7 @@ function scheduleRender() {
     window._mirrorT = setTimeout(mirrorState, 500);
   }, 70);
 }
+
 function setupPresence() {
   const pRef = ref(db, P(`presence/${state.user.uid}`));
   onValue(ref(db, '.info/connected'), snap => {
@@ -697,7 +742,7 @@ function initPresenceLog() {
     else if (!on && wasOnline) { wasOnline = false; logHistory('presence', 'presence', state.user.uid, 'Went offline'); }
   });
 }
-function startClock() { const t = () => { const d = new Date(); const el = $('clockText'); if (el) el.textContent = d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }; t(); setInterval(t,20000); }
+function startClock() { const t = () => { const el = $('clockText'); if (el) el.textContent = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }; t(); setInterval(t,20000); }
 function startMidnightReset() {
   setInterval(() => {
     const t = todayStr();
@@ -711,6 +756,10 @@ function startMidnightReset() {
     }
   }, 60000);
 }
+
+/* ═══════════════════════════════════════════════════════════
+   NOTIFICATIONS UI
+   ═══════════════════════════════════════════════════════════ */
 function initNotifications() {
   const bell = $('notifBell'); const dd = $('notifDropdown');
   if (bell && dd) {
@@ -720,25 +769,40 @@ function initNotifications() {
   }
   if ($('mNotifBtn')) $('mNotifBtn').onclick = () => { const list = buildNotifications(); if (!list.length) return toast('No alerts.', 'info'); toast(`${list.length} alert${list.length>1?'s':''}: ${list[0].title}`, 'info'); };
   if ($('testNotifBtn')) $('testNotifBtn').onclick = () => showNotification('Viora Track Test', 'Notifications working!');
-  $('notifEnabled').checked = !!state.settings.notifEnabled;
-  $('notifEnabled').onchange = e => { state.settings.notifEnabled = e.target.checked; persistSettings(); };
-  $('chatSoundEnabled').checked = state.settings.chatSoundEnabled !== false;
-  $('chatSoundEnabled').onchange = e => { state.settings.chatSoundEnabled = e.target.checked; persistSettings(); };
-  $('requestPermBtn').onclick = async () => { if (!('Notification' in window)) return toast('Not supported.', 'error'); const p = await Notification.requestPermission(); toast(`Permission: ${p}`, p === 'granted' ? 'success' : 'warning'); };
-  $('workerUrlInput').value = state.settings.workerUrl || WORKER_URL;
-  $('saveWorkerBtn').onclick = () => { const u = $('workerUrlInput').value.trim(); if (!u.startsWith('http')) return toast('Enter a valid https:// URL', 'error'); WORKER_URL = u; state.settings.workerUrl = u; persistSettings(); toast('Worker URL saved.', 'success'); };
+  if ($('notifEnabled')) {
+    $('notifEnabled').checked = !!state.settings.notifEnabled;
+    $('notifEnabled').onchange = e => { state.settings.notifEnabled = e.target.checked; persistSettings(); };
+  }
+  if ($('chatSoundEnabled')) {
+    $('chatSoundEnabled').checked = state.settings.chatSoundEnabled !== false;
+    $('chatSoundEnabled').onchange = e => { state.settings.chatSoundEnabled = e.target.checked; persistSettings(); };
+  }
+  if ($('requestPermBtn')) $('requestPermBtn').onclick = async () => {
+    if (!('Notification' in window)) return toast('Not supported.', 'error');
+    const p = await Notification.requestPermission(); toast(`Permission: ${p}`, p === 'granted' ? 'success' : 'warning');
+  };
+  if ($('workerUrlInput')) $('workerUrlInput').value = state.settings.workerUrl || WORKER_URL;
+  if ($('saveWorkerBtn')) $('saveWorkerBtn').onclick = () => {
+    const u = $('workerUrlInput').value.trim(); if (!u.startsWith('http')) return toast('Enter a valid https:// URL', 'error');
+    WORKER_URL = u; state.settings.workerUrl = u; persistSettings(); toast('Worker URL saved.', 'success');
+  };
   if ($('aiTestBtn')) $('aiTestBtn').onclick = async () => {
-    const out = $('aiTestResult'); if (out) out.textContent = 'Testingâ€¦';
+    const out = $('aiTestResult'); if (out) out.textContent = 'Testing…';
     const r = await checkAIHealth();
-    if (r && r.ok) { toast('Worker online Â· ' + (r.model || ''), 'success'); if (out) out.innerHTML = `<span style="color:#34d399">âœ“ Online Â· ${esc(r.model||'ok')}</span>`;
-      try { const t = await ai('/ai/chat', { messages: [{ role: 'user', content: 'Reply with one word: ready' }], context: {} }); toast('AI reply: ' + (t.reply || 'ok'), 'success'); if (out) out.innerHTML += ` Â· Reply: ${esc((t.reply||'').slice(0,20))}`; }
+    if (r && r.ok) {
+      toast('Worker online · ' + (r.model || ''), 'success');
+      if (out) out.innerHTML = `<span style="color:#34d399">✓ Online · ${esc(r.model||'ok')}</span>`;
+      try { const t = await ai('/ai/chat', { messages: [{ role: 'user', content: 'Reply with one word: ready' }], context: {} }); toast('AI reply: ' + (t.reply || 'ok'), 'success'); if (out) out.innerHTML += ` · Reply: ${esc((t.reply||'').slice(0,20))}`; }
       catch(e) { toast('Chat failed: ' + e.message, 'warning'); }
-    } else { toast('Worker unreachable', 'error'); if (out) out.innerHTML = '<span style="color:#fb7185">âœ— Unreachable</span>'; }
+    } else { toast('Worker unreachable', 'error'); if (out) out.innerHTML = '<span style="color:#fb7185">✗ Unreachable</span>'; }
   };
 }
 function persistSettings() { try { localStorage.setItem('dualtrack_settings_' + state.user.uid, JSON.stringify(state.settings)); } catch(e){} }
 function saveGameStats() { try { localStorage.setItem('dualtrack_gamestats', JSON.stringify(state.gameStats)); } catch(e){} }
 
+/* ═══════════════════════════════════════════════════════════
+   NAVIGATION
+   ═══════════════════════════════════════════════════════════ */
 function navigateTo(tab, options = {}) {
   if (!tab) return;
   if (!isMobile()) {
@@ -752,6 +816,7 @@ function navigateTo(tab, options = {}) {
   }
 }
 window.navigateTo = navigateTo;
+
 function highlightItem(id) {
   if (!id) return;
   setTimeout(() => {
@@ -764,13 +829,7 @@ function highlightItem(id) {
     setTimeout(() => card.classList.remove('highlight-pulse'), 4500);
   }, 250);
 }
-async function checkAIHealth() {
-  try { const res = await fetch(`${WORKER_URL}/health`); if (!res.ok) throw new Error('HTTP ' + res.status); return await res.json(); }
-  catch(e) { console.warn('AI Worker unreachable:', e.message); return null; }
-}
-window.checkAIHealth = checkAIHealth;
 
-// Mobile-only fullscreen for games. Guarded so it's a no-op on desktop.
 function enterFullscreenTab(tab) {
   if (!isMobile()) { goTab(tab); return; }
   document.body.classList.add('mobile-game-open');
@@ -790,12 +849,15 @@ function exitFullscreenTab() {
   document.body.classList.remove('mobile-game-open');
   const bar = document.getElementById('mobileReturnBar');
   if (bar) bar.remove();
-  document.getElementById('mobileAppShell').style.display = 'grid';
+  const mas = $('mobileAppShell'); if (mas) mas.style.display = 'grid';
   switchMobileScreen(state.mobileScreen || 'dashboard');
 }
 
+/* ═══════════════════════════════════════════════════════════
+   CHROME
+   ═══════════════════════════════════════════════════════════ */
 function renderChrome() {
-  const p = state.profile; if (!p) return;
+  const p = state.profile; if (!p || !state.user) return;
   const name = p.name || state.user.email;
   const safe = (id, val) => { const el = $(id); if (el) el.textContent = val; };
   safe('topName', name); safe('profileName', name);
@@ -836,7 +898,7 @@ function renderChrome() {
     cp.querySelectorAll('[data-accent]').forEach(x => x.style.borderColor = x.dataset.accent === (p.accent||ACCENTS[0]) ? '#fff' : 'transparent'); }
   const psel = $('partnerSelect');
   if (psel) { const cur = state.settings.activePartnerId || '';
-    psel.innerHTML = '<option value="">â€” None â€”</option>' + Object.values(state.profiles).filter(x => x.uid !== state.user.uid).map(x => `<option value="${x.uid}" ${x.uid===cur?'selected':''}>${esc(x.name)} Â· ${esc(x.email)}</option>`).join('');
+    psel.innerHTML = '<option value="">— None —</option>' + Object.values(state.profiles).filter(x => x.uid !== state.user.uid).map(x => `<option value="${x.uid}" ${x.uid===cur?'selected':''}>${esc(x.name)} · ${esc(x.email)}</option>`).join('');
     psel.onchange = () => { state.settings.activePartnerId = psel.value; persistSettings(); renderAll(); updateChatHeader(); }; }
   renderNotificationsBadge();
   if ($('queueState')) $('queueState').textContent = getQueue().length;
@@ -849,27 +911,26 @@ function renderNotificationsBadge() {
   const mbadge = $('mNotifDot');
   if (mbadge) { if (list.length) { mbadge.textContent = list.length > 9 ? '9+' : list.length; mbadge.style.display = 'grid'; } else mbadge.style.display = 'none'; }
 }
-
 function renderDashboardAlerts() {
-  const host = $('alertBannerContainer'); if (!host) return;
+  const host = $('alertBannerContainer'); if (!host || !state.user) return;
   const today = todayStr();
   const alerts = [];
   const overdue = myTasks().filter(t => !t.done && t.dueDate && t.dueDate < today);
-  if (overdue.length) alerts.push({ color:'#fb7185', icon:'fa-triangle-exclamation', title:`${overdue.length} overdue task${overdue.length>1?'s':''}`, sub: overdue.slice(0,2).map(t=>t.title).join(' Â· '), tab:'tasks', filter:'overdue' });
+  if (overdue.length) alerts.push({ color:'#fb7185', icon:'fa-triangle-exclamation', title:`${overdue.length} overdue task${overdue.length>1?'s':''}`, sub: overdue.slice(0,2).map(t=>t.title).join(' · '), tab:'tasks', filter:'overdue' });
   const overdueTodos = myTodos().filter(t => !t.done && t.date < today);
-  if (overdueTodos.length) alerts.push({ color:'#fb7185', icon:'fa-circle-check', title:`${overdueTodos.length} overdue to-do${overdueTodos.length>1?'s':''}`, sub: overdueTodos.slice(0,2).map(t=>t.text).join(' Â· '), tab:'today' });
+  if (overdueTodos.length) alerts.push({ color:'#fb7185', icon:'fa-circle-check', title:`${overdueTodos.length} overdue to-do${overdueTodos.length>1?'s':''}`, sub: overdueTodos.slice(0,2).map(t=>t.text).join(' · '), tab:'today' });
   const dueToday = myTasks().filter(t => !t.done && t.dueDate === today);
-  if (dueToday.length) alerts.push({ color:'#fbbf24', icon:'fa-hourglass-half', title:`${dueToday.length} due today`, sub: dueToday.slice(0,2).map(t=>t.title).join(' Â· '), tab:'tasks', filter:'today' });
+  if (dueToday.length) alerts.push({ color:'#fbbf24', icon:'fa-hourglass-half', title:`${dueToday.length} due today`, sub: dueToday.slice(0,2).map(t=>t.title).join(' · '), tab:'tasks', filter:'today' });
   const dueSoon = myTasks().filter(t => { if (t.done || !t.dueDate) return false; const d = dueDateTime(t); if (!d) return false; const diff = d.getTime() - Date.now(); return diff > 0 && diff < 2*3600000; });
-  if (dueSoon.length) alerts.push({ color:'#fbbf24', icon:'fa-clock', title:`${dueSoon.length} due in <2h`, sub: dueSoon.slice(0,2).map(t=>t.title).join(' Â· '), tab:'tasks', filter:'open' });
+  if (dueSoon.length) alerts.push({ color:'#fbbf24', icon:'fa-clock', title:`${dueSoon.length} due in <2h`, sub: dueSoon.slice(0,2).map(t=>t.title).join(' · '), tab:'tasks', filter:'open' });
   const pending = allHandoffs().filter(h => h.toUid === state.user.uid && h.status === 'pending');
-  if (pending.length) alerts.push({ color:'#22d3ee', icon:'fa-arrows-rotate', title:`${pending.length} handoff${pending.length>1?'s':''} waiting`, sub: pending.slice(0,2).map(h=>h.title).join(' Â· '), tab:'handoffs' });
+  if (pending.length) alerts.push({ color:'#22d3ee', icon:'fa-arrows-rotate', title:`${pending.length} handoff${pending.length>1?'s':''} waiting`, sub: pending.slice(0,2).map(h=>h.title).join(' · '), tab:'handoffs' });
   const goalSoon = allGoals().filter(g => { if (g.completedAt || !g.targetDate) return false; const d = daysUntil(g.targetDate); return d >= 0 && d <= 7; });
-  if (goalSoon.length) alerts.push({ color:'#fb923c', icon:'fa-bullseye', title:`${goalSoon.length} goal${goalSoon.length>1?'s':''} ending soon`, sub: goalSoon.slice(0,2).map(g=>`${g.title} (${daysUntil(g.targetDate)}d)`).join(' Â· '), tab:'goals' });
+  if (goalSoon.length) alerts.push({ color:'#fb923c', icon:'fa-bullseye', title:`${goalSoon.length} goal${goalSoon.length>1?'s':''} ending soon`, sub: goalSoon.slice(0,2).map(g=>`${g.title} (${daysUntil(g.targetDate)}d)`).join(' · '), tab:'goals' });
   const subsDue = allSubs().filter(s => s.nextDate && daysUntil(s.nextDate) <= 7 && daysUntil(s.nextDate) >= 0);
-  if (subsDue.length) alerts.push({ color:'#a855f7', icon:'fa-repeat', title:`${subsDue.length} subscription${subsDue.length>1?'s':''} due soon`, sub: subsDue.slice(0,2).map(s=>s.name).join(' Â· '), tab:'financials' });
+  if (subsDue.length) alerts.push({ color:'#a855f7', icon:'fa-repeat', title:`${subsDue.length} subscription${subsDue.length>1?'s':''} due soon`, sub: subsDue.slice(0,2).map(s=>s.name).join(' · '), tab:'financials' });
   if (!alerts.length) {
-    host.innerHTML = `<div class="rounded-2xl glass p-4 flex items-center gap-3" style="border-left:3px solid #34d399"><div class="w-8 h-8 rounded-lg grid place-items-center" style="background:#34d39922;color:#34d399"><i class="fa-solid fa-circle-check"></i></div><span class="text-[13px] text-slate-300">You're all caught up. Enjoy your day âœ¨</span></div>`;
+    host.innerHTML = `<div class="rounded-2xl glass p-4 flex items-center gap-3" style="border-left:3px solid #34d399"><div class="w-8 h-8 rounded-lg grid place-items-center" style="background:#34d39922;color:#34d399"><i class="fa-solid fa-circle-check"></i></div><span class="text-[13px] text-slate-300">You're all caught up. Enjoy your day ✨</span></div>`;
     return;
   }
   host.innerHTML = alerts.map(a => `<div class="alert-row" style="--a-color:${a.color}" data-go-tab="${a.tab}" data-go-filter="${a.filter || ''}">
@@ -879,14 +940,14 @@ function renderDashboardAlerts() {
   host.querySelectorAll('.alert-row').forEach(el => el.onclick = () => navigateTo(el.dataset.goTab, { filter: el.dataset.goFilter }));
 }
 function renderNotifDropdown() {
-  const host = $('notifBody'); if (!host) return;
+  const host = $('notifBody'); if (!host || !state.user) return;
   const items = [];
   const today = todayStr();
   myTasks().filter(t => !t.done && t.dueDate && t.dueDate < today).slice(0,3).forEach(t => items.push({ icon:'fa-triangle-exclamation', type:'danger', title:'Overdue task: ' + t.title, sub:'Was due ' + fmtDate(t.dueDate), time: fmtDate(t.dueDate), tab:'tasks', filter:'overdue', id: t.id }));
   myTasks().filter(t => !t.done && t.dueDate === today).slice(0,3).forEach(t => items.push({ icon:'fa-hourglass-half', type:'warning', title:'Due today: ' + t.title, sub: t.dueTime ? 'By ' + t.dueTime : 'Today', time: 'Today', tab:'tasks', filter:'today', id: t.id }));
   myTodos().filter(t => t.date === today && !t.done).slice(0,3).forEach(t => items.push({ icon:'fa-circle-check', type:'info', title:'To-do: ' + t.text, sub: t.dueTime ? 'By ' + t.dueTime : 'Today', time: 'Today', tab:'today', id: t.id }));
   allHandoffs().filter(h => h.toUid === state.user.uid && h.status === 'pending').slice(0,2).forEach(h => items.push({ icon:'fa-arrows-rotate', type:'info', title:'Handoff: ' + h.title, sub: 'From ' + (state.profiles[h.fromUid]?.name || 'partner'), time: timeAgo(h.createdAt), tab:'handoffs', id: h.id }));
-  allSubs().filter(s => s.nextDate && daysUntil(s.nextDate) <= 7 && daysUntil(s.nextDate) >= 0).slice(0,2).forEach(s => items.push({ icon:'fa-repeat', type:'warning', title:'Subscription: ' + s.name, sub: fmtMoney(s.amount) + ' Â· ' + fmtDate(s.nextDate), time: fmtDate(s.nextDate), tab:'financials' }));
+  allSubs().filter(s => s.nextDate && daysUntil(s.nextDate) <= 7 && daysUntil(s.nextDate) >= 0).slice(0,2).forEach(s => items.push({ icon:'fa-repeat', type:'warning', title:'Subscription: ' + s.name, sub: fmtMoney(s.amount) + ' · ' + fmtDate(s.nextDate), time: fmtDate(s.nextDate), tab:'financials' }));
   const pu = partnerUid();
   if (pu) {
     Object.values(state.chat || {}).filter(m => m.from === pu && m.to === state.user.uid && (m.ts||0) > (state.lastChatSeenTs||0)).slice(0,2).forEach(m => items.push({ icon:'fa-comments', type:'info', title:'Message from ' + profileName(pu), sub: m.text.slice(0,60), time: timeAgo(m.ts), tab:'dashboard' }));
@@ -902,6 +963,9 @@ function renderNotifDropdown() {
   });
 }
 
+/* ═══════════════════════════════════════════════════════════
+   RENDERERS
+   ═══════════════════════════════════════════════════════════ */
 function renderAll() {
   if (!state.user || !state.profile) return;
   renderUpcoming();
@@ -909,8 +973,9 @@ function renderAll() {
   renderFinancials(); renderGoals(); renderSkills(); renderHandoffs(); renderGames();
   renderActivities(); renderHourly(); renderProfileStats(); renderHistory();
 }
+
 function renderUpcoming() {
-  const host = $('upcomingGrid'); if (!host) return;
+  const host = $('upcomingGrid'); if (!host || !state.user) return;
   const items = [];
   myTasks().filter(t => !t.done).forEach(t => { const d = dueDateTime(t); if (d) items.push({ ...t, _type:'task', _due: d }); });
   myTodos().filter(t => !t.done).forEach(t => { const d = dueDateTime(t); if (d) items.push({ text: t.text, ...t, _type:'todo', _due: d }); });
@@ -932,6 +997,7 @@ function renderUpcoming() {
   }).join('');
   host.querySelectorAll('[data-go-tab]').forEach(el => el.onclick = () => navigateTo(el.dataset.goTab, { highlight: el.dataset.goId }));
 }
+
 function metricsFor(u) {
   const tasks = tasksOf(u), todos = todosOf(u), events = Object.values(state.schedule[u]||{}), docs = Object.values(state.documents||{}), hourly = hourlyOf(u);
   const today = todayStr(), nowIso = new Date().toISOString().slice(0,16);
@@ -962,10 +1028,10 @@ function metricsFor(u) {
   const goals = allGoals();
   const goalsScore = goals.length ? Math.round(goals.reduce((sum, g) => {
     const linked = Object.values(state.tasks).flatMap(t => Object.values(t)).filter(t => t.linkedGoalId === g.id);
-    const done = linked.filter(t => t.done).length;
+    const d = linked.filter(t => t.done).length;
     const ms = g.milestones || []; const mDone = ms.filter(m => m.done).length;
     const tot = linked.length + ms.length;
-    return sum + (tot ? (done + mDone) / tot * 100 : 0);
+    return sum + (tot ? (d + mDone) / tot * 100 : 0);
   }, 0) / goals.length) : 0;
   const savs = allSavings();
   const totalSaved = savs.reduce((s,g) => s + Number(g.current||0), 0);
@@ -1003,6 +1069,7 @@ function getGoalProgress(g) {
 }
 
 function renderDashboard() {
+  if (!state.user || !state.profile) return;
   const m = metricsFor(state.user.uid);
   const pu = partnerUid(); const pm = pu ? metricsFor(pu) : null;
   const kpis = [
@@ -1011,14 +1078,17 @@ function renderDashboard() {
     { label:'Completion', value: m.completion + '%', icon:'fa-percent', color:'#a855f7' },
     { label:'Overdue', value: m.overdue, icon:'fa-triangle-exclamation', color:'#fb7185' },
     { label:'Today', value: `${m.todayDone}/${m.todayTodos}`, icon:'fa-circle-dot', color:'#fbbf24' },
-    { label:'Streak', value: m.streak + 'ðŸ”¥', icon:'fa-fire', color:'#f97316' }
+    { label:'Streak', value: m.streak + '🔥', icon:'fa-fire', color:'#f97316' }
   ];
   const kpiRoutes = { 'Tasks':'tasks', 'Completed':'tasks', 'Completion':'tasks', 'Overdue':'tasks', 'Today':'today', 'Streak':'today' };
-  $('kpiGrid').innerHTML = kpis.map(k => `<div class="kpi-clickable rounded-2xl p-4 glass card-3d" data-go-tab="${kpiRoutes[k.label] || 'dashboard'}" data-go-filter="${k.label === 'Overdue' ? 'overdue' : k.label === 'Completed' ? 'done' : k.label === 'Tasks' ? 'all' : ''}">
-    <div class="w-9 h-9 rounded-xl grid place-items-center mb-2.5" style="background:${k.color}22;color:${k.color}"><i class="fa-solid ${k.icon} text-[14px]"></i></div>
-    <div class="font-display text-[22px] font-bold text-white leading-none">${k.value}</div>
-    <div class="text-[10px] uppercase tracking-[.8px] text-slate-500 mt-1.5 font-semibold">${k.label}</div></div>`).join('');
-  $('kpiGrid').querySelectorAll('[data-go-tab]').forEach(el => el.onclick = () => navigateTo(el.dataset.goTab, { filter: el.dataset.goFilter }));
+  const kg = $('kpiGrid');
+  if (kg) {
+    kg.innerHTML = kpis.map(k => `<div class="kpi-clickable rounded-2xl p-4 glass card-3d" data-go-tab="${kpiRoutes[k.label] || 'dashboard'}" data-go-filter="${k.label === 'Overdue' ? 'overdue' : k.label === 'Completed' ? 'done' : k.label === 'Tasks' ? 'all' : ''}">
+      <div class="w-9 h-9 rounded-xl grid place-items-center mb-2.5" style="background:${k.color}22;color:${k.color}"><i class="fa-solid ${k.icon} text-[14px]"></i></div>
+      <div class="font-display text-[22px] font-bold text-white leading-none">${k.value}</div>
+      <div class="text-[10px] uppercase tracking-[.8px] text-slate-500 mt-1.5 font-semibold">${k.label}</div></div>`).join('');
+    kg.querySelectorAll('[data-go-tab]').forEach(el => el.onclick = () => navigateTo(el.dataset.goTab, { filter: el.dataset.goFilter }));
+  }
   renderDashboardAlerts();
   const bars = [
     { label:'Task Completion', value: m.completion, cls:'fill-cyan' },
@@ -1028,7 +1098,8 @@ function renderDashboard() {
     { label:'Schedule Coverage', value: m.scheduleScore, cls:'fill-rose' },
     { label:'Hourly Tracking', value: m.hourlyScore, cls:'fill-cyan' }
   ];
-  $('metricBars').innerHTML = bars.map(b => `<div>
+  const mb = $('metricBars');
+  if (mb) mb.innerHTML = bars.map(b => `<div>
     <div class="flex items-center justify-between mb-1.5"><span class="text-[12px] font-medium text-slate-400">${b.label}</span><span class="text-[12.5px] font-display font-bold text-slate-200">${b.value}%</span></div>
     <div class="progress-shell"><div class="progress-fill ${b.cls}" style="width:${b.value}%"></div></div></div>`).join('');
   const todayTodos = myTodos().filter(t => t.date === todayStr());
@@ -1037,14 +1108,17 @@ function renderDashboard() {
     { icon:'fa-circle-check', color:'#34d399', label:'To-dos today', value:`${m.todayDone} / ${todayTodos.length}`, tab:'today' },
     { icon:'fa-hourglass-half', color:'#fbbf24', label:'Due today', value: m.dueToday, tab:'tasks', filter:'today' },
     { icon:'fa-clock-rotate-left', color:'#22d3ee', label:'Hours logged', value: m.hourlyToday, tab:'hourly' },
-    { icon:'fa-calendar-day', color:'#fb7185', label:'Next event', value: nextEvent ? nextEvent.title : 'â€”', tab:'schedule' },
-    { icon:'fa-users', color:'#a855f7', label:'Partner', value: pm ? pm.completion + '%' : 'â€”', tab:'shared' }
+    { icon:'fa-calendar-day', color:'#fb7185', label:'Next event', value: nextEvent ? nextEvent.title : '—', tab:'schedule' },
+    { icon:'fa-users', color:'#a855f7', label:'Partner', value: pm ? pm.completion + '%' : '—', tab:'shared' }
   ];
-  $('todayGlance').innerHTML = glance.map(g => `<div class="flex items-center gap-3 p-3 rounded-xl bg-white/[.03] border border-white/5 cursor-pointer hover:border-sky-400/40 transition-colors" data-go-tab="${g.tab}" data-go-filter="${g.filter||''}">
-    <span class="w-8 h-8 rounded-lg grid place-items-center shrink-0" style="background:${g.color}1f;color:${g.color}"><i class="fa-solid ${g.icon} text-[12px]"></i></span>
-    <span class="text-[12px] text-slate-400 flex-1">${g.label}</span>
-    <span class="font-display text-[13px] font-bold text-slate-200 truncate max-w-[130px]">${esc(String(g.value))}</span></div>`).join('');
-  $('todayGlance').querySelectorAll('[data-go-tab]').forEach(el => el.onclick = () => navigateTo(el.dataset.goTab, { filter: el.dataset.goFilter }));
+  const tg = $('todayGlance');
+  if (tg) {
+    tg.innerHTML = glance.map(g => `<div class="flex items-center gap-3 p-3 rounded-xl bg-white/[.03] border border-white/5 cursor-pointer hover:border-sky-400/40 transition-colors" data-go-tab="${g.tab}" data-go-filter="${g.filter||''}">
+      <span class="w-8 h-8 rounded-lg grid place-items-center shrink-0" style="background:${g.color}1f;color:${g.color}"><i class="fa-solid ${g.icon} text-[12px]"></i></span>
+      <span class="text-[12px] text-slate-400 flex-1">${g.label}</span>
+      <span class="font-display text-[13px] font-bold text-slate-200 truncate max-w-[130px]">${esc(String(g.value))}</span></div>`).join('');
+    tg.querySelectorAll('[data-go-tab]').forEach(el => el.onclick = () => navigateTo(el.dataset.goTab, { filter: el.dataset.goFilter }));
+  }
   const acts = [];
   myTasks().forEach(t => { acts.push({ ts:t.createdAt, icon:'fa-plus', color:'#38bdf8', text:`Created "${t.title}"` }); if (t.done && t.completedAt) acts.push({ ts:t.completedAt, icon:'fa-check', color:'#34d399', text:`Completed "${t.title}"` }); });
   myTodos().filter(t => t.done).forEach(t => acts.push({ ts:t.completedAt||t.createdAt, icon:'fa-circle-check', color:'#fbbf24', text:`To-do: "${t.text}"` }));
@@ -1052,7 +1126,8 @@ function renderDashboard() {
   mySchedule().forEach(e => acts.push({ ts:e.createdAt, icon:'fa-calendar-plus', color:'#fb7185', text:`Scheduled "${e.title}"` }));
   myHourly().slice(-10).forEach(h => acts.push({ ts:h.createdAt, icon:'fa-clock', color:'#34d399', text:h.text }));
   acts.sort((a,b) => new Date(b.ts||0) - new Date(a.ts||0));
-  $('activityFeed').innerHTML = acts.length ? acts.slice(0,20).map(a => `<div class="flex items-start gap-3 p-3 rounded-xl bg-white/[.03] border-l-[3px]" style="border-left-color:${a.color}">
+  const af = $('activityFeed');
+  if (af) af.innerHTML = acts.length ? acts.slice(0,20).map(a => `<div class="flex items-start gap-3 p-3 rounded-xl bg-white/[.03] border-l-[3px]" style="border-left-color:${a.color}">
     <i class="fa-solid ${a.icon} text-[12px] mt-1" style="color:${a.color}"></i>
     <span class="flex-1 text-[12.5px] text-slate-300">${esc(a.text)}</span>
     <span class="text-[10.5px] text-slate-600 whitespace-nowrap">${timeAgo(a.ts)}</span></div>`).join('')
@@ -1062,6 +1137,7 @@ function renderDashboard() {
 function destroyChart(id) { if (state.charts[id]) { state.charts[id].destroy(); delete state.charts[id]; } }
 function grad(ctx, c1, c2, vert = true) { const g = vert ? ctx.createLinearGradient(0,0,0,260) : ctx.createLinearGradient(0,0,300,0); g.addColorStop(0,c1); g.addColorStop(1,c2); return g; }
 function buildCharts(m, pm, pu) {
+  if (typeof Chart === 'undefined' || !state.user) return;
   const isDark = document.documentElement.classList.contains('dark');
   const grid = isDark ? 'rgba(148,163,184,.12)' : 'rgba(15,23,42,.08)';
   const tick = isDark ? '#94a3b8' : '#475569';
@@ -1118,7 +1194,7 @@ function buildCharts(m, pm, pu) {
   destroyChart('skills'); const skctx = $('chartSkills')?.getContext('2d');
   if (skctx) {
     const skills = allSkills().slice().sort((a,b) => (b.hours||0) - (a.hours||0)).slice(0,8);
-    const labels = skills.map(s => s.name.length > 14 ? s.name.slice(0,14) + 'â€¦' : s.name);
+    const labels = skills.map(s => s.name.length > 14 ? s.name.slice(0,14) + '…' : s.name);
     const data = skills.map(s => s.target ? Math.min(100, Math.round((s.hours/s.target)*100)) : 0);
     const colors = ['#38bdf8','#a855f7','#34d399','#fbbf24','#fb7185','#22d3ee','#f472b6','#818cf8'];
     state.charts.skills = new Chart(skctx, { type: 'bar', data: { labels, datasets: [{ label: 'Progress', data, backgroundColor: data.map((_, i) => colors[i % colors.length]), borderRadius: 8, borderSkipped: false, barPercentage: .7 }] },
@@ -1138,7 +1214,7 @@ function buildCharts(m, pm, pu) {
 }
 
 function renderShared() {
-  const host = $('sharedGrid'); if (!host) return;
+  const host = $('sharedGrid'); if (!host || !state.user) return;
   const ids = Object.keys(state.profiles);
   if (!ids.length) { host.innerHTML = `<div class="text-center py-16 text-slate-500">No profiles yet.</div>`; return; }
   host.innerHTML = ids.map(id => {
@@ -1170,7 +1246,7 @@ function renderShared() {
 }
 
 function renderTasks() {
-  const host = $('taskList'); if (!host) return;
+  const host = $('taskList'); if (!host || !state.user) return;
   const q = ($('taskSearch')?.value || '').toLowerCase().trim();
   const f = $('taskFilter')?.value || 'all';
   const today = todayStr();
@@ -1205,7 +1281,7 @@ function renderTasks() {
         ${goal ? `<div class="mt-1.5 text-[10.5px] text-orange-400"><i class="fa-solid fa-bullseye mr-1"></i>${esc(goal)}</div>` : ''}
         <div class="flex items-center gap-3 mt-2.5 flex-wrap text-[11px] text-slate-500">
           <span><i class="fa-solid fa-tag mr-1"></i>${esc(t.category||'Other')}</span>
-          ${t.dueDate ? `<span class="${overdue ? 'text-rose-400 font-semibold' : dueToday ? 'text-amber-400 font-semibold' : ''}"><i class="fa-regular fa-calendar mr-1"></i>${fmtDate(t.dueDate)}${t.dueTime ? ' Â· ' + t.dueTime : ''}</span>` : ''}
+          ${t.dueDate ? `<span class="${overdue ? 'text-rose-400 font-semibold' : dueToday ? 'text-amber-400 font-semibold' : ''}"><i class="fa-regular fa-calendar mr-1"></i>${fmtDate(t.dueDate)}${t.dueTime ? ' · ' + t.dueTime : ''}</span>` : ''}
           ${countdownPill(t, t.done)}
         </div>
       </div>
@@ -1221,9 +1297,10 @@ function renderTasks() {
 }
 
 function renderToday() {
+  if (!state.user) return;
   const d = state.todoDate;
   const dt = new Date(d + 'T00:00:00');
-  if ($('todayDateLabel')) $('todayDateLabel').textContent = dt.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) + (d === todayStr() ? ' Â· Today' : '');
+  if ($('todayDateLabel')) $('todayDateLabel').textContent = dt.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) + (d === todayStr() ? ' · Today' : '');
   if ($('mTodayDate')) $('mTodayDate').textContent = d === todayStr() ? 'Today' : dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
   const list = myTodos().filter(t => t.date === d).sort((a,b) => { const ta = a.dueTime || '99:99', tb = b.dueTime || '99:99'; return ta.localeCompare(tb); });
   const host = $('todoList');
@@ -1269,12 +1346,12 @@ function renderToday() {
         <div class="text-[9.5px] text-slate-500 mt-1.5 font-semibold uppercase">${dd.toLocaleDateString('en-GB',{weekday:'narrow'})}</div></div>`;
     }
     strip.innerHTML = html;
-    $('streakText').textContent = hits ? `${hits} strong day${hits>1?'s':''} this week` : 'No completed to-dos yet';
+    if ($('streakText')) $('streakText').textContent = hits ? `${hits} strong day${hits>1?'s':''} this week` : 'No completed to-dos yet';
   }
 }
 
 function renderSchedule() {
-  const host = $('scheduleList'); if (!host) return;
+  const host = $('scheduleList'); if (!host || !state.user) return;
   const events = mySchedule().sort((a,b) => (a.start||'').localeCompare(b.start||''));
   const now = new Date().toISOString().slice(0,16);
   const up = events.filter(e => e.start >= now); const past = events.filter(e => e.start < now).reverse();
@@ -1288,7 +1365,7 @@ function renderSchedule() {
         <div class="text-[9.5px] uppercase tracking-wider text-slate-500 mt-0.5">${s.toLocaleDateString('en-GB',{month:'short'})}</div></div>
       <div class="w-1 self-stretch rounded-full" style="background:${c}"></div>
       <div class="flex-1 min-w-0"><div class="flex items-center gap-2 flex-wrap"><h4 class="font-semibold text-[14px] text-slate-100 truncate">${esc(e.title)}</h4><span class="badge" style="background:${c}22;color:${c};border-color:${c}55">${esc(e.type)}</span></div>
-        <div class="flex items-center gap-3 mt-1.5 text-[11.5px] text-slate-500 flex-wrap"><span><i class="fa-regular fa-clock mr-1"></i>${s.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'})} Â· ${s.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}${e.end ? ' â€“ ' + new Date(e.end).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : ''}</span>${e.location ? `<span><i class="fa-solid fa-location-dot mr-1"></i>${esc(e.location)}</span>` : ''}</div>
+        <div class="flex items-center gap-3 mt-1.5 text-[11.5px] text-slate-500 flex-wrap"><span><i class="fa-regular fa-clock mr-1"></i>${s.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'})} · ${s.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}${e.end ? ' – ' + new Date(e.end).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : ''}</span>${e.location ? `<span><i class="fa-solid fa-location-dot mr-1"></i>${esc(e.location)}</span>` : ''}</div>
         ${e.notes ? `<p class="text-[12px] text-slate-500 mt-1.5">${esc(e.notes)}</p>` : ''}</div>
       <div class="flex gap-1.5 shrink-0">
         <button data-eedit="${e.id}" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-sky-500/20 text-slate-400 hover:text-sky-300 grid place-items-center"><i class="fa-solid fa-pen text-[11px]"></i></button>
@@ -1311,7 +1388,7 @@ function fileIcon(name, mime) {
   return { icon:'fa-file', color:'#94a3b8' };
 }
 function renderVault() {
-  const host = $('vaultGrid'); if (!host) return;
+  const host = $('vaultGrid'); if (!host || !state.user) return;
   const docs = myDocs().sort((a,b) => (b.uploadedAt||'').localeCompare(a.uploadedAt||''));
   if (!docs.length) { host.innerHTML = `<div class="col-span-full text-center py-14 text-slate-500"><i class="fa-solid fa-folder-open text-4xl block mb-3 opacity-35"></i>Vault is empty.</div>`; return; }
   host.innerHTML = docs.map(d => {
@@ -1324,7 +1401,7 @@ function renderVault() {
         ${d.sourceLabel ? `<span class="absolute top-2 left-2 badge b-cyan" style="font-size:8px;">${esc(d.sourceLabel.slice(0,20))}</span>` : ''}
       </div>
       <div class="p-3.5"><p class="text-[12.5px] font-semibold text-slate-200 truncate">${esc(d.name)}</p>
-        <p class="text-[10.5px] text-slate-500 mt-1">${fmtBytes(d.size)} Â· ${timeAgo(d.uploadedAt)}</p>
+        <p class="text-[10.5px] text-slate-500 mt-1">${fmtBytes(d.size)} · ${timeAgo(d.uploadedAt)}</p>
         <div class="flex gap-1.5 mt-3">
           <button data-preview="${d.id}" class="flex-1 py-1.5 rounded-lg bg-white/5 hover:bg-sky-500/20 text-slate-400 hover:text-sky-300 text-[11px]"><i class="fa-solid fa-eye"></i></button>
           <button data-ddel="${d.id}" class="flex-1 py-1.5 rounded-lg bg-white/5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 text-[11px]"><i class="fa-solid fa-trash"></i></button>
@@ -1334,6 +1411,7 @@ function renderVault() {
   host.querySelectorAll('[data-ddel]').forEach(b => b.onclick = () => deleteDoc(b.dataset.ddel));
 }
 function renderFinancials() {
+  if (!state.user) return;
   const exps = allExpenses(), savs = allSavings(), subs = allSubs();
   const totalExp = exps.reduce((s,e) => s + Number(e.amount||0), 0);
   const totalSaved = savs.reduce((s,g) => s + Number(g.current||0), 0);
@@ -1358,7 +1436,7 @@ function renderFinancials() {
         <div class="w-11 h-11 rounded-xl grid place-items-center text-[16px] shrink-0" style="background:#fbbf2422;color:#fbbf24"><i class="fa-solid fa-receipt"></i></div>
         <div class="flex-1 min-w-0"><div class="flex items-center gap-2 flex-wrap"><h4 class="font-semibold text-[14px] text-slate-100 truncate">${esc(e.title)}</h4>
           <span class="badge b-low">${esc(e.category)}</span><span class="badge ${isMe?'b-done':'b-purple'}">${esc(pb)}</span></div>
-          <div class="text-[11.5px] text-slate-500 mt-1">Split ${esc(e.splitRatio)} Â· ${fmtDate(e.date)}</div></div>
+          <div class="text-[11.5px] text-slate-500 mt-1">Split ${esc(e.splitRatio)} · ${fmtDate(e.date)}</div></div>
         <div class="text-right shrink-0"><div class="font-display text-[16px] font-bold text-white">${fmtMoney(e.amount)}</div>
           <button data-expdel="${e.id}" class="mt-1 text-[11px] text-rose-400"><i class="fa-solid fa-trash"></i></button></div></div>`;
     }).join('');
@@ -1374,7 +1452,7 @@ function renderFinancials() {
       return `<div class="rounded-2xl glass card-3d p-5">
         <div class="flex items-start justify-between gap-3 mb-3">
           <div class="flex-1 min-w-0"><h4 class="font-semibold text-[14.5px] text-slate-100 truncate">${esc(s.title)}</h4>
-            <p class="text-[11px] text-slate-500 mt-0.5">${s.deadline ? `${fmtDate(s.deadline)}${dl !== null ? ' Â· ' + (dl<0 ? Math.abs(dl)+'d over' : dl+'d left') : ''}` : 'No deadline'}</p></div>
+            <p class="text-[11px] text-slate-500 mt-0.5">${s.deadline ? `${fmtDate(s.deadline)}${dl !== null ? ' · ' + (dl<0 ? Math.abs(dl)+'d over' : dl+'d left') : ''}` : 'No deadline'}</p></div>
           <button data-savdel="${s.id}" class="w-7 h-7 rounded-lg text-slate-500 hover:text-rose-400 grid place-items-center shrink-0"><i class="fa-solid fa-trash text-[10px]"></i></button></div>
         <div class="progress-shell mb-2"><div class="progress-fill ${cls}" style="width:${pct}%"></div></div>
         <div class="flex justify-between items-end text-[12px] mb-3"><span class="text-slate-400">${fmtMoney(s.current)} / ${fmtMoney(s.target)}</span><span class="font-display font-bold text-slate-200">${pct}%</span></div>
@@ -1393,7 +1471,7 @@ function renderFinancials() {
         <div class="w-11 h-11 rounded-xl grid place-items-center text-[16px] shrink-0" style="background:#a855f722;color:#a855f7"><i class="fa-solid fa-repeat"></i></div>
         <div class="flex-1 min-w-0"><div class="flex items-center gap-2 flex-wrap"><h4 class="font-semibold text-[14px] text-slate-100 truncate">${esc(s.name)}</h4>
           <span class="badge b-low">${esc(s.cycle)}</span>${late ? '<span class="badge b-late">Overdue</span>' : urgent ? '<span class="badge b-medium">Soon</span>' : ''}</div>
-          <div class="text-[11.5px] text-slate-500 mt-1">Next: ${fmtDate(s.nextDate)} Â· ${esc(state.profiles[s.paidBy]?.name || 'â€”')}</div></div>
+          <div class="text-[11.5px] text-slate-500 mt-1">Next: ${fmtDate(s.nextDate)} · ${esc(state.profiles[s.paidBy]?.name || '—')}</div></div>
         <div class="text-right shrink-0"><div class="font-display text-[16px] font-bold text-white">${fmtMoney(s.amount)}</div>
           <button data-subdel="${s.id}" class="mt-1 text-[11px] text-rose-400"><i class="fa-solid fa-trash"></i></button></div></div>`;
     }).join('');
@@ -1401,13 +1479,12 @@ function renderFinancials() {
   }
 }
 function renderGoals() {
-  const host = $('goalsGrid'); if (!host) return;
+  const host = $('goalsGrid'); if (!host || !state.user) return;
   const goals = allGoals().sort((a,b) => { const pa = {high:0,medium:1,low:2}[a.priority] ?? 1; const pb = {high:0,medium:1,low:2}[b.priority] ?? 1; if (pa !== pb) return pa - pb; return (a.targetDate||'').localeCompare(b.targetDate||''); });
   if (!goals.length) { host.innerHTML = `<div class="col-span-full text-center py-14 text-slate-500 glass rounded-2xl"><i class="fa-solid fa-bullseye text-3xl block mb-3 opacity-35"></i>No goals yet.</div>`; return; }
   host.innerHTML = goals.map(g => {
     const pct = getGoalProgress(g);
     const cls = pct >= 70 ? 'fill-emerald' : pct >= 40 ? 'fill-cyan' : 'fill-amber';
-    const dl = g.targetDate ? daysUntil(g.targetDate) : null;
     const tc = g.type === 'long_term' ? '#a855f7' : '#fb923c';
     const ms = g.milestones || [];
     const msHtml = ms.length ? `<div class="mt-3 space-y-1.5">${ms.map((m, i) => `<div class="flex items-center gap-2 p-2 rounded-lg bg-white/[.03]">
@@ -1420,7 +1497,7 @@ function renderGoals() {
           <div class="flex items-center gap-2 flex-wrap mt-1">
             <span class="badge" style="background:${tc}22;color:${tc};border-color:${tc}55">${g.type === 'long_term' ? 'Long-term' : 'Short-term'}</span>
             <span class="badge b-${g.priority || 'medium'}">${esc(g.priority || 'medium')}</span>
-            ${g.targetDate ? `<span class="text-[11px] text-slate-500">${fmtDate(g.targetDate)}${g.targetTime ? ' Â· ' + g.targetTime : ''}</span>` : ''}
+            ${g.targetDate ? `<span class="text-[11px] text-slate-500">${fmtDate(g.targetDate)}${g.targetTime ? ' · ' + g.targetTime : ''}</span>` : ''}
           </div>
           <div class="mt-2 flex items-center gap-2 flex-wrap">${countdownPill({ targetDate: g.targetDate, targetTime: g.targetTime }, !!g.completedAt)}
             ${g.aiScore ? `<span class="badge b-ai"><i class="fa-solid fa-brain mr-1"></i>AI ${g.aiScore}</span>` : ''}</div>
@@ -1437,7 +1514,7 @@ function renderGoals() {
   host.querySelectorAll('[data-goalm]').forEach(b => b.onclick = () => toggleMilestone(b.dataset.goalm, parseInt(b.dataset.mi)));
 }
 function renderSkills() {
-  const host = $('skillsGrid'); if (!host) return;
+  const host = $('skillsGrid'); if (!host || !state.user) return;
   const skills = allSkills().sort((a,b) => (b.hours||0) - (a.hours||0));
   if (!skills.length) { host.innerHTML = `<div class="col-span-full text-center py-14 text-slate-500 glass rounded-2xl"><i class="fa-solid fa-code-branch text-3xl block mb-3 opacity-35"></i>No skills tracked.</div>`; return; }
   host.innerHTML = skills.map(s => {
@@ -1461,6 +1538,7 @@ function renderSkills() {
   host.querySelectorAll('[data-skillh]').forEach(b => b.onclick = () => logSkillHours(b.dataset.skillh, parseFloat(b.dataset.delta)));
 }
 function renderHandoffs() {
+  if (!state.user) return;
   const all = allHandoffs();
   const inbox = all.filter(h => h.toUid === state.user.uid).sort((a,b) => (b.createdAt||'').localeCompare(a.createdAt||''));
   const outbox = all.filter(h => h.fromUid === state.user.uid).sort((a,b) => (b.createdAt||'').localeCompare(a.createdAt||''));
@@ -1472,7 +1550,7 @@ function renderHandoffs() {
     return `<div class="rounded-2xl glass card-3d p-4">
       <div class="flex items-start justify-between gap-3 mb-2">
         <div class="flex-1 min-w-0"><div class="flex items-center gap-2 flex-wrap"><h4 class="font-semibold text-[14px] text-slate-100">${esc(h.title)}</h4><span class="badge ${dn?'b-done':pend?'b-medium':'b-open'}">${h.status}</span></div>
-          <p class="text-[11.5px] text-slate-500 mt-1"><i class="fa-solid fa-user mr-1"></i>${esc(fromP?.name||'?')} â†’ ${esc(toP?.name||'?')} Â· ${timeAgo(h.createdAt)}</p>
+          <p class="text-[11.5px] text-slate-500 mt-1"><i class="fa-solid fa-user mr-1"></i>${esc(fromP?.name||'?')} → ${esc(toP?.name||'?')} · ${timeAgo(h.createdAt)}</p>
           ${h.notes ? `<p class="text-[12px] text-slate-400 mt-2">${esc(h.notes)}</p>` : ''}
           ${h.feedback ? `<div class="mt-2 p-2 rounded-lg bg-white/[.03] border-l-2 border-emerald-400 text-[12px] text-slate-300"><strong class="text-emerald-400">Feedback:</strong> ${esc(h.feedback)}</div>` : ''}</div></div>
       <div class="flex gap-1.5 mt-2">
@@ -1496,19 +1574,24 @@ function renderHandoffs() {
   }
 }
 function renderProfileStats() {
+  if (!state.user) return;
   const m = metricsFor(state.user.uid);
   if ($('pStatTasks')) $('pStatTasks').textContent = m.total;
   if ($('pStatDone')) $('pStatDone').textContent = m.done;
   if ($('pStatDocs')) $('pStatDocs').textContent = m.docCount;
 }
 function renderActivities() {
+  if (!state.user) return;
   const today = todayStr();
   const mine = state.activities[state.user.uid];
   const isToday = mine && mine.date === today;
   const items = isToday ? (mine.items || []) : [];
   const theme = isToday ? mine.theme : null;
   const themeEl = $('dailyTheme');
-  if (themeEl) { if (theme) { themeEl.classList.remove('hidden'); $('dailyThemeText').textContent = theme; } else themeEl.classList.add('hidden'); }
+  if (themeEl) {
+    if (theme) { themeEl.classList.remove('hidden'); if ($('dailyThemeText')) $('dailyThemeText').textContent = theme; }
+    else themeEl.classList.add('hidden');
+  }
   const host = $('activitiesList'); if (!host) return;
   if (!items.length) { host.innerHTML = `<div class="text-center py-16 text-slate-500 glass rounded-2xl"><i class="fa-solid fa-wand-magic-sparkles text-4xl block mb-3 opacity-35"></i>Click <strong class="text-slate-300">Generate Plan</strong>.</div>`; return; }
   const cc = { work:'#38bdf8', health:'#34d399', creative:'#a855f7', social:'#fbbf24', learning:'#22d3ee', chore:'#94a3b8', fun:'#f472b6', intimacy:'#fb7185' };
@@ -1545,6 +1628,7 @@ function renderActivities() {
   });
 }
 function renderHourly() {
+  if (!state.user) return;
   const which = document.querySelector('[data-subgroup="hr"] .subtab.active')?.dataset.subtab || 'hr-me';
   const targetUid = which === 'hr-me' ? state.user.uid : (partnerUid() || state.user.uid);
   const rows = hourlyOf(targetUid);
@@ -1558,7 +1642,7 @@ function renderHourly() {
   for (let h = 0; h < 24; h++) { html += `<tr><td class="pr-2 text-slate-500 font-semibold whitespace-nowrap">${pad(h)}:00</td>`;
     days.forEach(d => { const key = `${dateStr(d)}-${pad(h)}`; const entry = rows.find(r => r.key === key);
       const lvl = entry ? (entry.intensity || 2) : 0; const cls = entry ? `has lvl-${lvl}` : '';
-      const title = entry ? `${entry.text} Â· ${entry.category}` : 'Click to log';
+      const title = entry ? `${entry.text} · ${entry.category}` : 'Click to log';
       html += `<td class="px-1 py-0.5"><div class="hour-cell ${cls}" data-hour="${key}" title="${esc(title)}">${entry ? '<i class="fa-solid fa-check"></i>' : ''}</div></td>`; });
     html += '</tr>'; }
   html += '</tbody></table>';
@@ -1567,17 +1651,21 @@ function renderHourly() {
   const today = todayStr();
   const tEntries = rows.filter(r => r.key && r.key.startsWith(today)).sort((a,b) => a.key.localeCompare(b.key));
   const tl = $('todayHourlyList');
-  if (tl) { if (!tEntries.length) tl.innerHTML = `<div class="text-center py-8 text-slate-500 text-[12.5px]"><i class="fa-regular fa-clock block text-2xl mb-2 opacity-40"></i>Nothing logged today.</div>`;
-    else { tl.innerHTML = tEntries.map(e => `<div class="flex items-center gap-3 p-3 rounded-xl bg-white/[.03] border border-white/5">
-      <span class="font-display text-[13px] font-bold text-sky-400 whitespace-nowrap">${e.key.slice(-2)}:00</span>
-      <span class="flex-1 text-[13px] text-slate-200 truncate">${esc(e.text)}</span>
-      <span class="badge b-low">${esc(e.category)}</span>
-      <button data-hdel="${e.id}" class="w-7 h-7 rounded-lg text-slate-500 hover:text-rose-400 grid place-items-center"><i class="fa-solid fa-trash text-[10px]"></i></button></div>`).join('');
-    tl.querySelectorAll('[data-hdel]').forEach(b => b.onclick = () => deleteHourly(b.dataset.hdel)); } }
+  if (tl) {
+    if (!tEntries.length) tl.innerHTML = `<div class="text-center py-8 text-slate-500 text-[12.5px]"><i class="fa-regular fa-clock block text-2xl mb-2 opacity-40"></i>Nothing logged today.</div>`;
+    else {
+      tl.innerHTML = tEntries.map(e => `<div class="flex items-center gap-3 p-3 rounded-xl bg-white/[.03] border border-white/5">
+        <span class="font-display text-[13px] font-bold text-sky-400 whitespace-nowrap">${e.key.slice(-2)}:00</span>
+        <span class="flex-1 text-[13px] text-slate-200 truncate">${esc(e.text)}</span>
+        <span class="badge b-low">${esc(e.category)}</span>
+        <button data-hdel="${e.id}" class="w-7 h-7 rounded-lg text-slate-500 hover:text-rose-400 grid place-items-center"><i class="fa-solid fa-trash text-[10px]"></i></button></div>`).join('');
+      tl.querySelectorAll('[data-hdel]').forEach(b => b.onclick = () => deleteHourly(b.dataset.hdel));
+    }
+  }
 }
 const HIST_STATE = { entity: 'all', action: 'all', search: '' };
 function renderHistory() {
-  const host = $('histList'); if (!host) return;
+  const host = $('histList'); if (!host || !state.user) return;
   const all = Object.values(state.history || {}).filter(h => h.uid === state.user.uid).sort((a, b) => b.ts - a.ts);
   if ($('navHistoryCount')) $('navHistoryCount').textContent = all.length > 99 ? '99+' : all.length;
   let items = all;
@@ -1593,12 +1681,12 @@ function renderHistory() {
     if (!groups[label]) groups[label] = []; groups[label].push(h); });
   const ACTION_LABEL = { create: 'created', complete: 'completed', uncomplete: 'reopened', update: 'updated', delete: 'deleted', log: 'logged', presence: 'presence', photo: 'photo', upload: 'uploaded' };
   host.innerHTML = Object.entries(groups).map(([label, arr]) => `
-    <div class="hist-day"><div class="hist-day-label">${label} Â· ${arr.length}</div>
+    <div class="hist-day"><div class="hist-day-label">${label} · ${arr.length}</div>
       ${arr.map(h => { const color = HIST_COLORS[h.entity] || '#38bdf8'; const icon = HIST_ICONS[h.entity] || 'fa-circle-dot'; const verb = ACTION_LABEL[h.action] || h.action;
         const time = new Date(h.ts).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
         return `<div class="hist-item" style="--h-color:${color}"><div class="hist-icon"><i class="fa-solid ${icon}"></i></div>
           <div class="hist-body"><div class="hist-title">${esc(h.title || '(untitled)')}</div>
-            <div class="hist-meta"><span class="chip" style="background:${color}22;color:${color}">${h.entity}</span><span>${verb}</span>${h.details?.priority ? `<span>Â· ${h.details.priority}</span>` : ''}${h.details?.dueDate ? `<span>Â· due ${h.details.dueDate}</span>` : ''}</div></div>
+            <div class="hist-meta"><span class="chip" style="background:${color}22;color:${color}">${h.entity}</span><span>${verb}</span>${h.details?.priority ? `<span>· ${h.details.priority}</span>` : ''}${h.details?.dueDate ? `<span>· due ${h.details.dueDate}</span>` : ''}</div></div>
           <div class="hist-time">${time}</div></div>`; }).join('')}</div>`).join('');
 }
 function initHistoryFilters() {
@@ -1627,6 +1715,7 @@ function initHistoryFilters() {
   if ($('syncBannerBtn')) $('syncBannerBtn').onclick = () => { updateSyncBanner('syncing'); flushQueue(); };
 }
 function exportHistory() {
+  if (!state.user) return;
   const items = Object.values(state.history || {}).filter(h => h.uid === state.user.uid).sort((a, b) => b.ts - a.ts);
   if (!items.length) return toast('No history to export.', 'info');
   const rows = [['Timestamp', 'Entity', 'Action', 'Title', 'Priority', 'Category', 'DueDate']];
@@ -1637,6 +1726,7 @@ function exportHistory() {
   URL.revokeObjectURL(a.href); toast(`Exported ${items.length} entries.`, 'success');
 }
 async function clearHistory() {
+  if (!state.user) return;
   if (!confirm('Delete your entire history?')) return;
   const items = Object.values(state.history || {}).filter(h => h.uid === state.user.uid);
   for (const h of items) await safeRemove(`history/${h.id}`);
@@ -1644,783 +1734,12 @@ async function clearHistory() {
   toast('History cleared.', 'info'); renderHistory();
 }
 
-function renderChat() {
-  const scroll = $('chatScroll'); if (!scroll) return;
-  if (!state.chatHistory.length) scroll.innerHTML = `<div class="chat-bubble them">ðŸ‘‹ Hi ${esc(state.profile?.name || 'there')}! I'm Viora AI. Ask me anything about your day, goals, or plans.</div>`;
-  else scroll.innerHTML = state.chatHistory.map(m => `<div class="flex ${m.role==='user'?'justify-end':'justify-start'}"><div class="chat-bubble ${m.role==='user'?'me':'them'}">${esc(m.content)}</div></div>`).join('');
-  scroll.scrollTop = scroll.scrollHeight;
-  const qp = [
-    { t:'â˜€ï¸ Plan my day', p:'Plan my day with a balance of work and rest.' }, { t:'ðŸŽ¯ Goal check', p:'Review my goals and suggest next steps.' },
-    { t:'ðŸŽ² Date idea', p:'Suggest a fun date idea we could do this weekend.' }, { t:'ðŸ“š Learning plan', p:'Make me a weekly learning plan.' },
-    { t:'ðŸ˜Œ Reduce stress', p:'I feel stressed. Give me 3 quick things.' }, { t:'ðŸ’ª Habit nudge', p:'Nudge me on my habits.' }
-  ];
-  const qh = $('chatQuick'); if (qh) {
-    qh.innerHTML = qp.map(q => `<button class="px-2.5 py-1.5 rounded-full glass text-[11px] font-medium text-slate-300 hover:text-white" data-qp="${esc(q.p)}">${q.t}</button>`).join('');
-    qh.querySelectorAll('[data-qp]').forEach(b => b.onclick = () => { $('chatInput').value = b.dataset.qp; $('chatForm').dispatchEvent(new Event('submit')); });
-  }
-}
-if ($('chatForm')) $('chatForm').addEventListener('submit', async e => {
-  e.preventDefault();
-  const input = $('chatInput'); const text = input.value.trim();
-  if (!text) return; input.value = '';
-  state.chatHistory.push({ role:'user', content: text }); renderChat();
-  const tid = 'thinking-' + Date.now(); const sc = $('chatScroll');
-  sc.insertAdjacentHTML('beforeend', `<div id="${tid}" class="flex justify-start"><div class="chat-bubble them"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Thinkingâ€¦</div></div>`);
-  sc.scrollTop = sc.scrollHeight;
-  try {
-    const m = metricsFor(state.user.uid); const pu = partnerUid();
-    const ctx = { myName: state.profile?.name, partnerName: pu ? state.profiles[pu]?.name : null, openTasks: m.open, completedToday: m.todayDone, goals: allGoals().map(g => g.title).slice(0,5), events: m.upcoming.slice(0,3).map(e => e.title) };
-    const res = await ai('/ai/chat', { messages: state.chatHistory.slice(-10).map(x => ({ role: x.role, content: x.content })), context: ctx });
-    document.getElementById(tid)?.remove();
-    state.chatHistory.push({ role:'assistant', content: res.reply || '(no reply)' });
-    state.settings.chatHistory = state.chatHistory.slice(-30); persistSettings(); renderChat();
-  } catch(e) { document.getElementById(tid)?.remove(); state.chatHistory.push({ role:'assistant', content: `âš ï¸ ${e.message}` }); renderChat(); }
-});
-async function loadAiInsight() {
-  const card = $('aiInsightCard'); if (!card) return; card.classList.remove('hidden');
-  $('aiInsightText').textContent = 'Analyzingâ€¦';
-  try {
-    const m = metricsFor(state.user.uid);
-    const res = await ai('/ai/chat', { messages:[{ role:'user', content:`Give me ONE punchy 2-sentence insight about my productivity today. Overdue: ${m.overdue}, Completion: ${m.completion}%, Streak: ${m.streak}.` }], context:{ myName: state.profile?.name, openTasks: m.open, completedToday: m.todayDone } });
-    $('aiInsightText').textContent = res.reply || 'â€”';
-  } catch(e) { $('aiInsightText').textContent = 'Set Worker URL in Settings â†’ AI.'; }
-}
-function showAutomationResult(html) { const el = $('automationResult'); if (!el) return; el.innerHTML = html; el.classList.remove('hidden'); el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
-async function runAutoSchedule() {
-  toast('Generating day planâ€¦', 'info');
-  try {
-    const res = await ai('/ai/schedule', { wake: 6, sleep: 22, mustDos: myTasks().filter(t => !t.done && t.dueDate === todayStr()).map(t => t.title), goals: allGoals().map(g => g.title).slice(0,5), mood: $('actMood')?.value || 'neutral' });
-    const blocks = res.blocks || []; if (!blocks.length) return toast('Empty response.', 'warning');
-    for (const b of blocks) { const id = uid();
-      await safeSet(`schedule/${state.user.uid}/${id}`, { id, title: b.title, start: `${todayStr()}T${b.start}`, end: b.end ? `${todayStr()}T${b.end}` : '', type: b.type === 'focus' ? 'Focus Block' : b.type === 'meal' ? 'Personal' : b.type === 'exercise' ? 'Personal' : b.type === 'social' ? 'Personal' : 'Other', location: '', notes: 'AI generated', createdAt: new Date().toISOString() }); }
-    await logHistory('create', 'event', 'ai-schedule', `AI scheduled ${blocks.length} blocks`);
-    showAutomationResult(`<div class="flex items-center gap-2 mb-3"><i class="fa-solid fa-circle-check text-emerald-400 text-xl"></i><h3 class="font-display font-bold text-[16px] text-white">Day Scheduled</h3></div>
-      <p class="text-[13px] text-slate-300 mb-3">${blocks.length} blocks added.</p>`);
-    toast('Day scheduled!', 'success'); renderSchedule();
-  } catch(e) { toast('Failed: ' + e.message, 'error'); }
-}
-function openBreakdownModal() {
-  const pending = myTasks().filter(t => !t.done);
-  $('breakdownBody').innerHTML = `<p class="text-[13px] text-slate-400 mb-3">Choose a task to break into steps:</p>
-    <select id="bdSelect" class="field mb-4">${pending.length ? pending.map(t => `<option value="${t.id}">${esc(t.title)}</option>`).join('') : '<option value="">No open tasks</option>'}</select>
-    <button id="bdRun" class="w-full py-2.5 rounded-xl font-semibold text-white" style="background:linear-gradient(135deg,#22d3ee,#0e7490)"><i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Break It Down</button>
-    <div id="bdResult" class="mt-4"></div>`;
-  showModal('breakdownModal');
-  $('bdRun').onclick = async () => {
-    const tid = $('bdSelect').value; const t = state.tasks[state.user.uid]?.[tid]; if (!t) return;
-    $('bdResult').innerHTML = `<div class="text-center py-4"><i class="fa-solid fa-circle-notch fa-spin text-cyan-400"></i></div>`;
-    try {
-      const res = await ai('/ai/breakdown', { title: t.title, notes: t.notes || '' });
-      const subs = res.subtasks || [];
-      $('bdResult').innerHTML = `<div class="space-y-2">${subs.map(s => `<label class="flex items-center gap-3 p-3 rounded-lg bg-white/[.03] border border-white/5 cursor-pointer">
-        <input type="checkbox" class="bdSub w-4 h-4 rounded" data-text="${esc(s.text)}" data-priority="${esc(s.suggestedPriority||'medium')}" checked />
-        <span class="flex-1 text-[13px] text-slate-200">${esc(s.text)}</span><span class="text-[10.5px] text-slate-500">${s.estimatedMinutes || 'â€”'}m</span></label>`).join('')}</div>
-        <button id="bdCreate" class="w-full mt-3 py-2.5 rounded-xl font-semibold text-white" style="background:linear-gradient(135deg,#34d399,#059669)"><i class="fa-solid fa-plus mr-1.5"></i> Create Sub-Tasks</button>`;
-      $('bdCreate').onclick = async () => {
-        const picked = [...document.querySelectorAll('.bdSub:checked')];
-        for (const c of picked) { const id = uid();
-          await safeSet(`todos/${state.user.uid}/${id}`, { id, text: c.dataset.text, date: t.dueDate || todayStr(), dueTime: t.dueTime || '', priority: c.dataset.priority || 'medium', done: false, recurring: false, createdAt: new Date().toISOString() }); }
-        await logHistory('create', 'todo', 'breakdown', `AI broke down "${t.title}" into ${picked.length} subtasks`);
-        toast(`${picked.length} sub-tasks added.`, 'success'); hideModal('breakdownModal');
-      };
-    } catch(e) { $('bdResult').innerHTML = `<p class="text-rose-400 text-[13px]">${esc(e.message)}</p>`; }
-  };
-}
-async function runMoodBoost() {
-  const mood = $('actMood')?.value || 'meh'; toast('Finding boostersâ€¦', 'info');
-  try { const res = await ai('/ai/mood-boost', { mood }); const b = res.boosters || [];
-    showAutomationResult(`<div class="flex items-center gap-2 mb-3"><i class="fa-solid fa-sun text-amber-400 text-xl"></i><h3 class="font-display font-bold text-[16px] text-white">Mood Boosters</h3></div>
-      <div class="space-y-2">${b.map(x => `<div class="flex items-start gap-3 p-3 rounded-lg bg-white/[.03]"><span class="text-2xl">${x.emoji || 'âœ¨'}</span>
-        <div class="flex-1"><div class="font-semibold text-[13.5px] text-white">${esc(x.title)}</div><div class="text-[12px] text-slate-400 mt-0.5">${esc(x.why)}</div></div></div>`).join('')}</div>`);
-  } catch(e) { toast('Failed.', 'error'); }
-}
-async function runJournal() {
-  toast('Finding promptâ€¦', 'info');
-  try { const res = await ai('/ai/journal', { mood: $('actMood')?.value || 'neutral' });
-    showAutomationResult(`<div class="flex items-center gap-2 mb-3"><i class="fa-solid fa-feather text-fuchsia-400 text-xl"></i><h3 class="font-display font-bold text-[16px] text-white">Journal Prompt</h3></div>
-      <p class="text-[14px] text-slate-200 italic mb-3">"${esc(res.prompt)}"</p><p class="text-[12px] text-slate-500">${esc(res.hint || '')}</p>`);
-    const jc = $('journalCard'); if (jc) { jc.classList.remove('hidden'); $('journalPromptText').textContent = res.prompt; $('journalHintText').textContent = res.hint || ''; }
-  } catch(e) { toast('Failed.', 'error'); }
-}
-async function runWeekReview() {
-  toast('Reviewing weekâ€¦', 'info'); const m = metricsFor(state.user.uid);
-  const catCounts = {}; myTasks().forEach(t => { catCounts[t.category] = (catCounts[t.category] || 0) + 1; });
-  const top = Object.entries(catCounts).sort((a,b) => b[1] - a[1]).slice(0,3).map(x => x[0]);
-  try {
-    const res = await ai('/ai/weekly-review', { name: state.profile?.name, doneTasks: m.done, totalTasks: m.total, doneTodos: m.todayDone, totalTodos: m.todayTodos, hoursLogged: m.hourlyToday, streak: m.streak, categories: top, overdue: m.overdue });
-    const card = $('weeklyReviewCard');
-    card.innerHTML = `<div class="flex items-start gap-3"><div class="w-10 h-10 rounded-xl grid place-items-center bg-gradient-to-br from-purple-400 to-violet-600 text-white shrink-0"><i class="fa-solid fa-book-open"></i></div>
-      <div class="flex-1"><div class="text-[10px] font-bold uppercase tracking-wider text-purple-300 mb-1">AI Week in Review</div>
-        <h3 class="font-display text-[18px] font-bold text-white mb-3">${esc(res.headline || 'Weekly Summary')}</h3>
-        <p class="text-[13px] text-slate-300 italic">${esc(res.motivationalClose || '')}</p></div>
-      <button onclick="document.getElementById('weeklyReviewCard').classList.add('hidden')" class="w-8 h-8 rounded-lg glass grid place-items-center text-slate-400"><i class="fa-solid fa-xmark"></i></button></div>`;
-    card.classList.remove('hidden'); card.scrollIntoView({ behavior:'smooth', block:'nearest' });
-  } catch(e) { toast('Failed.', 'error'); }
-}
-async function runWeeklyGoals() {
-  toast('Suggesting goalsâ€¦', 'info');
-  try { const res = await ai('/ai/chat', { messages:[{ role:'user', content:`Suggest 3-5 weekly goals for me based on: hobbies "${state.profile?.hobbies || 'general'}", completion ${metricsFor(state.user.uid).completion}%. Short bullets.` }], context:{ myName: state.profile?.name } });
-    showAutomationResult(`<div class="flex items-center gap-2 mb-3"><i class="fa-solid fa-bullseye text-cyan-400 text-xl"></i><h3 class="font-display font-bold text-[16px] text-white">Suggested Goals</h3></div>
-      <div class="text-[13px] text-slate-300 whitespace-pre-wrap">${esc(res.reply)}</div>`);
-  } catch(e) { toast('Failed.', 'error'); }
-}
-async function runPriorityAdvisor(scope = 'all') {
-  toast('AI analyzingâ€¦', 'info'); const items = [];
-  if (scope === 'tasks' || scope === 'all') {
-    myTasks().filter(t => !t.done).forEach(t => items.push({ id: t.id, type: 'task', title: t.title, category: t.category, dueDate: t.dueDate, dueTime: t.dueTime, currentPriority: t.priority }));
-    myTodos().filter(t => !t.done).forEach(t => items.push({ id: t.id, type: 'todo', title: t.text, category: 'todo', dueDate: t.date, dueTime: t.dueTime, currentPriority: t.priority }));
-  }
-  if (scope === 'goals' || scope === 'all') { allGoals().forEach(g => items.push({ id: g.id, type: 'goal', title: g.title, category: g.type, dueDate: g.targetDate, dueTime: g.targetTime, currentPriority: g.priority })); }
-  if (!items.length) return toast('Nothing to prioritize.', 'info');
-  try {
-    const res = await ai('/ai/prioritize', { items: items.slice(0, 40) });
-    const recs = res.priorities || [];
-    for (const r of recs) { const it = items.find(x => x.id === r.id); if (!it) continue;
-      const patch = { priority: r.priority, aiScore: r.score, aiReason: r.reason, aiAnalyzedAt: new Date().toISOString() };
-      if (it.type === 'task') await safeUpdate(`tasks/${state.user.uid}/${it.id}`, patch);
-      else if (it.type === 'todo') await safeUpdate(`todos/${state.user.uid}/${it.id}`, patch);
-      else if (it.type === 'goal') await safeUpdate(`goals/${it.id}`, patch);
-    }
-    await logHistory('update', 'task', 'ai-priority', `AI re-prioritized ${recs.length} items`);
-    const sorted = [...recs].sort((a, b) => (b.score || 0) - (a.score || 0));
-    const html = `<h3 class="font-display font-bold text-[16px] text-white mb-3">AI Priority Analysis</h3>
-      <div class="space-y-2 max-h-[400px] overflow-y-auto">${sorted.map(r => { const it = items.find(x => x.id === r.id);
-        const c = r.priority === 'high' ? '#fb7185' : r.priority === 'medium' ? '#fbbf24' : '#38bdf8';
-        return `<div class="priority-rec" style="--p-color:${c}"><div class="p-score">${r.score}</div>
-          <div class="flex-1"><div class="flex items-center gap-2 mb-1 flex-wrap"><span class="p-badge">${r.priority}</span><span class="text-[10px] text-slate-500 uppercase">${it?.type || ''}</span></div>
-            <div class="p-title">${esc(it?.title || '')}</div><div class="p-reason">${esc(r.reason || '')}</div></div></div>`; }).join('')}</div>`;
-    goTab('automations'); setTimeout(() => showAutomationResult(html), 150);
-    toast(`AI re-ranked ${recs.length} items.`, 'success');
-  } catch(e) { toast('AI failed: ' + e.message, 'error'); }
-}
-async function generateActivities() {
-  const hobbies = $('actHobbies').value.split(',').map(s => s.trim()).filter(Boolean);
-  const mood = $('actMood').value, hours = $('actHours').value || '6-22';
-  const goals = allGoals().map(g => g.title).slice(0,5); const pu = partnerUid();
-  const btn = $('genActivitiesBtn'); btn.disabled = true;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Generatingâ€¦';
-  $('actAiStatus').innerHTML = '<i class="fa-solid fa-spinner fa-spin text-cyan-400 mr-1.5"></i> Asking AIâ€¦';
-  try {
-    const res = await ai('/ai/activities', { hobbies, mood, availableHours: hours, goals, partnerName: pu ? state.profiles[pu]?.name : null, date: todayStr() });
-    if (!res.activities?.length) throw new Error('Invalid response');
-    await safeSet(`activities/${state.user.uid}`, { date: todayStr(), theme: res.dailyTheme || 'Balanced', items: res.activities, generatedAt: new Date().toISOString(), completions: state.activities[state.user.uid]?.completions || {} });
-    await logHistory('create', 'activity', 'daily', `Daily plan: ${res.dailyTheme || 'Balanced'}`);
-    $('actAiStatus').innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1.5"></i> Plan Â· ${res.activities.length} activities`;
-    toast('Plan generated!', 'success');
-  } catch(e) { $('actAiStatus').innerHTML = `<i class="fa-solid fa-circle-exclamation text-rose-400 mr-1.5"></i>${esc(e.message)}`; }
-  finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Generate Plan'; }
-}
-
-function openTaskModal(id = null) {
-  $('taskModalTitle').textContent = id ? 'Edit Task' : 'New Task'; $('taskEditId').value = id || '';
-  const gsel = $('taskGoal'); gsel.innerHTML = '<option value="">â€” None â€”</option>' + Object.values(state.goals).map(g => `<option value="${g.id}">${esc(g.title)}</option>`).join('');
-  const asel = $('taskAssign'); asel.innerHTML = '<option value="">â€” Myself â€”</option>' + Object.values(state.profiles).filter(p => p.uid !== state.user.uid).map(p => `<option value="${p.uid}">${esc(p.name)}</option>`).join('');
-  if (id) { const t = state.tasks[state.user.uid]?.[id]; if (!t) return;
-    $('taskTitle').value = t.title || ''; $('taskNotes').value = t.notes || ''; $('taskCategory').value = t.category || 'Personal';
-    $('taskPriority').value = t.priority || 'medium'; $('taskDue').value = t.dueDate || ''; $('taskDueTime').value = t.dueTime || '';
-    gsel.value = t.linkedGoalId || ''; asel.value = t.assignedTo || '';
-  } else { $('taskForm').reset(); $('taskPriority').value = 'medium'; $('taskDue').value = todayStr(); $('taskDueTime').value = '17:00'; }
-  showModal('taskModal');
-}
-$('taskForm').addEventListener('submit', async e => {
-  e.preventDefault();
-  const id = $('taskEditId').value || uid();
-  const existing = state.tasks[state.user.uid]?.[id] || {};
-  const assignedTo = $('taskAssign').value || '';
-  const payload = { id, title: $('taskTitle').value.trim(), notes: $('taskNotes').value.trim(), category: $('taskCategory').value, priority: $('taskPriority').value, dueDate: $('taskDue').value || '', dueTime: $('taskDueTime').value || '', linkedGoalId: $('taskGoal').value || '', assignedTo, ownerUid: state.user.uid, done: existing.done || false, completedAt: existing.completedAt || null, completionPhoto: existing.completionPhoto || null, createdAt: existing.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
-  if (!payload.title) return toast('Title required.', 'error');
-  state.tasks[state.user.uid] = state.tasks[state.user.uid] || {};
-  state.tasks[state.user.uid][id] = payload;
-  renderTasks();
-  await safeSet(`tasks/${state.user.uid}/${id}`, payload);
-  await logHistory(existing.createdAt ? 'update' : 'create', 'task', id, payload.title, { priority: payload.priority, category: payload.category, dueDate: payload.dueDate, dueTime: payload.dueTime });
-  if (assignedTo && assignedTo !== state.user.uid) {
-    const hid = uid();
-    await safeSet(`handoffs/${hid}`, { id: hid, taskId: id, title: payload.title, notes: payload.notes, fromUid: state.user.uid, toUid: assignedTo, status: 'pending', feedback: '', createdAt: new Date().toISOString() });
-    toast('Task + handoff saved.', 'success');
-  } else toast(existing.createdAt ? 'Updated.' : 'Created.', 'success');
-  hideModal('taskModal');
-});
-async function toggleTask(id) {
-  const t = state.tasks[state.user.uid]?.[id]; if (!t) return;
-  const d = !t.done;
-  t.done = d; t.completedAt = d ? new Date().toISOString() : null;
-  renderTasks();
-  await safeUpdate(`tasks/${state.user.uid}/${id}`, { done: d, completedAt: t.completedAt, updatedAt: new Date().toISOString() });
-  await logHistory(d ? 'complete' : 'uncomplete', 'task', id, t.title, { priority: t.priority, category: t.category });
-}
-async function deleteTask(id) {
-  const t = state.tasks[state.user.uid]?.[id];
-  if (!t || !confirm(`Delete "${t.title}"?`)) return;
-  if (state.tasks[state.user.uid]) delete state.tasks[state.user.uid][id];
-  renderTasks();
-  await safeRemove(`tasks/${state.user.uid}/${id}`);
-  await logHistory('delete', 'task', id, t.title);
-}
-async function addTodoOptimistic(text, dueTime, priority, recurring) {
-  if (!text || !text.trim()) { toast('Write something first.', 'warning'); return; }
-  const id = uid();
-  const payload = { id, text: text.trim(), date: state.todoDate, dueTime: dueTime || '', priority: priority || 'medium', done: false, recurring: !!recurring, completionPhoto: null, createdAt: new Date().toISOString() };
-  state.todos[state.user.uid] = state.todos[state.user.uid] || {};
-  state.todos[state.user.uid][id] = payload;
-  renderToday();
-  if (isMobile()) renderMobileTodos();
-  await safeSet(`todos/${state.user.uid}/${id}`, payload);
-  await logHistory('create', 'todo', id, payload.text, { priority: payload.priority, dueDate: payload.date, dueTime: payload.dueTime });
-  toast('To-do added.', 'success');
-}
-if ($('todoForm')) $('todoForm').addEventListener('submit', async e => {
-  e.preventDefault();
-  const text = $('todoInput').value.trim();
-  if (!text) { toast('Write something first.', 'warning'); return; }
-  const dueTime = $('todoDueTime').value || '';
-  const priority = $('todoPriority').value || 'medium';
-  const recurring = $('todoRecurring').checked;
-  $('todoInput').value = ''; $('todoDueTime').value = ''; $('todoPriority').value = 'medium'; $('todoRecurring').checked = false;
-  await addTodoOptimistic(text, dueTime, priority, recurring);
-});
-async function toggleTodo(id) {
-  const t = state.todos[state.user.uid]?.[id]; if (!t) return;
-  const d = !t.done; t.done = d; t.completedAt = d ? new Date().toISOString() : null;
-  renderToday(); if (isMobile()) renderMobileTodos();
-  await safeUpdate(`todos/${state.user.uid}/${id}`, { done: d, completedAt: t.completedAt });
-  await logHistory(d ? 'complete' : 'uncomplete', 'todo', id, t.text, { priority: t.priority });
-}
-async function deleteTodo(id) {
-  const t = state.todos[state.user.uid]?.[id]; if (!t) return;
-  if (state.todos[state.user.uid]) delete state.todos[state.user.uid][id];
-  renderToday(); if (isMobile()) renderMobileTodos();
-  await safeRemove(`todos/${state.user.uid}/${id}`);
-  await logHistory('delete', 'todo', id, t.text);
-}
-if ($('prevDayBtn')) $('prevDayBtn').onclick = () => { const d = new Date(state.todoDate + 'T00:00:00'); d.setDate(d.getDate()-1); state.todoDate = dateStr(d); renderToday(); if (isMobile()) renderMobileTodos(); };
-if ($('nextDayBtn')) $('nextDayBtn').onclick = () => { const d = new Date(state.todoDate + 'T00:00:00'); d.setDate(d.getDate()+1); state.todoDate = dateStr(d); renderToday(); if (isMobile()) renderMobileTodos(); };
-if ($('todayJumpBtn')) $('todayJumpBtn').onclick = () => { state.todoDate = todayStr(); renderToday(); if (isMobile()) renderMobileTodos(); };
-
-function openEventModal(id = null) {
-  $('eventEditId').value = id || '';
-  if (id) { const e = state.schedule[state.user.uid]?.[id]; if (!e) return;
-    $('eventTitle').value = e.title || ''; $('eventStart').value = e.start || ''; $('eventEnd').value = e.end || '';
-    $('eventType').value = e.type || 'Meeting'; $('eventLocation').value = e.location || ''; $('eventNotes').value = e.notes || '';
-  } else { $('eventForm').reset(); const now = new Date(); now.setMinutes(0,0,0); const end = new Date(now.getTime()+3600000);
-    const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    $('eventStart').value = iso(now); $('eventEnd').value = iso(end); }
-  showModal('eventModal');
-}
-$('eventForm').addEventListener('submit', async e => {
-  e.preventDefault();
-  const id = $('eventEditId').value || uid();
-  const existing = state.schedule[state.user.uid]?.[id] || {};
-  const p = { id, title: $('eventTitle').value.trim(), start: $('eventStart').value, end: $('eventEnd').value || '', type: $('eventType').value, location: $('eventLocation').value.trim(), notes: $('eventNotes').value.trim(), completionPhoto: existing.completionPhoto || null, createdAt: existing.createdAt || new Date().toISOString() };
-  if (!p.title || !p.start) return toast('Title+start required.', 'error');
-  await safeSet(`schedule/${state.user.uid}/${id}`, p);
-  await logHistory(existing.createdAt ? 'update' : 'create', 'event', id, p.title);
-  hideModal('eventModal');
-});
-async function deleteEvent(id) { const e = state.schedule[state.user.uid]?.[id]; if (!e || !confirm('Delete?')) return; await safeRemove(`schedule/${state.user.uid}/${id}`); await logHistory('delete', 'event', id, e.title); }
-function populatePayerSelect(sel) { sel.innerHTML = Object.values(state.profiles).map(p => `<option value="${p.uid}" ${p.uid === state.user.uid ? 'selected' : ''}>${esc(p.name)}</option>`).join(''); }
-$('expSplit').onchange = () => $('splitCustomRow').classList.toggle('hidden', $('expSplit').value !== 'custom');
-$('addExpenseBtn').onclick = () => { $('expenseForm').reset(); populatePayerSelect($('expPaidBy')); $('expDate').value = todayStr(); $('splitCustomRow').classList.add('hidden'); showModal('expenseModal'); };
-$('expenseForm').addEventListener('submit', async e => {
-  e.preventDefault(); const id = uid(); const sr = $('expSplit').value;
-  let sA = 0, sB = 0;
-  if (sr === 'custom') { sA = parseFloat($('expSplitA').value) || 0; sB = parseFloat($('expSplitB').value) || 0; }
-  else { const h = (parseFloat($('expAmount').value) || 0)/2; sA = h; sB = h; }
-  const p = { id, title: $('expTitle').value.trim(), amount: parseFloat($('expAmount').value) || 0, category: $('expCategory').value, paidBy: $('expPaidBy').value, splitRatio: sr, splitA: sA, splitB: sB, date: $('expDate').value || todayStr(), createdAt: new Date().toISOString() };
-  if (!p.title || !p.amount) return toast('Title+amount required.', 'error');
-  await safeSet(`financials/expenses/${id}`, p); await logHistory('create', 'expense', id, `${p.title} â€” ${fmtMoney(p.amount)}`); hideModal('expenseModal');
-});
-async function deleteExpense(id) { if (!confirm('Delete?')) return; await safeRemove(`financials/expenses/${id}`); }
-$('addSavingsBtn').onclick = () => { $('savingsForm').reset(); $('savCurrent').value = 0; showModal('savingsModal'); };
-$('savingsForm').addEventListener('submit', async e => {
-  e.preventDefault(); const id = uid();
-  const p = { id, title: $('savTitle').value.trim(), target: parseFloat($('savTarget').value) || 0, current: parseFloat($('savCurrent').value) || 0, deadline: $('savDeadline').value || '', createdAt: new Date().toISOString() };
-  if (!p.title || !p.target) return toast('Title+target required.', 'error');
-  await safeSet(`financials/savings/${id}`, p); await logHistory('create', 'savings', id, p.title); hideModal('savingsModal');
-});
-async function deleteSavings(id) { if (!confirm('Delete?')) return; await safeRemove(`financials/savings/${id}`); }
-async function addSavingsContribution(id) { const s = state.financials.savings[id]; if (!s) return;
-  const i = prompt(`Add to "${s.title}":`, '100'); if (!i) return;
-  const a = parseFloat(i); if (isNaN(a)) return toast('Invalid.', 'error');
-  await safeUpdate(`financials/savings/${id}`, { current: Math.max(0, Number(s.current||0) + a) });
-  await logHistory('update', 'savings', id, `${s.title} +${fmtMoney(a)}`); }
-$('addSubscriptionBtn').onclick = () => { $('subForm').reset(); populatePayerSelect($('subPaidBy')); const n = new Date(); n.setMonth(n.getMonth()+1); $('subNextDate').value = dateStr(n); showModal('subModal'); };
-$('subForm').addEventListener('submit', async e => {
-  e.preventDefault(); const id = uid();
-  const p = { id, name: $('subName').value.trim(), amount: parseFloat($('subAmount').value) || 0, cycle: $('subCycle').value, nextDate: $('subNextDate').value || '', paidBy: $('subPaidBy').value, createdAt: new Date().toISOString() };
-  if (!p.name || !p.amount) return toast('Name+amount required.', 'error');
-  await safeSet(`financials/subscriptions/${id}`, p); await logHistory('create', 'subscription', id, `${p.name} â€” ${fmtMoney(p.amount)}`); hideModal('subModal');
-});
-async function deleteSub(id) { if (!confirm('Delete?')) return; await safeRemove(`financials/subscriptions/${id}`); }
-let milestoneDraft = [];
-function renderMilestoneEditor() {
-  const h = $('milestoneEditor'); if (!h) return;
-  h.innerHTML = milestoneDraft.map((m, i) => `<div class="flex gap-2"><input type="text" class="field flex-1" value="${esc(m.text)}" data-midx="${i}" placeholder="Milestone ${i+1}" />
-    <button type="button" class="w-10 rounded-lg bg-rose-500/15 text-rose-300" data-mdel="${i}"><i class="fa-solid fa-xmark"></i></button></div>`).join('');
-  h.querySelectorAll('[data-midx]').forEach(inp => inp.oninput = e => { milestoneDraft[+e.target.dataset.midx].text = e.target.value; });
-  h.querySelectorAll('[data-mdel]').forEach(b => b.onclick = () => { milestoneDraft.splice(+b.dataset.mdel, 1); renderMilestoneEditor(); });
-}
-$('addMilestoneBtn').onclick = () => { milestoneDraft.push({ text: '', done: false }); renderMilestoneEditor(); };
-$('addGoalBtn').onclick = () => { $('goalEditId').value = ''; $('goalForm').reset(); $('goalPriority').value = 'medium'; $('goalTargetTime').value = '23:59'; milestoneDraft = []; renderMilestoneEditor(); showModal('goalModal'); };
-$('goalForm').addEventListener('submit', async e => {
-  e.preventDefault();
-  const id = $('goalEditId').value || uid(); const existing = state.goals[id] || {};
-  const ms = milestoneDraft.filter(m => m.text.trim()).map(m => ({ text: m.text.trim(), done: !!m.done }));
-  const p = { id, title: $('goalTitle').value.trim(), type: $('goalType').value, priority: $('goalPriority').value || 'medium', targetDate: $('goalTarget').value || '', targetTime: $('goalTargetTime').value || '', description: $('goalDesc').value.trim(), milestones: ms, completionPhoto: existing.completionPhoto || null, assignedTo: Object.keys(state.profiles), createdAt: existing.createdAt || new Date().toISOString() };
-  if (!p.title) return toast('Title required.', 'error');
-  await safeSet(`goals/${id}`, p); await logHistory(existing.createdAt ? 'update' : 'create', 'goal', id, p.title, { priority: p.priority, type: p.type }); hideModal('goalModal');
-});
-async function deleteGoal(id) { const g = state.goals[id]; if (!g || !confirm(`Delete "${g.title}"?`)) return; await safeRemove(`goals/${id}`); await logHistory('delete', 'goal', id, g.title); }
-async function toggleMilestone(gid, idx) {
-  const g = state.goals[gid]; if (!g?.milestones) return;
-  const ms = [...g.milestones]; ms[idx].done = !ms[idx].done;
-  await safeUpdate(`goals/${gid}`, { milestones: ms }); await logHistory(ms[idx].done ? 'complete' : 'uncomplete', 'goal', gid, `${g.title} â€” ${ms[idx].text}`);
-}
-$('addSkillBtn').onclick = () => { $('skillForm').reset(); $('skillHours').value = 0; $('skillLevel').value = 1; $('skillTarget').value = 100; showModal('skillModal'); };
-$('skillForm').addEventListener('submit', async e => {
-  e.preventDefault(); const id = uid();
-  const p = { id, name: $('skillName').value.trim(), hours: parseFloat($('skillHours').value) || 0, level: parseInt($('skillLevel').value) || 1, target: parseFloat($('skillTarget').value) || 100, category: $('skillCategory').value, createdAt: new Date().toISOString() };
-  if (!p.name) return toast('Name required.', 'error');
-  await safeSet(`skills/${id}`, p); await logHistory('create', 'skill', id, p.name); hideModal('skillModal');
-});
-async function deleteSkill(id) { const s = state.skills[id]; if (!s || !confirm(`Delete "${s.name}"?`)) return; await safeRemove(`skills/${id}`); }
-async function logSkillHours(id, d) { const s = state.skills[id]; if (!s) return;
-  const h = Number(s.hours||0) + d; const l = Math.floor(h/20) + 1;
-  await safeUpdate(`skills/${id}`, { hours: h, level: l }); await logHistory('log', 'skill', id, `${s.name} +${d}h`); toast(`+${d}h`, 'success'); }
-async function completeHandoff(id) {
-  const h = state.handoffs[id]; if (!h) return;
-  await safeUpdate(`handoffs/${id}`, { status: 'done', completedAt: new Date().toISOString() });
-  if (h.taskId && state.tasks[h.fromUid]?.[h.taskId]) await safeUpdate(`tasks/${h.fromUid}/${h.taskId}`, { done: true, completedAt: new Date().toISOString() });
-  await logHistory('complete', 'handoff', id, h.title);
-}
-async function addHandoffFeedback(id) { const f = prompt('Feedback:'); if (!f) return; await safeUpdate(`handoffs/${id}`, { feedback: f }); }
-async function deleteHandoff(id) { if (!confirm('Delete?')) return; await safeRemove(`handoffs/${id}`); }
-function openHourlyModal(key, prefill = null) {
-  const existing = Object.values(state.hourly[state.user.uid] || {}).find(x => x.key === key);
-  $('hourlyKey').value = key;
-  $('hourlyHourLabel').textContent = `Â· ${fmtDate(key.slice(0,10))} @ ${key.slice(-2)}:00`;
-  if (existing) { $('hourlyText').value = existing.text || ''; $('hourlyIntensity').value = existing.intensity || 2; $('hourlyCategory').value = existing.category || 'Work'; }
-  else { $('hourlyText').value = prefill?.text || ''; $('hourlyIntensity').value = prefill?.intensity || 2; $('hourlyCategory').value = prefill?.category || 'Work'; }
-  showModal('hourlyModal');
-}
-$('hourlyForm').addEventListener('submit', async e => {
-  e.preventDefault(); const key = $('hourlyKey').value; const text = $('hourlyText').value.trim(); if (!text) return;
-  const existing = Object.values(state.hourly[state.user.uid] || {}).find(x => x.key === key);
-  const id = existing?.id || uid();
-  const payload = { id, key, date: key.slice(0,10), hour: parseInt(key.slice(-2)), text, intensity: parseInt($('hourlyIntensity').value), category: $('hourlyCategory').value, createdAt: existing?.createdAt || new Date().toISOString() };
-  await safeSet(`hourly/${state.user.uid}/${id}`, payload);
-  await logHistory('log', 'hourly', id, text, { hour: payload.hour, date: payload.date, category: payload.category });
-  toast('Hour logged.', 'success'); hideModal('hourlyModal');
-});
-async function deleteHourly(id) { if (!confirm('Delete?')) return; await safeRemove(`hourly/${state.user.uid}/${id}`); }
-
-const MAX_FILE = 400 * 1024;
-$('avatarUploadBtn').onclick = () => $('avatarInput').click();
-$('avatarInput').onchange = async e => {
-  const f = e.target.files[0]; if (!f) return;
-  if (!f.type.startsWith('image/')) return toast('Pick an image.', 'error');
-  if (f.size > 4*1024*1024) return toast('Max 4 MB.', 'error');
-  try {
-    const d = await resizeImage(f, 320);
-    // SHARED path with index.html â€” updates the same user record
-    await safeUpdate(`users/${state.user.uid}`, { avatar: d });
-    await mirrorAvatarToVault(d);
-    toast('Photo updated.', 'success');
-  } catch(e) { toast('Failed.', 'error'); }
-  e.target.value = '';
-};
-$('dropZone').onclick = () => $('fileInput').click();
-$('dropZone').ondragover = e => { e.preventDefault(); $('dropZone').classList.add('border-sky-400/70'); };
-$('dropZone').ondragleave = () => $('dropZone').classList.remove('border-sky-400/70');
-$('dropZone').ondrop = e => { e.preventDefault(); $('dropZone').classList.remove('border-sky-400/70'); handleFiles(e.dataTransfer.files); };
-$('fileInput').onchange = e => { handleFiles(e.target.files); e.target.value = ''; };
-async function handleFiles(files) {
-  for (const f of Array.from(files)) {
-    const id = uid();
-    const base = { name: f.name, mime: f.type || 'application/octet-stream', size: f.size };
-    if (f.size > MAX_FILE) {
-      await vaultSave({ ...base, id, data: null, source: 'vault', sourceLabel: 'Manual upload', tags: ['metadata-only'] });
-      toast(`${f.name}: metadata only.`, 'warning');
-    } else {
-      try {
-        const d = await readAsDataURL(f);
-        await vaultSave({ ...base, id, data: d, source: 'vault', sourceLabel: 'Manual upload' });
-        toast(`${f.name} uploaded.`, 'success');
-        setTimeout(() => previewDoc(id), 300);
-      } catch(e) { toast(`Failed: ${f.name}`, 'error'); }
-    }
-  }
-}
-function previewDoc(id) {
-  const d = state.documents?.[id]; if (!d) return;
-  $('previewTitle').textContent = d.name;
-  let b = '';
-  if (!d.data) b = `<div class="text-center py-14"><i class="fa-solid fa-file text-5xl text-slate-600"></i><p class="text-slate-500 text-[13px] mt-4">Metadata only.</p></div>`;
-  else if ((d.mime||'').startsWith('image/')) b = `<img src="${d.data}" class="max-w-full max-h-[70vh] rounded-xl" />`;
-  else if (d.mime === 'application/pdf') b = `<iframe src="${d.data}" class="w-full h-[70vh] rounded-xl border-0"></iframe>`;
-  else if ((d.mime||'').startsWith('text/')) { try { b = `<pre class="w-full text-left text-[12px] text-slate-300 whitespace-pre-wrap p-4 rounded-xl bg-slate-950/60">${esc(atob(d.data.split(',')[1] || ''))}</pre>`; } catch { b = `<div class="text-center py-14"><i class="fa-solid fa-file text-5xl text-slate-600"></i><p class="text-slate-500 text-[13px] mt-4">Preview unsupported.</p></div>`; } }
-  else b = `<div class="text-center py-14"><i class="fa-solid fa-file text-5xl text-slate-600"></i><p class="text-slate-500 text-[13px] mt-4">Preview unsupported.</p></div>`;
-  $('previewBody').innerHTML = b;
-  $('previewDownloadBtn').onclick = () => { if (!d.data) return toast('No payload.', 'warning'); const a = document.createElement('a'); a.href = d.data; a.download = d.name; a.click(); };
-  showModal('previewModal');
-}
-async function deleteDoc(id) { const d = state.documents?.[id]; if (!d || !confirm(`Delete "${d.name}"?`)) return; await safeRemove(`documents/${id}`); }
-$('saveProfileBtn').onclick = async () => {
-  const name = $('profNameInput').value.trim(); if (!name) return toast('Name required.', 'error');
-  const accent = $('colorPicker').dataset.selected || state.profile?.accent || '#38bdf8';
-  // SHARED path with index.html
-  await safeUpdate(`users/${state.user.uid}`, { name, tagline: $('profTaglineInput').value.trim(), hobbies: $('profHobbiesInput').value.trim(), accent, updatedAt: new Date().toISOString() });
-  toast('Profile saved.', 'success');
-};
-
-function renderGames() { renderGameStats(); renderTTT(); renderC4(); renderMemory(); renderRPS(); renderDice(); renderWordDuel(); renderQ20(); renderTrivia(); renderTD(); renderPrompts(); }
-function renderGameStats() {
-  const s = state.gameStats; const el = $('gameStats'); if (!el) return;
-  el.innerHTML = `
-    <div class="p-3 rounded-xl bg-white/[.03] border border-white/5 text-center"><div class="font-display text-xl font-bold text-sky-400">${s.tttW||0}</div><div class="text-[10px] uppercase tracking-wider text-slate-500 mt-1">TTT</div></div>
-    <div class="p-3 rounded-xl bg-white/[.03] border border-white/5 text-center"><div class="font-display text-xl font-bold text-red-400">${s.c4W||0}</div><div class="text-[10px] uppercase tracking-wider text-slate-500 mt-1">C4</div></div>
-    <div class="p-3 rounded-xl bg-white/[.03] border border-white/5 text-center"><div class="font-display text-xl font-bold text-purple-400">${s.memW||0}</div><div class="text-[10px] uppercase tracking-wider text-slate-500 mt-1">Memory</div></div>
-    <div class="p-3 rounded-xl bg-white/[.03] border border-white/5 text-center"><div class="font-display text-xl font-bold text-amber-400">${s.diceW||0}</div><div class="text-[10px] uppercase tracking-wider text-slate-500 mt-1">Dice</div></div>
-    <div class="p-3 rounded-xl bg-white/[.03] border border-white/5 text-center"><div class="font-display text-xl font-bold text-cyan-400">${s.wdW||0}</div><div class="text-[10px] uppercase tracking-wider text-slate-500 mt-1">Word</div></div>
-    <div class="p-3 rounded-xl bg-white/[.03] border border-white/5 text-center"><div class="font-display text-xl font-bold text-violet-400">${s.rpsW||0}</div><div class="text-[10px] uppercase tracking-wider text-slate-500 mt-1">RPS</div></div>
-    <div class="p-3 rounded-xl bg-white/[.03] border border-white/5 text-center"><div class="font-display text-xl font-bold text-emerald-400">${s.triviaCorrect||0}/${s.triviaTotal||0}</div><div class="text-[10px] uppercase tracking-wider text-slate-500 mt-1">Trivia</div></div>
-    <div class="p-3 rounded-xl bg-white/[.03] border border-white/5 text-center"><div class="font-display text-xl font-bold text-pink-400">${(s.tttW||0)+(s.c4W||0)+(s.memW||0)+(s.diceW||0)+(s.wdW||0)+(s.rpsW||0)}</div><div class="text-[10px] uppercase tracking-wider text-slate-500 mt-1">Total</div></div>`;
-}
-function renderTTT() {
-  const g = state.games.ttt || {}; const board = g.board || Array(9).fill(null);
-  const meSym = g.players?.X === state.user.uid ? 'X' : g.players?.O === state.user.uid ? 'O' : null;
-  const themSym = meSym === 'X' ? 'O' : meSym === 'O' ? 'X' : null;
-  if ($('tttMeSymbol')) { $('tttMeSymbol').textContent = meSym || 'â€”'; $('tttPartnerSymbol').textContent = themSym || 'â€”'; }
-  let s = 'Start a new match.';
-  if (g.status === 'waiting') s = 'Waitingâ€¦'; else if (g.status === 'playing') s = g.turn === state.user.uid ? 'Your turn!' : `${profileName(g.turn)}'s turnâ€¦`;
-  else if (g.status === 'won') s = g.winner === state.user.uid ? 'ðŸŽ‰ You won!' : `${profileName(g.winner)} won.`;
-  else if (g.status === 'draw') s = "Draw!";
-  if ($('tttStatus')) $('tttStatus').textContent = s;
-  const sm = (state.user.uid === g.players?.X ? g.scoreX : g.scoreO) || 0; const st = (state.user.uid === g.players?.X ? g.scoreO : g.scoreX) || 0;
-  if ($('tttScore')) $('tttScore').textContent = `${sm} â€“ ${st}`;
-  const host = $('tttBoard'); if (!host) return;
-  host.innerHTML = board.map((v, i) => `<div class="ttt-cell ${v ? 'filled ' + v.toLowerCase() : ''}" data-i="${i}">${v || ''}</div>`).join('');
-  const wl = g.winLine || [];
-  host.querySelectorAll('.ttt-cell').forEach(c => { const i = parseInt(c.dataset.i); if (wl.includes(i)) c.classList.add('win'); c.onclick = () => makeTTTMove(i); });
-}
-async function newTTTMatch() {
-  const pu = partnerUid(); if (!pu) return toast('Set partner.', 'warning');
-  const meSym = Math.random() < .5 ? 'X' : 'O'; const themSym = meSym === 'X' ? 'O' : 'X';
-  await safeSet(`games/ttt`, { id:'ttt', board: Array(9).fill(null), players: { [meSym]: state.user.uid, [themSym]: pu }, turn: state.user.uid, status:'playing', winner:null, winLine:[], scoreX: state.games.ttt?.scoreX||0, scoreO: state.games.ttt?.scoreO||0, createdBy: state.user.uid, createdAt: new Date().toISOString() });
-  toast('Match started!', 'success');
-}
-async function makeTTTMove(i) {
-  const g = state.games.ttt; if (!g || g.status !== 'playing') return;
-  if (g.turn !== state.user.uid) return toast("Not your turn.", 'warning');
-  if (g.board[i]) return;
-  const meSym = g.players.X === state.user.uid ? 'X' : 'O';
-  const nb = [...g.board]; nb[i] = meSym;
-  const win = checkTTTWin(nb); const draw = !win && nb.every(c => c);
-  let p = { board: nb };
-  if (win) { p.winner = state.user.uid; p.status = 'won'; p.winLine = win; p['score'+meSym] = (g['score'+meSym]||0)+1; state.gameStats.tttW = (state.gameStats.tttW||0)+1; saveGameStats(); }
-  else if (draw) p.status = 'draw';
-  else p.turn = Object.values(g.players).find(u => u !== state.user.uid);
-  await safeUpdate(`games/ttt`, p);
-}
-function checkTTTWin(b) { const L = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; for (const l of L) if (b[l[0]] && b[l[0]] === b[l[1]] && b[l[0]] === b[l[2]]) return l; return null; }
-function renderC4() {
-  const g = state.games.c4 || {}; const board = g.board || Array(42).fill(null);
-  const meColor = g.players?.p1 === state.user.uid ? 'p1' : g.players?.p2 === state.user.uid ? 'p2' : null;
-  const themColor = meColor === 'p1' ? 'p2' : meColor === 'p2' ? 'p1' : null;
-  if ($('c4MeColor')) { $('c4MeColor').textContent = meColor === 'p1' ? 'Red' : meColor === 'p2' ? 'Yellow' : 'â€”'; $('c4PartnerColor').textContent = themColor === 'p1' ? 'Red' : themColor === 'p2' ? 'Yellow' : 'â€”'; }
-  let s = 'Start a new match.';
-  if (g.status === 'waiting') s = 'Waitingâ€¦'; else if (g.status === 'playing') s = g.turn === state.user.uid ? 'Your turn!' : `${profileName(g.turn)}'s turnâ€¦`;
-  else if (g.status === 'won') s = g.winner === state.user.uid ? 'ðŸŽ‰ You won!' : `${profileName(g.winner)} won.`;
-  else if (g.status === 'draw') s = "Draw!";
-  if ($('c4Status')) $('c4Status').textContent = s;
-  const sm = (g.scores?.[state.user.uid]) || 0; const st = themColor ? (g.scores?.[Object.keys(g.players).find(k => g.players[k] !== state.user.uid)] || 0) : 0;
-  if ($('c4Score')) $('c4Score').textContent = `${sm} â€“ ${st}`;
-  const host = $('c4Board'); if (!host) return;
-  host.innerHTML = board.map((v, i) => `<div class="c4-cell ${v || ''}" data-i="${i}"></div>`).join('');
-  host.querySelectorAll('.c4-cell').forEach(c => c.onclick = () => dropC4(parseInt(c.dataset.i)));
-}
-async function newC4Match() {
-  const pu = partnerUid(); if (!pu) return toast('Set partner.', 'warning');
-  const meColor = Math.random() < .5 ? 'p1' : 'p2'; const themColor = meColor === 'p1' ? 'p2' : 'p1';
-  const scores = state.games.c4?.scores || {};
-  await safeSet(`games/c4`, { id:'c4', board: Array(42).fill(null), players: { [meColor]: state.user.uid, [themColor]: pu }, turn: state.user.uid, status:'playing', winner:null, scores, createdBy: state.user.uid, createdAt: new Date().toISOString() });
-  toast('Connect Four started!', 'success');
-}
-async function dropC4(idx) {
-  const g = state.games.c4; if (!g || g.status !== 'playing') return;
-  if (g.turn !== state.user.uid) return toast("Not your turn.", 'warning');
-  const col = idx % 7; let targetRow = -1;
-  for (let r = 5; r >= 0; r--) { const i = r * 7 + col; if (!g.board[i]) { targetRow = r; break; } }
-  if (targetRow < 0) return toast('Column full.', 'warning');
-  const meColor = g.players.p1 === state.user.uid ? 'p1' : 'p2';
-  const nb = [...g.board]; nb[targetRow * 7 + col] = meColor;
-  const win = checkC4Win(nb, targetRow, col, meColor); const draw = !win && nb.every(c => c);
-  let p = { board: nb };
-  if (win) { p.winner = state.user.uid; p.status = 'won'; p.scores = { ...(g.scores||{}), [state.user.uid]: (g.scores?.[state.user.uid] || 0) + 1 }; state.gameStats.c4W = (state.gameStats.c4W||0)+1; saveGameStats(); }
-  else if (draw) p.status = 'draw';
-  else p.turn = Object.values(g.players).find(u => u !== state.user.uid);
-  await safeUpdate(`games/c4`, p);
-}
-function checkC4Win(b, row, col, color) {
-  const at = (r, c) => (r >= 0 && r < 6 && c >= 0 && c < 7) ? b[r*7+c] : null;
-  const dirs = [[0,1],[1,0],[1,1],[1,-1]];
-  for (const [dr, dc] of dirs) { let count = 1;
-    for (const sign of [1,-1]) { let r = row + dr*sign, c = col + dc*sign; while (at(r,c) === color) { count++; r += dr*sign; c += dc*sign; } }
-    if (count >= 4) return true; }
-  return false;
-}
-function renderMemory() {
-  const g = state.games.memory || {}; const deck = g.deck || []; const revealed = g.revealed || []; const matched = g.matched || [];
-  const host = $('memBoard'); if (!host) return;
-  let s = 'Start a new game.';
-  if (g.status === 'waiting') s = 'Waitingâ€¦'; else if (g.status === 'playing') s = g.turn === state.user.uid ? 'Your turn â€” flip 2 cards' : `${profileName(g.turn)}'s turn`;
-  else if (g.status === 'done') s = g.winner === state.user.uid ? 'ðŸŽ‰ You won!' : `${profileName(g.winner)} won.`;
-  if ($('memStatus')) $('memStatus').textContent = s;
-  if ($('memPairs')) $('memPairs').textContent = `${matched.length / 2} / 8`;
-  if ($('memMeScore')) $('memMeScore').textContent = g.scores?.[state.user.uid] || 0;
-  const otherUid = Object.keys(g.scores || {}).find(u => u !== state.user.uid);
-  if ($('memPartnerScore')) $('memPartnerScore').textContent = otherUid ? (g.scores[otherUid] || 0) : 0;
-  if (!deck.length) { host.innerHTML = `<div class="col-span-4 text-center py-10 text-slate-500 text-[13px]">No game running.</div>`; return; }
-  host.innerHTML = deck.map((emoji, i) => { const isFlipped = revealed.includes(i) || matched.includes(i); const isMatched = matched.includes(i);
-    return `<div class="mem-card ${isFlipped ? 'flipped' : ''} ${isMatched ? 'matched' : ''}" data-i="${i}"><span>${isFlipped ? emoji : ''}</span></div>`; }).join('');
-  host.querySelectorAll('.mem-card').forEach(c => c.onclick = () => flipMemory(parseInt(c.dataset.i)));
-}
-async function newMemoryGame() {
-  const pu = partnerUid(); if (!pu) return toast('Set partner.', 'warning');
-  const emojis = ['ðŸŽ','ðŸŒ','ðŸ‡','ðŸ“','ðŸ’','ðŸ¥','ðŸ','ðŸ¥¥'];
-  const deck = [...emojis, ...emojis].sort(() => Math.random() - 0.5);
-  await safeSet(`games/memory`, { id:'memory', deck, revealed: [], matched: [], locked: false, players: { p1: state.user.uid, p2: pu }, turn: state.user.uid, status:'playing', winner:null, scores: { [state.user.uid]: 0, [pu]: 0 }, createdBy: state.user.uid, createdAt: new Date().toISOString() });
-  toast('Memory started!', 'success');
-}
-async function flipMemory(i) {
-  const g = state.games.memory; if (!g || g.status !== 'playing' || g.locked) return;
-  if (g.turn !== state.user.uid) return toast("Not your turn.", 'warning');
-  if (g.revealed.includes(i) || g.matched.includes(i)) return;
-  const rev = [...g.revealed, i];
-  if (rev.length === 1) { await safeUpdate(`games/memory`, { revealed: rev }); return; }
-  if (rev.length === 2) {
-    await safeUpdate(`games/memory`, { revealed: rev, locked: true });
-    const [a, b] = rev;
-    if (g.deck[a] === g.deck[b]) { const matched = [...g.matched, a, b];
-      const scores = { ...g.scores, [state.user.uid]: (g.scores[state.user.uid] || 0) + 1 };
-      const done = matched.length === g.deck.length;
-      if (done) { const winner = Object.entries(scores).sort((a,b) => b[1] - a[1])[0][0]; state.gameStats.memW = (state.gameStats.memW||0)+1; saveGameStats(); await safeUpdate(`games/memory`, { revealed: [], matched, scores, locked: false, status:'done', winner }); }
-      else await safeUpdate(`games/memory`, { revealed: [], matched, scores, locked: false, turn: g.turn });
-    } else { setTimeout(async () => { await safeUpdate(`games/memory`, { revealed: [], locked: false, turn: Object.values(g.players).find(u => u !== state.user.uid) }); }, 1400); }
-  }
-}
-function renderRPS() {
-  const g = state.games.rps || {}; const choices = g.choices || {}; const rounds = g.rounds || {};
-  const me = choices[state.user.uid]; const pu = partnerUid(); const them = pu ? choices[pu] : null;
-  if ($('rpsMeScore')) $('rpsMeScore').textContent = rounds[state.user.uid] || 0;
-  if ($('rpsPartnerScore')) $('rpsPartnerScore').textContent = pu ? (rounds[pu] || 0) : 0;
-  if ($('rpsRound')) $('rpsRound').textContent = g.roundNumber || 1;
-  let s = 'Pick your throw.';
-  if (me && !them) s = 'Waiting for partnerâ€¦'; else if (!me && them) s = 'Your turn.'; else if (me && them) s = 'Revealed!';
-  if ($('rpsStatus')) $('rpsStatus').textContent = s;
-  document.querySelectorAll('.rps-btn').forEach(b => { b.classList.toggle('selected', b.dataset.throw === me); b.onclick = () => throwRPS(b.dataset.throw); });
-  const icons = { rock:'ðŸª¨', paper:'ðŸ“„', scissors:'âœ‚ï¸' };
-  if ($('rpsReveal')) {
-    if (me && them) { const w = rpsWinner(me, them);
-      if (w === 'tie') $('rpsReveal').textContent = `${icons[me]} vs ${icons[them]} â€” Tie!`;
-      else if (w === me) $('rpsReveal').textContent = `${icons[me]} vs ${icons[them]} â€” You win! ðŸŽ‰`;
-      else $('rpsReveal').textContent = `${icons[me]} vs ${icons[them]} â€” ${profileName(pu)} wins.`;
-    } else $('rpsReveal').textContent = '?';
-  }
-}
-async function throwRPS(choice) {
-  const pu = partnerUid(); if (!pu) return toast('Set partner.', 'warning');
-  const g = state.games.rps || {}; const rn = g.roundNumber || 1;
-  const choices = { ...(g.choices || {}), [state.user.uid]: choice };
-  await safeSet(`games/rps`, { ...g, id:'rps', roundNumber: rn, choices, status:'open', updatedAt: new Date().toISOString() });
-  const other = choices[pu];
-  if (other) {
-    const w = rpsWinner(choice, other); const rounds = { ...(g.rounds || {}) };
-    if (w !== 'tie') rounds[w] = (rounds[w]||0)+1;
-    if (w === state.user.uid) { state.gameStats.rpsW = (state.gameStats.rpsW||0)+1; saveGameStats(); }
-    await safeUpdate(`games/rps`, { rounds, status:'resolved' });
-    setTimeout(async () => { await safeUpdate(`games/rps`, { choices: {}, roundNumber: rn+1, status:'open' }); }, 3000);
-  }
-}
-function rpsWinner(a, b) { if (a === b) return 'tie'; if ((a === 'rock' && b === 'scissors') || (a === 'paper' && b === 'rock') || (a === 'scissors' && b === 'paper')) return a; return b; }
-async function newRPSRound() { await safeSet(`games/rps`, { id:'rps', roundNumber: (state.games.rps?.roundNumber||1)+1, choices:{}, rounds: state.games.rps?.rounds||{}, status:'open', updatedAt: new Date().toISOString() }); }
-function renderDice() {
-  const g = state.games.dice || {}; const pu = partnerUid();
-  const myRoll = g.rolls?.[state.user.uid]; const theirRoll = pu ? g.rolls?.[pu] : null;
-  const faces = ['','âš€','âš','âš‚','âšƒ','âš„','âš…'];
-  if ($('dieMe1')) $('dieMe1').textContent = myRoll ? faces[myRoll[0]] : '?';
-  if ($('dieMe2')) $('dieMe2').textContent = myRoll ? faces[myRoll[1]] : '?';
-  if ($('dieThem1')) $('dieThem1').textContent = theirRoll ? faces[theirRoll[0]] : '?';
-  if ($('dieThem2')) $('dieThem2').textContent = theirRoll ? faces[theirRoll[1]] : '?';
-  if ($('diceMeTotal')) $('diceMeTotal').textContent = myRoll ? myRoll[0] + myRoll[1] : 'â€”';
-  if ($('diceThemTotal')) $('diceThemTotal').textContent = theirRoll ? theirRoll[0] + theirRoll[1] : 'â€”';
-  const scores = g.scores || {};
-  if ($('diceMeScore')) $('diceMeScore').textContent = scores[state.user.uid] || 0;
-  if ($('diceThemScore')) $('diceThemScore').textContent = pu ? (scores[pu] || 0) : 0;
-  if ($('diceRound')) $('diceRound').textContent = g.roundNumber || 1;
-  let v = 'â€”';
-  if (myRoll && theirRoll) { const mt = myRoll[0]+myRoll[1], tt = theirRoll[0]+theirRoll[1];
-    if (mt > tt) v = 'ðŸŽ‰ You win!'; else if (mt < tt) v = `${profileName(pu)} wins.`; else v = 'Tie!';
-  } else if (myRoll) v = 'Waiting for partnerâ€¦'; else if (theirRoll) v = 'Your turn!';
-  if ($('diceVerdict')) $('diceVerdict').textContent = v;
-}
-async function rollDice() {
-  const pu = partnerUid(); if (!pu) return toast('Set partner.', 'warning');
-  const g = state.games.dice || {};
-  if (g.roundNumber && g.rolls?.[state.user.uid] && g.rolls?.[pu]) { await safeSet(`games/dice`, { ...g, roundNumber: (g.roundNumber||1)+1, rolls:{}, updatedAt: new Date().toISOString() }); return; }
-  if ($('dieMe1')) { $('dieMe1').classList.add('rolling'); $('dieMe2').classList.add('rolling'); }
-  await new Promise(r => setTimeout(r, 800));
-  if ($('dieMe1')) { $('dieMe1').classList.remove('rolling'); $('dieMe2').classList.remove('rolling'); }
-  const d1 = Math.ceil(Math.random()*6); const d2 = Math.ceil(Math.random()*6);
-  const rolls = { ...(g.rolls || {}), [state.user.uid]: [d1, d2] };
-  const scores = { ...(g.scores || {}) };
-  const patch = { id:'dice', roundNumber: g.roundNumber || 1, rolls, scores, updatedAt: new Date().toISOString() };
-  if (rolls[pu]) { const myTotal = d1 + d2; const theirTotal = rolls[pu][0] + rolls[pu][1];
-    if (myTotal > theirTotal) { scores[state.user.uid] = (scores[state.user.uid]||0) + 1; state.gameStats.diceW = (state.gameStats.diceW||0)+1; saveGameStats(); }
-    else if (theirTotal > myTotal) { scores[pu] = (scores[pu]||0) + 1; }
-    patch.scores = scores;
-  }
-  await safeSet(`games/dice`, patch);
-}
-function renderWordDuel() {
-  const g = state.games.word || {}; const guesses = g.guesses || [];
-  const host = $('wdBoard'); if (!host) return;
-  const rows = [];
-  for (let r = 0; r < 6; r++) { const guess = guesses[r]; const tiles = [];
-    for (let c = 0; c < 5; c++) { const ch = guess ? guess.word[c] : ''; let cls = '';
-      if (guess && guess.result) cls = guess.result[c] === 'correct' ? 'correct' : guess.result[c] === 'present' ? 'present' : 'absent';
-      tiles.push(`<div class="wd-tile ${cls}">${esc(ch || '')}</div>`); }
-    rows.push(`<div class="wd-row">${tiles.join('')}</div>`); }
-  host.innerHTML = rows.join('');
-  let s = 'Guess the 5-letter word.';
-  if (g.status === 'won') s = `ðŸŽ‰ Got it in ${guesses.length}!`; else if (g.status === 'lost') s = `Out. Word was ${g.word || '?'}`; else if (!g.word) s = 'Start a new word.';
-  if ($('wdStatus')) $('wdStatus').textContent = s;
-  if ($('wdVerdict')) $('wdVerdict').textContent = g.status === 'won' ? 'ðŸŽ‰' : g.status === 'lost' ? 'Try again' : '';
-  if ($('wdForm')) { if (g.status === 'won' || g.status === 'lost' || !g.word) $('wdForm').style.pointerEvents = 'none'; else $('wdForm').style.pointerEvents = ''; }
-}
-async function newWordDuel() {
-  const pu = partnerUid(); if (!pu) return toast('Set partner.', 'warning');
-  toast('Picking wordâ€¦', 'info');
-  try { const res = await ai('/ai/word-duel', {});
-    const word = (res.word || 'APPLE').toUpperCase().slice(0,5);
-    await safeSet(`games/word`, { id:'word', word, guesses: [], status:'playing', createdBy: state.user.uid, createdAt: new Date().toISOString() });
-    if ($('wdForm')) $('wdForm').style.pointerEvents = ''; toast('Ready!', 'success');
-  } catch(e) { toast('Failed.', 'error'); }
-}
-if ($('wdForm')) $('wdForm').addEventListener('submit', async e => {
-  e.preventDefault();
-  const g = state.games.word; if (!g || g.status !== 'playing' || !g.word) return;
-  const w = $('wdInput').value.toUpperCase().trim(); if (w.length !== 5) return toast('5 letters.', 'warning');
-  $('wdInput').value = '';
-  const result = []; const wArr = g.word.split(''); const used = wArr.slice();
-  for (let i = 0; i < 5; i++) { if (w[i] === wArr[i]) { result[i] = 'correct'; used[i] = null; } }
-  for (let i = 0; i < 5; i++) { if (result[i]) continue; const idx = used.indexOf(w[i]); if (idx > -1) { result[i] = 'present'; used[idx] = null; } else result[i] = 'absent'; }
-  const guesses = [...(g.guesses || []), { word: w, result }];
-  let status = g.status;
-  if (w === g.word) { status = 'won'; state.gameStats.wdW = (state.gameStats.wdW||0)+1; saveGameStats(); }
-  else if (guesses.length >= 6) status = 'lost';
-  await safeUpdate(`games/word`, { guesses, status });
-});
-function renderQ20() {
-  const g = state.games.twenty || {};
-  let s = 'AI thinks of something. Ask yes/no questions.';
-  if (g.status === 'playing') s = `Question ${(g.questions||[]).length + 1} of 20`;
-  else if (g.status === 'won') s = `ðŸŽ‰ Guessed! It was "${g.secret}".`;
-  else if (g.status === 'lost') s = `Out. It was "${g.secret}".`;
-  if ($('q20Status')) $('q20Status').textContent = s;
-  if ($('q20Hint')) { $('q20Hint').classList.toggle('hidden', !g.hint || !g.secret); if (g.hint && g.secret) $('q20Hint').innerHTML = `<strong class="text-cyan-400">Hint:</strong> ${esc(g.hint)}`; }
-  const log = (g.questions || []).map(q => `<div class="flex items-start gap-2 text-[12.5px]"><span class="text-slate-500 shrink-0">Q:</span>
-    <span class="flex-1 text-slate-300">${esc(q.q)}</span><span class="font-bold ${q.a === 'yes' ? 'text-emerald-400' : q.a === 'no' ? 'text-rose-400' : 'text-amber-400'}">${esc(q.a).toUpperCase()}</span></div>`).join('');
-  if ($('q20Log')) $('q20Log').innerHTML = log || `<div class="text-center py-6 text-slate-500 text-[12px]">No questions yet.</div>`;
-  if ($('q20Count')) $('q20Count').textContent = (g.questions || []).length;
-}
-async function newQ20() {
-  toast('AI is thinkingâ€¦', 'info');
-  try { const res = await ai('/ai/20questions', { action: 'start' });
-    await safeSet(`games/twenty`, { id:'twenty', secret: res.thing, hint: res.hint, questions: [], status:'playing', createdAt: new Date().toISOString() });
-    toast('New game!', 'success');
-  } catch(e) { toast('Failed.', 'error'); }
-}
-if ($('q20Form')) $('q20Form').addEventListener('submit', async e => {
-  e.preventDefault();
-  const g = state.games.twenty; if (!g || g.status !== 'playing') return toast('Start a new game.', 'warning');
-  const q = $('q20Input').value.trim(); if (!q) return;
-  $('q20Input').value = '';
-  try { const res = await ai('/ai/20questions', { secret: g.secret, question: q });
-    const questions = [...(g.questions || []), { q, a: res.answer, explanation: res.explanation }];
-    let status = g.status;
-    if (q.toLowerCase().includes(g.secret.toLowerCase())) status = 'won';
-    else if (questions.length >= 20) status = 'lost';
-    await safeUpdate(`games/twenty`, { questions, status });
-  } catch(e) { toast('Failed.', 'error'); }
-});
-async function loadTrivia() {
-  const topic = $('triviaTopic').value.trim() || 'general knowledge'; const diff = $('triviaDiff').value;
-  if ($('triviaCard')) $('triviaCard').innerHTML = `<div class="text-center py-10"><i class="fa-solid fa-circle-notch fa-spin text-2xl text-emerald-400"></i><p class="text-slate-500 text-[12px] mt-3">Generatingâ€¦</p></div>`;
-  try { const res = await ai('/ai/trivia', { topic, difficulty: diff }); if (!res.questions?.length) throw new Error('No questions');
-    state.games.trivia = { questions: res.questions, index: 0, correct: 0 }; renderTrivia();
-  } catch(e) { if ($('triviaCard')) $('triviaCard').innerHTML = `<div class="text-center py-10 text-rose-400"><i class="fa-solid fa-circle-exclamation text-2xl mb-2"></i><p class="text-[12px]">${esc(e.message)}</p></div>`; }
-}
-function renderTrivia() {
-  const g = state.games.trivia; const card = $('triviaCard'); if (!card) return;
-  if (!g || !g.questions?.length) { card.innerHTML = `<div class="text-center py-10 text-slate-500"><i class="fa-solid fa-brain text-3xl block mb-3 opacity-35"></i>Pick topic and click Generate.</div>`; if ($('triviaScore')) $('triviaScore').textContent = `${state.gameStats.triviaCorrect || 0} / ${state.gameStats.triviaTotal || 0}`; return; }
-  const q = g.questions[g.index];
-  if (!q) { card.innerHTML = `<div class="text-center py-10"><div class="text-3xl mb-3">ðŸ†</div><p class="font-display font-bold text-white mb-1">Round complete!</p><p class="text-[13px] text-slate-400">Got ${g.correct} / ${g.questions.length}.</p></div>`; if ($('triviaScore')) $('triviaScore').textContent = `${state.gameStats.triviaCorrect || 0} / ${state.gameStats.triviaTotal || 0}`; return; }
-  card.innerHTML = `<div class="flex items-center justify-between mb-3"><span class="text-[11px] uppercase tracking-wider text-slate-500">Question ${g.index + 1} of ${g.questions.length}</span>
-    <span class="text-[11px] text-emerald-400">Score: ${g.correct}</span></div>
-    <p class="text-[15px] font-semibold text-white mb-4">${esc(q.q)}</p>
-    <div class="grid gap-2">${(q.options || []).map((opt, i) => `<button data-topt="${i}" class="text-left px-4 py-3 rounded-xl bg-white/[.03] border border-white/10 hover:border-emerald-400/60 text-[13.5px] text-slate-200"><span class="font-bold text-slate-500 mr-2">${String.fromCharCode(65+i)}.</span>${esc(opt)}</button>`).join('')}</div>
-    <div id="triviaResult" class="mt-4 hidden text-[13px] p-3 rounded-lg bg-white/[.03] border border-white/5"></div>`;
-  card.querySelectorAll('[data-topt]').forEach(b => b.onclick = () => answerTrivia(parseInt(b.dataset.topt)));
-  if ($('triviaScore')) $('triviaScore').textContent = `${state.gameStats.triviaCorrect || 0} / ${state.gameStats.triviaTotal || 0}`;
-}
-function answerTrivia(i) {
-  const g = state.games.trivia; if (!g) return; const q = g.questions[g.index]; if (!q) return;
-  const correct = i === q.answer;
-  state.gameStats.triviaTotal = (state.gameStats.triviaTotal||0)+1;
-  if (correct) { state.gameStats.triviaCorrect = (state.gameStats.triviaCorrect||0)+1; g.correct++; }
-  saveGameStats();
-  const result = $('triviaResult');
-  if (result) { result.classList.remove('hidden'); result.innerHTML = correct ? `<span class="text-emerald-400 font-bold">âœ“ Correct!</span> ${q.explanation ? esc(q.explanation) : ''}` : `<span class="text-rose-400 font-bold">âœ— Correct: ${esc(q.options[q.answer])}</span> ${q.explanation ? 'Â· ' + esc(q.explanation) : ''}`; }
-  document.querySelectorAll('[data-topt]').forEach(b => b.onclick = null);
-  setTimeout(() => { g.index++; renderTrivia(); }, 1800);
-}
-async function loadTD(kind) {
-  state.tdKind = kind;
-  const card = $('tdCard'); if (!card) return;
-  card.innerHTML = `<div class="text-center py-10"><i class="fa-solid fa-circle-notch fa-spin text-2xl text-pink-400"></i><p class="text-slate-500 text-[12px] mt-3">Generatingâ€¦</p></div>`;
-  try { const res = await ai('/ai/truth-dare', { kind }); if (!res.items?.length) throw new Error('No items');
-    state.tdCurrent = { items: res.items, idx: 0 }; renderTD();
-  } catch(e) { card.innerHTML = `<p class="text-rose-400 text-[13px]">${esc(e.message)}</p>`; }
-}
-function renderTD() {
-  const card = $('tdCard'); if (!card) return;
-  if (!state.tdCurrent) { card.innerHTML = `<p class="text-slate-500 text-[13px]">Pick truth or dare.</p>`; if ($('tdNextBtn')) $('tdNextBtn').classList.add('hidden'); return; }
-  const { items, idx } = state.tdCurrent;
-  if (idx >= items.length) { card.innerHTML = `<p class="text-slate-500 text-[13px]">All done!</p>`; if ($('tdNextBtn')) $('tdNextBtn').classList.add('hidden'); return; }
-  const color = state.tdKind === 'truth' ? '#38bdf8' : '#fb7185';
-  card.innerHTML = `<div class="text-center"><div class="text-[10px] uppercase tracking-wider font-bold mb-2" style="color:${color}">${state.tdKind}</div>
-    <p class="text-[16px] text-white font-semibold">${esc(items[idx])}</p>
-    <div class="text-[11px] text-slate-500 mt-3">${idx + 1} / ${items.length}</div></div>`;
-  if ($('tdNextBtn')) { $('tdNextBtn').classList.remove('hidden'); $('tdNextBtn').onclick = () => { state.tdCurrent.idx++; renderTD(); }; }
-}
-async function loadPrompts() {
-  if ($('promptsCard')) $('promptsCard').innerHTML = `<div class="text-center py-10"><i class="fa-solid fa-circle-notch fa-spin text-2xl text-pink-400"></i></div>`;
-  try { const res = await ai('/ai/prompts', { kind: 'would_you_rather' }); if (!res.prompts?.length) throw new Error('No prompts');
-    state.games.prompts = res.prompts; renderPrompts();
-  } catch(e) { if ($('promptsCard')) $('promptsCard').innerHTML = `<p class="text-rose-400 text-[13px]">${esc(e.message)}</p>`; }
-}
-function renderPrompts() {
-  const card = $('promptsCard'); if (!card) return;
-  const prompts = state.games.prompts;
-  if (!prompts?.length) { card.innerHTML = `<div class="text-center py-10 text-slate-500"><i class="fa-solid fa-comments text-3xl block mb-3 opacity-35"></i>Click Generate Prompts.</div>`; return; }
-  card.innerHTML = `<div class="space-y-3">${prompts.map((p, i) => `<div class="p-4 rounded-xl bg-white/[.03] border border-white/5 hover:border-pink-400/40"><div class="flex items-start gap-3"><span class="text-[10px] font-bold text-pink-400 mt-0.5">${i+1}</span>
-    <div class="flex-1"><p class="text-[14px] text-slate-200">${esc(p.text)}</p><span class="badge b-purple mt-2">${esc(p.category || 'fun')}</span></div></div></div>`).join('')}</div>`;
-}
-
+/* ═══════════════════════════════════════════════════════════
+   CHAT
+   ═══════════════════════════════════════════════════════════ */
 function initChat() {
   if ($('chatFab')) $('chatFab').onclick = () => toggleChatPanel();
-  if ($('chatCloseBtn')) $('chatCloseBtn').onclick = () => { state.chatPanelOpen = false; $('chatPanel').classList.add('hidden'); };
+  if ($('chatCloseBtn')) $('chatCloseBtn').onclick = () => { state.chatPanelOpen = false; $('chatPanel')?.classList.add('hidden'); };
   if ($('chatFabForm')) $('chatFabForm').onsubmit = sendChatMessage;
   if ($('chatFabInput')) { $('chatFabInput').oninput = () => setTyping(true); $('chatFabInput').onblur = () => setTyping(false); }
   updateChatHeader();
@@ -2430,9 +1749,11 @@ function initChat() {
 }
 function toggleChatPanel() {
   state.chatPanelOpen = !state.chatPanelOpen;
-  $('chatPanel').classList.toggle('hidden', !state.chatPanelOpen);
-  if (state.chatPanelOpen) { setTimeout(() => { renderChatFab(); $('chatFabMessages').scrollTop = $('chatFabMessages').scrollHeight; $('chatFabInput').focus(); }, 100);
-    state.lastChatSeenTs = Date.now(); state.settings.lastChatSeenTs = state.lastChatSeenTs; persistSettings(); updateChatBadge(); }
+  $('chatPanel')?.classList.toggle('hidden', !state.chatPanelOpen);
+  if (state.chatPanelOpen) {
+    setTimeout(() => { renderChatFab(); const m = $('chatFabMessages'); if (m) m.scrollTop = m.scrollHeight; $('chatFabInput')?.focus(); }, 100);
+    state.lastChatSeenTs = Date.now(); state.settings.lastChatSeenTs = state.lastChatSeenTs; persistSettings(); updateChatBadge();
+  }
 }
 function openMobileChat() {
   const pu = partnerUid(); if (!pu) return toast('Set partner first.', 'warning');
@@ -2443,7 +1764,7 @@ function openMobileChat() {
     document.body.style.overflow = 'hidden';
     updateMobileChatHeader();
     renderMobileChatMessages();
-    setTimeout(() => { const msgs = $('mChatMessages'); if (msgs) msgs.scrollTop = msgs.scrollHeight; $('mChatInput').focus(); }, 100);
+    setTimeout(() => { const msgs = $('mChatMessages'); if (msgs) msgs.scrollTop = msgs.scrollHeight; $('mChatInput')?.focus(); }, 100);
   }
   state.lastChatSeenTs = Date.now(); state.settings.lastChatSeenTs = state.lastChatSeenTs; persistSettings(); updateChatBadge();
 }
@@ -2462,10 +1783,10 @@ function updateMobileChatHeader() {
   if ($('mChatPartnerStatus')) { const on = isOnline(pu); $('mChatPartnerStatus').innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:${on?'#34d399':'#64748b'};"></span> ${on ? 'Online' : 'Offline'}`; }
 }
 function renderMobileChatMessages() {
-  const pu = partnerUid(); const container = $('mChatMessages'); if (!container) return;
+  const pu = partnerUid(); const container = $('mChatMessages'); if (!container || !state.user) return;
   if (!pu) { container.innerHTML = `<div style="text-align:center;padding:30px;color:#64748b;font-size:.82rem;"><i class="fa-solid fa-comments" style="font-size:2rem;display:block;margin-bottom:8px;opacity:.4;"></i>Select partner in Settings.</div>`; return; }
   const msgs = Object.values(state.chat || {}).filter(m => (m.from === state.user.uid && m.to === pu) || (m.from === pu && m.to === state.user.uid)).sort((a,b) => (a.ts||0) - (b.ts||0));
-  if (!msgs.length) { container.innerHTML = `<div style="text-align:center;padding:30px;color:#64748b;font-size:.82rem;"><i class="fa-regular fa-comments" style="font-size:2rem;display:block;margin-bottom:8px;opacity:.4;"></i>Say hi to ${esc(profileName(pu))} ðŸ‘‹</div>`; return; }
+  if (!msgs.length) { container.innerHTML = `<div style="text-align:center;padding:30px;color:#64748b;font-size:.82rem;"><i class="fa-regular fa-comments" style="font-size:2rem;display:block;margin-bottom:8px;opacity:.4;"></i>Say hi to ${esc(profileName(pu))} 👋</div>`; return; }
   let lastDate = '', html = '';
   msgs.forEach(m => { const d = new Date(m.ts); const day = d.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'});
     if (day !== lastDate) { html += `<div style="text-align:center;margin:12px 0;"><span style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#475569;background:rgba(15,23,42,.7);padding:4px 10px;border-radius:20px;">${day}</span></div>`; lastDate = day; }
@@ -2492,12 +1813,12 @@ function updateChatHeader() {
   if (av) { if (p.avatar) av.innerHTML = `<img src="${p.avatar}" class="w-full h-full object-cover rounded-full"/>`; else { av.textContent = initials(p.name); av.style.background = `linear-gradient(135deg,${p.accent||'#a855f7'},#7c3aed)`; } }
   if ($('chatPartnerStatus')) { const on = isOnline(pu); $('chatPartnerStatus').innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${on?'bg-emerald-400':'bg-slate-500'}"></span> ${on ? 'Online' : 'Offline'}`; }
 }
-function handleChatUpdate() { renderChatFab(); updateChatBadge(); if (state.chatPanelOpen) setTimeout(() => $('chatFabMessages').scrollTop = $('chatFabMessages').scrollHeight, 100); if (state.mobileChatOpen) setTimeout(() => { const msgs = $('mChatMessages'); if (msgs) msgs.scrollTop = msgs.scrollHeight; }, 100); }
+function handleChatUpdate() { renderChatFab(); updateChatBadge(); if (state.chatPanelOpen) setTimeout(() => { const m=$('chatFabMessages'); if(m)m.scrollTop = m.scrollHeight; }, 100); if (state.mobileChatOpen) setTimeout(() => { const m = $('mChatMessages'); if (m) m.scrollTop = m.scrollHeight; }, 100); }
 function renderChatFab() {
-  const pu = partnerUid(); const container = $('chatFabMessages'); if (!container) return;
+  const pu = partnerUid(); const container = $('chatFabMessages'); if (!container || !state.user) return;
   if (!pu) { container.innerHTML = `<div class="text-center py-8 text-slate-500 text-[12.5px]"><i class="fa-solid fa-comments text-3xl block mb-2 opacity-40"></i>Select partner in Settings.</div>`; return; }
   const msgs = Object.values(state.chat || {}).filter(m => (m.from === state.user.uid && m.to === pu) || (m.from === pu && m.to === state.user.uid)).sort((a,b) => (a.ts||0) - (b.ts||0));
-  if (!msgs.length) { container.innerHTML = `<div class="text-center py-10 text-slate-500 text-[12.5px]"><i class="fa-regular fa-comments text-3xl block mb-3 opacity-40"></i>Say hi to ${esc(profileName(pu))} ðŸ‘‹</div>`; return; }
+  if (!msgs.length) { container.innerHTML = `<div class="text-center py-10 text-slate-500 text-[12.5px]"><i class="fa-regular fa-comments text-3xl block mb-3 opacity-40"></i>Say hi to ${esc(profileName(pu))} 👋</div>`; return; }
   let lastDate = '', html = '';
   msgs.forEach(m => { const d = new Date(m.ts); const day = d.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'});
     if (day !== lastDate) { html += `<div class="text-center my-3"><span class="text-[10px] uppercase tracking-wider text-slate-600 bg-slate-900/70 px-2 py-1 rounded-full">${day}</span></div>`; lastDate = day; }
@@ -2508,10 +1829,14 @@ function renderChatFab() {
   if ($('chatTyping')) $('chatTyping').classList.toggle('hidden', !partnerTyping);
 }
 function updateChatBadge() {
-  const pu = partnerUid(); if (!pu) { if ($('chatFabBadge')) $('chatFabBadge').classList.add('hidden'); return; }
-  const unread = Object.values(state.chat || {}).filter(m => m.from === pu && m.to === state.user.uid && (m.ts||0) > (state.lastChatSeenTs || 0)).length;
+  const pu = partnerUid();
+  if (!pu) { if ($('chatFabBadge')) $('chatFabBadge').classList.add('hidden'); return; }
+  const unread = Object.values(state.chat || {}).filter(m => m.from === pu && m.to === state.user?.uid && (m.ts||0) > (state.lastChatSeenTs || 0)).length;
   const badge = $('chatFabBadge');
-  if (badge) { if (unread > 0) { badge.textContent = unread > 9 ? '9+' : unread; badge.classList.remove('hidden'); $('chatFab').classList.add('pulse'); } else { badge.classList.add('hidden'); $('chatFab').classList.remove('pulse'); } }
+  if (badge) {
+    if (unread > 0) { badge.textContent = unread > 9 ? '9+' : unread; badge.classList.remove('hidden'); $('chatFab')?.classList.add('pulse'); }
+    else { badge.classList.add('hidden'); $('chatFab')?.classList.remove('pulse'); }
+  }
 }
 async function sendChatMessage(e) {
   e.preventDefault();
@@ -2519,14 +1844,17 @@ async function sendChatMessage(e) {
   const input = $('chatFabInput'); const text = input.value.trim(); if (!text) return;
   input.value = ''; const id = uid();
   await safeSet(`chat/${id}`, { id, from: state.user.uid, to: pu, text, ts: Date.now(), read: false });
-  setTyping(false); setTimeout(() => $('chatFabMessages').scrollTop = $('chatFabMessages').scrollHeight, 100);
+  setTyping(false); setTimeout(() => { const m=$('chatFabMessages'); if(m)m.scrollTop = m.scrollHeight; }, 100);
 }
 async function setTyping(isTyping) {
-  const pu = partnerUid(); if (!pu) return;
+  const pu = partnerUid(); if (!pu || !state.user) return;
   const tRef = ref(db, P(`typing/${state.user.uid}`));
   if (isTyping) await set(tRef, { typing: true, at: Date.now() }); else await remove(tRef);
 }
 
+/* ═══════════════════════════════════════════════════════════
+   MOBILE
+   ═══════════════════════════════════════════════════════════ */
 function switchMobileScreen(name) {
   state.mobileScreen = name;
   document.querySelectorAll('.mobile-screen').forEach(s => s.classList.toggle('active', s.dataset.screen === name));
@@ -2538,35 +1866,18 @@ function switchMobileScreen(name) {
   if (name === 'games') renderMobileGame();
   if (name === 'vault') renderMobileVault();
 }
-document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(item => {
-  item.onclick = () => {
-    if (item.id === 'mMoreBtn') { openSheet(); return; }
-    if (item.dataset.screen === 'games') { enterFullscreenTab('games'); return; }
-    switchMobileScreen(item.dataset.screen);
-  };
-});
-function openSheet() { $('mSheetBackdrop').classList.add('open'); $('mSheet').classList.add('open'); }
-function closeSheet() { $('mSheetBackdrop').classList.remove('open'); $('mSheet').classList.remove('open'); }
-if ($('mSheetBackdrop')) $('mSheetBackdrop').onclick = closeSheet;
-if ($('mSheetClose')) $('mSheetClose').onclick = closeSheet;
-document.querySelectorAll('[data-mgoto]').forEach(t => t.onclick = () => {
-  closeSheet();
-  const tab = t.dataset.mgoto;
-  if (tab === 'vault') { switchMobileScreen('vault'); setTimeout(() => renderMobileVault(), 100); return; }
-  enterFullscreenTab(tab);
-});
-document.querySelectorAll('[data-mchat]').forEach(t => t.onclick = () => { closeSheet(); openMobileChat(); });
-if ($('mFab')) $('mFab').onclick = () => {
-  const s = state.mobileScreen;
-  if (s === 'tasks') openTaskModal();
-  else if (s === 'today') $('mTodoInput').focus();
-  else if (s === 'goals') openGoalModal();
-  else openTaskModal();
-};
-function openGoalModal() { if ($('goalForm')) { $('goalEditId').value = ''; $('goalForm').reset(); $('goalPriority').value = 'medium'; $('goalTargetTime').value = '23:59'; milestoneDraft = []; renderMilestoneEditor(); showModal('goalModal'); } }
+function openSheet() { $('mSheetBackdrop')?.classList.add('open'); $('mSheet')?.classList.add('open'); }
+function closeSheet() { $('mSheetBackdrop')?.classList.remove('open'); $('mSheet')?.classList.remove('open'); }
+function openGoalModal() {
+  if ($('goalForm')) {
+    $('goalEditId').value = ''; $('goalForm').reset();
+    $('goalPriority').value = 'medium'; $('goalTargetTime').value = '23:59';
+    milestoneDraft = []; renderMilestoneEditor(); showModal('goalModal');
+  }
+}
 
 function renderMobileDashboard() {
-  if (!isMobile()) return;
+  if (!isMobile() || !state.user) return;
   const m = metricsFor(state.user.uid);
   const pu = partnerUid(); const pm = pu ? metricsFor(pu) : null;
   const kpis = [
@@ -2578,15 +1889,17 @@ function renderMobileDashboard() {
     { label:'Completion', value: m.completion + '%', icon:'fa-percent', color:'#a855f7', tab:'tasks', filter:'all' }
   ];
   const kg = $('mKpiGrid');
-  if (kg) kg.innerHTML = kpis.map(k => `<div class="m-kpi" data-m-go-tab="${k.tab}" data-m-go-filter="${k.filter||''}" style="cursor:pointer;">
-    <div class="kpi-icon" style="background:${k.color}22;color:${k.color}"><i class="fa-solid ${k.icon}"></i></div>
-    <div class="kpi-val" style="color:${k.color}">${k.value}</div>
-    <div class="kpi-label">${k.label}</div></div>`).join('');
-  kg.querySelectorAll('[data-m-go-tab]').forEach(el => el.onclick = () => {
-    const t = el.dataset.mGoTab;
-    if (t === 'tasks') { state.mobileTaskFilter = el.dataset.mGoFilter || 'all'; switchMobileScreen('tasks'); }
-    else if (t === 'today') switchMobileScreen('today');
-  });
+  if (kg) {
+    kg.innerHTML = kpis.map(k => `<div class="m-kpi" data-m-go-tab="${k.tab}" data-m-go-filter="${k.filter||''}" style="cursor:pointer;">
+      <div class="kpi-icon" style="background:${k.color}22;color:${k.color}"><i class="fa-solid ${k.icon}"></i></div>
+      <div class="kpi-val" style="color:${k.color}">${k.value}</div>
+      <div class="kpi-label">${k.label}</div></div>`).join('');
+    kg.querySelectorAll('[data-m-go-tab]').forEach(el => el.onclick = () => {
+      const t = el.dataset.mGoTab;
+      if (t === 'tasks') { state.mobileTaskFilter = el.dataset.mGoFilter || 'all'; switchMobileScreen('tasks'); }
+      else if (t === 'today') switchMobileScreen('today');
+    });
+  }
   const bars = [
     { label:'Task Completion', value: m.completion, cls:'fill-cyan' },
     { label:'On-Time', value: m.onTimeRate, cls:'fill-emerald' },
@@ -2630,6 +1943,7 @@ function renderMobileDashboard() {
   buildMobileCharts(m, pm, pu);
 }
 function buildMobileCharts(m, pm, pu) {
+  if (typeof Chart === 'undefined' || !state.user) return;
   const isDark = document.documentElement.classList.contains('dark');
   const grid = isDark ? 'rgba(148,163,184,.12)' : 'rgba(15,23,42,.08)';
   const tick = isDark ? '#94a3b8' : '#475569';
@@ -2670,7 +1984,7 @@ function buildMobileCharts(m, pm, pu) {
   const skctx = $('mChartSkills')?.getContext('2d');
   if (skctx) {
     const skills = allSkills().slice().sort((a,b) => (b.hours||0) - (a.hours||0)).slice(0,6);
-    const labels = skills.map(s => s.name.length > 10 ? s.name.slice(0,10) + 'â€¦' : s.name);
+    const labels = skills.map(s => s.name.length > 10 ? s.name.slice(0,10) + '…' : s.name);
     const data = skills.map(s => s.target ? Math.min(100, Math.round((s.hours/s.target)*100)) : 0);
     state.charts.mSkills = new Chart(skctx, { type: 'bar', data: { labels, datasets: [{ data, backgroundColor: ['#38bdf8','#a855f7','#34d399','#fbbf24','#fb7185','#22d3ee'], borderRadius: 8, barPercentage: .7 }] },
       options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } },
@@ -2701,7 +2015,7 @@ function buildMobileCharts(m, pm, pu) {
   }
 }
 function renderMobileTasks() {
-  if (!isMobile()) return;
+  if (!isMobile() || !state.user) return;
   const host = $('mTaskList'); if (!host) return;
   const today = todayStr(); const f = state.mobileTaskFilter || 'all';
   let list = myTasks();
@@ -2724,7 +2038,7 @@ function renderMobileTasks() {
         <div class="m-title">${esc(t.title)}</div>
         <div class="m-meta">
           <span class="badge b-${t.priority || 'medium'}">${esc(t.priority || 'medium')}</span>
-          ${t.dueDate ? `<span class="${overdue?'text-rose-400':dueToday?'text-amber-400':''}"><i class="fa-regular fa-calendar"></i> ${fmtDate(t.dueDate)}${t.dueTime?' Â· '+t.dueTime:''}</span>` : ''}
+          ${t.dueDate ? `<span class="${overdue?'text-rose-400':dueToday?'text-amber-400':''}"><i class="fa-regular fa-calendar"></i> ${fmtDate(t.dueDate)}${t.dueTime?' · '+t.dueTime:''}</span>` : ''}
           ${countdownPill(t, t.done)}
           ${isAssigned ? `<span class="badge b-purple">${esc(state.profiles[t.assignedTo]?.name || 'Partner')}</span>` : ''}
         </div>
@@ -2738,12 +2052,8 @@ function renderMobileTasks() {
   host.querySelectorAll('[data-mtoggle]').forEach(b => b.onclick = () => toggleTask(b.dataset.mtoggle));
   host.querySelectorAll('[data-mdel]').forEach(b => b.onclick = () => deleteTask(b.dataset.mdel));
 }
-document.querySelectorAll('[data-mfilter="tasks"] .m-pill').forEach(p => p.onclick = () => {
-  document.querySelectorAll('[data-mfilter="tasks"] .m-pill').forEach(x => x.classList.remove('active'));
-  p.classList.add('active'); state.mobileTaskFilter = p.dataset.filter; renderMobileTasks();
-});
 function renderMobileTodos() {
-  if (!isMobile()) return;
+  if (!isMobile() || !state.user) return;
   const list = myTodos().filter(t => t.date === state.todoDate).sort((a,b) => { const ta = a.dueTime || '99:99', tb = b.dueTime || '99:99'; return ta.localeCompare(tb); });
   const host = $('mTodoList'); if (!host) return;
   if (!list.length) { host.innerHTML = `<div style="text-align:center;padding:24px;color:#64748b;font-size:.8rem;"><i class="fa-regular fa-circle-check" style="font-size:2rem;display:block;margin-bottom:8px;opacity:.4;"></i>No to-dos for this day.</div>`; return; }
@@ -2758,21 +2068,8 @@ function renderMobileTodos() {
   </div>`).join('');
   host.querySelectorAll('[data-mttoggle]').forEach(b => b.onclick = () => toggleTodo(b.dataset.mttoggle));
 }
-if ($('mAddTodoBtn')) $('mAddTodoBtn').onclick = async () => {
-  const text = ($('mTodoInput').value || '').trim();
-  if (!text) { toast('Write something first.', 'warning'); return; }
-  const dueTime = $('mTodoDueTime').value || '';
-  const priority = $('mTodoPriority').value || 'medium';
-  const recurring = $('mTodoRecurring').checked;
-  $('mTodoInput').value = ''; $('mTodoDueTime').value = ''; $('mTodoPriority').value = 'medium'; $('mTodoRecurring').checked = false;
-  await addTodoOptimistic(text, dueTime, priority, recurring);
-};
-if ($('mTodoInput')) $('mTodoInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('mAddTodoBtn').click(); } });
-if ($('mPrevDay')) $('mPrevDay').onclick = () => { const d = new Date(state.todoDate + 'T00:00:00'); d.setDate(d.getDate()-1); state.todoDate = dateStr(d); renderMobileTodos(); };
-if ($('mNextDay')) $('mNextDay').onclick = () => { const d = new Date(state.todoDate + 'T00:00:00'); d.setDate(d.getDate()+1); state.todoDate = dateStr(d); renderMobileTodos(); };
-if ($('mTodayJump')) $('mTodayJump').onclick = () => { state.todoDate = todayStr(); renderMobileTodos(); };
 function renderMobileGoals() {
-  if (!isMobile()) return;
+  if (!isMobile() || !state.user) return;
   const host = $('mGoalsGrid'); if (!host) return;
   const goals = allGoals().sort((a,b) => { const pa = {high:0,medium:1,low:2}[a.priority] ?? 1; const pb = {high:0,medium:1,low:2}[b.priority] ?? 1; if (pa !== pb) return pa - pb; return (a.targetDate||'').localeCompare(b.targetDate||''); });
   if (!goals.length) { host.innerHTML = `<div style="text-align:center;padding:30px;color:#64748b;font-size:.8rem;"><i class="fa-solid fa-bullseye" style="font-size:2rem;display:block;margin-bottom:8px;opacity:.4;"></i>No goals yet.</div>`; return; }
@@ -2804,14 +2101,14 @@ function renderMobileGame() {
   if (tab === 'lobby') {
     host.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       ${[
-        { id:'ttt', name:'Tic-Tac-Toe', icon:'â¨¯', bg:'linear-gradient(135deg,#38bdf8,#0284c7)' },
-        { id:'c4', name:'Connect 4', icon:'ðŸ”´', bg:'linear-gradient(135deg,#ef4444,#b91c1c)' },
-        { id:'memory', name:'Memory', icon:'ðŸ§ ', bg:'linear-gradient(135deg,#a855f7,#7c3aed)' },
-        { id:'rps', name:'RPS', icon:'âœ‚ï¸', bg:'linear-gradient(135deg,#a855f7,#7c3aed)' },
-        { id:'dice', name:'Dice', icon:'ðŸŽ²', bg:'linear-gradient(135deg,#fbbf24,#d97706)' },
-        { id:'word', name:'Word', icon:'ðŸ”¤', bg:'linear-gradient(135deg,#22d3ee,#0e7490)' },
-        { id:'20q', name:'20 Qs', icon:'â“', bg:'linear-gradient(135deg,#fb7185,#e11d48)' },
-        { id:'trivia', name:'Trivia', icon:'ðŸ“š', bg:'linear-gradient(135deg,#34d399,#059669)' }
+        { id:'ttt', name:'Tic-Tac-Toe', icon:'⭕', bg:'linear-gradient(135deg,#38bdf8,#0284c7)' },
+        { id:'c4', name:'Connect 4', icon:'🔴', bg:'linear-gradient(135deg,#ef4444,#b91c1c)' },
+        { id:'memory', name:'Memory', icon:'🧠', bg:'linear-gradient(135deg,#a855f7,#7c3aed)' },
+        { id:'rps', name:'RPS', icon:'✂️', bg:'linear-gradient(135deg,#a855f7,#7c3aed)' },
+        { id:'dice', name:'Dice', icon:'🎲', bg:'linear-gradient(135deg,#fbbf24,#d97706)' },
+        { id:'word', name:'Word', icon:'🔤', bg:'linear-gradient(135deg,#22d3ee,#0e7490)' },
+        { id:'20q', name:'20 Qs', icon:'❓', bg:'linear-gradient(135deg,#fb7185,#e11d48)' },
+        { id:'trivia', name:'Trivia', icon:'📚', bg:'linear-gradient(135deg,#34d399,#059669)' }
       ].map(g => `<div style="display:flex;flex-direction:column;gap:6px;padding:14px;justify-content:center;align-items:center;border-radius:14px;background:rgba(15,23,42,.55);border:1px solid rgba(148,163,184,.15);font-size:.75rem;font-weight:600;cursor:pointer;color:#cbd5e1;" data-mgame-launch="${g.id}">
         <div style="width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:${g.bg};font-size:20px;">${g.icon}</div>
         <span>${g.name}</span></div>`).join('')}
@@ -2821,7 +2118,7 @@ function renderMobileGame() {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
         <div class="m-kpi"><div class="kpi-val" style="color:#38bdf8;">${state.gameStats.tttW||0}</div><div class="kpi-label">TTT Wins</div></div>
         <div class="m-kpi"><div class="kpi-val" style="color:#a855f7;">${state.gameStats.c4W||0}</div><div class="kpi-label">C4 Wins</div></div>
-        <div class="m-kpi"><div class="kpi-val" style="color:#34d399;">${state.gameStats.triviaCorrect||0}</div><div class="kpi-label">Trivia âœ“</div></div>
+        <div class="m-kpi"><div class="kpi-val" style="color:#34d399;">${state.gameStats.triviaCorrect||0}</div><div class="kpi-label">Trivia ✓</div></div>
         <div class="m-kpi"><div class="kpi-val" style="color:#fbbf24;">${state.gameStats.diceW||0}</div><div class="kpi-label">Dice Wins</div></div>
       </div>
     </div>`;
@@ -2845,7 +2142,7 @@ function launchMobileGame(gameId) {
   }, 150);
 }
 function renderMobileVault() {
-  if (!isMobile()) return;
+  if (!isMobile() || !state.user) return;
   const host = $('mVaultList'); if (!host) return;
   const docs = myDocs().sort((a, b) => (b.uploadedAt || '').localeCompare(a.uploadedAt || ''));
   if (!docs.length) {
@@ -2863,7 +2160,7 @@ function renderMobileVault() {
         <div style="font-size:.82rem;color:#e2e8f0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(d.name)}</div>
         <div style="font-size:.62rem;color:#64748b;margin-top:2px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
           <span>${fmtBytes(d.size)}</span>
-          <span>Â·</span>
+          <span>·</span>
           <span>${timeAgo(d.uploadedAt)}</span>
           ${src}
         </div>
@@ -2873,25 +2170,672 @@ function renderMobileVault() {
   }).join('');
   host.querySelectorAll('[data-mdoc-open]').forEach(el => el.onclick = () => previewDoc(el.dataset.mdocOpen));
 }
-if ($('mVaultFileInput')) $('mVaultFileInput').onchange = e => { handleFiles(e.target.files); e.target.value = ''; };
-if ($('mThemeBtn')) $('mThemeBtn').onclick = () => {
-  const isDark = document.documentElement.classList.toggle('dark');
-  document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
-  $('mThemeBtn').innerHTML = isDark ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>';
-  setTimeout(() => { if (isMobile()) renderMobileDashboard(); }, 80);
-};
-if ($('mAvatarBtn')) $('mAvatarBtn').onclick = () => { openSheet(); };
-if ($('mPrioritizeTasks')) $('mPrioritizeTasks').onclick = () => runPriorityAdvisor('tasks');
-if ($('mPrioritizeGoals')) $('mPrioritizeGoals').onclick = () => runPriorityAdvisor('goals');
-if ($('mAddTaskBtn')) $('mAddTaskBtn').onclick = () => openTaskModal();
-if ($('mAddGoalBtn')) $('mAddGoalBtn').onclick = () => openGoalModal();
 
-function showModal(id) { const el = $(id); if (!el) return; el.classList.remove('hidden'); el.classList.add('flex'); }
-function hideModal(id) { const el = $(id); if (!el) return; el.classList.add('hidden'); el.classList.remove('flex'); }
-document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => hideModal(b.dataset.close));
-document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) hideModal(m.id); }));
-document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.modal-overlay').forEach(m => hideModal(m.id)); });
+/* ═══════════════════════════════════════════════════════════
+   GAMES (unchanged from original but wrapped in functions)
+   ═══════════════════════════════════════════════════════════ */
+function renderGames() { renderGameStats(); renderTTT(); renderC4(); renderMemory(); renderRPS(); renderDice(); renderWordDuel(); renderQ20(); renderTrivia(); renderTD(); renderPrompts(); }
+function renderGameStats() {
+  const s = state.gameStats; const el = $('gameStats'); if (!el) return;
+  el.innerHTML = `
+    <div class="p-3 rounded-xl bg-white/[.03] border border-white/5 text-center"><div class="font-display text-xl font-bold text-sky-400">${s.tttW||0}</div><div class="text-[10px] uppercase tracking-wider text-slate-500 mt-1">TTT</div></div>
+    <div class="p-3 rounded-xl bg-white/[.03] border border-white/5 text-center"><div class="font-display text-xl font-bold text-red-400">${s.c4W||0}</div><div class="text-[10px] uppercase tracking-wider text-slate-500 mt-1">C4</div></div>
+    <div class="p-3 rounded-xl bg-white/[.03] border border-white/5 text-center"><div class="font-display text-xl font-bold text-purple-400">${s.memW||0}</div><div class="text-[10px] uppercase tracking-wider text-slate-500 mt-1">Memory</div></div>
+    <div class="p-3 rounded-xl bg-white/[.03] border border-white/5 text-center"><div class="font-display text-xl font-bold text-amber-400">${s.diceW||0}</div><div class="text-[10px] uppercase tracking-wider text-slate-500 mt-1">Dice</div></div>
+    <div class="p-3 rounded-xl bg-white/[.03] border border-white/5 text-center"><div class="font-display text-xl font-bold text-cyan-400">${s.wdW||0}</div><div class="text-[10px] uppercase tracking-wider text-slate-500 mt-1">Word</div></div>
+    <div class="p-3 rounded-xl bg-white/[.03] border border-white/5 text-center"><div class="font-display text-xl font-bold text-violet-400">${s.rpsW||0}</div><div class="text-[10px] uppercase tracking-wider text-slate-500 mt-1">RPS</div></div>
+    <div class="p-3 rounded-xl bg-white/[.03] border border-white/5 text-center"><div class="font-display text-xl font-bold text-emerald-400">${s.triviaCorrect||0}/${s.triviaTotal||0}</div><div class="text-[10px] uppercase tracking-wider text-slate-500 mt-1">Trivia</div></div>
+    <div class="p-3 rounded-xl bg-white/[.03] border border-white/5 text-center"><div class="font-display text-xl font-bold text-pink-400">${(s.tttW||0)+(s.c4W||0)+(s.memW||0)+(s.diceW||0)+(s.wdW||0)+(s.rpsW||0)}</div><div class="text-[10px] uppercase tracking-wider text-slate-500 mt-1">Total</div></div>`;
+}
+function renderTTT() {
+  if (!state.user) return;
+  const g = state.games.ttt || {}; const board = g.board || Array(9).fill(null);
+  const meSym = g.players?.X === state.user.uid ? 'X' : g.players?.O === state.user.uid ? 'O' : null;
+  const themSym = meSym === 'X' ? 'O' : meSym === 'O' ? 'X' : null;
+  if ($('tttMeSymbol')) { $('tttMeSymbol').textContent = meSym || '—'; $('tttPartnerSymbol').textContent = themSym || '—'; }
+  let s = 'Start a new match.';
+  if (g.status === 'waiting') s = 'Waiting…'; else if (g.status === 'playing') s = g.turn === state.user.uid ? 'Your turn!' : `${profileName(g.turn)}'s turn…`;
+  else if (g.status === 'won') s = g.winner === state.user.uid ? '🎉 You won!' : `${profileName(g.winner)} won.`;
+  else if (g.status === 'draw') s = "Draw!";
+  if ($('tttStatus')) $('tttStatus').textContent = s;
+  const sm = (state.user.uid === g.players?.X ? g.scoreX : g.scoreO) || 0; const st = (state.user.uid === g.players?.X ? g.scoreO : g.scoreX) || 0;
+  if ($('tttScore')) $('tttScore').textContent = `${sm} – ${st}`;
+  const host = $('tttBoard'); if (!host) return;
+  host.innerHTML = board.map((v, i) => `<div class="ttt-cell ${v ? 'filled ' + v.toLowerCase() : ''}" data-i="${i}">${v || ''}</div>`).join('');
+  const wl = g.winLine || [];
+  host.querySelectorAll('.ttt-cell').forEach(c => { const i = parseInt(c.dataset.i); if (wl.includes(i)) c.classList.add('win'); c.onclick = () => makeTTTMove(i); });
+}
+async function newTTTMatch() {
+  const pu = partnerUid(); if (!pu || !state.user) return toast('Set partner.', 'warning');
+  const meSym = Math.random() < .5 ? 'X' : 'O'; const themSym = meSym === 'X' ? 'O' : 'X';
+  await safeSet(`games/ttt`, { id:'ttt', board: Array(9).fill(null), players: { [meSym]: state.user.uid, [themSym]: pu }, turn: state.user.uid, status:'playing', winner:null, winLine:[], scoreX: state.games.ttt?.scoreX||0, scoreO: state.games.ttt?.scoreO||0, createdBy: state.user.uid, createdAt: new Date().toISOString() });
+  toast('Match started!', 'success');
+}
+async function makeTTTMove(i) {
+  const g = state.games.ttt; if (!g || g.status !== 'playing' || !state.user) return;
+  if (g.turn !== state.user.uid) return toast("Not your turn.", 'warning');
+  if (g.board[i]) return;
+  const meSym = g.players.X === state.user.uid ? 'X' : 'O';
+  const nb = [...g.board]; nb[i] = meSym;
+  const win = checkTTTWin(nb); const draw = !win && nb.every(c => c);
+  let p = { board: nb };
+  if (win) { p.winner = state.user.uid; p.status = 'won'; p.winLine = win; p['score'+meSym] = (g['score'+meSym]||0)+1; state.gameStats.tttW = (state.gameStats.tttW||0)+1; saveGameStats(); }
+  else if (draw) p.status = 'draw';
+  else p.turn = Object.values(g.players).find(u => u !== state.user.uid);
+  await safeUpdate(`games/ttt`, p);
+}
+function checkTTTWin(b) { const L = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; for (const l of L) if (b[l[0]] && b[l[0]] === b[l[1]] && b[l[0]] === b[l[2]]) return l; return null; }
+function renderC4() {
+  if (!state.user) return;
+  const g = state.games.c4 || {}; const board = g.board || Array(42).fill(null);
+  const meColor = g.players?.p1 === state.user.uid ? 'p1' : g.players?.p2 === state.user.uid ? 'p2' : null;
+  const themColor = meColor === 'p1' ? 'p2' : meColor === 'p2' ? 'p1' : null;
+  if ($('c4MeColor')) { $('c4MeColor').textContent = meColor === 'p1' ? 'Red' : meColor === 'p2' ? 'Yellow' : '—'; $('c4PartnerColor').textContent = themColor === 'p1' ? 'Red' : themColor === 'p2' ? 'Yellow' : '—'; }
+  let s = 'Start a new match.';
+  if (g.status === 'waiting') s = 'Waiting…'; else if (g.status === 'playing') s = g.turn === state.user.uid ? 'Your turn!' : `${profileName(g.turn)}'s turn…`;
+  else if (g.status === 'won') s = g.winner === state.user.uid ? '🎉 You won!' : `${profileName(g.winner)} won.`;
+  else if (g.status === 'draw') s = "Draw!";
+  if ($('c4Status')) $('c4Status').textContent = s;
+  const sm = (g.scores?.[state.user.uid]) || 0; const st = themColor ? (g.scores?.[Object.keys(g.players).find(k => g.players[k] !== state.user.uid)] || 0) : 0;
+  if ($('c4Score')) $('c4Score').textContent = `${sm} – ${st}`;
+  const host = $('c4Board'); if (!host) return;
+  host.innerHTML = board.map((v, i) => `<div class="c4-cell ${v || ''}" data-i="${i}"></div>`).join('');
+  host.querySelectorAll('.c4-cell').forEach(c => c.onclick = () => dropC4(parseInt(c.dataset.i)));
+}
+async function newC4Match() {
+  const pu = partnerUid(); if (!pu || !state.user) return toast('Set partner.', 'warning');
+  const meColor = Math.random() < .5 ? 'p1' : 'p2'; const themColor = meColor === 'p1' ? 'p2' : 'p1';
+  const scores = state.games.c4?.scores || {};
+  await safeSet(`games/c4`, { id:'c4', board: Array(42).fill(null), players: { [meColor]: state.user.uid, [themColor]: pu }, turn: state.user.uid, status:'playing', winner:null, scores, createdBy: state.user.uid, createdAt: new Date().toISOString() });
+  toast('Connect Four started!', 'success');
+}
+async function dropC4(idx) {
+  const g = state.games.c4; if (!g || g.status !== 'playing' || !state.user) return;
+  if (g.turn !== state.user.uid) return toast("Not your turn.", 'warning');
+  const col = idx % 7; let targetRow = -1;
+  for (let r = 5; r >= 0; r--) { const i = r * 7 + col; if (!g.board[i]) { targetRow = r; break; } }
+  if (targetRow < 0) return toast('Column full.', 'warning');
+  const meColor = g.players.p1 === state.user.uid ? 'p1' : 'p2';
+  const nb = [...g.board]; nb[targetRow * 7 + col] = meColor;
+  const win = checkC4Win(nb, targetRow, col, meColor); const draw = !win && nb.every(c => c);
+  let p = { board: nb };
+  if (win) { p.winner = state.user.uid; p.status = 'won'; p.scores = { ...(g.scores||{}), [state.user.uid]: (g.scores?.[state.user.uid] || 0) + 1 }; state.gameStats.c4W = (state.gameStats.c4W||0)+1; saveGameStats(); }
+  else if (draw) p.status = 'draw';
+  else p.turn = Object.values(g.players).find(u => u !== state.user.uid);
+  await safeUpdate(`games/c4`, p);
+}
+function checkC4Win(b, row, col, color) {
+  const at = (r, c) => (r >= 0 && r < 6 && c >= 0 && c < 7) ? b[r*7+c] : null;
+  const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+  for (const [dr, dc] of dirs) { let count = 1;
+    for (const sign of [1,-1]) { let r = row + dr*sign, c = col + dc*sign; while (at(r,c) === color) { count++; r += dr*sign; c += dc*sign; } }
+    if (count >= 4) return true; }
+  return false;
+}
+function renderMemory() {
+  if (!state.user) return;
+  const g = state.games.memory || {}; const deck = g.deck || []; const revealed = g.revealed || []; const matched = g.matched || [];
+  const host = $('memBoard'); if (!host) return;
+  let s = 'Start a new game.';
+  if (g.status === 'waiting') s = 'Waiting…'; else if (g.status === 'playing') s = g.turn === state.user.uid ? 'Your turn — flip 2 cards' : `${profileName(g.turn)}'s turn`;
+  else if (g.status === 'done') s = g.winner === state.user.uid ? '🎉 You won!' : `${profileName(g.winner)} won.`;
+  if ($('memStatus')) $('memStatus').textContent = s;
+  if ($('memPairs')) $('memPairs').textContent = `${matched.length / 2} / 8`;
+  if ($('memMeScore')) $('memMeScore').textContent = g.scores?.[state.user.uid] || 0;
+  const otherUid = Object.keys(g.scores || {}).find(u => u !== state.user.uid);
+  if ($('memPartnerScore')) $('memPartnerScore').textContent = otherUid ? (g.scores[otherUid] || 0) : 0;
+  if (!deck.length) { host.innerHTML = `<div class="col-span-4 text-center py-10 text-slate-500 text-[13px]">No game running.</div>`; return; }
+  host.innerHTML = deck.map((emoji, i) => { const isFlipped = revealed.includes(i) || matched.includes(i); const isMatched = matched.includes(i);
+    return `<div class="mem-card ${isFlipped ? 'flipped' : ''} ${isMatched ? 'matched' : ''}" data-i="${i}"><span>${isFlipped ? emoji : ''}</span></div>`; }).join('');
+  host.querySelectorAll('.mem-card').forEach(c => c.onclick = () => flipMemory(parseInt(c.dataset.i)));
+}
+async function newMemoryGame() {
+  const pu = partnerUid(); if (!pu || !state.user) return toast('Set partner.', 'warning');
+  const emojis = ['🍎','🍌','🍇','🍓','🍒','🥝','🍍','🥥'];
+  const deck = [...emojis, ...emojis].sort(() => Math.random() - 0.5);
+  await safeSet(`games/memory`, { id:'memory', deck, revealed: [], matched: [], locked: false, players: { p1: state.user.uid, p2: pu }, turn: state.user.uid, status:'playing', winner:null, scores: { [state.user.uid]: 0, [pu]: 0 }, createdBy: state.user.uid, createdAt: new Date().toISOString() });
+  toast('Memory started!', 'success');
+}
+async function flipMemory(i) {
+  const g = state.games.memory; if (!g || g.status !== 'playing' || g.locked || !state.user) return;
+  if (g.turn !== state.user.uid) return toast("Not your turn.", 'warning');
+  if (g.revealed.includes(i) || g.matched.includes(i)) return;
+  const rev = [...g.revealed, i];
+  if (rev.length === 1) { await safeUpdate(`games/memory`, { revealed: rev }); return; }
+  if (rev.length === 2) {
+    await safeUpdate(`games/memory`, { revealed: rev, locked: true });
+    const [a, b] = rev;
+    if (g.deck[a] === g.deck[b]) { const matched = [...g.matched, a, b];
+      const scores = { ...g.scores, [state.user.uid]: (g.scores[state.user.uid] || 0) + 1 };
+      const done = matched.length === g.deck.length;
+      if (done) { const winner = Object.entries(scores).sort((a,b) => b[1] - a[1])[0][0]; state.gameStats.memW = (state.gameStats.memW||0)+1; saveGameStats(); await safeUpdate(`games/memory`, { revealed: [], matched, scores, locked: false, status:'done', winner }); }
+      else await safeUpdate(`games/memory`, { revealed: [], matched, scores, locked: false, turn: g.turn });
+    } else { setTimeout(async () => { await safeUpdate(`games/memory`, { revealed: [], locked: false, turn: Object.values(g.players).find(u => u !== state.user.uid) }); }, 1400); }
+  }
+}
+function renderRPS() {
+  if (!state.user) return;
+  const g = state.games.rps || {}; const choices = g.choices || {}; const rounds = g.rounds || {};
+  const me = choices[state.user.uid]; const pu = partnerUid(); const them = pu ? choices[pu] : null;
+  if ($('rpsMeScore')) $('rpsMeScore').textContent = rounds[state.user.uid] || 0;
+  if ($('rpsPartnerScore')) $('rpsPartnerScore').textContent = pu ? (rounds[pu] || 0) : 0;
+  if ($('rpsRound')) $('rpsRound').textContent = g.roundNumber || 1;
+  let s = 'Pick your throw.';
+  if (me && !them) s = 'Waiting for partner…'; else if (!me && them) s = 'Your turn.'; else if (me && them) s = 'Revealed!';
+  if ($('rpsStatus')) $('rpsStatus').textContent = s;
+  document.querySelectorAll('.rps-btn').forEach(b => { b.classList.toggle('selected', b.dataset.throw === me); b.onclick = () => throwRPS(b.dataset.throw); });
+  const icons = { rock:'🪨', paper:'📄', scissors:'✂️' };
+  if ($('rpsReveal')) {
+    if (me && them) { const w = rpsWinner(me, them);
+      if (w === 'tie') $('rpsReveal').textContent = `${icons[me]} vs ${icons[them]} — Tie!`;
+      else if (w === me) $('rpsReveal').textContent = `${icons[me]} vs ${icons[them]} — You win! 🎉`;
+      else $('rpsReveal').textContent = `${icons[me]} vs ${icons[them]} — ${profileName(pu)} wins.`;
+    } else $('rpsReveal').textContent = '?';
+  }
+}
+async function throwRPS(choice) {
+  const pu = partnerUid(); if (!pu || !state.user) return toast('Set partner.', 'warning');
+  const g = state.games.rps || {}; const rn = g.roundNumber || 1;
+  const choices = { ...(g.choices || {}), [state.user.uid]: choice };
+  await safeSet(`games/rps`, { ...g, id:'rps', roundNumber: rn, choices, status:'open', updatedAt: new Date().toISOString() });
+  const other = choices[pu];
+  if (other) {
+    const w = rpsWinner(choice, other); const rounds = { ...(g.rounds || {}) };
+    if (w !== 'tie') rounds[w] = (rounds[w]||0)+1;
+    if (w === state.user.uid) { state.gameStats.rpsW = (state.gameStats.rpsW||0)+1; saveGameStats(); }
+    await safeUpdate(`games/rps`, { rounds, status:'resolved' });
+    setTimeout(async () => { await safeUpdate(`games/rps`, { choices: {}, roundNumber: rn+1, status:'open' }); }, 3000);
+  }
+}
+function rpsWinner(a, b) { if (a === b) return 'tie'; if ((a === 'rock' && b === 'scissors') || (a === 'paper' && b === 'rock') || (a === 'scissors' && b === 'paper')) return a; return b; }
+async function newRPSRound() { await safeSet(`games/rps`, { id:'rps', roundNumber: (state.games.rps?.roundNumber||1)+1, choices:{}, rounds: state.games.rps?.rounds||{}, status:'open', updatedAt: new Date().toISOString() }); }
+function renderDice() {
+  if (!state.user) return;
+  const g = state.games.dice || {}; const pu = partnerUid();
+  const myRoll = g.rolls?.[state.user.uid]; const theirRoll = pu ? g.rolls?.[pu] : null;
+  const faces = ['','⚀','⚁','⚂','⚃','⚄','⚅'];
+  if ($('dieMe1')) $('dieMe1').textContent = myRoll ? faces[myRoll[0]] : '?';
+  if ($('dieMe2')) $('dieMe2').textContent = myRoll ? faces[myRoll[1]] : '?';
+  if ($('dieThem1')) $('dieThem1').textContent = theirRoll ? faces[theirRoll[0]] : '?';
+  if ($('dieThem2')) $('dieThem2').textContent = theirRoll ? faces[theirRoll[1]] : '?';
+  if ($('diceMeTotal')) $('diceMeTotal').textContent = myRoll ? myRoll[0] + myRoll[1] : '—';
+  if ($('diceThemTotal')) $('diceThemTotal').textContent = theirRoll ? theirRoll[0] + theirRoll[1] : '—';
+  const scores = g.scores || {};
+  if ($('diceMeScore')) $('diceMeScore').textContent = scores[state.user.uid] || 0;
+  if ($('diceThemScore')) $('diceThemScore').textContent = pu ? (scores[pu] || 0) : 0;
+  if ($('diceRound')) $('diceRound').textContent = g.roundNumber || 1;
+  let v = '—';
+  if (myRoll && theirRoll) { const mt = myRoll[0]+myRoll[1], tt = theirRoll[0]+theirRoll[1];
+    if (mt > tt) v = '🎉 You win!'; else if (mt < tt) v = `${profileName(pu)} wins.`; else v = 'Tie!';
+  } else if (myRoll) v = 'Waiting for partner…'; else if (theirRoll) v = 'Your turn!';
+  if ($('diceVerdict')) $('diceVerdict').textContent = v;
+}
+async function rollDice() {
+  const pu = partnerUid(); if (!pu || !state.user) return toast('Set partner.', 'warning');
+  const g = state.games.dice || {};
+  if (g.roundNumber && g.rolls?.[state.user.uid] && g.rolls?.[pu]) { await safeSet(`games/dice`, { ...g, roundNumber: (g.roundNumber||1)+1, rolls:{}, updatedAt: new Date().toISOString() }); return; }
+  if ($('dieMe1')) { $('dieMe1').classList.add('rolling'); $('dieMe2').classList.add('rolling'); }
+  await new Promise(r => setTimeout(r, 800));
+  if ($('dieMe1')) { $('dieMe1').classList.remove('rolling'); $('dieMe2').classList.remove('rolling'); }
+  const d1 = Math.ceil(Math.random()*6); const d2 = Math.ceil(Math.random()*6);
+  const rolls = { ...(g.rolls || {}), [state.user.uid]: [d1, d2] };
+  const scores = { ...(g.scores || {}) };
+  const patch = { id:'dice', roundNumber: g.roundNumber || 1, rolls, scores, updatedAt: new Date().toISOString() };
+  if (rolls[pu]) { const myTotal = d1 + d2; const theirTotal = rolls[pu][0] + rolls[pu][1];
+    if (myTotal > theirTotal) { scores[state.user.uid] = (scores[state.user.uid]||0) + 1; state.gameStats.diceW = (state.gameStats.diceW||0)+1; saveGameStats(); }
+    else if (theirTotal > myTotal) { scores[pu] = (scores[pu]||0) + 1; }
+    patch.scores = scores;
+  }
+  await safeSet(`games/dice`, patch);
+}
+function renderWordDuel() {
+  if (!state.user) return;
+  const g = state.games.word || {}; const guesses = g.guesses || [];
+  const host = $('wdBoard'); if (!host) return;
+  const rows = [];
+  for (let r = 0; r < 6; r++) { const guess = guesses[r]; const tiles = [];
+    for (let c = 0; c < 5; c++) { const ch = guess ? guess.word[c] : ''; let cls = '';
+      if (guess && guess.result) cls = guess.result[c] === 'correct' ? 'correct' : guess.result[c] === 'present' ? 'present' : 'absent';
+      tiles.push(`<div class="wd-tile ${cls}">${esc(ch || '')}</div>`); }
+    rows.push(`<div class="wd-row">${tiles.join('')}</div>`); }
+  host.innerHTML = rows.join('');
+  let s = 'Guess the 5-letter word.';
+  if (g.status === 'won') s = `🎉 Got it in ${guesses.length}!`; else if (g.status === 'lost') s = `Out. Word was ${g.word || '?'}`; else if (!g.word) s = 'Start a new word.';
+  if ($('wdStatus')) $('wdStatus').textContent = s;
+  if ($('wdVerdict')) $('wdVerdict').textContent = g.status === 'won' ? '🎉' : g.status === 'lost' ? 'Try again' : '';
+  if ($('wdForm')) { if (g.status === 'won' || g.status === 'lost' || !g.word) $('wdForm').style.pointerEvents = 'none'; else $('wdForm').style.pointerEvents = ''; }
+}
+async function newWordDuel() {
+  const pu = partnerUid(); if (!pu || !state.user) return toast('Set partner.', 'warning');
+  toast('Picking word…', 'info');
+  try { const res = await ai('/ai/word-duel', {});
+    const word = (res.word || 'APPLE').toUpperCase().slice(0,5);
+    await safeSet(`games/word`, { id:'word', word, guesses: [], status:'playing', createdBy: state.user.uid, createdAt: new Date().toISOString() });
+    if ($('wdForm')) $('wdForm').style.pointerEvents = ''; toast('Ready!', 'success');
+  } catch(e) { toast('Failed.', 'error'); }
+}
+function renderQ20() {
+  if (!state.user) return;
+  const g = state.games.twenty || {};
+  let s = 'AI thinks of something. Ask yes/no questions.';
+  if (g.status === 'playing') s = `Question ${(g.questions||[]).length + 1} of 20`;
+  else if (g.status === 'won') s = `🎉 Guessed! It was "${g.secret}".`;
+  else if (g.status === 'lost') s = `Out. It was "${g.secret}".`;
+  if ($('q20Status')) $('q20Status').textContent = s;
+  if ($('q20Hint')) { $('q20Hint').classList.toggle('hidden', !g.hint || !g.secret); if (g.hint && g.secret) $('q20Hint').innerHTML = `<strong class="text-cyan-400">Hint:</strong> ${esc(g.hint)}`; }
+  const log = (g.questions || []).map(q => `<div class="flex items-start gap-2 text-[12.5px]"><span class="text-slate-500 shrink-0">Q:</span>
+    <span class="flex-1 text-slate-300">${esc(q.q)}</span><span class="font-bold ${q.a === 'yes' ? 'text-emerald-400' : q.a === 'no' ? 'text-rose-400' : 'text-amber-400'}">${esc(q.a).toUpperCase()}</span></div>`).join('');
+  if ($('q20Log')) $('q20Log').innerHTML = log || `<div class="text-center py-6 text-slate-500 text-[12px]">No questions yet.</div>`;
+  if ($('q20Count')) $('q20Count').textContent = (g.questions || []).length;
+}
+async function newQ20() {
+  toast('AI is thinking…', 'info');
+  try { const res = await ai('/ai/20questions', { action: 'start' });
+    await safeSet(`games/twenty`, { id:'twenty', secret: res.thing, hint: res.hint, questions: [], status:'playing', createdAt: new Date().toISOString() });
+    toast('New game!', 'success');
+  } catch(e) { toast('Failed.', 'error'); }
+}
+async function loadTrivia() {
+  const topic = $('triviaTopic')?.value.trim() || 'general knowledge'; const diff = $('triviaDiff')?.value || 'medium';
+  if ($('triviaCard')) $('triviaCard').innerHTML = `<div class="text-center py-10"><i class="fa-solid fa-circle-notch fa-spin text-2xl text-emerald-400"></i><p class="text-slate-500 text-[12px] mt-3">Generating…</p></div>`;
+  try { const res = await ai('/ai/trivia', { topic, difficulty: diff }); if (!res.questions?.length) throw new Error('No questions');
+    state.games.trivia = { questions: res.questions, index: 0, correct: 0 }; renderTrivia();
+  } catch(e) { if ($('triviaCard')) $('triviaCard').innerHTML = `<div class="text-center py-10 text-rose-400"><i class="fa-solid fa-circle-exclamation text-2xl mb-2"></i><p class="text-[12px]">${esc(e.message)}</p></div>`; }
+}
+function renderTrivia() {
+  const g = state.games.trivia; const card = $('triviaCard'); if (!card) return;
+  if (!g || !g.questions?.length) { card.innerHTML = `<div class="text-center py-10 text-slate-500"><i class="fa-solid fa-brain text-3xl block mb-3 opacity-35"></i>Pick topic and click Generate.</div>`; if ($('triviaScore')) $('triviaScore').textContent = `${state.gameStats.triviaCorrect || 0} / ${state.gameStats.triviaTotal || 0}`; return; }
+  const q = g.questions[g.index];
+  if (!q) { card.innerHTML = `<div class="text-center py-10"><div class="text-3xl mb-3">🏆</div><p class="font-display font-bold text-white mb-1">Round complete!</p><p class="text-[13px] text-slate-400">Got ${g.correct} / ${g.questions.length}.</p></div>`; if ($('triviaScore')) $('triviaScore').textContent = `${state.gameStats.triviaCorrect || 0} / ${state.gameStats.triviaTotal || 0}`; return; }
+  card.innerHTML = `<div class="flex items-center justify-between mb-3"><span class="text-[11px] uppercase tracking-wider text-slate-500">Question ${g.index + 1} of ${g.questions.length}</span>
+    <span class="text-[11px] text-emerald-400">Score: ${g.correct}</span></div>
+    <p class="text-[15px] font-semibold text-white mb-4">${esc(q.q)}</p>
+    <div class="grid gap-2">${(q.options || []).map((opt, i) => `<button data-topt="${i}" class="text-left px-4 py-3 rounded-xl bg-white/[.03] border border-white/10 hover:border-emerald-400/60 text-[13.5px] text-slate-200"><span class="font-bold text-slate-500 mr-2">${String.fromCharCode(65+i)}.</span>${esc(opt)}</button>`).join('')}</div>
+    <div id="triviaResult" class="mt-4 hidden text-[13px] p-3 rounded-lg bg-white/[.03] border border-white/5"></div>`;
+  card.querySelectorAll('[data-topt]').forEach(b => b.onclick = () => answerTrivia(parseInt(b.dataset.topt)));
+  if ($('triviaScore')) $('triviaScore').textContent = `${state.gameStats.triviaCorrect || 0} / ${state.gameStats.triviaTotal || 0}`;
+}
+function answerTrivia(i) {
+  const g = state.games.trivia; if (!g) return; const q = g.questions[g.index]; if (!q) return;
+  const correct = i === q.answer;
+  state.gameStats.triviaTotal = (state.gameStats.triviaTotal||0)+1;
+  if (correct) { state.gameStats.triviaCorrect = (state.gameStats.triviaCorrect||0)+1; g.correct++; }
+  saveGameStats();
+  const result = $('triviaResult');
+  if (result) { result.classList.remove('hidden'); result.innerHTML = correct ? `<span class="text-emerald-400 font-bold">✓ Correct!</span> ${q.explanation ? esc(q.explanation) : ''}` : `<span class="text-rose-400 font-bold">✗ Correct: ${esc(q.options[q.answer])}</span> ${q.explanation ? '· ' + esc(q.explanation) : ''}`; }
+  document.querySelectorAll('[data-topt]').forEach(b => b.onclick = null);
+  setTimeout(() => { g.index++; renderTrivia(); }, 1800);
+}
+async function loadTD(kind) {
+  state.tdKind = kind;
+  const card = $('tdCard'); if (!card) return;
+  card.innerHTML = `<div class="text-center py-10"><i class="fa-solid fa-circle-notch fa-spin text-2xl text-pink-400"></i><p class="text-slate-500 text-[12px] mt-3">Generating…</p></div>`;
+  try { const res = await ai('/ai/truth-dare', { kind }); if (!res.items?.length) throw new Error('No items');
+    state.tdCurrent = { items: res.items, idx: 0 }; renderTD();
+  } catch(e) { card.innerHTML = `<p class="text-rose-400 text-[13px]">${esc(e.message)}</p>`; }
+}
+function renderTD() {
+  const card = $('tdCard'); if (!card) return;
+  if (!state.tdCurrent) { card.innerHTML = `<p class="text-slate-500 text-[13px]">Pick truth or dare.</p>`; if ($('tdNextBtn')) $('tdNextBtn').classList.add('hidden'); return; }
+  const { items, idx } = state.tdCurrent;
+  if (idx >= items.length) { card.innerHTML = `<p class="text-slate-500 text-[13px]">All done!</p>`; if ($('tdNextBtn')) $('tdNextBtn').classList.add('hidden'); return; }
+  const color = state.tdKind === 'truth' ? '#38bdf8' : '#fb7185';
+  card.innerHTML = `<div class="text-center"><div class="text-[10px] uppercase tracking-wider font-bold mb-2" style="color:${color}">${state.tdKind}</div>
+    <p class="text-[16px] text-white font-semibold">${esc(items[idx])}</p>
+    <div class="text-[11px] text-slate-500 mt-3">${idx + 1} / ${items.length}</div></div>`;
+  if ($('tdNextBtn')) { $('tdNextBtn').classList.remove('hidden'); $('tdNextBtn').onclick = () => { state.tdCurrent.idx++; renderTD(); }; }
+}
+async function loadPrompts() {
+  if ($('promptsCard')) $('promptsCard').innerHTML = `<div class="text-center py-10"><i class="fa-solid fa-circle-notch fa-spin text-2xl text-pink-400"></i></div>`;
+  try { const res = await ai('/ai/prompts', { kind: 'would_you_rather' }); if (!res.prompts?.length) throw new Error('No prompts');
+    state.games.prompts = res.prompts; renderPrompts();
+  } catch(e) { if ($('promptsCard')) $('promptsCard').innerHTML = `<p class="text-rose-400 text-[13px]">${esc(e.message)}</p>`; }
+}
+function renderPrompts() {
+  const card = $('promptsCard'); if (!card) return;
+  const prompts = state.games.prompts;
+  if (!prompts?.length) { card.innerHTML = `<div class="text-center py-10 text-slate-500"><i class="fa-solid fa-comments text-3xl block mb-3 opacity-35"></i>Click Generate Prompts.</div>`; return; }
+  card.innerHTML = `<div class="space-y-3">${prompts.map((p, i) => `<div class="p-4 rounded-xl bg-white/[.03] border border-white/5 hover:border-pink-400/40"><div class="flex items-start gap-3"><span class="text-[10px] font-bold text-pink-400 mt-0.5">${i+1}</span>
+    <div class="flex-1"><p class="text-[14px] text-slate-200">${esc(p.text)}</p><span class="badge b-purple mt-2">${esc(p.category || 'fun')}</span></div></div></div>`).join('')}</div>`;
+}
 
+/* ═══════════════════════════════════════════════════════════
+   TASK MODAL / CRUD
+   ═══════════════════════════════════════════════════════════ */
+function openTaskModal(id = null) {
+  if (!state.user) return;
+  if ($('taskModalTitle')) $('taskModalTitle').textContent = id ? 'Edit Task' : 'New Task';
+  if ($('taskEditId')) $('taskEditId').value = id || '';
+  const gsel = $('taskGoal');
+  if (gsel) gsel.innerHTML = '<option value="">— None —</option>' + Object.values(state.goals).map(g => `<option value="${g.id}">${esc(g.title)}</option>`).join('');
+  const asel = $('taskAssign');
+  if (asel) asel.innerHTML = '<option value="">— Myself —</option>' + Object.values(state.profiles).filter(p => p.uid !== state.user.uid).map(p => `<option value="${p.uid}">${esc(p.name)}</option>`).join('');
+  if (id) {
+    const t = state.tasks[state.user.uid]?.[id]; if (!t) return;
+    $('taskTitle').value = t.title || ''; $('taskNotes').value = t.notes || ''; $('taskCategory').value = t.category || 'Personal';
+    $('taskPriority').value = t.priority || 'medium'; $('taskDue').value = t.dueDate || ''; $('taskDueTime').value = t.dueTime || '';
+    if (gsel) gsel.value = t.linkedGoalId || ''; if (asel) asel.value = t.assignedTo || '';
+  } else {
+    $('taskForm')?.reset();
+    if ($('taskPriority')) $('taskPriority').value = 'medium';
+    if ($('taskDue')) $('taskDue').value = todayStr();
+    if ($('taskDueTime')) $('taskDueTime').value = '17:00';
+  }
+  showModal('taskModal');
+}
+async function toggleTask(id) {
+  if (!state.user) return;
+  const t = state.tasks[state.user.uid]?.[id]; if (!t) return;
+  const d = !t.done;
+  t.done = d; t.completedAt = d ? new Date().toISOString() : null;
+  renderTasks();
+  await safeUpdate(`tasks/${state.user.uid}/${id}`, { done: d, completedAt: t.completedAt, updatedAt: new Date().toISOString() });
+  await logHistory(d ? 'complete' : 'uncomplete', 'task', id, t.title, { priority: t.priority, category: t.category });
+}
+async function deleteTask(id) {
+  if (!state.user) return;
+  const t = state.tasks[state.user.uid]?.[id];
+  if (!t || !confirm(`Delete "${t.title}"?`)) return;
+  if (state.tasks[state.user.uid]) delete state.tasks[state.user.uid][id];
+  renderTasks();
+  await safeRemove(`tasks/${state.user.uid}/${id}`);
+  await logHistory('delete', 'task', id, t.title);
+}
+async function addTodoOptimistic(text, dueTime, priority, recurring) {
+  if (!state.user) return;
+  if (!text || !text.trim()) { toast('Write something first.', 'warning'); return; }
+  const id = uid();
+  const payload = { id, text: text.trim(), date: state.todoDate, dueTime: dueTime || '', priority: priority || 'medium', done: false, recurring: !!recurring, completionPhoto: null, createdAt: new Date().toISOString() };
+  state.todos[state.user.uid] = state.todos[state.user.uid] || {};
+  state.todos[state.user.uid][id] = payload;
+  renderToday();
+  if (isMobile()) renderMobileTodos();
+  await safeSet(`todos/${state.user.uid}/${id}`, payload);
+  await logHistory('create', 'todo', id, payload.text, { priority: payload.priority, dueDate: payload.date, dueTime: payload.dueTime });
+  toast('To-do added.', 'success');
+}
+async function toggleTodo(id) {
+  if (!state.user) return;
+  const t = state.todos[state.user.uid]?.[id]; if (!t) return;
+  const d = !t.done; t.done = d; t.completedAt = d ? new Date().toISOString() : null;
+  renderToday(); if (isMobile()) renderMobileTodos();
+  await safeUpdate(`todos/${state.user.uid}/${id}`, { done: d, completedAt: t.completedAt });
+  await logHistory(d ? 'complete' : 'uncomplete', 'todo', id, t.text, { priority: t.priority });
+}
+async function deleteTodo(id) {
+  if (!state.user) return;
+  const t = state.todos[state.user.uid]?.[id]; if (!t) return;
+  if (state.todos[state.user.uid]) delete state.todos[state.user.uid][id];
+  renderToday(); if (isMobile()) renderMobileTodos();
+  await safeRemove(`todos/${state.user.uid}/${id}`);
+  await logHistory('delete', 'todo', id, t.text);
+}
+function openEventModal(id = null) {
+  if (!state.user) return;
+  if ($('eventEditId')) $('eventEditId').value = id || '';
+  if (id) {
+    const e = state.schedule[state.user.uid]?.[id]; if (!e) return;
+    $('eventTitle').value = e.title || ''; $('eventStart').value = e.start || ''; $('eventEnd').value = e.end || '';
+    $('eventType').value = e.type || 'Meeting'; $('eventLocation').value = e.location || ''; $('eventNotes').value = e.notes || '';
+  } else {
+    $('eventForm')?.reset(); const now = new Date(); now.setMinutes(0,0,0); const end = new Date(now.getTime()+3600000);
+    const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    if ($('eventStart')) $('eventStart').value = iso(now);
+    if ($('eventEnd')) $('eventEnd').value = iso(end);
+  }
+  showModal('eventModal');
+}
+async function deleteEvent(id) {
+  if (!state.user) return;
+  const e = state.schedule[state.user.uid]?.[id]; if (!e || !confirm('Delete?')) return;
+  await safeRemove(`schedule/${state.user.uid}/${id}`); await logHistory('delete', 'event', id, e.title);
+}
+async function deleteExpense(id) { if (!confirm('Delete?')) return; await safeRemove(`financials/expenses/${id}`); }
+async function deleteSavings(id) { if (!confirm('Delete?')) return; await safeRemove(`financials/savings/${id}`); }
+async function addSavingsContribution(id) {
+  if (!state.user) return;
+  const s = state.financials.savings[id]; if (!s) return;
+  const i = prompt(`Add to "${s.title}":`, '100'); if (!i) return;
+  const a = parseFloat(i); if (isNaN(a)) return toast('Invalid.', 'error');
+  await safeUpdate(`financials/savings/${id}`, { current: Math.max(0, Number(s.current||0) + a) });
+  await logHistory('update', 'savings', id, `${s.title} +${fmtMoney(a)}`);
+}
+async function deleteSub(id) { if (!confirm('Delete?')) return; await safeRemove(`financials/subscriptions/${id}`); }
+let milestoneDraft = [];
+function renderMilestoneEditor() {
+  const h = $('milestoneEditor'); if (!h) return;
+  h.innerHTML = milestoneDraft.map((m, i) => `<div class="flex gap-2"><input type="text" class="field flex-1" value="${esc(m.text)}" data-midx="${i}" placeholder="Milestone ${i+1}" />
+    <button type="button" class="w-10 rounded-lg bg-rose-500/15 text-rose-300" data-mdel="${i}"><i class="fa-solid fa-xmark"></i></button></div>`).join('');
+  h.querySelectorAll('[data-midx]').forEach(inp => inp.oninput = e => { milestoneDraft[+e.target.dataset.midx].text = e.target.value; });
+  h.querySelectorAll('[data-mdel]').forEach(b => b.onclick = () => { milestoneDraft.splice(+b.dataset.mdel, 1); renderMilestoneEditor(); });
+}
+async function deleteGoal(id) {
+  const g = state.goals[id]; if (!g || !confirm(`Delete "${g.title}"?`)) return;
+  await safeRemove(`goals/${id}`); await logHistory('delete', 'goal', id, g.title);
+}
+async function toggleMilestone(gid, idx) {
+  const g = state.goals[gid]; if (!g?.milestones) return;
+  const ms = [...g.milestones]; ms[idx].done = !ms[idx].done;
+  await safeUpdate(`goals/${gid}`, { milestones: ms }); await logHistory(ms[idx].done ? 'complete' : 'uncomplete', 'goal', gid, `${g.title} — ${ms[idx].text}`);
+}
+async function deleteSkill(id) { const s = state.skills[id]; if (!s || !confirm(`Delete "${s.name}"?`)) return; await safeRemove(`skills/${id}`); }
+async function logSkillHours(id, d) {
+  const s = state.skills[id]; if (!s) return;
+  const h = Number(s.hours||0) + d; const l = Math.floor(h/20) + 1;
+  await safeUpdate(`skills/${id}`, { hours: h, level: l }); await logHistory('log', 'skill', id, `${s.name} +${d}h`); toast(`+${d}h`, 'success');
+}
+async function completeHandoff(id) {
+  const h = state.handoffs[id]; if (!h) return;
+  await safeUpdate(`handoffs/${id}`, { status: 'done', completedAt: new Date().toISOString() });
+  if (h.taskId && state.tasks[h.fromUid]?.[h.taskId]) await safeUpdate(`tasks/${h.fromUid}/${h.taskId}`, { done: true, completedAt: new Date().toISOString() });
+  await logHistory('complete', 'handoff', id, h.title);
+}
+async function addHandoffFeedback(id) { const f = prompt('Feedback:'); if (!f) return; await safeUpdate(`handoffs/${id}`, { feedback: f }); }
+async function deleteHandoff(id) { if (!confirm('Delete?')) return; await safeRemove(`handoffs/${id}`); }
+function openHourlyModal(key, prefill = null) {
+  if (!state.user) return;
+  const existing = Object.values(state.hourly[state.user.uid] || {}).find(x => x.key === key);
+  if ($('hourlyKey')) $('hourlyKey').value = key;
+  if ($('hourlyHourLabel')) $('hourlyHourLabel').textContent = `· ${fmtDate(key.slice(0,10))} @ ${key.slice(-2)}:00`;
+  if (existing) {
+    if ($('hourlyText')) $('hourlyText').value = existing.text || '';
+    if ($('hourlyIntensity')) $('hourlyIntensity').value = existing.intensity || 2;
+    if ($('hourlyCategory')) $('hourlyCategory').value = existing.category || 'Work';
+  } else {
+    if ($('hourlyText')) $('hourlyText').value = prefill?.text || '';
+    if ($('hourlyIntensity')) $('hourlyIntensity').value = prefill?.intensity || 2;
+    if ($('hourlyCategory')) $('hourlyCategory').value = prefill?.category || 'Work';
+  }
+  showModal('hourlyModal');
+}
+async function deleteHourly(id) { if (!confirm('Delete?')) return; await safeRemove(`hourly/${state.user.uid}/${id}`); }
+
+/* ═══════════════════════════════════════════════════════════
+   FILE UPLOAD
+   ═══════════════════════════════════════════════════════════ */
+const MAX_FILE = 400 * 1024;
+async function handleFiles(files) {
+  if (!state.user) return;
+  for (const f of Array.from(files)) {
+    const id = uid();
+    const base = { name: f.name, mime: f.type || 'application/octet-stream', size: f.size };
+    if (f.size > MAX_FILE) {
+      await vaultSave({ ...base, id, data: null, source: 'vault', sourceLabel: 'Manual upload', tags: ['metadata-only'] });
+      toast(`${f.name}: metadata only.`, 'warning');
+    } else {
+      try {
+        const d = await readAsDataURL(f);
+        await vaultSave({ ...base, id, data: d, source: 'vault', sourceLabel: 'Manual upload' });
+        toast(`${f.name} uploaded.`, 'success');
+        setTimeout(() => previewDoc(id), 300);
+      } catch(e) { toast(`Failed: ${f.name}`, 'error'); }
+    }
+  }
+}
+function previewDoc(id) {
+  const d = state.documents?.[id]; if (!d) return;
+  if ($('previewTitle')) $('previewTitle').textContent = d.name;
+  let b = '';
+  if (!d.data) b = `<div class="text-center py-14"><i class="fa-solid fa-file text-5xl text-slate-600"></i><p class="text-slate-500 text-[13px] mt-4">Metadata only.</p></div>`;
+  else if ((d.mime||'').startsWith('image/')) b = `<img src="${d.data}" class="max-w-full max-h-[70vh] rounded-xl" />`;
+  else if (d.mime === 'application/pdf') b = `<iframe src="${d.data}" class="w-full h-[70vh] rounded-xl border-0"></iframe>`;
+  else if ((d.mime||'').startsWith('text/')) { try { b = `<pre class="w-full text-left text-[12px] text-slate-300 whitespace-pre-wrap p-4 rounded-xl bg-slate-950/60">${esc(atob(d.data.split(',')[1] || ''))}</pre>`; } catch { b = `<div class="text-center py-14"><i class="fa-solid fa-file text-5xl text-slate-600"></i><p class="text-slate-500 text-[13px] mt-4">Preview unsupported.</p></div>`; } }
+  else b = `<div class="text-center py-14"><i class="fa-solid fa-file text-5xl text-slate-600"></i><p class="text-slate-500 text-[13px] mt-4">Preview unsupported.</p></div>`;
+  if ($('previewBody')) $('previewBody').innerHTML = b;
+  if ($('previewDownloadBtn')) $('previewDownloadBtn').onclick = () => { if (!d.data) return toast('No payload.', 'warning'); const a = document.createElement('a'); a.href = d.data; a.download = d.name; a.click(); };
+  showModal('previewModal');
+}
+async function deleteDoc(id) { const d = state.documents?.[id]; if (!d || !confirm(`Delete "${d.name}"?`)) return; await safeRemove(`documents/${id}`); }
+
+/* ═══════════════════════════════════════════════════════════
+   AI AUTOMATIONS (called from DOM handlers)
+   ═══════════════════════════════════════════════════════════ */
+async function loadAiInsight() {
+  if (!state.user) return;
+  const card = $('aiInsightCard'); if (card) card.classList.remove('hidden');
+  if ($('aiInsightText')) $('aiInsightText').textContent = 'Analyzing…';
+  try {
+    const m = metricsFor(state.user.uid);
+    const res = await ai('/ai/chat', { messages:[{ role:'user', content:`Give me ONE punchy 2-sentence insight about my productivity today. Overdue: ${m.overdue}, Completion: ${m.completion}%, Streak: ${m.streak}.` }], context:{ myName: state.profile?.name, openTasks: m.open, completedToday: m.todayDone } });
+    if ($('aiInsightText')) $('aiInsightText').textContent = res.reply || '—';
+  } catch(e) { if ($('aiInsightText')) $('aiInsightText').textContent = 'Set Worker URL in Settings → AI.'; }
+}
+function showAutomationResult(html) { const el = $('automationResult'); if (!el) return; el.innerHTML = html; el.classList.remove('hidden'); el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+async function runAutoSchedule() {
+  if (!state.user) return;
+  toast('Generating day plan…', 'info');
+  try {
+    const res = await ai('/ai/schedule', { wake: 6, sleep: 22, mustDos: myTasks().filter(t => !t.done && t.dueDate === todayStr()).map(t => t.title), goals: allGoals().map(g => g.title).slice(0,5), mood: $('actMood')?.value || 'neutral' });
+    const blocks = res.blocks || []; if (!blocks.length) return toast('Empty response.', 'warning');
+    for (const b of blocks) { const id = uid();
+      await safeSet(`schedule/${state.user.uid}/${id}`, { id, title: b.title, start: `${todayStr()}T${b.start}`, end: b.end ? `${todayStr()}T${b.end}` : '', type: b.type === 'focus' ? 'Focus Block' : b.type === 'meal' ? 'Personal' : b.type === 'exercise' ? 'Personal' : b.type === 'social' ? 'Personal' : 'Other', location: '', notes: 'AI generated', createdAt: new Date().toISOString() }); }
+    await logHistory('create', 'event', 'ai-schedule', `AI scheduled ${blocks.length} blocks`);
+    showAutomationResult(`<div class="flex items-center gap-2 mb-3"><i class="fa-solid fa-circle-check text-emerald-400 text-xl"></i><h3 class="font-display font-bold text-[16px] text-white">Day Scheduled</h3></div>
+      <p class="text-[13px] text-slate-300 mb-3">${blocks.length} blocks added.</p>`);
+    toast('Day scheduled!', 'success'); renderSchedule();
+  } catch(e) { toast('Failed: ' + e.message, 'error'); }
+}
+function openBreakdownModal() {
+  if (!state.user) return;
+  const pending = myTasks().filter(t => !t.done);
+  if ($('breakdownBody')) $('breakdownBody').innerHTML = `<p class="text-[13px] text-slate-400 mb-3">Choose a task to break into steps:</p>
+    <select id="bdSelect" class="field mb-4">${pending.length ? pending.map(t => `<option value="${t.id}">${esc(t.title)}</option>`).join('') : '<option value="">No open tasks</option>'}</select>
+    <button id="bdRun" class="w-full py-2.5 rounded-xl font-semibold text-white" style="background:linear-gradient(135deg,#22d3ee,#0e7490)"><i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Break It Down</button>
+    <div id="bdResult" class="mt-4"></div>`;
+  showModal('breakdownModal');
+  const bdRun = $('bdRun'); if (bdRun) bdRun.onclick = async () => {
+    const tid = $('bdSelect').value; const t = state.tasks[state.user.uid]?.[tid]; if (!t) return;
+    $('bdResult').innerHTML = `<div class="text-center py-4"><i class="fa-solid fa-circle-notch fa-spin text-cyan-400"></i></div>`;
+    try {
+      const res = await ai('/ai/breakdown', { title: t.title, notes: t.notes || '' });
+      const subs = res.subtasks || [];
+      $('bdResult').innerHTML = `<div class="space-y-2">${subs.map(s => `<label class="flex items-center gap-3 p-3 rounded-lg bg-white/[.03] border border-white/5 cursor-pointer">
+        <input type="checkbox" class="bdSub w-4 h-4 rounded" data-text="${esc(s.text)}" data-priority="${esc(s.suggestedPriority||'medium')}" checked />
+        <span class="flex-1 text-[13px] text-slate-200">${esc(s.text)}</span><span class="text-[10.5px] text-slate-500">${s.estimatedMinutes || '—'}m</span></label>`).join('')}</div>
+        <button id="bdCreate" class="w-full mt-3 py-2.5 rounded-xl font-semibold text-white" style="background:linear-gradient(135deg,#34d399,#059669)"><i class="fa-solid fa-plus mr-1.5"></i> Create Sub-Tasks</button>`;
+      const bdCreate = $('bdCreate'); if (bdCreate) bdCreate.onclick = async () => {
+        const picked = [...document.querySelectorAll('.bdSub:checked')];
+        for (const c of picked) { const id = uid();
+          await safeSet(`todos/${state.user.uid}/${id}`, { id, text: c.dataset.text, date: t.dueDate || todayStr(), dueTime: t.dueTime || '', priority: c.dataset.priority || 'medium', done: false, recurring: false, createdAt: new Date().toISOString() }); }
+        await logHistory('create', 'todo', 'breakdown', `AI broke down "${t.title}" into ${picked.length} subtasks`);
+        toast(`${picked.length} sub-tasks added.`, 'success'); hideModal('breakdownModal');
+      };
+    } catch(e) { $('bdResult').innerHTML = `<p class="text-rose-400 text-[13px]">${esc(e.message)}</p>`; }
+  };
+}
+async function runMoodBoost() {
+  const mood = $('actMood')?.value || 'meh'; toast('Finding boosters…', 'info');
+  try { const res = await ai('/ai/mood-boost', { mood }); const b = res.boosters || [];
+    showAutomationResult(`<div class="flex items-center gap-2 mb-3"><i class="fa-solid fa-sun text-amber-400 text-xl"></i><h3 class="font-display font-bold text-[16px] text-white">Mood Boosters</h3></div>
+      <div class="space-y-2">${b.map(x => `<div class="flex items-start gap-3 p-3 rounded-lg bg-white/[.03]"><span class="text-2xl">${x.emoji || '✨'}</span>
+        <div class="flex-1"><div class="font-semibold text-[13.5px] text-white">${esc(x.title)}</div><div class="text-[12px] text-slate-400 mt-0.5">${esc(x.why)}</div></div></div>`).join('')}</div>`);
+  } catch(e) { toast('Failed.', 'error'); }
+}
+async function runJournal() {
+  toast('Finding prompt…', 'info');
+  try { const res = await ai('/ai/journal', { mood: $('actMood')?.value || 'neutral' });
+    showAutomationResult(`<div class="flex items-center gap-2 mb-3"><i class="fa-solid fa-feather text-fuchsia-400 text-xl"></i><h3 class="font-display font-bold text-[16px] text-white">Journal Prompt</h3></div>
+      <p class="text-[14px] text-slate-200 italic mb-3">"${esc(res.prompt)}"</p><p class="text-[12px] text-slate-500">${esc(res.hint || '')}</p>`);
+    const jc = $('journalCard'); if (jc) { jc.classList.remove('hidden'); if ($('journalPromptText')) $('journalPromptText').textContent = res.prompt; if ($('journalHintText')) $('journalHintText').textContent = res.hint || ''; }
+  } catch(e) { toast('Failed.', 'error'); }
+}
+async function runWeekReview() {
+  if (!state.user) return;
+  toast('Reviewing week…', 'info'); const m = metricsFor(state.user.uid);
+  const catCounts = {}; myTasks().forEach(t => { catCounts[t.category] = (catCounts[t.category] || 0) + 1; });
+  const top = Object.entries(catCounts).sort((a,b) => b[1] - a[1]).slice(0,3).map(x => x[0]);
+  try {
+    const res = await ai('/ai/weekly-review', { name: state.profile?.name, doneTasks: m.done, totalTasks: m.total, doneTodos: m.todayDone, totalTodos: m.todayTodos, hoursLogged: m.hourlyToday, streak: m.streak, categories: top, overdue: m.overdue });
+    const card = $('weeklyReviewCard');
+    if (!card) return;
+    card.innerHTML = `<div class="flex items-start gap-3"><div class="w-10 h-10 rounded-xl grid place-items-center bg-gradient-to-br from-purple-400 to-violet-600 text-white shrink-0"><i class="fa-solid fa-book-open"></i></div>
+      <div class="flex-1"><div class="text-[10px] font-bold uppercase tracking-wider text-purple-300 mb-1">AI Week in Review</div>
+        <h3 class="font-display text-[18px] font-bold text-white mb-3">${esc(res.headline || 'Weekly Summary')}</h3>
+        <p class="text-[13px] text-slate-300 italic">${esc(res.motivationalClose || '')}</p></div>
+      <button onclick="document.getElementById('weeklyReviewCard').classList.add('hidden')" class="w-8 h-8 rounded-lg glass grid place-items-center text-slate-400"><i class="fa-solid fa-xmark"></i></button></div>`;
+    card.classList.remove('hidden'); card.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  } catch(e) { toast('Failed.', 'error'); }
+}
+async function runWeeklyGoals() {
+  if (!state.user) return;
+  toast('Suggesting goals…', 'info');
+  try {
+    const res = await ai('/ai/chat', { messages:[{ role:'user', content:`Suggest 3-5 weekly goals for me based on: hobbies "${state.profile?.hobbies || 'general'}", completion ${metricsFor(state.user.uid).completion}%. Short bullets.` }], context:{ myName: state.profile?.name } });
+    showAutomationResult(`<div class="flex items-center gap-2 mb-3"><i class="fa-solid fa-bullseye text-cyan-400 text-xl"></i><h3 class="font-display font-bold text-[16px] text-white">Suggested Goals</h3></div>
+      <div class="text-[13px] text-slate-300 whitespace-pre-wrap">${esc(res.reply)}</div>`);
+  } catch(e) { toast('Failed.', 'error'); }
+}
+async function runPriorityAdvisor(scope = 'all') {
+  if (!state.user) return;
+  toast('AI analyzing…', 'info'); const items = [];
+  if (scope === 'tasks' || scope === 'all') {
+    myTasks().filter(t => !t.done).forEach(t => items.push({ id: t.id, type: 'task', title: t.title, category: t.category, dueDate: t.dueDate, dueTime: t.dueTime, currentPriority: t.priority }));
+    myTodos().filter(t => !t.done).forEach(t => items.push({ id: t.id, type: 'todo', title: t.text, category: 'todo', dueDate: t.date, dueTime: t.dueTime, currentPriority: t.priority }));
+  }
+  if (scope === 'goals' || scope === 'all') { allGoals().forEach(g => items.push({ id: g.id, type: 'goal', title: g.title, category: g.type, dueDate: g.targetDate, dueTime: g.targetTime, currentPriority: g.priority })); }
+  if (!items.length) return toast('Nothing to prioritize.', 'info');
+  try {
+    const res = await ai('/ai/prioritize', { items: items.slice(0, 40) });
+    const recs = res.priorities || [];
+    for (const r of recs) { const it = items.find(x => x.id === r.id); if (!it) continue;
+      const patch = { priority: r.priority, aiScore: r.score, aiReason: r.reason, aiAnalyzedAt: new Date().toISOString() };
+      if (it.type === 'task') await safeUpdate(`tasks/${state.user.uid}/${it.id}`, patch);
+      else if (it.type === 'todo') await safeUpdate(`todos/${state.user.uid}/${it.id}`, patch);
+      else if (it.type === 'goal') await safeUpdate(`goals/${it.id}`, patch);
+    }
+    await logHistory('update', 'task', 'ai-priority', `AI re-prioritized ${recs.length} items`);
+    const sorted = [...recs].sort((a, b) => (b.score || 0) - (a.score || 0));
+    const html = `<h3 class="font-display font-bold text-[16px] text-white mb-3">AI Priority Analysis</h3>
+      <div class="space-y-2 max-h-[400px] overflow-y-auto">${sorted.map(r => { const it = items.find(x => x.id === r.id);
+        const c = r.priority === 'high' ? '#fb7185' : r.priority === 'medium' ? '#fbbf24' : '#38bdf8';
+        return `<div class="priority-rec" style="--p-color:${c}"><div class="p-score">${r.score}</div>
+          <div class="flex-1"><div class="flex items-center gap-2 mb-1 flex-wrap"><span class="p-badge">${r.priority}</span><span class="text-[10px] text-slate-500 uppercase">${it?.type || ''}</span></div>
+            <div class="p-title">${esc(it?.title || '')}</div><div class="p-reason">${esc(r.reason || '')}</div></div></div>`; }).join('')}</div>`;
+    goTab('automations'); setTimeout(() => showAutomationResult(html), 150);
+    toast(`AI re-ranked ${recs.length} items.`, 'success');
+  } catch(e) { toast('AI failed: ' + e.message, 'error'); }
+}
+async function generateActivities() {
+  if (!state.user) return;
+  const hobbies = ($('actHobbies')?.value || '').split(',').map(s => s.trim()).filter(Boolean);
+  const mood = $('actMood')?.value || 'neutral', hours = $('actHours')?.value || '6-22';
+  const goals = allGoals().map(g => g.title).slice(0,5); const pu = partnerUid();
+  const btn = $('genActivitiesBtn'); if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Generating…'; }
+  if ($('actAiStatus')) $('actAiStatus').innerHTML = '<i class="fa-solid fa-spinner fa-spin text-cyan-400 mr-1.5"></i> Asking AI…';
+  try {
+    const res = await ai('/ai/activities', { hobbies, mood, availableHours: hours, goals, partnerName: pu ? state.profiles[pu]?.name : null, date: todayStr() });
+    if (!res.activities?.length) throw new Error('Invalid response');
+    await safeSet(`activities/${state.user.uid}`, { date: todayStr(), theme: res.dailyTheme || 'Balanced', items: res.activities, generatedAt: new Date().toISOString(), completions: state.activities[state.user.uid]?.completions || {} });
+    await logHistory('create', 'activity', 'daily', `Daily plan: ${res.dailyTheme || 'Balanced'}`);
+    if ($('actAiStatus')) $('actAiStatus').innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1.5"></i> Plan · ${res.activities.length} activities`;
+    toast('Plan generated!', 'success');
+  } catch(e) { if ($('actAiStatus')) $('actAiStatus').innerHTML = `<i class="fa-solid fa-circle-exclamation text-rose-400 mr-1.5"></i>${esc(e.message)}`; }
+  finally { if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Generate Plan'; } }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TAB / SIDEBAR
+   ═══════════════════════════════════════════════════════════ */
 function goTab(tab) {
   state.activeTab = tab;
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -2902,9 +2846,246 @@ function goTab(tab) {
   renders[tab]?.();
   setTimeout(startCountdownTicker, 50);
 }
-document.querySelectorAll('.nav-link').forEach(a => a.onclick = () => goTab(a.dataset.tab));
-document.querySelectorAll('.nav-jump').forEach(b => b.onclick = () => goTab(b.dataset.tab));
-function initSubtabs() {
+function openSidebar() { $('sidebar')?.classList.remove('-translate-x-full'); $('backdrop')?.classList.remove('hidden'); }
+function closeSidebar() { $('sidebar')?.classList.add('-translate-x-full'); $('backdrop')?.classList.add('hidden'); }
+
+/* ═══════════════════════════════════════════════════════════
+   DOM WIRING — runs ONCE, after DOMContentLoaded
+   ═══════════════════════════════════════════════════════════ */
+function startDomWiring() {
+  /* Auth */
+  if ($('tabSignIn')) $('tabSignIn').onclick = () => setAuthMode(false);
+  if ($('tabSignUp')) $('tabSignUp').onclick = () => setAuthMode(true);
+  if ($('authBtn')) $('authBtn').onclick = handleAuthSubmit;
+  if ($('authPassword')) $('authPassword').onkeydown = e => { if (e.key === 'Enter') $('authBtn')?.click(); };
+  if ($('signOutBtn')) $('signOutBtn').onclick = handleSignOut;
+
+  /* Photo delegation */
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('[data-photo]'); if (!btn) return;
+    e.stopPropagation();
+    const [type, id] = btn.dataset.photo.split(':');
+    let item = null;
+    if (type === 'task') item = state.tasks[state.user?.uid]?.[id];
+    else if (type === 'todo') item = state.todos[state.user?.uid]?.[id];
+    else if (type === 'goal') item = state.goals?.[id];
+    else if (type === 'event') item = state.schedule[state.user?.uid]?.[id];
+    else if (type === 'activity') {
+      const comp = state.activities[state.user?.uid]?.completions?.[id];
+      if (comp?.photo) return viewCompletionPhoto(comp.photo, `activity-${id}.jpg`);
+      return captureCompletionPhoto(type, id);
+    }
+    if (!state.user) return;
+    if (item?.completionPhoto) viewCompletionPhoto(item.completionPhoto, `${type}-${id}.jpg`);
+    else captureCompletionPhoto(type, id);
+  });
+
+  /* Chat */
+  if ($('chatForm')) $('chatForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!state.user) return;
+    const input = $('chatInput'); const text = input.value.trim();
+    if (!text) return; input.value = '';
+    state.chatHistory.push({ role:'user', content: text }); renderChat();
+    const tid = 'thinking-' + Date.now(); const sc = $('chatScroll');
+    sc?.insertAdjacentHTML('beforeend', `<div id="${tid}" class="flex justify-start"><div class="chat-bubble them"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Thinking…</div></div>`);
+    if (sc) sc.scrollTop = sc.scrollHeight;
+    try {
+      const m = metricsFor(state.user.uid); const pu = partnerUid();
+      const ctx = { myName: state.profile?.name, partnerName: pu ? state.profiles[pu]?.name : null, openTasks: m.open, completedToday: m.todayDone, goals: allGoals().map(g => g.title).slice(0,5), events: m.upcoming.slice(0,3).map(e => e.title) };
+      const res = await ai('/ai/chat', { messages: state.chatHistory.slice(-10).map(x => ({ role: x.role, content: x.content })), context: ctx });
+      document.getElementById(tid)?.remove();
+      state.chatHistory.push({ role:'assistant', content: res.reply || '(no reply)' });
+      state.settings.chatHistory = state.chatHistory.slice(-30); persistSettings(); renderChat();
+    } catch(e) { document.getElementById(tid)?.remove(); state.chatHistory.push({ role:'assistant', content: `⚠️ ${e.message}` }); renderChat(); }
+  });
+
+  /* Todo form */
+  if ($('todoForm')) $('todoForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const text = $('todoInput').value.trim();
+    if (!text) { toast('Write something first.', 'warning'); return; }
+    const dueTime = $('todoDueTime').value || '';
+    const priority = $('todoPriority').value || 'medium';
+    const recurring = $('todoRecurring').checked;
+    $('todoInput').value = ''; $('todoDueTime').value = ''; $('todoPriority').value = 'medium'; $('todoRecurring').checked = false;
+    await addTodoOptimistic(text, dueTime, priority, recurring);
+  });
+  if ($('prevDayBtn')) $('prevDayBtn').onclick = () => { const d = new Date(state.todoDate + 'T00:00:00'); d.setDate(d.getDate()-1); state.todoDate = dateStr(d); renderToday(); if (isMobile()) renderMobileTodos(); };
+  if ($('nextDayBtn')) $('nextDayBtn').onclick = () => { const d = new Date(state.todoDate + 'T00:00:00'); d.setDate(d.getDate()+1); state.todoDate = dateStr(d); renderToday(); if (isMobile()) renderMobileTodos(); };
+  if ($('todayJumpBtn')) $('todayJumpBtn').onclick = () => { state.todoDate = todayStr(); renderToday(); if (isMobile()) renderMobileTodos(); };
+
+  /* Task form */
+  if ($('taskForm')) $('taskForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!state.user) return;
+    const id = $('taskEditId').value || uid();
+    const existing = state.tasks[state.user.uid]?.[id] || {};
+    const assignedTo = $('taskAssign').value || '';
+    const payload = { id, title: $('taskTitle').value.trim(), notes: $('taskNotes').value.trim(), category: $('taskCategory').value, priority: $('taskPriority').value, dueDate: $('taskDue').value || '', dueTime: $('taskDueTime').value || '', linkedGoalId: $('taskGoal').value || '', assignedTo, ownerUid: state.user.uid, done: existing.done || false, completedAt: existing.completedAt || null, completionPhoto: existing.completionPhoto || null, createdAt: existing.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
+    if (!payload.title) return toast('Title required.', 'error');
+    state.tasks[state.user.uid] = state.tasks[state.user.uid] || {};
+    state.tasks[state.user.uid][id] = payload;
+    renderTasks();
+    await safeSet(`tasks/${state.user.uid}/${id}`, payload);
+    await logHistory(existing.createdAt ? 'update' : 'create', 'task', id, payload.title, { priority: payload.priority, category: payload.category, dueDate: payload.dueDate, dueTime: payload.dueTime });
+    if (assignedTo && assignedTo !== state.user.uid) {
+      const hid = uid();
+      await safeSet(`handoffs/${hid}`, { id: hid, taskId: id, title: payload.title, notes: payload.notes, fromUid: state.user.uid, toUid: assignedTo, status: 'pending', feedback: '', createdAt: new Date().toISOString() });
+      toast('Task + handoff saved.', 'success');
+    } else toast(existing.createdAt ? 'Updated.' : 'Created.', 'success');
+    hideModal('taskModal');
+  });
+
+  /* Event form */
+  if ($('eventForm')) $('eventForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!state.user) return;
+    const id = $('eventEditId').value || uid();
+    const existing = state.schedule[state.user.uid]?.[id] || {};
+    const p = { id, title: $('eventTitle').value.trim(), start: $('eventStart').value, end: $('eventEnd').value || '', type: $('eventType').value, location: $('eventLocation').value.trim(), notes: $('eventNotes').value.trim(), completionPhoto: existing.completionPhoto || null, createdAt: existing.createdAt || new Date().toISOString() };
+    if (!p.title || !p.start) return toast('Title+start required.', 'error');
+    await safeSet(`schedule/${state.user.uid}/${id}`, p);
+    await logHistory(existing.createdAt ? 'update' : 'create', 'event', id, p.title);
+    hideModal('eventModal');
+  });
+
+  /* Expenses */
+  if ($('expSplit')) $('expSplit').onchange = () => $('splitCustomRow')?.classList.toggle('hidden', $('expSplit').value !== 'custom');
+  if ($('addExpenseBtn')) $('addExpenseBtn').onclick = () => {
+    $('expenseForm')?.reset();
+    if ($('expPaidBy')) populatePayerSelect($('expPaidBy'));
+    if ($('expDate')) $('expDate').value = todayStr();
+    $('splitCustomRow')?.classList.add('hidden');
+    showModal('expenseModal');
+  };
+  if ($('expenseForm')) $('expenseForm').addEventListener('submit', async e => {
+    e.preventDefault(); if (!state.user) return;
+    const id = uid(); const sr = $('expSplit').value;
+    let sA = 0, sB = 0;
+    if (sr === 'custom') { sA = parseFloat($('expSplitA').value) || 0; sB = parseFloat($('expSplitB').value) || 0; }
+    else { const h = (parseFloat($('expAmount').value) || 0)/2; sA = h; sB = h; }
+    const p = { id, title: $('expTitle').value.trim(), amount: parseFloat($('expAmount').value) || 0, category: $('expCategory').value, paidBy: $('expPaidBy').value, splitRatio: sr, splitA: sA, splitB: sB, date: $('expDate').value || todayStr(), createdAt: new Date().toISOString() };
+    if (!p.title || !p.amount) return toast('Title+amount required.', 'error');
+    await safeSet(`financials/expenses/${id}`, p); await logHistory('create', 'expense', id, `${p.title} — ${fmtMoney(p.amount)}`); hideModal('expenseModal');
+  });
+
+  /* Savings */
+  if ($('addSavingsBtn')) $('addSavingsBtn').onclick = () => { $('savingsForm')?.reset(); if ($('savCurrent')) $('savCurrent').value = 0; showModal('savingsModal'); };
+  if ($('savingsForm')) $('savingsForm').addEventListener('submit', async e => {
+    e.preventDefault(); if (!state.user) return;
+    const id = uid();
+    const p = { id, title: $('savTitle').value.trim(), target: parseFloat($('savTarget').value) || 0, current: parseFloat($('savCurrent').value) || 0, deadline: $('savDeadline').value || '', createdAt: new Date().toISOString() };
+    if (!p.title || !p.target) return toast('Title+target required.', 'error');
+    await safeSet(`financials/savings/${id}`, p); await logHistory('create', 'savings', id, p.title); hideModal('savingsModal');
+  });
+
+  /* Subscriptions */
+  if ($('addSubscriptionBtn')) $('addSubscriptionBtn').onclick = () => {
+    $('subForm')?.reset();
+    if ($('subPaidBy')) populatePayerSelect($('subPaidBy'));
+    const n = new Date(); n.setMonth(n.getMonth()+1);
+    if ($('subNextDate')) $('subNextDate').value = dateStr(n);
+    showModal('subModal');
+  };
+  if ($('subForm')) $('subForm').addEventListener('submit', async e => {
+    e.preventDefault(); if (!state.user) return;
+    const id = uid();
+    const p = { id, name: $('subName').value.trim(), amount: parseFloat($('subAmount').value) || 0, cycle: $('subCycle').value, nextDate: $('subNextDate').value || '', paidBy: $('subPaidBy').value, createdAt: new Date().toISOString() };
+    if (!p.name || !p.amount) return toast('Name+amount required.', 'error');
+    await safeSet(`financials/subscriptions/${id}`, p); await logHistory('create', 'subscription', id, `${p.name} — ${fmtMoney(p.amount)}`); hideModal('subModal');
+  });
+
+  /* Goals */
+  if ($('addMilestoneBtn')) $('addMilestoneBtn').onclick = () => { milestoneDraft.push({ text: '', done: false }); renderMilestoneEditor(); };
+  if ($('addGoalBtn')) $('addGoalBtn').onclick = () => {
+    if ($('goalEditId')) $('goalEditId').value = '';
+    $('goalForm')?.reset();
+    if ($('goalPriority')) $('goalPriority').value = 'medium';
+    if ($('goalTargetTime')) $('goalTargetTime').value = '23:59';
+    milestoneDraft = []; renderMilestoneEditor(); showModal('goalModal');
+  };
+  if ($('goalForm')) $('goalForm').addEventListener('submit', async e => {
+    e.preventDefault(); if (!state.user) return;
+    const id = $('goalEditId').value || uid(); const existing = state.goals[id] || {};
+    const ms = milestoneDraft.filter(m => m.text.trim()).map(m => ({ text: m.text.trim(), done: !!m.done }));
+    const p = { id, title: $('goalTitle').value.trim(), type: $('goalType').value, priority: $('goalPriority').value || 'medium', targetDate: $('goalTarget').value || '', targetTime: $('goalTargetTime').value || '', description: $('goalDesc').value.trim(), milestones: ms, completionPhoto: existing.completionPhoto || null, assignedTo: Object.keys(state.profiles), createdAt: existing.createdAt || new Date().toISOString() };
+    if (!p.title) return toast('Title required.', 'error');
+    await safeSet(`goals/${id}`, p); await logHistory(existing.createdAt ? 'update' : 'create', 'goal', id, p.title, { priority: p.priority, type: p.type }); hideModal('goalModal');
+  });
+
+  /* Skills */
+  if ($('addSkillBtn')) $('addSkillBtn').onclick = () => {
+    $('skillForm')?.reset();
+    if ($('skillHours')) $('skillHours').value = 0;
+    if ($('skillLevel')) $('skillLevel').value = 1;
+    if ($('skillTarget')) $('skillTarget').value = 100;
+    showModal('skillModal');
+  };
+  if ($('skillForm')) $('skillForm').addEventListener('submit', async e => {
+    e.preventDefault(); if (!state.user) return;
+    const id = uid();
+    const p = { id, name: $('skillName').value.trim(), hours: parseFloat($('skillHours').value) || 0, level: parseInt($('skillLevel').value) || 1, target: parseFloat($('skillTarget').value) || 100, category: $('skillCategory').value, createdAt: new Date().toISOString() };
+    if (!p.name) return toast('Name required.', 'error');
+    await safeSet(`skills/${id}`, p); await logHistory('create', 'skill', id, p.name); hideModal('skillModal');
+  });
+
+  /* Hourly */
+  if ($('hourlyForm')) $('hourlyForm').addEventListener('submit', async e => {
+    e.preventDefault(); if (!state.user) return;
+    const key = $('hourlyKey').value; const text = $('hourlyText').value.trim(); if (!text) return;
+    const existing = Object.values(state.hourly[state.user.uid] || {}).find(x => x.key === key);
+    const id = existing?.id || uid();
+    const payload = { id, key, date: key.slice(0,10), hour: parseInt(key.slice(-2)), text, intensity: parseInt($('hourlyIntensity').value), category: $('hourlyCategory').value, createdAt: existing?.createdAt || new Date().toISOString() };
+    await safeSet(`hourly/${state.user.uid}/${id}`, payload);
+    await logHistory('log', 'hourly', id, text, { hour: payload.hour, date: payload.date, category: payload.category });
+    toast('Hour logged.', 'success'); hideModal('hourlyModal');
+  });
+
+  /* Avatar */
+  if ($('avatarUploadBtn')) $('avatarUploadBtn').onclick = () => $('avatarInput')?.click();
+  if ($('avatarInput')) $('avatarInput').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    if (!f.type.startsWith('image/')) return toast('Pick an image.', 'error');
+    if (f.size > 4*1024*1024) return toast('Max 4 MB.', 'error');
+    try {
+      const d = await resizeImage(f, 320);
+      await safeUpdate(`users/${state.user.uid}`, { avatar: d });
+      await mirrorAvatarToVault(d);
+      toast('Photo updated.', 'success');
+    } catch(e) { toast('Failed.', 'error'); }
+    e.target.value = '';
+  };
+
+  /* Vault drop zone */
+  if ($('dropZone')) {
+    $('dropZone').onclick = () => $('fileInput')?.click();
+    $('dropZone').ondragover = e => { e.preventDefault(); $('dropZone').classList.add('border-sky-400/70'); };
+    $('dropZone').ondragleave = () => $('dropZone').classList.remove('border-sky-400/70');
+    $('dropZone').ondrop = e => { e.preventDefault(); $('dropZone').classList.remove('border-sky-400/70'); handleFiles(e.dataTransfer.files); };
+  }
+  if ($('fileInput')) $('fileInput').onchange = e => { handleFiles(e.target.files); e.target.value = ''; };
+  if ($('mVaultFileInput')) $('mVaultFileInput').onchange = e => { handleFiles(e.target.files); e.target.value = ''; };
+
+  /* Profile */
+  if ($('saveProfileBtn')) $('saveProfileBtn').onclick = async () => {
+    if (!state.user) return;
+    const name = $('profNameInput').value.trim(); if (!name) return toast('Name required.', 'error');
+    const accent = $('colorPicker')?.dataset.selected || state.profile?.accent || '#38bdf8';
+    await safeUpdate(`users/${state.user.uid}`, { name, tagline: $('profTaglineInput').value.trim(), hobbies: $('profHobbiesInput').value.trim(), accent, updatedAt: new Date().toISOString() });
+    toast('Profile saved.', 'success');
+  };
+
+  /* Modals */
+  document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => hideModal(b.dataset.close));
+  document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) hideModal(m.id); }));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.modal-overlay').forEach(m => hideModal(m.id)); });
+
+  /* Navigation */
+  document.querySelectorAll('.nav-link').forEach(a => a.onclick = () => goTab(a.dataset.tab));
+  document.querySelectorAll('.nav-jump').forEach(b => b.onclick = () => goTab(b.dataset.tab));
+
+  /* Subtabs */
   document.querySelectorAll('[data-subgroup]').forEach(g => {
     const subs = g.querySelectorAll('.subtab');
     subs.forEach(st => st.onclick = () => {
@@ -2915,73 +3096,197 @@ function initSubtabs() {
       if (gn === 'hr') renderHourly();
     });
   });
+  document.querySelectorAll('[data-goto-game]').forEach(c => c.onclick = () => { const t = document.querySelector(`[data-subtab="game-${c.dataset.gotoGame}"]`); if (t) t.click(); });
+  document.querySelectorAll('.td-tab').forEach(b => b.onclick = () => {
+    document.querySelectorAll('.td-tab').forEach(x => { x.className = 'td-tab px-6 py-2.5 rounded-full glass font-semibold text-[12.5px] text-slate-300'; x.style.background = ''; });
+    b.className = 'td-tab px-6 py-2.5 rounded-full font-semibold text-[12.5px] text-white';
+    b.style.background = b.dataset.kind === 'truth' ? 'linear-gradient(135deg,#38bdf8,#0284c7)' : 'linear-gradient(135deg,#fb7185,#e11d48)';
+    loadTD(b.dataset.kind);
+  });
+
+  /* Sidebar / theme */
+  if ($('menuBtn')) $('menuBtn').onclick = openSidebar;
+  if ($('backdrop')) $('backdrop').onclick = closeSidebar;
+  if ($('themeBtn')) $('themeBtn').onclick = () => {
+    const isDark = document.documentElement.classList.toggle('dark');
+    document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+    $('themeBtn').innerHTML = isDark ? '<i class="fa-solid fa-moon"></i><span class="md:hidden lg:inline"> Theme</span>' : '<i class="fa-solid fa-sun"></i><span class="md:hidden lg:inline"> Theme</span>';
+    setTimeout(() => renderDashboard(), 80);
+  };
+
+  /* Standard toolbar */
+  if ($('refreshBtn')) $('refreshBtn').onclick = () => { renderAll(); toast('Refreshed.', 'info'); };
+  if ($('addTaskBtn')) $('addTaskBtn').onclick = () => openTaskModal();
+  if ($('addEventBtn')) $('addEventBtn').onclick = () => openEventModal();
+  if ($('taskSearch')) $('taskSearch').oninput = renderTasks;
+  if ($('taskFilter')) $('taskFilter').onchange = renderTasks;
+  if ($('genActivitiesBtn')) $('genActivitiesBtn').onclick = generateActivities;
+  if ($('aiInsightRefresh')) $('aiInsightRefresh').onclick = loadAiInsight;
+  if ($('weeklyReviewBtn')) $('weeklyReviewBtn').onclick = runWeekReview;
+  if ($('weekReviewBtn2')) $('weekReviewBtn2').onclick = runWeekReview;
+  if ($('weeklyGoalsBtn')) $('weeklyGoalsBtn').onclick = runWeeklyGoals;
+  if ($('autoScheduleBtn')) $('autoScheduleBtn').onclick = runAutoSchedule;
+  if ($('aiScheduleBtn')) $('aiScheduleBtn').onclick = runAutoSchedule;
+  if ($('breakdownBtn')) $('breakdownBtn').onclick = openBreakdownModal;
+  if ($('breakdownBtn2')) $('breakdownBtn2').onclick = () => { const id = $('taskEditId')?.value; if (id) { hideModal('taskModal'); setTimeout(openBreakdownModal, 200); } else openBreakdownModal(); };
+  if ($('moodBoostBtn')) $('moodBoostBtn').onclick = runMoodBoost;
+  if ($('journalBtn')) $('journalBtn').onclick = runJournal;
+  if ($('prioritizeTasksBtn')) $('prioritizeTasksBtn').onclick = () => runPriorityAdvisor('tasks');
+  if ($('prioritizeGoalsBtn')) $('prioritizeGoalsBtn').onclick = () => runPriorityAdvisor('goals');
+  if ($('priorityAdvisorBtn')) $('priorityAdvisorBtn').onclick = () => runPriorityAdvisor('all');
+
+  /* Games */
+  if ($('tttNewBtn')) $('tttNewBtn').onclick = newTTTMatch;
+  if ($('c4NewBtn')) $('c4NewBtn').onclick = newC4Match;
+  if ($('memNewBtn')) $('memNewBtn').onclick = newMemoryGame;
+  if ($('rpsNewBtn')) $('rpsNewBtn').onclick = newRPSRound;
+  if ($('diceRollBtn')) $('diceRollBtn').onclick = rollDice;
+  if ($('wdNewBtn')) $('wdNewBtn').onclick = newWordDuel;
+  if ($('q20NewBtn')) $('q20NewBtn').onclick = newQ20;
+  if ($('triviaNewBtn')) $('triviaNewBtn').onclick = loadTrivia;
+  if ($('tdNewBtn')) $('tdNewBtn').onclick = () => loadTD(state.tdKind);
+  if ($('promptsNewBtn')) $('promptsNewBtn').onclick = loadPrompts;
+  if ($('wdForm')) $('wdForm').addEventListener('submit', async e => {
+    e.preventDefault(); if (!state.user) return;
+    const g = state.games.word; if (!g || g.status !== 'playing' || !g.word) return;
+    const w = $('wdInput').value.toUpperCase().trim(); if (w.length !== 5) return toast('5 letters.', 'warning');
+    $('wdInput').value = '';
+    const result = []; const wArr = g.word.split(''); const used = wArr.slice();
+    for (let i = 0; i < 5; i++) { if (w[i] === wArr[i]) { result[i] = 'correct'; used[i] = null; } }
+    for (let i = 0; i < 5; i++) { if (result[i]) continue; const idx = used.indexOf(w[i]); if (idx > -1) { result[i] = 'present'; used[idx] = null; } else result[i] = 'absent'; }
+    const guesses = [...(g.guesses || []), { word: w, result }];
+    let status = g.status;
+    if (w === g.word) { status = 'won'; state.gameStats.wdW = (state.gameStats.wdW||0)+1; saveGameStats(); }
+    else if (guesses.length >= 6) status = 'lost';
+    await safeUpdate(`games/word`, { guesses, status });
+  });
+  if ($('q20Form')) $('q20Form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const g = state.games.twenty; if (!g || g.status !== 'playing') return toast('Start a new game.', 'warning');
+    const q = $('q20Input').value.trim(); if (!q) return;
+    $('q20Input').value = '';
+    try { const res = await ai('/ai/20questions', { secret: g.secret, question: q });
+      const questions = [...(g.questions || []), { q, a: res.answer, explanation: res.explanation }];
+      let status = g.status;
+      if (q.toLowerCase().includes(g.secret.toLowerCase())) status = 'won';
+      else if (questions.length >= 20) status = 'lost';
+      await safeUpdate(`games/twenty`, { questions, status });
+    } catch(e) { toast('Failed.', 'error'); }
+  });
+
+  /* Mobile bottom nav */
+  document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(item => {
+    item.onclick = () => {
+      if (item.id === 'mMoreBtn') { openSheet(); return; }
+      if (item.dataset.screen === 'games') { enterFullscreenTab('games'); return; }
+      switchMobileScreen(item.dataset.screen);
+    };
+  });
+  if ($('mSheetBackdrop')) $('mSheetBackdrop').onclick = closeSheet;
+  if ($('mSheetClose')) $('mSheetClose').onclick = closeSheet;
+  document.querySelectorAll('[data-mgoto]').forEach(t => t.onclick = () => {
+    closeSheet();
+    const tab = t.dataset.mgoto;
+    if (tab === 'vault') { switchMobileScreen('vault'); setTimeout(() => renderMobileVault(), 100); return; }
+    enterFullscreenTab(tab);
+  });
+  document.querySelectorAll('[data-mchat]').forEach(t => t.onclick = () => { closeSheet(); openMobileChat(); });
+  if ($('mFab')) $('mFab').onclick = () => {
+    const s = state.mobileScreen;
+    if (s === 'tasks') openTaskModal();
+    else if (s === 'today') $('mTodoInput')?.focus();
+    else if (s === 'goals') openGoalModal();
+    else openTaskModal();
+  };
+  if ($('mAddTodoBtn')) $('mAddTodoBtn').onclick = async () => {
+    const text = ($('mTodoInput')?.value || '').trim();
+    if (!text) { toast('Write something first.', 'warning'); return; }
+    const dueTime = $('mTodoDueTime')?.value || '';
+    const priority = $('mTodoPriority')?.value || 'medium';
+    const recurring = $('mTodoRecurring')?.checked || false;
+    if ($('mTodoInput')) $('mTodoInput').value = '';
+    if ($('mTodoDueTime')) $('mTodoDueTime').value = '';
+    if ($('mTodoPriority')) $('mTodoPriority').value = 'medium';
+    if ($('mTodoRecurring')) $('mTodoRecurring').checked = false;
+    await addTodoOptimistic(text, dueTime, priority, recurring);
+  };
+  if ($('mTodoInput')) $('mTodoInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('mAddTodoBtn')?.click(); } });
+  if ($('mPrevDay')) $('mPrevDay').onclick = () => { const d = new Date(state.todoDate + 'T00:00:00'); d.setDate(d.getDate()-1); state.todoDate = dateStr(d); renderMobileTodos(); };
+  if ($('mNextDay')) $('mNextDay').onclick = () => { const d = new Date(state.todoDate + 'T00:00:00'); d.setDate(d.getDate()+1); state.todoDate = dateStr(d); renderMobileTodos(); };
+  if ($('mTodayJump')) $('mTodayJump').onclick = () => { state.todoDate = todayStr(); renderMobileTodos(); };
+  document.querySelectorAll('[data-mfilter="tasks"] .m-pill').forEach(p => p.onclick = () => {
+    document.querySelectorAll('[data-mfilter="tasks"] .m-pill').forEach(x => x.classList.remove('active'));
+    p.classList.add('active'); state.mobileTaskFilter = p.dataset.filter; renderMobileTasks();
+  });
+  if ($('mThemeBtn')) $('mThemeBtn').onclick = () => {
+    const isDark = document.documentElement.classList.toggle('dark');
+    document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+    $('mThemeBtn').innerHTML = isDark ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>';
+    setTimeout(() => { if (isMobile()) renderMobileDashboard(); }, 80);
+  };
+  if ($('mAvatarBtn')) $('mAvatarBtn').onclick = () => { openSheet(); };
+  if ($('mPrioritizeTasks')) $('mPrioritizeTasks').onclick = () => runPriorityAdvisor('tasks');
+  if ($('mPrioritizeGoals')) $('mPrioritizeGoals').onclick = () => runPriorityAdvisor('goals');
+  if ($('mAddTaskBtn')) $('mAddTaskBtn').onclick = () => openTaskModal();
+  if ($('mAddGoalBtn')) $('mAddGoalBtn').onclick = () => openGoalModal();
+
+  /* Keyboard shortcuts */
+  document.addEventListener('keydown', e => {
+    if (e.target.matches('input, textarea, select')) return;
+    if (e.key === 'n' || e.key === 'N') { if (state.user) { e.preventDefault(); openTaskModal(); } }
+    if (e.key === 'c' || e.key === 'C') { if (state.user && !state.chatPanelOpen && !isMobile()) toggleChatPanel(); }
+  });
+
+  /* Resize */
+  window.addEventListener('resize', () => {
+    if (!state.user) return;
+    if (isMobile()) {
+      const mas = $('mobileAppShell'); if (mas) mas.style.display = 'grid';
+      $('desktopShell')?.classList.add('hidden');
+      renderMobileDashboard(); renderMobileTasks(); renderMobileTodos(); renderMobileGoals(); renderMobileVault();
+    } else {
+      $('desktopShell')?.classList.remove('hidden');
+      const mas = $('mobileAppShell'); if (mas) mas.style.display = 'none';
+      document.body.classList.remove('mobile-game-open');
+    }
+    const bar = document.getElementById('mobileReturnBar');
+    if (bar && !document.body.classList.contains('mobile-game-open')) bar.remove();
+  });
+
+  /* History filters, subtabs, sync banner */
+  initSubtabs?.();
+  initHistoryFilters();
+  updateSyncBanner();
 }
-document.querySelectorAll('[data-goto-game]').forEach(c => c.onclick = () => { const t = document.querySelector(`[data-subtab="game-${c.dataset.gotoGame}"]`); if (t) t.click(); });
-document.querySelectorAll('.td-tab').forEach(b => b.onclick = () => {
-  document.querySelectorAll('.td-tab').forEach(x => { x.className = 'td-tab px-6 py-2.5 rounded-full glass font-semibold text-[12.5px] text-slate-300'; x.style.background = ''; });
-  b.className = 'td-tab px-6 py-2.5 rounded-full font-semibold text-[12.5px] text-white';
-  b.style.background = b.dataset.kind === 'truth' ? 'linear-gradient(135deg,#38bdf8,#0284c7)' : 'linear-gradient(135deg,#fb7185,#e11d48)';
-  loadTD(b.dataset.kind);
-});
-function openSidebar() { $('sidebar').classList.remove('-translate-x-full'); $('backdrop').classList.remove('hidden'); }
-function closeSidebar() { $('sidebar').classList.add('-translate-x-full'); $('backdrop').classList.add('hidden'); }
-if ($('menuBtn')) $('menuBtn').onclick = openSidebar;
-if ($('backdrop')) $('backdrop').onclick = closeSidebar;
-if ($('themeBtn')) $('themeBtn').onclick = () => {
-  const isDark = document.documentElement.classList.toggle('dark');
-  document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
-  $('themeBtn').innerHTML = isDark ? '<i class="fa-solid fa-moon"></i><span class="md:hidden lg:inline"> Theme</span>' : '<i class="fa-solid fa-sun"></i><span class="md:hidden lg:inline"> Theme</span>';
-  setTimeout(() => renderDashboard(), 80);
-};
-if ($('refreshBtn')) $('refreshBtn').onclick = () => { renderAll(); toast('Refreshed.', 'info'); };
-if ($('addTaskBtn')) $('addTaskBtn').onclick = () => openTaskModal();
-if ($('addEventBtn')) $('addEventBtn').onclick = () => openEventModal();
-if ($('taskSearch')) $('taskSearch').oninput = renderTasks;
-if ($('taskFilter')) $('taskFilter').onchange = renderTasks;
-if ($('genActivitiesBtn')) $('genActivitiesBtn').onclick = generateActivities;
-if ($('aiInsightRefresh')) $('aiInsightRefresh').onclick = loadAiInsight;
-if ($('weeklyReviewBtn')) $('weeklyReviewBtn').onclick = runWeekReview;
-if ($('weekReviewBtn2')) $('weekReviewBtn2').onclick = runWeekReview;
-if ($('weeklyGoalsBtn')) $('weeklyGoalsBtn').onclick = runWeeklyGoals;
-if ($('autoScheduleBtn')) $('autoScheduleBtn').onclick = runAutoSchedule;
-if ($('aiScheduleBtn')) $('aiScheduleBtn').onclick = runAutoSchedule;
-if ($('breakdownBtn')) $('breakdownBtn').onclick = openBreakdownModal;
-if ($('breakdownBtn2')) $('breakdownBtn2').onclick = () => { const id = $('taskEditId').value; if (id) { hideModal('taskModal'); setTimeout(openBreakdownModal, 200); } else openBreakdownModal(); };
-if ($('moodBoostBtn')) $('moodBoostBtn').onclick = runMoodBoost;
-if ($('journalBtn')) $('journalBtn').onclick = runJournal;
-if ($('prioritizeTasksBtn')) $('prioritizeTasksBtn').onclick = () => runPriorityAdvisor('tasks');
-if ($('prioritizeGoalsBtn')) $('prioritizeGoalsBtn').onclick = () => runPriorityAdvisor('goals');
-if ($('priorityAdvisorBtn')) $('priorityAdvisorBtn').onclick = () => runPriorityAdvisor('all');
-if ($('tttNewBtn')) $('tttNewBtn').onclick = newTTTMatch;
-if ($('c4NewBtn')) $('c4NewBtn').onclick = newC4Match;
-if ($('memNewBtn')) $('memNewBtn').onclick = newMemoryGame;
-if ($('rpsNewBtn')) $('rpsNewBtn').onclick = newRPSRound;
-if ($('diceRollBtn')) $('diceRollBtn').onclick = rollDice;
-if ($('wdNewBtn')) $('wdNewBtn').onclick = newWordDuel;
-if ($('q20NewBtn')) $('q20NewBtn').onclick = newQ20;
-if ($('triviaNewBtn')) $('triviaNewBtn').onclick = newTrivia;
-if ($('tdNewBtn')) $('tdNewBtn').onclick = () => loadTD(state.tdKind);
-if ($('promptsNewBtn')) $('promptsNewBtn').onclick = loadPrompts;
 
-async function newTrivia() { await loadTrivia(); }
+/* ═══════════════════════════════════════════════════════════
+   RENDER CHAT (uses state.chatHistory)
+   ═══════════════════════════════════════════════════════════ */
+function renderChat() {
+  const scroll = $('chatScroll'); if (!scroll) return;
+  if (!state.chatHistory.length) scroll.innerHTML = `<div class="chat-bubble them">👋 Hi ${esc(state.profile?.name || 'there')}! I'm Viora AI. Ask me anything about your day, goals, or plans.</div>`;
+  else scroll.innerHTML = state.chatHistory.map(m => `<div class="flex ${m.role==='user'?'justify-end':'justify-start'}"><div class="chat-bubble ${m.role==='user'?'me':'them'}">${esc(m.content)}</div></div>`).join('');
+  scroll.scrollTop = scroll.scrollHeight;
+  const qp = [
+    { t:'☀️ Plan my day', p:'Plan my day with a balance of work and rest.' }, { t:'🎯 Goal check', p:'Review my goals and suggest next steps.' },
+    { t:'🎲 Date idea', p:'Suggest a fun date idea we could do this weekend.' }, { t:'📚 Learning plan', p:'Make me a weekly learning plan.' },
+    { t:'😌 Reduce stress', p:'I feel stressed. Give me 3 quick things.' }, { t:'💪 Habit nudge', p:'Nudge me on my habits.' }
+  ];
+  const qh = $('chatQuick'); if (qh) {
+    qh.innerHTML = qp.map(q => `<button class="px-2.5 py-1.5 rounded-full glass text-[11px] font-medium text-slate-300 hover:text-white" data-qp="${esc(q.p)}">${q.t}</button>`).join('');
+    qh.querySelectorAll('[data-qp]').forEach(b => b.onclick = () => { $('chatInput').value = b.dataset.qp; $('chatForm')?.dispatchEvent(new Event('submit')); });
+  }
+}
 
-document.addEventListener('keydown', e => {
-  if (e.target.matches('input, textarea, select')) return;
-  if (e.key === 'n' || e.key === 'N') { if (state.user) { e.preventDefault(); openTaskModal(); } }
-  if (e.key === 'c' || e.key === 'C') { if (state.user && !state.chatPanelOpen && !isMobile()) toggleChatPanel(); }
-});
+/* ═══════════════════════════════════════════════════════════
+   BOOT
+   ═══════════════════════════════════════════════════════════ */
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startDomWiring);
+} else {
+  startDomWiring();
+}
 
-window.addEventListener('resize', () => {
-  if (!state.user) return;
-  if (isMobile()) { $('mobileAppShell').style.display = 'grid'; $('desktopShell').classList.add('hidden'); renderMobileDashboard(); renderMobileTasks(); renderMobileTodos(); renderMobileGoals(); renderMobileVault(); }
-  else { $('desktopShell').classList.remove('hidden'); $('mobileAppShell').style.display = 'none'; document.body.classList.remove('mobile-game-open'); }
-  const bar = document.getElementById('mobileReturnBar');
-  if (bar && !document.body.classList.contains('mobile-game-open')) bar.remove();
-});
-
-initSubtabs();
-initHistoryFilters();
-updateSyncBanner();
 window.__avState = state;
 window.__avDebug = () => ({
   uid: window.__avState.user?.uid,
@@ -2989,4 +3294,4 @@ window.__avDebug = () => ({
   profile: window.__avState.profile,
 });
 
-console.log('âœ… Viora Track v7.3 booted â€” org-scoped track paths, shared /users with index.html');
+console.log('✅ Viora Track v7.4 booted');
