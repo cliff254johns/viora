@@ -1,5 +1,5 @@
 // mainTraining/trainer.js
-// VIORA Scholar — Trainer Portal with its own login + approval gate.
+// VIORA Scholar — Trainer Portal with login + approval gate.
 // ═══════════════════════════════════════════════════════════════
 
 import { initializeApp, getApps, getApp } from "firebase/app";
@@ -8,7 +8,7 @@ import {
   signInWithEmailAndPassword, createUserWithEmailAndPassword
 } from "firebase/auth";
 import {
-  getDatabase, ref, get, set, update, onValue, forceLongPolling
+  getDatabase, ref, get, set, update, onValue, off, forceLongPolling
 } from "firebase/database";
 
 const firebaseConfig = {
@@ -103,23 +103,22 @@ function showScreen(name) {
 /* ═══════════════════════════════════════════════════════════════
    LOGIN TAB SWITCHER
    ═══════════════════════════════════════════════════════════════ */
-let _loginMode = "signin"; // "signin" | "request"
-
 function setLoginMode(mode) {
-  _loginMode = mode;
   const isIn = mode === "signin";
   $("trTabSignIn")?.classList.toggle("active", isIn);
   $("trTabRequest")?.classList.toggle("active", !isIn);
-  $("trSignInFields").style.display = isIn ? "block" : "none";
-  $("trRequestFields").style.display = isIn ? "none" : "block";
-  $("trModeIndicator").textContent = isIn ? "Signing in" : "Requesting access";
-  $("trModeIndicator").classList.toggle("signup", !isIn);
-  $("trLoginHeading").innerHTML = isIn
-    ? 'Trainer <span>sign in</span>'
-    : 'Request <span>access</span>';
-  $("trLoginSubheading").textContent = isIn
-    ? 'Sign in to your trainer workspace'
-    : 'Apply for a trainer account';
+  if ($("trSignInFields"))  $("trSignInFields").style.display  = isIn ? "block" : "none";
+  if ($("trRequestFields")) $("trRequestFields").style.display = isIn ? "none"  : "block";
+  if ($("trModeIndicator")) {
+    $("trModeIndicator").textContent = isIn ? "Signing in" : "Requesting access";
+    $("trModeIndicator").classList.toggle("signup", !isIn);
+  }
+  if ($("trLoginHeading")) {
+    $("trLoginHeading").innerHTML = isIn ? 'Trainer <span>sign in</span>' : 'Request <span>access</span>';
+  }
+  if ($("trLoginSubheading")) {
+    $("trLoginSubheading").textContent = isIn ? 'Sign in to your trainer workspace' : 'Apply for a trainer account';
+  }
   clearLoginMessage();
 }
 
@@ -149,7 +148,6 @@ async function doTrainerSignIn() {
   clearLoginMessage();
   try {
     await signInWithEmailAndPassword(auth, email, password);
-    // onAuthStateChanged handles the rest
   } catch (e) {
     const friendly = {
       "auth/invalid-email": "That email address is not valid.",
@@ -190,7 +188,7 @@ async function doTrainerRequest() {
     const uidKey = cred.user.uid;
     const requestedAt = nowIso();
 
-    // 1. Access request — same queue the admin already watches
+    // 1. Access request
     await set(ref(db, `${ROOT}/${ORG}/training/accessRequests/${uidKey}`), {
       uid: uidKey,
       name, email, phone,
@@ -201,29 +199,41 @@ async function doTrainerRequest() {
       source: "trainer-portal"
     });
 
-    // 2. Seed a users record so admin sees the name in the Users tab
-    const userSnap = await get(ref(db, `${USERS_ROOT}/${uidKey}`));
-    if (!userSnap.exists()) {
-      await set(ref(db, `${USERS_ROOT}/${uidKey}`), {
-        uid: uidKey,
-        name, email, phone,
-        role: "trainer",           // intent — admin may re-scope on approval
-        pendingApproval: true,
-        source: "trainer-portal",
-        createdAt: requestedAt
-      });
+    // 2. Seed user profile (best-effort — the accessRequest is what matters)
+    try {
+      const userSnap = await get(ref(db, `${USERS_ROOT}/${uidKey}`));
+      if (!userSnap.exists()) {
+        await set(ref(db, `${USERS_ROOT}/${uidKey}`), {
+          uid: uidKey,
+          name, email, phone,
+          role: "trainer",
+          pendingApproval: true,
+          source: "trainer-portal",
+          createdAt: requestedAt
+        });
+      }
+    } catch (profileErr) {
+      // Non-fatal — admin can still see the request and create the profile on approve
+      console.warn("[trainer] profile seed failed (non-fatal):", profileErr?.message);
     }
 
-    // 3. Route to pending screen — onAuthStateChanged handles the display
     toast("Request submitted. An admin will review it shortly.", "success");
+    // Note: onAuthStateChanged fires automatically — no need to change screens manually
   } catch (e) {
+    console.error("[trainer] signup/write failed:", e);
     const friendly = {
       "auth/email-already-in-use": "That email is already registered. Try signing in instead.",
       "auth/weak-password": "Password must be at least 6 characters.",
-      "auth/invalid-email": "That email address is not valid."
+      "auth/invalid-email": "That email address is not valid.",
+      "PERMISSION_DENIED": "Your request could not be saved (permission denied). Please contact support@viora.co.ke."
     }[e.code] || (e.message || "Request failed.");
-    showLoginMessage(friendly);
+    showLoginMessage(friendly, "error");
     btn.disabled = false; btn.innerHTML = orig;
+
+    // If auth succeeded but DB write failed, sign out so they can retry cleanly
+    if (auth.currentUser) {
+      try { await signOut(auth); } catch (_) {}
+    }
   }
 }
 
@@ -237,7 +247,7 @@ async function doTrainerSignOut() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   COURSE BUILDER (self-contained — no cross-folder imports)
+   COURSE BUILDER
    ═══════════════════════════════════════════════════════════════ */
 let _ceModulesDraft = [];
 let _ceEditingId = null;
@@ -245,7 +255,7 @@ let _ceEditingId = null;
 function renderCeModules() {
   const host = $("ceModulesList");
   if (!host) return;
-  $("ceModuleCount").textContent = _ceModulesDraft.length;
+  if ($("ceModuleCount")) $("ceModuleCount").textContent = _ceModulesDraft.length;
   if (!_ceModulesDraft.length) {
     host.innerHTML = `<div class="empty-state" style="padding:24px;text-align:center;color:var(--text-secondary);font-size:.85rem;">No modules yet. Click <strong>Add Module</strong> to start.</div>`;
     return;
@@ -283,7 +293,7 @@ window.openCourseEditor = (courseId = null) => {
   if (courseId) {
     const c = state.courses[courseId];
     if (!c) { toast("Course not found.", "error"); return; }
-    $("courseEditorTitle").textContent = "Edit Course Draft";
+    if ($("courseEditorTitle")) $("courseEditorTitle").textContent = "Edit Course Draft";
     $("ceId").value = c.id || ""; $("ceId").disabled = true;
     $("ceTitle").value = c.title || "";
     $("ceDescription").value = c.description || "";
@@ -294,7 +304,7 @@ window.openCourseEditor = (courseId = null) => {
       .map(([id, m]) => ({ id, title: m.title || "", content: m.content || "", order: m.order || 0 }))
       .sort((a, b) => a.order - b.order);
   } else {
-    $("courseEditorTitle").textContent = "New Course Draft";
+    if ($("courseEditorTitle")) $("courseEditorTitle").textContent = "New Course Draft";
     $("ceId").disabled = false; $("ceId").value = "";
     $("ceTitle").value = ""; $("ceDescription").value = "";
     $("ceCategory").value = "Onboarding"; $("ceLevel").value = "Beginner";
@@ -348,7 +358,7 @@ window.saveCourse = async () => {
    ═══════════════════════════════════════════════════════════════ */
 function switchTab(tab) {
   state.currentTab = tab;
-  document.querySelectorAll(".sa-nav-item").forEach(b => b.classList.toggle("active", b.dataset.trTab === tab));
+  document.querySelectorAll(".sch-nav-item").forEach(b => b.classList.toggle("active", b.dataset.trTab === tab));
   document.querySelectorAll(".sch-bnav-item").forEach(b => b.classList.toggle("active", b.dataset.trTab === tab));
   document.querySelectorAll(".sa-pane").forEach(p => p.classList.toggle("active", p.id === `tr-pane-${tab}`));
   if (window.innerWidth <= 768) $("trSidebar")?.classList.remove("open");
@@ -361,17 +371,22 @@ function switchTab(tab) {
 
 function renderOverview() {
   const myCourses = Object.values(state.courses || {}).filter(c => c.trainerId === state.operator.uid);
-  $("trOverviewKpi").innerHTML = `
-    <div class="stat-card" style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:16px;"><div style="color:var(--accent-blue);font-size:1.5rem;margin-bottom:8px;"><i class="fa-solid fa-book-open"></i></div><div style="font-size:1.5rem;font-weight:800;">${myCourses.length}</div><div style="font-size:.75rem;color:var(--text-secondary);text-transform:uppercase;">My Courses</div></div>
-    <div class="stat-card" style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:16px;"><div style="color:var(--accent-green);font-size:1.5rem;margin-bottom:8px;"><i class="fa-solid fa-users"></i></div><div style="font-size:1.5rem;font-weight:800;">0</div><div style="font-size:.75rem;color:var(--text-secondary);text-transform:uppercase;">Students</div></div>
-    <div class="stat-card" style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:16px;"><div style="color:var(--accent-gold);font-size:1.5rem;margin-bottom:8px;"><i class="fa-solid fa-file-signature"></i></div><div style="font-size:1.5rem;font-weight:800;">0</div><div style="font-size:.75rem;color:var(--text-secondary);text-transform:uppercase;">Pending Grades</div></div>
-  `;
-  $("trRecentActivity").innerHTML = `<div style="color:var(--text-secondary);font-size:.85rem;">No recent activity from your students.</div>`;
+  if ($("trOverviewKpi")) {
+    $("trOverviewKpi").innerHTML = `
+      <div class="stat-card" style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:16px;"><div style="color:var(--accent-blue);font-size:1.5rem;margin-bottom:8px;"><i class="fa-solid fa-book-open"></i></div><div style="font-size:1.5rem;font-weight:800;">${myCourses.length}</div><div style="font-size:.75rem;color:var(--text-secondary);text-transform:uppercase;">My Courses</div></div>
+      <div class="stat-card" style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:16px;"><div style="color:var(--accent-green);font-size:1.5rem;margin-bottom:8px;"><i class="fa-solid fa-users"></i></div><div style="font-size:1.5rem;font-weight:800;">0</div><div style="font-size:.75rem;color:var(--text-secondary);text-transform:uppercase;">Students</div></div>
+      <div class="stat-card" style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:16px;"><div style="color:var(--accent-gold);font-size:1.5rem;margin-bottom:8px;"><i class="fa-solid fa-file-signature"></i></div><div style="font-size:1.5rem;font-weight:800;">0</div><div style="font-size:.75rem;color:var(--text-secondary);text-transform:uppercase;">Pending Grades</div></div>
+    `;
+  }
+  if ($("trRecentActivity")) {
+    $("trRecentActivity").innerHTML = `<div style="color:var(--text-secondary);font-size:.85rem;">No recent activity from your students.</div>`;
+  }
 }
 
 function renderTrainerCourses() {
   const myCourses = Object.values(state.courses || {}).filter(c => c.trainerId === state.operator.uid);
   const grid = $("trCoursesGrid");
+  if (!grid) return;
   if (!myCourses.length) {
     grid.innerHTML = `<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text-secondary);">You have not been assigned any courses yet. Click "Create Draft" to start one.</div>`;
     return;
@@ -395,10 +410,14 @@ function renderTrainerCourses() {
 }
 
 function renderLearners() {
-  $("trLearnersBody").innerHTML = `<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--text-secondary);">Learner tracking will populate once you have active enrollments.</td></tr>`;
+  if ($("trLearnersBody")) {
+    $("trLearnersBody").innerHTML = `<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--text-secondary);">Learner tracking will populate once you have active enrollments.</td></tr>`;
+  }
 }
 function renderGrading() {
-  $("trGradingBody").innerHTML = `<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--text-secondary);">No quiz submissions awaiting grading.</td></tr>`;
+  if ($("trGradingBody")) {
+    $("trGradingBody").innerHTML = `<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--text-secondary);">No quiz submissions awaiting grading.</td></tr>`;
+  }
 }
 
 window.submitForReview = async (id) => {
@@ -413,22 +432,22 @@ window.submitForReview = async (id) => {
    AUTH STATE HANDLER — routes between login / pending / app
    ═══════════════════════════════════════════════════════════════ */
 let _pendingRef = null;
+let _pendingUnsub = null;
 
 function handleAuth(user) {
-  if (_pendingRef) { try { _pendingRef(); } catch (e) {} _pendingRef = null; }
+  if (_pendingUnsub) { try { _pendingUnsub(); } catch (e) {} _pendingUnsub = null; }
+  if (_pendingRef) { try { off(_pendingRef, "value"); } catch (e) {} _pendingRef = null; }
 
   if (!user) {
     showScreen("login");
     return;
   }
 
-  // Subscribe to the access request record for this UID.
   const reqRef = ref(db, P(`accessRequests/${user.uid}`));
   const cb = (snap) => {
     const req = snap.exists() ? snap.val() : null;
 
     if (!req) {
-      // Signed in but no request — user probably signed up elsewhere.
       showScreen("login");
       showLoginMessage(
         "No trainer access request found for this account. Use the 'Request Access' tab to apply.",
@@ -451,7 +470,6 @@ function handleAuth(user) {
     }
 
     if (req.status === "approved") {
-      // Verify the user's actual role on the users node.
       get(ref(db, `${USERS_ROOT}/${user.uid}`)).then((us) => {
         const profile = us.exists() ? us.val() : null;
         if (!profile) {
@@ -474,7 +492,8 @@ function handleAuth(user) {
   onValue(reqRef, cb, (err) => {
     if (err && err.code !== "PERMISSION_DENIED") console.warn("[trainer] access sub failed", err);
   });
-  _pendingRef = () => off(reqRef, "value", cb);
+  _pendingRef = reqRef;
+  _pendingUnsub = () => off(reqRef, "value", cb);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -493,7 +512,7 @@ function bootTrainerApp() {
   });
   onValue(ref(db, P("enrollments")), (s) => { state.enrollments = s.val() || {}; });
 
-  document.querySelectorAll(".sa-nav-item").forEach((b) => {
+  document.querySelectorAll(".sch-nav-item").forEach((b) => {
     if (b._trBound) return; b._trBound = true;
     b.addEventListener("click", () => switchTab(b.dataset.trTab));
   });
@@ -530,7 +549,6 @@ function initLogin() {
     if (e.key === "Enter") { e.preventDefault(); doTrainerRequest(); }
   });
 
-  // Password visibility toggles
   document.querySelectorAll(".pw-toggle").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
