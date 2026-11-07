@@ -6,13 +6,35 @@
 <title>Privacy Policy — VIORA Ecosystems</title>
 <meta name="description" content="How VIORA Ecosystems collects, uses, stores and protects personal data. GDPR and Kenya Data Protection Act 2019 aligned.">
 <link rel="canonical" href="https://viora.co.ke/privacy.html">
+<meta name="theme-color" content="#0A192F">
+
+<link rel="icon" type="image/png" href="https://viora.co.ke/viora.png">
+<link rel="shortcut icon" type="image/png" href="https://viora.co.ke/viora.png">
+<link rel="apple-touch-icon" href="https://viora.co.ke/viora.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://viora.co.ke/viora.png">
+<link rel="apple-touch-icon" sizes="152x152" href="https://viora.co.ke/viora.png">
+<link rel="apple-touch-icon" sizes="120x120" href="https://viora.co.ke/viora.png">
+<link rel="mask-icon" href="https://viora.co.ke/viora.png" color="#00d2ff">
+<meta name="msapplication-TileImage" content="https://viora.co.ke/viora.png">
+<meta name="msapplication-TileColor" content="#070a13">
+<meta name="application-name" content="VIORA">
+
+<script>
+try {
+  var saved = localStorage.getItem('viora_theme');
+  document.documentElement.setAttribute('data-theme', saved === 'dark' ? 'dark' : 'light');
+} catch (_) {
+  document.documentElement.setAttribute('data-theme', 'light');
+}
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--navy:#0A192F;--accent:#2267EE;--bg:#F8FAFC;--ink:#0F172A;--muted:#64748B;--line:#CBD5E1;--white:#FFFFFF;--maxw:820px}
 *{box-sizing:border-box}
-body{margin:0;font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.75;color:var(--ink);background:var(--white);-webkit-font-smoothing:antialiased}
+body{margin:0;font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.75;color:var(--ink);background:var(--white);-webkit-font-smoothing:antialiased;transition:background .3s,color .3s}
 h1,h2,h3{font-family:'Manrope',sans-serif;color:var(--ink);line-height:1.2;letter-spacing:-.02em;font-weight:700;margin:0 0 .6em}
 h1{font-size:clamp(28px,4vw,42px)}
 h2{font-size:clamp(20px,2.4vw,26px);margin-top:2em}
@@ -23,26 +45,51 @@ a:hover{text-decoration:underline}
 ul,ol{padding-left:24px}
 li{margin-bottom:6px}
 .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
-header.topbar{background:var(--navy);color:#fff;padding:20px 0}
+header.topbar{background:var(--navy);color:#fff;padding:20px 0;transition:background .3s,border-color .3s}
 header.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-header.topbar a{color:#fff;font-weight:700;font-family:'Manrope';font-size:18px;text-decoration:none}
+header.topbar a{color:#fff;font-weight:700;font-family:'Manrope';font-size:18px;text-decoration:none;display:inline-flex;align-items:center;gap:10px}
 header.topbar a:hover{text-decoration:none;opacity:.85}
+header.topbar .brand-icon{width:32px;height:32px;border-radius:8px;background:#FFFFFF;object-fit:contain;padding:2px;display:inline-block}
 header.topbar span{font-size:13px;color:rgba(255,255,255,.65)}
-main{padding:64px 0 96px}
+main{padding:64px 0 96px;transition:background .3s}
 .meta{color:var(--muted);font-size:14px;margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid var(--line)}
 .callout{background:var(--bg);border-left:4px solid var(--accent);border-radius:8px;padding:16px 20px;margin:24px 0;font-size:15px}
 table{width:100%;border-collapse:collapse;margin:16px 0 24px;font-size:14px}
 th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
 th{background:var(--bg);font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-footer.foot{background:var(--navy);color:rgba(255,255,255,.7);padding:40px 0;font-size:13px;text-align:center}
+footer.foot{background:var(--navy);color:rgba(255,255,255,.7);padding:40px 0;font-size:13px;text-align:center;transition:background .3s}
 footer.foot a{color:rgba(255,255,255,.9)}
 .back{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;margin-bottom:24px;color:var(--accent)}
+.foot-theme-row{max-width:var(--maxw);margin:0 auto 20px;padding:0 24px;display:flex;justify-content:flex-end}
+.theme-btn-foot{background:transparent;border:1px solid rgba(255,255,255,.25);color:#FFFFFF;padding:8px 16px;border-radius:8px;font-family:inherit;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.theme-btn-foot:hover{border-color:#FFFFFF;background:rgba(255,255,255,.08)}
+
+/* ─── Dark Theme — Apple Black ─── */
+[data-theme="dark"] body{background:#000000;color:#F5F5F7}
+[data-theme="dark"] h1,[data-theme="dark"] h2,[data-theme="dark"] h3{color:#F5F5F7}
+[data-theme="dark"] header.topbar{background:#000000;border-bottom:1px solid rgba(255,255,255,.08)}
+[data-theme="dark"] header.topbar a{color:#F5F5F7}
+[data-theme="dark"] header.topbar span{color:#98989D}
+[data-theme="dark"] main{background:#000000}
+[data-theme="dark"] .meta{color:#98989D;border-bottom-color:rgba(255,255,255,.08)}
+[data-theme="dark"] .callout{background:#0A0A0A;border-left-color:#0A84FF}
+[data-theme="dark"] a{color:#0A84FF}
+[data-theme="dark"] a:hover{color:#0077ed}
+[data-theme="dark"] table{background:#0A0A0A}
+[data-theme="dark"] th{background:#141414;color:#98989D;border-color:rgba(255,255,255,.08)}
+[data-theme="dark"] td{border-color:rgba(255,255,255,.08)}
+[data-theme="dark"] code{background:#141414;color:#F5F5F7;padding:2px 6px;border-radius:4px}
+[data-theme="dark"] footer.foot{background:#000000;border-top:1px solid rgba(255,255,255,.08);color:#98989D}
+[data-theme="dark"] footer.foot a{color:#F5F5F7}
 </style>
 </head>
 <body>
 <header class="topbar">
   <div class="wrap">
-    <a href="index.html">VIORA Ecosystems</a>
+    <a href="index.html">
+      <img src="https://viora.co.ke/viora.png" alt="VIORA" class="brand-icon" onerror="this.style.display='none';" />
+      VIORA Ecosystems
+    </a>
     <span>Legal · Privacy</span>
   </div>
 </header>
@@ -178,10 +225,31 @@ footer.foot a{color:rgba(255,255,255,.9)}
 </div>
 </main>
 <footer class="foot">
+  <div class="foot-theme-row">
+    <button type="button" id="themeToggleLegal" class="theme-btn-foot">🌙 Toggle theme</button>
+  </div>
   <div class="wrap">
     © <span id="yr"></span> VIORA Ecosystems. All rights reserved. · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · <a href="cookies.html">Cookies</a> · <a href="accessibility.html">Accessibility</a> · <a href="dpa.html">DPA</a>
   </div>
 </footer>
-<script>document.getElementById('yr').textContent=new Date().getFullYear();</script>
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+(function(){
+  const btn = document.getElementById('themeToggleLegal');
+  if (!btn) return;
+  function sync() {
+    const cur = document.documentElement.getAttribute('data-theme') || 'light';
+    btn.textContent = cur === 'dark' ? '☀️ Toggle theme' : '🌙 Toggle theme';
+  }
+  btn.addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme') || 'light';
+    const next = cur === 'dark' ? 'light' : 'dark';
+    try { localStorage.setItem('viora_theme', next); } catch(_){}
+    document.documentElement.setAttribute('data-theme', next);
+    sync();
+  });
+  sync();
+})();
+</script>
 </body>
 </html>
