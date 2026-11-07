@@ -192,6 +192,19 @@
     letter-spacing: 0.01em;
   }
 </style>
+  <style>
+  /* Login stays hidden until preloader fully completes */
+  #loginScreen {
+    opacity: 0;
+    transition: opacity 500ms cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+  body.viora-preloader-done #loginScreen {
+    opacity: 1;
+  }
+  /* Also hide the app shell until auth resolves (it's already .hidden) */
+  #appShell { opacity: 0; transition: opacity 400ms ease; }
+  #appShell:not(.hidden) { opacity: 1; }
+</style>
 </head>
 <body>
 
@@ -212,14 +225,30 @@
   'use strict';
   var preloader = document.getElementById('vioraPreloader');
   if (!preloader) return;
-  var MIN_VISIBLE_MS = 3000, FADE_OUT_MS = 700, SAFETY_MAX_MS = 8000;
-  var startTime = Date.now(), hidden = false, pendingHide = false;
-  function doHide(){
-    if(hidden) return;
+
+  var MIN_VISIBLE_MS = 3000,
+      FADE_OUT_MS = 700,
+      SAFETY_MAX_MS = 8000;
+  var startTime = Date.now(),
+      hidden = false,
+      pendingHide = false;
+
+  function revealLogin() {
+    /* Set the flag BEFORE hiding, so the login's opacity transition
+       starts on the same frame the preloader fades out. */
+    document.body.classList.add('viora-preloader-done');
+  }
+
+  function doHide() {
+    if (hidden) return;
     hidden = true;
+
+    /* Start the fade of BOTH elements simultaneously */
+    revealLogin();
     preloader.classList.add('viora-preloader-hide');
-    setTimeout(function(){
-      if(preloader && preloader.parentNode) preloader.parentNode.removeChild(preloader);
+
+    setTimeout(function () {
+      if (preloader && preloader.parentNode) preloader.parentNode.removeChild(preloader);
       /* Re-fire resize so hero canvases measure their real size */
       try { window.dispatchEvent(new Event('resize')); } catch (e) {}
       try {
@@ -227,25 +256,20 @@
           window.VioraHero.render(true);
         }
       } catch (e) {}
-      /* FIX: ensure dashboard is the active tab on first load */
-      try {
-        const dash = document.getElementById('tab-dashboard');
-        if (dash && !dash.classList.contains('active')) {
-          document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-          dash.classList.add('active');
-        }
-        if (typeof window.Viora !== 'undefined' && typeof window.Viora.navigate === 'function') {
-          if (!window.Viora._didAutoNavigate) {
-            window.Viora._didAutoNavigate = true;
-            window.Viora.navigate('dashboard');
-          }
-        }
-      } catch (e) {}
     }, FADE_OUT_MS);
   }
-  function hide(){ if(hidden||pendingHide) return; var rem = MIN_VISIBLE_MS - (Date.now()-startTime); if(rem<=0){doHide();} else {pendingHide=true; setTimeout(doHide,rem);} }
-  if(document.readyState==='complete'){hide();} else {window.addEventListener('load',hide);}
-   setTimeout(function(){ if(!hidden) doHide(); }, SAFETY_MAX_MS);
+
+  function hide() {
+    if (hidden || pendingHide) return;
+    var rem = MIN_VISIBLE_MS - (Date.now() - startTime);
+    if (rem <= 0) { doHide(); }
+    else { pendingHide = true; setTimeout(doHide, rem); }
+  }
+
+  if (document.readyState === 'complete') { hide(); }
+  else { window.addEventListener('load', hide); }
+  setTimeout(function () { if (!hidden) doHide(); }, SAFETY_MAX_MS);
+
   window.vioraHidePreloader = hide;
 })();
 </script>
