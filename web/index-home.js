@@ -1979,6 +1979,198 @@ function initGlobe() {
     }
   });
 
+
+  /* ═══════════════════════════════════════════════════════════
+     VIORA CORE — central hub with per-node coloured data flows
+     ─────────────────────────────────────────────────────────
+     A pulsing core at the centre of the network. Data pulses
+     flow FROM each hub TO the core AND from the core BACK to
+     each hub — using that hub's unique colour. This visually
+     communicates the VIORA metaphor: one central system,
+     many connected domains.
+     ═══════════════════════════════════════════════════════════ */
+
+  /* Per-node colours — one distinct colour per hub.
+     Each hub gets a colour from the palette below, cycled. */
+  const NODE_COLORS = [
+    0xFF3B30,  // Apple Red
+    0xFF9500,  // Apple Orange
+    0xFFCC00,  // Apple Yellow
+    0x34C759,  // Apple Green
+    0x30D158,  // Apple Mint
+    0x00E0FF,  // Cyan
+    0x64D2FF,  // Light Blue
+    0x0A84FF,  // Apple Blue
+    0x5E5CE6,  // Apple Indigo
+    0xBF5AF2,  // Apple Purple
+    0xFF2D55,  // Apple Pink
+    0xAF52DE,  // Apple Violet
+    0xFF9F0A,  // Apple Amber
+    0x30B0C7,  // Teal
+    0x14B8A6,  // Deep Teal
+    0xF97316,  // Orange
+    0xEC4899,  // Rose
+    0x8B5CF6,  // Purple
+    0x10B981,  // Emerald
+    0x06B6D4,  // Sky
+  ];
+
+  /* ── VIORA Core central sphere ── */
+  const coreGroup = new THREE.Group();
+  globeGroup.add(coreGroup);
+
+  /* Outer glow */
+  const coreGlowGeo = new THREE.SphereGeometry(5.5, 24, 24);
+  const coreGlowMat = new THREE.MeshBasicMaterial({
+    color: 0x00E0FF,
+    transparent: true,
+    opacity: 0.35,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const coreGlow = new THREE.Mesh(coreGlowGeo, coreGlowMat);
+  coreGroup.add(coreGlow);
+
+  /* Mid glow */
+  const coreMidGeo = new THREE.SphereGeometry(3.5, 20, 20);
+  const coreMidMat = new THREE.MeshBasicMaterial({
+    color: 0x0A84FF,
+    transparent: true,
+    opacity: 0.6,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const coreMid = new THREE.Mesh(coreMidGeo, coreMidMat);
+  coreGroup.add(coreMid);
+
+  /* Solid core */
+  const coreGeo = new THREE.SphereGeometry(2.2, 20, 20);
+  const coreMat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
+  const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+  coreGroup.add(coreMesh);
+
+  /* Bright center */
+  const coreCenterGeo = new THREE.SphereGeometry(1.0, 16, 16);
+  const coreCenterMat = new THREE.MeshBasicMaterial({ color: 0x00FFFF });
+  const coreCenter = new THREE.Mesh(coreCenterGeo, coreCenterMat);
+  coreGroup.add(coreCenter);
+
+  /* Pulsing rings around the core */
+  const coreRings = [];
+  for (let r = 0; r < 3; r++) {
+    const ringGeo = new THREE.RingGeometry(4 + r * 1.5, 4.3 + r * 1.5, 48);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: r === 0 ? 0x00E0FF : r === 1 ? 0x0A84FF : 0xBF5AF2,
+      transparent: true,
+      opacity: 0.5,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = Math.PI / 2;
+    ring.userData.baseScale = 1;
+    ring.userData.phase = r / 3;
+    coreGroup.add(ring);
+    coreRings.push(ring);
+  }
+
+  /* ── Flows: 3 legs per hub (in → core → out) ──
+     Each hub gets:
+       · IN line   (hub → core)
+       · OUT line  (core → hub)
+       · 2 pulses  (one inward, one outward, offset)
+     Coloured per that hub's assigned colour. */
+
+  const coreOrigin = new THREE.Vector3(0, 0, 0);
+  const flowGroup = new THREE.Group();
+  globeGroup.add(flowGroup);
+  const coreFlows = [];    // [{ inCurve, outCurve, inPulses[], outPulses[] }]
+
+  /* Only use hubs that are "primary" (size 3) for clarity — 18 flows
+     is enough visual density. To use all 85, change the filter below. */
+  const FLOW_HUBS = HUBS.filter(h => h[3] === 3);
+
+  FLOW_HUBS.forEach(([name, lat, lon, size], idx) => {
+    const color = NODE_COLORS[idx % NODE_COLORS.length];
+    const hubPos = latLonToVec3(lat, lon, earthRadius * 1.015);
+
+    /* ── IN curve: hub → core (arc lifted slightly above surface) ── */
+    const inMid = hubPos.clone().multiplyScalar(0.5).add(coreOrigin.clone().multiplyScalar(0.5));
+    /* Push the mid-point outward from the globe centre so the arc curves nicely */
+    const inMidLen = inMid.length() || 1;
+    const inControl = inMid.normalize().multiplyScalar(inMidLen + 8);
+    const inCurve = new THREE.QuadraticBezierCurve3(hubPos, inControl, coreOrigin);
+
+    const inPoints = inCurve.getPoints(40);
+    const inGeo = new THREE.BufferGeometry().setFromPoints(inPoints);
+    const inMat = new THREE.LineBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0.35,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const inLine = new THREE.Line(inGeo, inMat);
+    flowGroup.add(inLine);
+
+    /* ── OUT curve: core → hub ── */
+    const outMid = coreOrigin.clone().multiplyScalar(0.5).add(hubPos.clone().multiplyScalar(0.5));
+    const outMidLen = outMid.length() || 1;
+    const outControl = outMid.normalize().multiplyScalar(outMidLen + 8);
+    const outCurve = new THREE.QuadraticBezierCurve3(coreOrigin, outControl, hubPos);
+
+    const outPoints = outCurve.getPoints(40);
+    const outGeo = new THREE.BufferGeometry().setFromPoints(outPoints);
+    const outMat = new THREE.LineBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0.25,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const outLine = new THREE.Line(outGeo, outMat);
+    flowGroup.add(outLine);
+
+    /* ── IN pulse (hub → core) ── */
+    const inPulseGeo = new THREE.SphereGeometry(1.4, 8, 8);
+    const inPulseMat = new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0.95,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const inPulse = new THREE.Mesh(inPulseGeo, inPulseMat);
+    inPulse.userData.offset = Math.random();
+    inPulse.userData.speed = 0.18 + Math.random() * 0.08;
+    flowGroup.add(inPulse);
+
+    /* ── OUT pulse (core → hub) ── */
+    const outPulseGeo = new THREE.SphereGeometry(1.4, 8, 8);
+    const outPulseMat = new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0.95,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const outPulse = new THREE.Mesh(outPulseGeo, outPulseMat);
+    outPulse.userData.offset = Math.random();
+    outPulse.userData.speed = 0.18 + Math.random() * 0.08;
+    flowGroup.add(outPulse);
+
+    coreFlows.push({
+      inCurve, outCurve,
+      inPulse, outPulse,
+      color,
+    });
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     CONTROLS
+     ═══════════════════════════════════════════════════════════ */
+   
   /* ═══════════════════════════════════════════════════════════
      CONTROLS
      ═══════════════════════════════════════════════════════════ */
@@ -2041,7 +2233,7 @@ function initGlobe() {
     globeGroup.rotation.x = currentRotX;
     globeGroup.rotation.y = currentRotY;
 
-    /* Move pulses along their cable */
+      /* Move pulses along their cable */
     cableCurves.forEach(({ curve, pulses }) => {
       pulses.forEach(pulse => {
         const offset = pulse.userData.offset;
@@ -2060,6 +2252,43 @@ function initGlobe() {
           pulse.material.opacity = 0.35 + edgeFade * 0.65;
         } catch (_) {}
       });
+    });
+
+    /* ═══ VIORA CORE FLOWS ═══ */
+
+    /* Pulsing rings around the core */
+    coreRings.forEach(ring => {
+      const phase = ring.userData.phase;
+      const cycle = ((t * 0.4) + phase) % 1;
+      const scale = 1 + cycle * 2.2;
+      ring.scale.set(scale, scale, scale);
+      ring.material.opacity = 0.5 * (1 - cycle);
+    });
+
+    /* Gentle core glow breathing */
+    const breathe = 1 + Math.sin(t * 1.5) * 0.08;
+    coreGroup.scale.set(breathe, breathe, breathe);
+
+    /* IN / OUT pulses */
+    coreFlows.forEach(flow => {
+      /* IN pulse: hub → core */
+      const inProgress = (flow.inPulse.userData.offset + t * flow.inPulse.userData.speed) % 1;
+      try {
+        const inPoint = flow.inCurve.getPoint(Math.min(0.9999, Math.max(0.0001, inProgress)));
+        flow.inPulse.position.copy(inPoint);
+        /* Bright in the middle, fade at ends */
+        const inFade = Math.min(1, Math.min(inProgress, 1 - inProgress) * 4);
+        flow.inPulse.material.opacity = 0.4 + inFade * 0.6;
+      } catch (_) {}
+
+      /* OUT pulse: core → hub */
+      const outProgress = (flow.outPulse.userData.offset + t * flow.outPulse.userData.speed) % 1;
+      try {
+        const outPoint = flow.outCurve.getPoint(Math.min(0.9999, Math.max(0.0001, outProgress)));
+        flow.outPulse.position.copy(outPoint);
+        const outFade = Math.min(1, Math.min(outProgress, 1 - outProgress) * 4);
+        flow.outPulse.material.opacity = 0.4 + outFade * 0.6;
+      } catch (_) {}
     });
 
     renderer.render(scene, camera);
