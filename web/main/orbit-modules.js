@@ -2360,6 +2360,7 @@ export async function renderCalendar(ctx) {
     html,
     mount(view) {
       /* Prev month */
+          /* Prev month */
       view.querySelector('#calPrevMonth')?.addEventListener('click', () => {
         if (_calState.month === 0) {
           _calState.month = 11;
@@ -2367,7 +2368,8 @@ export async function renderCalendar(ctx) {
         } else {
           _calState.month -= 1;
         }
-        renderCalendar(ctx);
+        /* Force the orbit shell to rebuild this module's DOM */
+        window.Orbit?.renderActiveOrbitModule?.();
       });
 
       /* Next month */
@@ -2378,7 +2380,7 @@ export async function renderCalendar(ctx) {
         } else {
           _calState.month += 1;
         }
-        renderCalendar(ctx);
+        window.Orbit?.renderActiveOrbitModule?.();
       });
 
       /* Today */
@@ -2386,7 +2388,7 @@ export async function renderCalendar(ctx) {
         const now = new Date();
         _calState.year = now.getFullYear();
         _calState.month = now.getMonth();
-        renderCalendar(ctx);
+        window.Orbit?.renderActiveOrbitModule?.();
       });
 
       /* Day click + post pill click — use delegation so re-renders can't
