@@ -4166,7 +4166,7 @@ case 'training-progress':
         reopenTrainingRequest:  (id) => Viora.reopenTrainingRequest?.(id),
         SENDER_PHONE, SENDER_EMAIL, MAX_FILE_SIZE, APP_VERSION,
         BUSINESS_COLLECTIONS,
-        PP, SubscriptionsAdmin, AutoCertification,
+        PP, SubscriptionsAdmin, 
         T: (window.VioraTraining || window.T || null),
         Viora,
         MOBILE_NAV_MAP,
