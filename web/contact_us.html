@@ -7,6 +7,29 @@
 <meta name="description" content="Book a demo or consultation with VIORA Ecosystems. Email support@viora.co.ke or WhatsApp +254 713 428 774.">
 <link rel="canonical" href="https://viora.co.ke/contact_us.html">
 <meta name="theme-color" content="#0A192F">
+
+<!-- Favicon + touch icons -->
+<link rel="icon" type="image/png" href="https://viora.co.ke/viora.png">
+<link rel="shortcut icon" type="image/png" href="https://viora.co.ke/viora.png">
+<link rel="apple-touch-icon" href="https://viora.co.ke/viora.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://viora.co.ke/viora.png">
+<link rel="apple-touch-icon" sizes="152x152" href="https://viora.co.ke/viora.png">
+<link rel="apple-touch-icon" sizes="120x120" href="https://viora.co.ke/viora.png">
+<link rel="mask-icon" href="https://viora.co.ke/viora.png" color="#00d2ff">
+<meta name="msapplication-TileImage" content="https://viora.co.ke/viora.png">
+<meta name="msapplication-TileColor" content="#070a13">
+<meta name="application-name" content="VIORA">
+
+<!-- Prevent flash of wrong theme -->
+<script>
+try {
+  var saved = localStorage.getItem('viora_theme');
+  document.documentElement.setAttribute('data-theme', saved === 'dark' ? 'dark' : 'light');
+} catch (_) {
+  document.documentElement.setAttribute('data-theme', 'light');
+}
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -23,16 +46,20 @@
   margin-bottom:14px;transition:transform .25s var(--ease),box-shadow .25s,border-color .25s;
   text-decoration:none!important;color:inherit;
 }
-[data-theme="dark"] .contact-method{background:var(--bg-alt)}
+[data-theme="dark"] .contact-method{background:#0A0A0A;border-color:rgba(255,255,255,.08)}
 .contact-method:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--accent)}
+[data-theme="dark"] .contact-method:hover{border-color:#0A84FF}
 .contact-method .cm-icon{
   width:48px;height:48px;border-radius:14px;flex-shrink:0;
   display:grid;place-items:center;font-size:22px;
   background:linear-gradient(135deg,rgba(34,103,238,.15),rgba(35,199,217,.15));
   color:var(--accent);
 }
+[data-theme="dark"] .contact-method .cm-icon{background:rgba(10,132,255,.15);color:#0A84FF}
 .contact-method .cm-icon.green{background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(16,185,129,.08));color:#10B981}
+[data-theme="dark"] .contact-method .cm-icon.green{background:rgba(48,209,88,.15);color:#30D158}
 .contact-method .cm-icon.violet{background:linear-gradient(135deg,rgba(139,92,246,.15),rgba(139,92,246,.08));color:#8B5CF6}
+[data-theme="dark"] .contact-method .cm-icon.violet{background:rgba(191,90,242,.15);color:#BF5AF2}
 .contact-method .cm-icon svg{width:24px;height:24px}
 .contact-method .cm-body{flex:1;min-width:0}
 .contact-method .cm-body strong{display:block;font-size:15px;color:var(--ink);margin-bottom:2px;font-family:'Manrope'}
@@ -41,6 +68,7 @@
 .next-steps{margin-top:48px}
 .next-steps h3{font-size:20px;margin-bottom:20px}
 .step-item{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--line)}
+[data-theme="dark"] .step-item{border-bottom-color:rgba(255,255,255,.08)}
 .step-item:last-child{border-bottom:none}
 .step-item .step-num{
   width:32px;height:32px;border-radius:50%;flex-shrink:0;
@@ -48,6 +76,7 @@
   background:linear-gradient(135deg,var(--accent),var(--accent-3));
   color:#fff;font-family:'Manrope';font-weight:800;font-size:14px;
 }
+[data-theme="dark"] .step-item .step-num{background:linear-gradient(135deg,#0A84FF,#BF5AF2)}
 .step-item .step-body strong{display:block;font-size:15px;color:var(--ink);margin-bottom:2px}
 .step-item .step-body span{font-size:13px;color:var(--muted);line-height:1.6}
 
@@ -55,12 +84,33 @@
 @media(max-width:900px){.contact-form-wrap{position:static}}
 .form-card h2{font-size:24px;margin-bottom:8px}
 .form-card .form-sub{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.6}
+[data-theme="dark"] .form-card{background:#0A0A0A;border-color:rgba(255,255,255,.08)}
+
+/* Dark form inputs */
+[data-theme="dark"] .field input,
+[data-theme="dark"] .field select,
+[data-theme="dark"] .field textarea{
+  background:#141414;border-color:rgba(255,255,255,.1);color:#F5F5F7;
+}
+[data-theme="dark"] .field input:focus,
+[data-theme="dark"] .field select:focus,
+[data-theme="dark"] .field textarea:focus{
+  border-color:#0A84FF;box-shadow:0 0 0 3px rgba(10,132,255,.2);background:#0A0A0A;
+}
+[data-theme="dark"] .field input::placeholder,
+[data-theme="dark"] .field textarea::placeholder{color:#6E6E73}
+[data-theme="dark"] .field label{color:#98989D}
+[data-theme="dark"] .field.invalid input,
+[data-theme="dark"] .field.invalid select,
+[data-theme="dark"] .field.invalid textarea{border-color:#FF453A}
+[data-theme="dark"] .field .err{color:#FF453A}
 
 .success-message{
   display:none;text-align:center;padding:60px 24px;
   background:linear-gradient(135deg,rgba(16,185,129,.1),rgba(35,199,217,.1));
   border:1px solid rgba(16,185,129,.3);border-radius:20px;
 }
+[data-theme="dark"] .success-message{background:linear-gradient(135deg,rgba(48,209,88,.12),rgba(100,210,255,.1));border-color:rgba(48,209,88,.3)}
 .success-message.show{display:block;animation:successIn .5s var(--ease-spring)}
 @keyframes successIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
 .success-message .sm-icon{
@@ -72,7 +122,14 @@
 }
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
 .success-message h3{font-size:24px;margin-bottom:8px;color:var(--ink)}
+[data-theme="dark"] .success-message h3{color:#F5F5F7}
 .success-message p{color:var(--muted);font-size:15px;line-height:1.7;max-width:400px;margin:0 auto 24px}
+
+/* CTA section dark override */
+[data-theme="dark"] section[style*="var(--navy)"]{background:#000000!important;border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06)}
+
+/* Page hero */
+[data-theme="dark"] .page-hero{background:radial-gradient(1200px 600px at 80% 20%,rgba(10,132,255,.1),transparent 60%),radial-gradient(900px 500px at 15% 80%,rgba(191,90,242,.08),transparent 60%)}
 </style>
 </head>
 <body>
@@ -81,10 +138,13 @@
 <canvas id="globalNetwork" aria-hidden="true"></canvas>
 <div class="bg-aurora" aria-hidden="true"></div>
 
+<!-- ============ DESKTOP NAV ============ -->
 <header class="nav" id="nav">
   <div class="nav-inner">
     <a href="index.html" class="brand">
-      <div class="brand-logo" aria-hidden="true"></div>
+      <div class="brand-logo">
+        <img src="https://viora.co.ke/viora.png" alt="VIORA" class="brand-logo-img" loading="eager" onerror="this.parentNode.classList.add('no-img');this.remove();" />
+      </div>
       <div class="brand-text"><strong>VIORA</strong><small>ECOSYSTEMS</small></div>
     </a>
     <nav aria-label="Primary">
@@ -110,8 +170,12 @@
   </div>
 </header>
 
+<!-- ============ MOBILE APP BAR ============ -->
 <div class="mobile-appbar" role="banner">
-  <div class="mab-brand"><div class="mab-logo">V</div><span>VIORA</span></div>
+  <div class="mab-brand">
+    <img src="https://viora.co.ke/viora.png" alt="VIORA" style="width:32px;height:32px;border-radius:8px;object-fit:contain;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12);" />
+    <span>VIORA</span>
+  </div>
   <div class="mab-actions">
     <button class="mab-btn" data-theme-toggle aria-label="Theme">
       <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -123,6 +187,7 @@
   </div>
 </div>
 
+<!-- ============ MOBILE DRAWER ============ -->
 <aside class="drawer" id="drawer" aria-hidden="true">
   <ul>
     <li><a href="index.html">Home</a></li>
@@ -137,6 +202,7 @@
 
 <main id="main">
 
+<!-- ============ HERO ============ -->
 <section class="page-hero">
   <div class="wrap">
     <span class="eyebrow reveal">Contact</span>
@@ -145,6 +211,7 @@
   </div>
 </section>
 
+<!-- ============ CONTACT INFO + FORM ============ -->
 <section style="padding-top:20px">
   <div class="wrap">
     <div class="contact-layout">
@@ -315,6 +382,7 @@
   </div>
 </section>
 
+<!-- ============ CTA ============ -->
 <section style="background:var(--navy);color:#fff;text-align:center;padding:100px 0">
   <div class="wrap">
     <h2 style="color:#fff;font-size:clamp(28px,3.6vw,42px);margin-bottom:16px" class="reveal">Prefer to talk first?</h2>
@@ -331,12 +399,15 @@
 
 </main>
 
+<!-- ============ FOOTER ============ -->
 <footer class="foot">
   <div class="wrap">
     <div class="foot-grid">
       <div>
         <a href="index.html" class="brand">
-          <div class="brand-logo" aria-hidden="true"></div>
+          <div class="brand-logo">
+            <img src="https://viora.co.ke/viora.png" alt="VIORA" class="brand-logo-img" loading="lazy" onerror="this.parentNode.classList.add('no-img');this.remove();" />
+          </div>
           <div class="brand-text"><strong>VIORA</strong><small>ECOSYSTEMS</small></div>
         </a>
         <p class="foot-tag">Connect People. Empower Businesses.</p>
@@ -384,6 +455,7 @@
   </div>
 </footer>
 
+<!-- ============ MOBILE BOTTOM NAV ============ -->
 <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
   <a href="index.html" class="mnav-item">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -407,53 +479,29 @@
   </a>
 </nav>
 
+<script src="shared-app.js" defer></script>
+
+<!-- ============ THEME TOGGLE WIRE-UP ============ -->
 <script>
-const form = document.getElementById('contactForm');
-const status = document.getElementById('formStatus');
-const success = document.getElementById('successMessage');
-const rules = {
-  'f-name': v => v.trim().length >= 2,
-  'f-email': v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()),
-  'f-solution': v => v.trim() !== '',
-  'f-desc': v => v.trim().length >= 10
-};
-function validate(id) {
-  const el = document.getElementById(id);
-  if (!el || !rules[id]) return true;
-  const ok = rules[id](el.value);
-  el.closest('.field').classList.toggle('invalid', !ok);
-  return ok;
-}
-['f-name','f-email','f-solution','f-desc'].forEach(id => {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.addEventListener('blur', () => validate(id));
-  el.addEventListener('input', () => {
-    if (el.closest('.field').classList.contains('invalid')) validate(id);
+(function(){
+  const KEY = 'viora_theme';
+  const html = document.documentElement;
+  document.querySelectorAll('[data-theme-toggle]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cur = html.getAttribute('data-theme') || 'light';
+      const next = cur === 'dark' ? 'light' : 'dark';
+      try { localStorage.setItem(KEY, next); } catch(_){}
+      html.setAttribute('data-theme', next);
+    });
   });
-});
-form.addEventListener('submit', e => {
-  e.preventDefault();
-  let allOk = true;
-  Object.keys(rules).forEach(id => { if (!validate(id)) allOk = false; });
-  if (!allOk) {
-    status.className = 'form-status show err';
-    status.textContent = 'Please correct the highlighted fields and try again.';
-    return;
-  }
-  form.style.display = 'none';
-  success.classList.add('show');
-  success.scrollIntoView({behavior:'smooth', block:'center'});
-});
+})();
 </script>
 
-<script src="shared-app.js" defer></script>
-<!-- ═══ CONTACT FORM → FIREBASE ═══ -->
+<!-- ============ CONTACT FORM → FIREBASE ============ -->
 <script>
 (function () {
   'use strict';
 
-  /* ── Same config as app.js ── */
   const FIREBASE_CONFIG = {
     apiKey: "AIzaSyC9gCBt-xR8t9n6rTGNvDZ5usUGiW-Dqxc",
     authDomain: "cliffclient-35ec5.firebaseapp.com",
@@ -488,16 +536,11 @@ form.addEventListener('submit', e => {
     return _fbPromise;
   }
 
-  /* ── Save contact submission ── */
   async function saveContactToFirebase(payload) {
     const ok = await loadFirebase();
-    if (!ok || !window._fbDb || !window._fbRef || !window._fbPush || !window._fbSet) {
-      return { saved: false, error: 'firebase-unavailable' };
-    }
+    if (!ok || !window._fbDb) return { saved: false, error: 'firebase-unavailable' };
     try {
       const now = new Date().toISOString();
-
-      /* 1. marketLeads (same collection app.js uses) */
       const leadRef = window._fbPush(window._fbRef(window._fbDb, "viora_data/orgs/viora/marketLeads"));
       const record = {
         id: leadRef.key,
@@ -508,14 +551,9 @@ form.addEventListener('submit', e => {
         phone: payload.phone || "",
         company: payload.company || "",
         industry: payload.industry || "",
-        industryName: payload.industry || null,
-        industryCategory: null,
         solution: payload.solution || "",
         message: payload.description || "",
         note: payload.description || "",
-        modules: [],
-        modulesDetailed: [],
-        blueprint: null,
         source: "contact_us_form",
         type: "contact_form",
         leadSource: "contact_us.html",
@@ -529,15 +567,9 @@ form.addEventListener('submit', e => {
       };
       await window._fbSet(leadRef, record);
 
-      /* 2. leads/{id} (mirror — same as app.js) */
       const mirrorRef = window._fbRef(window._fbDb, "viora_data/orgs/viora/leads/" + record.id);
-      await window._fbSet(mirrorRef, Object.assign({}, record, {
-        _fromContact: true,
-        _fromIndex: false,
-        _fromMarket: false
-      }));
+      await window._fbSet(mirrorRef, Object.assign({}, record, { _fromContact: true }));
 
-      /* 3. activityLog (same as app.js) */
       const logRef = window._fbPush(window._fbRef(window._fbDb, "viora_data/orgs/viora/activityLog"));
       await window._fbSet(logRef, {
         id: logRef.key,
@@ -556,14 +588,12 @@ form.addEventListener('submit', e => {
     }
   }
 
-  /* ── Replace the existing form submit handler ── */
   function wireContactForm() {
     const form = document.getElementById('contactForm');
     const status = document.getElementById('formStatus');
     const success = document.getElementById('successMessage');
     if (!form) return;
 
-    /* Remove the old listener by cloning the form (removes all listeners) */
     const fresh = form.cloneNode(true);
     form.parentNode.replaceChild(fresh, form);
 
@@ -596,8 +626,6 @@ form.addEventListener('submit', e => {
 
     fresh.addEventListener('submit', async function (e) {
       e.preventDefault();
-
-      /* clear old state */
       if (status) { status.className = 'form-status'; status.textContent = ''; }
       if (success) success.classList.remove('show');
 
@@ -637,10 +665,7 @@ form.addEventListener('submit', e => {
 
       const result = await saveContactToFirebase(payload);
 
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = origHTML;
-      }
+      if (btn) { btn.disabled = false; btn.innerHTML = origHTML; }
 
       if (status) {
         status.className = 'form-status show ok';
@@ -649,7 +674,6 @@ form.addEventListener('submit', e => {
           : '⚠️ Could not save to server. Opening WhatsApp instead…';
       }
 
-      /* Build the same WhatsApp message format app.js uses */
       const lines = [];
       lines.push("Hi VIORA 👋");
       lines.push("");
@@ -678,9 +702,7 @@ form.addEventListener('submit', e => {
         const win = window.open(url, '_blank', 'noopener,noreferrer');
         if (!win) window.location.href = url;
 
-        /* Show success card, hide form */
-        const formEl = fresh;
-        if (formEl) formEl.style.display = 'none';
+        if (fresh) fresh.style.display = 'none';
         if (success) {
           success.classList.add('show');
           success.scrollIntoView({ behavior: 'smooth', block: 'center' });
