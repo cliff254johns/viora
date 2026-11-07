@@ -1788,16 +1788,12 @@ function setNavMode(mode, opts = {}) {
   document.querySelectorAll('#sidebarNav .sb-group-wrap').forEach(wrap => {
     wrap.style.display = (mode === 'registers') ? '' : 'none';
   });
-  const hint = $('navRegistersHint');
-  if (hint) {
-    hint.style.display = (mode === 'registers') ? 'block' : 'none';
-    if (mode === 'registers' && !hint._hintSet) {
-      hint.innerHTML = 'Open a group to see its pages.';
-      hint._hintSet = true;
-    }
-  }
+
   try { localStorage.setItem(NAV_MODE_STORAGE_KEY, mode); } catch (e) {}
   if (mode === 'queues') renderNavQueues();
+  if (mode === 'timeline') {
+    try { _initTimeline(); renderTimeline(); } catch (e) { console.warn('[timeline] render failed', e); }
+  }
   if (!opts.silent) { if (mode === 'registers') openGroupForTab(state.currentTab); }
 }
 window.setNavMode = setNavMode;
@@ -2605,6 +2601,337 @@ async function bootApp() {
   } catch (e) { console.warn('[viora] registerNetworkEvents failed', e); }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   PERSONAL DOCS — operator's own uploads
+   ═══════════════════════════════════════════════════════════════ */
+function renderPersonalDocs() {
+  try {
+    const tb = $('personalDocsBody');
+    if (!tb) return;
+    const operatorName = state.operator?.name || '';
+    const docs = (state.data.documents || []).filter(d =>
+      d && (!d.parentId || d.parentId === '') &&
+      (d.uploadedBy === operatorName || !d.uploadedBy)
+    );
+    if (!docs.length) {
+      tb.innerHTML = `<tr><td colspan="5" class="empty-state">No personal documents yet. Click Upload to add one.</td></tr>`;
+      return;
+    }
+    tb.innerHTML = docs.map(d => {
+      const idSafe = String(d.id || '').replace(/'/g, "\\'");
+      return `<tr>
+        <td><strong>${escapeHtml(d.title || d.fileName || '—')}</strong><br><small style="color:var(--text-secondary);">${escapeHtml(d.fileName || '')}</small></td>
+        <td>${escapeHtml(d.category || '—')}</td>
+        <td>${fmtBytes(d.size || 0)}</td>
+        <td><small>${timeAgo(d.uploadedAt)}</small></td>
+        <td style="text-align:right;white-space:nowrap;">
+          <button class="btn btn-primary btn-xs" onclick="Viora.viewDoc('${idSafe}')"><i class="fa-solid fa-eye"></i></button>
+          <button class="btn btn-success btn-xs" onclick="Viora.downloadDoc('${idSafe}')"><i class="fa-solid fa-download"></i></button>
+          <button class="btn btn-danger btn-xs" onclick="Viora.deleteDoc('${idSafe}')"><i class="fa-solid fa-trash"></i></button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch (e) { console.warn('[renderPersonalDocs]', e); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CLIENT DOCS — every client's documents, flattened
+   ═══════════════════════════════════════════════════════════════ */
+function renderClientDocs() {
+  try {
+    const tb = $('clientDocsBody');
+    if (!tb) return;
+
+    const entities = state.data.entities || [];
+    const clients = entities.filter(e => e && e.type === 'client');
+
+    const sel = $('clientDocsFilterClient');
+    if (sel && sel.options.length <= 1) {
+      clients
+        .slice()
+        .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+        .forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.id;
+          opt.textContent = c.name || c.id;
+          sel.appendChild(opt);
+        });
+    }
+
+    const search = ($('clientDocsSearch')?.value || '').toLowerCase().trim();
+    const filterClient = sel?.value || 'all';
+
+    const rows = [];
+    for (const c of clients) {
+      if (filterClient !== 'all' && c.id !== filterClient) continue;
+      const docs = Array.isArray(c.documents) ? c.documents : [];
+      for (const d of docs) {
+        if (!d) continue;
+        const hay = ((d.title || '') + ' ' + (d.fileName || '') + ' ' + (c.name || '')).toLowerCase();
+        if (search && !hay.includes(search)) continue;
+        rows.push({ client: c, doc: d });
+      }
+    }
+
+    if (!rows.length) {
+      tb.innerHTML = `<tr><td colspan="6" class="empty-state">${clients.length ? 'No client documents match.' : 'No clients yet.'}</td></tr>`;
+      return;
+    }
+
+    tb.innerHTML = rows.map(({ client, doc }) => {
+      const cidSafe = String(client.id || '').replace(/'/g, "\\'");
+      const didSafe = String(doc.id || '').replace(/'/g, "\\'");
+      return `<tr>
+        <td><strong>${escapeHtml(doc.title || doc.fileName || '—')}</strong><br><small style="color:var(--text-secondary);">${escapeHtml(doc.fileName || '')}</small></td>
+        <td><a href="#" onclick="event.preventDefault();Viora.openClient360('${cidSafe}')" style="color:var(--accent-blue);">${escapeHtml(client.name || '—')}</a></td>
+        <td>${escapeHtml(doc.category || 'Document')}</td>
+        <td>${fmtBytes(doc.size || 0)}</td>
+        <td><small>${timeAgo(doc.uploadedAt)}</small></td>
+        <td style="text-align:right;white-space:nowrap;">
+          <button class="btn btn-primary btn-xs" onclick="Viora.viewClientDoc('${cidSafe}','${didSafe}')"><i class="fa-solid fa-eye"></i></button>
+          <button class="btn btn-success btn-xs" onclick="Viora.downloadClientDoc('${cidSafe}','${didSafe}')"><i class="fa-solid fa-download"></i></button>
+          <button class="btn btn-danger btn-xs" onclick="Viora.deleteClientDoc('${cidSafe}','${didSafe}')"><i class="fa-solid fa-trash"></i></button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch (e) { console.warn('[renderClientDocs]', e); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TIMELINE — merged business event stream
+   ═══════════════════════════════════════════════════════════════ */
+const _timelineState = {
+  filter: 'all',
+  days: 30,
+};
+
+function _timelineIcon(kind) {
+  return {
+    payment:      { icon: 'fa-money-bill-wave', color: '#22e6a0' },
+    invoice:      { icon: 'fa-file-invoice',    color: '#0ea5e9' },
+    comm:         { icon: 'fa-comments',        color: '#ffc857' },
+    handoff:      { icon: 'fa-bolt',            color: '#a855f7' },
+    client:       { icon: 'fa-user-plus',       color: '#00d4ff' },
+    task:         { icon: 'fa-list-check',      color: '#ff9f0a' },
+    project:      { icon: 'fa-folder',          color: '#10b981' },
+    contract:     { icon: 'fa-file-signature',  color: '#5e5ce6' },
+    presentation: { icon: 'fa-chalkboard-user', color: '#ec4899' },
+    activity:     { icon: 'fa-scroll',          color: '#64748b' },
+  }[kind] || { icon: 'fa-circle', color: '#64748b' };
+}
+
+function _timelineLink(kind) {
+  return {
+    payment: 'fin-payments',
+    invoice: 'fin-invoices',
+    comm: 'communications',
+    handoff: 'orchestration',
+    client: 'sales-clients',
+    task: 'ops-tasks',
+    project: 'ops-projects',
+    contract: 'sales-contracts',
+    presentation: 'marketing-presentations',
+    activity: 'activity',
+  }[kind] || 'dashboard';
+}
+
+function _buildTimelineEvents() {
+  const now = Date.now();
+  const cutoff = now - _timelineState.days * 86400000;
+  const events = [];
+  const d = state.data;
+
+  const push = (kind, ts, title, desc, id) => {
+    if (!ts) return;
+    const t = Date.parse(ts);
+    if (!Number.isFinite(t) || t < cutoff) return;
+    events.push({ kind, ts: t, title, desc: desc || '', id });
+  };
+
+  for (const a of (d.activityLog || [])) {
+    if (!a) continue;
+    const kind = a.type === 'pay' ? 'payment'
+               : a.type === 'send' ? 'comm'
+               : a.type === 'upload' ? 'project'
+               : 'activity';
+    push(kind, a.timestamp, a.title || '', a.description || '', a.id);
+  }
+
+  for (const p of (d.payments || [])) {
+    if (!p) continue;
+    push('payment', p.createdAt || p.date,
+      `Payment ${fmtKES(p.amount)}`,
+      `From ${(typeof getClientName === 'function' ? getClientName(p.clientId) : '—')} · ${p.method || ''}`,
+      p.id);
+  }
+
+  for (const inv of (d.invoices || [])) {
+    if (!inv) continue;
+    push('invoice', inv.createdAt || inv.date,
+      `Invoice ${inv.number || inv.id}`,
+      (typeof getClientName === 'function' ? getClientName(inv.clientId) : ''),
+      inv.id);
+  }
+
+  for (const c of (d.commLog || [])) {
+    if (!c) continue;
+    push('comm', c.timestamp,
+      `Message to ${c.recipientName || '—'}`,
+      c.subject || (c.message || '').slice(0, 60),
+      c.id);
+  }
+
+  for (const r of (d._orchestrationRuns || [])) {
+    if (!r) continue;
+    push('handoff', r.startedAt,
+      `Handoff: ${r.handoffId || 'unknown'}`,
+      `${(r.handlers || []).length} handler(s) · ${r.duration || 0}ms · ${r.ok ? 'OK' : 'FAILED'}`,
+      r.id);
+  }
+
+  for (const e of (d.entities || [])) {
+    if (!e || e.type !== 'client') continue;
+    push('client', e.createdAt, `New client: ${e.name || '—'}`, e.company || '', e.id);
+  }
+
+  for (const t of (d.tasks || [])) {
+    if (!t) continue;
+    push('task', t.createdAt || t.updatedAt,
+      `Task: ${t.title || '—'}`,
+      t.status === 'done' ? 'Completed' : t.status || '',
+      t.id);
+  }
+
+  for (const p of (d.projects || [])) {
+    if (!p) continue;
+    push('project', p.createdAt,
+      `Project: ${p.projectNumber || p.title || '—'}`,
+      (typeof getClientName === 'function' ? getClientName(p.clientId) : ''),
+      p.id);
+  }
+
+  for (const c of (d.contracts || [])) {
+    if (!c) continue;
+    push('contract', c.createdAt, `Contract: ${c.title || '—'}`, c.status || '', c.id);
+  }
+
+  for (const p of (d.presentations || [])) {
+    if (!p) continue;
+    push('presentation', p.createdAt || p.date,
+      `Presentation: ${p.title || '—'}`,
+      p.status || '',
+      p.id);
+  }
+
+  events.sort((a, b) => b.ts - a.ts);
+  return events;
+}
+
+function renderTimeline() {
+  try {
+    const host = $('timelineList');
+    if (!host) return;
+
+    document.querySelectorAll('.timeline-chip').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tlFilter === _timelineState.filter);
+    });
+
+    const all = _buildTimelineEvents();
+    const filtered = _timelineState.filter === 'all'
+      ? all
+      : all.filter(e => e.kind === _timelineState.filter);
+
+    if (!filtered.length) {
+      host.innerHTML = `<div class="timeline-empty">No events in the last ${_timelineState.days} days.</div>`;
+      return;
+    }
+
+    const groups = new Map();
+    for (const e of filtered) {
+      const day = new Date(e.ts).toISOString().slice(0, 10);
+      if (!groups.has(day)) groups.set(day, []);
+      groups.get(day).push(e);
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    const esc = (typeof escapeHtml === 'function') ? escapeHtml : (s => String(s == null ? '' : s));
+
+    let html = '';
+    for (const [day, events] of groups) {
+      const dayLabel = day === today ? 'Today'
+                     : day === yesterday ? 'Yesterday'
+                     : new Date(day + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      html += `<div class="timeline-day-group">
+        <div class="timeline-day-header">${dayLabel}</div>
+        ${events.map(e => {
+          const meta = _timelineIcon(e.kind);
+          const time = new Date(e.ts).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+          const target = _timelineLink(e.kind);
+          return `<div class="timeline-event" onclick="Viora.navigate && Viora.navigate('${target}')">
+            <div class="timeline-event-icon" style="background:${meta.color};"><i class="fa-solid ${meta.icon}"></i></div>
+            <div class="timeline-event-body">
+              <div class="timeline-event-title">${esc(e.title)}</div>
+              ${e.desc ? `<div class="timeline-event-desc">${esc(e.desc)}</div>` : ''}
+            </div>
+            <div class="timeline-event-time">${time}</div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }
+
+    host.innerHTML = html;
+  } catch (e) { console.warn('[renderTimeline]', e); }
+}
+
+function _initTimeline() {
+  if (window._timelineBound) return;
+  window._timelineBound = true;
+
+  document.addEventListener('click', (e) => {
+    const chip = e.target.closest('.timeline-chip');
+    if (!chip) return;
+    _timelineState.filter = chip.dataset.tlFilter || 'all';
+    renderTimeline();
+  });
+
+  const exportBtn = $('timelineExportBtn');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => {
+      const all = _buildTimelineEvents();
+      const filtered = _timelineState.filter === 'all'
+        ? all
+        : all.filter(e => e.kind === _timelineState.filter);
+      if (!filtered.length) { toast('Nothing to export.', 'info'); return; }
+      const rows = filtered.map(e => ({
+        date: new Date(e.ts).toISOString(),
+        kind: e.kind,
+        title: e.title,
+        desc: e.desc,
+      }));
+      if (typeof exportCsv === 'function') {
+        exportCsv(
+          rows,
+          ['Date', 'Kind', 'Title', 'Description'],
+          ['date', 'kind', 'title', 'desc'],
+          `viora-timeline-${new Date().toISOString().slice(0, 10)}.csv`
+        );
+      }
+    });
+  }
+
+  const todayBtn = $('timelineTodayBtn');
+  if (todayBtn) {
+    todayBtn.addEventListener('click', () => {
+      _timelineState.days = 30;
+      renderTimeline();
+      $('timelineList')?.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+}
+
+
+
 let _attachEventsImpl = null;
 let _attachFormsImpl  = null;
 
@@ -3273,8 +3600,10 @@ try {
           // ── Delivery ──
           case 'ops-projects':            renderProjects(); break;
           case 'ops-tasks':               renderTasks(); break;
-          case 'marketing-presentations': renderPresentations(); break;
+                case 'marketing-presentations': renderPresentations(); break;
           case 'documents':               renderDocumentVault(); break;
+          case 'personal-docs':           renderPersonalDocs(); break;
+          case 'client-docs':             renderClientDocs(); break;
 
           // ── Finance ──
           case 'fin-invoices':            renderInvoices(); break;
@@ -4033,24 +4362,7 @@ try {
         bound++;
       });
 
-      // 3. Group toggles
-      document.querySelectorAll('.sb-group-toggle').forEach(btn => {
-        if (btn._vioraGroupBound) return;
-        btn._vioraGroupBound = true;
-        btn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          const wrap = btn.closest('.sb-group-wrap');
-          if (!wrap) return;
-          const isOpen = wrap.classList.toggle('open');
-          btn.setAttribute('aria-expanded', String(isOpen));
-          console.log('[viora-group-click]', wrap.dataset.group, isOpen);
-          if (typeof window.__vioraResetSidebarScroll === 'function') {
-            requestAnimationFrame(window.__vioraResetSidebarScroll);
-          }
-        }, true);
-        bound++;
-      });
+ 
 
       // 4. Queue items
       document.querySelectorAll('.nav-queue-item').forEach(el => {
