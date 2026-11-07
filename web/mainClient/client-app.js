@@ -1070,27 +1070,34 @@ function attachTabEvents() {
 }
 
 function attachActionEvents() {
-  $('pStkSend').onclick = sendStkPush;
-    /* Marketplace modal actions */
-  $('pMarketItemPreviewBtn').onclick = () => previewMarketItem();
-  $('pMarketItemBuyBtn').onclick = () => openMarketBuy(S._viewingMarketItem);
-  $('pMarketItemSubscribeBtn').onclick = () => subscribeMarketItem(S._viewingMarketItem);
-  $('pMarketBuyConfirm').onclick = () => confirmMarketBuy();
-  $('pTkCreate').onclick = createTicket;
-  $('pInvPrint').onclick = printInvoice;
-  $('pInvDownload').onclick = printInvoice;
-  $('pFileDownload').onclick = downloadPreviewedFile;
-  $('pReportPrintBtn').onclick = () => window.print();
-  $('pThemeToggle').onclick = () => {
+  const bind = (id, handler) => {
+    const el = $(id);
+    if (!el) { console.warn('[portal] action bind skipped — missing #' + id); return; }
+    el.onclick = handler;
+  };
+
+  bind('pStkSend', sendStkPush);
+  /* Marketplace modal actions */
+  bind('pMarketItemPreviewBtn',   () => previewMarketItem());
+  bind('pMarketItemBuyBtn',       () => openMarketBuy(S._viewingMarketItem));
+  bind('pMarketItemSubscribeBtn', () => subscribeMarketItem(S._viewingMarketItem));
+  bind('pMarketBuyConfirm',       () => confirmMarketBuy());
+  bind('pTkCreate',               createTicket);
+  bind('pInvPrint',               printInvoice);
+  bind('pInvDownload',            printInvoice);
+  bind('pFileDownload',           downloadPreviewedFile);
+  bind('pReportPrintBtn',         () => window.print());
+  bind('pThemeToggle', () => {
     const cur = document.documentElement.getAttribute('data-theme');
     const next = cur === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
-    $('pThemeToggle').innerHTML = next === 'dark'
+    const t = $('pThemeToggle');
+    if (t) t.innerHTML = next === 'dark'
       ? '<i class="fa-solid fa-moon"></i>'
       : '<i class="fa-solid fa-sun"></i>';
     setTimeout(() => { try { renderOverviewCharts(); } catch (e) {} }, 100);
-  };
-  $('pSubRequestSubmit').onclick = submitSubRequest;
+  });
+  bind('pSubRequestSubmit', submitSubRequest);
 }
 
 function attachLockEvents() {
