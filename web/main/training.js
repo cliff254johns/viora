@@ -110,12 +110,13 @@ let _ptEditorBound = false;
    SHARED USER STATS
    ═══════════════════════════════════════════════════════════════ */
 function buildUserStats(state) {
-  const users       = state.data.users || [];
-  const portalUsers = state.data.portalUsers || [];
-  const courses     = state.data.trainingCourses || [];
-  const enrollments = state.data.trainingEnrollments || {};
-  const progress    = state.data.trainingProgress || {};
-  const certs       = state.data.trainingCertificates || [];
+ const toArr = (v) => Array.isArray(v) ? v : Object.values(v || {});
+const users       = toArr(state.data.users);
+const portalUsers = toArr(state.data.portalUsers);
+const courses     = toArr(state.data.trainingCourses);
+const enrollments = state.data.trainingEnrollments || {};
+const progress    = state.data.trainingProgress || {};
+const certs       = toArr(state.data.trainingCertificates);
 
   const allUsers = [];
   const seen = new Set();
@@ -198,7 +199,8 @@ export function renderTrainingOverview() {
     const courses     = state.data.trainingCourses || [];
     const checklists  = state.data.trainingChecklists || [];
     const resources   = state.data.trainingResources || [];
-    const certs       = state.data.trainingCertificates || [];
+   const certsRaw    = state.data.trainingCertificates;
+const certs       = Array.isArray(certsRaw) ? certsRaw : Object.values(certsRaw || {});
     const enrollments = state.data.trainingEnrollments || {};
     const quizSubs    = state.data.trainingQuizSubmissions || {};
     const accessReqs  = state.data.trainingAccessRequests || {};
@@ -805,8 +807,8 @@ export function renderTrainingCertificates() {
     const total = all.length;
     const nowMonth = new Date().getMonth();
     let thisMonth = 0, scoreSum = 0;
- const uniqueUids = new Set();
-for (const c of certs) {
+const uniqueUids = new Set();
+for (const c of all) {
   if (!c) continue;
   if (c.issuedAt && new Date(c.issuedAt).getMonth() === nowMonth) thisMonth++;
   scoreSum += c.score || 0;
