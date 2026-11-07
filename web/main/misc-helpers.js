@@ -5,8 +5,27 @@
 // ═══════════════════════════════════════════════════════════════
 
 let _ctx = null;
-export function initMiscHelpers(ctx) { _ctx = ctx || {}; }
+
+export function initMiscHelpers(ctx) {
+  _ctx = ctx || {};
+  // If the caller forgot to pass escapeHtml, install a safe default
+  // so openProposalStudio and friends can't throw on missing deps.
+  if (typeof _ctx.escapeHtml !== 'function') {
+    _ctx.escapeHtml = (s) => String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    console.info('[misc-helpers] escapeHtml dep was missing — installed safe default');
+  }
+}
+
 function ctx() { return _ctx || {}; }
+
+/** Local escape helper — reads through ctx() each call, so it always
+ *  reflects the current deps object even if initMiscHelpers ran late. */
+function esc(s) {
+  const f = ctx().escapeHtml;
+  return typeof f === 'function' ? f(s) : String(s == null ? '' : s);
+}
 
 /* ═══════════════════════════════════════════════════════════════
    SHARED MICRO-HELPERS
@@ -288,7 +307,8 @@ function proposalTitle(lead, deal) {
 }
 
 export function openProposalStudio(preset = {}) {
-  const { state, $, escapeHtml, openModal } = ctx();
+  const { state, $, openModal } = ctx();
+  const escapeHtml = esc;
 
   $('propLead').innerHTML =
     '<option value="">— None —</option>' +
