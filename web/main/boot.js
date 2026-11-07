@@ -1,14 +1,13 @@
 // main/boot.js
 /* ═══════════════════════════════════════════════════════════
-   VIORA — BOOT ORCHESTRATOR  (v7.5)
+   VIORA — BOOT ORCHESTRATOR  (v7.6)
    ─────────────────────────────────────────────────────────────
-   v7.5 changes over v7.4:
-     • Removed the click-triggered AIRank.rerankByAI() block
-       (it re-rendered the page mid-modal and destroyed form state)
-     • Guarded homeContent + industries listeners so they no longer
-       re-render the home-content tab while the editor is open
-     • Guarded visibilitychange so it does not run background work
-       while a modal/editor is open
+   v7.6 changes over v7.5:
+     • REMOVED the preloader gate (was causing the login/shell
+       to stay hidden while boot ran, which in turn made the
+       first users/{uid} read time out and dropped the operator
+       into a "member" fallback). The video already sits at
+       z-index 99999 and fades itself out — that's enough.
    ═══════════════════════════════════════════════════════════ */
 
 import { ref, get, set, remove, onValue, onChildAdded,
@@ -55,7 +54,6 @@ function _isModalOrEditorOpen() {
   } catch (_) {}
   return false;
 }
-
 
 /* ═══════════════════════════════════════════════════════════
    PUBLIC ENTRY POINT
@@ -178,10 +176,8 @@ async function handleAuthChange(user) {
       email: user.email,
       avatar: null, accent: '#00d4ff', tagline: '', orgId: 'viora'
     };
-        _whenPreloaderDone(() => {
-      document.getElementById('loginScreen')?.classList.add('hidden');
-      document.getElementById('appShell')?.classList.remove('hidden');
-    });
+    document.getElementById('loginScreen')?.classList.add('hidden');
+    document.getElementById('appShell')?.classList.remove('hidden');
     applyRoleGating();
     if (typeof window.vioraBootComplete === 'function') {
       try { window.vioraBootComplete(); } catch (e) {}
@@ -195,11 +191,22 @@ async function handleAuthChange(user) {
     /* ── Fetch the operator profile ── */
     let role = 'member', name = user.email, avatar = null;
     let accent = '#00d4ff', tagline = '', orgId = 'viora';
+    let operatorLoaded = false;
     try {
-      const snap = await Promise.race([
-        get(ref(db, `${ROOT}/users/${user.uid}`)),
-        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 6000))
-      ]);
+      let snap;
+      try {
+        snap = await Promise.race([
+          get(ref(db, `${ROOT}/users/${user.uid}`)),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000))
+        ]);
+      } catch (firstErr) {
+        console.warn('[boot] users read timed out once — retrying');
+        snap = await Promise.race([
+          get(ref(db, `${ROOT}/users/${user.uid}`)),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('timeout-retry')), 8000))
+        ]);
+      }
+
       if (snap.exists()) {
         const u = snap.val();
         role    = u.role    || 'member';
@@ -208,6 +215,7 @@ async function handleAuthChange(user) {
         accent  = u.accent  || '#00d4ff';
         tagline = u.tagline || '';
         orgId   = u.orgId   || 'viora';
+        operatorLoaded = true;
       } else {
         await set(ref(db, `${ROOT}/users/${user.uid}`), {
           name: user.email.split('@')[0],
@@ -216,6 +224,7 @@ async function handleAuthChange(user) {
           orgId: 'viora',
           createdAt: new Date().toISOString()
         });
+        operatorLoaded = true;
       }
     } catch (e) {
       console.warn('role fetch failed or timed out, continuing as member:', e);
@@ -225,7 +234,10 @@ async function handleAuthChange(user) {
       uid: user.uid, name, role, email: user.email,
       avatar, accent, tagline, orgId
     };
-    state._operatorLoaded = true;
+    /* Only mark operator-loaded if the fetch actually succeeded,
+       so roleAllows() doesn't lock the UI down on a transient
+       network failure. */
+    state._operatorLoaded = operatorLoaded;
     applyRoleGating();
 
     const avatarEl = document.getElementById('operatorAvatar');
