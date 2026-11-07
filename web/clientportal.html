@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes, viewport-fit=cover" />
 <meta name="theme-color" content="#0a0a0f" />
 <meta name="description" content="VIORA Client Portal — projects, invoices, subscriptions, and training in real time." />
-<title>Sign In · VIORA Client Portal</title>
+<title>VIORA Portal</title>
+  <link rel="stylesheet" href="mainClient/client-app.css" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -687,7 +688,16 @@ h1, h2, h3, h4, h5, h6, .btn, .stat-card .number {
   <button class="mnav-item" data-mnav="more" type="button"><i class="fa-solid fa-bars"></i><span class="mnav-label">More</span></button>
 </nav>
 
-<!-- Your existing modals below — no changes needed -->
+  <script type="importmap">
+  {
+    "imports": {
+      "firebase/app":       "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js",
+      "firebase/database":  "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js",
+      "firebase/auth":      "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js",
+      "firebase/messaging": "https://www.gstatic.com/firebasejs/12.19.0/firebase-messaging.js"
+    }
+  }
+  </script>
 
 <script>
 /* ═══════════════════════════════════════════════════════════════════
@@ -910,6 +920,6 @@ h1, h2, h3, h4, h5, h6, .btn, .stat-card .number {
 })();
 </script>
 
-<script type="module" src="/mainClient/client-app.js"></script>
+<script type="module" src="mainClient/client-app.js"></script>
 </body>
 </html>
