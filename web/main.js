@@ -1810,10 +1810,10 @@ const MOBILE_NAV_MAP = {
     { tab: 'dashboard', icon: 'fa-chart-pie', label: 'Dashboard' },
     { tab: 'profile', icon: 'fa-building', label: 'Profile' },
     { tab: 'global-market', icon: 'fa-earth-africa', label: 'Global' },
-    { tab: 'ledger', icon: 'fa-book', label: 'Ledger' },
-    { tab: 'marketplace-analytics', icon: 'fa-chart-line', label: 'Analytics' },
-    { tab: 'admin-compliance', icon: 'fa-scale-balanced', label: 'Compliance' },
     { tab: 'activity', icon: 'fa-scroll', label: 'Activity' },
+    { tab: 'admin-compliance', icon: 'fa-scale-balanced', label: 'Compliance' },
+    { tab: 'marketplace-analytics', icon: 'fa-chart-line', label: 'Analytics' },
+    { tab: 'orchestration', icon: 'fa-diagram-project', label: 'Orchestration' },
   ]},
   clientportal: { icon: 'fa-id-card-clip', label: 'Clients', tabs: [
     { tab: 'sales-clients', icon: 'fa-users', label: 'Clients' },
@@ -1854,18 +1854,16 @@ const MOBILE_NAV_MAP = {
     { tab: 'orchestration', icon: 'fa-diagram-project', label: 'Orchestration' },
     { tab: 'archives', icon: 'fa-box-archive', label: 'Archives' },
     { tab: 'trash', icon: 'fa-trash-can', label: 'Trash' },
-   
     { tab: 'marketplace-products', icon: 'fa-store', label: 'Products' },
     { tab: 'personal-wishlist', icon: 'fa-heart', label: 'Wishlist' },
     { tab: 'clientsite', icon: 'fa-globe', label: 'Public Site' },
-    { tab: 'product-presentation', icon: 'fa-window-restore', label: 'Presentation' },
+    { tab: 'product-presentation', icon: 'fa-window-restore', label: 'Brand Content' },
     { tab: 'personal-todos', icon: 'fa-circle-check', label: 'To-Dos' },
     { tab: 'personal-goals', icon: 'fa-bullseye', label: 'Goals' },
     { tab: 'personal-skills', icon: 'fa-code-branch', label: 'Skills' },
     { tab: 'training-overview', icon: 'fa-graduation-cap', label: 'Training' },
     { tab: 'training-quizzes', icon: 'fa-file-circle-question', label: 'Quizzes' },
     { tab: 'training-certificates', icon: 'fa-award', label: 'Certs' },
-    { tab: 'training-progress', icon: 'fa-chart-line', label: 'Progress' },
   ]},
 };
 window.MOBILE_NAV_MAP = MOBILE_NAV_MAP;
