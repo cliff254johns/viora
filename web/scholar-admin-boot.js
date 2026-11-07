@@ -206,7 +206,22 @@ function getTextColor() {
 
 /* ── State ── */
 const state = {
-  data: {},
+  data: {
+    // Pre-initialize so .length never throws or returns undefined
+    trainingCourses: {},
+    trainingChecklists: {},
+    trainingResources: {},
+    trainingEnrollments: {},
+    trainingProgress: {},
+    trainingCertificates: {},
+    trainingQuizSubmissions: {},
+    trainingAccessRequests: {},
+    trainingCertTemplates: {},
+    trainingCourseCompletions: {},
+    users: [],
+    portalUsers: [],
+    entities: []
+  },
   operator: null,
   currentTab: "training-overview",
   charts: _charts,
@@ -334,7 +349,6 @@ function updateBadges() {
   if (rb) { rb.textContent = requests; rb.style.display = requests > 0 ? "inline-block" : "none"; }
 }
 
-/* ── Subscriptions ── */
 function subscribeTraining() {
   const PATHS = {
     trainingAccessRequests:    "training/accessRequests",
@@ -353,7 +367,9 @@ function subscribeTraining() {
   for (const [key, path] of Object.entries(PATHS)) {
     const dbPath = P(path);
     onValue(ref(db, dbPath), (snap) => {
+      // Force an empty object {} if the DB is empty, preventing "undefined.length"
       state.data[key] = snap.exists() ? snap.val() : {};
+      
       // Also flatten users/portalUsers into the shape training.js expects
       if (key === "trainingUsers") {
         state.data.users = [];
@@ -363,7 +379,9 @@ function subscribeTraining() {
           else state.data.portalUsers.push({ uid: uidKey, ...u });
         }
       }
+      
       updateBadges();
+      
       // Re-render current tab
       const name = state.currentTab.replace(/^training-/, "");
       switch (name) {
@@ -392,6 +410,7 @@ function subscribeTraining() {
       : [];
     try { renderTrainingUsers(); renderTrainingProgress(); } catch (e) {}
   }, () => {});
+  
   onValue(ref(db, P("portalUsers")), (snap) => {
     state.data.portalUsers = snap.exists()
       ? Object.entries(snap.val()).map(([u, v]) => ({ uid: u, ...v }))
