@@ -2549,7 +2549,7 @@ async function bootApp() {
     global: window,
 
        renderDocuments:     renderDocumentVault,
-    renderTrainingUsers: renderTrainingUsers,
+    
     renderMyWishlist:    renderMyWishlist,
     renderUsers:         renderUsers,
     renderMarketContent: renderMarketContent,
@@ -3266,7 +3266,7 @@ function startApp() {
         checkOrderStock,
         scheduleMarketSync,
         buildInvoiceProgressMessage,
-        awardTrainingCertificate,
+    
         processMpesaQueue,
         openModal, closeModal,
         renderActiveTab,
@@ -3884,15 +3884,15 @@ case 'training-progress':
         openOrderDetail,
         viewTicket, closeTicketView, sendTicketReply, toggleTicketStatus,
         markTicketResolved, deleteTicket, getViewingTicketId,
-        TrainingVioraAPI,
+       
         openUserTraining:       (...a) => Viora.openUserTraining?.(...a),
-        revokeTrainingCertImpl,
+       
         approveTrainingRequest: (id) => Viora.approveTrainingRequest?.(id),
         rejectTrainingRequest:  (id) => Viora.rejectTrainingRequest?.(id),
         reopenTrainingRequest:  (id) => Viora.reopenTrainingRequest?.(id),
         SENDER_PHONE, SENDER_EMAIL, MAX_FILE_SIZE, APP_VERSION,
         BUSINESS_COLLECTIONS,
-        PP, SubscriptionsAdmin, AutoCertification,
+        PP, SubscriptionsAdmin,
         T: (window.VioraTraining || window.T || null),
         MOBILE_NAV_MAP,
         setNavMode,
