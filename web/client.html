@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Client Portal — VIORA Ecosystems</title>
-  <!-- Favicon + touch icons -->
+
+<!-- Favicon + touch icons -->
 <link rel="icon" type="image/png" href="https://viora.co.ke/viora.png">
 <link rel="shortcut icon" type="image/png" href="https://viora.co.ke/viora.png">
 <link rel="apple-touch-icon" href="https://viora.co.ke/viora.png">
@@ -14,15 +15,32 @@
 <link rel="mask-icon" href="https://viora.co.ke/viora.png" color="#00d2ff">
 <meta name="msapplication-TileImage" content="https://viora.co.ke/viora.png">
 <meta name="msapplication-TileColor" content="#070a13">
-<meta name="theme-color" content="#0A192F">
+<meta name="application-name" content="VIORA">
+
 <meta name="description" content="Sign in to your VIORA client portal. Projects, invoices, subscriptions, training, and support — all in one place.">
 <link rel="canonical" href="https://viora.co.ke/client.html">
 <meta name="theme-color" content="#0A192F">
+
+<!-- Prevent flash of wrong theme — same key as all other pages -->
+<script>
+try {
+  const saved = localStorage.getItem('viora_theme');
+  document.documentElement.setAttribute('data-theme', saved === 'dark' ? 'dark' : 'light');
+} catch (_) {
+  document.documentElement.setAttribute('data-theme', 'light');
+}
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared-app.css">
+
 <style>
+/* ═══════════════════════════════════════════════════════════════
+   CLIENT PORTAL STYLES + APPLE BLACK DARK THEME
+   ═══════════════════════════════════════════════════════════════ */
+
 .portal-hero{padding:140px 0 80px;position:relative;overflow:hidden}
 .portal-hero::before{
   content:"";position:absolute;top:-200px;right:-200px;width:600px;height:600px;border-radius:50%;
@@ -32,6 +50,13 @@
   content:"";position:absolute;bottom:-300px;left:-200px;width:600px;height:600px;border-radius:50%;
   background:radial-gradient(circle,rgba(35,199,217,.1),transparent 70%);pointer-events:none;
 }
+[data-theme="dark"] .portal-hero::before{
+  background:radial-gradient(circle,rgba(10,132,255,.12),transparent 70%);
+}
+[data-theme="dark"] .portal-hero::after{
+  background:radial-gradient(circle,rgba(100,210,255,.08),transparent 70%);
+}
+
 .portal-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:64px;align-items:center;position:relative;z-index:1}
 @media(max-width:900px){.portal-grid{grid-template-columns:1fr;gap:40px}}
 .portal-hero h1{font-size:clamp(34px,5vw,54px);line-height:1.08;margin-bottom:20px;letter-spacing:-.03em}
@@ -41,17 +66,27 @@
 .portal-trust .pt-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-weight:600}
 .portal-trust .pt-item svg{width:16px;height:16px;color:var(--accent)}
 
+/* Portal preview — always dark (it's a dashboard mockup) */
 .portal-preview{
   position:relative;border-radius:24px;padding:0;overflow:hidden;
   background:linear-gradient(135deg,#0A192F 0%,#1E293B 100%);
   box-shadow:0 40px 80px -20px rgba(10,25,47,.6);
   border:1px solid rgba(255,255,255,.1);
 }
+[data-theme="dark"] .portal-preview{
+  background:linear-gradient(135deg,#0A0A0A 0%,#141414 100%);
+  border-color:rgba(255,255,255,.1);
+}
 .portal-preview::before{
   content:"";position:absolute;inset:-2px;border-radius:26px;z-index:-1;
   background:linear-gradient(135deg,rgba(34,103,238,.5),rgba(35,199,217,.4),rgba(139,92,246,.4));
   filter:blur(24px);opacity:.6;
 }
+[data-theme="dark"] .portal-preview::before{
+  background:linear-gradient(135deg,rgba(10,132,255,.4),rgba(100,210,255,.3),rgba(191,90,242,.3));
+  opacity:.4;
+}
+
 .pp-head{
   display:flex;align-items:center;gap:12px;padding:16px 20px;
   border-bottom:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);
@@ -76,6 +111,17 @@
   display:inline-flex;align-items:center;gap:6px;
 }
 .pp-welcome .pw-badge::before{content:"";width:6px;height:6px;border-radius:50%;background:#10B981;box-shadow:0 0 8px #10B981;animation:pulse 2s infinite}
+
+[data-theme="dark"] .pp-welcome .pw-badge{
+  background:rgba(48,209,88,.15);
+  border-color:rgba(48,209,88,.35);
+  color:#30D158;
+}
+[data-theme="dark"] .pp-welcome .pw-badge::before{
+  background:#30D158;
+  box-shadow:0 0 8px #30D158;
+}
+
 .pp-kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
 .pp-kpi{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px}
 .pp-kpi .lbl{font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;font-weight:600}
@@ -83,8 +129,14 @@
 .pp-kpi .val.cyan{color:#23C7D9}
 .pp-kpi .val.green{color:#10B981}
 .pp-kpi .val.purple{color:#A78BFA}
+[data-theme="dark"] .pp-kpi .val.cyan{color:#64D2FF}
+[data-theme="dark"] .pp-kpi .val.green{color:#30D158}
+[data-theme="dark"] .pp-kpi .val.purple{color:#BF5AF2}
+
 .pp-bar{height:6px;background:rgba(255,255,255,.08);border-radius:3px;margin-top:10px;overflow:hidden}
 .pp-bar div{height:100%;background:linear-gradient(90deg,#2267EE,#23C7D9);border-radius:3px}
+[data-theme="dark"] .pp-bar div{background:linear-gradient(90deg,#0A84FF,#64D2FF)}
+
 .pp-chart{
   background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
   border-radius:12px;padding:14px;margin-bottom:12px;
@@ -93,51 +145,113 @@
 .pp-chart-bars{display:flex;align-items:flex-end;gap:6px;height:60px}
 .pp-chart-bars .cb{flex:1;background:linear-gradient(180deg,#2267EE,#1E3A8A);border-radius:3px 3px 0 0;position:relative;transition:opacity .3s}
 .pp-chart-bars .cb:nth-child(2n){background:linear-gradient(180deg,#23C7D9,#0891B2)}
+[data-theme="dark"] .pp-chart-bars .cb{background:linear-gradient(180deg,#0A84FF,#1E3A8A)}
+[data-theme="dark"] .pp-chart-bars .cb:nth-child(2n){background:linear-gradient(180deg,#64D2FF,#0891B2)}
 .pp-chart-bars .cb:hover{opacity:.8}
+
 .pp-timeline{display:flex;flex-direction:column;gap:6px}
 .pp-timeline .tl{display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:8px;font-size:12px;color:rgba(255,255,255,.8)}
 .pp-timeline .tl .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .pp-timeline .tl .dot.green{background:#10B981}
 .pp-timeline .tl .dot.cyan{background:#23C7D9}
 .pp-timeline .tl .dot.purple{background:#A78BFA}
+[data-theme="dark"] .pp-timeline .tl .dot.green{background:#30D158}
+[data-theme="dark"] .pp-timeline .tl .dot.cyan{background:#64D2FF}
+[data-theme="dark"] .pp-timeline .tl .dot.purple{background:#BF5AF2}
 
+/* Features */
 .features-section{padding:100px 0;background:var(--bg)}
-[data-theme="dark"] .features-section{background:rgba(15,23,42,.5)}
+[data-theme="dark"] .features-section{background:#000000}
 .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:48px}
 @media(max-width:900px){.features-grid{grid-template-columns:1fr}}
+
 .feat-card{
   background:var(--white);border:1px solid var(--line);border-radius:20px;
   padding:32px;transition:transform .3s var(--ease),box-shadow .3s,border-color .3s;
   position:relative;overflow:hidden;
 }
-[data-theme="dark"] .feat-card{background:var(--bg-alt)}
+[data-theme="dark"] .feat-card{
+  background:#0A0A0A;
+  border-color:rgba(255,255,255,.08);
+}
+[data-theme="dark"] .feat-card:hover{
+  background:#141414;
+  border-color:#0A84FF;
+}
 .feat-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--accent)}
 .feat-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent-3));opacity:0;transition:opacity .3s}
 .feat-card:hover::before{opacity:1}
 .feat-card .v-icon{margin-bottom:22px}
 .feat-card h3{font-size:20px;margin-bottom:10px}
+[data-theme="dark"] .feat-card h3{color:#F5F5F7}
 .feat-card p{font-size:15px;color:var(--muted);line-height:1.75;margin:0}
+[data-theme="dark"] .feat-card p{color:#98989D}
 
+/* Dark theme icon colors — Apple system palette */
+[data-theme="dark"] .v-icon.blue   { background: rgba(10, 132, 255, 0.15); color: #0A84FF; }
+[data-theme="dark"] .v-icon.cyan   { background: rgba(100, 210, 255, 0.15); color: #64D2FF; }
+[data-theme="dark"] .v-icon.violet { background: rgba(191, 90, 242, 0.15); color: #BF5AF2; }
+[data-theme="dark"] .v-icon.green  { background: rgba(48, 209, 88, 0.15); color: #30D158; }
+[data-theme="dark"] .v-icon.amber  { background: rgba(255, 159, 10, 0.15); color: #FF9F0A; }
+[data-theme="dark"] .v-icon.pink   { background: rgba(255, 55, 95, 0.15); color: #FF375F; }
+
+/* Sign in box */
 .signin-section{padding:100px 0;text-align:center;position:relative;overflow:hidden}
+[data-theme="dark"] .signin-section{background:#000000}
+
 .signin-box{
   max-width:500px;margin:0 auto;
   background:var(--white);border:1px solid var(--line);border-radius:24px;
   padding:48px 40px;box-shadow:var(--shadow-xl);position:relative;z-index:1;
 }
-[data-theme="dark"] .signin-box{background:var(--bg-alt)}
+[data-theme="dark"] .signin-box{
+  background:#0A0A0A;
+  border-color:rgba(255,255,255,.08);
+  box-shadow:0 24px 64px rgba(0,0,0,.6);
+}
 @media(max-width:520px){.signin-box{padding:32px 24px}}
+
 .signin-box h2{font-size:28px;margin-bottom:8px;letter-spacing:-.02em}
+[data-theme="dark"] .signin-box h2{color:#F5F5F7}
 .signin-box > p{color:var(--muted);font-size:15px;margin-bottom:32px;line-height:1.7}
+[data-theme="dark"] .signin-box > p{color:#98989D}
+
 .signin-box .btn{width:100%;justify-content:center;margin-bottom:12px}
 .signin-box .signin-links{margin-top:24px;font-size:13px;color:var(--muted)}
+[data-theme="dark"] .signin-box .signin-links{color:#98989D}
 .signin-box .signin-links a{color:var(--accent);font-weight:600}
+[data-theme="dark"] .signin-box .signin-links a{color:#0A84FF}
 
 .signin-trust{
   display:flex;gap:24px;justify-content:center;flex-wrap:wrap;
   margin-top:36px;padding-top:32px;border-top:1px solid var(--line);
 }
+[data-theme="dark"] .signin-trust{border-top-color:rgba(255,255,255,.08)}
+
 .signin-trust .st-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);font-weight:600}
 .signin-trust .st-item svg{width:16px;height:16px;color:var(--accent)}
+[data-theme="dark"] .signin-trust .st-item{color:#98989D}
+[data-theme="dark"] .signin-trust .st-item svg{color:#0A84FF}
+
+/* Dark theme: logo container stays white for contrast */
+[data-theme="dark"] .brand-logo{
+  background:#FFFFFF;
+  box-shadow:0 0 0 1px rgba(255,255,255,.1);
+}
+
+/* Dark theme: hero gradient text — keep visible */
+[data-theme="dark"] .portal-hero h1 span[style*="background"]{
+  background:linear-gradient(135deg,#0A84FF,#BF5AF2) !important;
+  -webkit-background-clip:text !important;
+  background-clip:text !important;
+  -webkit-text-fill-color:transparent !important;
+}
+
+/* Dark theme: section with navy background */
+[data-theme="dark"] section[style*="background:var(--navy)"]{
+  background:#0A0A0A !important;
+  border-top:1px solid rgba(255,255,255,.06);
+}
 </style>
 </head>
 <body>
@@ -146,14 +260,15 @@
 <canvas id="globalNetwork" aria-hidden="true"></canvas>
 <div class="bg-aurora" aria-hidden="true"></div>
 
+<!-- ============ NAV ============ -->
 <header class="nav" id="nav">
   <div class="nav-inner">
-  <a href="index.html" class="brand">
-  <div class="brand-logo">
-    <img src="https://viora.co.ke/viora.png" alt="VIORA" class="brand-logo-img" loading="lazy" onerror="this.parentNode.classList.add('no-img');this.remove();" />
-  </div>
-  <div class="brand-text"><strong>VIORA</strong><small>ECOSYSTEMS</small></div>
-</a>
+    <a href="index.html" class="brand">
+      <div class="brand-logo">
+        <img src="https://viora.co.ke/viora.png" alt="VIORA" class="brand-logo-img" loading="eager" onerror="this.parentNode.classList.add('no-img');this.remove();" />
+      </div>
+      <div class="brand-text"><strong>VIORA</strong><small>ECOSYSTEMS</small></div>
+    </a>
     <nav aria-label="Primary">
       <ul class="nav-links">
         <li><a href="index.html">Home</a></li>
@@ -177,8 +292,12 @@
   </div>
 </header>
 
+<!-- ============ MOBILE APP BAR ============ -->
 <div class="mobile-appbar" role="banner">
-  <div class="mab-brand"><div class="mab-logo">V</div><span>VIORA</span></div>
+  <div class="mab-brand">
+    <img src="https://viora.co.ke/viora.png" alt="VIORA" style="width:32px;height:32px;border-radius:8px;object-fit:contain;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12);" />
+    <span>VIORA</span>
+  </div>
   <div class="mab-actions">
     <button class="mab-btn" data-theme-toggle aria-label="Theme">
       <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -190,6 +309,7 @@
   </div>
 </div>
 
+<!-- ============ DRAWER ============ -->
 <aside class="drawer" id="drawer" aria-hidden="true">
   <ul>
     <li><a href="index.html">Home</a></li>
@@ -204,6 +324,7 @@
 
 <main id="main">
 
+<!-- ============ HERO ============ -->
 <section class="portal-hero">
   <div class="wrap">
     <div class="portal-grid">
@@ -231,7 +352,7 @@
         </div>
       </div>
 
-      <!-- Dashboard preview -->
+      <!-- Dashboard preview mockup -->
       <div class="portal-preview reveal" aria-hidden="true">
         <div class="pp-head">
           <div class="pp-dots"><span></span><span></span><span></span></div>
@@ -277,6 +398,7 @@
   </div>
 </section>
 
+<!-- ============ FEATURES ============ -->
 <section class="features-section">
   <div class="wrap">
     <div class="text-center reveal">
@@ -332,6 +454,7 @@
   </div>
 </section>
 
+<!-- ============ SIGN IN BOX ============ -->
 <section class="signin-section">
   <div class="wrap">
     <div class="signin-box reveal">
@@ -362,6 +485,7 @@
   </div>
 </section>
 
+<!-- ============ CTA ============ -->
 <section style="background:var(--navy);color:#fff;text-align:center;padding:100px 0">
   <div class="wrap">
     <h2 style="color:#fff;font-size:clamp(28px,3.6vw,42px);margin-bottom:16px" class="reveal">Not a VIORA client yet?</h2>
@@ -375,16 +499,17 @@
 
 </main>
 
+<!-- ============ FOOTER ============ -->
 <footer class="foot">
   <div class="wrap">
     <div class="foot-grid">
       <div>
-      <a href="index.html" class="brand">
-  <div class="brand-logo">
-    <img src="https://viora.co.ke/viora.png" alt="VIORA" class="brand-logo-img" loading="lazy" onerror="this.parentNode.classList.add('no-img');this.remove();" />
-  </div>
-  <div class="brand-text"><strong>VIORA</strong><small>ECOSYSTEMS</small></div>
-</a>
+        <a href="index.html" class="brand">
+          <div class="brand-logo">
+            <img src="https://viora.co.ke/viora.png" alt="VIORA" class="brand-logo-img" loading="lazy" onerror="this.parentNode.classList.add('no-img');this.remove();" />
+          </div>
+          <div class="brand-text"><strong>VIORA</strong><small>ECOSYSTEMS</small></div>
+        </a>
         <p class="foot-tag">Connect People. Empower Businesses.</p>
         <p style="color:rgba(255,255,255,.5);font-size:13px;line-height:1.7;max-width:300px">An integrated technology ecosystem for business management, commerce, digital services and support. Founded 2022.</p>
       </div>
@@ -430,6 +555,7 @@
   </div>
 </footer>
 
+<!-- ============ MOBILE BOTTOM NAV ============ -->
 <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
   <a href="index.html" class="mnav-item">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -454,5 +580,8 @@
 </nav>
 
 <script src="shared-app.js" defer></script>
+<script>
+  document.getElementById('yr').textContent = new Date().getFullYear();
+</script>
 </body>
 </html>
