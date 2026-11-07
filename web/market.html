@@ -25,6 +25,371 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
   <link rel="stylesheet" href="/mainMarket/market.css" />
+  <!-- ═══════════════════════════════════════════════════════════════
+     VIORA MARKETPLACE — DARK THEME (Apple-inspired true black)
+     Only overrides the CSS variables already defined in market.css.
+     No rule duplication. No structural changes.
+     ═══════════════════════════════════════════════════════════════ -->
+<style>
+  /* Set theme immediately to avoid flash of wrong theme */
+  (function() {
+    try {
+      const saved = localStorage.getItem('viora_theme');
+      if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+      else document.documentElement.setAttribute('data-theme', 'light');
+    } catch (_) {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  })();
+
+  /* ═══════════════════════════════════════════════════════════════
+     DARK THEME TOKENS
+     Apple's exact dark-mode colors. Replaces market.css light values.
+     ═══════════════════════════════════════════════════════════════ */
+  [data-theme="dark"] {
+    /* Base surfaces — true black */
+    --primary:    #000000;         /* page background — pure black */
+    --secondary:  #0A0A0A;         /* cards / surfaces */
+    --surface:    #0A0A0A;
+    --surface-2:  #141414;         /* elevated surface — level 2 */
+
+    /* Accent — Apple Blue, softened */
+    --accent:       #0A84FF;
+    --accent-glow:  rgba(10, 132, 255, 0.25);
+    --accent-dim:   rgba(10, 132, 255, 0.08);
+
+    /* Text — Apple's exact label colors */
+    --text-primary:   #F5F5F7;
+    --text-secondary: #98989D;
+    --text-muted:     #6E6E73;
+
+    /* Semantic colors — Apple system palette */
+    --success: #30D158;
+    --warning: #FF9F0A;
+    --danger:  #FF453A;
+    --gold:    #FFD60A;
+    --purple:  #BF5AF2;
+    --pink:    #FF375F;
+
+    /* Borders — ultra-subtle hairlines */
+    --border:        rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.16);
+
+    /* Shadows — Apple's layered dark-mode shadows */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.6), 0 2px 4px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.7), 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+
+  /* ─────────────────────────────────────────────────────────────
+     THEME TOGGLE BUTTON — matches nav-icon-btn styling
+     ───────────────────────────────────────────────────────────── */
+  .theme-toggle-market {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    width: 42px; height: 42px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: var(--transition);
+    font-size: 1rem; position: relative;
+    flex-shrink: 0;
+  }
+  .theme-toggle-market:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0, 113, 227, 0.08);
+    transform: translateY(-2px);
+  }
+  [data-theme="dark"] .theme-toggle-market {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  [data-theme="dark"] .theme-toggle-market:hover {
+    background: rgba(10, 132, 255, 0.15);
+    border-color: var(--accent);
+  }
+  .theme-toggle-market .icon-sun,
+  .theme-toggle-market .icon-moon { transition: transform 0.3s; }
+  [data-theme="light"] .theme-toggle-market .icon-sun { display: none; }
+  [data-theme="dark"] .theme-toggle-market .icon-moon { display: none; }
+
+  /* ─────────────────────────────────────────────────────────────
+     DARK-MODE SPECIFIC FIXES
+     Elements in market.css that use rgba() hardcoded values
+     which won't respond to variable changes.
+     ───────────────────────────────────────────────────────────── */
+
+  /* Nav */
+  [data-theme="dark"] .main-nav {
+    background: rgba(0, 0, 0, 0.72);
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+  }
+  [data-theme="dark"] .main-nav.scrolled {
+    background: rgba(0, 0, 0, 0.88);
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+  }
+
+  /* Brand name — replace gradient text */
+  [data-theme="dark"] .brand-name {
+    -webkit-text-fill-color: var(--text-primary);
+    color: var(--text-primary);
+  }
+
+  /* Category bar — fade edge gradients need black */
+  [data-theme="dark"] .category-bar-wrap::before {
+    background: linear-gradient(90deg, #000000, transparent) !important;
+  }
+  [data-theme="dark"] .category-bar-wrap::after {
+    background: linear-gradient(270deg, #000000, transparent) !important;
+  }
+  [data-theme="dark"] .section-dark .category-bar-wrap::before {
+    background: linear-gradient(90deg, #141414, transparent) !important;
+  }
+  [data-theme="dark"] .section-dark .category-bar-wrap::after {
+    background: linear-gradient(270deg, #141414, transparent) !important;
+  }
+
+  /* Section-dark class — light grey becomes dark elevated */
+  [data-theme="dark"] .section-dark {
+    background: #0A0A0A;
+  }
+
+  /* Badge counter on cart / wishlist */
+  [data-theme="dark"] .nav-icon-btn .badge {
+    border-color: #000000;
+  }
+
+  /* Products visual fallback */
+  [data-theme="dark"] .product-visual-fallback {
+    background: #141414;
+    color: #6E6E73;
+  }
+
+  /* Scrollbar */
+  [data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  [data-theme="dark"] ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* Selection */
+  [data-theme="dark"] ::selection {
+    background: rgba(10, 132, 255, 0.35);
+    color: #FFFFFF;
+  }
+
+  /* Announce bar */
+  [data-theme="dark"] .announce-bar {
+    background: #0A0A0A;
+    border-bottom-color: var(--border);
+    color: var(--text-secondary);
+  }
+
+  /* Trust strip */
+  [data-theme="dark"] .trust-strip {
+    background: #0A0A0A;
+    border-color: var(--border);
+  }
+
+  /* Footer */
+  [data-theme="dark"] footer {
+    background: #0A0A0A;
+    border-top-color: var(--border);
+  }
+
+  /* Mobile bottom nav */
+  [data-theme="dark"] .mobile-bottom-nav {
+    background: rgba(0, 0, 0, 0.92);
+    border-top-color: rgba(255, 255, 255, 0.06);
+  }
+
+  /* Cart drawer */
+  [data-theme="dark"] .cart-drawer {
+    background: #0A0A0A;
+    border-left-color: var(--border);
+    box-shadow: -30px 0 80px rgba(0, 0, 0, 0.7);
+  }
+  [data-theme="dark"] .cart-item {
+    background: #141414;
+    border-color: var(--border);
+  }
+  [data-theme="dark"] .cart-footer {
+    background: #0A0A0A;
+    border-top-color: var(--border);
+  }
+
+  /* Modals — sheet style with blur */
+  [data-theme="dark"] .modal-overlay {
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+  }
+  [data-theme="dark"] .modal-card {
+    background: #1C1C1E;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.75), 0 12px 32px rgba(0, 0, 0, 0.5);
+  }
+  [data-theme="dark"] .modal-field input,
+  [data-theme="dark"] .modal-field select,
+  [data-theme="dark"] .modal-field textarea {
+    background: #000000;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+  }
+  [data-theme="dark"] .modal-field input:focus,
+  [data-theme="dark"] .modal-field select:focus,
+  [data-theme="dark"] .modal-field textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.2);
+    background: #0A0A0A;
+  }
+
+  /* Search inputs */
+  [data-theme="dark"] .search-wrap input,
+  [data-theme="dark"] .cat-search-wrap input,
+  [data-theme="dark"] .newsletter-form input {
+    background: #141414;
+    border-color: var(--border);
+    color: var(--text-primary);
+  }
+  [data-theme="dark"] .search-wrap input:focus,
+  [data-theme="dark"] .cat-search-wrap input:focus,
+  [data-theme="dark"] .newsletter-form input:focus {
+    background: #0A0A0A;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2);
+  }
+
+  /* Search suggestions dropdown */
+  [data-theme="dark"] .search-suggestions {
+    background: #1C1C1E;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Select dropdowns */
+  [data-theme="dark"] .toolbar-select {
+    background: #141414;
+    border-color: var(--border);
+    color: var(--text-primary);
+  }
+  [data-theme="dark"] .toolbar-select option {
+    background: #1C1C1E;
+    color: var(--text-primary);
+  }
+
+  /* Reviews form inputs */
+  [data-theme="dark"] .rev-form .modal-field input,
+  [data-theme="dark"] .rev-form .modal-field textarea {
+    background: #000000;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+  }
+
+  /* Newsletter */
+  [data-theme="dark"] .newsletter {
+    background: #0A0A0A;
+    border-color: var(--border);
+  }
+
+  /* Hero featured card */
+  [data-theme="dark"] .hero-featured {
+    background: #0A0A0A;
+    border-color: var(--border);
+  }
+
+  /* Float chips */
+  [data-theme="dark"] .float-chip {
+    background: #1C1C1E;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+  }
+
+  /* Category buttons */
+  [data-theme="dark"] .cat-btn {
+    background: #0A0A0A;
+    border-color: var(--border);
+    color: var(--text-primary);
+  }
+  [data-theme="dark"] .cat-btn:hover {
+    background: #141414;
+    border-color: var(--border-strong);
+  }
+  [data-theme="dark"] .cat-btn.active {
+    background: var(--accent);
+    color: #FFFFFF;
+    border-color: transparent;
+  }
+  [data-theme="dark"] .cat-btn-more {
+    background: rgba(191, 90, 242, 0.15) !important;
+    border-color: rgba(191, 90, 242, 0.3) !important;
+    color: var(--purple) !important;
+  }
+
+  /* Product card stock badges */
+  [data-theme="dark"] .stock-badge {
+    background: rgba(48, 209, 88, 0.15);
+    border-color: rgba(48, 209, 88, 0.3);
+    color: var(--success);
+  }
+  [data-theme="dark"] .stock-badge.out {
+    background: rgba(255, 69, 58, 0.15);
+    border-color: rgba(255, 69, 58, 0.3);
+    color: var(--danger);
+  }
+
+  /* Carousel badges */
+  [data-theme="dark"] .carousel-badge {
+    background: rgba(48, 209, 88, 0.15);
+    border-color: rgba(48, 209, 88, 0.3);
+    color: var(--success);
+  }
+  [data-theme="dark"] .carousel-badge.out {
+    background: rgba(255, 69, 58, 0.15);
+    border-color: rgba(255, 69, 58, 0.3);
+    color: var(--danger);
+  }
+
+  /* Step card hover glow */
+  [data-theme="dark"] .step-card::after {
+    background: radial-gradient(circle, rgba(10, 132, 255, 0.15), transparent 70%);
+  }
+
+  /* Timeline */
+  [data-theme="dark"] .track-timeline::before {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  /* Toast — dark surface */
+  [data-theme="dark"] .toast {
+    background: #1C1C1E;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.7);
+  }
+
+  /* Modal input focus rings */
+  [data-theme="dark"] input:focus,
+  [data-theme="dark"] textarea:focus,
+  [data-theme="dark"] select:focus {
+    outline: none;
+  }
+
+  /* Product-rating stars — no glow in dark */
+  [data-theme="dark"] .product-rating i,
+  [data-theme="dark"] .rev-stars-big i,
+  [data-theme="dark"] .rev-stars-inline i {
+    filter: none;
+  }
+</style>
   <!-- TikTok Pixel Code Start -->
 <script>
 !function (w, d, t) {
