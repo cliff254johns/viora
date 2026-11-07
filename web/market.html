@@ -1061,5 +1061,55 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
       }
     };
   </script>
+  <script>
+/* ═══════════════════════════════════════════════════════════════
+   THEME TOGGLE — market.html
+   Reads/writes localStorage key 'viora_theme' (shared across pages)
+   ═══════════════════════════════════════════════════════════════ */
+(function() {
+  const STORAGE_KEY = 'viora_theme';
+  const html = document.documentElement;
+
+  function applyTheme(theme) {
+    html.setAttribute('data-theme', theme);
+
+    const btn = document.getElementById('themeToggleMarket');
+    if (!btn) return;
+
+    const sun = btn.querySelector('.icon-sun');
+    const moon = btn.querySelector('.icon-moon');
+
+    if (theme === 'dark') {
+      if (sun) sun.style.display = 'block';
+      if (moon) moon.style.display = 'none';
+    } else {
+      if (sun) sun.style.display = 'none';
+      if (moon) moon.style.display = 'block';
+    }
+  }
+
+  function setTheme(theme) {
+    try { localStorage.setItem(STORAGE_KEY, theme); } catch (_) {}
+    applyTheme(theme);
+  }
+
+  function toggleTheme() {
+    const current = html.getAttribute('data-theme') || 'light';
+    setTheme(current === 'dark' ? 'light' : 'dark');
+  }
+
+  /* Apply saved theme (already applied inline in <head> to avoid flash) */
+  const saved = (() => {
+    try { return localStorage.getItem(STORAGE_KEY); } catch (_) { return null; }
+  })();
+  applyTheme(saved || 'light');
+
+  /* Bind the toggle */
+  document.addEventListener('DOMContentLoaded', function() {
+    const btn = document.getElementById('themeToggleMarket');
+    if (btn) btn.addEventListener('click', toggleTheme);
+  });
+})();
+</script>
 </body>
 </html>
