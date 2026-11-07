@@ -1502,3 +1502,193 @@ html[data-theme="light"] .market-search input {
     transition-duration: .01ms !important;
   }
 }
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE TOPBAR — FIX
+   Replaces the fragile sticky+wrap layout on phones.
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 899px) {
+
+  /* ── Topbar: single row, no wrap, compact height ── */
+  .portal-topbar {
+    position: sticky;
+    top: 0;
+    height: 52px;
+    padding: 0 10px;
+    gap: 8px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+
+  /* Brand: logo + "VIORA" only. Hide the role badge on mobile. */
+  .portal-brand {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 8px;
+    font-size: .92rem;
+  }
+  .portal-brand .brand-logo {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+  }
+  .portal-brand .role-badge { display: none; }
+
+  /* Actions: only the icon buttons + compact user chip. */
+  .portal-actions {
+    flex: 0 0 auto;
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+
+  /* Hide the "Live sync" pill — no room, and it duplicates the pulse dot. */
+  .portal-actions .live-sync { display: none; }
+
+  /* User chip: avatar + first name only (max 80px), hides on very small screens. */
+  .portal-userinfo {
+    max-width: 84px;
+    font-size: .72rem;
+    padding: 4px 6px;
+    border-radius: 8px;
+    background: var(--bg-input);
+  }
+  .portal-userinfo span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Buttons: icon-only, 32×32 tap target. */
+  .portal-actions .btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 8px;
+    font-size: .82rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .portal-actions .btn i { font-size: .82rem; }
+
+  /* The "Marketplace" text button — turn into an icon-only square. */
+  .portal-actions .btn-purple {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    font-size: 0;
+  }
+  .portal-actions .btn-purple i { font-size: .85rem; }
+
+  /* The theme-toggle + logout buttons share the same square shape. */
+  .portal-actions #pThemeToggle,
+  .portal-actions #pLogout {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+  }
+
+  /* ── Hide the tab strip entirely on mobile ──
+     Bottom nav + subchips are the navigation surface. */
+  .portal-tabs { display: none; }
+
+  /* ── Main content padding must clear topbar + bottom nav + chips ── */
+  .portal-main {
+    padding: 14px 12px calc(var(--nav-h) + var(--chips-h) + 24px + env(safe-area-inset-bottom));
+    max-width: none;
+    margin: 0;
+  }
+
+  /* ── Bottom nav: fixed, flex row, equal buttons ── */
+  #portalBottomNav {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-around;
+    height: var(--nav-h);
+    padding: 0 env(safe-area-inset-left) 0 env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  #portalBottomNav .mnav-item {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 88px;
+    padding: 6px 4px;
+    font-size: .58rem;
+    gap: 2px;
+  }
+  #portalBottomNav .mnav-item i { font-size: 1.05rem; }
+  #portalBottomNav .mnav-label {
+    display: block;
+    font-size: .58rem;
+    letter-spacing: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  /* ── Sub-chips strip sits above the bottom nav ── */
+  #mobileSubChips {
+    display: flex;
+    align-items: center;
+    height: var(--chips-h);
+    padding: 6px 10px;
+    gap: 6px;
+    background: var(--bg-card-solid);
+    border-top: 1px solid var(--border-color);
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  #mobileSubChips::-webkit-scrollbar { display: none; }
+  #mobileSubChips .chip {
+    flex: 0 0 auto;
+    padding: 6px 12px;
+    font-size: .74rem;
+    border-radius: 999px;
+    gap: 5px;
+  }
+  #mobileSubChips .chip i { font-size: .72rem; }
+
+  /* ── Grace banner must not collide with the sticky topbar ── */
+  #pGraceBanner {
+    position: sticky;
+    top: 52px;               /* topbar height */
+    z-index: 44;
+    margin: 0 12px 12px;
+    padding: 10px 14px;
+    font-size: .78rem;
+  }
+
+  /* ── Toasts float above bottom nav + chips ── */
+  #pToastContainer {
+    bottom: calc(var(--nav-h) + var(--chips-h) + 16px + env(safe-area-inset-bottom));
+    left: 12px;
+    right: 12px;
+    max-width: none;
+  }
+  .toast { max-width: none; min-width: 0; width: 100%; }
+
+  /* ── Modals: full-screen-ish on phones ── */
+  .modal-overlay { padding: 10px; }
+  .modal-box {
+    max-height: calc(100vh - 20px);
+    border-radius: 16px;
+  }
+  .modal-head, .modal-body, .modal-foot { padding: 14px 16px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   EXTRA-SMALL PHONES (< 380px)
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 379px) {
+  .portal-topbar { padding: 0 8px; gap: 6px; }
+  .portal-brand { font-size: .85rem; gap: 6px; }
+  .portal-brand .brand-logo { width: 26px; height: 26px; }
+  .portal-userinfo { display: none; }
+  .portal-actions { gap: 4px; }
+  .portal-actions .btn,
+  .portal-actions #pThemeToggle,
+  .portal-actions #pLogout { width: 30px; height: 30px; }
+}
