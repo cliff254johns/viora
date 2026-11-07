@@ -1,3 +1,8 @@
+// ═══════════════════════════════════════════════════════════════
+// scholar-admin-boot.js
+// Stand-alone bootstrap for VIORA Scholar admin console.
+// ═══════════════════════════════════════════════════════════════
+
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 import { getDatabase, ref, set, get, update, remove, push, onValue, forceLongPolling } from "firebase/database";
@@ -47,7 +52,8 @@ const _charts = {}; function destroyChart(id) { if (_charts[id]) { try { _charts
 function safeCanvas(c) { try { c.getContext("2d"); return c; } catch { return null; } }
 function getTextColor() { return document.documentElement.getAttribute("data-theme") === "light" ? "#0a0a0f" : "#94a3b8"; }
 
-// The FIX for the "not iterable" error - Normalize ensures we always pass arrays to training.js
+// ── ROBUST DATA NORMALIZER ──
+// Force arrays to prevent .map() errors on empty nodes
 function normalize(val, forceArray = false) {
   if (!val) return forceArray ? [] : {};
   if (forceArray) {
@@ -120,8 +126,13 @@ function subscribeTraining() {
   for (const [key, path] of Object.entries(PATHS)) {
     onValue(ref(db, P(path)), (snap) => {
       const raw = snap.exists() ? snap.val() : {};
-      if (key === "trainingCertificates" || key === "trainingUsers") state.data[key] = normalize(raw, true); 
-      else state.data[key] = normalize(raw, false);
+      
+      // FORCE ARRAY FOR ALL LIST-BASED TYPES
+      if (["trainingCertificates", "trainingUsers", "trainingAccessRequests"].includes(key)) {
+        state.data[key] = normalize(raw, true);
+      } else {
+        state.data[key] = normalize(raw, false);
+      }
       
       if (key === "trainingUsers") {
         state.data.users = state.data.trainingUsers.filter(u => u.role === "trainer" || !u.role);
