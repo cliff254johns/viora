@@ -501,11 +501,63 @@ async function _upsertDocLocked(collection, entity, existingRev) {
     }
   }
 
+  /* ── 4.5 Merge campaign posts arrays so we never lose any post fields ──
+     When writing a campaign, the incoming `entity.posts` might be missing
+     fields that exist in Firebase (e.g. scheduledFor was stripped
+     somewhere upstream, or a merge produced a partial posts array).
+     Fetch the current campaign from Firebase and MERGE the arrays by
+     post id, keeping every field that exists on either side. */
+  if (collection === 'campaigns' && Array.isArray(working.posts)) {
+    try {
+      const remotePath = `${deps.P(collection)}/${working.id}`;
+      const remoteSnap = await deps.get(deps.ref(deps.db, remotePath));
+      if (remoteSnap.exists()) {
+        const remote = remoteSnap.val();
+        const remotePosts = remote && remote.posts
+          ? (Array.isArray(remote.posts) ? remote.posts : Object.values(remote.posts))
+          : [];
+        const incomingPosts = working.posts;
+        const remoteById = new Map();
+        for (const rp of remotePosts) if (rp && rp.id) remoteById.set(rp.id, rp);
+
+        const mergedPosts = incomingPosts.map(ip => {
+          if (!ip || !ip.id) return ip;
+          const rp = remoteById.get(ip.id);
+          if (!rp) return ip;
+          /* Preserve every field from both sides. Incoming wins for
+             fields it explicitly has. Remote wins for fields the
+             incoming version omits. */
+          const merged = { ...rp, ...ip };
+          /* Critical: never let an undefined incoming field overwrite
+             a defined remote field (especially scheduledFor, utm,
+             status, publishedAt, externalId). */
+          for (const key of Object.keys(rp)) {
+            if (ip[key] === undefined && rp[key] !== undefined) {
+              merged[key] = rp[key];
+            }
+          }
+          return merged;
+        });
+
+        /* Preserve remote posts that weren't in the incoming array */
+        const incomingIds = new Set(incomingPosts.map(p => p && p.id).filter(Boolean));
+        for (const rp of remotePosts) {
+          if (rp && rp.id && !incomingIds.has(rp.id)) {
+            mergedPosts.push(rp);
+          }
+        }
+
+        working = { ...working, posts: mergedPosts };
+      }
+    } catch (e) {
+      console.warn('[write-layer] campaign posts merge failed (non-fatal):', e.message);
+    }
+  }
+
   /* ── 5. Optimistic local update ── */
   const localRecord = { ...working, _updatedAt: new Date().toISOString() };
   putInArray(collection, localRecord);
   persistLocal();
-
   /* ── 6. Offline: queue and return ── */
   if (!isOnline()) {
     await deps.queueOfflineMutation(collection, 'upsert', localRecord, existingRev);
