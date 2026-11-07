@@ -501,24 +501,34 @@ async function initModules() {
 function attachListeners() {
 
 /* campaigns */
-onValue(ref(db, P('campaigns')), (snap) => {
-  const val = snap.exists() ? snap.val() : {};
-  state.data.campaigns = Object.entries(val).map(([k, v]) => ({ ...(v || {}), id: v?.id || k }));
+  /* campaigns */
+  onValue(ref(db, P('campaigns')), (snap) => {
+    const val = snap.exists() ? snap.val() : {};
+    state.data.campaigns = Object.entries(val).map(([k, v]) => ({ ...(v || {}), id: v?.id || k }));
 
-  /* If the calendar module is currently visible, re-render it so
-     scheduled posts appear immediately after a save. Same for the
-     other campaign-reading modules. */
-  if (state.firebaseReady) {
-    const current = window.Orbit?.currentModule?.();
-    if (current === 'calendar' || current === 'campaigns' || current === 'analytics' || current === 'publishing') {
-      try { window.Orbit?.renderActiveOrbitModule?.(); } catch (_) {}
-    } else if (state.currentTab === 'marketing-campaigns') {
-      try { renderCampaigns(); } catch (_) {}
-    } else if (state.currentTab === 'campaign-analytics') {
-      try { renderAnalyticsDashboard(); } catch (_) {}
-    }
-  }
-});
+    if (!state.firebaseReady) return;
+
+    /* Repaint whatever module is currently visible if it reads campaigns.
+       Previously this only refreshed the campaigns table and analytics
+       dashboard, so scheduled posts saved from the composer never appeared
+       in the calendar until the user navigated to another tab and back. */
+    try {
+      const current = window.Orbit?.currentModule?.();
+      if (current === 'calendar'
+          || current === 'campaigns'
+          || current === 'publishing'
+          || current === 'analytics'
+          || current === 'content'
+          || current === 'approvals') {
+        window.Orbit?.renderActiveOrbitModule?.();
+        return;
+      }
+    } catch (_) {}
+
+    /* Fallback — preserve the original in-tab renders for the legacy tab system */
+    if (state.currentTab === 'marketing-campaigns') renderCampaigns();
+    if (state.currentTab === 'campaign-analytics') renderAnalyticsDashboard();
+  });
 
   /* leads — needed for the "Leads" column in the campaigns table */
   onValue(ref(db, P('leads')), (snap) => {
