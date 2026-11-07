@@ -4,7 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>VIORA Academy — Training Portal</title>
-  <!-- Favicon + touch icons -->
+<meta name="description" content="VIORA Academy — structured training, onboarding checklists and certifications for VIORA clients and staff.">
+<link rel="canonical" href="https://viora.co.ke/training.html">
+<meta name="theme-color" content="#0A192F">
+
+<!-- Favicon + touch icons -->
 <link rel="icon" type="image/png" href="https://viora.co.ke/viora.png">
 <link rel="shortcut icon" type="image/png" href="https://viora.co.ke/viora.png">
 <link rel="apple-touch-icon" href="https://viora.co.ke/viora.png">
@@ -14,16 +18,23 @@
 <link rel="mask-icon" href="https://viora.co.ke/viora.png" color="#00d2ff">
 <meta name="msapplication-TileImage" content="https://viora.co.ke/viora.png">
 <meta name="msapplication-TileColor" content="#070a13">
-<meta name="theme-color" content="#0A192F">
-<meta name="description" content="VIORA Academy — structured training, onboarding checklists and certifications for VIORA clients and staff.">
-<link rel="canonical" href="https://viora.co.ke/training.html">
-<meta name="theme-color" content="#0A192F">
+<meta name="application-name" content="VIORA">
+
+<!-- Prevent flash of wrong theme -->
+<script>
+try {
+  var saved = localStorage.getItem('viora_theme');
+  document.documentElement.setAttribute('data-theme', saved === 'dark' ? 'dark' : 'light');
+} catch (_) {
+  document.documentElement.setAttribute('data-theme', 'light');
+}
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared-app.css">
 <style>
-/* ---------- Creative hero ---------- */
 .academy-hero{
   padding:140px 0 80px;position:relative;overflow:hidden;
 }
@@ -35,17 +46,15 @@
   content:"";position:absolute;bottom:-400px;right:-200px;width:800px;height:800px;border-radius:50%;
   background:radial-gradient(circle,rgba(35,199,217,.12),transparent 70%);pointer-events:none;
 }
+[data-theme="dark"] .academy-hero::before{background:radial-gradient(circle,rgba(191,90,242,.12),transparent 70%)}
+[data-theme="dark"] .academy-hero::after{background:radial-gradient(circle,rgba(100,210,255,.1),transparent 70%)}
 .academy-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:64px;align-items:center;position:relative;z-index:1}
 @media(max-width:900px){.academy-grid{grid-template-columns:1fr;gap:48px}}
 .academy-hero h1{font-size:clamp(34px,5vw,54px);line-height:1.08;margin-bottom:20px;letter-spacing:-.03em}
 .academy-hero p{font-size:18px;color:var(--muted);max-width:520px;line-height:1.7;margin-bottom:32px}
 .academy-ctas{display:flex;gap:14px;flex-wrap:wrap}
 
-/* Floating course preview with animation */
-.course-preview{
-  position:relative;
-  perspective:1200px;
-}
+.course-preview{position:relative;perspective:1200px}
 .course-preview .cp-card{
   background:linear-gradient(135deg,#0A192F 0%,#1E293B 100%);
   border-radius:24px;padding:28px;color:#fff;
@@ -55,14 +64,20 @@
   transition:transform .5s var(--ease);
   position:relative;
 }
+[data-theme="dark"] .course-preview .cp-card{
+  background:linear-gradient(135deg,#0A0A0A 0%,#141414 100%);
+  border-color:rgba(255,255,255,.08);
+}
 .course-preview .cp-card::before{
   content:"";position:absolute;inset:-2px;border-radius:26px;z-index:-1;
   background:linear-gradient(135deg,rgba(139,92,246,.5),rgba(35,199,217,.4));
   filter:blur(24px);opacity:.6;
 }
+[data-theme="dark"] .course-preview .cp-card::before{
+  background:linear-gradient(135deg,rgba(191,90,242,.4),rgba(100,210,255,.3));opacity:.5;
+}
 .course-preview:hover .cp-card{transform:rotateY(0) rotateX(0)}
 
-/* Floating decorative cards */
 .float-badge{
   position:absolute;background:var(--white);border:1px solid var(--line);
   border-radius:14px;padding:12px 16px;box-shadow:var(--shadow-lg);
@@ -70,7 +85,7 @@
   animation:floaty 4s ease-in-out infinite;
   z-index:3;
 }
-[data-theme="dark"] .float-badge{background:var(--bg-alt)}
+[data-theme="dark"] .float-badge{background:#0A0A0A;border-color:rgba(255,255,255,.08)}
 .float-badge .fb-icon{
   width:32px;height:32px;border-radius:10px;display:grid;place-items:center;
   font-size:16px;flex-shrink:0;
@@ -80,10 +95,7 @@
 .float-badge .fb-text{display:flex;flex-direction:column;line-height:1.2}
 .float-badge .fb-text strong{font-size:13px;color:var(--ink);font-family:'Manrope'}
 .float-badge .fb-text small{font-size:11px;color:var(--muted)}
-@keyframes floaty{
-  0%,100%{transform:translateY(0)}
-  50%{transform:translateY(-8px)}
-}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 @media(max-width:900px){.float-badge{display:none}}
 
 .cp-tag{
@@ -106,16 +118,17 @@
   border-radius:10px;font-size:12px;
 }
 .cp-module.done{background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.3)}
+[data-theme="dark"] .cp-module.done{background:rgba(48,209,88,.15);border-color:rgba(48,209,88,.3)}
 .cp-module .num{
   width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.1);
   display:grid;place-items:center;font-size:10px;font-weight:700;flex-shrink:0;
 }
 .cp-module.done .num{background:#10B981;color:#fff}
+[data-theme="dark"] .cp-module.done .num{background:#30D158}
 .cp-module span{flex:1;color:rgba(255,255,255,.85)}
 
-/* ---------- Why academy ---------- */
 .why-academy{padding:100px 0;background:var(--bg)}
-[data-theme="dark"] .why-academy{background:rgba(15,23,42,.5)}
+[data-theme="dark"] .why-academy{background:#000000}
 .why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:48px}
 @media(max-width:900px){.why-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.why-grid{grid-template-columns:1fr}}
@@ -125,14 +138,16 @@
   transition:transform .3s var(--ease),box-shadow .3s,border-color .3s;
   position:relative;overflow:hidden;
 }
-[data-theme="dark"] .why-card{background:var(--bg-alt)}
+[data-theme="dark"] .why-card{background:#0A0A0A;border-color:rgba(255,255,255,.08)}
 .why-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--accent)}
+[data-theme="dark"] .why-card:hover{border-color:#0A84FF}
 .why-card .v-icon{margin:0 auto 20px;transition:transform .4s var(--ease-spring)}
 .why-card:hover .v-icon{transform:scale(1.1) rotate(-5deg)}
 .why-card h3{font-size:17px;margin-bottom:8px}
+[data-theme="dark"] .why-card h3{color:#F5F5F7}
 .why-card p{font-size:14px;color:var(--muted);line-height:1.65;margin:0}
+[data-theme="dark"] .why-card p{color:#98989D}
 
-/* ---------- Course carousel ---------- */
 .courses-section{padding:100px 0}
 .courses-section .section-sub{max-width:600px}
 .course-card-lg{
@@ -140,39 +155,49 @@
   background:var(--white);border:1px solid var(--line);border-radius:20px;
   overflow:hidden;transition:transform .3s var(--ease),box-shadow .3s,border-color .3s;
 }
-[data-theme="dark"] .course-card-lg{background:var(--bg-alt)}
+[data-theme="dark"] .course-card-lg{background:#0A0A0A;border-color:rgba(255,255,255,.08)}
 .course-card-lg:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--accent)}
-.course-card-lg .ccl-visual{
-  height:160px;position:relative;overflow:hidden;display:grid;place-items:center;
-}
+[data-theme="dark"] .course-card-lg:hover{border-color:#0A84FF}
+.course-card-lg .ccl-visual{height:160px;position:relative;overflow:hidden;display:grid;place-items:center}
 .course-card-lg .ccl-visual.v1{background:linear-gradient(135deg,rgba(34,103,238,.2),rgba(35,199,217,.2))}
 .course-card-lg .ccl-visual.v2{background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(236,72,153,.2))}
 .course-card-lg .ccl-visual.v3{background:linear-gradient(135deg,rgba(16,185,129,.2),rgba(34,103,238,.2))}
 .course-card-lg .ccl-visual.v4{background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(236,72,153,.2))}
+[data-theme="dark"] .course-card-lg .ccl-visual.v1{background:linear-gradient(135deg,rgba(10,132,255,.25),rgba(100,210,255,.2))}
+[data-theme="dark"] .course-card-lg .ccl-visual.v2{background:linear-gradient(135deg,rgba(191,90,242,.25),rgba(255,55,95,.2))}
+[data-theme="dark"] .course-card-lg .ccl-visual.v3{background:linear-gradient(135deg,rgba(48,209,88,.2),rgba(10,132,255,.2))}
+[data-theme="dark"] .course-card-lg .ccl-visual.v4{background:linear-gradient(135deg,rgba(255,159,10,.2),rgba(255,55,95,.2))}
 .course-card-lg .ccl-visual .ccl-glyph{
   font-family:'Manrope';font-weight:800;font-size:56px;
   color:rgba(34,103,238,.35);letter-spacing:-.04em;
   position:relative;z-index:1;
 }
+[data-theme="dark"] .course-card-lg .ccl-visual .ccl-glyph{color:rgba(10,132,255,.4)}
 .course-card-lg .ccl-body{padding:22px;display:flex;flex-direction:column;gap:10px}
 .course-card-lg .ccl-tag{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+[data-theme="dark"] .course-card-lg .ccl-tag{color:#64D2FF}
 .course-card-lg h4{font-size:18px;margin:0;line-height:1.3}
+[data-theme="dark"] .course-card-lg h4{color:#F5F5F7}
 .course-card-lg p{font-size:13.5px;color:var(--muted);margin:0;line-height:1.55;flex:1}
+[data-theme="dark"] .course-card-lg p{color:#98989D}
 .course-card-lg .ccl-meta{
   display:flex;gap:16px;padding-top:12px;border-top:1px solid var(--line);
   font-size:12px;color:var(--muted);margin-top:auto;flex-wrap:wrap;
 }
+[data-theme="dark"] .course-card-lg .ccl-meta{border-top-color:rgba(255,255,255,.08);color:#98989D}
 .course-card-lg .ccl-meta .ccl-meta-item{display:flex;align-items:center;gap:6px}
 .course-card-lg .ccl-meta svg{width:14px;height:14px;color:var(--accent)}
+[data-theme="dark"] .course-card-lg .ccl-meta svg{color:#64D2FF}
 
-/* ---------- Achievements section ---------- */
 .achievements{background:var(--navy);color:#fff;padding:100px 0;position:relative;overflow:hidden}
+[data-theme="dark"] .achievements{background:#0A0A0A;border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06)}
 .achievements::before{
   content:"";position:absolute;top:-100px;left:50%;transform:translateX(-50%);
   width:800px;height:800px;border-radius:50%;
   background:radial-gradient(circle,rgba(139,92,246,.2),transparent 60%);
   pointer-events:none;
 }
+[data-theme="dark"] .achievements::before{background:radial-gradient(circle,rgba(191,90,242,.1),transparent 60%)}
 .achievements .wrap{position:relative;z-index:1}
 .achievements h2{color:#fff;font-size:clamp(28px,3.6vw,42px);margin-bottom:16px;text-align:center}
 .achievements .section-sub{color:rgba(255,255,255,.75);margin:0 auto 48px;text-align:center}
@@ -183,7 +208,9 @@
   border-radius:20px;padding:32px;transition:transform .3s,background .3s;
   position:relative;overflow:hidden;
 }
+[data-theme="dark"] .achievement-card{background:#141414;border-color:rgba(255,255,255,.08)}
 .achievement-card:hover{transform:translateY(-4px);background:rgba(255,255,255,.07)}
+[data-theme="dark"] .achievement-card:hover{background:#1C1C1E}
 .achievement-card::before{
   content:"";position:absolute;top:0;left:0;right:0;height:2px;
   background:linear-gradient(90deg,transparent,#A78BFA,transparent);
@@ -194,30 +221,35 @@
   background:linear-gradient(135deg,rgba(139,92,246,.25),rgba(35,199,217,.15));
   color:#C4B5FD;margin-bottom:20px;font-size:26px;
 }
+[data-theme="dark"] .achievement-card .ac-icon{background:rgba(191,90,242,.2);color:#BF5AF2}
 .achievement-card h3{color:#fff;font-size:18px;margin-bottom:8px}
 .achievement-card p{color:rgba(255,255,255,.7);font-size:14px;line-height:1.65;margin:0}
 
-/* ---------- Sign-in section ---------- */
 .signin-section{padding:100px 0;text-align:center}
 .signin-box{
   max-width:500px;margin:0 auto;background:var(--white);border:1px solid var(--line);
   border-radius:24px;padding:48px 40px;box-shadow:var(--shadow-xl);
 }
-[data-theme="dark"] .signin-box{background:var(--bg-alt)}
+[data-theme="dark"] .signin-box{background:#0A0A0A;border-color:rgba(255,255,255,.08)}
 @media(max-width:520px){.signin-box{padding:32px 24px}}
 .signin-box h2{font-size:28px;margin-bottom:8px;letter-spacing:-.02em}
+[data-theme="dark"] .signin-box h2{color:#F5F5F7}
 .signin-box > p{color:var(--muted);font-size:15px;margin-bottom:24px;line-height:1.7}
+[data-theme="dark"] .signin-box > p{color:#98989D}
 .signin-box .btn{width:100%;justify-content:center;margin-bottom:12px}
 .signin-note{
   margin-top:24px;padding:16px;border-radius:12px;
   background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.25);
   font-size:13px;color:var(--ink);line-height:1.6;text-align:left;
 }
-[data-theme="dark"] .signin-note{background:rgba(139,92,246,.15);color:#E9D5FF}
+[data-theme="dark"] .signin-note{background:rgba(191,90,242,.12);border-color:rgba(191,90,242,.3);color:#E9D5FF}
 .signin-note strong{color:var(--accent-3)}
 [data-theme="dark"] .signin-note strong{color:#C4B5FD}
 .signin-box .signin-links{margin-top:20px;font-size:13px;color:var(--muted)}
 .signin-box .signin-links a{color:var(--accent);font-weight:600}
+[data-theme="dark"] .signin-box .signin-links a{color:#64D2FF}
+
+[data-theme="dark"] section[style*="var(--navy)"]{background:#000000!important;border-top:1px solid rgba(255,255,255,.06)}
 </style>
 </head>
 <body>
@@ -228,12 +260,12 @@
 
 <header class="nav" id="nav">
   <div class="nav-inner">
-   <a href="index.html" class="brand">
-  <div class="brand-logo">
-    <img src="https://viora.co.ke/viora.png" alt="VIORA" class="brand-logo-img" loading="lazy" onerror="this.parentNode.classList.add('no-img');this.remove();" />
-  </div>
-  <div class="brand-text"><strong>VIORA</strong><small>ECOSYSTEMS</small></div>
-</a>
+    <a href="index.html" class="brand">
+      <div class="brand-logo">
+        <img src="https://viora.co.ke/viora.png" alt="VIORA" class="brand-logo-img" loading="eager" onerror="this.parentNode.classList.add('no-img');this.remove();" />
+      </div>
+      <div class="brand-text"><strong>VIORA</strong><small>ECOSYSTEMS</small></div>
+    </a>
     <nav aria-label="Primary">
       <ul class="nav-links">
         <li><a href="index.html">Home</a></li>
@@ -258,7 +290,10 @@
 </header>
 
 <div class="mobile-appbar" role="banner">
-  <div class="mab-brand"><div class="mab-logo">V</div><span>VIORA Learn</span></div>
+  <div class="mab-brand">
+    <img src="https://viora.co.ke/viora.png" alt="VIORA" style="width:32px;height:32px;border-radius:8px;object-fit:contain;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12);" />
+    <span>VIORA Learn</span>
+  </div>
   <div class="mab-actions">
     <button class="mab-btn" data-theme-toggle aria-label="Theme">
       <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -284,7 +319,6 @@
 
 <main id="main">
 
-<!-- ============ CREATIVE HERO ============ -->
 <section class="academy-hero">
   <div class="wrap">
     <div class="academy-grid">
@@ -298,7 +332,6 @@
         </div>
       </div>
 
-      <!-- Floating course preview -->
       <div class="course-preview reveal" aria-hidden="true">
         <div class="cp-card">
           <span class="cp-tag">Software Tutorial</span>
@@ -315,7 +348,6 @@
           </div>
         </div>
 
-        <!-- Floating achievement badges -->
         <div class="float-badge b1">
           <div class="fb-icon" style="background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(245,158,11,.1));color:#F59E0B">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
@@ -340,7 +372,6 @@
   </div>
 </section>
 
-<!-- ============ WHY ACADEMY ============ -->
 <section class="why-academy">
   <div class="wrap">
     <div class="text-center reveal">
@@ -381,7 +412,6 @@
   </div>
 </section>
 
-<!-- ============ COURSE CAROUSEL ============ -->
 <section class="courses-section">
   <div class="wrap">
     <span class="eyebrow reveal">Available Courses</span>
@@ -464,7 +494,6 @@
   </div>
 </section>
 
-<!-- ============ ACHIEVEMENTS ============ -->
 <section class="achievements">
   <div class="wrap">
     <h2 class="reveal">Everything you earn, kept forever.</h2>
@@ -495,7 +524,6 @@
   </div>
 </section>
 
-<!-- ============ SIGN IN ============ -->
 <section class="signin-section">
   <div class="wrap">
     <div class="signin-box reveal">
@@ -517,7 +545,6 @@
   </div>
 </section>
 
-<!-- ============ CTA ============ -->
 <section style="background:var(--navy);color:#fff;text-align:center;padding:100px 0">
   <div class="wrap">
     <h2 style="color:#fff;font-size:clamp(28px,3.6vw,42px);margin-bottom:16px" class="reveal">Want your team trained on VIORA?</h2>
@@ -535,12 +562,12 @@
   <div class="wrap">
     <div class="foot-grid">
       <div>
-       <a href="index.html" class="brand">
-  <div class="brand-logo">
-    <img src="https://viora.co.ke/viora.png" alt="VIORA" class="brand-logo-img" loading="lazy" onerror="this.parentNode.classList.add('no-img');this.remove();" />
-  </div>
-  <div class="brand-text"><strong>VIORA</strong><small>ECOSYSTEMS</small></div>
-</a>
+        <a href="index.html" class="brand">
+          <div class="brand-logo">
+            <img src="https://viora.co.ke/viora.png" alt="VIORA" class="brand-logo-img" loading="lazy" onerror="this.parentNode.classList.add('no-img');this.remove();" />
+          </div>
+          <div class="brand-text"><strong>VIORA</strong><small>ECOSYSTEMS</small></div>
+        </a>
         <p class="foot-tag">Connect People. Empower Businesses.</p>
         <p style="color:rgba(255,255,255,.5);font-size:13px;line-height:1.7;max-width:300px">An integrated technology ecosystem for business management, commerce, digital services and support. Founded 2022.</p>
       </div>
@@ -610,5 +637,20 @@
 </nav>
 
 <script src="shared-app.js" defer></script>
+<script>
+  document.getElementById('yr').textContent = new Date().getFullYear();
+  (function(){
+    const KEY = 'viora_theme';
+    const html = document.documentElement;
+    document.querySelectorAll('[data-theme-toggle]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const cur = html.getAttribute('data-theme') || 'light';
+        const next = cur === 'dark' ? 'light' : 'dark';
+        try { localStorage.setItem(KEY, next); } catch(_){}
+        html.setAttribute('data-theme', next);
+      });
+    });
+  })();
+</script>
 </body>
 </html>
