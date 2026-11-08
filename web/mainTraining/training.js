@@ -720,33 +720,59 @@ function openCourse(courseId) {
   const course = S.courses[courseId];
   if (!course) { toast("Course not found.", "error"); return; }
 
-  /* ACCESS GATE — stop here if the learner doesn't have this tier */
-  if (!canAccessCourse(course)) {
-    showUpgradeModal(courseId);
+  if (!canAccessCourse(course)) { showUpgradeModal(courseId); return; }
+
+  /* If not enrolled yet, enroll first, THEN open the lesson directly. */
+  if (!isEnrolled(courseId)) {
+    enrollAndOpen(courseId, { openImmediately: true });
     return;
   }
 
-  if (!isEnrolled(courseId)) { enrollAndOpen(courseId); return; }
   const mod = firstIncompleteModule(course);
   if (!mod) { toast("This course has no modules yet.", "info"); return; }
   openLesson(courseId, mod.id);
 }
-function enrollAndOpen(courseId) {
+
+function enrollAndOpen(courseId, opts = {}) {
   if (!S.user) return;
   const course = S.courses[courseId];
   if (!course) { toast("Course not found.", "error"); return; }
+
+  /* If already enrolled, just open it */
   const existing = S.enrollments?.[courseId];
-  if (existing) { openCourse(courseId); return; }
-  const payload = { courseId, startedAt: nowIso(), progress: 0, completedAt: null, enrolledBy: S.user.uid, enrolledByName: S.access?.name || S.user.email || "Learner", enrolledAt: nowIso() };
+  if (existing) {
+    const mod = firstIncompleteModule(course);
+    if (mod) openLesson(courseId, mod.id);
+    else toast("This course has no modules yet.", "info");
+    return;
+  }
+
+  const payload = {
+    courseId,
+    startedAt: nowIso(),
+    progress: 0,
+    completedAt: null,
+    enrolledBy: S.user.uid,
+    enrolledByName: S.access?.name || S.user.email || "Learner",
+    enrolledAt: nowIso()
+  };
+
   set(ref(db, `${SCHOLAR}/enrollments/${S.user.uid}/${courseId}`), payload)
     .then(() => {
+      /* Optimistically update local state so the very next click sees it. */
       S.enrollments[courseId] = payload;
+
       toast("Enrolled. Let's get started!", "success");
+
+      /* Open the first lesson — never leave the learner on a dead button. */
       const mod = firstIncompleteModule(course);
       if (mod) openLesson(courseId, mod.id);
       else toast("This course has no modules yet.", "info");
     })
-    .catch((e) => { toast("Could not enroll. Retry.", "error"); });
+    .catch((e) => {
+      console.error("[training] enroll failed", e);
+      toast("Could not enroll: " + (e.message || e.code), "error");
+    });
 }
 
 function openLesson(courseId, moduleId) {
