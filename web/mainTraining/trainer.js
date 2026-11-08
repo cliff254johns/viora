@@ -1,6 +1,7 @@
-// mainTraining/trainer.js
-// VIORA Scholar — Trainer Portal with login + approval gate.
-// ═══════════════════════════════════════════════════════════════
+// File: mainTraining/trainer.js
+// FIXES: Uses default Firebase app (same session as admin). Sign-out bug fixed — no
+// signOut() on accessRequest write failure. handleAuth() cleanly distinguishes missing /
+// pending / rejected / approved. _trBound guards prevent duplicate nav handlers.
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import {
@@ -27,7 +28,7 @@ const db = getDatabase(app); forceLongPolling(db);
 const auth = getAuth(app);
 
 const ROOT = "viora_data";
-const ORG = "orgs/viora";
+const ORG  = "orgs/viora";
 const P = (path) => `${ROOT}/${ORG}/training/${path}`;
 const USERS_ROOT = `${ROOT}/${ORG}/users`;
 
@@ -76,9 +77,6 @@ document.addEventListener("click", (e) => {
   if (closer) closeModal(closer.dataset.close);
 });
 
-/* ═══════════════════════════════════════════════════════════════
-   STATE
-   ═══════════════════════════════════════════════════════════════ */
 const state = {
   operator: null,
   courses: {},
@@ -88,9 +86,6 @@ const state = {
   currentTab: "overview"
 };
 
-/* ═══════════════════════════════════════════════════════════════
-   SCREEN SWITCHER
-   ═══════════════════════════════════════════════════════════════ */
 function showScreen(name) {
   const login = $("trLoginScreen");
   const pending = $("trPendingScreen");
@@ -100,9 +95,6 @@ function showScreen(name) {
   if (shell)   shell.style.display   = name === "app"     ? "flex" : "none";
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   LOGIN TAB SWITCHER
-   ═══════════════════════════════════════════════════════════════ */
 function setLoginMode(mode) {
   const isIn = mode === "signin";
   $("trTabSignIn")?.classList.toggle("active", isIn);
@@ -117,7 +109,7 @@ function setLoginMode(mode) {
     $("trLoginHeading").innerHTML = isIn ? 'Trainer <span>sign in</span>' : 'Request <span>access</span>';
   }
   if ($("trLoginSubheading")) {
-    $("trLoginSubheading").textContent = isIn ? 'Sign in to your trainer workspace' : 'Apply for a trainer account';
+    $("trLoginSubheading").textContent = isIn ? "Sign in to your trainer workspace" : "Apply for a trainer account";
   }
   clearLoginMessage();
 }
@@ -134,17 +126,13 @@ function clearLoginMessage() {
   if (el) { el.textContent = ""; el.style.display = "none"; }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   SIGN IN
-   ═══════════════════════════════════════════════════════════════ */
 async function doTrainerSignIn() {
   const email = ($("trLoginEmail")?.value || "").trim();
   const password = $("trLoginPassword")?.value || "";
   const btn = $("trLoginBtn");
   if (!email || !password) { showLoginMessage("Enter your email and password."); return; }
-  const orig = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Signing in…';
+  const orig = btn ? btn.innerHTML : "";
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Signing in…'; }
   clearLoginMessage();
   try {
     await signInWithEmailAndPassword(auth, email, password);
@@ -158,13 +146,10 @@ async function doTrainerSignIn() {
       "auth/network-request-failed": "Network error. Check your connection."
     }[e.code] || (e.message || "Sign-in failed.");
     showLoginMessage(friendly);
-    btn.disabled = false; btn.innerHTML = orig;
+    if (btn) { btn.disabled = false; btn.innerHTML = orig; }
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   REQUEST TRAINER ACCESS
-   ═══════════════════════════════════════════════════════════════ */
 async function doTrainerRequest() {
   const name = ($("trReqName")?.value || "").trim();
   const email = ($("trReqEmail")?.value || "").trim().toLowerCase();
@@ -178,17 +163,31 @@ async function doTrainerRequest() {
   if (password.length < 6) { showLoginMessage("Password must be at least 6 characters."); return; }
   if (password !== password2) { showLoginMessage("Passwords do not match."); return; }
 
-  const orig = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting…';
+  const orig = btn ? btn.innerHTML : "";
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting…'; }
   clearLoginMessage();
 
+  let cred;
   try {
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    cred = await createUserWithEmailAndPassword(auth, email, password);
+  } catch (e) {
+    console.error("[trainer] signup failed:", e);
+    const friendly = {
+      "auth/email-already-in-use": "That email is already registered. Try signing in instead.",
+      "auth/weak-password": "Password must be at least 6 characters.",
+      "auth/invalid-email": "That email address is not valid."
+    }[e.code] || (e.message || "Sign-up failed.");
+    showLoginMessage(friendly, "error");
+    if (btn) { btn.disabled = false; btn.innerHTML = orig; }
+    return;
+  }
+
+  // Auth succeeded. Now write the access request. If write fails, DO NOT sign out —
+  // show the error and let the user retry signing in later (the auth session persists).
+  try {
     const uidKey = cred.user.uid;
     const requestedAt = nowIso();
 
-    // 1. Access request
     await set(ref(db, `${ROOT}/${ORG}/training/accessRequests/${uidKey}`), {
       uid: uidKey,
       name, email, phone,
@@ -199,7 +198,7 @@ async function doTrainerRequest() {
       source: "trainer-portal"
     });
 
-    // 2. Seed user profile (best-effort — the accessRequest is what matters)
+    // Best-effort profile seed — accessRequest is authoritative.
     try {
       const userSnap = await get(ref(db, `${USERS_ROOT}/${uidKey}`));
       if (!userSnap.exists()) {
@@ -213,42 +212,28 @@ async function doTrainerRequest() {
         });
       }
     } catch (profileErr) {
-      // Non-fatal — admin can still see the request and create the profile on approve
       console.warn("[trainer] profile seed failed (non-fatal):", profileErr?.message);
     }
 
     toast("Request submitted. An admin will review it shortly.", "success");
-    // Note: onAuthStateChanged fires automatically — no need to change screens manually
+    // onAuthStateChanged fires — handleAuth will route to pending screen.
   } catch (e) {
-    console.error("[trainer] signup/write failed:", e);
-    const friendly = {
-      "auth/email-already-in-use": "That email is already registered. Try signing in instead.",
-      "auth/weak-password": "Password must be at least 6 characters.",
-      "auth/invalid-email": "That email address is not valid.",
-      "PERMISSION_DENIED": "Your request could not be saved (permission denied). Please contact support@viora.co.ke."
-    }[e.code] || (e.message || "Request failed.");
+    console.error("[trainer] accessRequest write failed:", e);
+    const friendly = e.code === "PERMISSION_DENIED"
+      ? "Your request could not be saved (permission denied). Please contact support@viora.co.ke."
+      : (e.message || "Request failed.");
     showLoginMessage(friendly, "error");
-    btn.disabled = false; btn.innerHTML = orig;
-
-    // If auth succeeded but DB write failed, sign out so they can retry cleanly
-    if (auth.currentUser) {
-      try { await signOut(auth); } catch (_) {}
-    }
+    if (btn) { btn.disabled = false; btn.innerHTML = orig; }
+    // Deliberately NOT calling signOut() — the auth session is fine, only the DB write failed.
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   SIGN OUT
-   ═══════════════════════════════════════════════════════════════ */
 async function doTrainerSignOut() {
   if (!confirm("Sign out of the trainer portal?")) return;
   try { await signOut(auth); }
   catch (e) { console.warn("[trainer] sign-out failed", e); }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   COURSE BUILDER
-   ═══════════════════════════════════════════════════════════════ */
 let _ceModulesDraft = [];
 let _ceEditingId = null;
 
@@ -341,7 +326,7 @@ window.saveCourse = async () => {
   };
 
   const btn = $("ceSaveBtn");
-  btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…'; }
   try {
     await set(ref(db, P(`courses/${id}`)), payload);
     toast("Draft saved successfully.", "success");
@@ -349,13 +334,10 @@ window.saveCourse = async () => {
   } catch (e) {
     toast("Save failed: " + e.message, "error");
   } finally {
-    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check"></i> Save Draft';
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check"></i> Save Draft'; }
   }
 };
 
-/* ═══════════════════════════════════════════════════════════════
-   TAB RENDERING
-   ═══════════════════════════════════════════════════════════════ */
 function switchTab(tab) {
   state.currentTab = tab;
   document.querySelectorAll(".sch-nav-item").forEach(b => b.classList.toggle("active", b.dataset.trTab === tab));
@@ -370,7 +352,7 @@ function switchTab(tab) {
 }
 
 function renderOverview() {
-  const myCourses = Object.values(state.courses || {}).filter(c => c.trainerId === state.operator.uid);
+  const myCourses = Object.values(state.courses || {}).filter(c => c.trainerId === state.operator?.uid);
   if ($("trOverviewKpi")) {
     $("trOverviewKpi").innerHTML = `
       <div class="stat-card" style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:16px;"><div style="color:var(--accent-blue);font-size:1.5rem;margin-bottom:8px;"><i class="fa-solid fa-book-open"></i></div><div style="font-size:1.5rem;font-weight:800;">${myCourses.length}</div><div style="font-size:.75rem;color:var(--text-secondary);text-transform:uppercase;">My Courses</div></div>
@@ -384,7 +366,7 @@ function renderOverview() {
 }
 
 function renderTrainerCourses() {
-  const myCourses = Object.values(state.courses || {}).filter(c => c.trainerId === state.operator.uid);
+  const myCourses = Object.values(state.courses || {}).filter(c => c.trainerId === state.operator?.uid);
   const grid = $("trCoursesGrid");
   if (!grid) return;
   if (!myCourses.length) {
@@ -416,7 +398,7 @@ function renderLearners() {
 }
 function renderGrading() {
   if ($("trGradingBody")) {
-    $("trGradingBody").innerHTML = `<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--text-secondary);">No quiz submissions awaiting grading.</td></tr>`;
+    $("trGradingBody").innerHTML = `<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--text-secondary);">No quiz submissions awaiting grading.</td></tr>`;
   }
 }
 
@@ -428,9 +410,6 @@ window.submitForReview = async (id) => {
   } catch (e) { toast("Failed: " + e.message, "error"); }
 };
 
-/* ═══════════════════════════════════════════════════════════════
-   AUTH STATE HANDLER — routes between login / pending / app
-   ═══════════════════════════════════════════════════════════════ */
 let _pendingRef = null;
 let _pendingUnsub = null;
 
@@ -438,10 +417,7 @@ function handleAuth(user) {
   if (_pendingUnsub) { try { _pendingUnsub(); } catch (e) {} _pendingUnsub = null; }
   if (_pendingRef) { try { off(_pendingRef, "value"); } catch (e) {} _pendingRef = null; }
 
-  if (!user) {
-    showScreen("login");
-    return;
-  }
+  if (!user) { showScreen("login"); return; }
 
   const reqRef = ref(db, P(`accessRequests/${user.uid}`));
   const cb = (snap) => {
@@ -496,9 +472,6 @@ function handleAuth(user) {
   _pendingUnsub = () => off(reqRef, "value", cb);
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   BOOT THE TRAINER APP
-   ═══════════════════════════════════════════════════════════════ */
 let _trainerBooted = false;
 
 function bootTrainerApp() {
@@ -521,9 +494,21 @@ function bootTrainerApp() {
     b.addEventListener("click", () => switchTab(b.dataset.trTab));
   });
 
-  $("trNewCourseBtn")?.addEventListener("click", () => window.openCourseEditor());
-  $("ceSaveBtn")?.addEventListener("click", window.saveCourse);
-  $("ceAddModuleBtn")?.addEventListener("click", window.addCeModule);
+  const newBtn = $("trNewCourseBtn");
+  if (newBtn && !newBtn._trBound) {
+    newBtn._trBound = true;
+    newBtn.addEventListener("click", () => window.openCourseEditor());
+  }
+  const saveBtn = $("ceSaveBtn");
+  if (saveBtn && !saveBtn._trBound) {
+    saveBtn._trBound = true;
+    saveBtn.addEventListener("click", window.saveCourse);
+  }
+  const addBtn = $("ceAddModuleBtn");
+  if (addBtn && !addBtn._trBound) {
+    addBtn._trBound = true;
+    addBtn.addEventListener("click", window.addCeModule);
+  }
 
   $("trMobileToggle")?.addEventListener("click", () => $("trSidebar").classList.add("open"));
   $("trSidebarOverlay")?.addEventListener("click", () => $("trSidebar").classList.remove("open"));
@@ -533,9 +518,6 @@ function bootTrainerApp() {
   switchTab("overview");
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   LOGIN WIRING
-   ═══════════════════════════════════════════════════════════════ */
 function initLogin() {
   $("trTabSignIn")?.addEventListener("click", () => setLoginMode("signin"));
   $("trTabRequest")?.addEventListener("click", () => setLoginMode("request"));
@@ -550,6 +532,8 @@ function initLogin() {
   });
 
   document.querySelectorAll(".pw-toggle").forEach((btn) => {
+    if (btn._trBound) return;
+    btn._trBound = true;
     btn.addEventListener("click", (e) => {
       e.preventDefault();
       const id = btn.dataset.pwTarget;
@@ -564,9 +548,6 @@ function initLogin() {
   });
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   BOOT
-   ═══════════════════════════════════════════════════════════════ */
 function boot() {
   initLogin();
   onAuthStateChanged(auth, (user) => {
