@@ -1,7 +1,12 @@
 // File: mainTraining/trainer.js
-// FIXES: Uses default Firebase app (same session as admin). Sign-out bug fixed — no
-// signOut() on accessRequest write failure. handleAuth() cleanly distinguishes missing /
-// pending / rejected / approved. _trBound guards prevent duplicate nav handlers.
+// FIXES:
+//  - Uses NAMED app "trainer" so signup/login here does NOT stomp on the
+//    default app's session used by admin/main.html. Each portal has its own
+//    localStorage key → no more "everyone gets signed out when trainer signs up".
+//  - Sign-out bug fixed: on accessRequest write failure we show inline error
+//    and DO NOT call signOut() — user can retry.
+//  - handleAuth cleanly distinguishes missing / pending / rejected / approved.
+//  - All nav binds guarded with _trBound to prevent duplicates.
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import {
@@ -23,7 +28,16 @@ const firebaseConfig = {
   measurementId: "G-G0NB6JGQVF"
 };
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+/* ═══════════════════════════════════════════════════════════════
+   ISOLATED AUTH SESSION — critical
+   The trainer portal must NOT share the default app's session with
+   admin.html / main.html. Otherwise a trainer signing up or signing
+   in replaces the current session for every tab on the origin,
+   silently kicking out the admin (or any other signed-in user).
+   ═══════════════════════════════════════════════════════════════ */
+const APP_NAME = "trainer";
+const existingApp = getApps().find(a => a.name === APP_NAME);
+const app = existingApp ? existingApp : initializeApp(firebaseConfig, APP_NAME);
 const db = getDatabase(app); forceLongPolling(db);
 const auth = getAuth(app);
 
@@ -136,6 +150,7 @@ async function doTrainerSignIn() {
   clearLoginMessage();
   try {
     await signInWithEmailAndPassword(auth, email, password);
+    // onAuthStateChanged fires → handleAuth routes to pending or app
   } catch (e) {
     const friendly = {
       "auth/invalid-email": "That email address is not valid.",
@@ -182,13 +197,11 @@ async function doTrainerRequest() {
     return;
   }
 
-  // Auth succeeded. Now write the access request. If write fails, DO NOT sign out —
-  // show the error and let the user retry signing in later (the auth session persists).
   try {
     const uidKey = cred.user.uid;
     const requestedAt = nowIso();
 
-    await set(ref(db, `${ROOT}/${ORG}/training/accessRequests/${uidKey}`), {
+    await set(ref(db, P(`accessRequests/${uidKey}`)), {
       uid: uidKey,
       name, email, phone,
       expertise,
@@ -198,7 +211,6 @@ async function doTrainerRequest() {
       source: "trainer-portal"
     });
 
-    // Best-effort profile seed — accessRequest is authoritative.
     try {
       const userSnap = await get(ref(db, `${USERS_ROOT}/${uidKey}`));
       if (!userSnap.exists()) {
@@ -216,7 +228,6 @@ async function doTrainerRequest() {
     }
 
     toast("Request submitted. An admin will review it shortly.", "success");
-    // onAuthStateChanged fires — handleAuth will route to pending screen.
   } catch (e) {
     console.error("[trainer] accessRequest write failed:", e);
     const friendly = e.code === "PERMISSION_DENIED"
@@ -224,7 +235,6 @@ async function doTrainerRequest() {
       : (e.message || "Request failed.");
     showLoginMessage(friendly, "error");
     if (btn) { btn.disabled = false; btn.innerHTML = orig; }
-    // Deliberately NOT calling signOut() — the auth session is fine, only the DB write failed.
   }
 }
 
