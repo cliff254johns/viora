@@ -1,6 +1,7 @@
 // File: mainTraining/training.js
 // Learner portal. Named app "training" (isolated auth session).
-// All signups write role: "learner" — no role picker, no role field read.
+// Handles: course access gate, price/duration display, contact-support →
+// WhatsApp + admin unlock request, free course access, enrollment.
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import {
@@ -29,12 +30,14 @@ const db = getDatabase(app);
 const SCHOLAR      = "viora_data/orgs/viora/training";
 const USERS        = "viora_data/orgs/viora/users";
 const PORTAL_USERS = "viora_data/orgs/viora/portalUsers";
+const ADMIN_PHONE  = "254713428774";
 
 const S = {
   user: null, access: null,
+  userProfile: { tiers: ["free"] },     // ← default so free courses work before profile loads
   courses: {}, checklists: {}, resources: {},
   enrollments: {}, progress: {}, checklistProgress: {},
-  quizSubmissions: {}, certificates: {},
+  quizSubmissions: {}, certificates: {}, payments: {},
   currentTab: "overview",
   activeCourseId: null, activeModuleId: null, activeQuizCourseId: null,
   pendingQuizAnswers: {},
@@ -44,129 +47,6 @@ const S = {
 
 const $ = (id) => document.getElementById(id);
 const nowIso = () => new Date().toISOString();
-
-/* ═══════════════════════════════════════════════════════════════
-   COURSE ACCESS GATE
-   ═══════════════════════════════════════════════════════════════ */
-function tierLabel(tier) {
-  return {
-    free: 'Free',
-    individual: 'Individual',
-    subscription: 'Subscribers',
-    professional: 'Professional',
-    corporate: 'Corporate',
-    institutional: 'Institutional',
-    marketplace: 'Marketplace',
-    research: 'Research',
-  }[tier] || 'Locked';
-}
-
-function canAccessCourse(course) {
-  if (!course) return false;
-  const tier = course.accessTier || 'free';
-  if (tier === 'free') return true;
-
-  const profile = S.userProfile || {};
-  const myTiers = Array.isArray(profile.tiers) ? profile.tiers : ['free'];
-
-  if (myTiers.includes(tier)) return true;
-
-  if (tier === 'individual' &&
-      Array.isArray(profile.individualCourses) &&
-      profile.individualCourses.includes(course.id)) {
-    return true;
-  }
-
-  if (tier === 'subscription' && myTiers.includes('subscription')) {
-    if (!profile.subscriptionEndsAt) return true;
-    return Date.parse(profile.subscriptionEndsAt) > Date.now();
-  }
-
-  return false;
-}
-
-function showUpgradeModal(courseId) {
-  const course = S.courses[courseId];
-  if (!course) return;
-  const tier = course.accessTier || 'free';
-
-  const tierMessages = {
-    individual: {
-      title: 'Buy this course',
-      body: 'One-time payment. Lifetime access to this course and its certificates.',
-      cta: 'Buy Now',
-      action: () => window.open('https://viora.co.ke/contact_us.html?buy=' + encodeURIComponent(courseId), '_blank'),
-    },
-    subscription: {
-      title: 'Subscribe to unlock everything',
-      body: 'Monthly or annual subscription gives you access to every course in the VIORA Academy library.',
-      cta: 'Start Subscription',
-      action: () => window.open('https://viora.co.ke/contact_us.html?subscribe=1', '_blank'),
-    },
-    professional: {
-      title: 'Enroll in a professional programme',
-      body: 'Professional programmes bundle advanced courses with career-grade certification and priority instructor support.',
-      cta: 'View Programmes',
-      action: () => window.open('https://viora.co.ke/contact_us.html?programme=1', '_blank'),
-    },
-    corporate: {
-      title: 'Corporate training access',
-      body: "This course is available through corporate training contracts. Ask your manager to add you to your organization's VIORA Academy account.",
-      cta: 'Contact Support',
-      action: () => window.open('mailto:support@viora.co.ke?subject=Corporate%20training%20access', '_blank'),
-    },
-    institutional: {
-      title: 'Institutional access',
-      body: 'This course is available through institutional partnerships. Contact your institution to arrange access.',
-      cta: 'Contact VIORA',
-      action: () => window.open('mailto:support@viora.co.ke?subject=Institutional%20access', '_blank'),
-    },
-    marketplace: {
-      title: 'Instructor course',
-      body: 'This course is sold by an independent VIORA instructor. Purchase it directly from the marketplace.',
-      cta: 'Go to Marketplace',
-      action: () => window.open('https://viora.co.ke/market.html', '_blank'),
-    },
-    research: {
-      title: 'Specialist resource',
-      body: 'This is a paid research resource, priced individually. Contact us for access.',
-      cta: 'Request Access',
-      action: () => window.open('mailto:support@viora.co.ke?subject=Research%20resource%20access', '_blank'),
-    },
-  };
-
-  const msg = tierMessages[tier] || tierMessages.subscription;
-
-  const modal = document.createElement('div');
-  modal.className = 'modal-overlay active';
-  modal.style.zIndex = '3000';
-  modal.innerHTML = `
-    <div class="modal" style="max-width:480px;text-align:center;padding:32px;">
-      <div style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,var(--accent-purple,#7c3aed),var(--accent-blue,#00d4ff));display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.6rem;color:#fff;">
-        <i class="fa-solid fa-lock"></i>
-      </div>
-      <h2 style="margin:0 0 8px;font-size:1.3rem;font-family:'Space Grotesk',sans-serif;">${msg.title}</h2>
-      <p style="color:var(--text-secondary,#94a3b8);font-size:.9rem;line-height:1.6;margin:0 0 20px;">${msg.body}</p>
-      <div style="padding:12px;background:var(--bg-input,#0f1117);border-radius:10px;margin-bottom:20px;font-size:.82rem;color:var(--text-secondary,#94a3b8);">
-        <strong style="color:var(--text-primary,#f1f5f9);">${escapeHtml(course.title || '')}</strong><br>
-        Tier: ${tierLabel(tier)}
-      </div>
-      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-        <button type="button" class="btn btn-outline" id="upgradeCancel" style="padding:10px 20px;">Maybe Later</button>
-        <button type="button" class="btn btn-success" id="upgradeGo" style="padding:10px 20px;">
-          <i class="fa-solid fa-arrow-right"></i> ${msg.cta}
-        </button>
-      </div>
-    </div>`;
-  document.body.appendChild(modal);
-
-  modal.querySelector('#upgradeCancel').onclick = () => modal.remove();
-  modal.querySelector('#upgradeGo').onclick = () => {
-    msg.action();
-    modal.remove();
-  };
-  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
-}
 
 function escapeHtml(s) {
   return String(s == null ? "" : s)
@@ -203,7 +83,6 @@ function toast(msg, type = "info") {
   host.appendChild(el);
   timer = setTimeout(dismiss, 5000);
 }
-
 function showLoginMessage(msg, kind = "error") {
   const el = $("loginMessage");
   if (!el) return;
@@ -215,7 +94,6 @@ function clearLoginMessage() {
   const el = $("loginMessage");
   if (el) { el.textContent = ""; el.style.display = "none"; }
 }
-
 function youtubeId(url) {
   if (!url) return null;
   const m = String(url).trim().match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/))([A-Za-z0-9_-]{6,})/);
@@ -228,6 +106,192 @@ function renderVideoEmbed(url) {
   return `<div class="lesson-video"><iframe src="${escapeHtml(src)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy" referrerpolicy="no-referrer"></iframe></div>`;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   ACCESS GATE + TIER HELPERS
+   ═══════════════════════════════════════════════════════════════ */
+function tierLabel(tier) {
+  return {
+    free: 'Free',
+    individual: 'Individual',
+    subscription: 'Subscribers',
+    professional: 'Professional',
+    corporate: 'Corporate',
+    institutional: 'Institutional',
+    marketplace: 'Marketplace',
+    research: 'Research',
+  }[tier] || 'Locked';
+}
+
+function tierPriceLabel(course) {
+  if (!course) return '';
+  if (course.accessTier === 'free') return 'Free';
+  if (course.priceKES > 0) return 'KES ' + Number(course.priceKES).toLocaleString();
+  return tierLabel(course.accessTier);
+}
+
+/* Returns true if the current learner can open this course. */
+function canAccessCourse(course) {
+  if (!course) return false;
+  const tier = course.accessTier || 'free';
+  if (tier === 'free') return true;
+
+  const profile = S.userProfile || { tiers: ['free'] };
+  const myTiers = Array.isArray(profile.tiers) ? profile.tiers : ['free'];
+
+  if (myTiers.includes(tier)) return true;
+
+  if (tier === 'individual' &&
+      Array.isArray(profile.individualCourses) &&
+      profile.individualCourses.includes(course.id)) {
+    return true;
+  }
+
+  if (tier === 'subscription' && myTiers.includes('subscription')) {
+    if (!profile.subscriptionEndsAt) return true;
+    return Date.parse(profile.subscriptionEndsAt) > Date.now();
+  }
+
+  return false;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   UPGRADE MODAL — contact support flow with WhatsApp + request
+   ═══════════════════════════════════════════════════════════════ */
+async function requestCourseAccess(courseId, source = "upgrade-modal") {
+  const course = S.courses[courseId];
+  if (!course || !S.user) return;
+
+  const requestId = "unlock-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const payload = {
+    id: requestId,
+    uid: S.user.uid,
+    userName: S.access?.name || S.user.email || "Learner",
+    userEmail: S.user.email || "",
+    courseId,
+    courseTitle: course.title || courseId,
+    courseTier: course.accessTier || "free",
+    coursePrice: course.priceKES || 0,
+    status: "pending",
+    source,
+    requestedAt: nowIso()
+  };
+
+  try {
+    await set(ref(db, `${SCHOLAR}/unlockRequests/${requestId}`), payload);
+    toast("Request sent — admin has been notified.", "success");
+  } catch (e) {
+    console.error("[training] unlock request failed:", e);
+    toast("Could not send request — contact support via WhatsApp.", "warning");
+  }
+
+  /* Open WhatsApp with a pre-filled message including course details */
+  const messageLines = [
+    `Hi VIORA Academy — I'd like access to:`,
+    ``,
+    `📚 *${course.title}*`,
+    `🎯 Tier: ${tierLabel(course.accessTier)}`,
+    course.priceKES > 0 ? `💰 Price: KES ${Number(course.priceKES).toLocaleString()}` : null,
+    course.durationHours ? `⏱ Duration: ${course.durationHours}h` : null,
+    ``,
+    `My details:`,
+    `Name: ${S.access?.name || "—"}`,
+    `Email: ${S.user.email || "—"}`,
+    `Course ID: ${courseId}`,
+    `Request ID: ${requestId}`,
+    ``,
+    `Please advise on next steps to unlock this course.`
+  ].filter(Boolean);
+
+  const waURL = `https://wa.me/${ADMIN_PHONE}?text=${encodeURIComponent(messageLines.join("\n"))}`;
+  window.open(waURL, "_blank", "noopener,noreferrer");
+}
+
+function showUpgradeModal(courseId) {
+  const course = S.courses[courseId];
+  if (!course) return;
+  const tier = course.accessTier || 'free';
+
+  const tierMessages = {
+    individual: {
+      title: 'Unlock this course',
+      body: 'One-time payment. Lifetime access to this course and its certificates. Tap below to message our team on WhatsApp — your request is sent to admin instantly.',
+    },
+    subscription: {
+      title: 'Subscribe to unlock',
+      body: 'A monthly or annual subscription gives you access to every course in the VIORA Academy library. Message us on WhatsApp and we\'ll get you started.',
+    },
+    professional: {
+      title: 'Enroll in a professional programme',
+      body: 'Professional programmes bundle advanced courses with career-grade certification. Message our team to enroll.',
+    },
+    corporate: {
+      title: 'Corporate training access',
+      body: 'This course is available through corporate training contracts. Message our team and we\'ll connect you with your organisation\'s account.',
+    },
+    institutional: {
+      title: 'Institutional access',
+      body: 'This course is available through institutional partnerships. Message our team to arrange access via your institution.',
+    },
+    marketplace: {
+      title: 'Instructor course',
+      body: 'This course is sold by an independent VIORA instructor. Message our team to purchase.',
+    },
+    research: {
+      title: 'Specialist resource',
+      body: 'This is a paid research resource, priced individually. Message our team for access.',
+    },
+  };
+
+  const msg = tierMessages[tier] || tierMessages.subscription;
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay active';
+  modal.style.zIndex = '3000';
+  modal.innerHTML = `
+    <div class="modal" style="max-width:520px;padding:32px;">
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#7c3aed,#00d4ff);display:inline-flex;align-items:center;justify-content:center;font-size:1.6rem;color:#fff;">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+        <h2 style="margin:16px 0 8px;font-size:1.3rem;font-family:'Space Grotesk',sans-serif;">${msg.title}</h2>
+        <p style="color:var(--text-secondary,#94a3b8);font-size:.9rem;line-height:1.6;margin:0;">${msg.body}</p>
+      </div>
+
+      <div style="padding:16px;background:var(--bg-input,#0f1117);border-radius:12px;margin-bottom:20px;">
+        <div style="font-weight:700;font-size:1rem;color:var(--text-primary,#f1f5f9);margin-bottom:6px;">${escapeHtml(course.title || '')}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:.8rem;color:var(--text-secondary,#94a3b8);">
+          ${course.durationHours ? `<span><i class="fa-solid fa-clock"></i> ${course.durationHours}h</span>` : ''}
+          <span><i class="fa-solid fa-tag"></i> ${tierLabel(tier)}</span>
+          ${course.priceKES > 0 ? `<span style="font-weight:700;color:#22e6a0;"><i class="fa-solid fa-coins"></i> KES ${Number(course.priceKES).toLocaleString()}</span>` : ''}
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button type="button" class="btn btn-success" id="upgradeWhatsApp" style="padding:14px 20px;font-size:.95rem;">
+          <i class="fa-brands fa-whatsapp"></i> Contact Support on WhatsApp
+        </button>
+        <button type="button" class="btn btn-outline" id="upgradeCancel" style="padding:12px 20px;">
+          Maybe Later
+        </button>
+      </div>
+
+      <div style="margin-top:16px;padding:10px;background:rgba(34,230,160,.06);border-left:3px solid #22e6a0;border-radius:6px;font-size:.75rem;color:var(--text-secondary,#94a3b8);">
+        <i class="fa-solid fa-bell"></i> A notification is sent to the admin the moment you tap the button.
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+
+  modal.querySelector('#upgradeCancel').onclick = () => modal.remove();
+  modal.querySelector('#upgradeWhatsApp').onclick = async () => {
+    modal.remove();
+    await requestCourseAccess(courseId, "upgrade-modal");
+  };
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SCREEN SWITCHER
+   ═══════════════════════════════════════════════════════════════ */
 function showScreen(name) {
   const login = $("loginScreen");
   const pending = $("pendingScreen");
@@ -278,9 +342,6 @@ async function doSignIn() {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   REGISTER — always learner
-   ═══════════════════════════════════════════════════════════════ */
 async function doRegister() {
   const name = ($("regName")?.value || "").trim();
   const email = ($("regEmail")?.value || "").trim().toLowerCase();
@@ -301,7 +362,6 @@ async function doRegister() {
     const uid = cred.user.uid;
     const requestedAt = nowIso();
 
-    /* Always learner — this portal is learner-only. No role picker. */
     await set(ref(db, `${SCHOLAR}/accessRequests/${uid}`), {
       uid, name, email, phone,
       role: "learner",
@@ -353,6 +413,7 @@ function handleAuth(user) {
   teardownSubs();
   S.user = user || null;
   S.access = null;
+  S.userProfile = { tiers: ["free"] };
   if (!user) { showScreen("login"); return; }
 
   const accessRef = ref(db, `${SCHOLAR}/accessRequests/${user.uid}`);
@@ -409,9 +470,19 @@ function bootLearnerApp() {
     if (S.currentTab === "certificates") renderCertificates();
   });
 
-    /* Learner's tier profile — drives course access */
+  /* Learner's tier profile */
   subNode(`${SCHOLAR}/users/${uid}`, (v) => {
-    S.userProfile = v || {};
+    S.userProfile = v || { tiers: ["free"] };
+    renderActiveTab();
+  });
+
+  /* Learner's payments — so paid courses show as owned */
+  subNode(`${SCHOLAR}/payments`, (all) => {
+    const mine = {};
+    for (const [id, p] of Object.entries(all || {})) {
+      if (p && p.uid === uid) mine[id] = p;
+    }
+    S.payments = mine;
     renderActiveTab();
   });
 
@@ -487,6 +558,9 @@ function courseAvgScore(courseId) {
 function firstIncompleteModule(course) { const mods = modulesOf(course); for (const m of mods) if (!moduleDone(course.id, m.id)) return m; return mods[mods.length - 1] || null; }
 function hasCertificateFor(courseId) { return Object.values(S.certificates || {}).some((c) => c && c.courseId === courseId); }
 
+/* ═══════════════════════════════════════════════════════════════
+   TAB: OVERVIEW
+   ═══════════════════════════════════════════════════════════════ */
 function renderOverview() {
   const host = $("tab-overview"); if (!host) return;
   const enrolledIds = Object.keys(S.enrollments || {});
@@ -504,6 +578,7 @@ function renderOverview() {
       <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-certificate"></i></div><div class="number">${certCount}</div><div class="label">Certificates</div></div>
     </div>
   `;
+
   let continueHtml = "";
   const continueCourse = enrolledCourses.find((c) => !courseDone(c));
   if (continueCourse) {
@@ -524,11 +599,13 @@ function renderOverview() {
       </div>
     `;
   }
+
   const recommended = allCourses.filter((c) => !isEnrolled(c.id)).slice(0, 4);
   let recHtml = "";
   if (recommended.length) {
     recHtml = `<div style="margin-top:24px;"><h2 style="font-size:1rem;text-transform:uppercase;color:var(--text-secondary);letter-spacing:.5px;margin-bottom:12px;"><i class="fa-solid fa-star" style="color:var(--accent-gold);"></i> Recommended for you</h2><div class="card-3d-grid">${recommended.map(courseCardHtml).join("")}</div></div>`;
   }
+
   const activity = buildActivityFeed().slice(0, 6);
   const activityHtml = activity.length
     ? activity.map(a => `
@@ -575,6 +652,9 @@ function buildActivityFeed() {
   return events;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   TAB: COURSES
+   ═══════════════════════════════════════════════════════════════ */
 function renderCourses() {
   const host = $("tab-courses"); if (!host) return;
   const all = courseList();
@@ -585,6 +665,7 @@ function renderCourses() {
   host.innerHTML = `<div class="page-header"><div><h1><span class="highlight">Courses</span></h1><p class="page-desc">Browse, enroll, and take your training courses. Your progress is saved per course.</p></div></div><h2 style="font-size:1rem;text-transform:uppercase;color:var(--text-secondary);letter-spacing:.5px;margin-bottom:12px;"><i class="fa-solid fa-book-open"></i> My Courses (${enrolled.length})</h2>${myHtml}<h2 style="font-size:1rem;text-transform:uppercase;color:var(--text-secondary);letter-spacing:.5px;margin:32px 0 12px;"><i class="fa-solid fa-store"></i> Available Courses (${available.length})</h2>${availHtml}`;
 }
 
+/* Course card — shows price + duration + lock state */
 function courseCardHtml(course) {
   const mods = modulesOf(course);
   const modCount = mods.length;
@@ -597,9 +678,10 @@ function courseCardHtml(course) {
   const level = course.level || "Beginner";
   const cat = course.category || "General";
   const cidSafe = escapeHtml(course.id);
-
   const allowed = canAccessCourse(course);
   const tier = course.accessTier || 'free';
+  const priceLabel = tierPriceLabel(course);
+  const durationLabel = course.durationHours ? `${course.durationHours}h` : null;
 
   let statusChip;
   if (!allowed) statusChip = `<span class="badge badge-overdue">🔒 ${tierLabel(tier)}</span>`;
@@ -619,15 +701,28 @@ function courseCardHtml(course) {
     <div class="card-3d">
       <div class="card-info" style="min-width:0;">
         <div class="card-title">${escapeHtml(course.title || "Untitled")} ${statusChip}</div>
-        <div class="card-sub"><i class="fa-solid fa-layer-group" style="opacity:.6;"></i> ${cat} · <i class="fa-solid fa-signal" style="opacity:.6;"></i> ${escapeHtml(level)} · ${modCount} module${modCount === 1 ? "" : "s"}</div>
+        <div class="card-sub">
+          <i class="fa-solid fa-layer-group" style="opacity:.6;"></i> ${escapeHtml(cat)}
+          · <i class="fa-solid fa-signal" style="opacity:.6;"></i> ${escapeHtml(level)}
+          · ${modCount} module${modCount === 1 ? "" : "s"}
+          ${durationLabel ? `· <i class="fa-solid fa-clock" style="opacity:.6;"></i> ${durationLabel}` : ""}
+        </div>
         ${course.description ? `<div style="font-size:.78rem;color:var(--text-secondary);margin-top:6px;">${escapeHtml(course.description.slice(0, 140))}${course.description.length > 140 ? "…" : ""}</div>` : ""}
         ${enrolled ? `<div class="progress-3d" style="margin-top:10px;"><div class="progress-3d-bar ${pct >= 100 ? "green" : pct >= 50 ? "" : "gold"}" style="width:${pct}%;"></div></div><div class="progress-3d-label"><span>Progress</span><span>${pct}%</span></div>` : ""}
       </div>
-      <div class="card-actions">${actionBtn}</div>
+      <div class="card-actions" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+        <span class="badge ${tier === 'free' ? 'badge-paid' : (allowed ? 'badge-active' : 'badge-pending')}" style="font-size:.75rem;font-weight:700;">
+          ${allowed && tier !== 'free' ? '✓ ' : ''}${priceLabel}
+        </span>
+        ${actionBtn}
+      </div>
     </div>
   `;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   TAB: CHECKLISTS
+   ═══════════════════════════════════════════════════════════════ */
 function renderChecklists() {
   const host = $("tab-checklists"); if (!host) return;
   const lists = Object.values(S.checklists || {});
@@ -663,6 +758,9 @@ document.addEventListener("change", async (e) => {
   } catch (err) { toast("Could not save that. Retry.", "error"); cb.checked = !cb.checked; }
 });
 
+/* ═══════════════════════════════════════════════════════════════
+   TAB: PROGRESS
+   ═══════════════════════════════════════════════════════════════ */
 function renderProgress() {
   const host = $("tab-progress"); if (!host) return;
   const enrolledIds = Object.keys(S.enrollments || {});
@@ -689,11 +787,14 @@ function renderProgress() {
   host.innerHTML = `<div class="page-header"><div><h1><span class="highlight">My Progress</span></h1><p class="page-desc">Module-by-module completion across every course you're enrolled in.</p></div></div><div class="table-wrapper"><table><thead><tr><th>Course</th><th>Modules</th><th>Progress</th><th>Avg Score</th><th>Started</th><th>Status</th><th style="text-align:right;">Action</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   TAB: CERTIFICATES
+   ═══════════════════════════════════════════════════════════════ */
 function renderCertificates() {
   const host = $("tab-certificates"); if (!host) return;
   const certs = Object.values(S.certificates || {}).sort((a, b) => (b.issuedAt || "").localeCompare(a.issuedAt || ""));
-  if (!certs.length) { host.innerHTML = `<div class="page-header"><div><h1><span class="highlight">Certificates</span></h1><p class="page-desc">Finish a course to earn your certificate. The admin will award it once your final quiz is reviewed.</p></div></div><div class="empty-state" style="padding:40px;text-align:center;color:var(--text-secondary);"><i class="fa-solid fa-award" style="font-size:2.4rem;opacity:.4;margin-bottom:12px;display:block;"></i>No certificates yet. Complete a course to get started.</div>`; return; }
-  host.innerHTML = `<div class="page-header"><div><h1><span class="highlight">Certificates</span></h1><p class="page-desc">Awarded by the VIORA admin after your final quiz is reviewed.</p></div></div><div class="card-3d-grid">${certs.map(certCardHtml).join("")}</div>`;
+  if (!certs.length) { host.innerHTML = `<div class="page-header"><div><h1><span class="highlight">Certificates</span></h1><p class="page-desc">Finish a course to earn your certificate.</p></div></div><div class="empty-state" style="padding:40px;text-align:center;color:var(--text-secondary);"><i class="fa-solid fa-award" style="font-size:2.4rem;opacity:.4;margin-bottom:12px;display:block;"></i>No certificates yet. Complete a course to get started.</div>`; return; }
+  host.innerHTML = `<div class="page-header"><div><h1><span class="highlight">Certificates</span></h1></div></div><div class="card-3d-grid">${certs.map(certCardHtml).join("")}</div>`;
 }
 function certCardHtml(cert) {
   const idSafe = escapeHtml(cert.id);
@@ -701,6 +802,9 @@ function certCardHtml(cert) {
   return `<div class="card-3d"><div style="width:100%;height:150px;border-radius:10px;overflow:hidden;background:var(--bg-input);display:flex;align-items:center;justify-content:center;">${hasImage ? `<img src="${cert.renderedImage}" style="max-width:100%;max-height:100%;object-fit:contain;" alt="Certificate" />` : `<i class="fa-solid fa-award" style="font-size:2.4rem;color:var(--accent-gold);"></i>`}</div><div class="card-info"><div class="card-title">${escapeHtml(cert.courseTitle || "Course")}</div><div class="card-sub">${escapeHtml(cert.moduleTitle || "Whole course")} · Score ${cert.score ?? "—"}%</div><div class="card-sub" style="font-family:monospace;font-size:.72rem;">${escapeHtml(cert.code || cert.id)}</div><div class="card-sub" style="font-size:.7rem;">Issued ${fmtDate(cert.issuedAt)}</div></div><div class="card-actions"><button class="btn btn-primary btn-sm" onclick="VioraTraining.viewCertificate('${idSafe}')"><i class="fa-solid fa-eye"></i> View</button></div></div>`;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   TAB: RESOURCES
+   ═══════════════════════════════════════════════════════════════ */
 function renderResources() {
   const host = $("tab-resources"); if (!host) return;
   const list = Object.values(S.resources || {}).sort((a, b) => (a.category || "").localeCompare(b.category || "") || (a.title || "").localeCompare(b.title || ""));
@@ -716,36 +820,44 @@ function resourceCardHtml(r) {
   return `<div class="card-3d" style="cursor:pointer;" onclick="VioraTraining.openResource('${idSafe}')"><div class="avatar-mini lg" style="border-radius:10px;"><i class="fa-solid ${icon}"></i></div><div class="card-info"><div class="card-title">${escapeHtml(r.title || "Untitled")}</div><div class="card-sub">${escapeHtml(r.type || "")}${r.fileName ? " · " + escapeHtml(r.fileName) : ""}</div>${r.description ? `<div class="card-sub" style="margin-top:4px;">${escapeHtml(r.description.slice(0, 120))}${r.description.length > 120 ? "…" : ""}</div>` : ""}</div><div class="card-actions"><button class="btn btn-primary btn-xs"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open</button></div></div>`;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   COURSE OPENING — the fix
+   ═══════════════════════════════════════════════════════════════ */
 function openCourse(courseId) {
   const course = S.courses[courseId];
   if (!course) { toast("Course not found.", "error"); return; }
 
-  if (!canAccessCourse(course)) { showUpgradeModal(courseId); return; }
-
-  /* If not enrolled yet, enroll first, THEN open the lesson directly. */
-  if (!isEnrolled(courseId)) {
-    enrollAndOpen(courseId, { openImmediately: true });
+  /* Gate 1: check access */
+  if (!canAccessCourse(course)) {
+    showUpgradeModal(courseId);
     return;
   }
 
-  const mod = firstIncompleteModule(course);
-  if (!mod) { toast("This course has no modules yet.", "info"); return; }
-  openLesson(courseId, mod.id);
+  /* If already enrolled — open first incomplete module */
+  if (isEnrolled(courseId)) {
+    const mod = firstIncompleteModule(course);
+    if (!mod) { toast("This course has no modules yet.", "info"); return; }
+    openLesson(courseId, mod.id);
+    return;
+  }
+
+  /* Not enrolled yet — enroll then open */
+  enrollAndOpen(courseId);
 }
 
-function enrollAndOpen(courseId, opts = {}) {
+function enrollAndOpen(courseId) {
   if (!S.user) return;
   const course = S.courses[courseId];
   if (!course) { toast("Course not found.", "error"); return; }
 
-  /* If already enrolled, just open it */
-  const existing = S.enrollments?.[courseId];
-  if (existing) {
-    const mod = firstIncompleteModule(course);
-    if (mod) openLesson(courseId, mod.id);
-    else toast("This course has no modules yet.", "info");
+  /* Gate — must also check here because "Enroll" button goes straight to this */
+  if (!canAccessCourse(course)) {
+    showUpgradeModal(courseId);
     return;
   }
+
+  const existing = S.enrollments?.[courseId];
+  if (existing) { openCourse(courseId); return; }
 
   const payload = {
     courseId,
@@ -759,19 +871,15 @@ function enrollAndOpen(courseId, opts = {}) {
 
   set(ref(db, `${SCHOLAR}/enrollments/${S.user.uid}/${courseId}`), payload)
     .then(() => {
-      /* Optimistically update local state so the very next click sees it. */
       S.enrollments[courseId] = payload;
-
       toast("Enrolled. Let's get started!", "success");
-
-      /* Open the first lesson — never leave the learner on a dead button. */
       const mod = firstIncompleteModule(course);
       if (mod) openLesson(courseId, mod.id);
       else toast("This course has no modules yet.", "info");
     })
     .catch((e) => {
       console.error("[training] enroll failed", e);
-      toast("Could not enroll: " + (e.message || e.code), "error");
+      toast("Could not enroll. Retry.", "error");
     });
 }
 
@@ -782,10 +890,13 @@ function openLesson(courseId, moduleId) {
   const idx = modules.findIndex(m => m.id === moduleId);
   if (idx < 0) return;
   const mod = modules[idx];
+
   S.activeCourseId = courseId;
   S.activeModuleId = moduleId;
+
   const titleEl = $("lessonTitle");
   if (titleEl) titleEl.textContent = `${course.title} — ${mod.title || "Module " + (idx + 1)}`;
+
   const bodyEl = $("lessonBody");
   if (bodyEl) {
     bodyEl.innerHTML = `
@@ -916,9 +1027,13 @@ function openResource(id) {
   toast("This resource has no file or link.", "info");
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   PUBLIC API
+   ═══════════════════════════════════════════════════════════════ */
 window.VioraTraining = {
   openCourse, enrollAndOpen, openLesson, openQuiz, submitQuiz,
   viewCertificate, printCertificate, openResource, switchTab,
+  showUpgradeModal, requestCourseAccess,
   debug: { S, db, auth, SCHOLAR, signOut: doSignOut }
 };
 
