@@ -1998,7 +1998,43 @@
       <div class="kpi-grid" id="portalReqStats"></div>
       <div class="table-wrapper"><table><thead><tr><th>Requested</th><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Match Quality</th><th>Matched Client</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="portalReqBody"></tbody></table></div>
     </section>
-
+    <!-- TRAINING REQUESTS (Scholar) -->
+    <section id="tab-training-requests" class="tab-content">
+      <div class="page-header">
+        <div>
+          <h1>
+            <span class="pillar-icon" style="background:linear-gradient(135deg,#ffc857,#b8860b);"><i class="fa-solid fa-user-clock"></i></span>
+            <span class="highlight">Training Requests</span>
+          </h1>
+          <p class="page-desc">All learner and trainer signups on VIORA Scholar. Approve to grant training access, or reject. Approved users can sign in and start learning / teaching immediately.</p>
+        </div>
+        <div class="actions">
+          <button class="btn btn-outline btn-sm" id="trainingRequestsRefreshBtn">
+            <i class="fa-solid fa-rotate"></i> Refresh
+          </button>
+          <a href="scholar-admin.html" target="_blank" rel="noopener" class="btn btn-purple btn-sm">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Scholar Admin
+          </a>
+        </div>
+      </div>
+      <div class="kpi-grid" id="trainingRequestsKpi"></div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Requested</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th style="text-align:right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="trainingRequestsBody"></tbody>
+        </table>
+      </div>
+    </section>
     <!-- PORTAL USERS -->
     <section id="tab-portal-users" class="tab-content">
       <div class="page-header">
