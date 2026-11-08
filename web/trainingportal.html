@@ -1,6 +1,6 @@
 <!-- File: trainingportal.html
-     Learner portal. Signs up → writes accessRequests/{uid} with role:"learner".
-     Approved learners see the shell automatically (onValue live swap). -->
+     Learner portal. All signups are role "learner" — no role picker.
+     Approved learners see the shell automatically via onValue live swap. -->
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
@@ -83,17 +83,6 @@
       <div class="login-field"><label>Full Name</label><input id="regName" placeholder="Jane Doe" autocomplete="name" /></div>
       <div class="login-field"><label>Email</label><input id="regEmail" type="email" placeholder="you@company.com" autocomplete="email" /></div>
       <div class="login-field"><label>Phone (optional)</label><input id="regPhone" placeholder="+254 7XX XXX XXX" autocomplete="tel" /></div>
-      <div class="login-field">
-        <label>Your role</label>
-        <select id="pRegRole">
-          <option value="">Select…</option>
-          <option value="admin">Admin</option>
-          <option value="cashier">Cashier</option>
-          <option value="hr">HR Officer</option>
-          <option value="manager">Manager</option>
-          <option value="staff">Other Staff</option>
-        </select>
-      </div>
       <div class="login-field" style="position:relative;">
         <label>Password (min 6 chars)</label>
         <input id="regPassword" type="password" placeholder="••••••••" autocomplete="new-password" />
