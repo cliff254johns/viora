@@ -1,6 +1,5 @@
 <!-- File: scholar-admin.html
-     FIXES: Loads only scholar-shared.css. All modal IDs present. Splash fades out.
-     Six sidebar tabs + five bottom-nav tabs. Importmap + module boot at bottom. -->
+     Command Center tab added as first sidebar item. Uses scholar-shared.css only. -->
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
@@ -15,7 +14,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <link rel="icon" type="image/png" href="https://viora.co.ke/viora.png" />
-<link rel="stylesheet" href="scholar-shared.css?v=9" />
+<link rel="stylesheet" href="scholar-shared.css" />
 </head>
 <body>
 
@@ -35,7 +34,8 @@
     </div>
 
     <div class="sch-nav">
-      <button class="sch-nav-item active" data-sa-tab="overview"><i class="fa-solid fa-graduation-cap"></i> Overview</button>
+      <button class="sch-nav-item active" data-sa-tab="command"><i class="fa-solid fa-satellite-dish"></i> Command Center</button>
+      <button class="sch-nav-item" data-sa-tab="overview"><i class="fa-solid fa-graduation-cap"></i> Overview</button>
       <button class="sch-nav-item" data-sa-tab="requests"><i class="fa-solid fa-user-clock"></i> Requests <span class="nav-badge" id="saReqBadge" style="display:none;margin-left:auto;">0</span></button>
       <button class="sch-nav-item" data-sa-tab="users"><i class="fa-solid fa-users"></i> Users</button>
       <button class="sch-nav-item" data-sa-tab="progress"><i class="fa-solid fa-chart-line"></i> Progress</button>
@@ -68,8 +68,54 @@
     <main class="sch-main">
       <div class="sch-content">
 
+        <!-- ═══════════════ COMMAND CENTER ═══════════════ -->
+        <section id="sa-pane-command" class="sa-pane active">
+          <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+            <div>
+              <h1 style="display:flex;align-items:center;gap:10px;">
+                <span class="pillar-icon" style="width:44px;height:44px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#00d4ff,#7c3aed);color:#fff;"><i class="fa-solid fa-satellite-dish"></i></span>
+                <span style="background:linear-gradient(135deg,#00d4ff,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Command Center</span>
+              </h1>
+              <p style="font-size:.85rem;color:var(--text-secondary);margin-top:6px;">Live KPIs across every VIORA portal. Times shown in Africa/Nairobi (EAT).</p>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn btn-outline btn-sm" id="cmdRefreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button>
+            </div>
+          </div>
+
+          <!-- Users group -->
+          <h3 style="font-size:.78rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-secondary);margin:8px 0 12px;font-weight:700;">
+            <i class="fa-solid fa-users" style="color:var(--accent-blue);"></i> Users
+          </h3>
+          <div class="kpi-grid" id="cmdUsersKpi"></div>
+
+          <!-- Subscriptions group -->
+          <h3 style="font-size:.78rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-secondary);margin:28px 0 12px;font-weight:700;">
+            <i class="fa-solid fa-repeat" style="color:var(--accent-green);"></i> Subscriptions
+          </h3>
+          <div class="kpi-grid" id="cmdSubsKpi"></div>
+
+          <!-- Portal group -->
+          <h3 style="font-size:.78rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-secondary);margin:28px 0 12px;font-weight:700;">
+            <i class="fa-solid fa-door-open" style="color:var(--accent-gold);"></i> Portal Access
+          </h3>
+          <div class="kpi-grid" id="cmdPortalKpi"></div>
+
+          <!-- Recent activity -->
+          <h3 style="font-size:.78rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-secondary);margin:28px 0 12px;font-weight:700;">
+            <i class="fa-solid fa-bolt" style="color:var(--accent-pink);"></i> Recent Activity
+          </h3>
+          <div id="cmdActivityFeed" style="padding:18px;background:rgba(18,18,26,.72);border:1px solid var(--border-color);border-radius:16px;min-height:100px;"></div>
+
+          <div style="margin-top:24px;padding:14px 18px;background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.22);border-radius:12px;font-size:.78rem;color:var(--text-secondary);">
+            <i class="fa-solid fa-clock" style="color:var(--accent-blue);"></i>
+            <strong style="color:var(--text-primary);">Last refresh:</strong>
+            <span id="cmdLastRefresh">—</span>
+          </div>
+        </section>
+
         <!-- OVERVIEW -->
-        <section id="sa-pane-overview" class="sa-pane active">
+        <section id="sa-pane-overview" class="sa-pane">
           <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
             <div>
               <h1 style="display:flex;align-items:center;gap:10px;">
@@ -183,13 +229,12 @@
   </div>
 
   <nav class="sch-bottom-nav">
-    <button class="sch-bnav-item active" data-sa-tab="overview"><i class="fa-solid fa-house"></i><span>Home</span></button>
+    <button class="sch-bnav-item active" data-sa-tab="command"><i class="fa-solid fa-satellite-dish"></i><span>Command</span></button>
+    <button class="sch-bnav-item" data-sa-tab="overview"><i class="fa-solid fa-house"></i><span>Home</span></button>
     <button class="sch-bnav-item" data-sa-tab="requests"><i class="fa-solid fa-user-clock"></i><span>Requests</span></button>
     <button class="sch-bnav-item" data-sa-tab="users"><i class="fa-solid fa-users"></i><span>Users</span></button>
-    <button class="sch-bnav-item" data-sa-tab="quizzes"><i class="fa-solid fa-file-circle-question"></i><span>Quizzes</span></button>
     <button class="sch-bnav-item" data-sa-tab="certificates"><i class="fa-solid fa-award"></i><span>Certs</span></button>
   </nav>
-
 </div>
 
 <!-- ════════ MODALS ════════ -->
@@ -289,175 +334,7 @@
   }
 }
 </script>
-<!-- ═══════════════════════════════════════════════════════════
-     LOGIN SCREEN — shown when there is no active Firebase session.
-     The boot script hides this and shows #saShell when signed in.
-     ═══════════════════════════════════════════════════════════ -->
-<div id="saLoginScreen" style="position:fixed;inset:0;z-index:1001;display:none;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at 20% 20%, #1E1B4B 0%, #0B1220 60%, #060913 100%);overflow-y:auto;">
 
-  <div class="login-card" style="width:100%;max-width:440px;background:rgba(255,255,255,.045);backdrop-filter:blur(24px) saturate(140%);-webkit-backdrop-filter:blur(24px) saturate(140%);border:1px solid rgba(255,255,255,.09);border-radius:22px;padding:40px 36px 32px;box-shadow:0 24px 60px rgba(0,0,0,.55);color:#E2E8F0;">
-
-    <div class="login-brand" style="display:flex;align-items:center;gap:14px;margin-bottom:24px;">
-      <div class="logo-mark" style="width:52px;height:52px;border-radius:15px;background:linear-gradient(135deg,#a855f7,#00d4ff);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(168,85,247,.45);">
-        <i class="fa-solid fa-shield-halved" style="color:#fff;font-size:20px;"></i>
-      </div>
-      <div>
-        <h1 style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.4px;color:#F8FAFC;line-height:1.15;">Scholar <span style="background:linear-gradient(135deg,#a855f7,#00d4ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Admin</span></h1>
-        <p style="font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:1.3px;margin-top:3px;">Sign in to continue</p>
-      </div>
-    </div>
-
-    <div class="auth-mode-indicator" style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;margin-bottom:14px;border-radius:20px;background:rgba(168,85,247,.10);color:#c4b5fd;font-size:.66rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;">
-      <i class="fa-solid fa-lock" style="font-size:.55rem;"></i> Admin access required
-    </div>
-
-    <form id="saLoginForm" autocomplete="on" onsubmit="event.preventDefault();">
-      <div class="login-field" style="position:relative;margin-bottom:16px;">
-        <label for="saLoginEmail" style="display:block;font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:#94a3b8;margin-bottom:8px;">Email</label>
-        <input id="saLoginEmail" type="email" placeholder="you@viora.co.ke" autocomplete="email" required style="width:100%;padding:12px 14px;background:rgba(15,23,42,.60);border:1px solid rgba(148,163,184,.18);border-radius:12px;color:#F1F5F9;font-family:'Inter',sans-serif;font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s;" />
-      </div>
-
-      <div class="login-field" style="position:relative;margin-bottom:16px;">
-        <label for="saLoginPassword" style="display:block;font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:#94a3b8;margin-bottom:8px;">Password</label>
-        <input id="saLoginPassword" type="password" placeholder="••••••••" autocomplete="current-password" required style="width:100%;padding:12px 42px 12px 14px;background:rgba(15,23,42,.60);border:1px solid rgba(148,163,184,.18);border-radius:12px;color:#F1F5F9;font-family:'Inter',sans-serif;font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s;" />
-        <button type="button" id="saLoginPwToggle" aria-label="Show password" style="position:absolute;right:10px;top:calc(50% + 6px);transform:translateY(-50%);width:30px;height:30px;border-radius:8px;border:none;background:transparent;color:#64748b;cursor:pointer;transition:color .15s;">
-          <i class="fa-solid fa-eye"></i>
-        </button>
-      </div>
-
-      <button type="submit" id="saLoginBtn" style="width:100%;padding:13px;background:linear-gradient(135deg,#a855f7,#00d4ff);border:none;border-radius:12px;color:#fff;font-family:'Space Grotesk','Inter',sans-serif;font-weight:700;font-size:14px;letter-spacing:.3px;cursor:pointer;box-shadow:0 6px 20px rgba(168,85,247,.4);margin-top:6px;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:box-shadow .15s,transform .15s;">
-        <i class="fa-solid fa-right-to-bracket"></i> Sign In
-      </button>
-    </form>
-
-    <div id="saLoginMessage" style="display:none;margin-top:14px;padding:12px 14px;border-radius:10px;font-size:.8rem;line-height:1.5;"></div>
-
-    <p style="margin-top:20px;text-align:center;font-size:.75rem;color:#64748b;">
-      <a href="/main.html" style="color:#67e8f9;text-decoration:none;">← Back to VIORA</a>
-    </p>
-
-    <div style="margin-top:22px;padding-top:20px;border-top:1px solid rgba(148,163,184,.10);font-size:11px;color:#64748b;line-height:1.7;text-align:center;">
-      Questions? Contact <strong style="color:#7de8ff;">support@viora.co.ke</strong>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════
-     LOGIN FORM HANDLER — signs in via the default Firebase app.
-     On success, reloads so the boot script's auth gate picks up the
-     session and boots the shell.
-     ═══════════════════════════════════════════════════════════ -->
-<script type="module">
-  import { initializeApp, getApps, getApp } from "firebase/app";
-  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyC9gCBt-xR8t9n6rTGNvDZ5usUGiW-Dqxc",
-    authDomain: "cliffclient-35ec5.firebaseapp.com",
-    databaseURL: "https://cliffclient-35ec5-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "cliffclient-35ec5",
-    storageBucket: "cliffclient-35ec5.firebasestorage.app",
-    messagingSenderId: "519782791696",
-    appId: "1:519782791696:web:6e1a654ddeed14b72b2895",
-    measurementId: "G-G0NB6JGQVF"
-  };
-
-  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-
-  const loginScreen = document.getElementById("saLoginScreen");
-  const splash      = document.getElementById("saSplash");
-  const shell       = document.getElementById("saShell");
-
-  function showLogin() {
-    if (splash) splash.style.display = "none";
-    if (shell)  shell.style.display  = "none";
-    if (loginScreen) loginScreen.style.display = "flex";
-  }
-
-  function hideLogin() {
-    if (loginScreen) loginScreen.style.display = "none";
-  }
-
-  /* Show the login screen immediately if the auth gate hasn't hidden the splash.
-     If the boot script has already booted the shell, don't show the login form. */
-  let _hidden = false;
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      _hidden = true;
-      hideLogin();
-    } else {
-      /* Wait a beat for the boot script's own 800ms deny timer to fire.
-         If the boot script has already put up the "Not signed in" splash,
-         replace it with the real login form. */
-      setTimeout(() => {
-        if (_hidden) return;
-        if (!auth.currentUser) showLogin();
-      }, 900);
-    }
-  });
-
-  const form   = document.getElementById("saLoginForm");
-  const emailEl = document.getElementById("saLoginEmail");
-  const pwEl    = document.getElementById("saLoginPassword");
-  const btn     = document.getElementById("saLoginBtn");
-  const msg     = document.getElementById("saLoginMessage");
-  const toggle  = document.getElementById("saLoginPwToggle");
-
-  function showMsg(text, kind) {
-    if (!msg) return;
-    msg.textContent = text;
-    msg.className = "";
-    msg.style.display = text ? "block" : "none";
-    if (kind === "error")   { msg.style.background = "rgba(217,43,75,.12)"; msg.style.color = "#fca5a5"; msg.style.border = "1px solid rgba(217,43,75,.32)"; }
-    if (kind === "success") { msg.style.background = "rgba(34,230,160,.12)"; msg.style.color = "#6ee7b7"; msg.style.border = "1px solid rgba(34,230,160,.32)"; }
-    if (kind === "info")    { msg.style.background = "rgba(0,212,255,.12)";  msg.style.color = "#67e8f9"; msg.style.border = "1px solid rgba(0,212,255,.32)"; }
-  }
-
-  toggle?.addEventListener("click", (e) => {
-    e.preventDefault();
-    if (!pwEl) return;
-    const isPw = pwEl.type === "password";
-    pwEl.type = isPw ? "text" : "password";
-    toggle.innerHTML = isPw
-      ? '<i class="fa-solid fa-eye-slash"></i>'
-      : '<i class="fa-solid fa-eye"></i>';
-  });
-
-  form?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const email    = (emailEl?.value || "").trim();
-    const password = pwEl?.value || "";
-    if (!email || !password) { showMsg("Enter your email and password.", "error"); return; }
-
-    const orig = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Signing in…';
-    showMsg("", "");
-
-    try {
-      const cred = await signInWithEmailAndPassword(auth, email, password);
-      console.info("[sa/login] ✓ Signed in", cred.user.uid, cred.user.email);
-      showMsg("Signed in. Loading dashboard…", "success");
-      setTimeout(() => location.reload(), 500);
-    } catch (err) {
-      const friendly = {
-        "auth/invalid-email": "That email address is not valid.",
-        "auth/user-not-found": "No account found with that email.",
-        "auth/wrong-password": "Incorrect password.",
-        "auth/invalid-credential": "Wrong email or password.",
-        "auth/user-disabled": "This account has been disabled. Contact support.",
-        "auth/too-many-requests": "Too many attempts. Try again in a few minutes.",
-        "auth/network-request-failed": "Network error. Check your connection.",
-        "auth/operation-not-allowed": "Email/password sign-in is not enabled for this project."
-      }[err.code] || (err.message || "Sign-in failed.");
-      console.error("[sa/login] ✗", err.code, err.message);
-      showMsg(friendly, "error");
-      btn.disabled = false;
-      btn.innerHTML = orig;
-    }
-  });
-</script>
 <script type="module" src="scholar-admin-boot.js"></script>
 
 </body>
