@@ -139,13 +139,10 @@ function canAccessCourse(course) {
   const myTiers = Array.isArray(profile.tiers) ? profile.tiers : ['free'];
 
   if (myTiers.includes(tier)) return true;
-
-  if (tier === 'individual' &&
-      Array.isArray(profile.individualCourses) &&
-      profile.individualCourses.includes(course.id)) {
-    return true;
-  }
-
+if (Array.isArray(profile.individualCourses) &&
+    profile.individualCourses.includes(course.id)) {
+  return true;
+}
   if (tier === 'subscription' && myTiers.includes('subscription')) {
     if (!profile.subscriptionEndsAt) return true;
     return Date.parse(profile.subscriptionEndsAt) > Date.now();
