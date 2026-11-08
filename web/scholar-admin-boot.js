@@ -2,21 +2,19 @@
 // VIORA Scholar Admin Console — bootstrap
 //
 // FIXES IN THIS VERSION:
-//  - window.Viora is defined (was only window.VioraTraining → inline
-//    onclick="Viora.xxx()" threw "Viora is not defined").
-//  - window.Viora has every method the renderers emit: editCourse,
-//    editChecklist, editResource, approveTrainingRequest, rejectTrainingRequest,
-//    reopenTrainingRequest, openUserTraining, enrollUserInCourse, unenrollUser,
-//    resetUserCourseProgress, resetAllUserTraining, deleteTrainingUser,
-//    revokeCertificate, viewQuizSubmission, viewTrainingCert, etc.
-//  - Import set/update/remove/push from firebase/database (they were missing,
-//    causing "set is not defined" when building the D object).
-//  - subscribeTraining() stamps uid+id onto accessRequests, logs every
-//    subscription result AND every error (including PERMISSION_DENIED which was
-//    previously swallowed).
+//  - window.Viora alias defined (inline onclick="Viora.xxx()" resolves).
+//  - Import set/update/remove/push from firebase/database (were missing).
+//  - Auth gate reads viora_data/users, orgs/viora/users, orgs/viora/training/users
+//    and accepts role|type|accessLevel === "admin"|"exec".
+//  - bootAdmin() is idempotent (_adminBooted guard) and bails if auth.currentUser
+//    is not yet populated — this prevents subscribeTraining() from attaching
+//    listeners BEFORE Firebase rehydrates the session from localStorage, which
+//    was causing every onValue to fire with null → state.data.* became empty.
+//  - onAuthStateChanged handles the transient null fire by delaying the deny
+//    splash by 800ms. If the session rehydrates within that window, no deny.
+//  - subscribeTraining() logs every callback and every error (permission_denied
+//    is critical, no longer swallowed).
 //  - bootAdmin() forces a second render after the first onValue round-trip.
-//  - Auth gate reads ALL THREE possible profile paths and accepts
-//    role | type | accessLevel === "admin" | "exec".
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
@@ -52,6 +50,10 @@ const firebaseConfig = {
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getDatabase(app); forceLongPolling(db);
 const auth = getAuth(app);
+
+/* Idempotency guard for bootAdmin — prevents subscribeTraining from attaching
+   listeners twice, and prevents it from attaching at all before auth is warm. */
+let _adminBooted = false;
 
 const ROOT = "viora_data";
 const ORG  = "orgs/viora";
@@ -165,43 +167,27 @@ catch (e) { console.warn("[sa] initial bindTrainingEvents failed:", e); }
 
 /* ═══════════════════════════════════════════════════════════════
    GLOBAL API — both window.VioraTraining and window.Viora point here.
-   Renderers in main/training.js emit onclick="Viora.xxx(...)".
    ═══════════════════════════════════════════════════════════════ */
 const VioraAPI = {
-  /* Modal launchers */
   openCourseEditor, openChecklistEditor, openResourceEditor, openCertTemplateEditor,
   openManualAwardModal,
-
-  /* Course */
   saveCourse, deleteCourse,
-
-  /* Checklist */
   saveChecklist,
-
-  /* Resource */
   saveResource, deleteResource, openResourceFile, handleReFile,
-
-  /* Certificate */
   saveCertTemplate, deleteCertTemplate, refreshCertTemplateModules,
   showCertTemplatePreview, paintCertTemplateStamps, handleCertTemplateImage,
   viewTrainingCert, revokeTrainingCert: revokeTrainingCertImpl,
   revokeTrainingCertImpl, awardTrainingCertificate,
-
-  /* Quiz */
   viewQuizSubmission,
-
-  /* Module / quiz editor helpers */
   toggleCeQuiz, addQuizQuestion, removeQuizQuestion, updateQuizQuestion, updateQuizOption,
   setQuizAnswer, addQuizOption, removeQuizOption, updateCeModule, addCeModule,
   removeCeModule, moveCeModule, renderCeModules,
   renderCleTasks, updateCleTask, addCleTask, removeCleTask,
 
-  /* Edit shortcuts called from renderTrainingOverview */
   editCourse:        (id) => openCourseEditor(id),
   editChecklist:     (id) => openChecklistEditor(id),
   editResource:      (id) => openResourceEditor(id),
 
-  /* Aliases the renderers emit */
   approveTrainingRequest:  (uid) => TrainingVioraAPI.approveTrainingRequest(uid),
   rejectTrainingRequest:   (uid) => TrainingVioraAPI.rejectTrainingRequest(uid),
   reopenTrainingRequest:   (uid) => TrainingVioraAPI.reopenTrainingRequest(uid),
@@ -213,10 +199,7 @@ const VioraAPI = {
   deleteTrainingUser:      (uid) => TrainingVioraAPI.deleteTrainingUser(uid),
   revokeCertificate:       (cid) => TrainingVioraAPI.revokeCertificate(cid),
 
-  /* Expose the API table directly for helpers that call TrainingVioraAPI */
   TrainingVioraAPI,
-
-  /* Modal helpers for inline onclick */
   openModal, closeModal
 };
 
@@ -227,7 +210,6 @@ window.VioraTraining.debug = { state, db, auth };
 
 console.info("[sa] window.Viora installed — inline onclick handlers will resolve");
 
-/* Also hoist individual functions in case any renderer calls them bare */
 window.openCertTemplateEditor     = openCertTemplateEditor;
 window.deleteCertTemplate         = deleteCertTemplate;
 window.saveCertTemplate           = saveCertTemplate;
@@ -251,10 +233,7 @@ window.saveResource               = saveResource;
 window.deleteResource             = deleteResource;
 window.openResourceFile           = openResourceFile;
 
-/* ═══════════════════════════════════════════════════════════════
-   DELEGATED CLICK HANDLER — safety net
-   Catches [data-viora-action] clicks and routes them.
-   ═══════════════════════════════════════════════════════════════ */
+/* Delegated fallback for [data-viora-action] buttons */
 document.addEventListener("click", (e) => {
   const btn = e.target.closest("[data-viora-action]");
   if (!btn) return;
@@ -377,7 +356,7 @@ function subscribeTraining() {
       const raw = snap.exists() ? snap.val() : {};
       state.data[key] = normalize(raw, ARRAY_KEYS.includes(key));
 
-      /* Stamp uid+id onto accessRequests so the renderer never sees undefined */
+      /* Stamp uid+id onto accessRequests so renderer never sees undefined */
       if (key === "trainingAccessRequests") {
         state.data[key] = Object.entries(raw || {}).map(([uid, v]) => ({ uid, ...v, id: uid }));
       }
@@ -405,7 +384,7 @@ function subscribeTraining() {
         console.warn("[sa] render during subscribe failed:", key, e);
       }
     }, (err) => {
-      /* Log EVERY error — permission_denied is critical, not noise */
+      /* Log EVERY error — permission_denied is critical */
       console.error(`[sa/sub] ${path} failed:`, err.code, err.message);
     });
   }
@@ -420,6 +399,9 @@ function subscribeTraining() {
 }
 
 function bootAdmin() {
+  if (_adminBooted) return;
+  _adminBooted = true;
+
   const bind = (id, evt, fn) => {
     const el = $(id);
     if (el && !el._saBound) { el._saBound = true; el.addEventListener(evt, fn); }
@@ -473,10 +455,17 @@ function bootAdmin() {
 
   try { const saved = localStorage.getItem("viora_theme"); if (saved) document.documentElement.setAttribute("data-theme", saved); } catch (e) {}
 
+  /* CRITICAL: don't subscribe until auth is warm. If the module is reloaded
+     by a transient null onAuthStateChanged, bail and wait for the real fire. */
+  if (!auth.currentUser) {
+    console.warn("[sa] bootAdmin called before auth was ready — waiting for next onAuthStateChanged");
+    _adminBooted = false;
+    return;
+  }
+
   subscribeTraining();
   switchTab("overview");
 
-  /* Force a second render after the first onValue round-trip lands */
   setTimeout(() => switchTab("overview"), 600);
 
   setTimeout(() => {
@@ -486,11 +475,17 @@ function bootAdmin() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   AUTH GATE — multi-path, multi-field-role
+   AUTH GATE — multi-path, multi-field-role, transient-null safe
    ═══════════════════════════════════════════════════════════════ */
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    showSplash("deny", "Not signed in", "Scholar Admin requires an active VIORA session.");
+    /* Firebase fires null once before rehydrating from localStorage.
+       Only show the deny splash if the session truly stays empty. */
+    setTimeout(() => {
+      if (!auth.currentUser) {
+        showSplash("deny", "Not signed in", "Scholar Admin requires an active VIORA session.");
+      }
+    }, 800);
     return;
   }
 
