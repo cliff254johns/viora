@@ -1,15 +1,11 @@
 // File: scholar-admin-boot.js
 // FIXES:
-//  1. Import set/update/remove/push from firebase/database — they were missing,
-//     causing "set is not defined" when building the D object passed to initTraining().
-//  2. Auth gate reads ALL THREE possible profile paths:
-//        viora_data/users/{uid}
-//        viora_data/orgs/viora/users/{uid}
-//        viora_data/orgs/viora/training/users/{uid}
-//     and accepts role | type | accessLevel === "admin" | "exec".
-//     Logs every path it checked to the console so you can see what's in the DB.
-//  3. initTraining() runs before bindTrainingEvents(); late re-bind after modals parse.
-//  4. subscribeTraining() coerces arrays safely; every renderer call is wrapped.
+//  - window.Viora is now defined (was only window.VioraTraining — inline onclick="Viora.*" threw).
+//  - Delegated click handler routes data-viora-action clicks to the right module function.
+//  - Import set/update/remove/push (they were missing → "set is not defined").
+//  - Auth gate reads viora_data/users, orgs/viora/users, orgs/viora/training/users
+//    and accepts role|type|accessLevel === "admin"|"exec".
+//  - initTraining() before bindTrainingEvents(); late re-bind after modals parse.
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
@@ -156,6 +152,120 @@ try { D.AutoCertification = AutoCertification; } catch (e) {}
 try { bindTrainingEvents(); }
 catch (e) { console.warn("[sa] initial bindTrainingEvents failed:", e); }
 
+/* ═══════════════════════════════════════════════════════════════
+   GLOBAL API — both window.VioraTraining and window.Viora point here.
+   Renderers in main/training.js emit onclick="Viora.xxx(...)".
+   The trainer portal emits window.submitForReview etc.
+   ═══════════════════════════════════════════════════════════════ */
+const VioraAPI = {
+  /* Modal launchers */
+  openCourseEditor, openChecklistEditor, openResourceEditor, openCertTemplateEditor,
+  openManualAwardModal,
+
+  /* Course */
+  saveCourse, deleteCourse,
+
+  /* Checklist */
+  saveChecklist,
+
+  /* Resource */
+  saveResource, deleteResource, openResourceFile, handleReFile,
+
+  /* Certificate */
+  saveCertTemplate, deleteCertTemplate, refreshCertTemplateModules,
+  showCertTemplatePreview, paintCertTemplateStamps, handleCertTemplateImage,
+  viewTrainingCert, revokeTrainingCert: revokeTrainingCertImpl,
+  revokeTrainingCertImpl, awardTrainingCertificate,
+
+  /* Quiz */
+  viewQuizSubmission,
+
+  /* Module / quiz editor helpers */
+  toggleCeQuiz, addQuizQuestion, removeQuizQuestion, updateQuizQuestion, updateQuizOption,
+  setQuizAnswer, addQuizOption, removeQuizOption, updateCeModule, addCeModule,
+  removeCeModule, moveCeModule, renderCeModules,
+  renderCleTasks, updateCleTask, addCleTask, removeCleTask,
+
+  /* Edit shortcuts (called from renderTrainingOverview) */
+  editCourse:        (id) => openCourseEditor(id),
+  editChecklist:     (id) => openChecklistEditor(id),
+  editResource:      (id) => openResourceEditor(id),
+
+  /* Aliases the renderers emit */
+  approveTrainingRequest: (uid) => TrainingVioraAPI.approveTrainingRequest(uid),
+  rejectTrainingRequest:  (uid) => TrainingVioraAPI.rejectTrainingRequest(uid),
+  reopenTrainingRequest:  (uid) => TrainingVioraAPI.reopenTrainingRequest(uid),
+  openUserTraining:       (uid) => TrainingVioraAPI.openUserTraining(uid),
+  enrollUserInCourse:     (uid, cid) => TrainingVioraAPI.enrollUserInCourse(uid, cid),
+  unenrollUser:           (uid, cid) => TrainingVioraAPI.unenrollUser(uid, cid),
+  resetUserCourseProgress:(uid, cid) => TrainingVioraAPI.resetUserCourseProgress(uid, cid),
+  resetAllUserTraining:   (uid) => TrainingVioraAPI.resetAllUserTraining(uid),
+  deleteTrainingUser:     (uid) => TrainingVioraAPI.deleteTrainingUser(uid),
+  revokeCertificate:      (cid) => TrainingVioraAPI.revokeCertificate(cid),
+
+  /* Expose the API table so any helper can call TrainingVioraAPI directly */
+  TrainingVioraAPI,
+
+  /* Module-level openModal / closeModal for inline onclick */
+  openModal, closeModal
+};
+
+window.VioraTraining = VioraAPI;
+window.Viora = VioraAPI;            // ← THIS is the missing alias
+window.VioraTrainingAPI = TrainingVioraAPI;
+window.VioraTraining.debug = { state, db, auth };
+
+console.info("[sa] window.Viora installed — inline onclick handlers will resolve");
+
+/* Also hoist individual functions in case any renderer calls them bare */
+window.openCertTemplateEditor     = openCertTemplateEditor;
+window.deleteCertTemplate         = deleteCertTemplate;
+window.saveCertTemplate           = saveCertTemplate;
+window.refreshCertTemplateModules = refreshCertTemplateModules;
+window.showCertTemplatePreview    = showCertTemplatePreview;
+window.paintCertTemplateStamps    = paintCertTemplateStamps;
+window.handleCertTemplateImage    = handleCertTemplateImage;
+window.openManualAwardModal       = openManualAwardModal;
+window.awardTrainingCertificate   = awardTrainingCertificate;
+window.viewQuizSubmission         = viewQuizSubmission;
+window.viewTrainingCert           = viewTrainingCert;
+window.revokeTrainingCert         = revokeTrainingCertImpl;
+window.AutoCertification          = AutoCertification;
+window.openCourseEditor           = openCourseEditor;
+window.openChecklistEditor        = openChecklistEditor;
+window.openResourceEditor         = openResourceEditor;
+window.saveCourse                 = saveCourse;
+window.deleteCourse               = deleteCourse;
+window.saveChecklist              = saveChecklist;
+window.saveResource               = saveResource;
+window.deleteResource             = deleteResource;
+window.openResourceFile           = openResourceFile;
+
+/* ═══════════════════════════════════════════════════════════════
+   DELEGATED CLICK HANDLER — safety net
+   Catches [data-viora-action] clicks and routes them. This exists so
+   even if a future renderer forgets to escape an arg, the button fires
+   something sensible instead of throwing.
+   ═══════════════════════════════════════════════════════════════ */
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-viora-action]");
+  if (!btn) return;
+  const action = btn.dataset.vioraAction;
+  const args = btn.dataset.vioraArgs ? JSON.parse(btn.dataset.vioraArgs) : [];
+  const fn = window.Viora?.[action];
+  if (typeof fn === "function") {
+    e.preventDefault();
+    e.stopPropagation();
+    try { fn(...args); }
+    catch (err) { console.error(`[sa] action ${action} failed:`, err); toast(`${action} failed: ${err.message}`, "error"); }
+  } else {
+    console.warn(`[sa] no handler for data-viora-action="${action}"`);
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════════
+   SPLASH
+   ═══════════════════════════════════════════════════════════════ */
 function showSplash(kind, title, subtitle) {
   const splash = $("saSplash");
   if (!splash) return;
@@ -352,8 +462,7 @@ function bootAdmin() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   AUTH GATE — reads all three possible profile paths, accepts
-   role | type | accessLevel === "admin" | "exec". Logs what it found.
+   AUTH GATE — multi-path, multi-field-role
    ═══════════════════════════════════════════════════════════════ */
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
@@ -415,16 +524,3 @@ onAuthStateChanged(auth, async (user) => {
   showSplash("ok", "Access granted", `Welcome, ${chosenProfile.name || user.email}.`);
   setTimeout(() => { hideSplash(); bootAdmin(); }, 400);
 });
-
-window.VioraTraining = {
-  openCourseEditor, openChecklistEditor, openResourceEditor, openCertTemplateEditor,
-  deleteCourse, deleteCertTemplate, deleteResource, viewQuizSubmission, viewTrainingCert,
-  revokeTrainingCert: revokeTrainingCertImpl, saveCourse, saveChecklist, saveResource, saveCertTemplate,
-  refreshCertTemplateModules, showCertTemplatePreview, paintCertTemplateStamps,
-  handleCertTemplateImage, openManualAwardModal, awardTrainingCertificate,
-  toggleCeQuiz, addQuizQuestion, removeQuizQuestion, updateQuizQuestion, updateQuizOption,
-  setQuizAnswer, addQuizOption, removeQuizOption, updateCeModule, addCeModule, removeCeModule,
-  moveCeModule, updateCleTask, addCleTask, removeCleTask, handleReFile, openResourceFile,
-  TrainingVioraAPI,
-  debug: { state, db, auth }
-};
