@@ -523,8 +523,10 @@ async function _fetchRequestsNow() {
 
 function renderRequestsPane() {
   try {
+    /* Fire one fetch. If it returns new data, re-render once. Never loop. */
+    const prevLen = getRequestsArray().length;
     _fetchRequestsNow().then((fresh) => {
-      if (fresh.length !== getRequestsArray().length || fresh.length > 0) {
+      if (fresh.length > prevLen) {
         setTimeout(() => renderRequestsPane(), 0);
       }
     });
@@ -577,9 +579,9 @@ function renderRequestsPane() {
       const sourceLabel = (r.source || "").replace(/-portal$/, "") || (isTrainer ? "trainer" : "learner");
       const safeUid = escapeHtml(r.uid || r.id || "");
       const actions = st === "pending"
-        ? `<button class="btn btn-success btn-xs" onclick="Viora.approveTrainingRequest('${safeUid}')"><i class="fa-solid fa-check"></i> Approve</button>
-           <button class="btn btn-danger btn-xs" onclick="Viora.rejectTrainingRequest('${safeUid}')"><i class="fa-solid fa-xmark"></i> Reject</button>`
-        : `<button class="btn btn-outline btn-xs" onclick="Viora.reopenTrainingRequest('${safeUid}')"><i class="fa-solid fa-rotate-left"></i> Reopen</button>`;
+        ? `<button class="btn btn-success btn-xs" data-action="approve" data-uid="${safeUid}"><i class="fa-solid fa-check"></i> Approve</button>
+           <button class="btn btn-danger btn-xs" data-action="reject" data-uid="${safeUid}"><i class="fa-solid fa-xmark"></i> Reject</button>`
+        : `<button class="btn btn-outline btn-xs" data-action="reopen" data-uid="${safeUid}"><i class="fa-solid fa-rotate-left"></i> Reopen</button>`;
       return `<tr>
         <td>${timeAgo(r.requestedAt)}</td>
         <td><strong>${escapeHtml(r.name || "—")}</strong></td>
@@ -590,7 +592,7 @@ function renderRequestsPane() {
         <td><span class="badge badge-${stCls}">${escapeHtml(st)}</span></td>
         <td style="text-align:right;white-space:nowrap;">
           ${actions}
-          <button class="btn btn-danger btn-xs" onclick="Viora.deleteTrainingRequest('${safeUid}')" title="Delete"><i class="fa-solid fa-trash"></i></button>
+          <button class="btn btn-danger btn-xs" data-action="delete" data-uid="${safeUid}" title="Delete"><i class="fa-solid fa-trash"></i></button>
         </td>
       </tr>`;
     }).join("");
