@@ -1,13 +1,15 @@
 // File: scholar-admin-boot.js
-// VIORA Scholar Admin Console bootstrap — DEFINITIVE version.
+// VIORA Scholar Admin Console bootstrap.
 //
-// ROOT CAUSE FIXED:
-//   onValue listeners were attaching BEFORE the Firebase Realtime Database
-//   transport had propagated the auth token. The stream opened unauthenticated,
-//   rules denied the read, onValue fired with null and stayed dead.
-//   Fix: warm the DB connection with an authenticated get() BEFORE attaching
-//   listeners. Also every render path for requests does its own synchronous
-//   get() as a safety net.
+// PATH FIX: P() previously returned `${ROOT}/${ORG}/training/${path}` which
+// combined with every caller's `training/xxx` argument produced
+// `viora_data/orgs/viora/training/training/xxx` — a path that doesn't exist.
+// That's why the listener fired with null, why _fetchRequestsNow() returned
+// empty, and why the Requests pane showed nothing despite 3 records living at
+// viora_data/orgs/viora/training/accessRequests.
+//
+// Now P() returns `${ROOT}/${ORG}/${path}`, so P("training/accessRequests")
+// correctly resolves to viora_data/orgs/viora/training/accessRequests.
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
@@ -50,11 +52,18 @@ let _dbWarmedUp = false;
 
 const ROOT = "viora_data";
 const ORG  = "orgs/viora";
-const P = (path) => `${ROOT}/${ORG}/training/${path}`;
+
+/* ═══════════ THE FIX ═══════════
+   Old: (path) => `${ROOT}/${ORG}/training/${path}`      ← double "training"
+   New: (path) => `${ROOT}/${ORG}/${path}`               ← callers already pass training/...
+   ═══════════════════════════════ */
+const P = (path) => `${ROOT}/${ORG}/${path}`;
+
 const $ = (id) => document.getElementById(id);
 const uid = () => "id-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 const nowIso = () => new Date().toISOString();
 
+/* EAT (Africa/Nairobi) helpers */
 const EAT_OFFSET_MS = 3 * 60 * 60 * 1000;
 function eatDayKey(ms) {
   const d = new Date(ms + EAT_OFFSET_MS);
@@ -486,9 +495,6 @@ function renderCommandCenter() {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   REQUESTS — every render pulls fresh data
-   ═══════════════════════════════════════════════════════════════ */
 function getRequestsArray() {
   const raw = state.data.trainingAccessRequests;
   if (Array.isArray(raw)) return raw.filter(Boolean);
@@ -559,7 +565,7 @@ function renderRequestsPane() {
     const tb = $("trainingRequestsBody");
     if (!tb) return;
     if (!list.length) {
-      tb.innerHTML = `<tr><td colspan="8" style="padding:32px;text-align:center;color:var(--text-secondary);">Loading requests… if this stays empty, check Console for [sa/fetch] lines.</td></tr>`;
+      tb.innerHTML = `<tr><td colspan="8" style="padding:32px;text-align:center;color:var(--text-secondary);">No requests yet.</td></tr>`;
       return;
     }
 
@@ -598,7 +604,7 @@ async function approveRequest(uidKey) {
   const req = getRequestsArray().find(r => (r.uid || r.id) === uidKey);
   const role = req?.role || "learner";
   try {
-    await update(ref(db, P(`accessRequests/${uidKey}`)), {
+    await update(ref(db, P(`training/accessRequests/${uidKey}`)), {
       status: "approved", approvedAt: nowIso(), approvedBy: state.operator?.name || "admin"
     });
     try {
@@ -615,7 +621,7 @@ async function rejectRequest(uidKey) {
   if (!uidKey) return;
   if (!confirm("Reject this request?")) return;
   try {
-    await update(ref(db, P(`accessRequests/${uidKey}`)), { status: "rejected", rejectedAt: nowIso(), rejectedBy: state.operator?.name || "admin" });
+    await update(ref(db, P(`training/accessRequests/${uidKey}`)), { status: "rejected", rejectedAt: nowIso(), rejectedBy: state.operator?.name || "admin" });
     toast("Rejected.", "info");
     await _fetchRequestsNow();
     renderRequestsPane();
@@ -624,7 +630,7 @@ async function rejectRequest(uidKey) {
 async function reopenRequest(uidKey) {
   if (!uidKey) return;
   try {
-    await update(ref(db, P(`accessRequests/${uidKey}`)), { status: "pending", reopenedAt: nowIso(), reopenedBy: state.operator?.name || "admin" });
+    await update(ref(db, P(`training/accessRequests/${uidKey}`)), { status: "pending", reopenedAt: nowIso(), reopenedBy: state.operator?.name || "admin" });
     toast("Reopened — now pending.", "info");
     await _fetchRequestsNow();
     renderRequestsPane();
@@ -634,16 +640,13 @@ async function deleteRequest(uidKey) {
   if (!uidKey) return;
   if (!confirm("Delete this request permanently?")) return;
   try {
-    await remove(ref(db, P(`accessRequests/${uidKey}`)));
+    await remove(ref(db, P(`training/accessRequests/${uidKey}`)));
     toast("Request deleted.", "success");
     await _fetchRequestsNow();
     renderRequestsPane();
   } catch (e) { toast("Delete failed: " + e.message, "error"); }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   TAB SWITCHING + BADGES
-   ═══════════════════════════════════════════════════════════════ */
 function switchTab(name) {
   state.currentTab = "training-" + name;
   document.querySelectorAll("[data-sa-tab]").forEach(b => b.classList.toggle("active", b.dataset.saTab === name));
@@ -673,29 +676,7 @@ function updateBadges() {
   if ($("saReqBadge"))  { $("saReqBadge").textContent = requests; $("saReqBadge").style.display = requests > 0 ? "inline-block" : "none"; }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   SUBSCRIPTIONS — warm up DB, then attach listeners
-   ═══════════════════════════════════════════════════════════════ */
-async function _warmUpDbAuth() {
-  if (_dbWarmedUp) return true;
-  try {
-    console.info("[sa/warmup] forcing authenticated DB read to warm transport");
-    await get(ref(db, `${ROOT}/${ORG}/users`));
-    _dbWarmedUp = true;
-    console.info("[sa/warmup] ✓ DB transport authenticated");
-    return true;
-  } catch (e) {
-    console.warn("[sa/warmup] warmup read failed:", e.code, e.message);
-    return false;
-  }
-}
-
 async function subscribeTraining() {
-  /* CRITICAL: warm up the DB transport with an authenticated read BEFORE
-     attaching any onValue listeners. Without this, listeners open an
-     unauthenticated stream, receive null, and stay dead. */
-  await _warmUpDbAuth();
-
   const PATHS = {
     trainingAccessRequests:   "training/accessRequests",
     trainingCourses:          "training/courses",
@@ -721,7 +702,6 @@ async function subscribeTraining() {
         state.data[key] = arr;
         console.info(`[sa/sub] ${path} → ${arr.length} records`);
         if (arr.length === 0) {
-          console.warn("[sa/sub] empty snapshot — running catch-up fetch");
           _fetchRequestsNow().then((fetched) => {
             if (fetched.length > 0 && state.currentTab === "training-requests") renderRequestsPane();
           });
@@ -748,11 +728,6 @@ async function subscribeTraining() {
       } catch (e) {}
     }, (err) => {
       console.error(`[sa/sub] ${path} failed:`, err.code, err.message);
-      if (key === "trainingAccessRequests") {
-        _fetchRequestsNow().then((fetched) => {
-          if (state.currentTab === "training-requests") renderRequestsPane();
-        });
-      }
     });
   }
 
@@ -780,15 +755,9 @@ async function subscribeTraining() {
     if (state.currentTab === "training-command") renderCommandCenter();
   }, (err) => console.error(`[sa/sub] portalRequests failed:`, err.code, err.message));
 
-  /* One-shot backfill of accessRequests, on top of everything above */
-  _fetchRequestsNow().then((fetched) => {
-    if (fetched.length > 0 && state.currentTab === "training-requests") renderRequestsPane();
-  });
+  _fetchRequestsNow();
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   BOOT
-   ═══════════════════════════════════════════════════════════════ */
 async function bootAdmin() {
   if (_adminBooted) return;
   _adminBooted = true;
@@ -845,7 +814,6 @@ async function bootAdmin() {
   setTimeout(() => { try { bindTrainingEvents(); } catch (e) {} }, 300);
 }
 
-/* AUTH GATE */
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     setTimeout(() => { if (!auth.currentUser) showSplash("deny", "Not signed in", "Scholar Admin requires an active VIORA session."); }, 800);
