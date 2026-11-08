@@ -663,17 +663,27 @@ function renderCommandCenter() {
         notifHost.innerHTML = `<div style="padding:16px;background:rgba(255,200,87,.08);border:1px solid rgba(255,200,87,.35);border-radius:16px;margin-bottom:20px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;"><h4 style="font-size:.85rem;font-weight:700;color:var(--accent-gold);margin:0;"><i class="fa-solid fa-bell"></i> ${pendingReqs.length} Pending Request${pendingReqs.length === 1 ? "" : "s"}</h4><button class="btn btn-outline btn-xs" data-action="goto-requests"><i class="fa-solid fa-arrow-right"></i> View All</button></div>${items}</div>`;
       }
     }
-
-    const usersHost = $("cmdUsersKpi");
-    if (usersHost) {
-      usersHost.innerHTML = `
-        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-users"></i></div><div class="number">${total}</div><div class="label">Total Users</div></div>
-        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-user-tie"></i></div><div class="number">${operators}</div><div class="label">Operators</div></div>
-        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-building-user"></i></div><div class="number">${clients}</div><div class="label">Portal Clients</div></div>
-        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-chalkboard-user"></i></div><div class="number">${trainers}</div><div class="label">Trainers</div></div>
-        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-graduation-cap"></i></div><div class="number">${learners}</div><div class="label">Learners</div></div>
-        <div class="stat-card" style="${pendingApprovalCount ? 'border-left:4px solid var(--accent-gold);' : ''}"><div class="stat-icon"><i class="fa-solid fa-hourglass-half"></i></div><div class="number">${pendingApprovalCount}</div><div class="label">Pending Approval</div></div>
-      `;
+    try {
+      const uCanvas = $("cmdUsersChart");
+      if (uCanvas && typeof Chart !== "undefined") {
+        destroyChart("cmdUsersChart");
+        const tc = getTextColor();
+        _charts["cmdUsersChart"] = new Chart(uCanvas.getContext("2d"), {
+          type: "bar",
+          data: { labels: ["Operators", "Portal Clients", "Trainers", "Learners", "Pending"],
+            datasets: [{ label: "Users", data: [operators, clients, trainers, learners, pendingApprovalCount],
+              backgroundColor: ["rgba(0,212,255,.75)", "rgba(168,85,247,.75)", "rgba(34,230,160,.75)", "rgba(255,200,87,.75)", "rgba(217,43,75,.75)"],
+              borderColor: ["#00d4ff", "#a855f7", "#22e6a0", "#ffc857", "#d92b4b"], borderWidth: 2, borderRadius: 8 }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { color: tc, precision: 0 }, grid: { color: "rgba(148,163,184,.1)" } },
+                      x: { ticks: { color: tc }, grid: { display: false } } } }
+        });
+        console.log("[sa/chart] ✓ users chart drawn");
+      } else {
+        console.warn("[sa/chart] users canvas missing or Chart.js undefined:", { canvas: !!uCanvas, Chart: typeof Chart });
+      }
+    } catch (e) {
+      console.error("[sa/chart] users chart failed:", e);
     }
 
     const stamp = $("cmdLastRefresh");
