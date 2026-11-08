@@ -71,49 +71,56 @@
     <main class="sch-main">
       <div class="sch-content">
 
-        <!-- COMMAND CENTER -->
-        <section id="sa-pane-command" class="sa-pane active">
-          <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
-            <div>
-              <h1 style="display:flex;align-items:center;gap:10px;">
-                <span class="pillar-icon" style="width:44px;height:44px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#00d4ff,#7c3aed);color:#fff;"><i class="fa-solid fa-satellite-dish"></i></span>
-                <span style="background:linear-gradient(135deg,#00d4ff,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Command Center</span>
-              </h1>
-              <p style="font-size:.85rem;color:var(--text-secondary);margin-top:6px;">Live KPIs across every VIORA portal. Times shown in Africa/Nairobi (EAT).</p>
-            </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <button class="btn btn-outline btn-sm" id="cmdRefreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button>
-            </div>
-          </div>
-             <!-- Pending Requests Notification -->
-<div id="cmdRequestsNotif" style="margin-bottom:20px;"></div>
+       <section id="sa-pane-command" class="sa-pane active">
+  <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+    <div>
+      <h1 style="display:flex;align-items:center;gap:10px;">
+        <span class="pillar-icon" style="width:44px;height:44px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#00d4ff,#7c3aed);color:#fff;"><i class="fa-solid fa-satellite-dish"></i></span>
+        <span style="background:linear-gradient(135deg,#00d4ff,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Command Center</span>
+      </h1>
+      <p style="font-size:.85rem;color:var(--text-secondary);margin-top:6px;">Live KPIs across every VIORA portal. Times shown in Africa/Nairobi (EAT).</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-outline btn-sm" id="cmdRefreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button>
+    </div>
+  </div>
 
-          <h3 style="font-size:.78rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-secondary);margin:8px 0 12px;font-weight:700;"><i class="fa-solid fa-users" style="color:var(--accent-blue);"></i> Users</h3>
-          <div class="kpi-grid" id="cmdUsersKpi"></div>
-          <div style="margin-top:14px;background:rgba(18,18,26,.72);border:1px solid var(--border-color);border-radius:16px;padding:16px;"><div style="height:220px;position:relative;"><canvas id="cmdUsersChart"></canvas></div></div>
+  <div id="cmdRequestsNotif" style="margin-bottom:20px;"></div>
 
-          <h3 style="font-size:.78rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-secondary);margin:28px 0 12px;font-weight:700;"><i class="fa-solid fa-repeat" style="color:var(--accent-green);"></i> Subscriptions</h3>
-          <div class="kpi-grid" id="cmdSubsKpi"></div>
-          <div style="margin-top:14px;background:rgba(18,18,26,.72);border:1px solid var(--border-color);border-radius:16px;padding:16px;"><div style="height:220px;position:relative;"><canvas id="cmdSubsChart"></canvas></div></div>
+  <h3 style="font-size:.78rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-secondary);margin:8px 0 12px;font-weight:700;"><i class="fa-solid fa-users" style="color:var(--accent-blue);"></i> Users</h3>
+  <div class="kpi-grid" id="cmdUsersKpi"></div>
+  <div style="margin-top:14px;background:rgba(18,18,26,.72);border:1px solid var(--border-color);border-radius:16px;padding:16px;">
+    <div style="height:220px;position:relative;"><canvas id="cmdUsersChart"></canvas></div>
+  </div>
 
-          <h3 style="font-size:.78rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-secondary);margin:28px 0 12px;font-weight:700;"><i class="fa-solid fa-graduation-cap" style="color:var(--accent-purple);"></i> Training</h3>
-          <div class="kpi-grid" id="cmdTrainingKpi"></div>
-          <div style="margin-top:14px;background:rgba(18,18,26,.72);border:1px solid var(--border-color);border-radius:16px;padding:16px;"><div style="height:220px;position:relative;"><canvas id="cmdTrainingChart"></canvas></div></div>
+  <h3 style="font-size:.78rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-secondary);margin:28px 0 12px;font-weight:700;"><i class="fa-solid fa-repeat" style="color:var(--accent-green);"></i> Subscriptions</h3>
+  <div class="kpi-grid" id="cmdSubsKpi"></div>
+  <div style="margin-top:14px;background:rgba(18,18,26,.72);border:1px solid var(--border-color);border-radius:16px;padding:16px;">
+    <div style="height:220px;position:relative;"><canvas id="cmdSubsChart"></canvas></div>
+  </div>
 
-          <h3 style="font-size:.78rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-secondary);margin:28px 0 12px;font-weight:700;"><i class="fa-solid fa-door-open" style="color:var(--accent-gold);"></i> Portal Access</h3>
-          <div class="kpi-grid" id="cmdPortalKpi"></div>
+  <h3 style="font-size:.78rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-secondary);margin:28px 0 12px;font-weight:700;"><i class="fa-solid fa-graduation-cap" style="color:var(--accent-purple);"></i> Training</h3>
+  <div class="kpi-grid" id="cmdTrainingKpi"></div>
+  <div style="margin-top:14px;background:rgba(18,18,26,.72);border:1px solid var(--border-color);border-radius:16px;padding:16px;">
+    <div style="height:220px;position:relative;"><canvas id="cmdTrainingChart"></canvas></div>
+  </div>
 
-          <h3 style="font-size:.78rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-secondary);margin:28px 0 12px;font-weight:700;"><i class="fa-solid fa-chart-line" style="color:var(--accent-pink);"></i> 30-Day Activity Trend (EAT)</h3>
-          <div style="background:rgba(18,18,26,.72);border:1px solid var(--border-color);border-radius:16px;padding:18px;"><div style="height:280px;position:relative;"><canvas id="cmdActivityChart"></canvas></div></div>
+  <h3 style="font-size:.78rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-secondary);margin:28px 0 12px;font-weight:700;"><i class="fa-solid fa-door-open" style="color:var(--accent-gold);"></i> Portal Access</h3>
+  <div class="kpi-grid" id="cmdPortalKpi"></div>
 
-          <h3 style="font-size:.78rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-secondary);margin:28px 0 12px;font-weight:700;"><i class="fa-solid fa-bolt" style="color:var(--accent-pink);"></i> Recent Activity</h3>
-          <div id="cmdActivityFeed" style="padding:18px;background:rgba(18,18,26,.72);border:1px solid var(--border-color);border-radius:16px;min-height:100px;"></div>
+  <h3 style="font-size:.78rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-secondary);margin:28px 0 12px;font-weight:700;"><i class="fa-solid fa-chart-line" style="color:var(--accent-pink);"></i> 30-Day Activity Trend (EAT)</h3>
+  <div style="background:rgba(18,18,26,.72);border:1px solid var(--border-color);border-radius:16px;padding:18px;">
+    <div style="height:280px;position:relative;"><canvas id="cmdActivityChart"></canvas></div>
+  </div>
 
-          <div style="margin-top:24px;padding:14px 18px;background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.22);border-radius:12px;font-size:.78rem;color:var(--text-secondary);">
-            <i class="fa-solid fa-clock" style="color:var(--accent-blue);"></i>
-            <strong style="color:var(--text-primary);">Last refresh:</strong> <span id="cmdLastRefresh">—</span>
-          </div>
-        </section>
+  <h3 style="font-size:.78rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-secondary);margin:28px 0 12px;font-weight:700;"><i class="fa-solid fa-bolt" style="color:var(--accent-pink);"></i> Recent Activity</h3>
+  <div id="cmdActivityFeed" style="padding:18px;background:rgba(18,18,26,.72);border:1px solid var(--border-color);border-radius:16px;min-height:100px;"></div>
+
+  <div style="margin-top:24px;padding:14px 18px;background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.22);border-radius:12px;font-size:.78rem;color:var(--text-secondary);">
+    <i class="fa-solid fa-clock" style="color:var(--accent-blue);"></i>
+    <strong style="color:var(--text-primary);">Last refresh:</strong> <span id="cmdLastRefresh">—</span>
+  </div>
+</section>
 
         <!-- OVERVIEW -->
         <section id="sa-pane-overview" class="sa-pane">
