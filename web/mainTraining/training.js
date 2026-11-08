@@ -1,29 +1,14 @@
+// File: mainTraining/training.js
+// FIXES: Renamed TRAINING constant → SCHOLAR (no collision with main/training.js).
+// All renderers array-safe. Auth gate reads training/accessRequests/{uid} at SCHOLAR path.
+// Named Firebase app ("training") keeps learner auth isolated from admin.
 
-
+import { initializeApp, getApps, getApp } from "firebase/app";
 import {
-  initializeApp,
-  getApps,
-  getApp
-} from "firebase/app";
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  signOut,
-  sendPasswordResetEmail   
+  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+  onAuthStateChanged, signOut, sendPasswordResetEmail
 } from "firebase/auth";
-import {
-  getDatabase,
-  ref,
-  set,
-  get,
-  update,
-  remove,
-  onValue,
-  off
-} from "firebase/database";
-
+import { getDatabase, ref, set, get, update, remove, onValue, off } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC9gCBt-xR8t9n6rTGNvDZ5usUGiW-Dqxc",
@@ -36,129 +21,63 @@ const firebaseConfig = {
   measurementId: "G-G0NB6JGQVF"
 };
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   NAMED APP = ISOLATED AUTH SESSION
-   The default app's storage key looks like:
-       firebase:authUser:<apiKey>:[DEFAULT]
-   The "training" app's storage key looks like:
-       firebase:authUser:<apiKey>:training
-   Different keys â†’ different sessions â†’ no cross-contamination
-   between main.html (admin) and training.html (learner).
-   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const APP_NAME = "training";
-
-let app;
 const existing = getApps().find(a => a.name === APP_NAME);
-if (existing) {
-  app = existing;
-} else {
-  app = initializeApp(firebaseConfig, APP_NAME);
-}
-
+const app = existing ? existing : initializeApp(firebaseConfig, APP_NAME);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-/* Canonical base paths â€” must match main.js exactly */
-const TRAINING = "viora_data/orgs/viora/training";
-const USERS = "viora_data/orgs/viora/users";
+const SCHOLAR      = "viora_data/orgs/viora/training";
+const USERS        = "viora_data/orgs/viora/users";
 const PORTAL_USERS = "viora_data/orgs/viora/portalUsers";
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   STATE
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const S = {
-  user: null,
-  access: null, // accessRequests/{uid} snapshot
-  courses: {}, // courseId -> course
-  checklists: {},
-  resources: {},
-  enrollments: {}, // courseId -> enrollment record for current uid
-  progress: {}, // courseId -> { moduleId -> { completedAt, score } }
-  checklistProgress: {}, // checklistId -> { taskId -> { done, doneAt } }
-  quizSubmissions: {}, // courseId -> submission
-  certificates: {}, // certId -> cert (filtered to current uid)
+  user: null, access: null,
+  courses: {}, checklists: {}, resources: {},
+  enrollments: {}, progress: {}, checklistProgress: {},
+  quizSubmissions: {}, certificates: {},
   currentTab: "overview",
-  activeCourseId: null,
-  activeModuleId: null,
-  activeQuizCourseId: null,
+  activeCourseId: null, activeModuleId: null, activeQuizCourseId: null,
   pendingQuizAnswers: {},
   subscriptions: [],
   bootDone: false
 };
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   SMALL UTILITIES
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const $ = (id) => document.getElementById(id);
 const nowIso = () => new Date().toISOString();
 
 function escapeHtml(s) {
   return String(s == null ? "" : s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
-
 function timeAgo(iso) {
   if (!iso) return "";
-  const t = Date.parse(iso);
-  if (!Number.isFinite(t)) return "";
+  const t = Date.parse(iso); if (!Number.isFinite(t)) return "";
   const diff = Date.now() - t;
   if (diff < 60000) return "just now";
-  const m = Math.floor(diff / 60000);
-  if (m < 60) return m + "m ago";
-  const h = Math.floor(m / 60);
-  if (h < 24) return h + "h ago";
-  const d = Math.floor(h / 24);
-  if (d < 30) return d + "d ago";
-  return new Date(iso).toLocaleDateString();
+  const m = Math.floor(diff / 60000); if (m < 60) return m + "m ago";
+  const h = Math.floor(m / 60); if (h < 24) return h + "h ago";
+  return Math.floor(h / 24) + "d ago";
 }
-
 function fmtDate(iso) {
-  if (!iso) return "â€”";
-  try {
-    return new Date(iso).toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric"
-    });
-  } catch {
-    return "â€”";
-  }
+  if (!iso) return "—";
+  try { return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }); }
+  catch { return "—"; }
 }
-
 function toast(msg, type = "info") {
   const host = $("toastContainer");
-  if (!host) {
-    console.log("[toast]", type, msg);
-    return;
-  }
+  if (!host) { console.log("[toast]", type, msg); return; }
   while (host.children.length >= 5) host.removeChild(host.firstElementChild);
-
   const el = document.createElement("div");
   el.className = "toast " + type;
   el.innerHTML = `<span>${escapeHtml(msg)}</span>`;
-
   const btn = document.createElement("button");
-  btn.className = "toast-close";
-  btn.type = "button";
-  btn.setAttribute("aria-label", "Close");
-  btn.textContent = "Ã—";
+  btn.className = "toast-close"; btn.type = "button"; btn.textContent = "×";
   el.appendChild(btn);
-
   let timer = null;
-  const dismiss = () => {
-    if (timer) {
-      clearTimeout(timer);
-      timer = null;
-    }
-    if (el.isConnected) el.remove();
-  };
-  btn.addEventListener("click", dismiss, {
-    once: true
-  });
+  const dismiss = () => { if (timer) { clearTimeout(timer); timer = null; } if (el.isConnected) el.remove(); };
+  btn.addEventListener("click", dismiss, { once: true });
   host.appendChild(el);
   timer = setTimeout(dismiss, 5000);
 }
@@ -170,76 +89,44 @@ function showLoginMessage(msg, kind = "error") {
   el.className = "login-message " + kind;
   el.style.display = msg ? "block" : "none";
 }
-
 function clearLoginMessage() {
   const el = $("loginMessage");
-  if (el) {
-    el.textContent = "";
-    el.style.display = "none";
-  }
+  if (el) { el.textContent = ""; el.style.display = "none"; }
 }
 
-/* Extract a YouTube video ID from any common URL shape */
 function youtubeId(url) {
   if (!url) return null;
-  const s = String(url).trim();
-  const m = s.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/))([A-Za-z0-9_-]{6,})/);
+  const m = String(url).trim().match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/))([A-Za-z0-9_-]{6,})/);
   return m ? m[1] : null;
 }
-
-/* Render a video URL as a safe iframe (YouTube embed) or a plain iframe */
 function renderVideoEmbed(url) {
   if (!url) return "";
   const yt = youtubeId(url);
   const src = yt ? `https://www.youtube.com/embed/${yt}` : url;
-  return `<div class="lesson-video"><iframe
-    src="${escapeHtml(src)}"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-    allowfullscreen
-    loading="lazy"
-    referrerpolicy="no-referrer"></iframe></div>`;
+  return `<div class="lesson-video"><iframe src="${escapeHtml(src)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy" referrerpolicy="no-referrer"></iframe></div>`;
 }
-
-/* Fire the shared notification bridge (defined inline in training.html) */
 function notify(opts) {
   try {
-    if (typeof window.vioraNotify === "function") {
-      window.vioraNotify(opts).catch?.(() => {});
-    }
-  } catch (_) {
-    /* non-fatal */ }
+    if (typeof window.vioraNotify === "function") window.vioraNotify(opts).catch?.(() => {});
+  } catch (_) {}
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   SCREEN SWITCHER
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function showScreen(name) {
   const login = $("loginScreen");
   const pending = $("pendingScreen");
   const shell = $("appShell");
-
   if (login) login.style.display = name === "login" ? "flex" : "none";
   if (pending) pending.style.display = name === "pending" ? "flex" : "none";
   if (shell) shell.style.display = name === "app" ? "block" : "none";
-
-  /* Toggle a body class so CSS media queries can show/hide the
-     mobile chrome correctly (desktop never sees it; mobile only
-     sees it while the app shell is active). Do NOT set inline
-     display on #mobileAppBar / #mobileBottomNav â€” that would
-     override the desktop `display:none` rule. */
   document.body.classList.toggle("is-app-view", name === "app");
 }
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   LOGIN TAB SWITCHER
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+
 function initLoginTabs() {
   const tabIn = $("tabSignIn");
   const tabReg = $("tabRegister");
   const inFields = $("signInFields");
   const regFields = $("registerFields");
-
   if (!tabIn || !tabReg) return;
-
   const setMode = (mode) => {
     tabIn.classList.toggle("active", mode === "in");
     tabReg.classList.toggle("active", mode === "reg");
@@ -247,34 +134,20 @@ function initLoginTabs() {
     if (regFields) regFields.style.display = mode === "reg" ? "block" : "none";
     clearLoginMessage();
   };
-
   tabIn.addEventListener("click", () => setMode("in"));
   tabReg.addEventListener("click", () => setMode("reg"));
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   AUTH ACTIONS
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 async function doSignIn() {
   const email = ($("loginEmail")?.value || "").trim();
   const password = $("loginPassword")?.value || "";
   const btn = $("loginBtn");
-
-  if (!email || !password) {
-    showLoginMessage("Enter your email and password.");
-    return;
-  }
-
+  if (!email || !password) { showLoginMessage("Enter your email and password."); return; }
   const orig = btn ? btn.innerHTML : "";
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>&nbsp; Signing inâ€¦';
-  }
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>&nbsp; Signing in…'; }
   clearLoginMessage();
-
   try {
     await signInWithEmailAndPassword(auth, email, password);
-    /* onAuthStateChanged handles the rest */
   } catch (e) {
     const friendly = {
       "auth/invalid-email": "That email address isn't valid.",
@@ -283,41 +156,24 @@ async function doSignIn() {
       "auth/invalid-credential": "Wrong email or password.",
       "auth/too-many-requests": "Too many attempts. Try again later.",
       "auth/network-request-failed": "Network error. Check your connection."
-    } [e.code] || (e.message || "Sign-in failed.");
+    }[e.code] || (e.message || "Sign-in failed.");
     showLoginMessage(friendly);
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = orig;
-    }
+    if (btn) { btn.disabled = false; btn.innerHTML = orig; }
   }
 }
 
 async function doRegister() {
- const name = $('regName')?.value?.trim() || '';
-const email = $('regEmail')?.value?.trim().toLowerCase() || '';
-const phone = $('regPhone')?.value?.trim() || '';
-const role = $('pRegRole')?.value || '';
-const password = $('regPassword')?.value || '';
+  const name = ($("regName")?.value || "").trim();
+  const email = ($("regEmail")?.value || "").trim().toLowerCase();
+  const phone = ($("regPhone")?.value || "").trim();
+  const password = $("regPassword")?.value || "";
+  const btn = $("registerBtn");
 
-// Confirm password check
-if (typeof window.vioraConfirmPwMatch === 'function' && !window.vioraConfirmPwMatch()) {
-  return;
-}
-
-  if (!name || !email || !password) {
-    showLoginMessage("Name, email, and password are required.");
-    return;
-  }
-  if (password.length < 6) {
-    showLoginMessage("Password must be at least 6 characters.");
-    return;
-  }
+  if (!name || !email || !password) { showLoginMessage("Name, email, and password are required."); return; }
+  if (password.length < 6) { showLoginMessage("Password must be at least 6 characters."); return; }
 
   const orig = btn ? btn.innerHTML : "";
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>&nbsp; Creatingâ€¦';
-  }
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>&nbsp; Creating…'; }
   clearLoginMessage();
 
   try {
@@ -325,72 +181,41 @@ if (typeof window.vioraConfirmPwMatch === 'function' && !window.vioraConfirmPwMa
     const uid = cred.user.uid;
     const requestedAt = nowIso();
 
-    /* Write the access request â€” admin approves from main.html */
-    await set(ref(db, `${TRAINING}/accessRequests/${uid}`), {
-      uid,
-      name,
-      email,
-      phone,
-      status: "pending",
-      requestedAt,
-      source: "training-portal"
+    await set(ref(db, `${SCHOLAR}/accessRequests/${uid}`), {
+      uid, name, email, phone,
+      status: "pending", requestedAt, source: "training-portal"
     });
 
-    /* Also seed a minimal users record so the admin side has a name */
     try {
       const snap = await get(ref(db, `${USERS}/${uid}`));
       if (!snap.exists()) {
         await set(ref(db, `${USERS}/${uid}`), {
-          uid,
-          name,
-          email,
-          role: "learner",
-          createdAt: requestedAt
+          uid, name, email, role: "learner", createdAt: requestedAt
         });
       }
-    } catch (_) {
-      /* non-fatal */ }
+    } catch (_) {}
 
-    /* onAuthStateChanged will route us to #pendingScreen */
   } catch (e) {
     const friendly = {
       "auth/email-already-in-use": "That email is already registered. Try signing in instead.",
       "auth/weak-password": "Password must be at least 6 characters.",
       "auth/invalid-email": "That email address isn't valid."
-    } [e.code] || (e.message || "Sign-up failed.");
+    }[e.code] || (e.message || "Sign-up failed.");
     showLoginMessage(friendly);
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = orig;
-    }
+    if (btn) { btn.disabled = false; btn.innerHTML = orig; }
   }
 }
 
 async function doSignOut() {
-  try {
-    await signOut(auth);
-  } catch (e) {
-    console.warn("[training] sign-out failed", e);
-  }
+  try { await signOut(auth); } catch (e) { console.warn("[training] sign-out failed", e); }
   location.reload();
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   SUBSCRIPTION HELPERS
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
-function trackSub(unsub) {
-  if (typeof unsub === "function") S.subscriptions.push(unsub);
-}
-
+function trackSub(unsub) { if (typeof unsub === "function") S.subscriptions.push(unsub); }
 function teardownSubs() {
-  for (const u of S.subscriptions) {
-    try {
-      u();
-    } catch (_) {}
-  }
+  for (const u of S.subscriptions) { try { u(); } catch (_) {} }
   S.subscriptions = [];
 }
-
 function subNode(path, handler) {
   const r = ref(db, path);
   const cb = (snap) => handler(snap.exists() ? snap.val() : null);
@@ -398,58 +223,38 @@ function subNode(path, handler) {
   trackSub(() => off(r, "value", cb));
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   AUTH STATE HANDLER â€” routes between login / pending / app
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function handleAuth(user) {
   teardownSubs();
   S.user = user || null;
   S.access = null;
+  if (!user) { showScreen("login"); return; }
 
-  if (!user) {
-    showScreen("login");
-    return;
-  }
-
-  /* Subscribe to the access request record; the answer decides the screen */
-  const accessRef = ref(db, `${TRAINING}/accessRequests/${user.uid}`);
+  const accessRef = ref(db, `${SCHOLAR}/accessRequests/${user.uid}`);
   const accessCb = (snap) => {
     const val = snap.exists() ? snap.val() : null;
     S.access = val;
-
     if (!val) {
-      /* Signed in but never registered for training */
       showScreen("login");
-      showLoginMessage(
-        "No training access request found for this account. " +
-        "Click the 'First Time' tab to request access."
-      );
+      showLoginMessage("No training access request found for this account. Click the 'First Time' tab to request access.");
       return;
     }
-
     if (val.status === "rejected") {
       showScreen("login");
       showLoginMessage("Your training access request was declined. Contact the admin.");
       return;
     }
-
     if (val.status === "pending") {
       const pName = $("pendingName");
       if (pName) pName.textContent = val.name || user.email || "there";
       showScreen("pending");
       return;
     }
-
     if (val.status === "approved") {
-      if (!S.bootDone) {
-        S.bootDone = true;
-        bootLearnerApp();
-      }
+      if (!S.bootDone) { S.bootDone = true; bootLearnerApp(); }
       showScreen("app");
       return;
     }
   };
-
   onValue(accessRef, accessCb, (err) => {
     console.warn("[training] access sub failed", err);
     showScreen("login");
@@ -458,64 +263,34 @@ function handleAuth(user) {
   trackSub(() => off(accessRef, "value", accessCb));
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   BOOT THE LEARNER APP â€” wire all subscriptions + UI
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function bootLearnerApp() {
   if (!S.user) return;
   const uid = S.user.uid;
-
-  /* Who am I */
   const who = $("whoami");
   if (who) who.textContent = S.access?.name || S.user.email || "Learner";
 
-  /* â”€â”€ Content collections â”€â”€ */
-  subNode(`${TRAINING}/courses`, (v) => {
-    S.courses = v || {};
-    renderActiveTab();
-  });
-  subNode(`${TRAINING}/checklists`, (v) => {
-    S.checklists = v || {};
-    if (S.currentTab === "checklists") renderChecklists();
-  });
-  subNode(`${TRAINING}/resources`, (v) => {
-    S.resources = v || {};
-    if (S.currentTab === "resources") renderResources();
-  });
+  subNode(`${SCHOLAR}/courses`, (v) => { S.courses = v || {}; renderActiveTab(); });
+  subNode(`${SCHOLAR}/checklists`, (v) => { S.checklists = v || {}; if (S.currentTab === "checklists") renderChecklists(); });
+  subNode(`${SCHOLAR}/resources`, (v) => { S.resources = v || {}; if (S.currentTab === "resources") renderResources(); });
 
-  /* â”€â”€ My personal data â”€â”€ */
-  subNode(`${TRAINING}/enrollments/${uid}`, (v) => {
-    S.enrollments = v || {};
-    renderActiveTab();
-  });
-  subNode(`${TRAINING}/progress/${uid}`, (v) => {
-    S.progress = v || {};
-    renderActiveTab();
-  });
-  subNode(`${TRAINING}/checklistProgress/${uid}`, (v) => {
-    S.checklistProgress = v || {};
-    if (S.currentTab === "checklists") renderChecklists();
-  });
-  subNode(`${TRAINING}/quizSubmissions/${uid}`, (v) => {
-    S.quizSubmissions = v || {};
-    renderActiveTab();
-  });
+  subNode(`${SCHOLAR}/enrollments/${uid}`, (v) => { S.enrollments = v || {}; renderActiveTab(); });
+  subNode(`${SCHOLAR}/progress/${uid}`, (v) => { S.progress = v || {}; renderActiveTab(); });
+  subNode(`${SCHOLAR}/checklistProgress/${uid}`, (v) => { S.checklistProgress = v || {}; if (S.currentTab === "checklists") renderChecklists(); });
+  subNode(`${SCHOLAR}/quizSubmissions/${uid}`, (v) => { S.quizSubmissions = v || {}; renderActiveTab(); });
 
-  /* â”€â”€ Certificates â€” filter by uid client-side â”€â”€ */
-  subNode(`${TRAINING}/certificates`, (all) => {
+  subNode(`${SCHOLAR}/certificates`, (all) => {
     const filtered = {};
-    for (const [id, c] of Object.entries(all || {})) {
-      if (c && c.uid === uid) filtered[id] = c;
-    }
+    for (const [id, c] of Object.entries(all || {})) if (c && c.uid === uid) filtered[id] = c;
     S.certificates = filtered;
     if (S.currentTab === "certificates") renderCertificates();
   });
 
-  /* â”€â”€ Tab navigation â”€â”€ */
   document.querySelectorAll(".tab-btn").forEach((btn) => {
+    if (btn._tnBound) return; btn._tnBound = true;
     btn.addEventListener("click", () => switchTab(btn.dataset.tab));
   });
   document.querySelectorAll("#mobileBottomNav .mnav-item").forEach((btn) => {
+    if (btn._tnBound) return; btn._tnBound = true;
     btn.addEventListener("click", () => {
       document.querySelectorAll("#mobileBottomNav .mnav-item").forEach(x => x.classList.remove("active"));
       btn.classList.add("active");
@@ -523,7 +298,6 @@ function bootLearnerApp() {
     });
   });
 
-  /* â”€â”€ Header actions â”€â”€ */
   $("logoutBtn")?.addEventListener("click", doSignOut);
   $("mobileLogoutBtn")?.addEventListener("click", doSignOut);
   $("themeToggle")?.addEventListener("click", () => {
@@ -531,160 +305,96 @@ function bootLearnerApp() {
     document.documentElement.setAttribute("data-theme", cur === "dark" ? "light" : "dark");
   });
 
-  /* â”€â”€ Modal wiring â”€â”€ */
   document.querySelectorAll("[data-close]").forEach((el) => {
-    el.addEventListener("click", () => {
-      const id = el.dataset.close;
-      closeModal(id);
-    });
+    el.addEventListener("click", () => closeModal(el.dataset.close));
   });
   document.querySelectorAll(".modal-overlay").forEach((ov) => {
-    ov.addEventListener("click", (e) => {
-      if (e.target === ov) closeModal(ov.id);
-    });
+    ov.addEventListener("click", (e) => { if (e.target === ov) closeModal(ov.id); });
   });
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      document.querySelectorAll(".modal-overlay.active").forEach((m) => closeModal(m.id));
-    }
+    if (e.key === "Escape") document.querySelectorAll(".modal-overlay.active").forEach((m) => closeModal(m.id));
   });
 
   $("lessonCompleteBtn")?.addEventListener("click", onLessonCompleteClick);
   $("quizSubmitBtn")?.addEventListener("click", submitQuiz);
   $("certPrintBtn")?.addEventListener("click", printCertificate);
 
-  /* â”€â”€ Render initial tab â”€â”€ */
   switchTab("overview");
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   MODAL PRIMITIVES
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function openModal(id) {
   const el = document.getElementById(id);
   if (!el) return;
-  el.classList.add("active");
-  el.style.display = "flex";
+  el.classList.add("active"); el.style.display = "flex";
   document.body.style.overflow = "hidden";
 }
-
 function closeModal(id) {
   const el = document.getElementById(id);
   if (!el) return;
-  el.classList.remove("active");
-  el.style.display = "none";
-  if (!document.querySelector(".modal-overlay.active")) {
-    document.body.style.overflow = "";
-  }
+  el.classList.remove("active"); el.style.display = "none";
+  if (!document.querySelector(".modal-overlay.active")) document.body.style.overflow = "";
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   TAB SWITCHING
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function switchTab(tab) {
   S.currentTab = tab;
-
-  document.querySelectorAll(".tab-btn").forEach((b) =>
-    b.classList.toggle("active", b.dataset.tab === tab)
-  );
-  document.querySelectorAll(".ptab").forEach((p) =>
-    p.classList.toggle("active", p.id === "tab-" + tab)
-  );
-  document.querySelectorAll("#mobileBottomNav .mnav-item").forEach((b) =>
-    b.classList.toggle("active", b.dataset.mtab === tab)
-  );
-
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+  document.querySelectorAll(".ptab").forEach(p => p.classList.toggle("active", p.id === "tab-" + tab));
+  document.querySelectorAll("#mobileBottomNav .mnav-item").forEach(b => b.classList.toggle("active", b.dataset.mtab === tab));
   renderActiveTab();
 }
-
 function renderActiveTab() {
   switch (S.currentTab) {
-    case "overview":
-      renderOverview();
-      break;
-    case "courses":
-      renderCourses();
-      break;
-    case "checklists":
-      renderChecklists();
-      break;
-    case "progress":
-      renderProgress();
-      break;
-    case "certificates":
-      renderCertificates();
-      break;
-    case "resources":
-      renderResources();
-      break;
+    case "overview":     renderOverview();     break;
+    case "courses":      renderCourses();      break;
+    case "checklists":   renderChecklists();   break;
+    case "progress":     renderProgress();     break;
+    case "certificates": renderCertificates(); break;
+    case "resources":    renderResources();    break;
   }
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   DATA HELPERS
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function courseList() {
-  return Object.values(S.courses || {}).sort((a, b) =>
-    (a.title || "").localeCompare(b.title || "")
-  );
+  return Object.values(S.courses || {}).sort((a, b) => (a.title || "").localeCompare(b.title || ""));
 }
-
 function modulesOf(course) {
   if (!course || !course.modules) return [];
   return Object.values(course.modules).sort((a, b) => (a.order || 0) - (b.order || 0));
 }
-
-function isEnrolled(courseId) {
-  return !!S.enrollments?.[courseId];
-}
-
+function isEnrolled(courseId) { return !!S.enrollments?.[courseId]; }
 function moduleDone(courseId, moduleId) {
   const p = S.progress?.[courseId]?.[moduleId];
   return !!(p && p.completedAt);
 }
-
 function coursePct(course) {
   const mods = modulesOf(course);
   if (!mods.length) return 0;
   let done = 0;
-  for (const m of mods)
-    if (moduleDone(course.id, m.id)) done++;
+  for (const m of mods) if (moduleDone(course.id, m.id)) done++;
   return Math.round((done / mods.length) * 100);
 }
-
 function courseDone(course) {
   const mods = modulesOf(course);
   if (!mods.length) return false;
   return mods.every((m) => moduleDone(course.id, m.id));
 }
-
 function courseAvgScore(courseId) {
   const sub = S.quizSubmissions?.[courseId];
   if (!sub) return null;
-  const s = (typeof sub.finalScore === "number") ? sub.finalScore :
-    (typeof sub.autoScore === "number") ? sub.autoScore :
-    null;
-  return s;
+  return (typeof sub.finalScore === "number") ? sub.finalScore :
+         (typeof sub.autoScore === "number") ? sub.autoScore : null;
 }
-
 function firstIncompleteModule(course) {
   const mods = modulesOf(course);
-  for (const m of mods)
-    if (!moduleDone(course.id, m.id)) return m;
+  for (const m of mods) if (!moduleDone(course.id, m.id)) return m;
   return mods[mods.length - 1] || null;
 }
-
 function hasCertificateFor(courseId) {
   return Object.values(S.certificates || {}).some((c) => c && c.courseId === courseId);
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   TAB 1 â€” OVERVIEW
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function renderOverview() {
   const host = $("tab-overview");
   if (!host) return;
-
   const enrolledIds = Object.keys(S.enrollments || {});
   const allCourses = courseList();
   const enrolledCourses = allCourses.filter((c) => enrolledIds.includes(c.id));
@@ -692,33 +402,14 @@ function renderOverview() {
   const completed = enrolledCourses.filter((c) => courseDone(c)).length;
   const certCount = Object.keys(S.certificates || {}).length;
 
-  /* KPI block */
   const kpiHtml = `
     <div class="kpi-grid">
-      <div class="stat-card">
-        <div class="stat-icon"><i class="fa-solid fa-book-open"></i></div>
-        <div class="number">${enrolledCourses.length}</div>
-        <div class="label">Enrolled</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon"><i class="fa-solid fa-spinner"></i></div>
-        <div class="number">${inProgress}</div>
-        <div class="label">In Progress</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
-        <div class="number">${completed}</div>
-        <div class="label">Completed</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon"><i class="fa-solid fa-certificate"></i></div>
-        <div class="number">${certCount}</div>
-        <div class="label">Certificates</div>
-      </div>
+      <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-book-open"></i></div><div class="number">${enrolledCourses.length}</div><div class="label">Enrolled</div></div>
+      <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-spinner"></i></div><div class="number">${inProgress}</div><div class="label">In Progress</div></div>
+      <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div><div class="number">${completed}</div><div class="label">Completed</div></div>
+      <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-certificate"></i></div><div class="number">${certCount}</div><div class="label">Certificates</div></div>
     </div>
   `;
-
-  /* Continue learning â€” first enrolled course with an incomplete module */
   let continueHtml = "";
   const continueCourse = enrolledCourses.find((c) => !courseDone(c));
   if (continueCourse) {
@@ -730,42 +421,30 @@ function renderOverview() {
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
           <div style="flex:1;min-width:200px;">
             <div style="font-weight:700;font-size:1rem;">${escapeHtml(continueCourse.title)}</div>
-            <div style="font-size:.8rem;color:var(--text-secondary);margin-top:4px;">
-              Next: ${escapeHtml(nextMod ? nextMod.title : "â€”")}
-            </div>
-            <div class="progress-3d" style="margin-top:10px;">
-              <div class="progress-3d-bar ${pct >= 100 ? "green" : pct >= 50 ? "" : "gold"}" style="width:${pct}%;"></div>
-            </div>
+            <div style="font-size:.8rem;color:var(--text-secondary);margin-top:4px;">Next: ${escapeHtml(nextMod ? nextMod.title : "—")}</div>
+            <div class="progress-3d" style="margin-top:10px;"><div class="progress-3d-bar ${pct >= 100 ? "green" : pct >= 50 ? "" : "gold"}" style="width:${pct}%;"></div></div>
             <div class="progress-3d-label"><span>Progress</span><span>${pct}%</span></div>
           </div>
-          <button class="btn btn-primary" onclick="VioraTraining.openCourse('${continueCourse.id}')">
-            <i class="fa-solid fa-play"></i> Resume
-          </button>
+          <button class="btn btn-primary" onclick="VioraTraining.openCourse('${continueCourse.id}')"><i class="fa-solid fa-play"></i> Resume</button>
         </div>
       </div>
     `;
   }
 
-  /* Recommended â€” unenrolled courses, up to 4 */
   const recommended = allCourses.filter((c) => !isEnrolled(c.id)).slice(0, 4);
   let recHtml = "";
   if (recommended.length) {
     recHtml = `
       <div style="margin-top:24px;">
-        <h2 style="font-size:1rem;text-transform:uppercase;color:var(--text-secondary);letter-spacing:.5px;margin-bottom:12px;">
-          <i class="fa-solid fa-star" style="color:var(--accent-gold);"></i> Recommended for you
-        </h2>
-        <div class="card-3d-grid">
-          ${recommended.map(courseCardHtml).join("")}
-        </div>
+        <h2 style="font-size:1rem;text-transform:uppercase;color:var(--text-secondary);letter-spacing:.5px;margin-bottom:12px;"><i class="fa-solid fa-star" style="color:var(--accent-gold);"></i> Recommended for you</h2>
+        <div class="card-3d-grid">${recommended.map(courseCardHtml).join("")}</div>
       </div>
     `;
   }
 
-  /* Recent activity â€” my last few events */
   const activity = buildActivityFeed().slice(0, 6);
-  const activityHtml = activity.length ?
-    activity.map(a => `
+  const activityHtml = activity.length
+    ? activity.map(a => `
         <div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border-color);">
           <i class="fa-solid ${a.icon}" style="color:${a.color};margin-top:2px;"></i>
           <div style="flex:1;min-width:0;">
@@ -774,8 +453,8 @@ function renderOverview() {
           </div>
           <div style="font-size:.68rem;color:var(--text-light);white-space:nowrap;">${timeAgo(a.ts)}</div>
         </div>
-      `).join("") :
-    `<div style="color:var(--text-secondary);font-size:.82rem;padding:12px;">No activity yet. Enroll in a course to get started.</div>`;
+      `).join("")
+    : `<div style="color:var(--text-secondary);font-size:.82rem;padding:12px;">No activity yet. Enroll in a course to get started.</div>`;
 
   host.innerHTML = `
     <div class="page-header">
@@ -787,20 +466,12 @@ function renderOverview() {
     ${kpiHtml}
     ${continueHtml}
     <div class="chart-grid" style="margin-top:24px;">
-      <div class="chart-box">
-        <h4><i class="fa-solid fa-bolt"></i> Recent Activity</h4>
-        <div style="max-height:340px;overflow-y:auto;">${activityHtml}</div>
-      </div>
-      <div class="chart-box">
-        <h4><i class="fa-solid fa-chart-pie"></i> My Progress</h4>
+      <div class="chart-box"><h4><i class="fa-solid fa-bolt"></i> Recent Activity</h4><div style="max-height:340px;overflow-y:auto;">${activityHtml}</div></div>
+      <div class="chart-box"><h4><i class="fa-solid fa-chart-pie"></i> My Progress</h4>
         <div style="padding:14px 4px;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:.82rem;">
-            <span>Courses completed</span><strong>${completed} / ${enrolledCourses.length}</strong>
-          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:.82rem;"><span>Courses completed</span><strong>${completed} / ${enrolledCourses.length}</strong></div>
           <div class="progress-3d"><div class="progress-3d-bar green" style="width:${enrolledCourses.length ? Math.round(completed / enrolledCourses.length * 100) : 0}%;"></div></div>
-          <div style="display:flex;justify-content:space-between;margin:14px 0 6px;font-size:.82rem;">
-            <span>Certificates earned</span><strong>${certCount}</strong>
-          </div>
+          <div style="display:flex;justify-content:space-between;margin:14px 0 6px;font-size:.82rem;"><span>Certificates earned</span><strong>${certCount}</strong></div>
         </div>
       </div>
     </div>
@@ -815,103 +486,51 @@ function buildActivityFeed() {
 
   for (const [cid, e] of Object.entries(S.enrollments || {})) {
     if (e.startedAt) {
-      events.push({
-        ts: e.startedAt,
-        icon: "fa-user-plus",
-        color: "var(--accent-blue)",
-        title: "Enrolled in " + (byId[cid]?.title || cid),
-        sub: "Started learning"
-      });
+      events.push({ ts: e.startedAt, icon: "fa-user-plus", color: "var(--accent-blue)", title: "Enrolled in " + (byId[cid]?.title || cid), sub: "Started learning" });
     }
     if (e.completedAt) {
-      events.push({
-        ts: e.completedAt,
-        icon: "fa-circle-check",
-        color: "var(--accent-green)",
-        title: "Completed " + (byId[cid]?.title || cid),
-        sub: "All modules done"
-      });
+      events.push({ ts: e.completedAt, icon: "fa-circle-check", color: "var(--accent-green)", title: "Completed " + (byId[cid]?.title || cid), sub: "All modules done" });
     }
   }
   for (const [cid, mods] of Object.entries(S.progress || {})) {
     for (const [mid, m] of Object.entries(mods || {})) {
       if (m.completedAt) {
         const modTitle = byId[cid]?.modules?.[mid]?.title || mid;
-        events.push({
-          ts: m.completedAt,
-          icon: "fa-check",
-          color: "var(--text-secondary)",
-          title: "Module complete",
-          sub: modTitle
-        });
+        events.push({ ts: m.completedAt, icon: "fa-check", color: "var(--text-secondary)", title: "Module complete", sub: modTitle });
       }
     }
   }
   for (const [cid, sub] of Object.entries(S.quizSubmissions || {})) {
     if (sub.submittedAt) {
-      events.push({
-        ts: sub.submittedAt,
-        icon: "fa-file-circle-question",
-        color: "var(--accent-purple)",
-        title: "Quiz submitted",
-        sub: (byId[cid]?.title || cid) + " Â· score " + (sub.autoScore ?? "â€”") + "%"
-      });
+      events.push({ ts: sub.submittedAt, icon: "fa-file-circle-question", color: "var(--accent-purple)", title: "Quiz submitted", sub: (byId[cid]?.title || cid) + " · score " + (sub.autoScore ?? "—") + "%" });
     }
   }
   for (const c of Object.values(S.certificates || {})) {
     if (c.issuedAt) {
-      events.push({
-        ts: c.issuedAt,
-        icon: "fa-award",
-        color: "var(--accent-gold)",
-        title: "Certificate awarded",
-        sub: c.courseTitle || c.courseId
-      });
+      events.push({ ts: c.issuedAt, icon: "fa-award", color: "var(--accent-gold)", title: "Certificate awarded", sub: c.courseTitle || c.courseId });
     }
   }
   events.sort((a, b) => (b.ts || "").localeCompare(a.ts || ""));
   return events;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   TAB 2 â€” COURSES
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function renderCourses() {
   const host = $("tab-courses");
   if (!host) return;
-
   const all = courseList();
   const enrolled = all.filter(c => isEnrolled(c.id));
   const available = all.filter(c => !isEnrolled(c.id));
-
-  const myHtml = enrolled.length ?
-    `<div class="card-3d-grid">${enrolled.map(courseCardHtml).join("")}</div>` :
-    `<div class="empty-state" style="padding:24px;text-align:center;color:var(--text-secondary);">
-         You haven't enrolled in any courses yet. Pick one from Available below.
-       </div>`;
-
-  const availHtml = available.length ?
-    `<div class="card-3d-grid">${available.map(courseCardHtml).join("")}</div>` :
-    `<div class="empty-state" style="padding:24px;text-align:center;color:var(--text-secondary);">
-         You're enrolled in every course. ðŸŽ‰
-       </div>`;
-
+  const myHtml = enrolled.length
+    ? `<div class="card-3d-grid">${enrolled.map(courseCardHtml).join("")}</div>`
+    : `<div class="empty-state" style="padding:24px;text-align:center;color:var(--text-secondary);">You haven't enrolled in any courses yet. Pick one from Available below.</div>`;
+  const availHtml = available.length
+    ? `<div class="card-3d-grid">${available.map(courseCardHtml).join("")}</div>`
+    : `<div class="empty-state" style="padding:24px;text-align:center;color:var(--text-secondary);">You're enrolled in every course. 🎉</div>`;
   host.innerHTML = `
-    <div class="page-header">
-      <div>
-        <h1><span class="highlight">Courses</span></h1>
-        <p class="page-desc">Browse, enroll, and take your training courses. Your progress is saved per course.</p>
-      </div>
-    </div>
-
-    <h2 style="font-size:1rem;text-transform:uppercase;color:var(--text-secondary);letter-spacing:.5px;margin-bottom:12px;">
-      <i class="fa-solid fa-book-open"></i> My Courses (${enrolled.length})
-    </h2>
+    <div class="page-header"><div><h1><span class="highlight">Courses</span></h1><p class="page-desc">Browse, enroll, and take your training courses. Your progress is saved per course.</p></div></div>
+    <h2 style="font-size:1rem;text-transform:uppercase;color:var(--text-secondary);letter-spacing:.5px;margin-bottom:12px;"><i class="fa-solid fa-book-open"></i> My Courses (${enrolled.length})</h2>
     ${myHtml}
-
-    <h2 style="font-size:1rem;text-transform:uppercase;color:var(--text-secondary);letter-spacing:.5px;margin:32px 0 12px;">
-      <i class="fa-solid fa-store"></i> Available Courses (${available.length})
-    </h2>
+    <h2 style="font-size:1rem;text-transform:uppercase;color:var(--text-secondary);letter-spacing:.5px;margin:32px 0 12px;"><i class="fa-solid fa-store"></i> Available Courses (${available.length})</h2>
     ${availHtml}
   `;
 }
@@ -925,97 +544,60 @@ function courseCardHtml(course) {
   const cert = hasCertificateFor(course.id);
   const sub = S.quizSubmissions?.[course.id];
   const awaitingGrade = enrolled && done && !cert && sub;
-
   const level = course.level || "Beginner";
   const cat = course.category || "General";
   const cidSafe = escapeHtml(course.id);
 
   let statusChip;
-  if (cert) statusChip = `<span class="badge badge-paid">ðŸŽ“ Certified</span>`;
+  if (cert)             statusChip = `<span class="badge badge-paid">🎓 Certified</span>`;
   else if (awaitingGrade) statusChip = `<span class="badge badge-pending">Awaiting cert</span>`;
-  else if (done) statusChip = `<span class="badge badge-pending">Completed</span>`;
-  else if (enrolled) statusChip = `<span class="badge badge-active">In progress</span>`;
-  else statusChip = `<span class="badge badge-gray">Not started</span>`;
+  else if (done)        statusChip = `<span class="badge badge-pending">Completed</span>`;
+  else if (enrolled)    statusChip = `<span class="badge badge-active">In progress</span>`;
+  else                  statusChip = `<span class="badge badge-gray">Not started</span>`;
 
-  const actionBtn = enrolled ?
-    `<button class="btn btn-primary btn-sm" onclick="VioraTraining.openCourse('${cidSafe}')">
-         <i class="fa-solid fa-play"></i> ${done ? "Review" : "Continue"}
-       </button>` :
-    `<button class="btn btn-success btn-sm" onclick="VioraTraining.enrollAndOpen('${cidSafe}')">
-         <i class="fa-solid fa-plus"></i> Enroll
-       </button>`;
+  const actionBtn = enrolled
+    ? `<button class="btn btn-primary btn-sm" onclick="VioraTraining.openCourse('${cidSafe}')"><i class="fa-solid fa-play"></i> ${done ? "Review" : "Continue"}</button>`
+    : `<button class="btn btn-success btn-sm" onclick="VioraTraining.enrollAndOpen('${cidSafe}')"><i class="fa-solid fa-plus"></i> Enroll</button>`;
 
   return `
     <div class="card-3d">
       <div class="card-info" style="min-width:0;">
-        <div class="card-title">
-          ${escapeHtml(course.title || "Untitled")}
-          ${statusChip}
-        </div>
-        <div class="card-sub">
-          <i class="fa-solid fa-layer-group" style="opacity:.6;"></i> ${cat}
-          Â· <i class="fa-solid fa-signal" style="opacity:.6;"></i> ${escapeHtml(level)}
-          Â· ${modCount} module${modCount === 1 ? "" : "s"}
-        </div>
-        ${course.description ? `<div style="font-size:.78rem;color:var(--text-secondary);margin-top:6px;">${escapeHtml(course.description.slice(0, 140))}${course.description.length > 140 ? "â€¦" : ""}</div>` : ""}
-        ${enrolled ? `
-          <div class="progress-3d" style="margin-top:10px;">
-            <div class="progress-3d-bar ${pct >= 100 ? "green" : pct >= 50 ? "" : "gold"}" style="width:${pct}%;"></div>
-          </div>
-          <div class="progress-3d-label"><span>Progress</span><span>${pct}%</span></div>
-        ` : ""}
+        <div class="card-title">${escapeHtml(course.title || "Untitled")} ${statusChip}</div>
+        <div class="card-sub"><i class="fa-solid fa-layer-group" style="opacity:.6;"></i> ${cat} · <i class="fa-solid fa-signal" style="opacity:.6;"></i> ${escapeHtml(level)} · ${modCount} module${modCount === 1 ? "" : "s"}</div>
+        ${course.description ? `<div style="font-size:.78rem;color:var(--text-secondary);margin-top:6px;">${escapeHtml(course.description.slice(0, 140))}${course.description.length > 140 ? "…" : ""}</div>` : ""}
+        ${enrolled ? `<div class="progress-3d" style="margin-top:10px;"><div class="progress-3d-bar ${pct >= 100 ? "green" : pct >= 50 ? "" : "gold"}" style="width:${pct}%;"></div></div><div class="progress-3d-label"><span>Progress</span><span>${pct}%</span></div>` : ""}
       </div>
       <div class="card-actions">${actionBtn}</div>
     </div>
   `;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   TAB 3 â€” CHECKLISTS
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function renderChecklists() {
   const host = $("tab-checklists");
   if (!host) return;
-
   const lists = Object.values(S.checklists || {});
   if (!lists.length) {
-    host.innerHTML = `
-      <div class="page-header"><div><h1><span class="highlight">Onboarding</span></h1></div></div>
-      <div class="empty-state" style="padding:40px;text-align:center;color:var(--text-secondary);">
-        No onboarding checklists have been assigned yet.
-      </div>`;
+    host.innerHTML = `<div class="page-header"><div><h1><span class="highlight">Onboarding</span></h1></div></div><div class="empty-state" style="padding:40px;text-align:center;color:var(--text-secondary);">No onboarding checklists have been assigned yet.</div>`;
     return;
   }
-
   host.innerHTML = `
-    <div class="page-header">
-      <div>
-        <h1><span class="highlight">Onboarding</span></h1>
-        <p class="page-desc">Tick each item as you complete it. Your progress is saved automatically.</p>
-      </div>
-    </div>
-    <div class="card-3d-grid">
-      ${lists.map(checklistCardHtml).join("")}
-    </div>
+    <div class="page-header"><div><h1><span class="highlight">Onboarding</span></h1><p class="page-desc">Tick each item as you complete it. Your progress is saved automatically.</p></div></div>
+    <div class="card-3d-grid">${lists.map(checklistCardHtml).join("")}</div>
   `;
 }
-
 function checklistCardHtml(cl) {
   const tasks = (cl.tasks || []).slice().sort((a, b) => (a.order || 0) - (b.order || 0));
   const prog = S.checklistProgress?.[cl.id] || {};
   const doneCount = tasks.filter(t => prog[t.id]?.done).length;
   const pct = tasks.length ? Math.round((doneCount / tasks.length) * 100) : 0;
-
   const rows = tasks.map(t => {
     const done = !!(prog[t.id]?.done);
     return `
       <label style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border-color);cursor:pointer;">
         <input type="checkbox" ${done ? "checked" : ""} data-cl="${escapeHtml(cl.id)}" data-task="${escapeHtml(t.id)}" class="cl-task-checkbox" style="width:auto;margin-top:3px;" />
         <span style="flex:1;font-size:.85rem;${done ? "text-decoration:line-through;color:var(--text-light);" : ""}">${escapeHtml(t.text || "")}</span>
-      </label>
-    `;
+      </label>`;
   }).join("");
-
   return `
     <div class="card-3d" style="grid-column:1/-1;display:block;">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
@@ -1023,42 +605,28 @@ function checklistCardHtml(cl) {
           <div style="font-weight:700;font-size:1rem;">${escapeHtml(cl.title || "Checklist")}</div>
           ${cl.description ? `<div style="font-size:.78rem;color:var(--text-secondary);margin-top:2px;">${escapeHtml(cl.description)}</div>` : ""}
         </div>
-        <div style="font-size:.82rem;font-weight:600;color:${pct >= 100 ? "var(--accent-green)" : "var(--text-secondary)"};">
-          ${doneCount} / ${tasks.length} done
-        </div>
+        <div style="font-size:.82rem;font-weight:600;color:${pct >= 100 ? "var(--accent-green)" : "var(--text-secondary)"};">${doneCount} / ${tasks.length} done</div>
       </div>
-      <div class="progress-3d" style="margin-bottom:12px;">
-        <div class="progress-3d-bar ${pct >= 100 ? "green" : pct >= 50 ? "" : "gold"}" style="width:${pct}%;"></div>
-      </div>
+      <div class="progress-3d" style="margin-bottom:12px;"><div class="progress-3d-bar ${pct >= 100 ? "green" : pct >= 50 ? "" : "gold"}" style="width:${pct}%;"></div></div>
       <div>${rows}</div>
-    </div>
-  `;
+    </div>`;
 }
 
-/* Delegated handler for checklist checkboxes â€” bound once */
 document.addEventListener("change", async (e) => {
   const cb = e.target.closest(".cl-task-checkbox");
   if (!cb || !S.user) return;
   const clId = cb.dataset.cl;
   const taskId = cb.dataset.task;
   if (!clId || !taskId) return;
-
-  const path = `${TRAINING}/checklistProgress/${S.user.uid}/${clId}/${taskId}`;
+  const path = `${SCHOLAR}/checklistProgress/${S.user.uid}/${clId}/${taskId}`;
   try {
     if (cb.checked) {
-      await set(ref(db, path), {
-        done: true,
-        doneAt: nowIso()
-      });
+      await set(ref(db, path), { done: true, doneAt: nowIso() });
     } else {
       await remove(ref(db, path));
     }
-    /* Optimistic UI update */
     S.checklistProgress[clId] = S.checklistProgress[clId] || {};
-    if (cb.checked) S.checklistProgress[clId][taskId] = {
-      done: true,
-      doneAt: nowIso()
-    };
+    if (cb.checked) S.checklistProgress[clId][taskId] = { done: true, doneAt: nowIso() };
     else delete S.checklistProgress[clId][taskId];
     renderChecklists();
   } catch (err) {
@@ -1068,25 +636,15 @@ document.addEventListener("change", async (e) => {
   }
 });
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   TAB 4 â€” MY PROGRESS
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function renderProgress() {
   const host = $("tab-progress");
   if (!host) return;
-
   const enrolledIds = Object.keys(S.enrollments || {});
   const allCourses = courseList().filter(c => enrolledIds.includes(c.id));
-
   if (!allCourses.length) {
-    host.innerHTML = `
-      <div class="page-header"><div><h1><span class="highlight">My Progress</span></h1></div></div>
-      <div class="empty-state" style="padding:40px;text-align:center;color:var(--text-secondary);">
-        Enroll in a course to start tracking your progress.
-      </div>`;
+    host.innerHTML = `<div class="page-header"><div><h1><span class="highlight">My Progress</span></h1></div></div><div class="empty-state" style="padding:40px;text-align:center;color:var(--text-secondary);">Enroll in a course to start tracking your progress.</div>`;
     return;
   }
-
   const rows = allCourses.map(c => {
     const mods = modulesOf(c);
     const doneCount = mods.filter(m => moduleDone(c.id, m.id)).length;
@@ -1096,253 +654,123 @@ function renderProgress() {
     const done = courseDone(c);
     const sub = S.quizSubmissions?.[c.id];
     const awaiting = done && !cert && sub;
-
     let status;
-    if (cert) status = `<span class="badge badge-paid">ðŸŽ“ Certified</span>`;
+    if (cert) status = `<span class="badge badge-paid">🎓 Certified</span>`;
     else if (awaiting) status = `<span class="badge badge-pending">Awaiting certificate</span>`;
     else if (done) status = `<span class="badge badge-active">Completed</span>`;
     else if (pct > 0) status = `<span class="badge badge-active">In progress</span>`;
     else status = `<span class="badge badge-gray">Not started</span>`;
-
     const e = S.enrollments?.[c.id] || {};
-
     return `<tr>
       <td><strong>${escapeHtml(c.title || "")}</strong></td>
       <td>${doneCount} / ${mods.length}</td>
-      <td>
-        <div class="progress-3d" style="margin:4px 0;">
-          <div class="progress-3d-bar ${pct >= 100 ? "green" : pct >= 50 ? "" : "gold"}" style="width:${pct}%;"></div>
-        </div>
-        <small>${pct}%</small>
-      </td>
-      <td>${avg != null ? avg + "%" : "â€”"}</td>
-      <td><small>${e.startedAt ? fmtDate(e.startedAt) : "â€”"}</small></td>
+      <td><div class="progress-3d" style="margin:4px 0;"><div class="progress-3d-bar ${pct >= 100 ? "green" : pct >= 50 ? "" : "gold"}" style="width:${pct}%;"></div></div><small>${pct}%</small></td>
+      <td>${avg != null ? avg + "%" : "—"}</td>
+      <td><small>${e.startedAt ? fmtDate(e.startedAt) : "—"}</small></td>
       <td>${status}</td>
-      <td style="text-align:right;">
-        <button class="btn btn-primary btn-xs" onclick="VioraTraining.openCourse('${escapeHtml(c.id)}')">
-          <i class="fa-solid fa-eye"></i> Open
-        </button>
-      </td>
+      <td style="text-align:right;"><button class="btn btn-primary btn-xs" onclick="VioraTraining.openCourse('${escapeHtml(c.id)}')"><i class="fa-solid fa-eye"></i> Open</button></td>
     </tr>`;
   }).join("");
-
   host.innerHTML = `
-    <div class="page-header">
-      <div>
-        <h1><span class="highlight">My Progress</span></h1>
-        <p class="page-desc">Module-by-module completion across every course you're enrolled in.</p>
-      </div>
-    </div>
-    <div class="table-wrapper">
-      <table>
-        <thead><tr>
-          <th>Course</th>
-          <th>Modules</th>
-          <th>Progress</th>
-          <th>Avg Score</th>
-          <th>Started</th>
-          <th>Status</th>
-          <th style="text-align:right;">Action</th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
+    <div class="page-header"><div><h1><span class="highlight">My Progress</span></h1><p class="page-desc">Module-by-module completion across every course you're enrolled in.</p></div></div>
+    <div class="table-wrapper"><table><thead><tr><th>Course</th><th>Modules</th><th>Progress</th><th>Avg Score</th><th>Started</th><th>Status</th><th style="text-align:right;">Action</th></tr></thead><tbody>${rows}</tbody></table></div>
   `;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   TAB 5 â€” CERTIFICATES
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function renderCertificates() {
   const host = $("tab-certificates");
   if (!host) return;
-
-  const certs = Object.values(S.certificates || {}).sort((a, b) =>
-    (b.issuedAt || "").localeCompare(a.issuedAt || "")
-  );
-
+  const certs = Object.values(S.certificates || {}).sort((a, b) => (b.issuedAt || "").localeCompare(a.issuedAt || ""));
   if (!certs.length) {
-    host.innerHTML = `
-      <div class="page-header">
-        <div>
-          <h1><span class="highlight">Certificates</span></h1>
-          <p class="page-desc">Finish a course to earn your certificate. The admin will award it once your final quiz is reviewed.</p>
-        </div>
-      </div>
-      <div class="empty-state" style="padding:40px;text-align:center;color:var(--text-secondary);">
-        <i class="fa-solid fa-award" style="font-size:2.4rem;opacity:.4;margin-bottom:12px;display:block;"></i>
-        No certificates yet. Complete a course to get started.
-      </div>`;
+    host.innerHTML = `<div class="page-header"><div><h1><span class="highlight">Certificates</span></h1><p class="page-desc">Finish a course to earn your certificate. The admin will award it once your final quiz is reviewed.</p></div></div><div class="empty-state" style="padding:40px;text-align:center;color:var(--text-secondary);"><i class="fa-solid fa-award" style="font-size:2.4rem;opacity:.4;margin-bottom:12px;display:block;"></i>No certificates yet. Complete a course to get started.</div>`;
     return;
   }
-
   host.innerHTML = `
-    <div class="page-header">
-      <div>
-        <h1><span class="highlight">Certificates</span></h1>
-        <p class="page-desc">Awarded by the VIORA admin after your final quiz is reviewed.</p>
-      </div>
-    </div>
-    <div class="card-3d-grid">
-      ${certs.map(certCardHtml).join("")}
-    </div>
+    <div class="page-header"><div><h1><span class="highlight">Certificates</span></h1><p class="page-desc">Awarded by the VIORA admin after your final quiz is reviewed.</p></div></div>
+    <div class="card-3d-grid">${certs.map(certCardHtml).join("")}</div>
   `;
 }
-
 function certCardHtml(cert) {
   const idSafe = escapeHtml(cert.id);
   const hasImage = !!cert.renderedImage;
   return `
     <div class="card-3d">
       <div style="width:100%;height:150px;border-radius:10px;overflow:hidden;background:var(--bg-input);display:flex;align-items:center;justify-content:center;">
-        ${hasImage
-          ? `<img src="${cert.renderedImage}" style="max-width:100%;max-height:100%;object-fit:contain;" alt="Certificate" />`
-          : `<i class="fa-solid fa-award" style="font-size:2.4rem;color:var(--accent-gold);"></i>`}
+        ${hasImage ? `<img src="${cert.renderedImage}" style="max-width:100%;max-height:100%;object-fit:contain;" alt="Certificate" />` : `<i class="fa-solid fa-award" style="font-size:2.4rem;color:var(--accent-gold);"></i>`}
       </div>
       <div class="card-info">
         <div class="card-title">${escapeHtml(cert.courseTitle || "Course")}</div>
-        <div class="card-sub">${escapeHtml(cert.moduleTitle || "Whole course")} Â· Score ${cert.score ?? "â€”"}%</div>
+        <div class="card-sub">${escapeHtml(cert.moduleTitle || "Whole course")} · Score ${cert.score ?? "—"}%</div>
         <div class="card-sub" style="font-family:monospace;font-size:.72rem;">${escapeHtml(cert.code || cert.id)}</div>
         <div class="card-sub" style="font-size:.7rem;">Issued ${fmtDate(cert.issuedAt)}</div>
       </div>
       <div class="card-actions">
-        <button class="btn btn-primary btn-sm" onclick="VioraTraining.viewCertificate('${idSafe}')">
-          <i class="fa-solid fa-eye"></i> View
-        </button>
+        <button class="btn btn-primary btn-sm" onclick="VioraTraining.viewCertificate('${idSafe}')"><i class="fa-solid fa-eye"></i> View</button>
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   TAB 6 â€” RESOURCES
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function renderResources() {
   const host = $("tab-resources");
   if (!host) return;
-
-  const list = Object.values(S.resources || {}).sort((a, b) =>
-    (a.category || "").localeCompare(b.category || "") || (a.title || "").localeCompare(b.title || "")
-  );
-
+  const list = Object.values(S.resources || {}).sort((a, b) => (a.category || "").localeCompare(b.category || "") || (a.title || "").localeCompare(b.title || ""));
   if (!list.length) {
-    host.innerHTML = `
-      <div class="page-header"><div><h1><span class="highlight">Resources</span></h1></div></div>
-      <div class="empty-state" style="padding:40px;text-align:center;color:var(--text-secondary);">
-        No resources have been shared yet.
-      </div>`;
+    host.innerHTML = `<div class="page-header"><div><h1><span class="highlight">Resources</span></h1></div></div><div class="empty-state" style="padding:40px;text-align:center;color:var(--text-secondary);">No resources have been shared yet.</div>`;
     return;
   }
-
-  /* Group by category */
   const byCat = {};
   for (const r of list) {
     const k = r.category || "General";
     (byCat[k] = byCat[k] || []).push(r);
   }
-
   host.innerHTML = `
-    <div class="page-header">
-      <div>
-        <h1><span class="highlight">Resources</span></h1>
-        <p class="page-desc">Documents, videos, links, and reference material.</p>
-      </div>
-    </div>
+    <div class="page-header"><div><h1><span class="highlight">Resources</span></h1><p class="page-desc">Documents, videos, links, and reference material.</p></div></div>
     ${Object.entries(byCat).map(([cat, items]) => `
-      <h2 style="font-size:.9rem;text-transform:uppercase;color:var(--text-secondary);letter-spacing:.5px;margin:20px 0 10px;">
-        <i class="fa-solid fa-folder"></i> ${escapeHtml(cat)} (${items.length})
-      </h2>
-      <div class="card-3d-grid">
-        ${items.map(resourceCardHtml).join("")}
-      </div>
+      <h2 style="font-size:.9rem;text-transform:uppercase;color:var(--text-secondary);letter-spacing:.5px;margin:20px 0 10px;"><i class="fa-solid fa-folder"></i> ${escapeHtml(cat)} (${items.length})</h2>
+      <div class="card-3d-grid">${items.map(resourceCardHtml).join("")}</div>
     `).join("")}
   `;
 }
-
 function resourceCardHtml(r) {
-  const iconMap = {
-    PDF: "fa-file-pdf",
-    Document: "fa-file-lines",
-    Video: "fa-file-video",
-    Link: "fa-link",
-    Spreadsheet: "fa-file-excel",
-    Slides: "fa-file-powerpoint",
-    Other: "fa-file"
-  };
+  const iconMap = { PDF: "fa-file-pdf", Document: "fa-file-lines", Video: "fa-file-video", Link: "fa-link", Spreadsheet: "fa-file-excel", Slides: "fa-file-powerpoint", Other: "fa-file" };
   const icon = iconMap[r.type] || "fa-file";
   const idSafe = escapeHtml(r.id);
-
   return `
     <div class="card-3d" style="cursor:pointer;" onclick="VioraTraining.openResource('${idSafe}')">
       <div class="avatar-mini lg" style="border-radius:10px;"><i class="fa-solid ${icon}"></i></div>
       <div class="card-info">
         <div class="card-title">${escapeHtml(r.title || "Untitled")}</div>
-        <div class="card-sub">${escapeHtml(r.type || "")}${r.fileName ? " Â· " + escapeHtml(r.fileName) : ""}</div>
-        ${r.description ? `<div class="card-sub" style="margin-top:4px;">${escapeHtml(r.description.slice(0, 120))}${r.description.length > 120 ? "â€¦" : ""}</div>` : ""}
+        <div class="card-sub">${escapeHtml(r.type || "")}${r.fileName ? " · " + escapeHtml(r.fileName) : ""}</div>
+        ${r.description ? `<div class="card-sub" style="margin-top:4px;">${escapeHtml(r.description.slice(0, 120))}${r.description.length > 120 ? "…" : ""}</div>` : ""}
       </div>
-      <div class="card-actions">
-        <button class="btn btn-primary btn-xs"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open</button>
-      </div>
-    </div>
-  `;
+      <div class="card-actions"><button class="btn btn-primary btn-xs"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open</button></div>
+    </div>`;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   LESSON MODAL
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function openCourse(courseId) {
   const course = S.courses[courseId];
-  if (!course) {
-    toast("Course not found.", "error");
-    return;
-  }
-
-  if (!isEnrolled(courseId)) {
-    enrollAndOpen(courseId);
-    return;
-  }
-
+  if (!course) { toast("Course not found.", "error"); return; }
+  if (!isEnrolled(courseId)) { enrollAndOpen(courseId); return; }
   const mod = firstIncompleteModule(course);
-  if (!mod) {
-    toast("This course has no modules yet.", "info");
-    return;
-  }
+  if (!mod) { toast("This course has no modules yet.", "info"); return; }
   openLesson(courseId, mod.id);
 }
-
 function enrollAndOpen(courseId) {
   if (!S.user) return;
   const course = S.courses[courseId];
-  if (!course) {
-    toast("Course not found.", "error");
-    return;
-  }
-
+  if (!course) { toast("Course not found.", "error"); return; }
   const existing = S.enrollments?.[courseId];
-  if (existing) {
-    openCourse(courseId);
-    return;
-  }
-
+  if (existing) { openCourse(courseId); return; }
   const payload = {
-    courseId,
-    startedAt: nowIso(),
-    progress: 0,
-    completedAt: null,
+    courseId, startedAt: nowIso(), progress: 0, completedAt: null,
     enrolledBy: S.user.uid,
     enrolledByName: S.access?.name || S.user.email || "Learner",
     enrolledAt: nowIso()
   };
-
-  set(ref(db, `${TRAINING}/enrollments/${S.user.uid}/${courseId}`), payload)
+  set(ref(db, `${SCHOLAR}/enrollments/${S.user.uid}/${courseId}`), payload)
     .then(() => {
       S.enrollments[courseId] = payload;
-      notify({
-        title: "Enrolled in course",
-        body: course.title || courseId,
-        level: "success",
-        source: "training-enroll"
-      });
+      notify({ title: "Enrolled in course", body: course.title || courseId, level: "success", source: "training-enroll" });
       toast("Enrolled. Let's get started!", "success");
       const mod = firstIncompleteModule(course);
       if (mod) openLesson(courseId, mod.id);
@@ -1366,129 +794,74 @@ function openLesson(courseId, moduleId) {
   S.activeModuleId = moduleId;
 
   const titleEl = $("lessonTitle");
-  if (titleEl) titleEl.textContent = `${course.title} â€” ${mod.title || "Module " + (idx + 1)}`;
+  if (titleEl) titleEl.textContent = `${course.title} — ${mod.title || "Module " + (idx + 1)}`;
 
   const bodyEl = $("lessonBody");
   if (bodyEl) {
     bodyEl.innerHTML = `
-      <div style="font-size:.75rem;color:var(--text-secondary);margin-bottom:12px;">
-        Module ${idx + 1} of ${modules.length}
-        ${moduleDone(courseId, moduleId) ? ' Â· <span style="color:var(--accent-green);">âœ“ Completed</span>' : ""}
-      </div>
+      <div style="font-size:.75rem;color:var(--text-secondary);margin-bottom:12px;">Module ${idx + 1} of ${modules.length}${moduleDone(courseId, moduleId) ? ' · <span style="color:var(--accent-green);">✓ Completed</span>' : ""}</div>
       ${mod.videoUrl ? renderVideoEmbed(mod.videoUrl) : ""}
-      <div class="lesson-content" style="font-size:.9rem;line-height:1.7;color:var(--text-primary);white-space:pre-wrap;margin-top:14px;">
-        ${escapeHtml(mod.content || "(No written content for this module.)")}
-      </div>
-        <div style="display:flex;gap:8px;justify-content:space-between;margin-top:20px;">
+      <div class="lesson-content" style="font-size:.9rem;line-height:1.7;color:var(--text-primary);white-space:pre-wrap;margin-top:14px;">${escapeHtml(mod.content || "(No written content for this module.)")}</div>
+      <div style="display:flex;gap:8px;justify-content:space-between;margin-top:20px;">
         ${idx > 0
-          ? `<button type="button" class="btn btn-outline btn-sm" onclick="VioraTraining.openLesson('${escapeHtml(courseId)}', '${escapeHtml(modules[idx - 1].id)}')">
-               <i class="fa-solid fa-chevron-left"></i> Previous
-             </button>`
-          : `<button type="button" class="btn btn-outline btn-sm" disabled>
-               <i class="fa-solid fa-chevron-left"></i> Previous
-             </button>`}
+          ? `<button type="button" class="btn btn-outline btn-sm" onclick="VioraTraining.openLesson('${escapeHtml(courseId)}', '${escapeHtml(modules[idx - 1].id)}')"><i class="fa-solid fa-chevron-left"></i> Previous</button>`
+          : `<button type="button" class="btn btn-outline btn-sm" disabled><i class="fa-solid fa-chevron-left"></i> Previous</button>`}
         ${idx < modules.length - 1
-          ? `<button type="button" class="btn btn-outline btn-sm" onclick="VioraTraining.openLesson('${escapeHtml(courseId)}', '${escapeHtml(modules[idx + 1].id)}')">
-               Next <i class="fa-solid fa-chevron-right"></i>
-             </button>`
+          ? `<button type="button" class="btn btn-outline btn-sm" onclick="VioraTraining.openLesson('${escapeHtml(courseId)}', '${escapeHtml(modules[idx + 1].id)}')">Next <i class="fa-solid fa-chevron-right"></i></button>`
           : ""}
       </div>
     `;
   }
 
-  /* Update the primary action button */
   const btn = $("lessonCompleteBtn");
   if (btn) {
     const isLast = idx === modules.length - 1;
     const hasQuiz = isLast && Array.isArray(mod.quiz) && mod.quiz.length > 0;
     const done = moduleDone(courseId, moduleId);
-
     if (hasQuiz && !done) {
       btn.innerHTML = '<i class="fa-solid fa-file-circle-question"></i> Take Final Quiz';
-      btn.disabled = false;
-      btn.dataset.mode = "quiz";
+      btn.disabled = false; btn.dataset.mode = "quiz";
     } else if (done) {
       btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Completed';
-      btn.disabled = true;
-      btn.dataset.mode = "done";
+      btn.disabled = true; btn.dataset.mode = "done";
     } else {
       btn.innerHTML = '<i class="fa-solid fa-check"></i> Mark Module Complete';
-      btn.disabled = false;
-      btn.dataset.mode = "complete";
+      btn.disabled = false; btn.dataset.mode = "complete";
     }
   }
-
   openModal("lessonModal");
 }
 
 async function onLessonCompleteClick() {
   const btn = $("lessonCompleteBtn");
   if (!btn || btn.disabled) return;
-
   const courseId = S.activeCourseId;
   const moduleId = S.activeModuleId;
   if (!courseId || !moduleId || !S.user) return;
-
   const course = S.courses[courseId];
   if (!course) return;
   const mod = course.modules?.[moduleId];
   if (!mod) return;
-
-  if (btn.dataset.mode === "quiz") {
-    openQuiz(courseId, moduleId);
-    return;
-  }
-
+  if (btn.dataset.mode === "quiz") { openQuiz(courseId, moduleId); return; }
   btn.disabled = true;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Savingâ€¦';
-
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
   try {
-    await set(ref(db, `${TRAINING}/progress/${S.user.uid}/${courseId}/${moduleId}`), {
-      moduleId,
-      completedAt: nowIso()
-    });
-
-    /* Update local state so UI reacts immediately */
+    await set(ref(db, `${SCHOLAR}/progress/${S.user.uid}/${courseId}/${moduleId}`), { moduleId, completedAt: nowIso() });
     S.progress[courseId] = S.progress[courseId] || {};
-    S.progress[courseId][moduleId] = {
-      moduleId,
-      completedAt: nowIso()
-    };
-
-    /* If the whole course is now done, mark enrollment complete */
+    S.progress[courseId][moduleId] = { moduleId, completedAt: nowIso() };
     if (courseDone(course)) {
-      const ePath = `${TRAINING}/enrollments/${S.user.uid}/${courseId}`;
-      await update(ref(db, ePath), {
-        completedAt: nowIso(),
-        progress: 100
-      });
-      S.enrollments[courseId] = {
-        ...(S.enrollments[courseId] || {}),
-        completedAt: nowIso(),
-        progress: 100
-      };
-
-      notify({
-        title: "Course completed",
-        body: course.title || courseId,
-        level: "success",
-        source: "training-complete"
-      });
+      await update(ref(db, `${SCHOLAR}/enrollments/${S.user.uid}/${courseId}`), { completedAt: nowIso(), progress: 100 });
+      S.enrollments[courseId] = { ...(S.enrollments[courseId] || {}), completedAt: nowIso(), progress: 100 };
+      notify({ title: "Course completed", body: course.title || courseId, level: "success", source: "training-complete" });
       toast("Course complete! The admin will review your final quiz.", "success");
     } else {
       toast("Module complete.", "success");
     }
-
     const modules = modulesOf(course);
     const idx = modules.findIndex(m => m.id === moduleId);
     const next = modules[idx + 1];
-    if (next) {
-      /* Advance to next module */
-      openLesson(courseId, next.id);
-    } else {
-      closeModal("lessonModal");
-      renderActiveTab();
-    }
+    if (next) openLesson(courseId, next.id);
+    else { closeModal("lessonModal"); renderActiveTab(); }
   } catch (e) {
     console.error("[training] complete failed", e);
     toast("Could not save. Retry.", "error");
@@ -1497,38 +870,26 @@ async function onLessonCompleteClick() {
   }
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   QUIZ MODAL
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function openQuiz(courseId, moduleId) {
   const course = S.courses[courseId];
   if (!course) return;
   const mod = course.modules?.[moduleId];
-  if (!mod || !Array.isArray(mod.quiz) || !mod.quiz.length) {
-    toast("No quiz attached to this module.", "info");
-    return;
-  }
-
-  /* Already submitted? */
+  if (!mod || !Array.isArray(mod.quiz) || !mod.quiz.length) { toast("No quiz attached to this module.", "info"); return; }
   const existing = S.quizSubmissions?.[courseId];
   if (existing && existing.moduleId === moduleId) {
     toast("You already submitted this quiz. Awaiting admin review.", "info");
     return;
   }
-
   S.activeQuizCourseId = courseId;
   S.pendingQuizAnswers = {};
 
   const titleEl = $("quizTitle");
   if (titleEl) titleEl.textContent = course.title;
-
   const bodyEl = $("quizBody");
   if (bodyEl) {
     bodyEl.innerHTML = mod.quiz.map((q, qi) => `
       <div class="quiz-question" style="margin-bottom:20px;padding:14px;background:var(--bg-input);border-radius:12px;border:1px solid var(--border-color);">
-        <div style="font-weight:700;font-size:.9rem;margin-bottom:10px;">
-          ${qi + 1}. ${escapeHtml(q.q || "")}
-        </div>
+        <div style="font-weight:700;font-size:.9rem;margin-bottom:10px;">${qi + 1}. ${escapeHtml(q.q || "")}</div>
         <div style="display:flex;flex-direction:column;gap:6px;">
           ${(q.options || []).map((opt, oi) => `
             <label style="display:flex;gap:10px;align-items:center;padding:9px 12px;background:var(--bg-card-solid);border:1.5px solid var(--border-color);border-radius:9px;cursor:pointer;font-size:.85rem;">
@@ -1540,15 +901,12 @@ function openQuiz(courseId, moduleId) {
       </div>
     `).join("");
   }
-
-  /* Bind change handler once per open (delegated, safe) */
   bodyEl?.querySelectorAll(".quiz-radio").forEach(radio => {
     radio.addEventListener("change", (e) => {
       const qi = Number(e.target.dataset.q);
       S.pendingQuizAnswers[qi] = Number(e.target.value);
     });
   });
-
   closeModal("lessonModal");
   openModal("quizModal");
 }
@@ -1556,95 +914,46 @@ function openQuiz(courseId, moduleId) {
 async function submitQuiz() {
   const courseId = S.activeQuizCourseId;
   if (!courseId || !S.user) return;
-
   const course = S.courses[courseId];
   if (!course) return;
-
-  /* Find the module that owns the quiz (should be the last module) */
   const modules = modulesOf(course);
   const mod = modules[modules.length - 1];
   if (!mod || !Array.isArray(mod.quiz) || !mod.quiz.length) return;
-
   const total = mod.quiz.length;
   const answers = S.pendingQuizAnswers || {};
+  if (Object.keys(answers).length === 0) { toast("Please answer at least one question.", "warning"); return; }
 
-  /* Require at least one answer */
-  if (Object.keys(answers).length === 0) {
-    toast("Please answer at least one question.", "warning");
-    return;
-  }
-
-  /* Compute score */
   let correct = 0;
   for (let qi = 0; qi < total; qi++) {
-    const expected = mod.quiz[qi].answer;
-    const given = answers[qi];
-    if (typeof given === "number" && given === expected) correct++;
+    if (typeof answers[qi] === "number" && answers[qi] === mod.quiz[qi].answer) correct++;
   }
   const autoScore = Math.round((correct / total) * 100);
 
   const btn = $("quizSubmitBtn");
   const orig = btn ? btn.innerHTML : "";
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submittingâ€¦';
-  }
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting…'; }
 
   try {
     const submission = {
       uid: S.user.uid,
       userName: S.access?.name || S.user.email || "Learner",
       userEmail: S.user.email || "",
-      courseId,
-      courseTitle: course.title || courseId,
-      moduleId: mod.id,
-      moduleTitle: mod.title || "",
-      questions: mod.quiz.map(q => ({
-        q: q.q,
-        options: q.options,
-        answer: q.answer
-      })),
-      answers,
-      autoScore,
-      status: "submitted",
-      submittedAt: nowIso()
+      courseId, courseTitle: course.title || courseId,
+      moduleId: mod.id, moduleTitle: mod.title || "",
+      questions: mod.quiz.map(q => ({ q: q.q, options: q.options, answer: q.answer })),
+      answers, autoScore,
+      status: "submitted", submittedAt: nowIso()
     };
-
-    await set(ref(db, `${TRAINING}/quizSubmissions/${S.user.uid}/${courseId}`), submission);
-
-    /* Also mark the module complete */
-    await set(ref(db, `${TRAINING}/progress/${S.user.uid}/${courseId}/${mod.id}`), {
-      moduleId: mod.id,
-      completedAt: nowIso(),
-      score: autoScore
-    });
-
-    /* Mark enrollment complete */
-    await update(ref(db, `${TRAINING}/enrollments/${S.user.uid}/${courseId}`), {
-      completedAt: nowIso(),
-      progress: 100
-    });
+    await set(ref(db, `${SCHOLAR}/quizSubmissions/${S.user.uid}/${courseId}`), submission);
+    await set(ref(db, `${SCHOLAR}/progress/${S.user.uid}/${courseId}/${mod.id}`), { moduleId: mod.id, completedAt: nowIso(), score: autoScore });
+    await update(ref(db, `${SCHOLAR}/enrollments/${S.user.uid}/${courseId}`), { completedAt: nowIso(), progress: 100 });
 
     S.quizSubmissions[courseId] = submission;
     S.progress[courseId] = S.progress[courseId] || {};
-    S.progress[courseId][mod.id] = {
-      moduleId: mod.id,
-      completedAt: nowIso(),
-      score: autoScore
-    };
-    S.enrollments[courseId] = {
-      ...(S.enrollments[courseId] || {}),
-      completedAt: nowIso(),
-      progress: 100
-    };
+    S.progress[courseId][mod.id] = { moduleId: mod.id, completedAt: nowIso(), score: autoScore };
+    S.enrollments[courseId] = { ...(S.enrollments[courseId] || {}), completedAt: nowIso(), progress: 100 };
 
-    notify({
-      title: "Quiz submitted",
-      body: `${course.title} â€” auto-score ${autoScore}%`,
-      level: autoScore >= 80 ? "success" : "info",
-      source: "training-quiz"
-    });
-
+    notify({ title: "Quiz submitted", body: `${course.title} — auto-score ${autoScore}%`, level: autoScore >= 80 ? "success" : "info", source: "training-quiz" });
     closeModal("quizModal");
     toast(`Submitted! Auto-score ${autoScore}%. The admin will review.`, "success");
     renderActiveTab();
@@ -1652,23 +961,13 @@ async function submitQuiz() {
     console.error("[training] submit failed", e);
     toast("Could not submit. Retry.", "error");
   } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = orig;
-    }
+    if (btn) { btn.disabled = false; btn.innerHTML = orig; }
   }
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   CERTIFICATE VIEWER
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function viewCertificate(certId) {
   const cert = S.certificates[certId];
-  if (!cert) {
-    toast("Certificate not found.", "error");
-    return;
-  }
-
+  if (!cert) { toast("Certificate not found.", "error"); return; }
   const body = $("certBody");
   if (!body) return;
 
@@ -1678,175 +977,76 @@ function viewCertificate(certId) {
         <img id="certImageEl" src="${cert.renderedImage}" style="max-width:100%;border-radius:8px;" alt="Certificate" />
       </div>
       <div style="margin-top:12px;font-size:.78rem;color:var(--text-secondary);text-align:center;">
-        ${escapeHtml(cert.courseTitle || "")}${cert.moduleTitle ? " â€” " + escapeHtml(cert.moduleTitle) : ""}
-        Â· Score ${cert.score ?? "â€”"}%
-        Â· <span style="font-family:monospace;">${escapeHtml(cert.code || cert.id)}</span>
-        Â· Issued ${fmtDate(cert.issuedAt)}
-      </div>
-    `;
+        ${escapeHtml(cert.courseTitle || "")}${cert.moduleTitle ? " — " + escapeHtml(cert.moduleTitle) : ""} · Score ${cert.score ?? "—"}% · <span style="font-family:monospace;">${escapeHtml(cert.code || cert.id)}</span> · Issued ${fmtDate(cert.issuedAt)}
+      </div>`;
   } else {
-    /* Fallback HTML certificate */
     body.innerHTML = `
       <div style="background:linear-gradient(135deg,rgba(255,200,87,.12),rgba(0,212,255,.12));border:2px solid var(--accent-gold);border-radius:16px;padding:32px;text-align:center;">
-        <div style="font-size:3rem;color:var(--accent-gold);margin-bottom:8px;">ðŸ†</div>
+        <div style="font-size:3rem;color:var(--accent-gold);margin-bottom:8px;">🏆</div>
         <div style="font-size:1.4rem;font-weight:800;margin-bottom:6px;">Certificate of Completion</div>
         <div style="font-size:.85rem;color:var(--text-secondary);margin:18px 0 6px;">This certifies that</div>
         <div style="font-size:1.6rem;font-weight:800;margin:6px 0;">${escapeHtml(cert.userName || "")}</div>
         <div style="font-size:.85rem;color:var(--text-secondary);margin:14px 0 6px;">has successfully completed</div>
         <div style="font-size:1.15rem;font-weight:700;margin:6px 0;color:var(--accent-blue);">${escapeHtml(cert.courseTitle || "")}</div>
         <div style="margin-top:22px;font-size:.75rem;color:var(--text-secondary);">
-          Score: <strong>${cert.score ?? 100}%</strong> Â· Issued ${fmtDate(cert.issuedAt)}<br>
+          Score: <strong>${cert.score ?? 100}%</strong> · Issued ${fmtDate(cert.issuedAt)}<br>
           <span style="font-family:monospace;margin-top:8px;display:inline-block;background:rgba(0,0,0,.25);padding:4px 10px;border-radius:6px;">${escapeHtml(cert.code || cert.id)}</span>
         </div>
-      </div>
-    `;
+      </div>`;
   }
-
   openModal("certModal");
 }
 
 function printCertificate() {
   const img = $("certImageEl");
   const body = $("certBody");
-
   let html;
   if (img && img.src) {
-    html = `
-      <!DOCTYPE html>
-      <html><head>
-        <title>Certificate</title>
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #fff; }
-          img { max-width: 100%; max-height: 100vh; }
-          @media print { @page { size: landscape; margin: 0; } }
-        </style>
-      </head><body>
-        <img src="${img.src}" onload="setTimeout(()=>window.print(), 300)" />
-      </body></html>`;
+    html = `<!DOCTYPE html><html><head><title>Certificate</title><style>*{margin:0;padding:0;box-sizing:border-box;}body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#fff;}img{max-width:100%;max-height:100vh;}@media print{@page{size:landscape;margin:0;}}</style></head><body><img src="${img.src}" onload="setTimeout(()=>window.print(),300)" /></body></html>`;
   } else if (body) {
-    html = `
-      <!DOCTYPE html>
-      <html><head>
-        <title>Certificate</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 40px; }
-        </style>
-      </head><body onload="setTimeout(()=>window.print(), 300)">
-        ${body.innerHTML}
-      </body></html>`;
+    html = `<!DOCTYPE html><html><head><title>Certificate</title><style>body{font-family:Arial,sans-serif;padding:40px;}</style></head><body onload="setTimeout(()=>window.print(),300)">${body.innerHTML}</body></html>`;
   } else {
-    toast("Nothing to print.", "error");
-    return;
+    toast("Nothing to print.", "error"); return;
   }
-
   const w = window.open("", "_blank", "width=1000,height=700");
-  if (!w) {
-    toast("Pop-up blocked â€” allow pop-ups to print.", "warning");
-    return;
-  }
-  w.document.write(html);
-  w.document.close();
+  if (!w) { toast("Pop-up blocked — allow pop-ups to print.", "warning"); return; }
+  w.document.write(html); w.document.close();
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   RESOURCE OPENER
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function openResource(id) {
   const r = S.resources[id];
-  if (!r) {
-    toast("Resource not found.", "error");
-    return;
-  }
-
-  /* Uploaded file â†’ view inline */
+  if (!r) { toast("Resource not found.", "error"); return; }
   if (r.data) {
     const w = window.open();
-    if (!w) {
-      toast("Pop-up blocked.", "warning");
-      return;
-    }
-    if ((r.mime || "").startsWith("image/")) {
-      w.document.write(`<title>${escapeHtml(r.title)}</title><img src="${r.data}" style="max-width:100%;" />`);
-    } else if (r.mime === "application/pdf") {
-      w.document.write(`<title>${escapeHtml(r.title)}</title><iframe src="${r.data}" style="border:0;position:fixed;inset:0;width:100%;height:100%;"></iframe>`);
-    } else {
-      w.document.write(`<title>${escapeHtml(r.title)}</title><div style="font-family:sans-serif;padding:40px;text-align:center;"><p>Preview not available.</p><a href="${r.data}" download="${escapeHtml(r.fileName || r.title)}">Download</a></div>`);
-    }
+    if (!w) { toast("Pop-up blocked.", "warning"); return; }
+    if ((r.mime || "").startsWith("image/")) w.document.write(`<title>${escapeHtml(r.title)}</title><img src="${r.data}" style="max-width:100%;" />`);
+    else if (r.mime === "application/pdf") w.document.write(`<title>${escapeHtml(r.title)}</title><iframe src="${r.data}" style="border:0;position:fixed;inset:0;width:100%;height:100%;"></iframe>`);
+    else w.document.write(`<title>${escapeHtml(r.title)}</title><div style="font-family:sans-serif;padding:40px;text-align:center;"><p>Preview not available.</p><a href="${r.data}" download="${escapeHtml(r.fileName || r.title)}">Download</a></div>`);
     return;
   }
-
-  /* External URL */
-  if (r.url) {
-    window.open(r.url, "_blank", "noopener,noreferrer");
-    return;
-  }
-
+  if (r.url) { window.open(r.url, "_blank", "noopener,noreferrer"); return; }
   toast("This resource has no file or link.", "info");
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   GLOBAL API â€” reachable from onclick in generated HTML
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 window.VioraTraining = {
-  openCourse,
-  enrollAndOpen,
-  openLesson,
-  openQuiz,
-  submitQuiz,
-  viewCertificate,
-  printCertificate,
-  openResource,
-  switchTab,
-  debug: {
-    S,
-    db,
-    auth,
-    TRAINING,
-    signOut: doSignOut
-  }
+  openCourse, enrollAndOpen, openLesson, openQuiz, submitQuiz,
+  viewCertificate, printCertificate, openResource, switchTab,
+  debug: { S, db, auth, SCHOLAR, signOut: doSignOut }
 };
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   BOOT
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function boot() {
   initLoginTabs();
-
-  const loginBtn = $("loginBtn");
-  if (loginBtn) loginBtn.addEventListener("click", doSignIn);
-
-  const regBtn = $("registerBtn");
-  if (regBtn) regBtn.addEventListener("click", doRegister);
-
-  const pendingLogout = $("pendingLogout");
-  if (pendingLogout) pendingLogout.addEventListener("click", doSignOut);
-
-  /* Enter key in password field triggers the active button */
-  $("loginPassword")?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      doSignIn();
-    }
-  });
-  $("regPassword")?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      doRegister();
-    }
-  });
-
-  /* Hide the admin tab â€” trainee portal never shows it */
+  $("loginBtn")?.addEventListener("click", doSignIn);
+  $("registerBtn")?.addEventListener("click", doRegister);
+  $("pendingLogout")?.addEventListener("click", doSignOut);
+  $("loginPassword")?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); doSignIn(); } });
+  $("regPassword")?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); doRegister(); } });
   const adminTab = $("adminTabBtn");
   if (adminTab) adminTab.style.display = "none";
 
-  /* Kick off auth */
   onAuthStateChanged(auth, (user) => {
-    try {
-      handleAuth(user);
-    } catch (e) {
-      console.error("[training] auth handler failed", e);
-    }
+    try { handleAuth(user); }
+    catch (e) { console.error("[training] auth handler failed", e); }
   });
 
   console.info("[Viora Training] portal ready (isolated auth session: '" + APP_NAME + "')");
@@ -1858,65 +1058,22 @@ if (document.readyState === "loading") {
   boot();
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   PASSWORD RESET EXPOSURE
-   ═══════════════════════════════════════════════════════════════ */
 window.vioraSendPasswordReset = async function (email) {
-  if (!email || typeof email !== 'string') {
-    return { ok: false, error: 'missing-email' };
-  }
-  try {
-    await sendPasswordResetEmail(auth, email.trim());
-    return { ok: true };
-  } catch (e) {
-    console.warn('[training] password reset failed:', e && e.code, e && e.message);
-    return { ok: false, error: (e && e.code) || (e && e.message) || 'unknown' };
-  }
+  if (!email || typeof email !== "string") return { ok: false, error: "missing-email" };
+  try { await sendPasswordResetEmail(auth, email.trim()); return { ok: true }; }
+  catch (e) { return { ok: false, error: (e && e.code) || (e && e.message) || "unknown" }; }
 };
 
-/* ═══════════════════════════════════════════════════════════════
-   WELCOME TOAST on ?welcome=1
-   ═══════════════════════════════════════════════════════════════ */
 (function () {
   try {
     const params = new URLSearchParams(location.search);
-    if (params.get('welcome') === '1') {
-      setTimeout(function () {
-        if (typeof toast === 'function') {
-          toast('Welcome to VIORA Academy!', 'success');
-        }
-      }, 800);
+    if (params.get("welcome") === "1") {
+      setTimeout(function () { if (typeof toast === "function") toast("Welcome to VIORA Academy!", "success"); }, 800);
     }
   } catch (e) {}
 })();
 
-/* ═══════════════════════════════════════════════════════════════
-   PENDING PROGRESS ANIMATION
-   ═══════════════════════════════════════════════════════════════ */
-window.animatePendingProgress = function () {
-  const steps = document.querySelectorAll('.pending-step');
-  if (!steps.length) return;
-  setTimeout(() => steps[0]?.classList.add('done'), 300);
-  setTimeout(() => steps[1]?.classList.add('active'), 1200);
-};
-// Call on pending screen activation
-(function () {
-  const pending = document.getElementById('pendingScreen');
-  if (!pending) return;
-  const observer = new MutationObserver(() => {
-    if (pending.classList.contains('active')) {
-      window.animatePendingProgress();
-    }
-  });
-  observer.observe(pending, { attributes: true, attributeFilter: ['class'] });
-})();
-
-/* ═══════════════════════════════════════════════════════════════
-   DEFENSIVE ROLE INJECTION
-   Captures role from the form and makes it available globally
-   so any fetch/set call can pick it up.
-   ═══════════════════════════════════════════════════════════════ */
 window.vioraGetRegistrationRole = function () {
-  const el = document.getElementById('pRegRole');
-  return el && el.value ? el.value : '';
+  const el = document.getElementById("pRegRole");
+  return el && el.value ? el.value : "";
 };
