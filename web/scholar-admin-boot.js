@@ -1,15 +1,11 @@
 // File: scholar-admin-boot.js
 // VIORA Scholar Admin Console bootstrap.
 //
-// PATH FIX: P() previously returned `${ROOT}/${ORG}/training/${path}` which
-// combined with every caller's `training/xxx` argument produced
-// `viora_data/orgs/viora/training/training/xxx` — a path that doesn't exist.
-// That's why the listener fired with null, why _fetchRequestsNow() returned
-// empty, and why the Requests pane showed nothing despite 3 records living at
-// viora_data/orgs/viora/training/accessRequests.
-//
-// Now P() returns `${ROOT}/${ORG}/${path}`, so P("training/accessRequests")
-// correctly resolves to viora_data/orgs/viora/training/accessRequests.
+// - Command Center shows a live "Pending Requests" notification card. Clicking
+//   it jumps to the Requests tab. Also fires a toast when a new request arrives.
+// - All request actions use data-action/data-uid + delegated click handler.
+// - P() returns `${ROOT}/${ORG}/${path}` (no double "training").
+// - Infinite render loop guard in renderRequestsPane().
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
@@ -48,22 +44,16 @@ const db = getDatabase(app); forceLongPolling(db);
 const auth = getAuth(app);
 
 let _adminBooted = false;
-let _dbWarmedUp = false;
+let _lastPendingCount = 0;
 
 const ROOT = "viora_data";
 const ORG  = "orgs/viora";
-
-/* ═══════════ THE FIX ═══════════
-   Old: (path) => `${ROOT}/${ORG}/training/${path}`      ← double "training"
-   New: (path) => `${ROOT}/${ORG}/${path}`               ← callers already pass training/...
-   ═══════════════════════════════ */
 const P = (path) => `${ROOT}/${ORG}/${path}`;
 
 const $ = (id) => document.getElementById(id);
 const uid = () => "id-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 const nowIso = () => new Date().toISOString();
 
-/* EAT (Africa/Nairobi) helpers */
 const EAT_OFFSET_MS = 3 * 60 * 60 * 1000;
 function eatDayKey(ms) {
   const d = new Date(ms + EAT_OFFSET_MS);
@@ -176,6 +166,89 @@ try { D.AutoCertification = AutoCertification; } catch (e) {}
 try { bindTrainingEvents(); }
 catch (e) { console.warn("[sa] initial bindTrainingEvents failed:", e); }
 
+/* ═══════════════════════════════════════════════════════════════
+   REQUEST ACTIONS
+   ═══════════════════════════════════════════════════════════════ */
+async function approveRequest(uidKey) {
+  if (!uidKey) return;
+  console.info("[sa/approve] starting", uidKey);
+  const req = getRequestsArray().find(r => (r.uid || r.id) === uidKey);
+  const role = req?.role || "learner";
+  try {
+    await update(ref(db, P(`training/accessRequests/${uidKey}`)), {
+      status: "approved", approvedAt: nowIso(), approvedBy: state.operator?.name || "admin"
+    });
+    try {
+      await update(ref(db, `${ROOT}/${ORG}/users/${uidKey}`), {
+        role, trainingStatus: "approved", trainingApprovedAt: nowIso(), pendingApproval: false
+      });
+    } catch (e) {}
+    toast(`Approved ${role}.`, "success");
+    await _fetchRequestsNow();
+    renderRequestsPane();
+    renderCommandCenter();
+  } catch (e) { console.error("[sa/approve] failed:", e); toast("Approve failed: " + (e.message || e.code), "error"); }
+}
+
+async function rejectRequest(uidKey) {
+  if (!uidKey) return;
+  if (!confirm("Reject this request?")) return;
+  try {
+    await update(ref(db, P(`training/accessRequests/${uidKey}`)), {
+      status: "rejected", rejectedAt: nowIso(), rejectedBy: state.operator?.name || "admin"
+    });
+    toast("Rejected.", "info");
+    await _fetchRequestsNow();
+    renderRequestsPane();
+    renderCommandCenter();
+  } catch (e) { toast("Reject failed: " + (e.message || e.code), "error"); }
+}
+
+async function reopenRequest(uidKey) {
+  if (!uidKey) return;
+  try {
+    await update(ref(db, P(`training/accessRequests/${uidKey}`)), {
+      status: "pending", reopenedAt: nowIso(), reopenedBy: state.operator?.name || "admin"
+    });
+    toast("Reopened — now pending.", "info");
+    await _fetchRequestsNow();
+    renderRequestsPane();
+    renderCommandCenter();
+  } catch (e) { toast("Reopen failed: " + (e.message || e.code), "error"); }
+}
+
+async function deleteRequest(uidKey) {
+  if (!uidKey) return;
+  if (!confirm("Delete this request permanently?")) return;
+  try {
+    await remove(ref(db, P(`training/accessRequests/${uidKey}`)));
+    toast("Request deleted.", "success");
+    await _fetchRequestsNow();
+    renderRequestsPane();
+    renderCommandCenter();
+  } catch (e) { toast("Delete failed: " + (e.message || e.code), "error"); }
+}
+
+/* Delegated click for data-action buttons */
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-action][data-uid]");
+  if (!btn) return;
+  const action = btn.getAttribute("data-action");
+  const uidKey = btn.getAttribute("data-uid");
+  if (!uidKey) return;
+  console.info(`[sa/click] ${action} ${uidKey}`);
+  e.preventDefault();
+  e.stopPropagation();
+  if (action === "approve") approveRequest(uidKey);
+  else if (action === "reject") rejectRequest(uidKey);
+  else if (action === "reopen") reopenRequest(uidKey);
+  else if (action === "delete") deleteRequest(uidKey);
+  else if (action === "goto-requests") switchTab("requests");
+});
+
+/* ═══════════════════════════════════════════════════════════════
+   GLOBAL API
+   ═══════════════════════════════════════════════════════════════ */
 const VioraAPI = {
   openCourseEditor, openChecklistEditor, openResourceEditor, openCertTemplateEditor,
   openManualAwardModal,
@@ -205,13 +278,14 @@ const VioraAPI = {
   deleteTrainingUser:      (uid) => TrainingVioraAPI.deleteTrainingUser(uid),
   revokeCertificate:       (cid) => TrainingVioraAPI.revokeCertificate(cid),
   TrainingVioraAPI, openModal, closeModal,
-  refreshRequests: () => renderRequestsPane()
+  refreshRequests: () => { _fetchRequestsNow().then(() => renderRequestsPane()); }
 };
 
 window.VioraTraining = VioraAPI;
 window.Viora = VioraAPI;
 window.VioraTrainingAPI = TrainingVioraAPI;
 window.VioraTraining.debug = { state, db, auth };
+console.info("[sa] window.Viora installed");
 
 window.openCertTemplateEditor = openCertTemplateEditor;
 window.deleteCertTemplate = deleteCertTemplate;
@@ -236,6 +310,9 @@ window.saveResource = saveResource;
 window.deleteResource = deleteResource;
 window.openResourceFile = openResourceFile;
 
+/* ═══════════════════════════════════════════════════════════════
+   SPLASH
+   ═══════════════════════════════════════════════════════════════ */
 function showSplash(kind, title, subtitle) {
   const splash = $("saSplash");
   if (!splash) return;
@@ -276,6 +353,9 @@ function classifyUserRole(u) {
   return "learner";
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   COMMAND CENTER
+   ═══════════════════════════════════════════════════════════════ */
 function renderCommandCenter() {
   try {
     const data = state.data;
@@ -296,6 +376,44 @@ function renderCommandCenter() {
     for (const p of portalArr) {
       if (!p.uid || seen.has(p.uid)) continue;
       seen.add(p.uid); total++; clients++;
+    }
+
+    /* ── PENDING REQUESTS NOTIFICATION ── */
+    const pendingReqs = getRequestsArray().filter(r => (r.status || "pending") === "pending");
+    const notifHost = $("cmdRequestsNotif");
+    if (notifHost) {
+      if (pendingReqs.length === 0) {
+        notifHost.innerHTML = "";
+      } else {
+        const items = pendingReqs.slice(0, 5).map(r => {
+          const isTrainer = r.role === "trainer";
+          const badge = isTrainer
+            ? '<span class="badge badge-purple" style="font-size:.6rem;">Trainer</span>'
+            : '<span class="badge badge-active" style="font-size:.6rem;">Learner</span>';
+          return `
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,200,87,.06);border-left:3px solid var(--accent-gold);border-radius:8px;margin-bottom:8px;">
+              <i class="fa-solid fa-user-clock" style="color:var(--accent-gold);"></i>
+              <div style="flex:1;min-width:0;">
+                <div style="font-weight:600;font-size:.85rem;">${escapeHtml(r.name || r.email || "—")}</div>
+                <div style="font-size:.7rem;color:var(--text-secondary);">${badge} · ${timeAgo(r.requestedAt)}</div>
+              </div>
+              <button class="btn btn-success btn-xs" data-action="approve" data-uid="${escapeHtml(r.uid || r.id)}"><i class="fa-solid fa-check"></i> Approve</button>
+              <button class="btn btn-danger btn-xs" data-action="reject" data-uid="${escapeHtml(r.uid || r.id)}"><i class="fa-solid fa-xmark"></i> Reject</button>
+            </div>`;
+        }).join("");
+        const more = pendingReqs.length > 5 ? `<div style="text-align:center;font-size:.75rem;color:var(--text-secondary);padding:4px;">+ ${pendingReqs.length - 5} more</div>` : "";
+        notifHost.innerHTML = `
+          <div style="padding:16px;background:rgba(255,200,87,.08);border:1px solid rgba(255,200,87,.35);border-radius:16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <h4 style="font-size:.85rem;font-weight:700;color:var(--accent-gold);margin:0;">
+                <i class="fa-solid fa-bell"></i> ${pendingReqs.length} Pending Request${pendingReqs.length === 1 ? "" : "s"}
+              </h4>
+              <button class="btn btn-outline btn-xs" data-action="goto-requests"><i class="fa-solid fa-arrow-right"></i> View All</button>
+            </div>
+            ${items}
+            ${more}
+          </div>`;
+      }
     }
 
     const usersHost = $("cmdUsersKpi");
@@ -320,8 +438,7 @@ function renderCommandCenter() {
           datasets: [{ label: "Users", data: [operators, clients, trainers, learners, pendingApprovalCount],
             backgroundColor: ["rgba(0,212,255,.75)", "rgba(168,85,247,.75)", "rgba(34,230,160,.75)", "rgba(255,200,87,.75)", "rgba(217,43,75,.75)"],
             borderColor: ["#00d4ff", "#a855f7", "#22e6a0", "#ffc857", "#d92b4b"], borderWidth: 2, borderRadius: 8 }] },
-        options: { responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
           scales: { y: { beginAtZero: true, ticks: { color: tc, precision: 0 }, grid: { color: "rgba(148,163,184,.1)" } },
                     x: { ticks: { color: tc }, grid: { display: false } } } }
       });
@@ -358,8 +475,7 @@ function renderCommandCenter() {
           datasets: [{ label: "Subscriptions", data: [activeSubs, expiringSubs, pendingSubs, expiredSubs],
             backgroundColor: ["rgba(34,230,160,.75)", "rgba(255,200,87,.75)", "rgba(168,85,247,.75)", "rgba(217,43,75,.75)"],
             borderColor: ["#22e6a0", "#ffc857", "#a855f7", "#d92b4b"], borderWidth: 2, borderRadius: 8 }] },
-        options: { responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
           scales: { y: { beginAtZero: true, ticks: { color: tc, precision: 0 }, grid: { color: "rgba(148,163,184,.1)" } },
                     x: { ticks: { color: tc }, grid: { display: false } } } }
       });
@@ -391,8 +507,7 @@ function renderCommandCenter() {
           datasets: [{ label: "Training", data: [courseCount, enrollments, completions, certCount],
             backgroundColor: ["rgba(0,212,255,.75)", "rgba(124,58,237,.75)", "rgba(34,230,160,.75)", "rgba(255,200,87,.75)"],
             borderColor: ["#00d4ff", "#7c3aed", "#22e6a0", "#ffc857"], borderWidth: 2, borderRadius: 8 }] },
-        options: { responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
           scales: { y: { beginAtZero: true, ticks: { color: tc, precision: 0 }, grid: { color: "rgba(148,163,184,.1)" } },
                     x: { ticks: { color: tc }, grid: { display: false } } } }
       });
@@ -495,6 +610,9 @@ function renderCommandCenter() {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   REQUESTS
+   ═══════════════════════════════════════════════════════════════ */
 function getRequestsArray() {
   const raw = state.data.trainingAccessRequests;
   if (Array.isArray(raw)) return raw.filter(Boolean);
@@ -507,9 +625,17 @@ async function _fetchRequestsNow() {
     if (snap.exists()) {
       const val = snap.val();
       const arr = Object.entries(val || {}).map(([uidKey, v]) => ({ uid: uidKey, ...(v || {}), id: uidKey }));
+      const prevLen = getRequestsArray().length;
       state.data.trainingAccessRequests = arr;
       console.info(`[sa/fetch] loaded ${arr.length} access requests`);
       updateBadges();
+      /* Fire toast if a NEW pending request appeared since last check */
+      const newPending = arr.filter(r => (r.status || "pending") === "pending").length;
+      if (newPending > _lastPendingCount && _lastPendingCount >= 0) {
+        const diff = newPending - _lastPendingCount;
+        toast(`🔔 ${diff} new access request${diff === 1 ? "" : "s"} pending`, "info");
+      }
+      _lastPendingCount = newPending;
       return arr;
     }
     console.info("[sa/fetch] accessRequests path is empty");
@@ -523,7 +649,6 @@ async function _fetchRequestsNow() {
 
 function renderRequestsPane() {
   try {
-    /* Fire one fetch. If it returns new data, re-render once. Never loop. */
     const prevLen = getRequestsArray().length;
     _fetchRequestsNow().then((fresh) => {
       if (fresh.length > prevLen) {
@@ -601,54 +726,6 @@ function renderRequestsPane() {
   }
 }
 
-async function approveRequest(uidKey) {
-  if (!uidKey) return;
-  const req = getRequestsArray().find(r => (r.uid || r.id) === uidKey);
-  const role = req?.role || "learner";
-  try {
-    await update(ref(db, P(`training/accessRequests/${uidKey}`)), {
-      status: "approved", approvedAt: nowIso(), approvedBy: state.operator?.name || "admin"
-    });
-    try {
-      await update(ref(db, `${ROOT}/${ORG}/users/${uidKey}`), {
-        role, trainingStatus: "approved", trainingApprovedAt: nowIso(), pendingApproval: false
-      });
-    } catch (e) {}
-    toast(`Approved ${role}.`, "success");
-    await _fetchRequestsNow();
-    renderRequestsPane();
-  } catch (e) { toast("Approve failed: " + e.message, "error"); }
-}
-async function rejectRequest(uidKey) {
-  if (!uidKey) return;
-  if (!confirm("Reject this request?")) return;
-  try {
-    await update(ref(db, P(`training/accessRequests/${uidKey}`)), { status: "rejected", rejectedAt: nowIso(), rejectedBy: state.operator?.name || "admin" });
-    toast("Rejected.", "info");
-    await _fetchRequestsNow();
-    renderRequestsPane();
-  } catch (e) { toast("Reject failed: " + e.message, "error"); }
-}
-async function reopenRequest(uidKey) {
-  if (!uidKey) return;
-  try {
-    await update(ref(db, P(`training/accessRequests/${uidKey}`)), { status: "pending", reopenedAt: nowIso(), reopenedBy: state.operator?.name || "admin" });
-    toast("Reopened — now pending.", "info");
-    await _fetchRequestsNow();
-    renderRequestsPane();
-  } catch (e) { toast("Reopen failed: " + e.message, "error"); }
-}
-async function deleteRequest(uidKey) {
-  if (!uidKey) return;
-  if (!confirm("Delete this request permanently?")) return;
-  try {
-    await remove(ref(db, P(`training/accessRequests/${uidKey}`)));
-    toast("Request deleted.", "success");
-    await _fetchRequestsNow();
-    renderRequestsPane();
-  } catch (e) { toast("Delete failed: " + e.message, "error"); }
-}
-
 function switchTab(name) {
   state.currentTab = "training-" + name;
   document.querySelectorAll("[data-sa-tab]").forEach(b => b.classList.toggle("active", b.dataset.saTab === name));
@@ -703,10 +780,24 @@ async function subscribeTraining() {
         const arr = Object.entries(raw || {}).map(([uidKey, v]) => ({ uid: uidKey, ...(v || {}), id: uidKey }));
         state.data[key] = arr;
         console.info(`[sa/sub] ${path} → ${arr.length} records`);
+        /* If listener fires with 0 records but the DB may have data, do a catch-up fetch */
         if (arr.length === 0) {
           _fetchRequestsNow().then((fetched) => {
-            if (fetched.length > 0 && state.currentTab === "training-requests") renderRequestsPane();
+            if (fetched.length > 0) {
+              if (state.currentTab === "training-requests") renderRequestsPane();
+              if (state.currentTab === "training-command") renderCommandCenter();
+            }
           });
+        } else {
+          /* Fire toast if new pending requests appeared */
+          const newPending = arr.filter(r => (r.status || "pending") === "pending").length;
+          if (newPending > _lastPendingCount && _lastPendingCount >= 0) {
+            const diff = newPending - _lastPendingCount;
+            if (state.currentTab !== "training-command") {
+              toast(`🔔 ${diff} new access request${diff === 1 ? "" : "s"} pending`, "info");
+            }
+          }
+          _lastPendingCount = newPending;
         }
       } else {
         state.data[key] = incoming;
