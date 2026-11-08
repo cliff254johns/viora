@@ -1,11 +1,14 @@
 // File: scholar-admin-boot.js
-// FIXES: Auth gate now checks viora_data/orgs/viora/users/{uid}.role (the correct path).
-// initTraining() runs BEFORE bindTrainingEvents(); late retry re-binds after modals parse.
-// subscribeTraining() coerces arrays safely; every renderer call is wrapped in try/catch.
+// FIX: import set/update/remove/push from firebase/database — they were missing,
+// causing "set is not defined" when building the D object passed to initTraining().
+// FIXES (retained): auth gate checks org users path; initTraining before
+// bindTrainingEvents; late re-bind after modals parse; array-coerced subscribers.
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
-import { getDatabase, ref, get, onValue, forceLongPolling } from "firebase/database";
+import {
+  getDatabase, ref, get, set, update, remove, push, onValue, forceLongPolling
+} from "firebase/database";
 
 import {
   initTraining, bindTrainingEvents, renderTrainingOverview, renderTrainingRequests, renderTrainingUsers,
