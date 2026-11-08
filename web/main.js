@@ -3829,6 +3829,9 @@ case 'training-progress':
         onValue(ref(db, dbPath), snap => {
           state.data[key] = snap.exists() ? snap.val() : {};
           invalidateCountersFor(key);
+                    invalidateCountersFor(key);
+          try { if (typeof updateSidebarCounters === 'function') updateSidebarCounters(true); } catch (e) {}
+          scheduleRender(true);
           scheduleRender(true);
           if (state.notifOpen && typeof renderNotifications === 'function') {
             try { renderNotifications(); } catch (e) {}
