@@ -41,8 +41,8 @@
       <button class="sch-nav-item" data-sa-tab="users"><i class="fa-solid fa-users"></i> Users</button>
       <button class="sch-nav-item" data-sa-tab="progress"><i class="fa-solid fa-chart-line"></i> Progress</button>
       <button class="sch-nav-item" data-sa-tab="quizzes"><i class="fa-solid fa-file-circle-question"></i> Quizzes <span class="nav-badge" id="saQuizBadge" style="display:none;margin-left:auto;">0</span></button>
-      <button class="sch-nav-item" data-sa-tab="certificates"><i class="fa-solid fa-award"></i> Certificates</button>
-         <button class="sch-nav-item" data-sa-tab="finance"><i class="fa-solid fa-coins"></i> Finance <span class="nav-badge" id="saFinBadge" style="display:none;margin-left:auto;">0</span></button>
+   <button class="sch-nav-item" data-sa-tab="certificates"><i class="fa-solid fa-award"></i> Certificates</button>
+<button class="sch-nav-item" data-sa-tab="finance"><i class="fa-solid fa-coins"></i> Finance <span class="nav-badge" id="saFinBadge" style="display:none;margin-left:auto;">0</span></button>
     </div>
 
     <div class="sch-sidebar-footer">
@@ -219,7 +219,73 @@
           <div class="kpi-grid" id="certsKpi"></div>
           <div id="certTemplateGrid" class="card-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:20px;"></div>
           <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;"><div style="display:flex;align-items:center;background:var(--bg-input);border:1px solid var(--border-color);border-radius:8px;padding:8px 12px;flex:1;min-width:200px;"><i class="fa-solid fa-magnifying-glass" style="color:var(--text-secondary);margin-right:8px;"></i><input id="certsSearch" placeholder="Search by trainee or certificate ID..." style="background:none;border:none;outline:none;color:var(--text-primary);width:100%;" /></div><button class="btn btn-outline btn-sm" id="certsClearSearch">Clear</button></div>
-          <div class="table-wrapper"><table><thead><tr><th>Issued</th><th>Trainee</th><th>Course</th><th>Score</th><th>Certificate ID</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="certsBody"></tbody></table></div>
+                 <div class="table-wrapper"><table><thead><tr><th>Issued</th><th>Trainee</th><th>Course</th><th>Score</th><th>Certificate ID</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="certsBody"></tbody></table></div>
+        </section>
+
+        <!-- FINANCE -->
+        <section id="sa-pane-finance" class="sa-pane">
+          <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+            <div>
+              <h1 style="display:flex;align-items:center;gap:10px;">
+                <span class="pillar-icon" style="width:44px;height:44px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#ffc857,#b8860b);color:#fff;"><i class="fa-solid fa-coins"></i></span>
+                <span style="background:linear-gradient(135deg,#ffc857,#b8860b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Course Finance</span>
+              </h1>
+              <p style="font-size:.85rem;color:var(--text-secondary);margin-top:6px;">All unlock requests, payments, and revenue. Approve to unlock, record payment, or revoke access.</p>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn btn-outline btn-sm" id="finRefreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button>
+            </div>
+          </div>
+
+          <div class="kpi-grid" id="finKpi"></div>
+
+          <div style="display:grid;grid-template-columns:1fr;gap:20px;margin-top:16px;">
+            <div style="background:rgba(18,18,26,.72);border:1px solid var(--border-color);border-radius:16px;padding:18px;">
+              <h4 style="font-size:.82rem;font-weight:700;color:var(--text-secondary);margin-bottom:12px;text-transform:uppercase;">
+                <i class="fa-solid fa-lock-open"></i> Unlock Requests
+                <span style="font-weight:400;color:var(--text-light);text-transform:none;letter-spacing:0;font-size:.7rem;margin-left:6px;">— learners who clicked Contact Support on locked courses</span>
+              </h4>
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Requested</th>
+                      <th>Learner</th>
+                      <th>Course</th>
+                      <th>Tier</th>
+                      <th>Price</th>
+                      <th>Status</th>
+                      <th style="text-align:right;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="finUnlockRequestsBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div style="background:rgba(18,18,26,.72);border:1px solid var(--border-color);border-radius:16px;padding:18px;">
+              <h4 style="font-size:.82rem;font-weight:700;color:var(--text-secondary);margin-bottom:12px;text-transform:uppercase;">
+                <i class="fa-solid fa-receipt"></i> Paid Courses
+                <span style="font-weight:400;color:var(--text-light);text-transform:none;letter-spacing:0;font-size:.7rem;margin-left:6px;">— every learner payment with revoke + delete</span>
+              </h4>
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Learner</th>
+                      <th>Course</th>
+                      <th>Amount</th>
+                      <th>Method</th>
+                      <th>Status</th>
+                      <th style="text-align:right;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="finPaymentsBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </section>
 
            <!-- FINANCE -->
@@ -357,6 +423,55 @@
   </div>
 </div>
 
+<!-- RECORD PAYMENT MODAL -->
+<div class="modal-overlay" id="finPaymentModal">
+  <div class="modal" style="background:#12121a;border:1px solid rgba(0,212,255,.14);border-radius:20px;padding:24px;width:100%;max-width:520px;">
+    <h2 style="display:flex;align-items:center;gap:10px;font-size:1.2rem;margin-bottom:20px;">
+      <span class="modal-icon" style="width:36px;height:36px;border-radius:12px;background:rgba(255,200,87,.1);color:#ffc857;display:inline-flex;align-items:center;justify-content:center;"><i class="fa-solid fa-coins"></i></span>
+      <span>Record Payment</span>
+    </h2>
+    <div id="finPayContext" style="padding:14px;background:var(--bg-input);border-radius:12px;margin-bottom:16px;font-size:.85rem;border:1px solid var(--border-color);"></div>
+    <label style="display:block;font-size:.8rem;color:var(--text-secondary);margin-bottom:4px;">Amount (KES) *</label>
+    <input type="number" id="finPayAmount" min="0" step="1" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border-color);background:#0a0a0f;color:#fff;margin-bottom:12px;" required />
+    <label style="display:block;font-size:.8rem;color:var(--text-secondary);margin-bottom:4px;">Payment Method *</label>
+    <select id="finPayMethod" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border-color);background:#0a0a0f;color:#fff;margin-bottom:12px;">
+      <option value="mpesa">M-Pesa</option>
+      <option value="cash">Cash</option>
+      <option value="bank">Bank Transfer</option>
+      <option value="card">Card</option>
+      <option value="waiver">Waiver (free access)</option>
+      <option value="other">Other</option>
+    </select>
+    <label style="display:block;font-size:.8rem;color:var(--text-secondary);margin-bottom:4px;">Reference / Transaction ID</label>
+    <input type="text" id="finPayReference" placeholder="e.g. M-Pesa code QAB123XYZ" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border-color);background:#0a0a0f;color:#fff;margin-bottom:12px;" />
+    <label style="display:block;font-size:.8rem;color:var(--text-secondary);margin-bottom:4px;">Admin Notes</label>
+    <textarea id="finPayNotes" rows="2" placeholder="e.g. Paid in person at office" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border-color);background:#0a0a0f;color:#fff;margin-bottom:16px;"></textarea>
+    <div style="display:flex;justify-content:flex-end;gap:10px;">
+      <button type="button" class="btn btn-outline" data-close="finPaymentModal" style="background:transparent;border:1px solid var(--border-color);color:#fff;padding:10px 20px;border-radius:8px;">Cancel</button>
+      <button type="button" class="btn btn-success" id="finPayConfirmBtn" style="background:linear-gradient(135deg,#22e6a0,#0d9e6e);border:none;color:#fff;padding:10px 20px;border-radius:8px;"><i class="fa-solid fa-check"></i> Record & Unlock</button>
+    </div>
+  </div>
+</div>
+
+<!-- UNLOCK CONFIRM MODAL -->
+<div class="modal-overlay" id="finUnlockModal">
+  <div class="modal" style="background:#12121a;border:1px solid rgba(0,212,255,.14);border-radius:20px;padding:24px;width:100%;max-width:520px;">
+    <h2 style="display:flex;align-items:center;gap:10px;font-size:1.2rem;margin-bottom:20px;">
+      <span class="modal-icon" style="width:36px;height:36px;border-radius:12px;background:rgba(34,230,160,.1);color:#22e6a0;display:inline-flex;align-items:center;justify-content:center;"><i class="fa-solid fa-lock-open"></i></span>
+      <span>Unlock Course Access</span>
+    </h2>
+    <div id="finUnlockContext" style="padding:14px;background:var(--bg-input);border-radius:12px;margin-bottom:16px;font-size:.85rem;border:1px solid var(--border-color);"></div>
+    <label style="display:flex;align-items:center;gap:10px;padding:14px;background:rgba(255,200,87,.06);border:1px solid rgba(255,200,87,.25);border-radius:10px;margin-bottom:16px;cursor:pointer;font-size:.85rem;">
+      <input type="checkbox" id="finUnlockRecordPayment" style="width:auto;" />
+      <span>Record payment for this unlock</span>
+    </label>
+    <div style="display:flex;justify-content:flex-end;gap:10px;">
+      <button type="button" class="btn btn-outline" data-close="finUnlockModal" style="background:transparent;border:1px solid var(--border-color);color:#fff;padding:10px 20px;border-radius:8px;">Cancel</button>
+      <button type="button" class="btn btn-success" id="finUnlockConfirmBtn" style="background:linear-gradient(135deg,#22e6a0,#0d9e6e);border:none;color:#fff;padding:10px 20px;border-radius:8px;"><i class="fa-solid fa-lock-open"></i> Unlock</button>
+    </div>
+  </div>
+</div>
+     
 <div class="modal-overlay" id="certPreviewModal">
   <div class="modal xl" style="background:#12121a;border:1px solid rgba(0,212,255,.14);border-radius:20px;padding:24px;width:100%;max-width:800px;max-height:90vh;overflow-y:auto;">
     <h2 style="display:flex;align-items:center;gap:10px;font-size:1.2rem;margin-bottom:20px;"><span class="modal-icon" style="width:36px;height:36px;border-radius:12px;background:rgba(0,212,255,.1);color:#00d4ff;display:inline-flex;align-items:center;justify-content:center;"><i class="fa-solid fa-award"></i></span> Certificate Preview</h2>
