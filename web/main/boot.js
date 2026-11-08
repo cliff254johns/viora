@@ -650,8 +650,10 @@ function wireSecondaryListeners(user) {
       state.data.trainingCertTemplates = s.exists() ? s.val() : {};
       if (state.currentTab === 'training-certificates' && renderTrainingCertificates) renderTrainingCertificates();
     }));
-    _track(onValue(ref(db, P('training/certificates')), s => {
+        _track(onValue(ref(db, P('training/certificates')), s => {
       state.data.trainingCertificates = s.exists() ? Object.values(s.val()) : [];
+      state._counterCache = null;
+      try { updateSidebarCounters(true); } catch (e) {}
       if (state.currentTab === 'training-progress' && renderTrainingProgress) renderTrainingProgress();
       if (state.currentTab === 'training-overview' && renderTrainingOverview) renderTrainingOverview();
       if (state.currentTab === 'training-certificates' && renderTrainingCertificates) renderTrainingCertificates();
@@ -1034,6 +1036,14 @@ function wireArchiveListeners() {
   ['archivedClients', 'archivedDeals', 'archivedProjects'].forEach(key => {
     _track(onValue(ref(db, P(key)), s => {
       state.data[key] = s.exists() ? Object.values(s.val()) : [];
+
+      /* Refresh the sidebar counter for Archives */
+      try {
+        if (typeof _ctx.updateSidebarCounters === 'function') {
+          _ctx.updateSidebarCounters(true);
+        }
+      } catch (e) { /* non-fatal */ }
+
       if (state.currentTab === 'archives' && renderArchivesPanel) renderArchivesPanel();
     }));
   });
