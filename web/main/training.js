@@ -1175,17 +1175,23 @@ export async function saveCourse() {
   const modulesObj = {};
   _ceModulesDraft.forEach((m, idx) => { modulesObj[m.id] = cleanModuleDraft(m, idx); });
 
-  const payload = {
-    id, title,
-    description: (R.ceDescription.value || '').trim(),
-    category: R.ceCategory.value,
-    level: R.ceLevel.value,
-    requiredFor: (R.ceRequiredFor.value || '').trim(),
-    modules: modulesObj,
-    createdAt: existing?.createdAt || new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    createdBy: existing?.createdBy || state.operator?.name || 'admin'
-  };
+ const payload = {
+  id, title,
+  description: (R.ceDescription.value || '').trim(),
+  category: R.ceCategory.value,
+  level: R.ceLevel.value,
+  requiredFor: (R.ceRequiredFor.value || '').trim(),
+  /* NEW fields — preserve on save */
+  accessTier: window.__ceAccessTier || existing?.accessTier || 'free',
+  priceKES: Number(window.__cePriceKES) || existing?.priceKES || 0,
+  durationHours: Number(window.__ceDurationHours) || existing?.durationHours || 0,
+  currency: 'KES',
+  language: window.__ceLanguage || existing?.language || 'English',
+  modules: modulesObj,
+  createdAt: existing?.createdAt || new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  createdBy: existing?.createdBy || state.operator?.name || 'admin'
+};
 
   const btn = R.ceSaveBtn;
   const originalHtml = btn ? btn.innerHTML : '';
