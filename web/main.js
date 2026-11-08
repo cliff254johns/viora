@@ -1339,6 +1339,10 @@ function updateSidebarCounters(force = false) {
     try { state._counterCache.v[k] = computeCounterValue(k); } catch (_) {}
   }
 
+  /* Compare old vs new and notify dashboard on relevant changes */
+  try { _compareCountersAndNotify(); }
+  catch (e) { console.warn('[counter-notify] failed', e); }
+
   try { maybeBroadcastCounterChanges(); }
   catch (e) { console.warn('[counter-broadcast] failed', e); }
 }
@@ -1443,6 +1447,136 @@ async function flushCounterBroadcasts() {
       icon: q.icon
     });
   } catch (e) { console.warn('[counter-broadcast] failed', e); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   COUNTER → NOTIFICATION BRIDGE
+   Compares previous counter values with current ones.
+   Only fires notifications when a counter INCREASES or crosses
+   a danger threshold — never on decreases, never on minor churn.
+   ═══════════════════════════════════════════════════════════ */
+function _compareCountersAndNotify() {
+  const prev = window.__vioraCounterLastSeen || {};
+  const next = {};
+  const toNotify = [];
+
+  for (const key of Object.keys(state._counterEls || {})) {
+    let raw;
+    try { raw = computeCounterValue(key); } catch (_) { raw = 0; }
+
+    let value = 0, danger = false;
+    if (raw == null) value = 0;
+    else if (typeof raw === 'object') { value = raw.value || 0; danger = !!raw.danger; }
+    else value = Number(raw) || 0;
+
+    next[key] = { value, danger };
+
+    if (!(key in prev)) continue; // first run — don't fire for initial baseline
+
+    const pv = prev[key].value;
+    const pd = prev[key].danger;
+
+    const increased   = value > pv;
+    const wentDanger  = !pd && danger;
+
+    if (increased || wentDanger) {
+      toNotify.push({
+        key,
+        delta:    value - pv,
+        value,
+        danger,
+        dangerFlip: wentDanger
+      });
+    }
+  }
+
+  window.__vioraCounterLastSeen = next;
+
+  if (!toNotify.length) return;
+  if (Date.now() - (window.__vioraSessionStart || 0) < 5000) return; // ignore boot noise
+
+  // Debounce: queue and flush after 1.2s so a burst becomes one notification
+  window.__vioraCounterNotifyQueue = window.__vioraCounterNotifyQueue || [];
+  window.__vioraCounterNotifyQueue.push(...toNotify);
+
+  if (window.__vioraCounterNotifyTimer) return;
+  window.__vioraCounterNotifyTimer = setTimeout(_flushCounterNotifications, 1200);
+}
+
+async function _flushCounterNotifications() {
+  window.__vioraCounterNotifyTimer = null;
+  const queue = (window.__vioraCounterNotifyQueue || []).splice(0);
+  if (!queue.length) return;
+
+  if (queue.length === 1) {
+    const q = queue[0];
+    const meta = _counterMeta(q.key);
+    const body = q.dangerFlip
+      ? `${meta.label} now needs attention${q.delta > 0 ? ` (${q.delta} new)` : ''}`
+      : `${q.delta} new item${q.delta === 1 ? '' : 's'} — ${meta.label}`;
+
+    try {
+      await window.vioraNotify({
+        title: meta.title,
+        body,
+        icon: meta.icon,
+        level: q.danger ? 'warning' : 'info',
+        url: '/main.html#' + (meta.tab || 'dashboard'),
+        source: 'sidebar-counter:' + q.key
+      });
+    } catch (e) { console.warn('[counter-notify] single failed', e); }
+    return;
+  }
+
+  // Group multiple counter changes into one notification
+  const lines = queue.map(q => {
+    const meta = _counterMeta(q.key);
+    return `• ${meta.label}: +${q.delta}${q.dangerFlip ? ' ⚠' : ''}`;
+  }).join('\n');
+
+  const anyDanger = queue.some(q => q.danger);
+
+  try {
+    await window.vioraNotify({
+      title: `${queue.length} counters updated`,
+      body: lines,
+      icon: 'fa-bell',
+      level: anyDanger ? 'warning' : 'info',
+      url: '/main.html#dashboard',
+      source: 'sidebar-counters-batch'
+    });
+  } catch (e) { console.warn('[counter-notify] batch failed', e); }
+}
+
+function _counterMeta(key) {
+  // Look up the sidebar link that owns this counter
+  const el = document.querySelector(`.sidebar nav a[data-counter="${key}"]`);
+  const label = el
+    ? el.textContent.trim().replace(/\s+/g, ' ').replace(/\d+$/, '').trim() || key
+    : key;
+
+  const icon = (() => {
+    const cn = el?.querySelector('i')?.className || '';
+    if (cn.includes('invoice')) return 'fa-file-invoice';
+    if (cn.includes('mpesa') || cn.includes('mobile-screen')) return 'fa-mobile-screen-button';
+    if (cn.includes('ticket') || cn.includes('headset')) return 'fa-headset';
+    if (cn.includes('lead')) return 'fa-user-plus';
+    if (cn.includes('task') || cn.includes('calendar')) return 'fa-calendar-check';
+    if (cn.includes('box')) return 'fa-boxes-stacked';
+    if (cn.includes('portal')) return 'fa-user-clock';
+    if (cn.includes('order')) return 'fa-receipt';
+    if (cn.includes('deal') || cn.includes('handshake')) return 'fa-handshake';
+    if (cn.includes('project') || cn.includes('folder')) return 'fa-folder';
+    if (cn.includes('user')) return 'fa-user';
+    return 'fa-bell';
+  })();
+
+  return {
+    label,
+    title: 'VIORA · ' + label,
+    icon,
+    tab: el?.dataset.tab || 'dashboard'
+  };
 }
 
 function maybeBroadcastCounterChanges() {
