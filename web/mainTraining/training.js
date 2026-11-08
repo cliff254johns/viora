@@ -1,14 +1,16 @@
-// File: mainTraining/training.js
-// FIXES: Renamed TRAINING constant → SCHOLAR (no collision with main/training.js).
-// All renderers array-safe. Auth gate reads training/accessRequests/{uid} at SCHOLAR path.
-// Named Firebase app ("training") keeps learner auth isolated from admin.
+// mainTraining/training.js — LEARNER portal
+// Isolated auth session: named app "training".
+// Admin (default app) and trainer ("trainer" app) sessions are untouched by
+// anything this file does. Sign-in/sign-up here does NOT log out anyone else.
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import {
   getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
   onAuthStateChanged, signOut, sendPasswordResetEmail
 } from "firebase/auth";
-import { getDatabase, ref, set, get, update, remove, onValue, off } from "firebase/database";
+import {
+  getDatabase, ref, set, get, update, remove, onValue, off, forceLongPolling
+} from "firebase/database";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC9gCBt-xR8t9n6rTGNvDZ5usUGiW-Dqxc",
@@ -21,12 +23,28 @@ const firebaseConfig = {
   measurementId: "G-G0NB6JGQVF"
 };
 
+/* ═══════════════════════════════════════════════════════════════
+   ISOLATED AUTH SESSION
+   The learner portal uses its own named Firebase app so that signing
+   in or enrolling here never touches the admin or trainer sessions.
+   localStorage key: firebase:authUser:<apiKey>:training
+   (admin uses :[DEFAULT], trainer uses :trainer)
+   ═══════════════════════════════════════════════════════════════ */
 const APP_NAME = "training";
+
+let app;
 const existing = getApps().find(a => a.name === APP_NAME);
-const app = existing ? existing : initializeApp(firebaseConfig, APP_NAME);
+if (existing) {
+  app = existing;
+} else {
+  app = initializeApp(firebaseConfig, APP_NAME);
+}
+
 const auth = getAuth(app);
 const db = getDatabase(app);
+forceLongPolling(db);
 
+/* Base paths */
 const SCHOLAR      = "viora_data/orgs/viora/training";
 const USERS        = "viora_data/orgs/viora/users";
 const PORTAL_USERS = "viora_data/orgs/viora/portalUsers";
