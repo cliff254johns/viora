@@ -211,7 +211,16 @@ import {
   renderSubscriptionPlans
 } from './main/main-subscription-plans.js';
 
-/* ── Training ── */
+/* ── Training admin bridge ── */
+import {
+  initTrainingAdminBridge,
+  subscribeTrainingRequests,
+  renderTrainingRequests,
+  approveTrainingRequest,
+  rejectTrainingRequest,
+  reopenTrainingRequest,
+  deleteTrainingRequest,
+} from './main/training-admin-bridge.js';
 
 
 /* ── PP + Market Content ── */
@@ -422,6 +431,10 @@ const TRACK_COLLECTIONS = new Set([
 ]);
 
 const TRACK_P = (path) => `viora_data/orgs/viora/track/${String(path || '').replace(/^\/+|\/+$/g, '')}`;
+
+/* Scholar training node helper — mirrors the P()/TRACK_P() pattern.
+   Used by the inline training-requests admin bridge in main.html. */
+const TP_PATH = (path) => `${ROOT}/${ORG}/training/${String(path || '').replace(/^\/+|\/+$/g, '')}`;
 
 function P(path) {
   const clean = String(path || '').replace(/^\/+|\/+$/g, '');
@@ -3572,8 +3585,11 @@ try {
           case 'fin-expenses':            renderExpenses(); break;
           case 'fin-payroll':             renderPayroll(); break;
           case 'ledger':                  renderLedger(); break;
-
-         // ── Training moved to scholar-admin.html ──
+            
+          case 'training-requests':
+            try { renderTrainingRequests(); } catch (e) { console.warn('[render] training-requests', e); }
+            break;
+            
 case 'training-overview':
 case 'training-quizzes':
 case 'training-certificates':
@@ -3715,6 +3731,30 @@ case 'training-progress':
         if (err && err.code !== 'PERMISSION_DENIED') console.warn('[portalUsers] listener failed', err);
       });
 
+
+            // ★ Scholar training approvals inline (Option C)
+      try {
+        initTrainingAdminBridge({
+          state, db, ref, get, update, remove, onValue,
+          escapeHtml, timeAgo, toast, logActivity,
+        });
+        subscribeTrainingRequests((arr) => {
+          // Update sidebar badge
+          const pending = arr.filter(r => (r.status || 'pending') === 'pending').length;
+          const badge = document.getElementById('trainingReqNavBadge');
+          if (badge) {
+            badge.textContent = pending;
+            badge.style.display = pending > 0 ? 'inline-block' : 'none';
+          }
+          // If user is currently on the training-requests tab, redraw
+          if (state.currentTab === 'training-requests') {
+            try { renderTrainingRequests(); } catch (e) { console.warn(e); }
+          }
+        });
+        console.info('[training-bridge] ✅ main.html subscribed to training/accessRequests');
+      } catch (e) {
+        console.error('[training-bridge] init failed:', e);
+      }
          console.info('[training-bridge] subscribed to training/* paths');
     }
 
@@ -3915,11 +3955,13 @@ case 'training-progress':
       console.error('[viora] buildVioraHandlers:', e);
     }
 
-    /* ═══════════════════════════════════════════════════════════
-       ★★★ FIX #1 — APPLY _handlers TO Viora ★★★
-       Without this, Viora.navigate is never installed and every
-       sidebar click silently does nothing.
-       ═══════════════════════════════════════════════════════════ */
+        // ★ Attach training handlers so inline onclick works in main.html
+        Viora.approveTrainingRequest = approveTrainingRequest;
+        Viora.rejectTrainingRequest  = rejectTrainingRequest;
+        Viora.reopenTrainingRequest  = reopenTrainingRequest;
+        Viora.deleteTrainingRequest  = deleteTrainingRequest;
+        console.info('[training-bridge] ✅ Viora.approveTrainingRequest installed');
+    
     if (_handlers) {
       try {
         Object.assign(Viora, _handlers);
