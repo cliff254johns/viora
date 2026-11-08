@@ -1,8 +1,15 @@
 // File: scholar-admin-boot.js
-// FIX: import set/update/remove/push from firebase/database — they were missing,
-// causing "set is not defined" when building the D object passed to initTraining().
-// FIXES (retained): auth gate checks org users path; initTraining before
-// bindTrainingEvents; late re-bind after modals parse; array-coerced subscribers.
+// FIXES:
+//  1. Import set/update/remove/push from firebase/database — they were missing,
+//     causing "set is not defined" when building the D object passed to initTraining().
+//  2. Auth gate reads ALL THREE possible profile paths:
+//        viora_data/users/{uid}
+//        viora_data/orgs/viora/users/{uid}
+//        viora_data/orgs/viora/training/users/{uid}
+//     and accepts role | type | accessLevel === "admin" | "exec".
+//     Logs every path it checked to the console so you can see what's in the DB.
+//  3. initTraining() runs before bindTrainingEvents(); late re-bind after modals parse.
+//  4. subscribeTraining() coerces arrays safely; every renderer call is wrapped.
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
@@ -273,7 +280,7 @@ function subscribeTraining() {
     });
   }
 
-  onValue(ref(db, `${ROOT}/orgs/viora/users`), (snap) => {
+  onValue(ref(db, `${ROOT}/${ORG}/users`), (snap) => {
     state.data.users = normalize(snap.exists() ? snap.val() : {}, true);
     try { renderTrainingUsers(); renderTrainingProgress(); } catch (e) {}
   }, (err) => {
@@ -324,7 +331,11 @@ function bootAdmin() {
     const next = cur === "dark" ? "light" : "dark";
     document.documentElement.setAttribute("data-theme", next);
     try { localStorage.setItem("viora_theme", next); } catch (e) {}
-    $("saThemeBtn").querySelector("i").className = next === "dark" ? "fa-solid fa-moon" : "fa-solid fa-sun";
+    const btn = $("saThemeBtn");
+    if (btn) {
+      const icon = btn.querySelector("i");
+      if (icon) icon.className = next === "dark" ? "fa-solid fa-moon" : "fa-solid fa-sun";
+    }
   });
   bind("saMobileToggle", "click", () => $("saSidebar")?.classList.toggle("open"));
   bind("saSidebarOverlay", "click", () => $("saSidebar")?.classList.remove("open"));
@@ -340,28 +351,69 @@ function bootAdmin() {
   }, 300);
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   AUTH GATE — reads all three possible profile paths, accepts
+   role | type | accessLevel === "admin" | "exec". Logs what it found.
+   ═══════════════════════════════════════════════════════════════ */
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     showSplash("deny", "Not signed in", "Scholar Admin requires an active VIORA session.");
     return;
   }
-  try {
-    // Correct path per rules: viora_data/orgs/viora/users/{uid}
-    const snap = await get(ref(db, `${ROOT}/${ORG}/users/${user.uid}`));
-    const profile = snap.exists() ? snap.val() : null;
-    const role = profile?.role || null;
-    if (role !== "admin" && role !== "exec") {
-      showSplash("deny", "Access denied", `Your role (${role || "unknown"}) does not have Scholar admin access.`);
-      return;
+
+  const candidatePaths = [
+    `${ROOT}/users/${user.uid}`,
+    `${ROOT}/${ORG}/users/${user.uid}`,
+    `${ROOT}/${ORG}/training/users/${user.uid}`
+  ];
+
+  let chosenProfile = null;
+  let chosenPath = null;
+
+  for (const path of candidatePaths) {
+    try {
+      const snap = await get(ref(db, path));
+      if (snap.exists()) {
+        const val = snap.val();
+        console.info(`[sa/auth] ${path} →`, val);
+        const rawRole = val?.role ?? val?.type ?? val?.accessLevel ?? null;
+        const normRole = typeof rawRole === "string" ? rawRole.toLowerCase().trim() : null;
+        const isElevated = normRole === "admin" || normRole === "exec";
+        if (!chosenProfile || isElevated) {
+          chosenProfile = val;
+          chosenPath = path;
+          if (isElevated) break;
+        }
+      } else {
+        console.info(`[sa/auth] ${path} → (missing)`);
+      }
+    } catch (e) {
+      console.warn(`[sa/auth] ${path} read failed:`, e.message);
     }
-    state.operator = { uid: user.uid, ...profile };
-    if ($("saWhoami")) $("saWhoami").textContent = profile.name || user.email || "Admin";
-    showSplash("ok", "Access granted", `Welcome, ${profile.name || user.email}.`);
-    setTimeout(() => { hideSplash(); bootAdmin(); }, 400);
-  } catch (e) {
-    console.error("[sa] auth check failed", e);
-    showSplash("deny", "Verification failed", e.message || "Could not verify permissions.");
   }
+
+  if (!chosenProfile) {
+    console.error("[sa/auth] No profile found in any of:", candidatePaths);
+    showSplash("deny", "Profile not found",
+      `No record for UID ${user.uid.slice(0,8)}… in any users node. Create one at viora_data/orgs/viora/users/${user.uid} with role "exec".`);
+    return;
+  }
+
+  const rawRole = chosenProfile.role ?? chosenProfile.type ?? chosenProfile.accessLevel ?? null;
+  const role = typeof rawRole === "string" ? rawRole.toLowerCase().trim() : null;
+
+  if (role !== "admin" && role !== "exec") {
+    console.error(`[sa/auth] Role from ${chosenPath} = "${rawRole}" — not admin/exec. Full profile:`, chosenProfile);
+    showSplash("deny", "Access denied",
+      `Your role ("${rawRole || "unknown"}") at ${chosenPath.replace(ROOT + "/", "")} does not have Scholar admin access.`);
+    return;
+  }
+
+  console.info(`[sa/auth] ✓ Granted via ${chosenPath} (role="${role}")`);
+  state.operator = { uid: user.uid, ...chosenProfile };
+  if ($("saWhoami")) $("saWhoami").textContent = chosenProfile.name || user.email || "Admin";
+  showSplash("ok", "Access granted", `Welcome, ${chosenProfile.name || user.email}.`);
+  setTimeout(() => { hideSplash(); bootAdmin(); }, 400);
 });
 
 window.VioraTraining = {
