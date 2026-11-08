@@ -1,7 +1,7 @@
 // File: scholar-admin-boot.js
 // VIORA Scholar Admin Console bootstrap.
-// Adds: Finance tab (payments + unlock requests), unlock actions,
-// approve/reject/delete per row.
+// Adds Finance tab with unlock-request approval, payment recording,
+// course access revocation, and delete actions.
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
@@ -40,6 +40,7 @@ const db = getDatabase(app); forceLongPolling(db);
 const auth = getAuth(app);
 
 let _adminBooted = false;
+let _pendingUnlock = null;   // { uid, courseId, requestId, learnerName, courseTitle, price }
 
 const ROOT = "viora_data";
 const ORG  = "orgs/viora";
@@ -78,7 +79,6 @@ function fmtDate(iso) {
   try { return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "Africa/Nairobi" }); }
   catch { return "—"; }
 }
-
 function toast(msg, type) {
   const host = $("toastContainer");
   if (!host) { console.log("[toast]", type, msg); return; }
@@ -88,13 +88,15 @@ function toast(msg, type) {
   host.appendChild(el);
   setTimeout(() => el.remove(), 4500);
 }
-
 function openModal(id) { const el = $(id); if (el) { el.classList.add("active"); el.style.display = "flex"; document.body.style.overflow = "hidden"; } }
 function closeModal(id) { const el = $(id); if (el) { el.classList.remove("active"); el.style.display = "none"; document.body.style.overflow = ""; } }
+
 document.addEventListener("click", (e) => {
   const closer = e.target.closest("[data-close]");
   if (closer) { closeModal(closer.dataset.close); return; }
-  if (e.target.classList && e.target.classList.contains("modal-overlay") && e.target.classList.contains("active")) closeModal(e.target.id);
+  if (e.target.classList && e.target.classList.contains("modal-overlay") && e.target.classList.contains("active")) {
+    closeModal(e.target.id);
+  }
 });
 
 const _charts = {};
@@ -143,11 +145,47 @@ try { bindTrainingEvents(); }
 catch (e) { console.warn("[sa] initial bindTrainingEvents failed:", e); }
 
 /* ═══════════════════════════════════════════════════════════════
-   FINANCE HANDLERS
+   FINANCE — UNLOCK + PAYMENT + REVOKE
    ═══════════════════════════════════════════════════════════════ */
-async function unlockCourseForLearner(uidKey, courseId, requestId) {
+
+/* Opens the confirm-unlock modal, storing context in _pendingUnlock */
+function openUnlockModal(uidKey, courseId, requestId) {
+  const req = state.data.trainingUnlockRequests?.[requestId] || {};
+  const course = state.data.trainingCourses?.[courseId] ||
+                 Object.values(state.data.trainingCourses || {}).find(c => c && c.id === courseId) || {};
+
+  _pendingUnlock = {
+    uid: uidKey,
+    courseId,
+    requestId,
+    learnerName: req.userName || "—",
+    learnerEmail: req.userEmail || "—",
+    courseTitle: req.courseTitle || course.title || courseId,
+    price: Number(req.coursePrice || course.priceKES || 0),
+    tier: req.courseTier || course.accessTier || "individual"
+  };
+
+  const ctx = $("finUnlockContext");
+  if (ctx) {
+    ctx.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div><span style="color:var(--text-secondary);font-size:.75rem;">Learner</span><div style="font-weight:600;">${escapeHtml(_pendingUnlock.learnerName)}</div></div>
+        <div><span style="color:var(--text-secondary);font-size:.75rem;">Email</span><div style="font-weight:600;font-size:.8rem;">${escapeHtml(_pendingUnlock.learnerEmail)}</div></div>
+        <div><span style="color:var(--text-secondary);font-size:.75rem;">Course</span><div style="font-weight:600;">${escapeHtml(_pendingUnlock.courseTitle)}</div></div>
+        <div><span style="color:var(--text-secondary);font-size:.75rem;">Price</span><div style="font-weight:700;color:var(--accent-gold);">${_pendingUnlock.price > 0 ? fmtKES(_pendingUnlock.price) : "Free"}</div></div>
+      </div>`;
+  }
+  if ($("finUnlockRecordPayment")) $("finUnlockRecordPayment").checked = _pendingUnlock.price > 0;
+  openModal("finUnlockModal");
+}
+
+/* Performs the unlock. Optionally records payment first. */
+async function doUnlock(recordPayment) {
+  if (!_pendingUnlock) return;
+  const { uid: uidKey, courseId, requestId, learnerName, learnerEmail, courseTitle, price } = _pendingUnlock;
+
   try {
-    /* 1. Add courseId to learner's individualCourses[] */
+    /* Add courseId to learner's individualCourses */
     const userSnap = await get(ref(db, `${ROOT}/${ORG}/training/users/${uidKey}`));
     const existing = userSnap.exists() ? userSnap.val() : {};
     const list = Array.isArray(existing.individualCourses) ? existing.individualCourses : [];
@@ -158,23 +196,95 @@ async function unlockCourseForLearner(uidKey, courseId, requestId) {
       updatedAt: nowIso()
     });
 
-    /* 2. Mark the unlock request approved */
+    /* Mark request approved */
     if (requestId) {
       await update(ref(db, `${ROOT}/${ORG}/training/unlockRequests/${requestId}`), {
         status: "approved",
         approvedAt: nowIso(),
-        approvedBy: state.operator?.name || "admin"
+        approvedBy: state.operator?.name || "admin",
+        paymentRecorded: !!recordPayment
       });
     }
 
-    toast("Course unlocked for learner.", "success");
-    renderFinancePane();
+    toast("Course unlocked.", "success");
+
+    if (recordPayment) {
+      _pendingUnlock.paymentAmount = price;
+      closeModal("finUnlockModal");
+      openPaymentModalForContext();
+    } else {
+      closeModal("finUnlockModal");
+      _pendingUnlock = null;
+      renderFinancePane();
+    }
   } catch (e) {
     console.error("[sa/unlock] failed:", e);
     toast("Unlock failed: " + e.message, "error");
   }
 }
 
+/* Opens the Record Payment modal, pre-filled from _pendingUnlock */
+function openPaymentModalForContext() {
+  if (!_pendingUnlock) return;
+  const ctx = $("finPayContext");
+  if (ctx) {
+    ctx.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div><span style="color:var(--text-secondary);font-size:.75rem;">Learner</span><div style="font-weight:600;">${escapeHtml(_pendingUnlock.learnerName)}</div></div>
+        <div><span style="color:var(--text-secondary);font-size:.75rem;">Email</span><div style="font-weight:600;font-size:.8rem;">${escapeHtml(_pendingUnlock.learnerEmail)}</div></div>
+        <div style="grid-column:1/-1;"><span style="color:var(--text-secondary);font-size:.75rem;">Course</span><div style="font-weight:600;">${escapeHtml(_pendingUnlock.courseTitle)}</div></div>
+      </div>`;
+  }
+  if ($("finPayAmount")) $("finPayAmount").value = _pendingUnlock.paymentAmount || _pendingUnlock.price || 0;
+  if ($("finPayMethod")) $("finPayMethod").value = "mpesa";
+  if ($("finPayReference")) $("finPayReference").value = "";
+  if ($("finPayNotes")) $("finPayNotes").value = "";
+  openModal("finPaymentModal");
+}
+
+/* Records a payment from the current modal context */
+async function savePaymentRecord() {
+  if (!_pendingUnlock) return;
+  const amount = Number($("finPayAmount")?.value || 0);
+  const method = $("finPayMethod")?.value || "other";
+  const reference = $("finPayReference")?.value.trim() || "";
+  const notes = $("finPayNotes")?.value.trim() || "";
+
+  if (!Number.isFinite(amount) || amount < 0) {
+    toast("Enter a valid amount.", "error");
+    return;
+  }
+
+  const paymentId = "pay-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const payload = {
+    id: paymentId,
+    uid: _pendingUnlock.uid,
+    userName: _pendingUnlock.learnerName,
+    userEmail: _pendingUnlock.learnerEmail,
+    courseId: _pendingUnlock.courseId,
+    courseTitle: _pendingUnlock.courseTitle,
+    amountKES: amount,
+    method,
+    reference,
+    notes,
+    status: "paid",
+    recordedAt: nowIso(),
+    recordedBy: state.operator?.name || "admin"
+  };
+
+  try {
+    await set(ref(db, `${ROOT}/${ORG}/training/payments/${paymentId}`), payload);
+    toast("Payment recorded.", "success");
+    closeModal("finPaymentModal");
+    _pendingUnlock = null;
+    renderFinancePane();
+  } catch (e) {
+    console.error("[sa/payment] failed:", e);
+    toast("Payment save failed: " + e.message, "error");
+  }
+}
+
+/* Revoke course access */
 async function revokeCourseForLearner(uidKey, courseId) {
   if (!confirm("Revoke access to this course for the learner?")) return;
   try {
@@ -187,9 +297,7 @@ async function revokeCourseForLearner(uidKey, courseId) {
     });
     toast("Access revoked.", "info");
     renderFinancePane();
-  } catch (e) {
-    toast("Revoke failed: " + e.message, "error");
-  }
+  } catch (e) { toast("Revoke failed: " + e.message, "error"); }
 }
 
 async function rejectUnlockRequest(requestId) {
@@ -215,7 +323,7 @@ async function deleteUnlockRequest(requestId) {
 }
 
 async function deletePayment(paymentId) {
-  if (!confirm("Delete this payment record?")) return;
+  if (!confirm("Delete this payment record? The course stays unlocked for the learner.")) return;
   try {
     await remove(ref(db, `${ROOT}/${ORG}/training/payments/${paymentId}`));
     toast("Payment deleted.", "success");
@@ -223,28 +331,7 @@ async function deletePayment(paymentId) {
   } catch (e) { toast("Delete failed: " + e.message, "error"); }
 }
 
-async function recordManualPayment(uidKey, courseId, amount, method) {
-  const paymentId = "pay-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  const payment = {
-    id: paymentId,
-    uid: uidKey,
-    courseId,
-    amountKES: amount,
-    method: method || "manual",
-    status: "paid",
-    recordedAt: nowIso(),
-    recordedBy: state.operator?.name || "admin"
-  };
-  try {
-    await set(ref(db, `${ROOT}/${ORG}/training/payments/${paymentId}`), payment);
-    toast("Payment recorded.", "success");
-    renderFinancePane();
-  } catch (e) { toast("Record failed: " + e.message, "error"); }
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   DELEGATED CLICK HANDLER (finance actions)
-   ═══════════════════════════════════════════════════════════════ */
+/* Delegated click handler for finance rows */
 document.addEventListener("click", (e) => {
   const btn = e.target.closest("[data-fin-action]");
   if (!btn) return;
@@ -255,15 +342,28 @@ document.addEventListener("click", (e) => {
   const paymentId = btn.dataset.paymentId;
 
   e.preventDefault(); e.stopPropagation();
-  if (action === "unlock")      unlockCourseForLearner(uidKey, courseId, requestId);
-  else if (action === "revoke") revokeCourseForLearner(uidKey, courseId);
-  else if (action === "reject") rejectUnlockRequest(requestId);
+  if (action === "unlock")            openUnlockModal(uidKey, courseId, requestId);
+  else if (action === "revoke")       revokeCourseForLearner(uidKey, courseId);
+  else if (action === "reject")       rejectUnlockRequest(requestId);
   else if (action === "delete-request") deleteUnlockRequest(requestId);
   else if (action === "delete-payment") deletePayment(paymentId);
 });
 
+/* Modal button handlers */
+document.addEventListener("click", (e) => {
+  if (e.target.closest("#finUnlockConfirmBtn")) {
+    e.preventDefault();
+    const record = !!$("finUnlockRecordPayment")?.checked;
+    doUnlock(record);
+  }
+  if (e.target.closest("#finPayConfirmBtn")) {
+    e.preventDefault();
+    savePaymentRecord();
+  }
+});
+
 /* ═══════════════════════════════════════════════════════════════
-   RENDER: FINANCE PANE
+   RENDER FINANCE PANE
    ═══════════════════════════════════════════════════════════════ */
 function renderFinancePane() {
   try {
@@ -289,6 +389,7 @@ function renderFinancePane() {
     const badge = $("saFinBadge");
     if (badge) { badge.textContent = pendingReqs; badge.style.display = pendingReqs > 0 ? "inline-block" : "none"; }
 
+    /* Unlock requests table */
     const urTb = $("finUnlockRequestsBody");
     if (urTb) {
       if (!requests.length) {
@@ -314,11 +415,12 @@ function renderFinancePane() {
       }
     }
 
+    /* Payments table */
     const pTb = $("finPaymentsBody");
     if (pTb) {
       const sorted = payments.sort((a, b) => (b.recordedAt || "").localeCompare(a.recordedAt || ""));
       if (!sorted.length) {
-        pTb.innerHTML = `<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--text-secondary);">No payments recorded yet.</td></tr>`;
+        pTb.innerHTML = `<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--text-secondary);">No payments recorded yet. Approve an unlock request and record payment to populate this table.</td></tr>`;
       } else {
         pTb.innerHTML = sorted.map(p => `
           <tr>
@@ -326,7 +428,7 @@ function renderFinancePane() {
             <td><strong>${escapeHtml(p.userName || p.uid || "—")}</strong><br><small style="color:var(--text-secondary);">${escapeHtml(p.userEmail || "")}</small></td>
             <td>${escapeHtml(p.courseTitle || p.courseId || "—")}</td>
             <td><strong style="color:var(--accent-green);">${fmtKES(p.amountKES)}</strong></td>
-            <td><span class="badge badge-active">${escapeHtml(p.method || "manual")}</span></td>
+            <td><span class="badge badge-active">${escapeHtml(p.method || "manual")}</span>${p.reference ? `<br><small style="color:var(--text-secondary);font-family:monospace;">${escapeHtml(p.reference)}</small>` : ''}</td>
             <td><span class="badge badge-paid">paid</span></td>
             <td style="text-align:right;white-space:nowrap;">
               <button class="btn btn-outline btn-xs" data-fin-action="revoke" data-uid="${escapeHtml(p.uid)}" data-course-id="${escapeHtml(p.courseId)}" title="Revoke course access"><i class="fa-solid fa-lock"></i></button>
@@ -342,7 +444,7 @@ function renderFinancePane() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   APPROVE / REJECT TRAINING ACCESS REQUESTS (existing)
+   TRAINING REQUESTS — APPROVE / REJECT / REOPEN / DELETE
    ═══════════════════════════════════════════════════════════════ */
 async function approveRequest(uidKey) {
   if (!uidKey) return;
@@ -357,25 +459,17 @@ async function approveRequest(uidKey) {
         role, trainingStatus: "approved", trainingApprovedAt: nowIso(), pendingApproval: false
       });
     } catch (e) {}
-    /* Also ensure training/users record with free tier */
     try {
       const us = await get(ref(db, `${ROOT}/${ORG}/training/users/${uidKey}`));
       if (!us.exists()) {
         await set(ref(db, `${ROOT}/${ORG}/training/users/${uidKey}`), {
-          uid: uidKey,
-          name: req?.name || "",
-          email: req?.email || "",
-          role,
-          tiers: ["free"],
-          individualCourses: [],
-          createdAt: nowIso()
+          uid: uidKey, name: req?.name || "", email: req?.email || "",
+          role, tiers: ["free"], individualCourses: [], createdAt: nowIso()
         });
       }
     } catch (e) {}
     toast(`Approved ${role}.`, "success");
-    await _fetchRequestsNow();
-    renderRequestsPane();
-    renderCommandCenter();
+    await _fetchRequestsNow(); renderRequestsPane(); renderCommandCenter();
   } catch (e) { toast("Approve failed: " + e.message, "error"); }
 }
 async function rejectRequest(uidKey) {
@@ -405,9 +499,6 @@ async function deleteRequest(uidKey) {
   } catch (e) { toast("Delete failed: " + e.message, "error"); }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   DELEGATED CLICK (access request actions)
-   ═══════════════════════════════════════════════════════════════ */
 document.addEventListener("click", (e) => {
   const btn = e.target.closest("[data-action][data-uid]");
   if (!btn) return;
@@ -422,6 +513,9 @@ document.addEventListener("click", (e) => {
   else if (action === "goto-requests") switchTab("requests");
 });
 
+/* ═══════════════════════════════════════════════════════════════
+   GLOBAL API
+   ═══════════════════════════════════════════════════════════════ */
 const VioraAPI = {
   openCourseEditor, openChecklistEditor, openResourceEditor, openCertTemplateEditor,
   openManualAwardModal,
@@ -443,8 +537,8 @@ const VioraAPI = {
   rejectTrainingRequest:   (uid) => rejectRequest(uid),
   reopenTrainingRequest:   (uid) => reopenRequest(uid),
   deleteTrainingRequest:   (uid) => deleteRequest(uid),
-  unlockCourseForLearner, revokeCourseForLearner,
-  rejectUnlockRequest, deleteUnlockRequest, deletePayment, recordManualPayment,
+  openUnlockModal, revokeCourseForLearner, rejectUnlockRequest,
+  deleteUnlockRequest, deletePayment, openPaymentModalForContext, savePaymentRecord,
   openUserTraining:        (uid) => TrainingVioraAPI.openUserTraining(uid),
   enrollUserInCourse:      (uid, cid) => TrainingVioraAPI.enrollUserInCourse(uid, cid),
   unenrollUser:            (uid, cid) => TrainingVioraAPI.unenrollUser(uid, cid),
@@ -485,9 +579,7 @@ window.saveResource = saveResource;
 window.deleteResource = deleteResource;
 window.openResourceFile = openResourceFile;
 
-/* ═══════════════════════════════════════════════════════════════
-   SPLASH
-   ═══════════════════════════════════════════════════════════════ */
+/* SPLASH */
 function showSplash(kind, title, subtitle) {
   const splash = $("saSplash");
   if (!splash) return;
@@ -528,6 +620,9 @@ function classifyUserRole(u) {
   return "learner";
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   COMMAND CENTER
+   ═══════════════════════════════════════════════════════════════ */
 function renderCommandCenter() {
   try {
     const data = state.data;
@@ -550,7 +645,6 @@ function renderCommandCenter() {
       seen.add(p.uid); total++; clients++;
     }
 
-    /* Pending requests notification */
     const pendingReqs = getRequestsArray().filter(r => (r.status || "pending") === "pending");
     const notifHost = $("cmdRequestsNotif");
     if (notifHost) {
@@ -600,10 +694,9 @@ async function _fetchRequestsNow() {
     const snap = await get(ref(db, P("training/accessRequests")));
     if (snap.exists()) {
       const val = snap.val();
-      const arr = Object.entries(val || {}).map(([uidKey, v]) => ({ uid: uidKey, ...(v || {}), id: uidKey }));
-      state.data.trainingAccessRequests = arr;
+      state.data.trainingAccessRequests = Object.entries(val || {}).map(([uidKey, v]) => ({ uid: uidKey, ...(v || {}), id: uidKey }));
       updateBadges();
-      return arr;
+      return state.data.trainingAccessRequests;
     }
     state.data.trainingAccessRequests = [];
     return [];
@@ -615,11 +708,6 @@ async function _fetchRequestsNow() {
 
 function renderRequestsPane() {
   try {
-    const prevLen = getRequestsArray().length;
-    _fetchRequestsNow().then((fresh) => {
-      if (fresh.length > prevLen) setTimeout(() => renderRequestsPane(), 0);
-    });
-
     const all = getRequestsArray();
     const statusFilter = ($("trainingRequestsFilter")?.value || "all").toLowerCase();
     const roleFilter = ($("trainingRequestsRoleFilter")?.value || "all").toLowerCase();
