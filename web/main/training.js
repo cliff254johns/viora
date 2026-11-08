@@ -1,8 +1,18 @@
-/* ═══════════════════════════════════════════════════════════════
-   VIORA — TRAINING SUBSYSTEM  (v8.0 — full, hardened)
-   Handles: courses, checklists, resources, enrollments, progress,
-            quizzes, certificates, certificate templates.
-   ═══════════════════════════════════════════════════════════════ */
+// File: main/training.js
+// VIORA — TRAINING SUBSYSTEM (v8.1 — full, hardened)
+// All 12 fixes from the patch list applied inline:
+//  - indexBy null-safe
+//  - buildUserStats coerces with toArr
+//  - renderTrainingOverview coerces certs
+//  - renderTrainingCertificates uses `all` not undeclared `certs`
+//  - Modal setters null-guarded
+//  - Save buttons null-guarded
+//  - viewQuizSubmission null-guarded
+//  - D.P() paths no longer double-prefix training/
+//  - openUserTraining null-guarded
+//  - renderCertTemplatesGrid confirmed safe
+//  - trainingUsersBodyProgress id used in Progress tab
+//  - awardTrainingCertificate writes to training/certificates/ (correct)
 
 let D = {
   $: null,
@@ -74,9 +84,9 @@ function slugId(raw, fallbackPrefix) {
   return v || (fallbackPrefix + '-' + D.uid().slice(0, 6));
 }
 
+/* FIX 1: indexBy is null-safe and coerces objects to iterable arrays */
 function indexBy(arr, keyFn) {
   const m = new Map();
-  // Safely handle objects, arrays, nulls, and undefined
   if (!arr) return m;
   const list = Array.isArray(arr) ? arr : Object.values(arr);
   for (const item of list) {
@@ -95,6 +105,13 @@ function groupBy(arr, keyFn) {
   return m;
 }
 
+/* Coerce any value into an array — safe for null/undefined/object/array */
+function toArr(v) {
+  if (!v) return [];
+  if (Array.isArray(v)) return v;
+  return Object.values(v);
+}
+
 /* ═══════════════════════════════════════════════════════════════
    MODULE DRAFT STATE
    ═══════════════════════════════════════════════════════════════ */
@@ -108,25 +125,25 @@ let _ptEditorBound = false;
 
 /* ═══════════════════════════════════════════════════════════════
    SHARED USER STATS
+   FIX 2: coerces users, portalUsers, courses, certs with toArr
    ═══════════════════════════════════════════════════════════════ */
 function buildUserStats(state) {
- const toArr = (v) => Array.isArray(v) ? v : Object.values(v || {});
-const users       = toArr(state.data.users);
-const portalUsers = toArr(state.data.portalUsers);
-const courses     = toArr(state.data.trainingCourses);
-const enrollments = state.data.trainingEnrollments || {};
-const progress    = state.data.trainingProgress || {};
-const certs       = toArr(state.data.trainingCertificates);
+  const users       = toArr(state.data.users);
+  const portalUsers = toArr(state.data.portalUsers);
+  const courses     = toArr(state.data.trainingCourses);
+  const enrollments = state.data.trainingEnrollments || {};
+  const progress    = state.data.trainingProgress || {};
+  const certs       = toArr(state.data.trainingCertificates);
 
   const allUsers = [];
   const seen = new Set();
   for (const u of users) {
-    if (seen.has(u.uid)) continue;
+    if (!u || !u.uid || seen.has(u.uid)) continue;
     seen.add(u.uid);
     allUsers.push({ uid: u.uid, name: u.name || '—', email: u.email || '—', role: u.role || 'member', type: 'operator' });
   }
   for (const p of portalUsers) {
-    if (seen.has(p.uid)) continue;
+    if (!p || !p.uid || seen.has(p.uid)) continue;
     seen.add(p.uid);
     allUsers.push({ uid: p.uid, name: p.name || '—', email: p.email || '—', role: 'client', type: 'client', clientId: p.clientId });
   }
@@ -157,12 +174,12 @@ const certs       = toArr(state.data.trainingCertificates);
       const uProg = (progress[uid] || {})[cid] || {};
       let done = 0;
       for (const m of Object.values(uProg)) {
-        if (m.completedAt) done++;
-        if (typeof m.score === 'number') s.scores.push(m.score);
-        else if (typeof m.autoScore === 'number') s.scores.push(m.autoScore);
+        if (m && m.completedAt) done++;
+        if (m && typeof m.score === 'number') s.scores.push(m.score);
+        else if (m && typeof m.autoScore === 'number') s.scores.push(m.autoScore);
       }
       s.enrolled++;
-      if (e.completedAt) s.completed++;
+      if (e && e.completedAt) s.completed++;
       s.modulesDone  += done;
       s.modulesTotal += total;
       s.courseDetails.push({
@@ -170,8 +187,8 @@ const certs       = toArr(state.data.trainingCertificates);
         courseTitle: coursesById.get(cid)?.title || cid,
         totalModules: total,
         doneModules: done,
-        completedAt: e.completedAt || null,
-        startedAt: e.startedAt || null,
+        completedAt: (e && e.completedAt) || null,
+        startedAt: (e && e.startedAt) || null,
         progressPct: total ? Math.round((done / total) * 100) : 0
       });
     }
@@ -192,23 +209,23 @@ const certs       = toArr(state.data.trainingCertificates);
 
 /* ═══════════════════════════════════════════════════════════════
    TAB 1 — OVERVIEW
+   FIX 3: coerces certs before use
    ═══════════════════════════════════════════════════════════════ */
 export function renderTrainingOverview() {
   try {
     const state = D.state;
-    const courses     = state.data.trainingCourses || [];
-    const checklists  = state.data.trainingChecklists || [];
-    const resources   = state.data.trainingResources || [];
-   const certsRaw    = state.data.trainingCertificates;
-const certs       = Array.isArray(certsRaw) ? certsRaw : Object.values(certsRaw || {});
+    const courses     = toArr(state.data.trainingCourses);
+    const checklists  = toArr(state.data.trainingChecklists);
+    const resources   = toArr(state.data.trainingResources);
+    const certs       = toArr(state.data.trainingCertificates);
     const enrollments = state.data.trainingEnrollments || {};
     const quizSubs    = state.data.trainingQuizSubmissions || {};
     const accessReqs  = state.data.trainingAccessRequests || {};
 
     const totalEnrollments = Object.values(enrollments).reduce((sum, u) => sum + Object.keys(u || {}).length, 0);
-    const completedCount   = Object.values(enrollments).reduce((sum, u) => sum + Object.values(u || {}).filter(e => e.completedAt).length, 0);
-    const pendingQuizzes   = Object.values(quizSubs).flatMap(byC => Object.values(byC || {})).filter(q => (q.status || 'submitted') === 'submitted').length;
-    const pendingRequests  = Object.values(accessReqs).filter(r => (r.status || 'pending') === 'pending').length;
+    const completedCount   = Object.values(enrollments).reduce((sum, u) => sum + Object.values(u || {}).filter(e => e && e.completedAt).length, 0);
+    const pendingQuizzes   = Object.values(quizSubs).flatMap(byC => Object.values(byC || {})).filter(q => q && (q.status || 'submitted') === 'submitted').length;
+    const pendingRequests  = Object.values(accessReqs).filter(r => r && (r.status || 'pending') === 'pending').length;
 
     const kpiHost = D.$('trainingOverviewKpi');
     if (kpiHost) {
@@ -228,7 +245,7 @@ const certs       = Array.isArray(certsRaw) ? certsRaw : Object.values(certsRaw 
       let awaitingCert = 0;
       for (const [uidKey, byCourse] of Object.entries(enrollments)) {
         for (const [cid, e] of Object.entries(byCourse || {})) {
-          if (e.completedAt && !certKey.has(uidKey + '|' + cid)) awaitingCert++;
+          if (e && e.completedAt && !certKey.has(uidKey + '|' + cid)) awaitingCert++;
         }
       }
       snap.innerHTML = `
@@ -254,12 +271,13 @@ const certs       = Array.isArray(certsRaw) ? certsRaw : Object.values(certsRaw 
     if (recent) {
       const coursesById = indexBy(courses, c => c.id);
       const usersById = new Map();
-      for (const u of (state.data.users || []))       usersById.set(u.uid, u);
-      for (const u of (state.data.portalUsers || [])) if (!usersById.has(u.uid)) usersById.set(u.uid, u);
+      for (const u of toArr(state.data.users))       usersById.set(u.uid, u);
+      for (const u of toArr(state.data.portalUsers)) if (!usersById.has(u.uid)) usersById.set(u.uid, u);
 
       const events = [];
       for (const [uidKey, byCourse] of Object.entries(enrollments)) {
         for (const [cid, e] of Object.entries(byCourse || {})) {
+          if (!e) continue;
           const title = coursesById.get(cid)?.title || cid;
           if (e.startedAt)   events.push({ ts: e.startedAt,   kind: 'enroll',   uid: uidKey, label: `Enrolled in ${title}` });
           if (e.completedAt) events.push({ ts: e.completedAt, kind: 'complete', uid: uidKey, label: `Completed ${title}` });
@@ -369,7 +387,11 @@ const certs       = Array.isArray(certsRaw) ? certsRaw : Object.values(certsRaw 
 export function renderTrainingRequests() {
   try {
     const state = D.state;
-    const all = Object.entries(state.data.trainingAccessRequests || {}).map(([uid, r]) => ({ uid, ...r }));
+    const allRaw = state.data.trainingAccessRequests || {};
+    const all = Array.isArray(allRaw)
+      ? allRaw.map(r => ({ uid: r.uid, ...r }))
+      : Object.entries(allRaw).map(([uid, r]) => ({ uid, ...r }));
+
     const status = D.$('trainingRequestsFilter')?.value || 'pending';
     const search = (D.$('trainingRequestsSearch')?.value || '').toLowerCase().trim();
 
@@ -459,10 +481,10 @@ export function renderTrainingUsers() {
       (s.user.email || '').toLowerCase().includes(search)
     );
     if (roleFilter !== 'all') filtered = filtered.filter(s => s.user.role === roleFilter);
-    if      (courseFilter === '__none__')    filtered = filtered.filter(s => s.enrolled === 0);
-    else if (courseFilter === '__inprog__')  filtered = filtered.filter(s => s.enrolled > 0 && s.completed < s.enrolled);
+    if      (courseFilter === '__none__')     filtered = filtered.filter(s => s.enrolled === 0);
+    else if (courseFilter === '__inprog__')   filtered = filtered.filter(s => s.enrolled > 0 && s.completed < s.enrolled);
     else if (courseFilter === '__complete__') filtered = filtered.filter(s => s.enrolled > 0 && s.completed === s.enrolled);
-    else if (courseFilter !== 'all')         filtered = filtered.filter(s => s.courseDetails.some(c => c.courseId === courseFilter));
+    else if (courseFilter !== 'all')          filtered = filtered.filter(s => s.courseDetails.some(c => c.courseId === courseFilter));
 
     filtered.sort((a, b) => {
       if (b.completed !== a.completed) return b.completed - a.completed;
@@ -521,6 +543,7 @@ export function renderTrainingUsers() {
 
 /* ═══════════════════════════════════════════════════════════════
    TAB 4 — PROGRESS
+   FIX 11: target id is trainingUsersBodyProgress, not trainingUsersBody
    ═══════════════════════════════════════════════════════════════ */
 export function renderTrainingProgress() {
   try {
@@ -549,10 +572,10 @@ export function renderTrainingProgress() {
       (s.user.email || '').toLowerCase().includes(search)
     );
     if (roleFilter !== 'all') filtered = filtered.filter(s => s.user.role === roleFilter);
-    if      (courseFilter === '__none__')    filtered = filtered.filter(s => s.enrolled === 0);
-    else if (courseFilter === '__inprog__')  filtered = filtered.filter(s => s.enrolled > 0 && s.completed < s.enrolled);
+    if      (courseFilter === '__none__')     filtered = filtered.filter(s => s.enrolled === 0);
+    else if (courseFilter === '__inprog__')   filtered = filtered.filter(s => s.enrolled > 0 && s.completed < s.enrolled);
     else if (courseFilter === '__complete__') filtered = filtered.filter(s => s.enrolled > 0 && s.completed === s.enrolled);
-    else if (courseFilter !== 'all')         filtered = filtered.filter(s => s.courseDetails.some(c => c.courseId === courseFilter));
+    else if (courseFilter !== 'all')          filtered = filtered.filter(s => s.courseDetails.some(c => c.courseId === courseFilter));
 
     filtered.sort((a, b) => {
       if (b.completed !== a.completed) return b.completed - a.completed;
@@ -581,7 +604,8 @@ export function renderTrainingProgress() {
       `;
     }
 
-    const ub = D.$('trainingUsersBody');
+    /* FIX 11: target the Progress-tab-specific tbody */
+    const ub = D.$('trainingUsersBodyProgress');
     if (ub) {
       if (!filtered.length) {
         ub.innerHTML = `<tr><td colspan="7" class="empty-state">No users match the current filters.</td></tr>`;
@@ -703,6 +727,7 @@ export function renderTrainingQuizzes() {
   }
 }
 
+/* FIX 7 + FIX 8: null-guard modal buttons; D.P without training/ prefix */
 export function viewQuizSubmission(uidKey, courseId) {
   const state = D.state;
   const sub = state.data.trainingQuizSubmissions?.[uidKey]?.[courseId];
@@ -757,13 +782,17 @@ export function viewQuizSubmission(uidKey, courseId) {
     </div>`;
   document.body.appendChild(modal);
   modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-  modal.querySelector('#qsClose').onclick = () => modal.remove();
 
-  modal.querySelector('#qsSaveGrade').onclick = async () => {
+  const closeBtn = modal.querySelector('#qsClose');
+  if (closeBtn) closeBtn.onclick = () => modal.remove();
+
+  const saveGradeBtn = modal.querySelector('#qsSaveGrade');
+  if (saveGradeBtn) saveGradeBtn.onclick = async () => {
     const finalScore = parseInt(modal.querySelector('#qsOverride').value, 10) || 0;
     const adminNotes = modal.querySelector('#qsNotes').value.trim();
     try {
-      const path = D.P(`training/quizSubmissions/${uidKey}/${courseId}`);
+      /* FIX 8: strip training/ prefix — D.P already prepends it */
+      const path = D.P(`quizSubmissions/${uidKey}/${courseId}`);
       await safePromise(D.update(D.ref(D.db, path), {
         finalScore, adminNotes, status: 'graded',
         gradedAt: new Date().toISOString(),
@@ -775,7 +804,8 @@ export function viewQuizSubmission(uidKey, courseId) {
     } catch (e) { D.toast('Save failed: ' + e.message, 'error'); }
   };
 
-  modal.querySelector('#qsAwardCert').onclick = async () => {
+  const awardBtn = modal.querySelector('#qsAwardCert');
+  if (awardBtn) awardBtn.onclick = async () => {
     const finalScore = parseInt(modal.querySelector('#qsOverride').value, 10) || 0;
     const adminNotes = modal.querySelector('#qsNotes').value.trim();
     await awardTrainingCertificate({
@@ -789,11 +819,12 @@ export function viewQuizSubmission(uidKey, courseId) {
 
 /* ═══════════════════════════════════════════════════════════════
    TAB 6 — CERTIFICATES
+   FIX 4: use `all` (not undeclared `certs`) in the score/thisMonth loop
    ═══════════════════════════════════════════════════════════════ */
 export function renderTrainingCertificates() {
   try {
     const state = D.state;
-    const all = Object.values(state.data.trainingCertificates || {})
+    const all = toArr(state.data.trainingCertificates)
       .slice()
       .sort((a, b) => (b.issuedAt || '').localeCompare(a.issuedAt || ''));
     const search = (D.$('certsSearch')?.value || '').toLowerCase().trim();
@@ -807,13 +838,13 @@ export function renderTrainingCertificates() {
     const total = all.length;
     const nowMonth = new Date().getMonth();
     let thisMonth = 0, scoreSum = 0;
-const uniqueUids = new Set();
-for (const c of all) {
-  if (!c) continue;
-  if (c.issuedAt && new Date(c.issuedAt).getMonth() === nowMonth) thisMonth++;
-  scoreSum += c.score || 0;
-  if (c.uid) uniqueUids.add(c.uid);
-}
+    const uniqueUids = new Set();
+    for (const c of all) {
+      if (!c) continue;
+      if (c.issuedAt && new Date(c.issuedAt).getMonth() === nowMonth) thisMonth++;
+      scoreSum += c.score || 0;
+      if (c.uid) uniqueUids.add(c.uid);
+    }
     const avgScore = total ? Math.round(scoreSum / total) : 0;
 
     const kpi = D.$('certsKpi');
@@ -862,6 +893,7 @@ for (const c of all) {
   }
 }
 
+/* FIX 10: already safe via Object.values + || {} */
 export function renderCertTemplatesGrid() {
   const state = D.state;
   const host = D.$('certTemplateGrid');
@@ -871,7 +903,7 @@ export function renderCertTemplatesGrid() {
     host.innerHTML = `<div class="empty-state" style="grid-column:1/-1;padding:24px;">No certificate templates yet. Click <strong>New Template</strong> to upload one for a course or module.</div>`;
     return;
   }
-  const coursesById = indexBy(state.data.trainingCourses || [], c => c.id);
+  const coursesById = indexBy(toArr(state.data.trainingCourses), c => c.id);
   templates.sort((a, b) => (a.courseId || '').localeCompare(b.courseId || '') || (a.moduleId || '').localeCompare(b.moduleId || ''));
   host.innerHTML = templates.map(t => {
     const course = coursesById.get(t.courseId);
@@ -899,6 +931,7 @@ export function renderCertTemplatesGrid() {
 
 /* ═══════════════════════════════════════════════════════════════
    COURSE EDITOR
+   FIX 5: null-guard title setters
    ═══════════════════════════════════════════════════════════════ */
 let _ceRefs = null;
 function ceRefs() {
@@ -915,9 +948,9 @@ export function openCourseEditor(courseId = null) {
   _ceModulesDraft = [];
   const R = ceRefs();
   if (courseId) {
-    const c = (D.state.data.trainingCourses || []).find(x => x.id === courseId);
+    const c = toArr(D.state.data.trainingCourses).find(x => x.id === courseId);
     if (!c) { D.toast('Course not found.', 'error'); return; }
-    R.courseEditorTitle.textContent = 'Edit Course';
+    if (R.courseEditorTitle) R.courseEditorTitle.textContent = 'Edit Course';
     R.ceId.value = c.id || '';
     R.ceId.disabled = true;
     R.ceTitle.value = c.title || '';
@@ -936,7 +969,7 @@ export function openCourseEditor(courseId = null) {
       }))
       .sort((a, b) => a.order - b.order);
   } else {
-    R.courseEditorTitle.textContent = 'New Course';
+    if (R.courseEditorTitle) R.courseEditorTitle.textContent = 'New Course';
     R.ceId.disabled = false;
     R.ceId.value = '';
     R.ceTitle.value = '';
@@ -952,7 +985,7 @@ export function openCourseEditor(courseId = null) {
 export function renderCeModules() {
   const host = D.$('ceModulesList');
   if (!host) return;
-  D.$('ceModuleCount').textContent = _ceModulesDraft.length;
+  if (D.$('ceModuleCount')) D.$('ceModuleCount').textContent = _ceModulesDraft.length;
   if (!_ceModulesDraft.length) {
     host.innerHTML = `<div class="empty-state" style="padding:24px;text-align:center;color:var(--text-secondary);font-size:.85rem;">No modules yet. Click <strong>Add Module</strong> to start.</div>`;
     return;
@@ -1110,6 +1143,7 @@ function cleanModuleDraft(m, idx) {
   };
 }
 
+/* FIX 6 + FIX 8: guard save button; strip training/ prefix */
 export async function saveCourse() {
   const state = D.state;
   const R = ceRefs();
@@ -1137,7 +1171,7 @@ export async function saveCourse() {
     }
   }
 
-  const existing = (state.data.trainingCourses || []).find(x => x.id === id);
+  const existing = toArr(state.data.trainingCourses).find(x => x.id === id);
   const modulesObj = {};
   _ceModulesDraft.forEach((m, idx) => { modulesObj[m.id] = cleanModuleDraft(m, idx); });
 
@@ -1154,11 +1188,11 @@ export async function saveCourse() {
   };
 
   const btn = R.ceSaveBtn;
-  btn.disabled = true;
-  const originalHtml = btn.innerHTML;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
+  const originalHtml = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…'; }
   try {
-    await safePromise(D.set(D.ref(D.db, D.P(`training/courses/${id}`)), payload));
+    /* FIX 8: D.P('courses/...') — no training/ prefix */
+    await safePromise(D.set(D.ref(D.db, D.P(`courses/${id}`)), payload));
     await safePromise(D.logActivity(_ceEditingId ? 'edit' : 'add', _ceEditingId ? 'Course updated' : 'Course created', `${title} (${Object.keys(modulesObj).length} modules)`));
     D.toast(_ceEditingId ? 'Course updated.' : 'Course created.', 'success');
     D.closeModal('courseEditorModal');
@@ -1166,24 +1200,24 @@ export async function saveCourse() {
   } catch (e) {
     D.toast('Save failed: ' + e.message, 'error');
   } finally {
-    btn.disabled = false;
-    btn.innerHTML = originalHtml;
+    if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
   }
 }
 
+/* FIX 8: strip training/ prefix in all remove calls */
 export async function deleteCourse(id) {
   const state = D.state;
-  const c = (state.data.trainingCourses || []).find(x => x.id === id);
+  const c = toArr(state.data.trainingCourses).find(x => x.id === id);
   if (!c) return;
   if (!confirm(`Delete course "${c.title}"?`)) return;
   try {
-    await safePromise(D.remove(D.ref(D.db, D.P(`training/courses/${id}`))));
+    await safePromise(D.remove(D.ref(D.db, D.P(`courses/${id}`))));
     const enrolls = state.data.trainingEnrollments || {};
     const jobs = [];
     for (const uidKey of Object.keys(enrolls)) {
       if (enrolls[uidKey]?.[id]) {
-        jobs.push(safePromise(D.remove(D.ref(D.db, D.P(`training/enrollments/${uidKey}/${id}`)))));
-        jobs.push(safePromise(D.remove(D.ref(D.db, D.P(`training/progress/${uidKey}/${id}`)))));
+        jobs.push(safePromise(D.remove(D.ref(D.db, D.P(`enrollments/${uidKey}/${id}`)))));
+        jobs.push(safePromise(D.remove(D.ref(D.db, D.P(`progress/${uidKey}/${id}`)))));
       }
     }
     await Promise.all(jobs);
@@ -1195,14 +1229,15 @@ export async function deleteCourse(id) {
 
 /* ═══════════════════════════════════════════════════════════════
    CHECKLIST EDITOR
+   FIX 5 + FIX 6 + FIX 8
    ═══════════════════════════════════════════════════════════════ */
 export function openChecklistEditor(checklistId = null) {
   _cleEditingId = checklistId;
   _cleTasksDraft = [];
   if (checklistId) {
-    const c = (D.state.data.trainingChecklists || []).find(x => x.id === checklistId);
+    const c = toArr(D.state.data.trainingChecklists).find(x => x.id === checklistId);
     if (!c) { D.toast('Checklist not found.', 'error'); return; }
-    D.$('checklistEditorTitle').textContent = 'Edit Checklist';
+    if (D.$('checklistEditorTitle')) D.$('checklistEditorTitle').textContent = 'Edit Checklist';
     D.$('cleId').value = c.id || '';
     D.$('cleId').disabled = true;
     D.$('cleTitle').value = c.title || '';
@@ -1210,7 +1245,7 @@ export function openChecklistEditor(checklistId = null) {
     D.$('cleTargetRole').value = c.targetRole || '';
     _cleTasksDraft = (c.tasks || []).map(t => ({ text: t.text || '', done: false }));
   } else {
-    D.$('checklistEditorTitle').textContent = 'New Checklist';
+    if (D.$('checklistEditorTitle')) D.$('checklistEditorTitle').textContent = 'New Checklist';
     D.$('cleId').disabled = false;
     D.$('cleId').value = '';
     D.$('cleTitle').value = '';
@@ -1223,7 +1258,7 @@ export function openChecklistEditor(checklistId = null) {
 
 export function renderCleTasks() {
   const host = D.$('cleTasksList'); if (!host) return;
-  D.$('cleTaskCount').textContent = _cleTasksDraft.length;
+  if (D.$('cleTaskCount')) D.$('cleTaskCount').textContent = _cleTasksDraft.length;
   if (!_cleTasksDraft.length) {
     host.innerHTML = `<div style="font-size:.8rem;color:var(--text-light);text-align:center;padding:12px;">No tasks yet.</div>`;
     return;
@@ -1249,7 +1284,7 @@ export async function saveChecklist() {
   if (!_cleTasksDraft.length || _cleTasksDraft.some(t => !t.text.trim())) {
     D.toast('Add at least one non-empty task.', 'error'); return;
   }
-  const existing = (state.data.trainingChecklists || []).find(x => x.id === id);
+  const existing = toArr(state.data.trainingChecklists).find(x => x.id === id);
   const tasks = _cleTasksDraft.map((t, i) => ({ id: 'task-' + i, text: t.text.trim(), order: i }));
   const payload = {
     id, title,
@@ -1261,21 +1296,21 @@ export async function saveChecklist() {
     createdBy: existing?.createdBy || state.operator?.name || 'admin'
   };
   const btn = D.$('cleSaveBtn');
-  btn.disabled = true;
-  const originalHtml = btn.innerHTML;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
+  const originalHtml = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…'; }
   try {
-    await safePromise(D.set(D.ref(D.db, D.P(`training/checklists/${id}`)), payload));
+    await safePromise(D.set(D.ref(D.db, D.P(`checklists/${id}`)), payload));
     await safePromise(D.logActivity(_cleEditingId ? 'edit' : 'add', _cleEditingId ? 'Checklist updated' : 'Checklist created', title));
     D.toast('Checklist saved.', 'success');
     D.closeModal('checklistEditorModal');
     renderTrainingOverview();
   } catch (e) { D.toast('Save failed: ' + e.message, 'error'); }
-  finally { btn.disabled = false; btn.innerHTML = originalHtml; }
+  finally { if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; } }
 }
 
 /* ═══════════════════════════════════════════════════════════════
    RESOURCE EDITOR
+   FIX 5 + FIX 6 + FIX 8
    ═══════════════════════════════════════════════════════════════ */
 export function openResourceEditor(resourceId = null) {
   _reEditingId = resourceId;
@@ -1283,9 +1318,9 @@ export function openResourceEditor(resourceId = null) {
   if (D.$('reUploadPreview')) D.$('reUploadPreview').innerHTML = '';
   if (D.$('reFileInput')) D.$('reFileInput').value = '';
   if (resourceId) {
-    const r = (D.state.data.trainingResources || []).find(x => x.id === resourceId);
+    const r = toArr(D.state.data.trainingResources).find(x => x.id === resourceId);
     if (!r) { D.toast('Resource not found.', 'error'); return; }
-    D.$('resourceEditorTitle').textContent = 'Edit Resource';
+    if (D.$('resourceEditorTitle')) D.$('resourceEditorTitle').textContent = 'Edit Resource';
     D.$('reId').value = r.id || '';
     D.$('reId').disabled = true;
     D.$('reTitle').value = r.title || '';
@@ -1293,9 +1328,9 @@ export function openResourceEditor(resourceId = null) {
     D.$('reCategory').value = r.category || 'Reference';
     D.$('reType').value = r.type || 'Link';
     D.$('reUrl').value = r.url || '';
-    if (r.data) D.$('reUploadPreview').innerHTML = `<em>Existing file: ${D.escapeHtml(r.fileName || 'attached')}</em>`;
+    if (r.data && D.$('reUploadPreview')) D.$('reUploadPreview').innerHTML = `<em>Existing file: ${D.escapeHtml(r.fileName || 'attached')}</em>`;
   } else {
-    D.$('resourceEditorTitle').textContent = 'New Resource';
+    if (D.$('resourceEditorTitle')) D.$('resourceEditorTitle').textContent = 'New Resource';
     D.$('reId').disabled = false;
     D.$('reId').value = '';
     D.$('reTitle').value = '';
@@ -1328,7 +1363,7 @@ export async function saveResource() {
   if (!title) { D.toast('Resource title required.', 'error'); return; }
   if (!url && !_rePendingFileData) { D.toast('Provide a URL or upload a file.', 'error'); return; }
 
-  const existing = (state.data.trainingResources || []).find(x => x.id === id);
+  const existing = toArr(state.data.trainingResources).find(x => x.id === id);
   const payload = {
     id, title,
     description: (D.$('reDescription').value || '').trim(),
@@ -1351,25 +1386,24 @@ export async function saveResource() {
     payload.size = existing.size;
   }
   const btn = D.$('reSaveBtn');
-  btn.disabled = true;
-  const originalHtml = btn.innerHTML;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
+  const originalHtml = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…'; }
   try {
-    await safePromise(D.set(D.ref(D.db, D.P(`training/resources/${id}`)), payload));
+    await safePromise(D.set(D.ref(D.db, D.P(`resources/${id}`)), payload));
     await safePromise(D.logActivity(_reEditingId ? 'edit' : 'add', _reEditingId ? 'Resource updated' : 'Resource added', title));
     D.toast('Resource saved.', 'success');
     D.closeModal('resourceEditorModal');
     renderTrainingOverview();
   } catch (e) { D.toast('Save failed: ' + e.message, 'error'); }
-  finally { btn.disabled = false; btn.innerHTML = originalHtml; }
+  finally { if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; } }
 }
 
 export async function deleteResource(id) {
   const state = D.state;
-  const r = (state.data.trainingResources || []).find(x => x.id === id);
+  const r = toArr(state.data.trainingResources).find(x => x.id === id);
   if (!r || !confirm(`Delete resource "${r.title}"?`)) return;
   try {
-    await safePromise(D.remove(D.ref(D.db, D.P(`training/resources/${id}`))));
+    await safePromise(D.remove(D.ref(D.db, D.P(`resources/${id}`))));
     await safePromise(D.logActivity('delete', 'Resource deleted', r.title));
     D.toast('Resource deleted.', 'info');
     renderTrainingOverview();
@@ -1377,7 +1411,7 @@ export async function deleteResource(id) {
 }
 
 export function openResourceFile(id) {
-  const r = (D.state.data.trainingResources || []).find(x => x.id === id);
+  const r = toArr(D.state.data.trainingResources).find(x => x.id === id);
   if (!r || !r.data) return;
   const w = window.open();
   if (!w) { D.toast('Pop-up blocked.', 'warning'); return; }
@@ -1390,6 +1424,8 @@ export function openResourceFile(id) {
 
 /* ═══════════════════════════════════════════════════════════════
    CERTIFICATE — award + view + render + templates
+   FIX 8 + FIX 12: all writes use D.P('certificates/...') which expands to
+   viora_data/orgs/viora/training/certificates/...
    ═══════════════════════════════════════════════════════════════ */
 export async function awardTrainingCertificate({
   uid: uidKey, userName, userEmail, courseId, courseTitle,
@@ -1417,7 +1453,7 @@ export async function awardTrainingCertificate({
     } catch (e) { console.warn('[cert] render failed:', e); }
   }
 
-  const course = (state.data.trainingCourses || []).find(c => c.id === courseId);
+  const course = toArr(state.data.trainingCourses).find(c => c.id === courseId);
   const cert = {
     id: certId, uid: uidKey,
     userName: userName || 'Trainee',
@@ -1435,24 +1471,25 @@ export async function awardTrainingCertificate({
   };
 
   try {
-    await safePromise(D.set(D.ref(D.db, D.P(`training/certificates/${certId}`)), cert));
+    /* FIX 12: D.P('certificates/x') → viora_data/orgs/viora/training/certificates/x */
+    await safePromise(D.set(D.ref(D.db, D.P(`certificates/${certId}`)), cert));
 
     if (template?.id) {
       try {
-        await safePromise(D.update(D.ref(D.db, D.P(`training/certificateTemplates/${template.id}`)), {
+        await safePromise(D.update(D.ref(D.db, D.P(`certificateTemplates/${template.id}`)), {
           awardedCount: (template.awardedCount || 0) + 1
         }));
       } catch (e) { /* non-fatal */ }
     }
 
     if (sourceSubmission) {
-      await safePromise(D.update(D.ref(D.db, D.P(`training/quizSubmissions/${uidKey}/${courseId}`)), {
+      await safePromise(D.update(D.ref(D.db, D.P(`quizSubmissions/${uidKey}/${courseId}`)), {
         status: 'awarded', finalScore: score, adminNotes: adminNotes || '',
         certificateId: certId, awardedAt: new Date().toISOString(),
         awardedBy: state.operator?.name || 'admin'
       }));
     }
-    await safePromise(D.update(D.ref(D.db, D.P(`training/courseCompletions/${uidKey}/${courseId}`)), {
+    await safePromise(D.update(D.ref(D.db, D.P(`courseCompletions/${uidKey}/${courseId}`)), {
       status: 'certificate-awarded', certificateId: certId,
       awardedAt: new Date().toISOString(), requiresAdminAction: false
     })).catch(() => {});
@@ -1466,7 +1503,7 @@ export async function awardTrainingCertificate({
 }
 
 export function viewTrainingCert(certId) {
-  const cert = (D.state.data.trainingCertificates || []).find(c => c.id === certId);
+  const cert = toArr(D.state.data.trainingCertificates).find(c => c.id === certId);
   if (!cert) { D.toast('Certificate not found.', 'error'); return; }
 
   if (cert.renderedImage && D.$('certPreviewImg')) {
@@ -1483,7 +1520,7 @@ export function viewTrainingCert(certId) {
     return;
   }
 
-  const course = (D.state.data.trainingCourses || []).find(c => c.id === cert.courseId);
+  const course = toArr(D.state.data.trainingCourses).find(c => c.id === cert.courseId);
   const modal = document.createElement('div');
   modal.className = 'modal-overlay active';
   modal.style.zIndex = '2000';
@@ -1511,11 +1548,11 @@ export function viewTrainingCert(certId) {
 
 export async function revokeTrainingCertImpl(certId) {
   const state = D.state;
-  const cert = (state.data.trainingCertificates || []).find(c => c.id === certId);
+  const cert = toArr(state.data.trainingCertificates).find(c => c.id === certId);
   if (!cert) return;
   if (!confirm(`Revoke certificate for "${cert.userName}" — "${cert.courseTitle}"?\n\nThis cannot be undone.`)) return;
   try {
-    await safePromise(D.remove(D.ref(D.db, D.P(`training/certificates/${certId}`))));
+    await safePromise(D.remove(D.ref(D.db, D.P(`certificates/${certId}`))));
     await safePromise(D.logActivity('delete', 'Certificate revoked', `${cert.userName} · ${cert.courseTitle}`));
     D.toast('Certificate revoked.', 'info');
     if (state.currentTab === 'training-certificates') renderTrainingCertificates();
@@ -1529,13 +1566,13 @@ export async function revokeTrainingCertImpl(certId) {
 export function openCertTemplateEditor(templateId = null) {
   const state = D.state;
   const editing = templateId ? (state.data.trainingCertTemplates || {})[templateId] : null;
-  D.$('certTemplateEditorTitle').textContent = templateId ? 'Edit Certificate Template' : 'New Certificate Template';
+  if (D.$('certTemplateEditorTitle')) D.$('certTemplateEditorTitle').textContent = templateId ? 'Edit Certificate Template' : 'New Certificate Template';
   D.$('cteTemplateId').value = templateId || '';
 
   const courseSel = D.$('cteCourseId');
   if (courseSel) {
     courseSel.innerHTML = '<option value="">— Select a course —</option>' +
-      (state.data.trainingCourses || []).map(c => `<option value="${c.id}">${D.escapeHtml(c.title)}</option>`).join('');
+      toArr(state.data.trainingCourses).map(c => `<option value="${c.id}">${D.escapeHtml(c.title)}</option>`).join('');
     courseSel.value = editing?.courseId || '';
   }
 
@@ -1543,10 +1580,10 @@ export function openCertTemplateEditor(templateId = null) {
 
   D.$('cteTitle').value = editing?.title || '';
   D.$('cteDescription').value = editing?.description || '';
-  D.$('cteDeleteBtn').style.display = templateId ? 'inline-flex' : 'none';
+  if (D.$('cteDeleteBtn')) D.$('cteDeleteBtn').style.display = templateId ? 'inline-flex' : 'none';
 
-  D.$('ctePreviewWrap').style.display = 'none';
-  D.$('cteLayoutControls').style.display = 'none';
+  if (D.$('ctePreviewWrap')) D.$('ctePreviewWrap').style.display = 'none';
+  if (D.$('cteLayoutControls')) D.$('cteLayoutControls').style.display = 'none';
   state._cteImageData = null;
   state._cteImageMime = 'image/png';
   state._cteLayout = editing?.layout || {
@@ -1572,7 +1609,7 @@ export function refreshCertTemplateModules(preselect) {
   const courseId = D.$('cteCourseId')?.value;
   const modSel = D.$('cteModuleId');
   if (!modSel) return;
-  const course = (D.state.data.trainingCourses || []).find(c => c.id === courseId);
+  const course = toArr(D.state.data.trainingCourses).find(c => c.id === courseId);
   const mods = course ? Object.values(course.modules || {}).sort((a, b) => (a.order || 0) - (b.order || 0)) : [];
   modSel.innerHTML = '<option value="">— Whole Course —</option>' +
     mods.map(m => `<option value="${m.id}">${D.escapeHtml(m.title)}</option>`).join('');
@@ -1640,7 +1677,7 @@ export async function saveCertTemplate() {
   };
 
   try {
-    await safePromise(D.set(D.ref(D.db, D.P(`training/certificateTemplates/${id}`)), payload));
+    await safePromise(D.set(D.ref(D.db, D.P(`certificateTemplates/${id}`)), payload));
     await safePromise(D.logActivity(editingId ? 'edit' : 'add', editingId ? 'Certificate template updated' : 'Certificate template created', title));
     D.toast('Template saved.', 'success');
     D.closeModal('certTemplateEditorModal');
@@ -1654,7 +1691,7 @@ export async function deleteCertTemplate(templateId) {
   if (!tpl) return;
   if (!confirm(`Delete template "${tpl.title}"? Certificates already issued with it are unaffected.`)) return;
   try {
-    await safePromise(D.remove(D.ref(D.db, D.P(`training/certificateTemplates/${templateId}`))));
+    await safePromise(D.remove(D.ref(D.db, D.P(`certificateTemplates/${templateId}`))));
     await safePromise(D.logActivity('delete', 'Certificate template deleted', tpl.title));
     D.toast('Template deleted.', 'info');
     renderTrainingCertificates();
@@ -1749,10 +1786,10 @@ export async function renderCertificateImage(template, user, cert) {
 export function openManualAwardModal() {
   const state = D.state;
   const userMap = new Map();
-  for (const u of (state.data.users || []))       userMap.set(u.uid, { uid: u.uid, name: u.name || u.email, email: u.email });
-  for (const u of (state.data.portalUsers || [])) userMap.set(u.uid, { uid: u.uid, name: u.name || u.email, email: u.email });
+  for (const u of toArr(state.data.users))       if (u && u.uid) userMap.set(u.uid, { uid: u.uid, name: u.name || u.email, email: u.email });
+  for (const u of toArr(state.data.portalUsers)) if (u && u.uid) userMap.set(u.uid, { uid: u.uid, name: u.name || u.email, email: u.email });
   const users = Array.from(userMap.values()).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-  const courses = state.data.trainingCourses || [];
+  const courses = toArr(state.data.trainingCourses);
   const templates = Object.values(state.data.trainingCertTemplates || {});
   if (!users.length)   { D.toast('No users available.',   'error'); return; }
   if (!courses.length) { D.toast('No courses available.', 'error'); return; }
@@ -1913,7 +1950,7 @@ export const AutoCertification = (function () {
     if (!confirm(`Auto-award certificates to ${eligible.length} eligible submission(s)?`)) return;
 
     const existingKeys = new Set(
-      (state.data.trainingCertificates || []).map(x => x.uid + '|' + x.courseId)
+      toArr(state.data.trainingCertificates).map(x => x.uid + '|' + x.courseId)
     );
 
     let awarded = 0;
@@ -2005,6 +2042,7 @@ export function setupCertStampDragging() {
 
 /* ═══════════════════════════════════════════════════════════════
    TRAINING VIORA API
+   FIX 8 + FIX 9: all D.P calls strip training/; openUserTraining null-guards
    ═══════════════════════════════════════════════════════════════ */
 export const TrainingVioraAPI = {
   async approveTrainingRequest(uid) {
@@ -2012,13 +2050,13 @@ export const TrainingVioraAPI = {
     const req = (state.data.trainingAccessRequests || {})[uid];
     if (!req) { D.toast('Request not found.', 'error'); return; }
     try {
-      await safePromise(D.update(D.ref(D.db, D.P(`training/accessRequests/${uid}`)), {
+      await safePromise(D.update(D.ref(D.db, D.P(`accessRequests/${uid}`)), {
         status: 'approved',
         approvedAt: new Date().toISOString(),
         approvedBy: state.operator?.name || 'admin'
       }));
       try {
-        await safePromise(D.update(D.ref(D.db, `${D.ROOT}/users/${uid}`), {
+        await safePromise(D.update(D.ref(D.db, `${D.ROOT}/orgs/viora/users/${uid}`), {
           trainingStatus: 'approved',
           trainingApprovedAt: new Date().toISOString()
         }));
@@ -2035,12 +2073,12 @@ export const TrainingVioraAPI = {
     if (!req) return;
     if (!confirm(`Reject training request from "${req.name || req.email}"?`)) return;
     try {
-      await safePromise(D.update(D.ref(D.db, D.P(`training/accessRequests/${uid}`)), {
+      await safePromise(D.update(D.ref(D.db, D.P(`accessRequests/${uid}`)), {
         status: 'rejected',
         rejectedAt: new Date().toISOString(),
         rejectedBy: state.operator?.name || 'admin'
       }));
-      try { await safePromise(D.update(D.ref(D.db, `${D.ROOT}/users/${uid}`), { trainingStatus: 'rejected' })); } catch (e) {}
+      try { await safePromise(D.update(D.ref(D.db, `${D.ROOT}/orgs/viora/users/${uid}`), { trainingStatus: 'rejected' })); } catch (e) {}
       await safePromise(D.logActivity('delete', 'Training request rejected', `${req.name || req.email || uid}`));
       D.toast('Request rejected.', 'info');
       renderTrainingRequests();
@@ -2050,7 +2088,7 @@ export const TrainingVioraAPI = {
   async reopenTrainingRequest(uid) {
     const state = D.state;
     try {
-      await safePromise(D.update(D.ref(D.db, D.P(`training/accessRequests/${uid}`)), {
+      await safePromise(D.update(D.ref(D.db, D.P(`accessRequests/${uid}`)), {
         status: 'pending',
         reopenedAt: new Date().toISOString(),
         reopenedBy: state.operator?.name || 'admin'
@@ -2067,20 +2105,20 @@ export const TrainingVioraAPI = {
   openUserTraining(userUid) {
     const state = D.state;
     const $ = D.$;
-    const users = state.data.users || [];
-    const portalUsers = state.data.portalUsers || [];
+    const users = toArr(state.data.users);
+    const portalUsers = toArr(state.data.portalUsers);
     const u = users.find(x => x.uid === userUid) || portalUsers.find(x => x.uid === userUid);
     if (!u) { D.toast('User not found.', 'error'); return; }
 
     const isClient = portalUsers.some(x => x.uid === userUid);
-    const courses = state.data.trainingCourses || [];
+    const courses = toArr(state.data.trainingCourses);
     const enrollments = state.data.trainingEnrollments?.[userUid] || {};
     const progress = state.data.trainingProgress?.[userUid] || {};
-    const certs = (state.data.trainingCertificates || []).filter(cert => cert.uid === userUid);
+    const certs = toArr(state.data.trainingCertificates).filter(cert => cert.uid === userUid);
     const coursesById = indexBy(courses, c => c.id);
 
-    $('tumUserName').textContent = u.name || u.email || 'User';
-    $('tumUserHeader').innerHTML = `
+    if ($('tumUserName')) $('tumUserName').textContent = u.name || u.email || 'User';
+    if ($('tumUserHeader')) $('tumUserHeader').innerHTML = `
       <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;">
         <div><span style="color:var(--text-secondary);">Name:</span> <strong>${D.escapeHtml(u.name || '—')}</strong></div>
         <div><span style="color:var(--text-secondary);">Email:</span> ${D.escapeHtml(u.email || '—')}</div>
@@ -2091,11 +2129,11 @@ export const TrainingVioraAPI = {
       const course = coursesById.get(cid);
       const uProg = progress[cid] || {};
       const totalModules = Object.keys(course?.modules || {}).length;
-      const doneModules = Object.values(uProg).filter(m => m.completedAt).length;
+      const doneModules = Object.values(uProg).filter(m => m && m.completedAt).length;
       const pct = totalModules ? Math.round((doneModules / totalModules) * 100) : 0;
       return `<div class="card-3d" style="margin-bottom:10px;">
         <div class="card-info" style="flex:1;min-width:0;">
-          <div class="card-title">${D.escapeHtml(course?.title || cid)} ${e.completedAt ? '<span class="badge badge-completed">Completed</span>' : '<span class="badge badge-inprogress">In Progress</span>'}</div>
+          <div class="card-title">${D.escapeHtml(course?.title || cid)} ${e && e.completedAt ? '<span class="badge badge-completed">Completed</span>' : '<span class="badge badge-inprogress">In Progress</span>'}</div>
           <div class="card-sub">${doneModules}/${totalModules} modules · ${pct}%</div>
         </div>
         <div class="card-actions">
@@ -2123,7 +2161,7 @@ export const TrainingVioraAPI = {
         </div>`).join('')
       : '<div style="font-size:.8rem;color:var(--text-secondary);text-align:center;padding:12px;">No certificates yet.</div>';
 
-    $('tumUserBody').innerHTML = `
+    if ($('tumUserBody')) $('tumUserBody').innerHTML = `
       <div style="margin-bottom:24px;">
         <h4 style="font-size:.82rem;text-transform:uppercase;color:var(--text-secondary);letter-spacing:.6px;margin-bottom:12px;">Enrolled Courses (${Object.keys(enrollments).length})</h4>
         ${enrolledRows || '<div class="empty-state" style="padding:20px;">Not enrolled in any courses yet.</div>'}
@@ -2150,8 +2188,8 @@ export const TrainingVioraAPI = {
   async deleteTrainingUser(userUid) {
     const state = D.state;
     if (!userUid) { D.toast('No user selected.', 'error'); return; }
-    const operatorUser = (state.data.users || []).find(u => u.uid === userUid);
-    const portalUser   = (state.data.portalUsers || []).find(u => u.uid === userUid);
+    const operatorUser = toArr(state.data.users).find(u => u.uid === userUid);
+    const portalUser   = toArr(state.data.portalUsers).find(u => u.uid === userUid);
     const user = operatorUser || portalUser;
     if (!user) { D.toast('User not found.', 'error'); return; }
 
@@ -2164,27 +2202,28 @@ export const TrainingVioraAPI = {
     if (!confirm(confirmMsg)) return;
 
     const jobs = [
-      safePromise(D.remove(D.ref(D.db, D.P(`training/enrollments/${userUid}`)))).catch(() => {}),
-      safePromise(D.remove(D.ref(D.db, D.P(`training/progress/${userUid}`)))).catch(() => {}),
-      safePromise(D.remove(D.ref(D.db, D.P(`training/quizSubmissions/${userUid}`)))).catch(() => {}),
-      safePromise(D.remove(D.ref(D.db, D.P(`training/courseCompletions/${userUid}`)))).catch(() => {})
+      safePromise(D.remove(D.ref(D.db, D.P(`enrollments/${userUid}`)))).catch(() => {}),
+      safePromise(D.remove(D.ref(D.db, D.P(`progress/${userUid}`)))).catch(() => {}),
+      safePromise(D.remove(D.ref(D.db, D.P(`quizSubmissions/${userUid}`)))).catch(() => {}),
+      safePromise(D.remove(D.ref(D.db, D.P(`courseCompletions/${userUid}`)))).catch(() => {})
     ];
-    const userCerts = (state.data.trainingCertificates || []).filter(cert => cert.uid === userUid);
+    const userCerts = toArr(state.data.trainingCertificates).filter(cert => cert.uid === userUid);
     for (const cert of userCerts) {
-      jobs.push(safePromise(D.remove(D.ref(D.db, D.P(`training/certificates/${cert.id}`)))).catch(() => {}));
+      jobs.push(safePromise(D.remove(D.ref(D.db, D.P(`certificates/${cert.id}`)))).catch(() => {}));
     }
     await Promise.all(jobs);
 
     if (isPortalClient) {
       try { await safePromise(D.callFn('portal/deleteUser', { uid: userUid })); } catch (e) {}
-      try { await safePromise(D.remove(D.ref(D.db, D.P('portalUsers/' + userUid)))); } catch (e) {}
-      try { await safePromise(D.remove(D.ref(D.db, D.P('portalRequests/' + userUid)))); } catch (e) {}
-      state.data.portalUsers = (state.data.portalUsers || []).filter(u => u.uid !== userUid);
+      try { await safePromise(D.remove(D.ref(D.db, `${D.ROOT}/orgs/viora/portalUsers/${userUid}`))); } catch (e) {}
+      try { await safePromise(D.remove(D.ref(D.db, `${D.ROOT}/orgs/viora/portalRequests/${userUid}`))); } catch (e) {}
+      state.data.portalUsers = toArr(state.data.portalUsers).filter(u => u.uid !== userUid);
     } else {
+      try { await safePromise(D.remove(D.ref(D.db, `${D.ROOT}/orgs/viora/users/${userUid}`))); } catch (e) {}
       try { await safePromise(D.remove(D.ref(D.db, `${D.ROOT}/users/${userUid}`))); } catch (e) {}
     }
-    state.data.users = (state.data.users || []).filter(u => u.uid !== userUid);
-    state.data.trainingCertificates = (state.data.trainingCertificates || []).filter(c => c.uid !== userUid);
+    state.data.users = toArr(state.data.users).filter(u => u.uid !== userUid);
+    state.data.trainingCertificates = toArr(state.data.trainingCertificates).filter(c => c.uid !== userUid);
     await safePromise(D.logActivity('delete', 'Training user deleted', displayName));
     D.toast('User deleted.', 'success');
     try { renderTrainingProgress(); } catch (e) {}
@@ -2192,12 +2231,12 @@ export const TrainingVioraAPI = {
 
   async enrollUserInCourse(userUid, courseId) {
     const state = D.state;
-    const course = (state.data.trainingCourses || []).find(x => x.id === courseId);
+    const course = toArr(state.data.trainingCourses).find(x => x.id === courseId);
     if (!course) { D.toast('Course not found.', 'error'); return; }
     try {
       const existing = state.data.trainingEnrollments?.[userUid]?.[courseId];
       if (existing) { D.toast('Already enrolled.', 'info'); return; }
-      await safePromise(D.set(D.ref(D.db, D.P(`training/enrollments/${userUid}/${courseId}`)), {
+      await safePromise(D.set(D.ref(D.db, D.P(`enrollments/${userUid}/${courseId}`)), {
         courseId,
         startedAt: new Date().toISOString(),
         progress: 0,
@@ -2214,12 +2253,12 @@ export const TrainingVioraAPI = {
 
   async unenrollUser(userUid, courseId) {
     const state = D.state;
-    const course = (state.data.trainingCourses || []).find(x => x.id === courseId);
+    const course = toArr(state.data.trainingCourses).find(x => x.id === courseId);
     if (!course) return;
     if (!confirm(`Unenroll from "${course.title}"?`)) return;
     try {
-      await safePromise(D.remove(D.ref(D.db, D.P(`training/enrollments/${userUid}/${courseId}`))));
-      await safePromise(D.remove(D.ref(D.db, D.P(`training/progress/${userUid}/${courseId}`))));
+      await safePromise(D.remove(D.ref(D.db, D.P(`enrollments/${userUid}/${courseId}`))));
+      await safePromise(D.remove(D.ref(D.db, D.P(`progress/${userUid}/${courseId}`))));
       await safePromise(D.logActivity('delete', 'User unenrolled', `${userUid.slice(0, 8)} × ${course.title}`));
       D.toast('Unenrolled.', 'info');
       setTimeout(() => TrainingVioraAPI.openUserTraining(userUid), 300);
@@ -2230,8 +2269,8 @@ export const TrainingVioraAPI = {
     const state = D.state;
     if (!confirm('Reset all module progress for this course?')) return;
     try {
-      await safePromise(D.remove(D.ref(D.db, D.P(`training/progress/${userUid}/${courseId}`))));
-      await safePromise(D.update(D.ref(D.db, D.P(`training/enrollments/${userUid}/${courseId}`)), {
+      await safePromise(D.remove(D.ref(D.db, D.P(`progress/${userUid}/${courseId}`))));
+      await safePromise(D.update(D.ref(D.db, D.P(`enrollments/${userUid}/${courseId}`)), {
         progress: 0, completedAt: null,
         resetAt: new Date().toISOString(),
         resetBy: state.operator?.uid || 'admin'
@@ -2245,10 +2284,10 @@ export const TrainingVioraAPI = {
     const state = D.state;
     if (!confirm('Reset ALL training data for this user? Cannot be undone.')) return;
     try {
-      await safePromise(D.remove(D.ref(D.db, D.P(`training/enrollments/${userUid}`))));
-      await safePromise(D.remove(D.ref(D.db, D.P(`training/progress/${userUid}`))));
-      const certs = (state.data.trainingCertificates || []).filter(cert => cert.uid === userUid);
-      for (const cert of certs) await safePromise(D.remove(D.ref(D.db, D.P(`training/certificates/${cert.id}`))));
+      await safePromise(D.remove(D.ref(D.db, D.P(`enrollments/${userUid}`))));
+      await safePromise(D.remove(D.ref(D.db, D.P(`progress/${userUid}`))));
+      const certs = toArr(state.data.trainingCertificates).filter(cert => cert.uid === userUid);
+      for (const cert of certs) await safePromise(D.remove(D.ref(D.db, D.P(`certificates/${cert.id}`))));
       D.toast('All training data reset.', 'info');
       if (typeof D.closeModal === 'function') D.closeModal('trainingUserModal');
     } catch (e) { D.toast('Reset failed: ' + e.message, 'error'); }
@@ -2256,11 +2295,11 @@ export const TrainingVioraAPI = {
 
   async revokeCertificate(certId) {
     const state = D.state;
-    const cert = (state.data.trainingCertificates || []).find(c => c.id === certId);
+    const cert = toArr(state.data.trainingCertificates).find(c => c.id === certId);
     if (!cert) return;
     if (!confirm(`Revoke certificate for "${cert.userName}"?`)) return;
     try {
-      await safePromise(D.remove(D.ref(D.db, D.P(`training/certificates/${certId}`))));
+      await safePromise(D.remove(D.ref(D.db, D.P(`certificates/${certId}`))));
       await safePromise(D.logActivity('delete', 'Certificate revoked', `${cert.userName} · ${cert.courseTitle}`));
       D.toast('Certificate revoked.', 'info');
       try { renderTrainingProgress(); } catch (e) {}
@@ -2274,19 +2313,19 @@ export const TrainingVioraAPI = {
   openEnrollUserModal() {
     const state = D.state;
     const $ = D.$;
-    const users = (state.data.users || []).concat(
-      (state.data.portalUsers || []).filter(p => !(state.data.users || []).find(u => u.uid === p.uid))
+    const users = toArr(state.data.users).concat(
+      toArr(state.data.portalUsers).filter(p => !toArr(state.data.users).find(u => u.uid === p.uid))
     );
-    const courses = state.data.trainingCourses || [];
+    const courses = toArr(state.data.trainingCourses);
     if (!users.length)   { D.toast('No registered users yet.', 'warning'); return; }
     if (!courses.length) { D.toast('No courses yet. Create one first.', 'warning'); return; }
-    $('teuUser').innerHTML = users.map(u =>
+    if ($('teuUser')) $('teuUser').innerHTML = users.map(u =>
       `<option value="${u.uid}">${D.escapeHtml(u.name || u.email || u.uid)} — ${D.escapeHtml(u.email || '')}</option>`
     ).join('');
-    $('teuCourse').innerHTML = courses.map(c =>
+    if ($('teuCourse')) $('teuCourse').innerHTML = courses.map(c =>
       `<option value="${c.id}">${D.escapeHtml(c.title)} (${Object.keys(c.modules || {}).length} modules)</option>`
     ).join('');
-    $('teuMarkRequired').checked = false;
+    if ($('teuMarkRequired')) $('teuMarkRequired').checked = false;
     if (typeof D.openModal === 'function') D.openModal('trainingEnrollModal');
   }
 };
@@ -2309,10 +2348,10 @@ export function bindTrainingEvents() {
     el.addEventListener(evt, fn);
   };
 
-  bind('addCourseBtn',      'click', () => openCourseEditor());
-  bind('addChecklistBtn',   'click', () => openChecklistEditor());
-  bind('addResourceBtn',    'click', () => openResourceEditor());
-  bind('newCertTemplateBtn','click', () => openCertTemplateEditor());
+  bind('addCourseBtn',       'click', () => openCourseEditor());
+  bind('addChecklistBtn',    'click', () => openChecklistEditor());
+  bind('addResourceBtn',     'click', () => openResourceEditor());
+  bind('newCertTemplateBtn', 'click', () => openCertTemplateEditor());
 
   bind('ceAddModuleBtn', 'click', addCeModule);
   bind('ceSaveBtn',      'click', saveCourse);
@@ -2530,7 +2569,7 @@ export function bindTrainingEvents() {
     toast('Refreshed.', 'info');
   });
 
-  console.info('[training] events bound (v8.0)');
+  console.info('[training] events bound (v8.1)');
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2541,15 +2580,15 @@ if (typeof window !== 'undefined') {
   window.VioraTraining = T;
   window.VioraTrainingAPI = TrainingVioraAPI;
 
-  window.openCertTemplateEditor   = openCertTemplateEditor;
-  window.deleteCertTemplate       = deleteCertTemplate;
-  window.saveCertTemplate         = saveCertTemplate;
+  window.openCertTemplateEditor     = openCertTemplateEditor;
+  window.deleteCertTemplate         = deleteCertTemplate;
+  window.saveCertTemplate           = saveCertTemplate;
   window.refreshCertTemplateModules = refreshCertTemplateModules;
-  window.showCertTemplatePreview  = showCertTemplatePreview;
-  window.paintCertTemplateStamps  = paintCertTemplateStamps;
-  window.handleCertTemplateImage  = handleCertTemplateImage;
+  window.showCertTemplatePreview    = showCertTemplatePreview;
+  window.paintCertTemplateStamps    = paintCertTemplateStamps;
+  window.handleCertTemplateImage    = handleCertTemplateImage;
 
-  window.openManualAwardModal = openManualAwardModal;
+  window.openManualAwardModal     = openManualAwardModal;
   window.awardTrainingCertificate = awardTrainingCertificate;
 
   window.viewQuizSubmission = viewQuizSubmission;
