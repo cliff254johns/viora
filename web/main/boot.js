@@ -502,8 +502,11 @@ function wireCoreAndDeferredListeners() {
         state._counterClean = false;
       }
 
+           /* Always refresh counters immediately — even during boot-drain.
+         The counters are what drive notifications; if we defer them
+         to the render loop, we lose real-time behaviour. */
+      try { updateSidebarCounters(true); } catch (e) {}
       if (!state._bootDraining) {
-        try { updateSidebarCounters(false); } catch (e) {}
         scheduleRender();
       }
     });
@@ -567,10 +570,9 @@ function wireOrdersListener() {
     state._counterClean = false;
 
     /* Skip counter churn during boot-drain to avoid O(N) recomputes */
-    if (state._bootDraining) return;
-
+       /* Always refresh — real-time counters are the priority */
     try { updateSidebarCounters(true); } catch (e) {}
-    scheduleRender();
+    if (!state._bootDraining) scheduleRender();
     try { scheduleMarketSync?.({ immediate: true }); } catch (e) {}
     if (!state.localMutationLock) emitOrderPaid(item);
   }));
@@ -593,10 +595,10 @@ function wireOrdersListener() {
     const idx = arr.findIndex(x => x.id === (old?.id || snap.key));
     if (idx > -1) arr.splice(idx, 1);
     state._counterCache = null;
+      state._counterCache = null;
     state._counterClean = false;
-    if (state._bootDraining) return;
     try { updateSidebarCounters(true); } catch (e) {}
-    scheduleRender();
+    if (!state._bootDraining) scheduleRender();
   }));
 }
 
