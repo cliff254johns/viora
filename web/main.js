@@ -606,7 +606,7 @@ Object.assign(window, {
   $, uid, todayStr, dateToStr, fmtDate, fmtDateTime, timeAgo, daysBetween,
   isOverdue, fmtKES, fmtUSD, usdToKes, kpiFormat, escapeHtml, fmtBytes,
   normalizePhone, normalizeEmail, generateLicenseKey, isMobile, debounce,
-  pickFile, pickFileMobileSplit, P, TRACK_P,
+  pickFile, pickFileMobileSplit, P, TRACK_P, TP_PATH,
   VioraDb: db, VioraAuth: auth, VioraApp: app
 });
 
@@ -4446,6 +4446,64 @@ case 'training-progress':
         window.__vioraAddClientObserver.observe(document.body, {
           childList: true,
           subtree: true
+        });
+      }
+
+      // 8. Training Requests — refresh button (Scholar inline approvals)
+      (function bindTrainingRequestsRefresh() {
+        const btn = document.getElementById('trainingRequestsRefreshBtn');
+        if (!btn || btn._vioraTrainingRefreshBound) return;
+        btn._vioraTrainingRefreshBound = true;
+        btn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          try {
+            const snap = await get(ref(db, TP_PATH('accessRequests')));
+            const raw = snap.exists() ? snap.val() : {};
+            state.data.trainingAccessRequests = Array.isArray(raw)
+              ? raw
+              : Object.entries(raw).map(([uid, v]) => ({ uid, ...(v || {}), id: uid }));
+            if (typeof renderTrainingRequests === 'function') renderTrainingRequests();
+            toast('Refreshed.', 'info');
+          } catch (err) {
+            console.error('[training-requests] refresh failed:', err);
+            toast('Refresh failed.', 'error');
+          }
+        }, true);
+        bound++;
+        console.log('[viora] ✅ trainingRequestsRefreshBtn bound');
+      })();
+
+      // Also bind on the requests tab whenever it becomes active
+      if (!window.__vioraTrainingTabObserver) {
+        window.__vioraTrainingTabObserver = new MutationObserver(() => {
+          const pane = document.getElementById('tab-training-requests');
+          if (!pane) return;
+          if (!pane.classList.contains('active')) return;
+          const btn = document.getElementById('trainingRequestsRefreshBtn');
+          if (btn && !btn._vioraTrainingRefreshBound) {
+            btn._vioraTrainingRefreshBound = true;
+            btn.addEventListener('click', async (e) => {
+              e.preventDefault();
+              try {
+                const snap = await get(ref(db, TP_PATH('accessRequests')));
+                const raw = snap.exists() ? snap.val() : {};
+                state.data.trainingAccessRequests = Array.isArray(raw)
+                  ? raw
+                  : Object.entries(raw).map(([uid, v]) => ({ uid, ...(v || {}), id: uid }));
+                if (typeof renderTrainingRequests === 'function') renderTrainingRequests();
+                toast('Refreshed.', 'info');
+              } catch (err) {
+                console.error('[training-requests] refresh failed:', err);
+                toast('Refresh failed.', 'error');
+              }
+            }, true);
+          }
+        });
+        window.__vioraTrainingTabObserver.observe(document.body, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['class']
         });
       }
 
