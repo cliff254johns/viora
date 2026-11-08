@@ -1,3 +1,6 @@
+<!-- File: trainingportal.html
+     Learner portal. Signs up → writes accessRequests/{uid} with role:"learner".
+     Approved learners see the shell automatically (onValue live swap). -->
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
@@ -16,65 +19,45 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="VIORA Training">
 <link rel="stylesheet" href="mainTraining/training.css" />
-
 </head>
-
 <body>
 
-<!-- ═══ LOGIN ═══ -->
 <div id="loginScreen">
   <div class="login-card" id="loginCard" data-flow="signin">
     <div class="login-brand">
-      <div class="logo-mark" id="loginLogoMark">
-        <img src="https://viora.co.ke/viora.png" />
-      </div>
+      <div class="logo-mark" id="loginLogoMark"><img src="https://viora.co.ke/viora.png" /></div>
       <div>
         <h1 id="loginHeading">Welcome <span>back</span></h1>
-        <p id="loginSubheading">Sign in to your lerners portal</p>
+        <p id="loginSubheading">Sign in to your learners portal</p>
       </div>
     </div>
 
     <noscript>
-      <div class="noscript-warning">
-        JavaScript is required to sign in. Email <a href="mailto:support@viora.co.ke">support@viora.co.ke</a> if you're having trouble.
-      </div>
+      <div class="noscript-warning">JavaScript is required to sign in. Email <a href="mailto:support@viora.co.ke">support@viora.co.ke</a> if you're having trouble.</div>
     </noscript>
 
-    <div class="auth-mode-indicator">
-      <span id="modeLabel">Signing in</span>
-    </div>
+    <div class="auth-mode-indicator"><span id="modeLabel">Signing in</span></div>
 
     <div class="login-tabs" role="tablist">
-      <button id="tabSignIn" class="active" type="button" role="tab" aria-selected="true" data-flow="signin">
-        <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i> Sign In
-      </button>
-      <button id="tabRegister" type="button" role="tab" aria-selected="false" data-flow="signup">
-        <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i> Enroll Now
-      </button>
+      <button id="tabSignIn" class="active" type="button" role="tab" aria-selected="true" data-flow="signin"><i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i> Sign In</button>
+      <button id="tabRegister" type="button" role="tab" aria-selected="false" data-flow="signup"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i> Enroll Now</button>
     </div>
 
-    <!-- SIGN IN -->
     <form id="signInFields" aria-labelledby="tabSignIn">
       <div class="login-field"><label>Email</label><input id="loginEmail" type="email" placeholder="you@viora.io" autocomplete="email" /></div>
       <div class="login-field" style="position:relative;">
         <label>Password</label>
         <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password" />
-        <button type="button" class="pw-toggle" data-pw-target="loginPassword" aria-label="Show password">
-          <i class="fa-solid fa-eye" aria-hidden="true"></i>
-        </button>
+        <button type="button" class="pw-toggle" data-pw-target="loginPassword" aria-label="Show password"><i class="fa-solid fa-eye" aria-hidden="true"></i></button>
       </div>
       <p class="forgot-row" id="forgotRow"><a href="#" id="forgotLink">Forgot password?</a></p>
       <button class="btn-login" id="loginBtn"><i class="fa-solid fa-right-to-bracket"></i>&nbsp; Sign In</button>
-      <p class="login-helper">
-        New to VIORA Academy? <a href="#" id="switchToRegister">Enroll now →</a>
-      </p>
+      <p class="login-helper">New to VIORA Academy? <a href="#" id="switchToRegister">Enroll now →</a></p>
     </form>
 
-    <!-- ENROLL -->
     <form id="registerFields" style="display:none;" aria-labelledby="tabRegister">
-
       <div class="signup-intro">
-        <strong><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Lerner is by approval</strong>
+        <strong><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Learning is by approval</strong>
         <p>VIORA Scholar is for verified VIORA clients and staff. After you enroll, an admin will review your account and grant access — usually within a few hours.</p>
       </div>
 
@@ -114,29 +97,18 @@
       <div class="login-field" style="position:relative;">
         <label>Password (min 6 chars)</label>
         <input id="regPassword" type="password" placeholder="••••••••" autocomplete="new-password" />
-        <button type="button" class="pw-toggle" data-pw-target="regPassword" aria-label="Show password">
-          <i class="fa-solid fa-eye" aria-hidden="true"></i>
-        </button>
-        <div class="pw-meter" id="pwMeter">
-          <div class="pw-bars"><span></span><span></span><span></span><span></span></div>
-          <small id="pwHint">Use 8+ characters</small>
-        </div>
+        <button type="button" class="pw-toggle" data-pw-target="regPassword" aria-label="Show password"><i class="fa-solid fa-eye" aria-hidden="true"></i></button>
+        <div class="pw-meter" id="pwMeter"><div class="pw-bars"><span></span><span></span><span></span><span></span></div><small id="pwHint">Use 8+ characters</small></div>
       </div>
       <div class="login-field" style="position:relative;">
         <label>Confirm password</label>
         <input id="regPassword2" type="password" placeholder="••••••••" autocomplete="new-password" />
-        <button type="button" class="pw-toggle" data-pw-target="regPassword2" aria-label="Show password">
-          <i class="fa-solid fa-eye" aria-hidden="true"></i>
-        </button>
+        <button type="button" class="pw-toggle" data-pw-target="regPassword2" aria-label="Show password"><i class="fa-solid fa-eye" aria-hidden="true"></i></button>
       </div>
 
       <button class="btn-login" id="registerBtn"><i class="fa-solid fa-graduation-cap"></i>&nbsp; Enroll Now →</button>
-      <p class="login-helper">
-        Already enrolled? <a href="#" id="switchToLogin">← Sign in instead</a>
-      </p>
-      <p class="signup-terms">
-        By enrolling you agree to our <a href="terms.html" target="_blank">Terms</a> and <a href="privacy.html" target="_blank">Privacy Policy</a>.
-      </p>
+      <p class="login-helper">Already enrolled? <a href="#" id="switchToLogin">← Sign in instead</a></p>
+      <p class="signup-terms">By enrolling you agree to our <a href="terms.html" target="_blank">Terms</a> and <a href="privacy.html" target="_blank">Privacy Policy</a>.</p>
 
       <div class="enroll-callout">
         <i class="fa-solid fa-info-circle" aria-hidden="true"></i>
@@ -145,73 +117,34 @@
     </form>
 
     <div id="loginMessage" class="login-message"></div>
-    <div class="login-footer">
-      Contact <strong style="color:#7de8ff;">cliff254johns@gmail.com</strong> for help.
-    </div>
+    <div class="login-footer">Contact <strong style="color:#7de8ff;">cliff254johns@gmail.com</strong> for help.</div>
   </div>
 </div>
 
-<!-- ═══ PENDING ═══ -->
 <div id="pendingScreen">
   <div class="pending-card">
-    <div class="pending-icon" aria-hidden="true">
-      <i class="fa-solid fa-graduation-cap"></i>
-    </div>
+    <div class="pending-icon" aria-hidden="true"><i class="fa-solid fa-graduation-cap"></i></div>
     <h2 id="pendingTitle">Enrollment submitted</h2>
     <p>Hi <strong id="pendingName">there</strong>, your training access request is under review. VIORA Scholar is reserved for verified clients and staff.</p>
-
     <div class="pending-progress">
-      <div class="pending-step done">
-        <span aria-hidden="true">✓</span>
-        <span>Account created</span>
-      </div>
-      <div class="pending-step active">
-        <span aria-hidden="true"><div class="spinner-mini"></div></span>
-        <span>Admin review</span>
-      </div>
-      <div class="pending-step">
-        <span aria-hidden="true">·</span>
-        <span>Access granted</span>
-      </div>
+      <div class="pending-step done"><span aria-hidden="true">✓</span><span>Account created</span></div>
+      <div class="pending-step active"><span aria-hidden="true"><div class="spinner-mini"></div></span><span>Admin review</span></div>
+      <div class="pending-step"><span aria-hidden="true">·</span><span>Access granted</span></div>
     </div>
-
-    <div class="check-row">
-      <span class="dot-pulse"></span>
-      <span>This page checks automatically…</span>
-    </div>
-
-    <p class="pending-help">
-      Questions? <a href="mailto:support@viora.co.ke">Email support</a> or
-      <a href="https://wa.me/254713428774" target="_blank" rel="noopener">WhatsApp us</a>.
-    </p>
-
-    <div style="margin-top:20px;">
-      <button class="btn-login" id="pendingLogout" type="button" style="background:rgba(255,255,255,.08);box-shadow:none;font-size:12px;padding:10px;">
-        <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Sign Out
-      </button>
-    </div>
+    <div class="check-row"><span class="dot-pulse"></span><span>This page checks automatically…</span></div>
+    <p class="pending-help">Questions? <a href="mailto:support@viora.co.ke">Email support</a> or <a href="https://wa.me/254713428774" target="_blank" rel="noopener">WhatsApp us</a>.</p>
+    <div style="margin-top:20px;"><button class="btn-login" id="pendingLogout" type="button" style="background:rgba(255,255,255,.08);box-shadow:none;font-size:12px;padding:10px;"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Sign Out</button></div>
   </div>
 </div>
 
-<!-- ═══ MOBILE APP BAR ═══ -->
 <div id="mobileAppBar">
-  <div class="mab-brand">
-    <img src="https://viora.co.ke/viora.png" alt="VIORA" />
-    <span>VIORA Learn</span>
-  </div>
-  <div style="display:flex;gap:6px;">
-    <button class="mab-icon-btn" id="mobileLogoutBtn" title="Sign out"><i class="fa-solid fa-right-from-bracket"></i></button>
-  </div>
+  <div class="mab-brand"><img src="https://viora.co.ke/viora.png" alt="VIORA" /><span>VIORA Learn</span></div>
+  <div style="display:flex;gap:6px;"><button class="mab-icon-btn" id="mobileLogoutBtn" title="Sign out"><i class="fa-solid fa-right-from-bracket"></i></button></div>
 </div>
 
-<!-- ═══ SHELL ═══ -->
 <div id="appShell">
   <header class="topbar">
-    <div class="brand">
-      <img src="https://viora.co.ke/viora.png" alt="VIORA" />
-      <span>VIORA</span>
-      <span class="badge badge-purple" style="font-size:9px;">Training Portal</span>
-    </div>
+    <div class="brand"><img src="https://viora.co.ke/viora.png" alt="VIORA" /><span>VIORA</span><span class="badge badge-purple" style="font-size:9px;">Training Portal</span></div>
     <div class="user-actions">
       <span class="live-sync"><span class="pulse-dot"></span> Live sync</span>
       <span class="user-info"><i class="fa-solid fa-user-circle"></i> <span id="whoami">—</span></span>
@@ -259,12 +192,10 @@
 }
 </script>
 
-<!-- Login tab binder -->
 <script>
 (function () {
   'use strict';
   const $ = (id) => document.getElementById(id);
-
   const tabSignIn  = $('tabSignIn');
   const tabReg     = $('tabRegister');
   const inFields   = $('signInFields');
@@ -274,7 +205,6 @@
   const forgotRow  = $('forgotRow');
   const headingEl  = $('loginHeading');
   const subEl      = $('loginSubheading');
-
   if (!tabSignIn || !tabReg) return;
 
   function activateFlow(flow) {
@@ -305,24 +235,13 @@
     return ['loginEmail','loginPassword','regName','regEmail','regPhone','regPassword','regPassword2']
       .some(id => { const el = $(id); return el && el.value && el.value.length > 0; });
   }
-
   function switchFlow(flow) {
-    if (anyInputFilled()) {
-      if (!confirm('You have unsaved input. Switch anyway?')) return;
-    }
+    if (anyInputFilled()) { if (!confirm('You have unsaved input. Switch anyway?')) return; }
     activateFlow(flow);
   }
 
-  tabSignIn.addEventListener('click', (e) => {
-    e.preventDefault();
-    if (loginCard.getAttribute('data-flow') === 'signin') return;
-    switchFlow('signin');
-  });
-  tabReg.addEventListener('click', (e) => {
-    e.preventDefault();
-    if (loginCard.getAttribute('data-flow') === 'signup') return;
-    switchFlow('signup');
-  });
+  tabSignIn.addEventListener('click', (e) => { e.preventDefault(); if (loginCard.getAttribute('data-flow') === 'signin') return; switchFlow('signin'); });
+  tabReg.addEventListener('click', (e) => { e.preventDefault(); if (loginCard.getAttribute('data-flow') === 'signup') return; switchFlow('signup'); });
 
   const switchToRegister = $('switchToRegister');
   if (switchToRegister) switchToRegister.addEventListener('click', (e) => { e.preventDefault(); switchFlow('signup'); });
@@ -336,7 +255,6 @@
   const params = new URLSearchParams(location.search);
   if (params.get('mode') === 'register') activateFlow('signup');
 
-  // Password strength
   const pwInput = $('regPassword');
   const pwMeter = $('pwMeter');
   const pwHint  = $('pwHint');
@@ -351,7 +269,6 @@
     });
   }
 
-  // Password visibility toggles
   document.querySelectorAll('.pw-toggle').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -360,14 +277,11 @@
       if (!input) return;
       const isPw = input.type === 'password';
       input.type = isPw ? 'text' : 'password';
-      btn.innerHTML = isPw
-        ? '<i class="fa-solid fa-eye-slash" aria-hidden="true"></i>'
-        : '<i class="fa-solid fa-eye" aria-hidden="true"></i>';
+      btn.innerHTML = isPw ? '<i class="fa-solid fa-eye-slash" aria-hidden="true"></i>' : '<i class="fa-solid fa-eye" aria-hidden="true"></i>';
       btn.setAttribute('aria-label', isPw ? 'Hide password' : 'Show password');
     });
   });
 
-  // Confirm password
   window.vioraConfirmPwMatch = function () {
     const p1 = $('regPassword'), p2 = $('regPassword2');
     if (!p1 || !p2) return true;
@@ -381,29 +295,19 @@
     return true;
   };
 
-  // Forgot password
   const forgotLink = $('forgotLink');
   if (forgotLink) {
     forgotLink.addEventListener('click', async (e) => {
       e.preventDefault();
       const email = ($('loginEmail').value || '').trim();
       const msg = $('loginMessage');
-      if (!email) {
-        if (msg) { msg.className = 'login-message error'; msg.textContent = 'Enter your email address first, then click Forgot password.'; }
-        return;
-      }
-      if (typeof window.vioraSendPasswordReset !== 'function') {
-        if (msg) { msg.className = 'login-message info'; msg.textContent = 'Password reset is initialising — try again in a moment.'; }
-        return;
-      }
+      if (!email) { if (msg) { msg.className = 'login-message error'; msg.textContent = 'Enter your email address first, then click Forgot password.'; } return; }
+      if (typeof window.vioraSendPasswordReset !== 'function') { if (msg) { msg.className = 'login-message info'; msg.textContent = 'Password reset is initialising — try again in a moment.'; } return; }
       forgotLink.textContent = 'Sending…';
       const res = await window.vioraSendPasswordReset(email);
       forgotLink.textContent = 'Forgot password?';
-      if (res && res.ok) {
-        if (msg) { msg.className = 'login-message success'; msg.textContent = 'Reset link sent. Check your inbox.'; }
-      } else {
-        if (msg) { msg.className = 'login-message error'; msg.textContent = 'Could not send reset link. Check the email address.'; }
-      }
+      if (res && res.ok) { if (msg) { msg.className = 'login-message success'; msg.textContent = 'Reset link sent. Check your inbox.'; } }
+      else { if (msg) { msg.className = 'login-message error'; msg.textContent = 'Could not send reset link. Check the email address.'; } }
     });
   }
 
