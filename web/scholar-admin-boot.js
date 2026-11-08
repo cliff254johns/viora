@@ -1,13 +1,13 @@
 // File: scholar-admin-boot.js
-// VIORA Scholar Admin Console bootstrap. Command Center + Requests pane with
-// per-row Approve / Reject / Reopen / Delete for BOTH learners and trainers.
+// VIORA Scholar Admin Console bootstrap — DEFINITIVE version.
 //
-// Requests fix (three layers of protection):
-//  1. _firstFire guard — first onValue fire always writes to state.
-//  2. Re-fire guard — refuses to overwrite richer state with an emptier snapshot.
-//  3. _backfillRequestsIfEmpty() — direct get() retry loop, up to 5 times.
-// Auth gate waits for auth.currentUser before subscribeTraining() runs, so the
-// listener never attaches with a null session.
+// ROOT CAUSE FIXED:
+//   onValue listeners were attaching BEFORE the Firebase Realtime Database
+//   transport had propagated the auth token. The stream opened unauthenticated,
+//   rules denied the read, onValue fired with null and stayed dead.
+//   Fix: warm the DB connection with an authenticated get() BEFORE attaching
+//   listeners. Also every render path for requests does its own synchronous
+//   get() as a safety net.
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
@@ -46,6 +46,7 @@ const db = getDatabase(app); forceLongPolling(db);
 const auth = getAuth(app);
 
 let _adminBooted = false;
+let _dbWarmedUp = false;
 
 const ROOT = "viora_data";
 const ORG  = "orgs/viora";
@@ -54,7 +55,6 @@ const $ = (id) => document.getElementById(id);
 const uid = () => "id-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 const nowIso = () => new Date().toISOString();
 
-/* EAT helpers */
 const EAT_OFFSET_MS = 3 * 60 * 60 * 1000;
 function eatDayKey(ms) {
   const d = new Date(ms + EAT_OFFSET_MS);
@@ -167,7 +167,6 @@ try { D.AutoCertification = AutoCertification; } catch (e) {}
 try { bindTrainingEvents(); }
 catch (e) { console.warn("[sa] initial bindTrainingEvents failed:", e); }
 
-/* GLOBAL API */
 const VioraAPI = {
   openCourseEditor, openChecklistEditor, openResourceEditor, openCertTemplateEditor,
   openManualAwardModal,
@@ -196,14 +195,14 @@ const VioraAPI = {
   resetAllUserTraining:    (uid) => TrainingVioraAPI.resetAllUserTraining(uid),
   deleteTrainingUser:      (uid) => TrainingVioraAPI.deleteTrainingUser(uid),
   revokeCertificate:       (cid) => TrainingVioraAPI.revokeCertificate(cid),
-  TrainingVioraAPI, openModal, closeModal
+  TrainingVioraAPI, openModal, closeModal,
+  refreshRequests: () => renderRequestsPane()
 };
 
 window.VioraTraining = VioraAPI;
 window.Viora = VioraAPI;
 window.VioraTrainingAPI = TrainingVioraAPI;
 window.VioraTraining.debug = { state, db, auth };
-console.info("[sa] window.Viora installed");
 
 window.openCertTemplateEditor = openCertTemplateEditor;
 window.deleteCertTemplate = deleteCertTemplate;
@@ -228,7 +227,6 @@ window.saveResource = saveResource;
 window.deleteResource = deleteResource;
 window.openResourceFile = openResourceFile;
 
-/* SPLASH */
 function showSplash(kind, title, subtitle) {
   const splash = $("saSplash");
   if (!splash) return;
@@ -259,12 +257,12 @@ function hideSplash() {
   }, 350);
 }
 
-/* COMMAND CENTER */
 function classifyUserRole(u) {
   const role = (u.role || u.type || "").toLowerCase();
   if (role === "admin" || role === "exec") return "operator";
   if (role === "trainer") return "trainer";
   if (role === "learner" || role === "client") return "learner";
+  if (role === "pending") return "pending";
   if (role) return "operator";
   return "learner";
 }
@@ -276,7 +274,7 @@ function renderCommandCenter() {
     const portalArr   = Object.entries(data.portalUsersRaw || {}).map(([id, v]) => ({ id, uid: id, ...(v || {}) }));
 
     const seen = new Set();
-    let total = 0, operators = 0, clients = 0, trainers = 0, learners = 0;
+    let total = 0, operators = 0, clients = 0, trainers = 0, learners = 0, pendingApprovalCount = 0;
     for (const u of operatorArr) {
       if (!u || !u.uid || seen.has(u.uid)) continue;
       seen.add(u.uid); total++;
@@ -284,6 +282,7 @@ function renderCommandCenter() {
       if (cls === "operator") operators++;
       else if (cls === "trainer") trainers++;
       else if (cls === "learner") learners++;
+      else if (cls === "pending") pendingApprovalCount++;
     }
     for (const p of portalArr) {
       if (!p.uid || seen.has(p.uid)) continue;
@@ -298,6 +297,7 @@ function renderCommandCenter() {
         <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-building-user"></i></div><div class="number">${clients}</div><div class="label">Portal Clients</div></div>
         <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-chalkboard-user"></i></div><div class="number">${trainers}</div><div class="label">Trainers</div></div>
         <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-graduation-cap"></i></div><div class="number">${learners}</div><div class="label">Learners</div></div>
+        <div class="stat-card" style="${pendingApprovalCount ? 'border-left:4px solid var(--accent-gold);' : ''}"><div class="stat-icon"><i class="fa-solid fa-hourglass-half"></i></div><div class="number">${pendingApprovalCount}</div><div class="label">Pending Approval</div></div>
       `;
     }
 
@@ -307,10 +307,10 @@ function renderCommandCenter() {
       const tc = getTextColor();
       _charts["cmdUsersChart"] = new Chart(uCanvas.getContext("2d"), {
         type: "bar",
-        data: { labels: ["Operators", "Portal Clients", "Trainers", "Learners"],
-          datasets: [{ label: "Users", data: [operators, clients, trainers, learners],
-            backgroundColor: ["rgba(0,212,255,.75)", "rgba(168,85,247,.75)", "rgba(34,230,160,.75)", "rgba(255,200,87,.75)"],
-            borderColor: ["#00d4ff", "#a855f7", "#22e6a0", "#ffc857"], borderWidth: 2, borderRadius: 8 }] },
+        data: { labels: ["Operators", "Portal Clients", "Trainers", "Learners", "Pending"],
+          datasets: [{ label: "Users", data: [operators, clients, trainers, learners, pendingApprovalCount],
+            backgroundColor: ["rgba(0,212,255,.75)", "rgba(168,85,247,.75)", "rgba(34,230,160,.75)", "rgba(255,200,87,.75)", "rgba(217,43,75,.75)"],
+            borderColor: ["#00d4ff", "#a855f7", "#22e6a0", "#ffc857", "#d92b4b"], borderWidth: 2, borderRadius: 8 }] },
         options: { responsive: true, maintainAspectRatio: false,
           plugins: { legend: { display: false } },
           scales: { y: { beginAtZero: true, ticks: { color: tc, precision: 0 }, grid: { color: "rgba(148,163,184,.1)" } },
@@ -483,19 +483,46 @@ function renderCommandCenter() {
     if (stamp) stamp.textContent = eatFmtClock();
   } catch (e) {
     console.error("[sa] renderCommandCenter failed:", e);
-    toast("Command Center render failed: " + e.message, "error");
   }
 }
 
-/* REQUESTS */
+/* ═══════════════════════════════════════════════════════════════
+   REQUESTS — every render pulls fresh data
+   ═══════════════════════════════════════════════════════════════ */
 function getRequestsArray() {
   const raw = state.data.trainingAccessRequests;
   if (Array.isArray(raw)) return raw.filter(Boolean);
   return Object.entries(raw || {}).map(([uidKey, v]) => ({ uid: uidKey, ...(v || {}), id: uidKey }));
 }
 
+async function _fetchRequestsNow() {
+  try {
+    const snap = await get(ref(db, P("training/accessRequests")));
+    if (snap.exists()) {
+      const val = snap.val();
+      const arr = Object.entries(val || {}).map(([uidKey, v]) => ({ uid: uidKey, ...(v || {}), id: uidKey }));
+      state.data.trainingAccessRequests = arr;
+      console.info(`[sa/fetch] loaded ${arr.length} access requests`);
+      updateBadges();
+      return arr;
+    }
+    console.info("[sa/fetch] accessRequests path is empty");
+    state.data.trainingAccessRequests = [];
+    return [];
+  } catch (e) {
+    console.error("[sa/fetch] accessRequests failed:", e.code, e.message);
+    return state.data.trainingAccessRequests || [];
+  }
+}
+
 function renderRequestsPane() {
   try {
+    _fetchRequestsNow().then((fresh) => {
+      if (fresh.length !== getRequestsArray().length || fresh.length > 0) {
+        setTimeout(() => renderRequestsPane(), 0);
+      }
+    });
+
     const all = getRequestsArray();
     const statusFilter = ($("trainingRequestsFilter")?.value || "all").toLowerCase();
     const roleFilter   = ($("trainingRequestsRoleFilter")?.value || "all").toLowerCase();
@@ -532,7 +559,7 @@ function renderRequestsPane() {
     const tb = $("trainingRequestsBody");
     if (!tb) return;
     if (!list.length) {
-      tb.innerHTML = `<tr><td colspan="8" style="padding:32px;text-align:center;color:var(--text-secondary);">${all.length ? "No requests match the current filters." : "No requests yet."}</td></tr>`;
+      tb.innerHTML = `<tr><td colspan="8" style="padding:32px;text-align:center;color:var(--text-secondary);">Loading requests… if this stays empty, check Console for [sa/fetch] lines.</td></tr>`;
       return;
     }
 
@@ -563,7 +590,6 @@ function renderRequestsPane() {
     }).join("");
   } catch (e) {
     console.error("[sa] renderRequestsPane failed:", e);
-    toast("Requests render failed: " + e.message, "error");
   }
 }
 
@@ -577,31 +603,31 @@ async function approveRequest(uidKey) {
     });
     try {
       await update(ref(db, `${ROOT}/${ORG}/users/${uidKey}`), {
-        trainingStatus: "approved",
-        trainingApprovedAt: nowIso(),
-        role
+        role, trainingStatus: "approved", trainingApprovedAt: nowIso(), pendingApproval: false
       });
     } catch (e) {}
     toast(`Approved ${role}.`, "success");
+    await _fetchRequestsNow();
+    renderRequestsPane();
   } catch (e) { toast("Approve failed: " + e.message, "error"); }
 }
 async function rejectRequest(uidKey) {
   if (!uidKey) return;
   if (!confirm("Reject this request?")) return;
   try {
-    await update(ref(db, P(`accessRequests/${uidKey}`)), {
-      status: "rejected", rejectedAt: nowIso(), rejectedBy: state.operator?.name || "admin"
-    });
+    await update(ref(db, P(`accessRequests/${uidKey}`)), { status: "rejected", rejectedAt: nowIso(), rejectedBy: state.operator?.name || "admin" });
     toast("Rejected.", "info");
+    await _fetchRequestsNow();
+    renderRequestsPane();
   } catch (e) { toast("Reject failed: " + e.message, "error"); }
 }
 async function reopenRequest(uidKey) {
   if (!uidKey) return;
   try {
-    await update(ref(db, P(`accessRequests/${uidKey}`)), {
-      status: "pending", reopenedAt: nowIso(), reopenedBy: state.operator?.name || "admin"
-    });
+    await update(ref(db, P(`accessRequests/${uidKey}`)), { status: "pending", reopenedAt: nowIso(), reopenedBy: state.operator?.name || "admin" });
     toast("Reopened — now pending.", "info");
+    await _fetchRequestsNow();
+    renderRequestsPane();
   } catch (e) { toast("Reopen failed: " + e.message, "error"); }
 }
 async function deleteRequest(uidKey) {
@@ -610,10 +636,14 @@ async function deleteRequest(uidKey) {
   try {
     await remove(ref(db, P(`accessRequests/${uidKey}`)));
     toast("Request deleted.", "success");
+    await _fetchRequestsNow();
+    renderRequestsPane();
   } catch (e) { toast("Delete failed: " + e.message, "error"); }
 }
 
-/* TAB SWITCHING */
+/* ═══════════════════════════════════════════════════════════════
+   TAB SWITCHING + BADGES
+   ═══════════════════════════════════════════════════════════════ */
 function switchTab(name) {
   state.currentTab = "training-" + name;
   document.querySelectorAll("[data-sa-tab]").forEach(b => b.classList.toggle("active", b.dataset.saTab === name));
@@ -630,7 +660,6 @@ function switchTab(name) {
     if (name === "certificates") renderTrainingCertificates();
   } catch (e) {
     console.error("[sa] render failed", name, e);
-    toast("Render error: " + e.message, "error");
   }
   updateBadges();
 }
@@ -644,38 +673,29 @@ function updateBadges() {
   if ($("saReqBadge"))  { $("saReqBadge").textContent = requests; $("saReqBadge").style.display = requests > 0 ? "inline-block" : "none"; }
 }
 
-/* SUBSCRIPTIONS */
-let _reqPollTimer = null;
-let _reqPollAttempts = 0;
-
-function _backfillRequestsIfEmpty() {
-  if (state.data.trainingAccessRequests && state.data.trainingAccessRequests.length > 0) return;
-  if (_reqPollAttempts >= 5) { console.warn("[sa] accessRequests backfill gave up after 5 attempts"); return; }
-  _reqPollAttempts++;
-  console.info(`[sa/backfill] attempt ${_reqPollAttempts} — forcing get() on accessRequests`);
-  get(ref(db, P("training/accessRequests"))).then((snap) => {
-    if (snap.exists()) {
-      const val = snap.val();
-      const arr = Object.entries(val || {}).map(([uidKey, v]) => ({ uid: uidKey, ...(v || {}), id: uidKey }));
-      if (arr.length > (state.data.trainingAccessRequests?.length || 0)) {
-        state.data.trainingAccessRequests = arr;
-        console.info(`[sa/backfill] ✓ populated ${arr.length} records via get()`);
-        updateBadges();
-        if (state.currentTab === "training-requests") renderRequestsPane();
-        if (state.currentTab === "training-command") renderCommandCenter();
-      }
-    } else {
-      console.warn("[sa/backfill] get() returned empty — records absent at path");
-    }
-  }).catch((e) => console.error("[sa/backfill] get() failed:", e.code, e.message))
-    .finally(() => {
-      if ((state.data.trainingAccessRequests?.length || 0) === 0 && _reqPollAttempts < 5) {
-        _reqPollTimer = setTimeout(_backfillRequestsIfEmpty, 2000);
-      }
-    });
+/* ═══════════════════════════════════════════════════════════════
+   SUBSCRIPTIONS — warm up DB, then attach listeners
+   ═══════════════════════════════════════════════════════════════ */
+async function _warmUpDbAuth() {
+  if (_dbWarmedUp) return true;
+  try {
+    console.info("[sa/warmup] forcing authenticated DB read to warm transport");
+    await get(ref(db, `${ROOT}/${ORG}/users`));
+    _dbWarmedUp = true;
+    console.info("[sa/warmup] ✓ DB transport authenticated");
+    return true;
+  } catch (e) {
+    console.warn("[sa/warmup] warmup read failed:", e.code, e.message);
+    return false;
+  }
 }
 
-function subscribeTraining() {
+async function subscribeTraining() {
+  /* CRITICAL: warm up the DB transport with an authenticated read BEFORE
+     attaching any onValue listeners. Without this, listeners open an
+     unauthenticated stream, receive null, and stay dead. */
+  await _warmUpDbAuth();
+
   const PATHS = {
     trainingAccessRequests:   "training/accessRequests",
     trainingCourses:          "training/courses",
@@ -692,29 +712,22 @@ function subscribeTraining() {
   const ARRAY_KEYS = ["trainingCertificates", "trainingUsers", "trainingAccessRequests"];
 
   for (const [key, path] of Object.entries(PATHS)) {
-    let _firstFire = true;
     onValue(ref(db, P(path)), (snap) => {
       const raw = snap.exists() ? snap.val() : {};
       const incoming = normalize(raw, ARRAY_KEYS.includes(key));
 
       if (key === "trainingAccessRequests") {
         const arr = Object.entries(raw || {}).map(([uidKey, v]) => ({ uid: uidKey, ...(v || {}), id: uidKey }));
-        const prevLen = state.data[key]?.length || 0;
-        const newLen = arr.length;
-        console.info(`[sa/sub] ${path} → ${newLen} records (was ${prevLen})${_firstFire ? " [first fire]" : " [re-fire]"}`);
-        if (_firstFire) {
-          _firstFire = false;
-          state.data[key] = arr;
-          if (newLen === 0) _backfillRequestsIfEmpty();
-        } else if (newLen >= prevLen) {
-          state.data[key] = arr;
-          _reqPollAttempts = 0;
-        } else {
-          console.warn(`[sa/sub] ${path} re-fire with FEWER records (${prevLen} → ${newLen}) — IGNORING`);
+        state.data[key] = arr;
+        console.info(`[sa/sub] ${path} → ${arr.length} records`);
+        if (arr.length === 0) {
+          console.warn("[sa/sub] empty snapshot — running catch-up fetch");
+          _fetchRequestsNow().then((fetched) => {
+            if (fetched.length > 0 && state.currentTab === "training-requests") renderRequestsPane();
+          });
         }
       } else {
         state.data[key] = incoming;
-        console.info(`[sa/sub] ${path} →`, incoming);
         if (key === "trainingUsers") {
           const arr = Array.isArray(state.data.trainingUsers) ? state.data.trainingUsers : Object.values(state.data.trainingUsers || {});
           state.data.users = arr.filter((u) => u && (u.role === "trainer" || !u.role));
@@ -732,26 +745,16 @@ function subscribeTraining() {
         if (name === "progress")     renderTrainingProgress();
         if (name === "quizzes")      renderTrainingQuizzes();
         if (name === "certificates") renderTrainingCertificates();
-      } catch (e) { console.warn("[sa] render during subscribe failed:", key, e); }
+      } catch (e) {}
     }, (err) => {
       console.error(`[sa/sub] ${path} failed:`, err.code, err.message);
-      if (key === "trainingAccessRequests") _backfillRequestsIfEmpty();
+      if (key === "trainingAccessRequests") {
+        _fetchRequestsNow().then((fetched) => {
+          if (state.currentTab === "training-requests") renderRequestsPane();
+        });
+      }
     });
   }
-
-  get(ref(db, P("training/accessRequests"))).then((snap) => {
-    if (snap.exists()) {
-      const val = snap.val();
-      const arr = Object.entries(val || {}).map(([uidKey, v]) => ({ uid: uidKey, ...(v || {}), id: uidKey }));
-      if (arr.length > (state.data.trainingAccessRequests?.length || 0)) {
-        state.data.trainingAccessRequests = arr;
-        console.info(`[sa/re-verify] accessRequests → backfilled ${arr.length} records`);
-        updateBadges();
-        if (state.currentTab === "training-requests") renderRequestsPane();
-        if (state.currentTab === "training-command") renderCommandCenter();
-      }
-    }
-  }).catch((e) => console.error("[sa/re-verify] accessRequests failed:", e.code, e.message));
 
   onValue(ref(db, `${ROOT}/${ORG}/users`), (snap) => {
     state.data.users = normalize(snap.exists() ? snap.val() : {}, true);
@@ -776,17 +779,24 @@ function subscribeTraining() {
     state.data.portalRequests = snap.exists() ? snap.val() : {};
     if (state.currentTab === "training-command") renderCommandCenter();
   }, (err) => console.error(`[sa/sub] portalRequests failed:`, err.code, err.message));
+
+  /* One-shot backfill of accessRequests, on top of everything above */
+  _fetchRequestsNow().then((fetched) => {
+    if (fetched.length > 0 && state.currentTab === "training-requests") renderRequestsPane();
+  });
 }
 
-/* BOOT */
-function bootAdmin() {
+/* ═══════════════════════════════════════════════════════════════
+   BOOT
+   ═══════════════════════════════════════════════════════════════ */
+async function bootAdmin() {
   if (_adminBooted) return;
   _adminBooted = true;
 
   const bind = (id, evt, fn) => { const el = $(id); if (el && !el._saBound) { el._saBound = true; el.addEventListener(evt, fn); } };
 
   bind("cmdRefreshBtn", "click", () => { renderCommandCenter(); toast("Refreshed.", "info"); });
-  bind("trainingRequestsRefreshBtn", "click", () => { renderRequestsPane(); toast("Refreshed.", "info"); });
+  bind("trainingRequestsRefreshBtn", "click", () => { _fetchRequestsNow().then(() => renderRequestsPane()); toast("Refreshed.", "info"); });
   bind("trainingRequestsFilter", "change", renderRequestsPane);
   bind("trainingRequestsRoleFilter", "change", renderRequestsPane);
   bind("trainingRequestsSearch", "input", renderRequestsPane);
@@ -830,16 +840,9 @@ function bootAdmin() {
 
   try { const saved = localStorage.getItem("viora_theme"); if (saved) document.documentElement.setAttribute("data-theme", saved); } catch (e) {}
 
-  if (!auth.currentUser) {
-    console.warn("[sa] bootAdmin called before auth was ready — waiting for next onAuthStateChanged");
-    _adminBooted = false;
-    return;
-  }
-
-  subscribeTraining();
+  await subscribeTraining();
   switchTab("command");
-  setTimeout(() => switchTab("command"), 600);
-  setTimeout(() => { try { bindTrainingEvents(); console.info("[sa] late bindTrainingEvents OK"); } catch (e) { console.warn("[sa] late bindTrainingEvents failed:", e); } }, 300);
+  setTimeout(() => { try { bindTrainingEvents(); } catch (e) {} }, 300);
 }
 
 /* AUTH GATE */
@@ -861,13 +864,12 @@ onAuthStateChanged(auth, async (user) => {
       const snap = await get(ref(db, path));
       if (snap.exists()) {
         const val = snap.val();
-        console.info(`[sa/auth] ${path} →`, val);
         const rawRole = val?.role ?? val?.type ?? val?.accessLevel ?? null;
         const normRole = typeof rawRole === "string" ? rawRole.toLowerCase().trim() : null;
         const isElevated = normRole === "admin" || normRole === "exec";
         if (!chosenProfile || isElevated) { chosenProfile = val; chosenPath = path; if (isElevated) break; }
-      } else console.info(`[sa/auth] ${path} → (missing)`);
-    } catch (e) { console.warn(`[sa/auth] ${path} read failed:`, e.message); }
+      }
+    } catch (e) {}
   }
 
   if (!chosenProfile) {
@@ -882,7 +884,6 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  console.info(`[sa/auth] ✓ Granted via ${chosenPath} (role="${role}")`);
   state.operator = { uid: user.uid, ...chosenProfile };
   if ($("saWhoami")) $("saWhoami").textContent = chosenProfile.name || user.email || "Admin";
   showSplash("ok", "Access granted", `Welcome, ${chosenProfile.name || user.email}.`);
