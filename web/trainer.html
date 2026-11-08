@@ -1,3 +1,6 @@
+<!-- File: trainer.html
+     FIXES: Loads only scholar-shared.css. All login/pending/shell ids preserved.
+     Course editor modal at bottom with all ce* ids. Bottom nav has five tabs. -->
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
@@ -11,19 +14,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-<link rel="icon" type="image/png" href="https://viora.co.ke/viora.png">
-
+<link rel="icon" type="image/png" href="https://viora.co.ke/viora.png" />
 <link rel="stylesheet" href="scholar-shared.css" />
-<link rel="stylesheet" href="mainTraining/training.css" />
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════════════
-     TRAINER LOGIN
-     ═══════════════════════════════════════════════════════════ -->
 <div id="trLoginScreen" style="position:fixed;inset:0;z-index:9999;background:radial-gradient(circle at 20% 20%, #1E1B4B 0%, #0B1220 60%, #060913 100%);display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto;">
   <div class="login-card" style="width:100%;max-width:460px;background:rgba(255,255,255,.045);backdrop-filter:blur(24px) saturate(140%);-webkit-backdrop-filter:blur(24px) saturate(140%);border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:40px 36px 32px;box-shadow:0 24px 60px rgba(0,0,0,.55);color:#E2E8F0;">
-    
+
     <div class="login-brand" style="display:flex;align-items:center;gap:14px;margin-bottom:24px;">
       <div class="logo-mark" style="width:56px;height:56px;border-radius:15px;background:linear-gradient(135deg,#22e6a0 0%,#00d4ff 100%);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:#fff;box-shadow:0 8px 24px rgba(34,230,160,.5);">
         <i class="fa-solid fa-chalkboard-user"></i>
@@ -45,7 +43,6 @@
       </button>
     </div>
 
-    <!-- SIGN IN FORM -->
     <form id="trSignInFields" onsubmit="event.preventDefault();">
       <div class="login-field" style="position:relative;margin-bottom:16px;">
         <label style="display:block;font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:#94a3b8;margin-bottom:8px;">Email</label>
@@ -63,7 +60,6 @@
       </button>
     </form>
 
-    <!-- REQUEST ACCESS FORM -->
     <form id="trRequestFields" onsubmit="event.preventDefault();" style="display:none;">
       <div class="signup-intro" style="padding:14px 16px;margin-bottom:16px;background:rgba(34,230,160,.08);border-left:3px solid #22e6a0;border-radius:10px;font-size:.78rem;line-height:1.55;color:#a7f3d0;">
         <strong style="display:flex;align-items:center;gap:6px;color:#22e6a0;font-size:.82rem;margin-bottom:4px;font-weight:700;">
@@ -115,9 +111,6 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     PENDING SCREEN — waiting for admin approval
-     ═══════════════════════════════════════════════════════════ -->
 <div id="trPendingScreen" style="position:fixed;inset:0;z-index:9999;background:radial-gradient(circle at 20% 20%, #1E1B4B 0%, #0B1220 60%, #060913 100%);display:none;align-items:center;justify-content:center;padding:24px;overflow-y:auto;">
   <div style="width:100%;max-width:480px;background:rgba(255,255,255,.045);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:40px 34px 32px;box-shadow:0 24px 60px rgba(0,0,0,.5);color:#E2E8F0;text-align:center;">
     <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#ffc857,#b8860b);display:inline-flex;align-items:center;justify-content:center;font-size:1.7rem;color:#fff;margin-bottom:18px;box-shadow:0 8px 24px rgba(255,200,87,.35);">
@@ -154,9 +147,6 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     TRAINER APP SHELL
-     ═══════════════════════════════════════════════════════════ -->
 <div class="sch-app" id="trShell" style="display:none;">
   <div class="sch-overlay" id="trSidebarOverlay"></div>
 
@@ -184,7 +174,7 @@
     <header class="sch-topbar">
       <div class="sch-topbar-left">
         <button class="sch-mobile-toggle" id="trMobileToggle"><i class="fa-solid fa-bars"></i></button>
-        <span style="font-family:'Space Grotesk';font-weight:700;font-size:.9rem;">Trainer Dashboard</span>
+        <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:.9rem;">Trainer Dashboard</span>
       </div>
       <div class="sch-topbar-right">
         <span class="live-sync" style="display:inline-flex;align-items:center;gap:6px;font-size:.7rem;color:var(--accent-green);background:rgba(34,230,160,.1);padding:4px 10px;border-radius:20px;border:1px solid rgba(34,230,160,.3);">
@@ -250,7 +240,6 @@
   </nav>
 </div>
 
-<!-- ═══ COURSE EDITOR MODAL ═══ -->
 <div class="modal-overlay" id="courseEditorModal">
   <div class="modal xl" style="background:#12121a;border:1px solid rgba(0,212,255,.14);border-radius:20px;padding:24px;width:100%;max-width:800px;max-height:90vh;overflow-y:auto;">
     <h2 style="display:flex;align-items:center;gap:10px;font-size:1.2rem;margin-bottom:20px;">
