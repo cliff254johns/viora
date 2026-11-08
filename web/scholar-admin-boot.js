@@ -1,12 +1,18 @@
 // File: scholar-admin-boot.js
-// VIORA Scholar Admin Console — bootstrap with Command Center (bar + line charts)
-// and rewritten Requests pane (approve/reject/reopen/delete per row).
+// VIORA Scholar Admin Console — bootstrap
 //
-// THE REQUESTS FIX: The renderer now bypasses main/training.js's
-// renderTrainingRequests entirely and draws rows directly from state.data,
-// so any bug in the training-module renderer cannot hide requests anymore.
-// The state itself is populated by onValue(ref(db, "training/accessRequests"))
-// which we re-verify with a one-shot get() at boot.
+// WHAT'S IN THIS FILE:
+//  - Command Center tab with Users / Subscriptions / Training KPIs + bar charts,
+//    30-day activity line chart, recent activity feed. All timestamps in EAT.
+//  - Access Requests pane: ALL statuses shown by default, Approve / Reject /
+//    Reopen / Delete per row. Subscriber is bulletproof: first-fire capture,
+//    re-fire guard (never overwrites richer state with emptier state),
+//    _backfillRequestsIfEmpty fallback that calls get() up to 5 times.
+//  - Multi-path auth gate (viora_data/users, orgs/viora/users,
+//    orgs/viora/training/users). Accepts role|type|accessLevel === admin|exec.
+//  - _adminBooted guard + auth-warm check so subscribeTraining never runs
+//    before Firebase rehydrates the session from localStorage.
+//  - window.Viora + window.VioraTraining both expose the full API surface.
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
@@ -53,6 +59,9 @@ const $ = (id) => document.getElementById(id);
 const uid = () => "id-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 const nowIso = () => new Date().toISOString();
 
+/* ═══════════════════════════════════════════════════════════════
+   EAT (Africa/Nairobi) timezone helpers — UTC+3, no DST
+   ═══════════════════════════════════════════════════════════════ */
 const EAT_OFFSET_MS = 3 * 60 * 60 * 1000;
 function eatNow() { return new Date(Date.now() + EAT_OFFSET_MS); }
 function eatDayKey(ms) {
@@ -140,8 +149,7 @@ const state = {
     subscriptions: {}, subscriptionsRaw: {},
     portalUsers: {}, portalUsersRaw: {},
     portalRequests: {},
-    users: [], entities: [],
-    _commandCenterRefresh: 0
+    users: [], entities: []
   },
   operator: null, currentTab: "training-command", charts: _charts
 };
@@ -233,7 +241,7 @@ window.deleteResource = deleteResource;
 window.openResourceFile = openResourceFile;
 
 /* ═══════════════════════════════════════════════════════════════
-   AUTH SPLASH
+   SPLASH
    ═══════════════════════════════════════════════════════════════ */
 function showSplash(kind, title, subtitle) {
   const splash = $("saSplash");
@@ -266,7 +274,7 @@ function hideSplash() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   COMMAND CENTER — with bar + line charts
+   COMMAND CENTER
    ═══════════════════════════════════════════════════════════════ */
 function classifyUserRole(u) {
   const role = (u.role || u.type || "").toLowerCase();
@@ -360,7 +368,6 @@ function renderCommandCenter() {
       `;
     }
 
-    /* Subscriptions bar chart */
     const sCanvas = $("cmdSubsChart");
     if (sCanvas && typeof Chart !== "undefined") {
       destroyChart("cmdSubsChart");
@@ -388,7 +395,7 @@ function renderCommandCenter() {
       });
     }
 
-    /* Training KPIs */
+    /* Training */
     const courseCount = (Array.isArray(data.trainingCourses) ? data.trainingCourses : Object.values(data.trainingCourses || {})).length;
     const enrollments = Object.values(data.trainingEnrollments || {}).reduce((sum, u) => sum + Object.keys(u || {}).length, 0);
     const completions = Object.values(data.trainingEnrollments || {}).reduce((sum, u) => sum + Object.values(u || {}).filter(e => e && e.completedAt).length, 0);
@@ -405,7 +412,6 @@ function renderCommandCenter() {
       `;
     }
 
-    /* Training bar chart */
     const tCanvas = $("cmdTrainingChart");
     if (tCanvas && typeof Chart !== "undefined") {
       destroyChart("cmdTrainingChart");
@@ -548,12 +554,12 @@ function renderCommandCenter() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   REQUESTS — full rewrite, all statuses visible, all actions available
+   REQUESTS
    ═══════════════════════════════════════════════════════════════ */
 function getRequestsArray() {
   const raw = state.data.trainingAccessRequests;
   if (Array.isArray(raw)) return raw.filter(Boolean);
-  return Object.entries(raw || {}).map(([uid, v]) => ({ uid, ...(v || {}), id: uid }));
+  return Object.entries(raw || {}).map(([uidKey, v]) => ({ uid: uidKey, ...(v || {}), id: uidKey }));
 }
 
 function renderRequestsPane() {
@@ -582,10 +588,7 @@ function renderRequestsPane() {
     }
 
     const badge = $("saReqBadge");
-    if (badge) {
-      badge.textContent = pending;
-      badge.style.display = pending > 0 ? "inline-block" : "none";
-    }
+    if (badge) { badge.textContent = pending; badge.style.display = pending > 0 ? "inline-block" : "none"; }
 
     const tb = $("trainingRequestsBody");
     if (!tb) { console.warn("[sa] #trainingRequestsBody not found in DOM"); return; }
@@ -661,7 +664,7 @@ async function deleteRequest(uidKey) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   TAB SWITCHING + BADGES
+   TAB SWITCHING
    ═══════════════════════════════════════════════════════════════ */
 function switchTab(name) {
   state.currentTab = "training-" + name;
@@ -694,8 +697,43 @@ function updateBadges() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   SUBSCRIPTIONS — includes one-shot re-verify for accessRequests
+   SUBSCRIPTIONS — bulletproof accessRequests backfill
    ═══════════════════════════════════════════════════════════════ */
+let _reqPollTimer = null;
+let _reqPollAttempts = 0;
+
+function _backfillRequestsIfEmpty() {
+  if (state.data.trainingAccessRequests && state.data.trainingAccessRequests.length > 0) return;
+  if (_reqPollAttempts >= 5) {
+    console.warn("[sa] accessRequests backfill gave up after 5 attempts");
+    return;
+  }
+  _reqPollAttempts++;
+  console.info(`[sa/backfill] attempt ${_reqPollAttempts} — forcing get() on accessRequests`);
+  get(ref(db, P("training/accessRequests"))).then((snap) => {
+    if (snap.exists()) {
+      const val = snap.val();
+      const arr = Object.entries(val || {}).map(([uidKey, v]) => ({ uid: uidKey, ...(v || {}), id: uidKey }));
+      if (arr.length > (state.data.trainingAccessRequests?.length || 0)) {
+        state.data.trainingAccessRequests = arr;
+        console.info(`[sa/backfill] ✓ populated ${arr.length} records via get()`);
+        updateBadges();
+        if (state.currentTab === "training-requests") renderRequestsPane();
+        if (state.currentTab === "training-command") renderCommandCenter();
+      } else {
+        console.warn(`[sa/backfill] get() returned ${arr.length} records but state already has ${state.data.trainingAccessRequests?.length || 0} — no change`);
+      }
+    } else {
+      console.warn("[sa/backfill] get() returned empty — records truly absent at path");
+    }
+  }).catch((e) => console.error("[sa/backfill] get() failed:", e.code, e.message))
+    .finally(() => {
+      if ((state.data.trainingAccessRequests?.length || 0) === 0 && _reqPollAttempts < 5) {
+        _reqPollTimer = setTimeout(_backfillRequestsIfEmpty, 2000);
+      }
+    });
+}
+
 function subscribeTraining() {
   const PATHS = {
     trainingAccessRequests:   "training/accessRequests",
@@ -713,18 +751,40 @@ function subscribeTraining() {
   const ARRAY_KEYS = ["trainingCertificates", "trainingUsers", "trainingAccessRequests"];
 
   for (const [key, path] of Object.entries(PATHS)) {
+    let _firstFire = true;
     onValue(ref(db, P(path)), (snap) => {
       const raw = snap.exists() ? snap.val() : {};
-      state.data[key] = normalize(raw, ARRAY_KEYS.includes(key));
+      const incoming = normalize(raw, ARRAY_KEYS.includes(key));
+
       if (key === "trainingAccessRequests") {
-        state.data[key] = Object.entries(raw || {}).map(([uidKey, v]) => ({ uid: uidKey, ...(v || {}), id: uidKey }));
+        const arr = Object.entries(raw || {}).map(([uidKey, v]) => ({ uid: uidKey, ...(v || {}), id: uidKey }));
+        const prevLen = state.data[key]?.length || 0;
+        const newLen = arr.length;
+        console.info(`[sa/sub] ${path} → ${newLen} records (was ${prevLen})${_firstFire ? " [first fire]" : " [re-fire]"}`);
+
+        if (_firstFire) {
+          _firstFire = false;
+          state.data[key] = arr;
+          if (newLen === 0) {
+            console.warn(`[sa/sub] ${path} fired EMPTY on first fire — scheduling backfill`);
+            _backfillRequestsIfEmpty();
+          }
+        } else if (newLen >= prevLen) {
+          state.data[key] = arr;
+          _reqPollAttempts = 0;
+        } else {
+          console.warn(`[sa/sub] ${path} re-fire with FEWER records (${prevLen} → ${newLen}) — IGNORING to protect state`);
+        }
+      } else {
+        state.data[key] = incoming;
+        console.info(`[sa/sub] ${path} →`, incoming);
+        if (key === "trainingUsers") {
+          const arr = Array.isArray(state.data.trainingUsers) ? state.data.trainingUsers : Object.values(state.data.trainingUsers || {});
+          state.data.users = arr.filter((u) => u && (u.role === "trainer" || !u.role));
+          state.data.portalUsers = arr.filter((u) => u && u.role !== "trainer" && u.role);
+        }
       }
-      if (key === "trainingUsers") {
-        const arr = Array.isArray(state.data.trainingUsers) ? state.data.trainingUsers : Object.values(state.data.trainingUsers || {});
-        state.data.users = arr.filter((u) => u && (u.role === "trainer" || !u.role));
-        state.data.portalUsers = arr.filter((u) => u && u.role !== "trainer" && u.role);
-      }
-      console.info(`[sa/sub] ${path} →`, key === "trainingAccessRequests" ? `${state.data[key].length} records` : state.data[key]);
+
       updateBadges();
       const name = state.currentTab.replace(/^training-/, "");
       try {
@@ -736,18 +796,28 @@ function subscribeTraining() {
         if (name === "quizzes")      renderTrainingQuizzes();
         if (name === "certificates") renderTrainingCertificates();
       } catch (e) { console.warn("[sa] render during subscribe failed:", key, e); }
-    }, (err) => { console.error(`[sa/sub] ${path} failed:`, err.code, err.message); });
+    }, (err) => {
+      console.error(`[sa/sub] ${path} failed:`, err.code, err.message);
+      if (key === "trainingAccessRequests") _backfillRequestsIfEmpty();
+    });
   }
 
-  /* Force re-verify accessRequests with a one-shot get() so we never miss data */
+  /* One-shot re-verify */
   get(ref(db, P("training/accessRequests"))).then((snap) => {
     if (snap.exists()) {
       const val = snap.val();
-      state.data.trainingAccessRequests = Object.entries(val || {}).map(([uidKey, v]) => ({ uid: uidKey, ...(v || {}), id: uidKey }));
-      console.info(`[sa/re-verify] accessRequests → ${state.data.trainingAccessRequests.length} records`);
-      updateBadges();
-      if (state.currentTab === "training-requests") renderRequestsPane();
-      if (state.currentTab === "training-command") renderCommandCenter();
+      const arr = Object.entries(val || {}).map(([uidKey, v]) => ({ uid: uidKey, ...(v || {}), id: uidKey }));
+      if (arr.length > (state.data.trainingAccessRequests?.length || 0)) {
+        state.data.trainingAccessRequests = arr;
+        console.info(`[sa/re-verify] accessRequests → backfilled ${arr.length} records`);
+        updateBadges();
+        if (state.currentTab === "training-requests") renderRequestsPane();
+        if (state.currentTab === "training-command") renderCommandCenter();
+      } else {
+        console.info(`[sa/re-verify] accessRequests → listener already has ${state.data.trainingAccessRequests?.length || 0} records`);
+      }
+    } else {
+      console.info(`[sa/re-verify] accessRequests → path is empty`);
     }
   }).catch((e) => console.error("[sa/re-verify] accessRequests failed:", e.code, e.message));
 
