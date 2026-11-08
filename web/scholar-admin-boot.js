@@ -1,20 +1,15 @@
 // File: scholar-admin-boot.js
-// VIORA Scholar Admin Console — bootstrap
+// VIORA Scholar Admin Console — bootstrap with Command Center.
 //
 // FIXES IN THIS VERSION:
-//  - window.Viora alias defined (inline onclick="Viora.xxx()" resolves).
-//  - Import set/update/remove/push from firebase/database (were missing).
-//  - Auth gate reads viora_data/users, orgs/viora/users, orgs/viora/training/users
-//    and accepts role|type|accessLevel === "admin"|"exec".
-//  - bootAdmin() is idempotent (_adminBooted guard) and bails if auth.currentUser
-//    is not yet populated — this prevents subscribeTraining() from attaching
-//    listeners BEFORE Firebase rehydrates the session from localStorage, which
-//    was causing every onValue to fire with null → state.data.* became empty.
-//  - onAuthStateChanged handles the transient null fire by delaying the deny
-//    splash by 800ms. If the session rehydrates within that window, no deny.
-//  - subscribeTraining() logs every callback and every error (permission_denied
-//    is critical, no longer swallowed).
-//  - bootAdmin() forces a second render after the first onValue round-trip.
+//  - window.Viora alias (inline onclick="Viora.xxx()" resolves).
+//  - Import set/update/remove/push from firebase/database.
+//  - bootAdmin() idempotent + bails if auth not warm — fixes Requests subscriber
+//    firing with null before localStorage rehydration.
+//  - onAuthStateChanged delays null-user deny splash by 800ms.
+//  - subscribeTraining() logs every callback & error.
+//  - NEW: Command Center tab with Users, Subscriptions, Portal KPIs.
+//  - All "today / this week / this month" computed in Africa/Nairobi (EAT, +3).
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
@@ -51,8 +46,6 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getDatabase(app); forceLongPolling(db);
 const auth = getAuth(app);
 
-/* Idempotency guard for bootAdmin — prevents subscribeTraining from attaching
-   listeners twice, and prevents it from attaching at all before auth is warm. */
 let _adminBooted = false;
 
 const ROOT = "viora_data";
@@ -61,6 +54,57 @@ const P = (path) => `${ROOT}/${ORG}/training/${path}`;
 const $ = (id) => document.getElementById(id);
 const uid = () => "id-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 const nowIso = () => new Date().toISOString();
+
+/* ═══════════════════════════════════════════════════════════════
+   EAT (Africa/Nairobi) timezone helpers.
+   EAT is UTC+3 with no DST, so the math is trivial but explicit.
+   ═══════════════════════════════════════════════════════════════ */
+const EAT_OFFSET_MS = 3 * 60 * 60 * 1000; // +3 hours
+
+function eatNow() {
+  return new Date(Date.now() + EAT_OFFSET_MS);
+}
+function eatTodayKey(/* Date */ d = eatNow()) {
+  // "YYYY-MM-DD" in EAT
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+function eatMonthKey(/* Date */ d = eatNow()) {
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+function eatDayStartMs(/* Date */ d = eatNow()) {
+  const copy = new Date(d.getTime());
+  copy.setUTCHours(0, 0, 0, 0);
+  return copy.getTime() - EAT_OFFSET_MS; // back to UTC ms
+}
+function eatMonthStartMs(/* Date */ d = eatNow()) {
+  const copy = new Date(d.getTime());
+  copy.setUTCDate(1);
+  copy.setUTCHours(0, 0, 0, 0);
+  return copy.getTime() - EAT_OFFSET_MS;
+}
+function eatFmtClock() {
+  try {
+    return eatNow().toLocaleString("en-GB", {
+      timeZone: "Africa/Nairobi",
+      day: "2-digit", month: "short", year: "numeric",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+      hour12: false
+    }) + " EAT";
+  } catch { return eatNow().toISOString(); }
+}
+function eatFmtDate(iso) {
+  if (!iso) return "—";
+  try {
+    return new Date(iso).toLocaleString("en-GB", {
+      timeZone: "Africa/Nairobi",
+      day: "2-digit", month: "short", year: "numeric",
+      hour: "2-digit", minute: "2-digit"
+    });
+  } catch { return "—"; }
+}
 
 function escapeHtml(s) {
   return String(s == null ? "" : s)
@@ -78,7 +122,7 @@ function timeAgo(iso) {
 }
 function fmtDate(iso) {
   if (!iso) return "—";
-  try { return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }); }
+  try { return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "Africa/Nairobi" }); }
   catch { return "—"; }
 }
 function fmtBytes(b) {
@@ -136,14 +180,19 @@ const state = {
     trainingCourses: {}, trainingChecklists: {}, trainingResources: {}, trainingEnrollments: {},
     trainingProgress: {}, trainingCertificates: [], trainingQuizSubmissions: {},
     trainingAccessRequests: [], trainingCertTemplates: {}, trainingCourseCompletions: {},
-    trainingUsers: [], users: [], portalUsers: [], entities: []
+    trainingUsers: [],
+    subscriptions: {}, subscriptionsRaw: {},
+    portalUsers: {}, portalUsersRaw: {},
+    portalRequests: {},
+    users: [], entities: [],
+    _commandCenterRefresh: 0
   },
-  operator: null, currentTab: "training-overview", charts: _charts
+  operator: null, currentTab: "training-command", charts: _charts
 };
 
 const D = {
   $, state, toast, escapeHtml, timeAgo, fmtDate, fmtBytes, fmtKES, uid,
-  todayStr: () => new Date().toISOString().slice(0, 10),
+  todayStr: () => eatTodayKey(),
   db, ref, set, update, remove, push, get, onValue, P, ROOT,
   logActivity: async () => {},
   callFn: async () => ({}),
@@ -166,7 +215,7 @@ try { bindTrainingEvents(); }
 catch (e) { console.warn("[sa] initial bindTrainingEvents failed:", e); }
 
 /* ═══════════════════════════════════════════════════════════════
-   GLOBAL API — both window.VioraTraining and window.Viora point here.
+   GLOBAL API
    ═══════════════════════════════════════════════════════════════ */
 const VioraAPI = {
   openCourseEditor, openChecklistEditor, openResourceEditor, openCertTemplateEditor,
@@ -208,7 +257,7 @@ window.Viora = VioraAPI;
 window.VioraTrainingAPI = TrainingVioraAPI;
 window.VioraTraining.debug = { state, db, auth };
 
-console.info("[sa] window.Viora installed — inline onclick handlers will resolve");
+console.info("[sa] window.Viora installed");
 
 window.openCertTemplateEditor     = openCertTemplateEditor;
 window.deleteCertTemplate         = deleteCertTemplate;
@@ -233,7 +282,6 @@ window.saveResource               = saveResource;
 window.deleteResource             = deleteResource;
 window.openResourceFile           = openResourceFile;
 
-/* Delegated fallback for [data-viora-action] buttons */
 document.addEventListener("click", (e) => {
   const btn = e.target.closest("[data-viora-action]");
   if (!btn) return;
@@ -291,6 +339,155 @@ function hideSplash() {
   }, 350);
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   COMMAND CENTER — rendering
+   ═══════════════════════════════════════════════════════════════ */
+function classifyUserRole(u) {
+  const role = (u.role || u.type || "").toLowerCase();
+  if (role === "admin" || role === "exec") return "operator";
+  if (role === "trainer")                 return "trainer";
+  if (role === "learner" || role === "client") return "learner";
+  if (role) return "operator"; // any other staff role
+  return "learner";
+}
+
+function renderCommandCenter() {
+  try {
+    const data = state.data;
+    const operatorArr = Array.isArray(data.users) ? data.users : Object.values(data.users || {});
+    const portalArr   = Object.entries(data.portalUsersRaw || {}).map(([id, v]) => ({ id, uid: id, ...(v || {}) }));
+
+    /* ── USERS ──────────────────────────────── */
+    const seen = new Set();
+    let total = 0, operators = 0, clients = 0, trainers = 0, learners = 0;
+    for (const u of operatorArr) {
+      if (!u || !u.uid || seen.has(u.uid)) continue;
+      seen.add(u.uid);
+      total++;
+      const cls = classifyUserRole(u);
+      if (cls === "operator") operators++;
+      else if (cls === "trainer") trainers++;
+      else if (cls === "learner") learners++;
+    }
+    for (const p of portalArr) {
+      if (!p.uid || seen.has(p.uid)) continue;
+      seen.add(p.uid);
+      total++;
+      clients++;
+    }
+
+    const usersHost = $("cmdUsersKpi");
+    if (usersHost) {
+      usersHost.innerHTML = `
+        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-users"></i></div><div class="number">${total}</div><div class="label">Total Users</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-user-tie"></i></div><div class="number">${operators}</div><div class="label">Operators</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-building-user"></i></div><div class="number">${clients}</div><div class="label">Portal Clients</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-chalkboard-user"></i></div><div class="number">${trainers}</div><div class="label">Trainers</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-graduation-cap"></i></div><div class="number">${learners}</div><div class="label">Learners</div></div>
+      `;
+    }
+
+    /* ── SUBSCRIPTIONS ──────────────────────── */
+    const subsArr = Object.entries(data.subscriptionsRaw || {}).map(([id, v]) => ({ id, ...(v || {}) }));
+    const nowMs = Date.now();
+    const thirtyDaysMs = nowMs + 30 * 24 * 60 * 60 * 1000;
+    let activeSubs = 0, expiringSubs = 0, pendingSubs = 0, expiredSubs = 0;
+    for (const s of subsArr) {
+      const status = (s.status || "").toLowerCase();
+      const endMs = s.endDate ? Date.parse(s.endDate) : null;
+      if (status === "pending") { pendingSubs++; continue; }
+      if (status === "expired" || (endMs && endMs < nowMs)) { expiredSubs++; continue; }
+      if (status === "active") {
+        activeSubs++;
+        if (endMs && endMs <= thirtyDaysMs) expiringSubs++;
+      }
+    }
+
+    const subsHost = $("cmdSubsKpi");
+    if (subsHost) {
+      subsHost.innerHTML = `
+        <div class="stat-card" style="${activeSubs ? 'border-left:4px solid var(--accent-green);' : ''}"><div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div><div class="number">${activeSubs}</div><div class="label">Active</div></div>
+        <div class="stat-card" style="${expiringSubs ? 'border-left:4px solid var(--accent-gold);' : ''}"><div class="stat-icon"><i class="fa-solid fa-hourglass-half"></i></div><div class="number">${expiringSubs}</div><div class="label">Expiring (30d)</div></div>
+        <div class="stat-card" style="${pendingSubs ? 'border-left:4px solid var(--accent-purple);' : ''}"><div class="stat-icon"><i class="fa-solid fa-clock"></i></div><div class="number">${pendingSubs}</div><div class="label">Pending Requests</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-circle-xmark"></i></div><div class="number">${expiredSubs}</div><div class="label">Expired</div></div>
+      `;
+    }
+
+    /* ── PORTAL ACCESS ──────────────────────── */
+    const portalReqArr = Object.entries(data.portalRequests || {}).map(([id, v]) => ({ id, ...(v || {}) }));
+    const pendingPortalReqs = portalReqArr.filter(r => (r.status || "pending") === "pending").length;
+    const registeredPortalUsers = portalArr.length;
+    const pendingApproval = portalArr.filter(p => p.pendingApproval === true || (p.status || "").toLowerCase() === "pending").length;
+
+    const portalHost = $("cmdPortalKpi");
+    if (portalHost) {
+      portalHost.innerHTML = `
+        <div class="stat-card" style="${pendingPortalReqs ? 'border-left:4px solid var(--accent-gold);' : ''}"><div class="stat-icon"><i class="fa-solid fa-envelope-open-text"></i></div><div class="number">${pendingPortalReqs}</div><div class="label">Pending Portal Requests</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-door-open"></i></div><div class="number">${registeredPortalUsers}</div><div class="label">Registered Portal Users</div></div>
+        <div class="stat-card" style="${pendingApproval ? 'border-left:4px solid var(--accent-blue);' : ''}"><div class="stat-icon"><i class="fa-solid fa-user-clock"></i></div><div class="number">${pendingApproval}</div><div class="label">Pending Approval</div></div>
+      `;
+    }
+
+    /* ── ACTIVITY FEED ──────────────────────── */
+    const feed = $("cmdActivityFeed");
+    if (feed) {
+      const events = [];
+      // Access requests
+      for (const r of (Array.isArray(data.trainingAccessRequests) ? data.trainingAccessRequests : Object.values(data.trainingAccessRequests || {}))) {
+        if (r && r.requestedAt) events.push({
+          ts: r.requestedAt,
+          icon: r.status === "approved" ? "fa-circle-check" : r.status === "rejected" ? "fa-circle-xmark" : "fa-user-clock",
+          color: r.status === "approved" ? "var(--accent-green)" : r.status === "rejected" ? "var(--accent-red)" : "var(--accent-gold)",
+          title: `${r.name || r.email || "Someone"} — ${r.status || "pending"} access`,
+          sub: r.role === "trainer" ? "Trainer request" : "Learner request"
+        });
+      }
+      // Enrollments
+      for (const [uid, byCourse] of Object.entries(data.trainingEnrollments || {})) {
+        for (const [cid, e] of Object.entries(byCourse || {})) {
+          if (e && e.startedAt) events.push({
+            ts: e.startedAt, icon: "fa-user-plus", color: "var(--accent-blue)",
+            title: "Enrollment started", sub: cid
+          });
+        }
+      }
+      // Certificates
+      for (const c of (Array.isArray(data.trainingCertificates) ? data.trainingCertificates : Object.values(data.trainingCertificates || {}))) {
+        if (c && c.issuedAt) events.push({
+          ts: c.issuedAt, icon: "fa-award", color: "var(--accent-gold)",
+          title: "🎓 Certificate: " + (c.userName || "trainee"), sub: c.courseTitle || c.courseId
+        });
+      }
+      events.sort((a, b) => (b.ts || "").localeCompare(a.ts || ""));
+      const recent = events.slice(0, 20);
+
+      if (!recent.length) {
+        feed.innerHTML = '<div class="empty-state" style="padding:20px;">No activity yet.</div>';
+      } else {
+        feed.innerHTML = recent.map(e => `
+          <div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border-color);">
+            <i class="fa-solid ${e.icon}" style="color:${e.color};margin-top:2px;"></i>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:.84rem;font-weight:600;">${escapeHtml(e.title)}</div>
+              <div style="font-size:.72rem;color:var(--text-secondary);">${escapeHtml(e.sub)}</div>
+            </div>
+            <div style="font-size:.68rem;color:var(--text-light);white-space:nowrap;" title="${escapeHtml(eatFmtDate(e.ts))}">${timeAgo(e.ts)}</div>
+          </div>
+        `).join("");
+      }
+    }
+
+    const stamp = $("cmdLastRefresh");
+    if (stamp) stamp.textContent = eatFmtClock();
+  } catch (e) {
+    console.error("[sa] renderCommandCenter failed:", e);
+    toast("Command Center render failed: " + e.message, "error");
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TAB SWITCHING
+   ═══════════════════════════════════════════════════════════════ */
 function switchTab(name) {
   const key = "training-" + name;
   state.currentTab = key;
@@ -303,6 +500,7 @@ function switchTab(name) {
   if (window.innerWidth <= 768) $("saSidebar")?.classList.remove("open");
 
   try {
+    if (name === "command")      renderCommandCenter();
     if (name === "overview")     renderTrainingOverview();
     if (name === "requests")     renderTrainingRequests();
     if (name === "users")        renderTrainingUsers();
@@ -334,6 +532,9 @@ function updateBadges() {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   SUBSCRIPTIONS
+   ═══════════════════════════════════════════════════════════════ */
 function subscribeTraining() {
   const PATHS = {
     trainingAccessRequests:   "training/accessRequests",
@@ -356,7 +557,6 @@ function subscribeTraining() {
       const raw = snap.exists() ? snap.val() : {};
       state.data[key] = normalize(raw, ARRAY_KEYS.includes(key));
 
-      /* Stamp uid+id onto accessRequests so renderer never sees undefined */
       if (key === "trainingAccessRequests") {
         state.data[key] = Object.entries(raw || {}).map(([uid, v]) => ({ uid, ...v, id: uid }));
       }
@@ -374,6 +574,7 @@ function subscribeTraining() {
 
       const name = state.currentTab.replace(/^training-/, "");
       try {
+        if (name === "command")      renderCommandCenter();
         if (name === "overview")     renderTrainingOverview();
         if (name === "requests")     renderTrainingRequests();
         if (name === "users")        renderTrainingUsers();
@@ -384,20 +585,51 @@ function subscribeTraining() {
         console.warn("[sa] render during subscribe failed:", key, e);
       }
     }, (err) => {
-      /* Log EVERY error — permission_denied is critical */
       console.error(`[sa/sub] ${path} failed:`, err.code, err.message);
     });
   }
 
+  /* Org users */
   onValue(ref(db, `${ROOT}/${ORG}/users`), (snap) => {
     state.data.users = normalize(snap.exists() ? snap.val() : {}, true);
-    console.info(`[sa/sub] ${ROOT}/${ORG}/users →`, state.data.users);
-    try { renderTrainingUsers(); renderTrainingProgress(); } catch (e) {}
+    try { renderTrainingUsers(); renderTrainingProgress(); renderCommandCenter(); } catch (e) {}
   }, (err) => {
     console.error(`[sa/sub] ${ROOT}/${ORG}/users failed:`, err.code, err.message);
   });
+
+  /* Subscriptions */
+  onValue(ref(db, `${ROOT}/${ORG}/subscriptions`), (snap) => {
+    const val = snap.exists() ? snap.val() : {};
+    state.data.subscriptionsRaw = val || {};
+    state.data.subscriptions = normalize(val, true);
+    try { renderCommandCenter(); } catch (e) {}
+  }, (err) => {
+    console.error(`[sa/sub] subscriptions failed:`, err.code, err.message);
+  });
+
+  /* Portal users */
+  onValue(ref(db, `${ROOT}/${ORG}/portalUsers`), (snap) => {
+    const val = snap.exists() ? snap.val() : {};
+    state.data.portalUsersRaw = val || {};
+    state.data.portalUsers = normalize(val, true);
+    try { renderCommandCenter(); } catch (e) {}
+  }, (err) => {
+    console.error(`[sa/sub] portalUsers failed:`, err.code, err.message);
+  });
+
+  /* Portal requests */
+  onValue(ref(db, `${ROOT}/${ORG}/portalRequests`), (snap) => {
+    const val = snap.exists() ? snap.val() : {};
+    state.data.portalRequests = val || {};
+    try { renderCommandCenter(); } catch (e) {}
+  }, (err) => {
+    console.error(`[sa/sub] portalRequests failed:`, err.code, err.message);
+  });
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   BOOT
+   ═══════════════════════════════════════════════════════════════ */
 function bootAdmin() {
   if (_adminBooted) return;
   _adminBooted = true;
@@ -407,6 +639,10 @@ function bootAdmin() {
     if (el && !el._saBound) { el._saBound = true; el.addEventListener(evt, fn); }
   };
 
+  /* Command Center refresh */
+  bind("cmdRefreshBtn", "click", () => { renderCommandCenter(); toast("Refreshed.", "info"); });
+
+  /* Training panes */
   bind("trainingRequestsRefreshBtn", "click", () => { renderTrainingRequests(); toast("Refreshed.", "info"); });
   bind("trainingUsersRefreshBtn",    "click", () => { renderTrainingUsers();    toast("Refreshed.", "info"); });
   bind("trainingRefreshBtn",         "click", () => { renderTrainingProgress(); toast("Refreshed.", "info"); });
@@ -455,8 +691,7 @@ function bootAdmin() {
 
   try { const saved = localStorage.getItem("viora_theme"); if (saved) document.documentElement.setAttribute("data-theme", saved); } catch (e) {}
 
-  /* CRITICAL: don't subscribe until auth is warm. If the module is reloaded
-     by a transient null onAuthStateChanged, bail and wait for the real fire. */
+  /* CRITICAL: don't subscribe until auth is warm */
   if (!auth.currentUser) {
     console.warn("[sa] bootAdmin called before auth was ready — waiting for next onAuthStateChanged");
     _adminBooted = false;
@@ -464,9 +699,9 @@ function bootAdmin() {
   }
 
   subscribeTraining();
-  switchTab("overview");
+  switchTab("command");
 
-  setTimeout(() => switchTab("overview"), 600);
+  setTimeout(() => switchTab("command"), 600);
 
   setTimeout(() => {
     try { bindTrainingEvents(); console.info("[sa] late bindTrainingEvents succeeded"); }
@@ -475,12 +710,10 @@ function bootAdmin() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   AUTH GATE — multi-path, multi-field-role, transient-null safe
+   AUTH GATE
    ═══════════════════════════════════════════════════════════════ */
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    /* Firebase fires null once before rehydrating from localStorage.
-       Only show the deny splash if the session truly stays empty. */
     setTimeout(() => {
       if (!auth.currentUser) {
         showSplash("deny", "Not signed in", "Scholar Admin requires an active VIORA session.");
