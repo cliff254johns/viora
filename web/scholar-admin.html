@@ -240,11 +240,35 @@
     <h2 style="display:flex;align-items:center;gap:10px;font-size:1.2rem;margin-bottom:20px;"><span class="modal-icon" style="width:36px;height:36px;border-radius:12px;background:rgba(0,212,255,.1);color:#00d4ff;display:inline-flex;align-items:center;justify-content:center;"><i class="fa-solid fa-book-open"></i></span><span id="courseEditorTitle">New Course</span></h2>
     <input type="hidden" id="ceCourseId" />
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;"><div style="flex:1;min-width:160px;"><label style="display:block;font-size:.8rem;color:var(--text-secondary);margin-bottom:4px;">Course ID *</label><input id="ceId" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border-color);background:#0a0a0f;color:#fff;" required /></div><div style="flex:1;min-width:160px;"><label style="display:block;font-size:.8rem;color:var(--text-secondary);margin-bottom:4px;">Level</label><select id="ceLevel" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border-color);background:#0a0a0f;color:#fff;"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></div></div>
+       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+  <div style="flex:1;min-width:160px;">
+    <label style="display:block;font-size:.8rem;color:var(--text-secondary);margin-bottom:4px;">Access Tier</label>
+    <select id="ceAccessTier" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border-color);background:#0a0a0f;color:#fff;">
+      <option value="free">Free</option>
+      <option value="individual">Individual (paid)</option>
+      <option value="subscription">Subscription</option>
+      <option value="professional">Professional</option>
+      <option value="corporate">Corporate</option>
+      <option value="institutional">Institutional</option>
+      <option value="marketplace">Marketplace</option>
+      <option value="research">Research</option>
+    </select>
+  </div>
+  <div style="flex:1;min-width:120px;">
+    <label style="display:block;font-size:.8rem;color:var(--text-secondary);margin-bottom:4px;">Price (KES)</label>
+    <input id="cePriceKES" type="number" min="0" value="0" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border-color);background:#0a0a0f;color:#fff;" />
+  </div>
+  <div style="flex:1;min-width:120px;">
+    <label style="display:block;font-size:.8rem;color:var(--text-secondary);margin-bottom:4px;">Duration (hrs)</label>
+    <input id="ceDurationHours" type="number" min="0" value="0" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border-color);background:#0a0a0f;color:#fff;" />
+  </div>
+</div>
     <label style="display:block;font-size:.8rem;color:var(--text-secondary);margin-bottom:4px;">Title *</label><input id="ceTitle" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border-color);background:#0a0a0f;color:#fff;margin-bottom:12px;" required />
     <label style="display:block;font-size:.8rem;color:var(--text-secondary);margin-bottom:4px;">Description</label><textarea id="ceDescription" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border-color);background:#0a0a0f;color:#fff;margin-bottom:12px;" rows="2"></textarea>
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;"><div style="flex:1;min-width:160px;"><label style="display:block;font-size:.8rem;color:var(--text-secondary);margin-bottom:4px;">Category</label><select id="ceCategory" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border-color);background:#0a0a0f;color:#fff;"><option>Onboarding</option><option>Sales</option><option>Marketing</option><option>Operations</option><option>Finance</option><option>Product</option><option>Compliance</option><option>Leadership</option><option>Technical</option><option>Other</option></select></div><div style="flex:1;min-width:160px;"><label style="display:block;font-size:.8rem;color:var(--text-secondary);margin-bottom:4px;">Required For</label><input id="ceRequiredFor" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border-color);background:#0a0a0f;color:#fff;" placeholder="sales,marketing" /></div></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin:22px 0 10px;"><h4 style="font-size:.82rem;text-transform:uppercase;color:var(--text-secondary);margin:0;"><i class="fa-solid fa-cubes"></i> Modules (<span id="ceModuleCount">0</span>)</h4><button type="button" class="btn btn-outline btn-sm" id="ceAddModuleBtn" style="background:transparent;border:1px solid var(--border-color);color:#fff;padding:6px 12px;border-radius:8px;"><i class="fa-solid fa-plus"></i> Add Module</button></div>
-    <div id="ceModulesList" style="max-height:520px;overflow-y:auto;padding:4px;"></div>
+    
+       <div id="ceModulesList" style="max-height:520px;overflow-y:auto;padding:4px;"></div>
     <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;"><button type="button" class="btn btn-outline" data-close="courseEditorModal" style="background:transparent;border:1px solid var(--border-color);color:#fff;padding:10px 20px;border-radius:8px;">Cancel</button><button type="button" class="btn btn-success" id="ceSaveBtn" style="background:linear-gradient(135deg,#22e6a0,#0d9e6e);border:none;color:#fff;padding:10px 20px;border-radius:8px;"><i class="fa-solid fa-check"></i> Save Course</button></div>
   </div>
 </div>
