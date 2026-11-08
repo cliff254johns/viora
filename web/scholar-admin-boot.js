@@ -1,18 +1,13 @@
 // File: scholar-admin-boot.js
-// VIORA Scholar Admin Console — bootstrap
+// VIORA Scholar Admin Console bootstrap. Command Center + Requests pane with
+// per-row Approve / Reject / Reopen / Delete for BOTH learners and trainers.
 //
-// WHAT'S IN THIS FILE:
-//  - Command Center tab with Users / Subscriptions / Training KPIs + bar charts,
-//    30-day activity line chart, recent activity feed. All timestamps in EAT.
-//  - Access Requests pane: ALL statuses shown by default, Approve / Reject /
-//    Reopen / Delete per row. Subscriber is bulletproof: first-fire capture,
-//    re-fire guard (never overwrites richer state with emptier state),
-//    _backfillRequestsIfEmpty fallback that calls get() up to 5 times.
-//  - Multi-path auth gate (viora_data/users, orgs/viora/users,
-//    orgs/viora/training/users). Accepts role|type|accessLevel === admin|exec.
-//  - _adminBooted guard + auth-warm check so subscribeTraining never runs
-//    before Firebase rehydrates the session from localStorage.
-//  - window.Viora + window.VioraTraining both expose the full API surface.
+// Requests fix (three layers of protection):
+//  1. _firstFire guard — first onValue fire always writes to state.
+//  2. Re-fire guard — refuses to overwrite richer state with an emptier snapshot.
+//  3. _backfillRequestsIfEmpty() — direct get() retry loop, up to 5 times.
+// Auth gate waits for auth.currentUser before subscribeTraining() runs, so the
+// listener never attaches with a null session.
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
@@ -59,11 +54,8 @@ const $ = (id) => document.getElementById(id);
 const uid = () => "id-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 const nowIso = () => new Date().toISOString();
 
-/* ═══════════════════════════════════════════════════════════════
-   EAT (Africa/Nairobi) timezone helpers — UTC+3, no DST
-   ═══════════════════════════════════════════════════════════════ */
+/* EAT helpers */
 const EAT_OFFSET_MS = 3 * 60 * 60 * 1000;
-function eatNow() { return new Date(Date.now() + EAT_OFFSET_MS); }
 function eatDayKey(ms) {
   const d = new Date(ms + EAT_OFFSET_MS);
   return d.getUTCFullYear() + "-" + String(d.getUTCMonth() + 1).padStart(2, "0") + "-" + String(d.getUTCDate()).padStart(2, "0");
@@ -128,7 +120,6 @@ document.addEventListener("click", (e) => {
 
 const _charts = {};
 function destroyChart(id) { if (_charts[id]) { try { _charts[id].destroy(); } catch (e) {} delete _charts[id]; } }
-function safeCanvas(c) { try { c.getContext("2d"); return c; } catch { return null; } }
 function getTextColor() { return document.documentElement.getAttribute("data-theme") === "light" ? "#0a0a0f" : "#94a3b8"; }
 
 function normalize(val, forceArray = false) {
@@ -163,7 +154,7 @@ const D = {
   openModal, closeModal,
   getClient: (id) => (state.data.entities || []).find((e) => e && e.id === id),
   getClientName: (id) => (state.data.entities || []).find((e) => e && e.id === id)?.name || "—",
-  getTextColor, destroyChart, safeCanvas,
+  getTextColor, destroyChart, safeCanvas: (c) => c,
   MAX_FILE_SIZE: 5 * 1024 * 1024,
   AutoCertification: null,
   setupCertStampDragging,
@@ -176,14 +167,11 @@ try { D.AutoCertification = AutoCertification; } catch (e) {}
 try { bindTrainingEvents(); }
 catch (e) { console.warn("[sa] initial bindTrainingEvents failed:", e); }
 
-/* ═══════════════════════════════════════════════════════════════
-   GLOBAL API
-   ═══════════════════════════════════════════════════════════════ */
+/* GLOBAL API */
 const VioraAPI = {
   openCourseEditor, openChecklistEditor, openResourceEditor, openCertTemplateEditor,
   openManualAwardModal,
-  saveCourse, deleteCourse,
-  saveChecklist,
+  saveCourse, deleteCourse, saveChecklist,
   saveResource, deleteResource, openResourceFile, handleReFile,
   saveCertTemplate, deleteCertTemplate, refreshCertTemplateModules,
   showCertTemplatePreview, paintCertTemplateStamps, handleCertTemplateImage,
@@ -240,9 +228,7 @@ window.saveResource = saveResource;
 window.deleteResource = deleteResource;
 window.openResourceFile = openResourceFile;
 
-/* ═══════════════════════════════════════════════════════════════
-   SPLASH
-   ═══════════════════════════════════════════════════════════════ */
+/* SPLASH */
 function showSplash(kind, title, subtitle) {
   const splash = $("saSplash");
   if (!splash) return;
@@ -273,9 +259,7 @@ function hideSplash() {
   }, 350);
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   COMMAND CENTER
-   ═══════════════════════════════════════════════════════════════ */
+/* COMMAND CENTER */
 function classifyUserRole(u) {
   const role = (u.role || u.type || "").toLowerCase();
   if (role === "admin" || role === "exec") return "operator";
@@ -291,7 +275,6 @@ function renderCommandCenter() {
     const operatorArr = Array.isArray(data.users) ? data.users : Object.values(data.users || {});
     const portalArr   = Object.entries(data.portalUsersRaw || {}).map(([id, v]) => ({ id, uid: id, ...(v || {}) }));
 
-    /* Users */
     const seen = new Set();
     let total = 0, operators = 0, clients = 0, trainers = 0, learners = 0;
     for (const u of operatorArr) {
@@ -318,35 +301,23 @@ function renderCommandCenter() {
       `;
     }
 
-    /* Users bar chart */
     const uCanvas = $("cmdUsersChart");
     if (uCanvas && typeof Chart !== "undefined") {
       destroyChart("cmdUsersChart");
       const tc = getTextColor();
       _charts["cmdUsersChart"] = new Chart(uCanvas.getContext("2d"), {
         type: "bar",
-        data: {
-          labels: ["Operators", "Portal Clients", "Trainers", "Learners"],
-          datasets: [{
-            label: "Users",
-            data: [operators, clients, trainers, learners],
+        data: { labels: ["Operators", "Portal Clients", "Trainers", "Learners"],
+          datasets: [{ label: "Users", data: [operators, clients, trainers, learners],
             backgroundColor: ["rgba(0,212,255,.75)", "rgba(168,85,247,.75)", "rgba(34,230,160,.75)", "rgba(255,200,87,.75)"],
-            borderColor: ["#00d4ff", "#a855f7", "#22e6a0", "#ffc857"],
-            borderWidth: 2, borderRadius: 8
-          }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false }, tooltip: { backgroundColor: "#12121a", titleColor: tc, bodyColor: tc, borderColor: "#00d4ff", borderWidth: 1 } },
-          scales: {
-            y: { beginAtZero: true, ticks: { color: tc, precision: 0 }, grid: { color: "rgba(148,163,184,.1)" } },
-            x: { ticks: { color: tc }, grid: { display: false } }
-          }
-        }
+            borderColor: ["#00d4ff", "#a855f7", "#22e6a0", "#ffc857"], borderWidth: 2, borderRadius: 8 }] },
+        options: { responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { color: tc, precision: 0 }, grid: { color: "rgba(148,163,184,.1)" } },
+                    x: { ticks: { color: tc }, grid: { display: false } } } }
       });
     }
 
-    /* Subscriptions */
     const subsArr = Object.entries(data.subscriptionsRaw || {}).map(([id, v]) => ({ id, ...(v || {}) }));
     const nowMs = Date.now(); const thirtyDaysMs = nowMs + 30 * 24 * 60 * 60 * 1000;
     let activeSubs = 0, expiringSubs = 0, pendingSubs = 0, expiredSubs = 0;
@@ -374,28 +345,17 @@ function renderCommandCenter() {
       const tc = getTextColor();
       _charts["cmdSubsChart"] = new Chart(sCanvas.getContext("2d"), {
         type: "bar",
-        data: {
-          labels: ["Active", "Expiring 30d", "Pending", "Expired"],
-          datasets: [{
-            label: "Subscriptions",
-            data: [activeSubs, expiringSubs, pendingSubs, expiredSubs],
+        data: { labels: ["Active", "Expiring 30d", "Pending", "Expired"],
+          datasets: [{ label: "Subscriptions", data: [activeSubs, expiringSubs, pendingSubs, expiredSubs],
             backgroundColor: ["rgba(34,230,160,.75)", "rgba(255,200,87,.75)", "rgba(168,85,247,.75)", "rgba(217,43,75,.75)"],
-            borderColor: ["#22e6a0", "#ffc857", "#a855f7", "#d92b4b"],
-            borderWidth: 2, borderRadius: 8
-          }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false }, tooltip: { backgroundColor: "#12121a", titleColor: tc, bodyColor: tc, borderColor: "#22e6a0", borderWidth: 1 } },
-          scales: {
-            y: { beginAtZero: true, ticks: { color: tc, precision: 0 }, grid: { color: "rgba(148,163,184,.1)" } },
-            x: { ticks: { color: tc }, grid: { display: false } }
-          }
-        }
+            borderColor: ["#22e6a0", "#ffc857", "#a855f7", "#d92b4b"], borderWidth: 2, borderRadius: 8 }] },
+        options: { responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { color: tc, precision: 0 }, grid: { color: "rgba(148,163,184,.1)" } },
+                    x: { ticks: { color: tc }, grid: { display: false } } } }
       });
     }
 
-    /* Training */
     const courseCount = (Array.isArray(data.trainingCourses) ? data.trainingCourses : Object.values(data.trainingCourses || {})).length;
     const enrollments = Object.values(data.trainingEnrollments || {}).reduce((sum, u) => sum + Object.keys(u || {}).length, 0);
     const completions = Object.values(data.trainingEnrollments || {}).reduce((sum, u) => sum + Object.values(u || {}).filter(e => e && e.completedAt).length, 0);
@@ -418,28 +378,17 @@ function renderCommandCenter() {
       const tc = getTextColor();
       _charts["cmdTrainingChart"] = new Chart(tCanvas.getContext("2d"), {
         type: "bar",
-        data: {
-          labels: ["Courses", "Enrollments", "Completions", "Certificates"],
-          datasets: [{
-            label: "Training",
-            data: [courseCount, enrollments, completions, certCount],
+        data: { labels: ["Courses", "Enrollments", "Completions", "Certificates"],
+          datasets: [{ label: "Training", data: [courseCount, enrollments, completions, certCount],
             backgroundColor: ["rgba(0,212,255,.75)", "rgba(124,58,237,.75)", "rgba(34,230,160,.75)", "rgba(255,200,87,.75)"],
-            borderColor: ["#00d4ff", "#7c3aed", "#22e6a0", "#ffc857"],
-            borderWidth: 2, borderRadius: 8
-          }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false }, tooltip: { backgroundColor: "#12121a", titleColor: tc, bodyColor: tc, borderColor: "#7c3aed", borderWidth: 1 } },
-          scales: {
-            y: { beginAtZero: true, ticks: { color: tc, precision: 0 }, grid: { color: "rgba(148,163,184,.1)" } },
-            x: { ticks: { color: tc }, grid: { display: false } }
-          }
-        }
+            borderColor: ["#00d4ff", "#7c3aed", "#22e6a0", "#ffc857"], borderWidth: 2, borderRadius: 8 }] },
+        options: { responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { color: tc, precision: 0 }, grid: { color: "rgba(148,163,184,.1)" } },
+                    x: { ticks: { color: tc }, grid: { display: false } } } }
       });
     }
 
-    /* Portal */
     const portalReqArr = Object.entries(data.portalRequests || {}).map(([id, v]) => ({ id, ...(v || {}) }));
     const pendingPortalReqs = portalReqArr.filter(r => (r.status || "pending") === "pending").length;
     const registeredPortalUsers = portalArr.length;
@@ -454,7 +403,6 @@ function renderCommandCenter() {
       `;
     }
 
-    /* 30-day activity line chart */
     const activityCanvas = $("cmdActivityChart");
     if (activityCanvas && typeof Chart !== "undefined") {
       destroyChart("cmdActivityChart");
@@ -479,36 +427,23 @@ function renderCommandCenter() {
       for (const r of (Array.isArray(data.trainingAccessRequests) ? data.trainingAccessRequests : Object.values(data.trainingAccessRequests || {}))) {
         if (r && r.requestedAt) { const k = eatDayKey(Date.parse(r.requestedAt)); if (dayMap.has(k)) dayMap.get(k).requests++; }
       }
-
-      const enrollmentsData = days.map(k => dayMap.get(k).enrollments);
-      const completionsData = days.map(k => dayMap.get(k).completions);
-      const certificatesData = days.map(k => dayMap.get(k).certificates);
-      const requestsData = days.map(k => dayMap.get(k).requests);
       const labels = days.map(k => k.slice(5));
-
       _charts["cmdActivityChart"] = new Chart(activityCanvas.getContext("2d"), {
         type: "line",
-        data: {
-          labels,
+        data: { labels,
           datasets: [
-            { label: "Enrollments", data: enrollmentsData, borderColor: "#00d4ff", backgroundColor: "rgba(0,212,255,.15)", tension: 0.35, fill: true, pointRadius: 2, borderWidth: 2 },
-            { label: "Completions", data: completionsData, borderColor: "#22e6a0", backgroundColor: "rgba(34,230,160,.15)", tension: 0.35, fill: true, pointRadius: 2, borderWidth: 2 },
-            { label: "Certificates", data: certificatesData, borderColor: "#ffc857", backgroundColor: "rgba(255,200,87,.15)", tension: 0.35, fill: true, pointRadius: 2, borderWidth: 2 },
-            { label: "Access Requests", data: requestsData, borderColor: "#ff6ec7", backgroundColor: "rgba(255,110,199,.15)", tension: 0.35, fill: true, pointRadius: 2, borderWidth: 2 }
-          ]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
+            { label: "Enrollments", data: days.map(k => dayMap.get(k).enrollments), borderColor: "#00d4ff", backgroundColor: "rgba(0,212,255,.15)", tension: 0.35, fill: true, pointRadius: 2, borderWidth: 2 },
+            { label: "Completions", data: days.map(k => dayMap.get(k).completions), borderColor: "#22e6a0", backgroundColor: "rgba(34,230,160,.15)", tension: 0.35, fill: true, pointRadius: 2, borderWidth: 2 },
+            { label: "Certificates", data: days.map(k => dayMap.get(k).certificates), borderColor: "#ffc857", backgroundColor: "rgba(255,200,87,.15)", tension: 0.35, fill: true, pointRadius: 2, borderWidth: 2 },
+            { label: "Access Requests", data: days.map(k => dayMap.get(k).requests), borderColor: "#ff6ec7", backgroundColor: "rgba(255,110,199,.15)", tension: 0.35, fill: true, pointRadius: 2, borderWidth: 2 }
+          ] },
+        options: { responsive: true, maintainAspectRatio: false,
           plugins: { legend: { labels: { color: tc, boxWidth: 12, usePointStyle: true, padding: 14 } } },
-          scales: {
-            y: { beginAtZero: true, ticks: { color: tc, precision: 0 }, grid: { color: "rgba(148,163,184,.1)" } },
-            x: { ticks: { color: tc, maxRotation: 0 }, grid: { display: false } }
-          }
-        }
+          scales: { y: { beginAtZero: true, ticks: { color: tc, precision: 0 }, grid: { color: "rgba(148,163,184,.1)" } },
+                    x: { ticks: { color: tc, maxRotation: 0 }, grid: { display: false } } } }
       });
     }
 
-    /* Activity feed */
     const feed = $("cmdActivityFeed");
     if (feed) {
       const events = [];
@@ -531,7 +466,6 @@ function renderCommandCenter() {
       }
       events.sort((a, b) => (b.ts || "").localeCompare(a.ts || ""));
       const recent = events.slice(0, 20);
-
       if (!recent.length) feed.innerHTML = '<div class="empty-state" style="padding:20px;">No activity yet.</div>';
       else feed.innerHTML = recent.map(e => `
         <div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border-color);">
@@ -553,9 +487,7 @@ function renderCommandCenter() {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   REQUESTS
-   ═══════════════════════════════════════════════════════════════ */
+/* REQUESTS */
 function getRequestsArray() {
   const raw = state.data.trainingAccessRequests;
   if (Array.isArray(raw)) return raw.filter(Boolean);
@@ -565,15 +497,20 @@ function getRequestsArray() {
 function renderRequestsPane() {
   try {
     const all = getRequestsArray();
-    const filter = ($("trainingRequestsFilter")?.value || "all").toLowerCase();
+    const statusFilter = ($("trainingRequestsFilter")?.value || "all").toLowerCase();
+    const roleFilter   = ($("trainingRequestsRoleFilter")?.value || "all").toLowerCase();
     const search = ($("trainingRequestsSearch")?.value || "").toLowerCase().trim();
 
     const pending  = all.filter(r => (r.status || "pending") === "pending").length;
     const approved = all.filter(r => r.status === "approved").length;
     const rejected = all.filter(r => r.status === "rejected").length;
+    const trainerCount  = all.filter(r => r.role === "trainer").length;
+    const learnerCount  = all.filter(r => r.role !== "trainer").length;
 
     let list = all;
-    if (filter !== "all") list = list.filter(r => (r.status || "pending") === filter);
+    if (statusFilter !== "all") list = list.filter(r => (r.status || "pending") === statusFilter);
+    if (roleFilter === "trainer") list = list.filter(r => r.role === "trainer");
+    if (roleFilter === "learner") list = list.filter(r => r.role !== "trainer");
     if (search) list = list.filter(r => (r.name || "").toLowerCase().includes(search) || (r.email || "").toLowerCase().includes(search));
     list.sort((a, b) => (b.requestedAt || "").localeCompare(a.requestedAt || ""));
 
@@ -584,6 +521,8 @@ function renderRequestsPane() {
         <div class="stat-card" style="${pending ? 'border-left:4px solid var(--accent-gold);' : ''}"><div class="stat-icon"><i class="fa-solid fa-hourglass"></i></div><div class="number">${pending}</div><div class="label">Pending</div></div>
         <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-check-circle"></i></div><div class="number">${approved}</div><div class="label">Approved</div></div>
         <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-xmark"></i></div><div class="number">${rejected}</div><div class="label">Rejected</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-chalkboard-user"></i></div><div class="number">${trainerCount}</div><div class="label">Trainers</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-graduation-cap"></i></div><div class="number">${learnerCount}</div><div class="label">Learners</div></div>
       `;
     }
 
@@ -591,16 +530,18 @@ function renderRequestsPane() {
     if (badge) { badge.textContent = pending; badge.style.display = pending > 0 ? "inline-block" : "none"; }
 
     const tb = $("trainingRequestsBody");
-    if (!tb) { console.warn("[sa] #trainingRequestsBody not found in DOM"); return; }
+    if (!tb) return;
     if (!list.length) {
-      tb.innerHTML = `<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--text-secondary);">${all.length ? "No requests match the filter." : "No requests yet."}</td></tr>`;
+      tb.innerHTML = `<tr><td colspan="8" style="padding:32px;text-align:center;color:var(--text-secondary);">${all.length ? "No requests match the current filters." : "No requests yet."}</td></tr>`;
       return;
     }
 
     tb.innerHTML = list.map(r => {
       const st = (r.status || "pending").toLowerCase();
       const stCls = st === "approved" ? "paid" : st === "rejected" ? "overdue" : "pending";
-      const roleLabel = r.role === "trainer" ? '<span class="badge badge-purple">Trainer</span>' : '<span class="badge badge-active">Learner</span>';
+      const isTrainer = r.role === "trainer";
+      const roleLabel = isTrainer ? '<span class="badge badge-purple">Trainer</span>' : '<span class="badge badge-active">Learner</span>';
+      const sourceLabel = (r.source || "").replace(/-portal$/, "") || (isTrainer ? "trainer" : "learner");
       const safeUid = escapeHtml(r.uid || r.id || "");
       const actions = st === "pending"
         ? `<button class="btn btn-success btn-xs" onclick="Viora.approveTrainingRequest('${safeUid}')"><i class="fa-solid fa-check"></i> Approve</button>
@@ -612,6 +553,7 @@ function renderRequestsPane() {
         <td>${escapeHtml(r.email || "—")}</td>
         <td>${escapeHtml(r.phone || "—")}</td>
         <td>${roleLabel}</td>
+        <td><small style="color:var(--text-secondary);">${escapeHtml(sourceLabel)}</small></td>
         <td><span class="badge badge-${stCls}">${escapeHtml(st)}</span></td>
         <td style="text-align:right;white-space:nowrap;">
           ${actions}
@@ -627,12 +569,20 @@ function renderRequestsPane() {
 
 async function approveRequest(uidKey) {
   if (!uidKey) return;
+  const req = getRequestsArray().find(r => (r.uid || r.id) === uidKey);
+  const role = req?.role || "learner";
   try {
     await update(ref(db, P(`accessRequests/${uidKey}`)), {
       status: "approved", approvedAt: nowIso(), approvedBy: state.operator?.name || "admin"
     });
-    try { await update(ref(db, `${ROOT}/${ORG}/users/${uidKey}`), { trainingStatus: "approved", trainingApprovedAt: nowIso() }); } catch (e) {}
-    toast("Approved.", "success");
+    try {
+      await update(ref(db, `${ROOT}/${ORG}/users/${uidKey}`), {
+        trainingStatus: "approved",
+        trainingApprovedAt: nowIso(),
+        role
+      });
+    } catch (e) {}
+    toast(`Approved ${role}.`, "success");
   } catch (e) { toast("Approve failed: " + e.message, "error"); }
 }
 async function rejectRequest(uidKey) {
@@ -663,9 +613,7 @@ async function deleteRequest(uidKey) {
   } catch (e) { toast("Delete failed: " + e.message, "error"); }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   TAB SWITCHING
-   ═══════════════════════════════════════════════════════════════ */
+/* TAB SWITCHING */
 function switchTab(name) {
   state.currentTab = "training-" + name;
   document.querySelectorAll("[data-sa-tab]").forEach(b => b.classList.toggle("active", b.dataset.saTab === name));
@@ -696,18 +644,13 @@ function updateBadges() {
   if ($("saReqBadge"))  { $("saReqBadge").textContent = requests; $("saReqBadge").style.display = requests > 0 ? "inline-block" : "none"; }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   SUBSCRIPTIONS — bulletproof accessRequests backfill
-   ═══════════════════════════════════════════════════════════════ */
+/* SUBSCRIPTIONS */
 let _reqPollTimer = null;
 let _reqPollAttempts = 0;
 
 function _backfillRequestsIfEmpty() {
   if (state.data.trainingAccessRequests && state.data.trainingAccessRequests.length > 0) return;
-  if (_reqPollAttempts >= 5) {
-    console.warn("[sa] accessRequests backfill gave up after 5 attempts");
-    return;
-  }
+  if (_reqPollAttempts >= 5) { console.warn("[sa] accessRequests backfill gave up after 5 attempts"); return; }
   _reqPollAttempts++;
   console.info(`[sa/backfill] attempt ${_reqPollAttempts} — forcing get() on accessRequests`);
   get(ref(db, P("training/accessRequests"))).then((snap) => {
@@ -720,11 +663,9 @@ function _backfillRequestsIfEmpty() {
         updateBadges();
         if (state.currentTab === "training-requests") renderRequestsPane();
         if (state.currentTab === "training-command") renderCommandCenter();
-      } else {
-        console.warn(`[sa/backfill] get() returned ${arr.length} records but state already has ${state.data.trainingAccessRequests?.length || 0} — no change`);
       }
     } else {
-      console.warn("[sa/backfill] get() returned empty — records truly absent at path");
+      console.warn("[sa/backfill] get() returned empty — records absent at path");
     }
   }).catch((e) => console.error("[sa/backfill] get() failed:", e.code, e.message))
     .finally(() => {
@@ -761,19 +702,15 @@ function subscribeTraining() {
         const prevLen = state.data[key]?.length || 0;
         const newLen = arr.length;
         console.info(`[sa/sub] ${path} → ${newLen} records (was ${prevLen})${_firstFire ? " [first fire]" : " [re-fire]"}`);
-
         if (_firstFire) {
           _firstFire = false;
           state.data[key] = arr;
-          if (newLen === 0) {
-            console.warn(`[sa/sub] ${path} fired EMPTY on first fire — scheduling backfill`);
-            _backfillRequestsIfEmpty();
-          }
+          if (newLen === 0) _backfillRequestsIfEmpty();
         } else if (newLen >= prevLen) {
           state.data[key] = arr;
           _reqPollAttempts = 0;
         } else {
-          console.warn(`[sa/sub] ${path} re-fire with FEWER records (${prevLen} → ${newLen}) — IGNORING to protect state`);
+          console.warn(`[sa/sub] ${path} re-fire with FEWER records (${prevLen} → ${newLen}) — IGNORING`);
         }
       } else {
         state.data[key] = incoming;
@@ -802,7 +739,6 @@ function subscribeTraining() {
     });
   }
 
-  /* One-shot re-verify */
   get(ref(db, P("training/accessRequests"))).then((snap) => {
     if (snap.exists()) {
       const val = snap.val();
@@ -813,42 +749,36 @@ function subscribeTraining() {
         updateBadges();
         if (state.currentTab === "training-requests") renderRequestsPane();
         if (state.currentTab === "training-command") renderCommandCenter();
-      } else {
-        console.info(`[sa/re-verify] accessRequests → listener already has ${state.data.trainingAccessRequests?.length || 0} records`);
       }
-    } else {
-      console.info(`[sa/re-verify] accessRequests → path is empty`);
     }
   }).catch((e) => console.error("[sa/re-verify] accessRequests failed:", e.code, e.message));
 
   onValue(ref(db, `${ROOT}/${ORG}/users`), (snap) => {
     state.data.users = normalize(snap.exists() ? snap.val() : {}, true);
     try { renderTrainingUsers(); renderTrainingProgress(); renderCommandCenter(); } catch (e) {}
-  }, (err) => { console.error(`[sa/sub] ${ROOT}/${ORG}/users failed:`, err.code, err.message); });
+  }, (err) => console.error(`[sa/sub] ${ROOT}/${ORG}/users failed:`, err.code, err.message));
 
   onValue(ref(db, `${ROOT}/${ORG}/subscriptions`), (snap) => {
     const val = snap.exists() ? snap.val() : {};
     state.data.subscriptionsRaw = val || {};
     state.data.subscriptions = normalize(val, true);
     if (state.currentTab === "training-command") renderCommandCenter();
-  }, (err) => { console.error(`[sa/sub] subscriptions failed:`, err.code, err.message); });
+  }, (err) => console.error(`[sa/sub] subscriptions failed:`, err.code, err.message));
 
   onValue(ref(db, `${ROOT}/${ORG}/portalUsers`), (snap) => {
     const val = snap.exists() ? snap.val() : {};
     state.data.portalUsersRaw = val || {};
     state.data.portalUsers = normalize(val, true);
     if (state.currentTab === "training-command") renderCommandCenter();
-  }, (err) => { console.error(`[sa/sub] portalUsers failed:`, err.code, err.message); });
+  }, (err) => console.error(`[sa/sub] portalUsers failed:`, err.code, err.message));
 
   onValue(ref(db, `${ROOT}/${ORG}/portalRequests`), (snap) => {
     state.data.portalRequests = snap.exists() ? snap.val() : {};
     if (state.currentTab === "training-command") renderCommandCenter();
-  }, (err) => { console.error(`[sa/sub] portalRequests failed:`, err.code, err.message); });
+  }, (err) => console.error(`[sa/sub] portalRequests failed:`, err.code, err.message));
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   BOOT
-   ═══════════════════════════════════════════════════════════════ */
+/* BOOT */
 function bootAdmin() {
   if (_adminBooted) return;
   _adminBooted = true;
@@ -858,8 +788,14 @@ function bootAdmin() {
   bind("cmdRefreshBtn", "click", () => { renderCommandCenter(); toast("Refreshed.", "info"); });
   bind("trainingRequestsRefreshBtn", "click", () => { renderRequestsPane(); toast("Refreshed.", "info"); });
   bind("trainingRequestsFilter", "change", renderRequestsPane);
+  bind("trainingRequestsRoleFilter", "change", renderRequestsPane);
   bind("trainingRequestsSearch", "input", renderRequestsPane);
-  bind("trainingRequestsClearSearch", "click", () => { const s = $("trainingRequestsSearch"); if (s) s.value = ""; const f = $("trainingRequestsFilter"); if (f) f.value = "all"; renderRequestsPane(); });
+  bind("trainingRequestsClearSearch", "click", () => {
+    const s = $("trainingRequestsSearch"); if (s) s.value = "";
+    const f = $("trainingRequestsFilter"); if (f) f.value = "all";
+    const r = $("trainingRequestsRoleFilter"); if (r) r.value = "all";
+    renderRequestsPane();
+  });
 
   bind("trainingUsersRefreshBtn", "click", () => { renderTrainingUsers(); toast("Refreshed.", "info"); });
   bind("trainingRefreshBtn", "click", () => { renderTrainingProgress(); toast("Refreshed.", "info"); });
@@ -903,12 +839,10 @@ function bootAdmin() {
   subscribeTraining();
   switchTab("command");
   setTimeout(() => switchTab("command"), 600);
-  setTimeout(() => { try { bindTrainingEvents(); console.info("[sa] late bindTrainingEvents succeeded"); } catch (e) { console.warn("[sa] late bindTrainingEvents failed:", e); } }, 300);
+  setTimeout(() => { try { bindTrainingEvents(); console.info("[sa] late bindTrainingEvents OK"); } catch (e) { console.warn("[sa] late bindTrainingEvents failed:", e); } }, 300);
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   AUTH GATE
-   ═══════════════════════════════════════════════════════════════ */
+/* AUTH GATE */
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     setTimeout(() => { if (!auth.currentUser) showSplash("deny", "Not signed in", "Scholar Admin requires an active VIORA session."); }, 800);
