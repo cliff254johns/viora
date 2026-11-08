@@ -1,15 +1,12 @@
 // File: scholar-admin-boot.js
-// VIORA Scholar Admin Console — bootstrap with Command Center.
+// VIORA Scholar Admin Console — bootstrap with Command Center (bar + line charts)
+// and rewritten Requests pane (approve/reject/reopen/delete per row).
 //
-// FIXES IN THIS VERSION:
-//  - window.Viora alias (inline onclick="Viora.xxx()" resolves).
-//  - Import set/update/remove/push from firebase/database.
-//  - bootAdmin() idempotent + bails if auth not warm — fixes Requests subscriber
-//    firing with null before localStorage rehydration.
-//  - onAuthStateChanged delays null-user deny splash by 800ms.
-//  - subscribeTraining() logs every callback & error.
-//  - NEW: Command Center tab with Users, Subscriptions, Portal KPIs.
-//  - All "today / this week / this month" computed in Africa/Nairobi (EAT, +3).
+// THE REQUESTS FIX: The renderer now bypasses main/training.js's
+// renderTrainingRequests entirely and draws rows directly from state.data,
+// so any bug in the training-module renderer cannot hide requests anymore.
+// The state itself is populated by onValue(ref(db, "training/accessRequests"))
+// which we re-verify with a one-shot get() at boot.
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
@@ -18,8 +15,9 @@ import {
 } from "firebase/database";
 
 import {
-  initTraining, bindTrainingEvents, renderTrainingOverview, renderTrainingRequests, renderTrainingUsers,
-  renderTrainingProgress, renderTrainingQuizzes, renderTrainingCertificates, viewQuizSubmission,
+  initTraining, bindTrainingEvents, renderTrainingOverview,
+  renderTrainingUsers, renderTrainingProgress, renderTrainingQuizzes,
+  renderTrainingCertificates, viewQuizSubmission,
   openCourseEditor, openChecklistEditor, openResourceEditor, renderCeModules, toggleCeQuiz,
   addQuizQuestion, removeQuizQuestion, updateQuizQuestion, updateQuizOption, setQuizAnswer,
   addQuizOption, removeQuizOption, updateCeModule, addCeModule, removeCeModule, moveCeModule,
@@ -55,52 +53,25 @@ const $ = (id) => document.getElementById(id);
 const uid = () => "id-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 const nowIso = () => new Date().toISOString();
 
-/* ═══════════════════════════════════════════════════════════════
-   EAT (Africa/Nairobi) timezone helpers.
-   EAT is UTC+3 with no DST, so the math is trivial but explicit.
-   ═══════════════════════════════════════════════════════════════ */
-const EAT_OFFSET_MS = 3 * 60 * 60 * 1000; // +3 hours
-
-function eatNow() {
-  return new Date(Date.now() + EAT_OFFSET_MS);
-}
-function eatTodayKey(/* Date */ d = eatNow()) {
-  // "YYYY-MM-DD" in EAT
-  const y = d.getUTCFullYear();
-  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(d.getUTCDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-function eatMonthKey(/* Date */ d = eatNow()) {
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
-}
-function eatDayStartMs(/* Date */ d = eatNow()) {
-  const copy = new Date(d.getTime());
-  copy.setUTCHours(0, 0, 0, 0);
-  return copy.getTime() - EAT_OFFSET_MS; // back to UTC ms
-}
-function eatMonthStartMs(/* Date */ d = eatNow()) {
-  const copy = new Date(d.getTime());
-  copy.setUTCDate(1);
-  copy.setUTCHours(0, 0, 0, 0);
-  return copy.getTime() - EAT_OFFSET_MS;
+const EAT_OFFSET_MS = 3 * 60 * 60 * 1000;
+function eatNow() { return new Date(Date.now() + EAT_OFFSET_MS); }
+function eatDayKey(ms) {
+  const d = new Date(ms + EAT_OFFSET_MS);
+  return d.getUTCFullYear() + "-" + String(d.getUTCMonth() + 1).padStart(2, "0") + "-" + String(d.getUTCDate()).padStart(2, "0");
 }
 function eatFmtClock() {
   try {
-    return eatNow().toLocaleString("en-GB", {
-      timeZone: "Africa/Nairobi",
-      day: "2-digit", month: "short", year: "numeric",
-      hour: "2-digit", minute: "2-digit", second: "2-digit",
-      hour12: false
+    return new Date().toLocaleString("en-GB", {
+      timeZone: "Africa/Nairobi", day: "2-digit", month: "short", year: "numeric",
+      hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false
     }) + " EAT";
-  } catch { return eatNow().toISOString(); }
+  } catch { return new Date().toISOString(); }
 }
 function eatFmtDate(iso) {
   if (!iso) return "—";
   try {
     return new Date(iso).toLocaleString("en-GB", {
-      timeZone: "Africa/Nairobi",
-      day: "2-digit", month: "short", year: "numeric",
+      timeZone: "Africa/Nairobi", day: "2-digit", month: "short", year: "numeric",
       hour: "2-digit", minute: "2-digit"
     });
   } catch { return "—"; }
@@ -125,15 +96,8 @@ function fmtDate(iso) {
   try { return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "Africa/Nairobi" }); }
   catch { return "—"; }
 }
-function fmtBytes(b) {
-  const n = Number(b) || 0;
-  if (n < 1024) return n + " B";
-  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
-  return (n / (1024 * 1024)).toFixed(2) + " MB";
-}
-function fmtKES(n) {
-  return "KES " + (Number(n) || 0).toLocaleString("en-KE", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-}
+function fmtBytes(b) { const n = Number(b) || 0; if (n < 1024) return n + " B"; if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB"; return (n / (1024 * 1024)).toFixed(2) + " MB"; }
+function fmtKES(n) { return "KES " + (Number(n) || 0).toLocaleString("en-KE", { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
 
 function toast(msg, type) {
   const host = $("toastContainer");
@@ -145,20 +109,12 @@ function toast(msg, type) {
   setTimeout(() => el.remove(), 4500);
 }
 
-function openModal(id) {
-  const el = $(id);
-  if (el) { el.classList.add("active"); el.style.display = "flex"; document.body.style.overflow = "hidden"; }
-}
-function closeModal(id) {
-  const el = $(id);
-  if (el) { el.classList.remove("active"); el.style.display = "none"; document.body.style.overflow = ""; }
-}
+function openModal(id) { const el = $(id); if (el) { el.classList.add("active"); el.style.display = "flex"; document.body.style.overflow = "hidden"; } }
+function closeModal(id) { const el = $(id); if (el) { el.classList.remove("active"); el.style.display = "none"; document.body.style.overflow = ""; } }
 document.addEventListener("click", (e) => {
   const closer = e.target.closest("[data-close]");
   if (closer) { closeModal(closer.dataset.close); return; }
-  if (e.target.classList && e.target.classList.contains("modal-overlay") && e.target.classList.contains("active")) {
-    closeModal(e.target.id);
-  }
+  if (e.target.classList && e.target.classList.contains("modal-overlay") && e.target.classList.contains("active")) closeModal(e.target.id);
 });
 
 const _charts = {};
@@ -192,7 +148,7 @@ const state = {
 
 const D = {
   $, state, toast, escapeHtml, timeAgo, fmtDate, fmtBytes, fmtKES, uid,
-  todayStr: () => eatTodayKey(),
+  todayStr: () => eatDayKey(Date.now()),
   db, ref, set, update, remove, push, get, onValue, P, ROOT,
   logActivity: async () => {},
   callFn: async () => ({}),
@@ -207,10 +163,8 @@ const D = {
   updateSidebarCounters: () => {}
 };
 
-// Order matters: initTraining first so D is populated before bindTrainingEvents.
 initTraining(D);
 try { D.AutoCertification = AutoCertification; } catch (e) {}
-
 try { bindTrainingEvents(); }
 catch (e) { console.warn("[sa] initial bindTrainingEvents failed:", e); }
 
@@ -232,14 +186,13 @@ const VioraAPI = {
   setQuizAnswer, addQuizOption, removeQuizOption, updateCeModule, addCeModule,
   removeCeModule, moveCeModule, renderCeModules,
   renderCleTasks, updateCleTask, addCleTask, removeCleTask,
-
   editCourse:        (id) => openCourseEditor(id),
   editChecklist:     (id) => openChecklistEditor(id),
   editResource:      (id) => openResourceEditor(id),
-
-  approveTrainingRequest:  (uid) => TrainingVioraAPI.approveTrainingRequest(uid),
-  rejectTrainingRequest:   (uid) => TrainingVioraAPI.rejectTrainingRequest(uid),
-  reopenTrainingRequest:   (uid) => TrainingVioraAPI.reopenTrainingRequest(uid),
+  approveTrainingRequest:  (uid) => approveRequest(uid),
+  rejectTrainingRequest:   (uid) => rejectRequest(uid),
+  reopenTrainingRequest:   (uid) => reopenRequest(uid),
+  deleteTrainingRequest:   (uid) => deleteRequest(uid),
   openUserTraining:        (uid) => TrainingVioraAPI.openUserTraining(uid),
   enrollUserInCourse:      (uid, cid) => TrainingVioraAPI.enrollUserInCourse(uid, cid),
   unenrollUser:            (uid, cid) => TrainingVioraAPI.unenrollUser(uid, cid),
@@ -247,60 +200,40 @@ const VioraAPI = {
   resetAllUserTraining:    (uid) => TrainingVioraAPI.resetAllUserTraining(uid),
   deleteTrainingUser:      (uid) => TrainingVioraAPI.deleteTrainingUser(uid),
   revokeCertificate:       (cid) => TrainingVioraAPI.revokeCertificate(cid),
-
-  TrainingVioraAPI,
-  openModal, closeModal
+  TrainingVioraAPI, openModal, closeModal
 };
 
 window.VioraTraining = VioraAPI;
 window.Viora = VioraAPI;
 window.VioraTrainingAPI = TrainingVioraAPI;
 window.VioraTraining.debug = { state, db, auth };
-
 console.info("[sa] window.Viora installed");
 
-window.openCertTemplateEditor     = openCertTemplateEditor;
-window.deleteCertTemplate         = deleteCertTemplate;
-window.saveCertTemplate           = saveCertTemplate;
+window.openCertTemplateEditor = openCertTemplateEditor;
+window.deleteCertTemplate = deleteCertTemplate;
+window.saveCertTemplate = saveCertTemplate;
 window.refreshCertTemplateModules = refreshCertTemplateModules;
-window.showCertTemplatePreview    = showCertTemplatePreview;
-window.paintCertTemplateStamps    = paintCertTemplateStamps;
-window.handleCertTemplateImage    = handleCertTemplateImage;
-window.openManualAwardModal       = openManualAwardModal;
-window.awardTrainingCertificate   = awardTrainingCertificate;
-window.viewQuizSubmission         = viewQuizSubmission;
-window.viewTrainingCert           = viewTrainingCert;
-window.revokeTrainingCert         = revokeTrainingCertImpl;
-window.AutoCertification          = AutoCertification;
-window.openCourseEditor           = openCourseEditor;
-window.openChecklistEditor        = openChecklistEditor;
-window.openResourceEditor         = openResourceEditor;
-window.saveCourse                 = saveCourse;
-window.deleteCourse               = deleteCourse;
-window.saveChecklist              = saveChecklist;
-window.saveResource               = saveResource;
-window.deleteResource             = deleteResource;
-window.openResourceFile           = openResourceFile;
-
-document.addEventListener("click", (e) => {
-  const btn = e.target.closest("[data-viora-action]");
-  if (!btn) return;
-  const action = btn.dataset.vioraAction;
-  let args = [];
-  try { args = btn.dataset.vioraArgs ? JSON.parse(btn.dataset.vioraArgs) : []; } catch (err) {}
-  const fn = window.Viora?.[action];
-  if (typeof fn === "function") {
-    e.preventDefault();
-    e.stopPropagation();
-    try { fn(...args); }
-    catch (err) { console.error(`[sa] action ${action} failed:`, err); toast(`${action} failed: ${err.message}`, "error"); }
-  } else {
-    console.warn(`[sa] no handler for data-viora-action="${action}"`);
-  }
-});
+window.showCertTemplatePreview = showCertTemplatePreview;
+window.paintCertTemplateStamps = paintCertTemplateStamps;
+window.handleCertTemplateImage = handleCertTemplateImage;
+window.openManualAwardModal = openManualAwardModal;
+window.awardTrainingCertificate = awardTrainingCertificate;
+window.viewQuizSubmission = viewQuizSubmission;
+window.viewTrainingCert = viewTrainingCert;
+window.revokeTrainingCert = revokeTrainingCertImpl;
+window.AutoCertification = AutoCertification;
+window.openCourseEditor = openCourseEditor;
+window.openChecklistEditor = openChecklistEditor;
+window.openResourceEditor = openResourceEditor;
+window.saveCourse = saveCourse;
+window.deleteCourse = deleteCourse;
+window.saveChecklist = saveChecklist;
+window.saveResource = saveResource;
+window.deleteResource = deleteResource;
+window.openResourceFile = openResourceFile;
 
 /* ═══════════════════════════════════════════════════════════════
-   SPLASH
+   AUTH SPLASH
    ═══════════════════════════════════════════════════════════════ */
 function showSplash(kind, title, subtitle) {
   const splash = $("saSplash");
@@ -309,25 +242,18 @@ function showSplash(kind, title, subtitle) {
   splash.style.opacity = "1";
   if (kind === "ok") {
     splash.innerHTML = `
-      <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#22e6a0,#0d9e6e);display:flex;align-items:center;justify-content:center;font-size:1.7rem;color:#fff;">
-        <i class="fa-solid fa-check"></i>
-      </div>
+      <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#22e6a0,#0d9e6e);display:flex;align-items:center;justify-content:center;font-size:1.7rem;color:#fff;"><i class="fa-solid fa-check"></i></div>
       <h1 style="margin-top:20px;font-family:'Space Grotesk',sans-serif;font-size:1.3rem;">${escapeHtml(title || "Access granted")}</h1>
       <p style="color:#94a3b8;margin-top:6px;">${escapeHtml(subtitle || "")}</p>`;
   } else if (kind === "deny") {
     splash.innerHTML = `
-      <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#ff5c7c,#d92b4b);display:flex;align-items:center;justify-content:center;font-size:1.7rem;color:#fff;">
-        <i class="fa-solid fa-lock"></i>
-      </div>
+      <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#ff5c7c,#d92b4b);display:flex;align-items:center;justify-content:center;font-size:1.7rem;color:#fff;"><i class="fa-solid fa-lock"></i></div>
       <h1 style="margin-top:20px;font-family:'Space Grotesk',sans-serif;font-size:1.3rem;">${escapeHtml(title || "Access denied")}</h1>
       <p style="color:#94a3b8;margin-top:6px;">${escapeHtml(subtitle || "")}</p>
-      <button class="btn btn-danger" id="saDenyOut" style="margin-top:16px;background:#d92b4b;border:none;color:#fff;padding:10px 20px;border-radius:8px;">
-        <i class="fa-solid fa-right-from-bracket"></i> Sign out
-      </button>`;
+      <button class="btn btn-danger" id="saDenyOut" style="margin-top:16px;background:#d92b4b;border:none;color:#fff;padding:10px 20px;border-radius:8px;"><i class="fa-solid fa-right-from-bracket"></i> Sign out</button>`;
     $("saDenyOut")?.addEventListener("click", () => signOut(auth).then(() => location.reload()));
   }
 }
-
 function hideSplash() {
   const s = $("saSplash");
   if (!s) return;
@@ -340,14 +266,14 @@ function hideSplash() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   COMMAND CENTER — rendering
+   COMMAND CENTER — with bar + line charts
    ═══════════════════════════════════════════════════════════════ */
 function classifyUserRole(u) {
   const role = (u.role || u.type || "").toLowerCase();
   if (role === "admin" || role === "exec") return "operator";
-  if (role === "trainer")                 return "trainer";
+  if (role === "trainer") return "trainer";
   if (role === "learner" || role === "client") return "learner";
-  if (role) return "operator"; // any other staff role
+  if (role) return "operator";
   return "learner";
 }
 
@@ -357,13 +283,12 @@ function renderCommandCenter() {
     const operatorArr = Array.isArray(data.users) ? data.users : Object.values(data.users || {});
     const portalArr   = Object.entries(data.portalUsersRaw || {}).map(([id, v]) => ({ id, uid: id, ...(v || {}) }));
 
-    /* ── USERS ──────────────────────────────── */
+    /* Users */
     const seen = new Set();
     let total = 0, operators = 0, clients = 0, trainers = 0, learners = 0;
     for (const u of operatorArr) {
       if (!u || !u.uid || seen.has(u.uid)) continue;
-      seen.add(u.uid);
-      total++;
+      seen.add(u.uid); total++;
       const cls = classifyUserRole(u);
       if (cls === "operator") operators++;
       else if (cls === "trainer") trainers++;
@@ -371,9 +296,7 @@ function renderCommandCenter() {
     }
     for (const p of portalArr) {
       if (!p.uid || seen.has(p.uid)) continue;
-      seen.add(p.uid);
-      total++;
-      clients++;
+      seen.add(p.uid); total++; clients++;
     }
 
     const usersHost = $("cmdUsersKpi");
@@ -387,20 +310,44 @@ function renderCommandCenter() {
       `;
     }
 
-    /* ── SUBSCRIPTIONS ──────────────────────── */
+    /* Users bar chart */
+    const uCanvas = $("cmdUsersChart");
+    if (uCanvas && typeof Chart !== "undefined") {
+      destroyChart("cmdUsersChart");
+      const tc = getTextColor();
+      _charts["cmdUsersChart"] = new Chart(uCanvas.getContext("2d"), {
+        type: "bar",
+        data: {
+          labels: ["Operators", "Portal Clients", "Trainers", "Learners"],
+          datasets: [{
+            label: "Users",
+            data: [operators, clients, trainers, learners],
+            backgroundColor: ["rgba(0,212,255,.75)", "rgba(168,85,247,.75)", "rgba(34,230,160,.75)", "rgba(255,200,87,.75)"],
+            borderColor: ["#00d4ff", "#a855f7", "#22e6a0", "#ffc857"],
+            borderWidth: 2, borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { backgroundColor: "#12121a", titleColor: tc, bodyColor: tc, borderColor: "#00d4ff", borderWidth: 1 } },
+          scales: {
+            y: { beginAtZero: true, ticks: { color: tc, precision: 0 }, grid: { color: "rgba(148,163,184,.1)" } },
+            x: { ticks: { color: tc }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    /* Subscriptions */
     const subsArr = Object.entries(data.subscriptionsRaw || {}).map(([id, v]) => ({ id, ...(v || {}) }));
-    const nowMs = Date.now();
-    const thirtyDaysMs = nowMs + 30 * 24 * 60 * 60 * 1000;
+    const nowMs = Date.now(); const thirtyDaysMs = nowMs + 30 * 24 * 60 * 60 * 1000;
     let activeSubs = 0, expiringSubs = 0, pendingSubs = 0, expiredSubs = 0;
     for (const s of subsArr) {
       const status = (s.status || "").toLowerCase();
       const endMs = s.endDate ? Date.parse(s.endDate) : null;
       if (status === "pending") { pendingSubs++; continue; }
       if (status === "expired" || (endMs && endMs < nowMs)) { expiredSubs++; continue; }
-      if (status === "active") {
-        activeSubs++;
-        if (endMs && endMs <= thirtyDaysMs) expiringSubs++;
-      }
+      if (status === "active") { activeSubs++; if (endMs && endMs <= thirtyDaysMs) expiringSubs++; }
     }
 
     const subsHost = $("cmdSubsKpi");
@@ -408,12 +355,85 @@ function renderCommandCenter() {
       subsHost.innerHTML = `
         <div class="stat-card" style="${activeSubs ? 'border-left:4px solid var(--accent-green);' : ''}"><div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div><div class="number">${activeSubs}</div><div class="label">Active</div></div>
         <div class="stat-card" style="${expiringSubs ? 'border-left:4px solid var(--accent-gold);' : ''}"><div class="stat-icon"><i class="fa-solid fa-hourglass-half"></i></div><div class="number">${expiringSubs}</div><div class="label">Expiring (30d)</div></div>
-        <div class="stat-card" style="${pendingSubs ? 'border-left:4px solid var(--accent-purple);' : ''}"><div class="stat-icon"><i class="fa-solid fa-clock"></i></div><div class="number">${pendingSubs}</div><div class="label">Pending Requests</div></div>
+        <div class="stat-card" style="${pendingSubs ? 'border-left:4px solid var(--accent-purple);' : ''}"><div class="stat-icon"><i class="fa-solid fa-clock"></i></div><div class="number">${pendingSubs}</div><div class="label">Pending</div></div>
         <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-circle-xmark"></i></div><div class="number">${expiredSubs}</div><div class="label">Expired</div></div>
       `;
     }
 
-    /* ── PORTAL ACCESS ──────────────────────── */
+    /* Subscriptions bar chart */
+    const sCanvas = $("cmdSubsChart");
+    if (sCanvas && typeof Chart !== "undefined") {
+      destroyChart("cmdSubsChart");
+      const tc = getTextColor();
+      _charts["cmdSubsChart"] = new Chart(sCanvas.getContext("2d"), {
+        type: "bar",
+        data: {
+          labels: ["Active", "Expiring 30d", "Pending", "Expired"],
+          datasets: [{
+            label: "Subscriptions",
+            data: [activeSubs, expiringSubs, pendingSubs, expiredSubs],
+            backgroundColor: ["rgba(34,230,160,.75)", "rgba(255,200,87,.75)", "rgba(168,85,247,.75)", "rgba(217,43,75,.75)"],
+            borderColor: ["#22e6a0", "#ffc857", "#a855f7", "#d92b4b"],
+            borderWidth: 2, borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { backgroundColor: "#12121a", titleColor: tc, bodyColor: tc, borderColor: "#22e6a0", borderWidth: 1 } },
+          scales: {
+            y: { beginAtZero: true, ticks: { color: tc, precision: 0 }, grid: { color: "rgba(148,163,184,.1)" } },
+            x: { ticks: { color: tc }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    /* Training KPIs */
+    const courseCount = (Array.isArray(data.trainingCourses) ? data.trainingCourses : Object.values(data.trainingCourses || {})).length;
+    const enrollments = Object.values(data.trainingEnrollments || {}).reduce((sum, u) => sum + Object.keys(u || {}).length, 0);
+    const completions = Object.values(data.trainingEnrollments || {}).reduce((sum, u) => sum + Object.values(u || {}).filter(e => e && e.completedAt).length, 0);
+    const certsArr = Array.isArray(data.trainingCertificates) ? data.trainingCertificates : Object.values(data.trainingCertificates || {});
+    const certCount = certsArr.length;
+
+    const trainHost = $("cmdTrainingKpi");
+    if (trainHost) {
+      trainHost.innerHTML = `
+        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-book-open"></i></div><div class="number">${courseCount}</div><div class="label">Courses</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-graduation-cap"></i></div><div class="number">${enrollments}</div><div class="label">Enrollments</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div><div class="number">${completions}</div><div class="label">Completions</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-certificate"></i></div><div class="number">${certCount}</div><div class="label">Certificates</div></div>
+      `;
+    }
+
+    /* Training bar chart */
+    const tCanvas = $("cmdTrainingChart");
+    if (tCanvas && typeof Chart !== "undefined") {
+      destroyChart("cmdTrainingChart");
+      const tc = getTextColor();
+      _charts["cmdTrainingChart"] = new Chart(tCanvas.getContext("2d"), {
+        type: "bar",
+        data: {
+          labels: ["Courses", "Enrollments", "Completions", "Certificates"],
+          datasets: [{
+            label: "Training",
+            data: [courseCount, enrollments, completions, certCount],
+            backgroundColor: ["rgba(0,212,255,.75)", "rgba(124,58,237,.75)", "rgba(34,230,160,.75)", "rgba(255,200,87,.75)"],
+            borderColor: ["#00d4ff", "#7c3aed", "#22e6a0", "#ffc857"],
+            borderWidth: 2, borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { backgroundColor: "#12121a", titleColor: tc, bodyColor: tc, borderColor: "#7c3aed", borderWidth: 1 } },
+          scales: {
+            y: { beginAtZero: true, ticks: { color: tc, precision: 0 }, grid: { color: "rgba(148,163,184,.1)" } },
+            x: { ticks: { color: tc }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    /* Portal */
     const portalReqArr = Object.entries(data.portalRequests || {}).map(([id, v]) => ({ id, ...(v || {}) }));
     const pendingPortalReqs = portalReqArr.filter(r => (r.status || "pending") === "pending").length;
     const registeredPortalUsers = portalArr.length;
@@ -428,11 +448,64 @@ function renderCommandCenter() {
       `;
     }
 
-    /* ── ACTIVITY FEED ──────────────────────── */
+    /* 30-day activity line chart */
+    const activityCanvas = $("cmdActivityChart");
+    if (activityCanvas && typeof Chart !== "undefined") {
+      destroyChart("cmdActivityChart");
+      const tc = getTextColor();
+      const days = []; const dayMap = new Map();
+      const todayMs = Date.now();
+      for (let i = 29; i >= 0; i--) {
+        const ms = todayMs - i * 86400000;
+        const key = eatDayKey(ms);
+        dayMap.set(key, { enrollments: 0, completions: 0, certificates: 0, requests: 0 });
+        days.push(key);
+      }
+      for (const byCourse of Object.values(data.trainingEnrollments || {})) {
+        for (const e of Object.values(byCourse || {})) {
+          if (e && e.startedAt) { const k = eatDayKey(Date.parse(e.startedAt)); if (dayMap.has(k)) dayMap.get(k).enrollments++; }
+          if (e && e.completedAt) { const k = eatDayKey(Date.parse(e.completedAt)); if (dayMap.has(k)) dayMap.get(k).completions++; }
+        }
+      }
+      for (const c of certsArr) {
+        if (c && c.issuedAt) { const k = eatDayKey(Date.parse(c.issuedAt)); if (dayMap.has(k)) dayMap.get(k).certificates++; }
+      }
+      for (const r of (Array.isArray(data.trainingAccessRequests) ? data.trainingAccessRequests : Object.values(data.trainingAccessRequests || {}))) {
+        if (r && r.requestedAt) { const k = eatDayKey(Date.parse(r.requestedAt)); if (dayMap.has(k)) dayMap.get(k).requests++; }
+      }
+
+      const enrollmentsData = days.map(k => dayMap.get(k).enrollments);
+      const completionsData = days.map(k => dayMap.get(k).completions);
+      const certificatesData = days.map(k => dayMap.get(k).certificates);
+      const requestsData = days.map(k => dayMap.get(k).requests);
+      const labels = days.map(k => k.slice(5));
+
+      _charts["cmdActivityChart"] = new Chart(activityCanvas.getContext("2d"), {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            { label: "Enrollments", data: enrollmentsData, borderColor: "#00d4ff", backgroundColor: "rgba(0,212,255,.15)", tension: 0.35, fill: true, pointRadius: 2, borderWidth: 2 },
+            { label: "Completions", data: completionsData, borderColor: "#22e6a0", backgroundColor: "rgba(34,230,160,.15)", tension: 0.35, fill: true, pointRadius: 2, borderWidth: 2 },
+            { label: "Certificates", data: certificatesData, borderColor: "#ffc857", backgroundColor: "rgba(255,200,87,.15)", tension: 0.35, fill: true, pointRadius: 2, borderWidth: 2 },
+            { label: "Access Requests", data: requestsData, borderColor: "#ff6ec7", backgroundColor: "rgba(255,110,199,.15)", tension: 0.35, fill: true, pointRadius: 2, borderWidth: 2 }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: tc, boxWidth: 12, usePointStyle: true, padding: 14 } } },
+          scales: {
+            y: { beginAtZero: true, ticks: { color: tc, precision: 0 }, grid: { color: "rgba(148,163,184,.1)" } },
+            x: { ticks: { color: tc, maxRotation: 0 }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    /* Activity feed */
     const feed = $("cmdActivityFeed");
     if (feed) {
       const events = [];
-      // Access requests
       for (const r of (Array.isArray(data.trainingAccessRequests) ? data.trainingAccessRequests : Object.values(data.trainingAccessRequests || {}))) {
         if (r && r.requestedAt) events.push({
           ts: r.requestedAt,
@@ -442,39 +515,28 @@ function renderCommandCenter() {
           sub: r.role === "trainer" ? "Trainer request" : "Learner request"
         });
       }
-      // Enrollments
-      for (const [uid, byCourse] of Object.entries(data.trainingEnrollments || {})) {
+      for (const [uidKey, byCourse] of Object.entries(data.trainingEnrollments || {})) {
         for (const [cid, e] of Object.entries(byCourse || {})) {
-          if (e && e.startedAt) events.push({
-            ts: e.startedAt, icon: "fa-user-plus", color: "var(--accent-blue)",
-            title: "Enrollment started", sub: cid
-          });
+          if (e && e.startedAt) events.push({ ts: e.startedAt, icon: "fa-user-plus", color: "var(--accent-blue)", title: "Enrollment started", sub: cid });
         }
       }
-      // Certificates
-      for (const c of (Array.isArray(data.trainingCertificates) ? data.trainingCertificates : Object.values(data.trainingCertificates || {}))) {
-        if (c && c.issuedAt) events.push({
-          ts: c.issuedAt, icon: "fa-award", color: "var(--accent-gold)",
-          title: "🎓 Certificate: " + (c.userName || "trainee"), sub: c.courseTitle || c.courseId
-        });
+      for (const c of certsArr) {
+        if (c && c.issuedAt) events.push({ ts: c.issuedAt, icon: "fa-award", color: "var(--accent-gold)", title: "🎓 Certificate: " + (c.userName || "trainee"), sub: c.courseTitle || c.courseId });
       }
       events.sort((a, b) => (b.ts || "").localeCompare(a.ts || ""));
       const recent = events.slice(0, 20);
 
-      if (!recent.length) {
-        feed.innerHTML = '<div class="empty-state" style="padding:20px;">No activity yet.</div>';
-      } else {
-        feed.innerHTML = recent.map(e => `
-          <div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border-color);">
-            <i class="fa-solid ${e.icon}" style="color:${e.color};margin-top:2px;"></i>
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:.84rem;font-weight:600;">${escapeHtml(e.title)}</div>
-              <div style="font-size:.72rem;color:var(--text-secondary);">${escapeHtml(e.sub)}</div>
-            </div>
-            <div style="font-size:.68rem;color:var(--text-light);white-space:nowrap;" title="${escapeHtml(eatFmtDate(e.ts))}">${timeAgo(e.ts)}</div>
+      if (!recent.length) feed.innerHTML = '<div class="empty-state" style="padding:20px;">No activity yet.</div>';
+      else feed.innerHTML = recent.map(e => `
+        <div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border-color);">
+          <i class="fa-solid ${e.icon}" style="color:${e.color};margin-top:2px;"></i>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:.84rem;font-weight:600;">${escapeHtml(e.title)}</div>
+            <div style="font-size:.72rem;color:var(--text-secondary);">${escapeHtml(e.sub)}</div>
           </div>
-        `).join("");
-      }
+          <div style="font-size:.68rem;color:var(--text-light);white-space:nowrap;" title="${escapeHtml(eatFmtDate(e.ts))}">${timeAgo(e.ts)}</div>
+        </div>
+      `).join("");
     }
 
     const stamp = $("cmdLastRefresh");
@@ -486,23 +548,131 @@ function renderCommandCenter() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   TAB SWITCHING
+   REQUESTS — full rewrite, all statuses visible, all actions available
+   ═══════════════════════════════════════════════════════════════ */
+function getRequestsArray() {
+  const raw = state.data.trainingAccessRequests;
+  if (Array.isArray(raw)) return raw.filter(Boolean);
+  return Object.entries(raw || {}).map(([uid, v]) => ({ uid, ...(v || {}), id: uid }));
+}
+
+function renderRequestsPane() {
+  try {
+    const all = getRequestsArray();
+    const filter = ($("trainingRequestsFilter")?.value || "all").toLowerCase();
+    const search = ($("trainingRequestsSearch")?.value || "").toLowerCase().trim();
+
+    const pending  = all.filter(r => (r.status || "pending") === "pending").length;
+    const approved = all.filter(r => r.status === "approved").length;
+    const rejected = all.filter(r => r.status === "rejected").length;
+
+    let list = all;
+    if (filter !== "all") list = list.filter(r => (r.status || "pending") === filter);
+    if (search) list = list.filter(r => (r.name || "").toLowerCase().includes(search) || (r.email || "").toLowerCase().includes(search));
+    list.sort((a, b) => (b.requestedAt || "").localeCompare(a.requestedAt || ""));
+
+    const kpi = $("trainingRequestsKpi");
+    if (kpi) {
+      kpi.innerHTML = `
+        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-list"></i></div><div class="number">${all.length}</div><div class="label">Total</div></div>
+        <div class="stat-card" style="${pending ? 'border-left:4px solid var(--accent-gold);' : ''}"><div class="stat-icon"><i class="fa-solid fa-hourglass"></i></div><div class="number">${pending}</div><div class="label">Pending</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-check-circle"></i></div><div class="number">${approved}</div><div class="label">Approved</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-xmark"></i></div><div class="number">${rejected}</div><div class="label">Rejected</div></div>
+      `;
+    }
+
+    const badge = $("saReqBadge");
+    if (badge) {
+      badge.textContent = pending;
+      badge.style.display = pending > 0 ? "inline-block" : "none";
+    }
+
+    const tb = $("trainingRequestsBody");
+    if (!tb) { console.warn("[sa] #trainingRequestsBody not found in DOM"); return; }
+    if (!list.length) {
+      tb.innerHTML = `<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--text-secondary);">${all.length ? "No requests match the filter." : "No requests yet."}</td></tr>`;
+      return;
+    }
+
+    tb.innerHTML = list.map(r => {
+      const st = (r.status || "pending").toLowerCase();
+      const stCls = st === "approved" ? "paid" : st === "rejected" ? "overdue" : "pending";
+      const roleLabel = r.role === "trainer" ? '<span class="badge badge-purple">Trainer</span>' : '<span class="badge badge-active">Learner</span>';
+      const safeUid = escapeHtml(r.uid || r.id || "");
+      const actions = st === "pending"
+        ? `<button class="btn btn-success btn-xs" onclick="Viora.approveTrainingRequest('${safeUid}')"><i class="fa-solid fa-check"></i> Approve</button>
+           <button class="btn btn-danger btn-xs" onclick="Viora.rejectTrainingRequest('${safeUid}')"><i class="fa-solid fa-xmark"></i> Reject</button>`
+        : `<button class="btn btn-outline btn-xs" onclick="Viora.reopenTrainingRequest('${safeUid}')"><i class="fa-solid fa-rotate-left"></i> Reopen</button>`;
+      return `<tr>
+        <td>${timeAgo(r.requestedAt)}</td>
+        <td><strong>${escapeHtml(r.name || "—")}</strong></td>
+        <td>${escapeHtml(r.email || "—")}</td>
+        <td>${escapeHtml(r.phone || "—")}</td>
+        <td>${roleLabel}</td>
+        <td><span class="badge badge-${stCls}">${escapeHtml(st)}</span></td>
+        <td style="text-align:right;white-space:nowrap;">
+          ${actions}
+          <button class="btn btn-danger btn-xs" onclick="Viora.deleteTrainingRequest('${safeUid}')" title="Delete"><i class="fa-solid fa-trash"></i></button>
+        </td>
+      </tr>`;
+    }).join("");
+  } catch (e) {
+    console.error("[sa] renderRequestsPane failed:", e);
+    toast("Requests render failed: " + e.message, "error");
+  }
+}
+
+async function approveRequest(uidKey) {
+  if (!uidKey) return;
+  try {
+    await update(ref(db, P(`accessRequests/${uidKey}`)), {
+      status: "approved", approvedAt: nowIso(), approvedBy: state.operator?.name || "admin"
+    });
+    try { await update(ref(db, `${ROOT}/${ORG}/users/${uidKey}`), { trainingStatus: "approved", trainingApprovedAt: nowIso() }); } catch (e) {}
+    toast("Approved.", "success");
+  } catch (e) { toast("Approve failed: " + e.message, "error"); }
+}
+async function rejectRequest(uidKey) {
+  if (!uidKey) return;
+  if (!confirm("Reject this request?")) return;
+  try {
+    await update(ref(db, P(`accessRequests/${uidKey}`)), {
+      status: "rejected", rejectedAt: nowIso(), rejectedBy: state.operator?.name || "admin"
+    });
+    toast("Rejected.", "info");
+  } catch (e) { toast("Reject failed: " + e.message, "error"); }
+}
+async function reopenRequest(uidKey) {
+  if (!uidKey) return;
+  try {
+    await update(ref(db, P(`accessRequests/${uidKey}`)), {
+      status: "pending", reopenedAt: nowIso(), reopenedBy: state.operator?.name || "admin"
+    });
+    toast("Reopened — now pending.", "info");
+  } catch (e) { toast("Reopen failed: " + e.message, "error"); }
+}
+async function deleteRequest(uidKey) {
+  if (!uidKey) return;
+  if (!confirm("Delete this request permanently?")) return;
+  try {
+    await remove(ref(db, P(`accessRequests/${uidKey}`)));
+    toast("Request deleted.", "success");
+  } catch (e) { toast("Delete failed: " + e.message, "error"); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TAB SWITCHING + BADGES
    ═══════════════════════════════════════════════════════════════ */
 function switchTab(name) {
-  const key = "training-" + name;
-  state.currentTab = key;
-  document.querySelectorAll("[data-sa-tab]").forEach((b) =>
-    b.classList.toggle("active", b.dataset.saTab === name)
-  );
-  document.querySelectorAll(".sa-pane").forEach((p) =>
-    p.classList.toggle("active", p.id === "sa-pane-" + name)
-  );
+  state.currentTab = "training-" + name;
+  document.querySelectorAll("[data-sa-tab]").forEach(b => b.classList.toggle("active", b.dataset.saTab === name));
+  document.querySelectorAll(".sa-pane").forEach(p => p.classList.toggle("active", p.id === "sa-pane-" + name));
   if (window.innerWidth <= 768) $("saSidebar")?.classList.remove("open");
 
   try {
     if (name === "command")      renderCommandCenter();
     if (name === "overview")     renderTrainingOverview();
-    if (name === "requests")     renderTrainingRequests();
+    if (name === "requests")     renderRequestsPane();
     if (name === "users")        renderTrainingUsers();
     if (name === "progress")     renderTrainingProgress();
     if (name === "quizzes")      renderTrainingQuizzes();
@@ -518,22 +688,13 @@ function updateBadges() {
   const quizzes = Object.values(state.data.trainingQuizSubmissions || {})
     .flatMap((byCourse) => Object.values(byCourse || {}))
     .filter((q) => q && (q.status || "submitted") === "submitted").length;
-  const requests = (Array.isArray(state.data.trainingAccessRequests)
-    ? state.data.trainingAccessRequests
-    : Object.values(state.data.trainingAccessRequests || {})
-  ).filter((r) => r && (r.status || "pending") === "pending").length;
-  if ($("saQuizBadge")) {
-    $("saQuizBadge").textContent = quizzes;
-    $("saQuizBadge").style.display = quizzes > 0 ? "inline-block" : "none";
-  }
-  if ($("saReqBadge")) {
-    $("saReqBadge").textContent = requests;
-    $("saReqBadge").style.display = requests > 0 ? "inline-block" : "none";
-  }
+  const requests = getRequestsArray().filter((r) => (r.status || "pending") === "pending").length;
+  if ($("saQuizBadge")) { $("saQuizBadge").textContent = quizzes; $("saQuizBadge").style.display = quizzes > 0 ? "inline-block" : "none"; }
+  if ($("saReqBadge"))  { $("saReqBadge").textContent = requests; $("saReqBadge").style.display = requests > 0 ? "inline-block" : "none"; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   SUBSCRIPTIONS
+   SUBSCRIPTIONS — includes one-shot re-verify for accessRequests
    ═══════════════════════════════════════════════════════════════ */
 function subscribeTraining() {
   const PATHS = {
@@ -549,82 +710,70 @@ function subscribeTraining() {
     trainingCourseCompletions:"training/courseCompletions",
     trainingUsers:            "training/users"
   };
-
   const ARRAY_KEYS = ["trainingCertificates", "trainingUsers", "trainingAccessRequests"];
 
   for (const [key, path] of Object.entries(PATHS)) {
     onValue(ref(db, P(path)), (snap) => {
       const raw = snap.exists() ? snap.val() : {};
       state.data[key] = normalize(raw, ARRAY_KEYS.includes(key));
-
       if (key === "trainingAccessRequests") {
-        state.data[key] = Object.entries(raw || {}).map(([uid, v]) => ({ uid, ...v, id: uid }));
+        state.data[key] = Object.entries(raw || {}).map(([uidKey, v]) => ({ uid: uidKey, ...(v || {}), id: uidKey }));
       }
-
       if (key === "trainingUsers") {
-        const arr = Array.isArray(state.data.trainingUsers)
-          ? state.data.trainingUsers
-          : Object.values(state.data.trainingUsers || {});
+        const arr = Array.isArray(state.data.trainingUsers) ? state.data.trainingUsers : Object.values(state.data.trainingUsers || {});
         state.data.users = arr.filter((u) => u && (u.role === "trainer" || !u.role));
         state.data.portalUsers = arr.filter((u) => u && u.role !== "trainer" && u.role);
       }
-
-      console.info(`[sa/sub] ${path} →`, state.data[key]);
+      console.info(`[sa/sub] ${path} →`, key === "trainingAccessRequests" ? `${state.data[key].length} records` : state.data[key]);
       updateBadges();
-
       const name = state.currentTab.replace(/^training-/, "");
       try {
         if (name === "command")      renderCommandCenter();
         if (name === "overview")     renderTrainingOverview();
-        if (name === "requests")     renderTrainingRequests();
+        if (name === "requests")     renderRequestsPane();
         if (name === "users")        renderTrainingUsers();
         if (name === "progress")     renderTrainingProgress();
         if (name === "quizzes")      renderTrainingQuizzes();
         if (name === "certificates") renderTrainingCertificates();
-      } catch (e) {
-        console.warn("[sa] render during subscribe failed:", key, e);
-      }
-    }, (err) => {
-      console.error(`[sa/sub] ${path} failed:`, err.code, err.message);
-    });
+      } catch (e) { console.warn("[sa] render during subscribe failed:", key, e); }
+    }, (err) => { console.error(`[sa/sub] ${path} failed:`, err.code, err.message); });
   }
 
-  /* Org users */
+  /* Force re-verify accessRequests with a one-shot get() so we never miss data */
+  get(ref(db, P("training/accessRequests"))).then((snap) => {
+    if (snap.exists()) {
+      const val = snap.val();
+      state.data.trainingAccessRequests = Object.entries(val || {}).map(([uidKey, v]) => ({ uid: uidKey, ...(v || {}), id: uidKey }));
+      console.info(`[sa/re-verify] accessRequests → ${state.data.trainingAccessRequests.length} records`);
+      updateBadges();
+      if (state.currentTab === "training-requests") renderRequestsPane();
+      if (state.currentTab === "training-command") renderCommandCenter();
+    }
+  }).catch((e) => console.error("[sa/re-verify] accessRequests failed:", e.code, e.message));
+
   onValue(ref(db, `${ROOT}/${ORG}/users`), (snap) => {
     state.data.users = normalize(snap.exists() ? snap.val() : {}, true);
     try { renderTrainingUsers(); renderTrainingProgress(); renderCommandCenter(); } catch (e) {}
-  }, (err) => {
-    console.error(`[sa/sub] ${ROOT}/${ORG}/users failed:`, err.code, err.message);
-  });
+  }, (err) => { console.error(`[sa/sub] ${ROOT}/${ORG}/users failed:`, err.code, err.message); });
 
-  /* Subscriptions */
   onValue(ref(db, `${ROOT}/${ORG}/subscriptions`), (snap) => {
     const val = snap.exists() ? snap.val() : {};
     state.data.subscriptionsRaw = val || {};
     state.data.subscriptions = normalize(val, true);
-    try { renderCommandCenter(); } catch (e) {}
-  }, (err) => {
-    console.error(`[sa/sub] subscriptions failed:`, err.code, err.message);
-  });
+    if (state.currentTab === "training-command") renderCommandCenter();
+  }, (err) => { console.error(`[sa/sub] subscriptions failed:`, err.code, err.message); });
 
-  /* Portal users */
   onValue(ref(db, `${ROOT}/${ORG}/portalUsers`), (snap) => {
     const val = snap.exists() ? snap.val() : {};
     state.data.portalUsersRaw = val || {};
     state.data.portalUsers = normalize(val, true);
-    try { renderCommandCenter(); } catch (e) {}
-  }, (err) => {
-    console.error(`[sa/sub] portalUsers failed:`, err.code, err.message);
-  });
+    if (state.currentTab === "training-command") renderCommandCenter();
+  }, (err) => { console.error(`[sa/sub] portalUsers failed:`, err.code, err.message); });
 
-  /* Portal requests */
   onValue(ref(db, `${ROOT}/${ORG}/portalRequests`), (snap) => {
-    const val = snap.exists() ? snap.val() : {};
-    state.data.portalRequests = val || {};
-    try { renderCommandCenter(); } catch (e) {}
-  }, (err) => {
-    console.error(`[sa/sub] portalRequests failed:`, err.code, err.message);
-  });
+    state.data.portalRequests = snap.exists() ? snap.val() : {};
+    if (state.currentTab === "training-command") renderCommandCenter();
+  }, (err) => { console.error(`[sa/sub] portalRequests failed:`, err.code, err.message); });
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -634,64 +783,47 @@ function bootAdmin() {
   if (_adminBooted) return;
   _adminBooted = true;
 
-  const bind = (id, evt, fn) => {
-    const el = $(id);
-    if (el && !el._saBound) { el._saBound = true; el.addEventListener(evt, fn); }
-  };
+  const bind = (id, evt, fn) => { const el = $(id); if (el && !el._saBound) { el._saBound = true; el.addEventListener(evt, fn); } };
 
-  /* Command Center refresh */
   bind("cmdRefreshBtn", "click", () => { renderCommandCenter(); toast("Refreshed.", "info"); });
+  bind("trainingRequestsRefreshBtn", "click", () => { renderRequestsPane(); toast("Refreshed.", "info"); });
+  bind("trainingRequestsFilter", "change", renderRequestsPane);
+  bind("trainingRequestsSearch", "input", renderRequestsPane);
+  bind("trainingRequestsClearSearch", "click", () => { const s = $("trainingRequestsSearch"); if (s) s.value = ""; const f = $("trainingRequestsFilter"); if (f) f.value = "all"; renderRequestsPane(); });
 
-  /* Training panes */
-  bind("trainingRequestsRefreshBtn", "click", () => { renderTrainingRequests(); toast("Refreshed.", "info"); });
-  bind("trainingUsersRefreshBtn",    "click", () => { renderTrainingUsers();    toast("Refreshed.", "info"); });
-  bind("trainingRefreshBtn",         "click", () => { renderTrainingProgress(); toast("Refreshed.", "info"); });
-  bind("quizzesRefreshBtn",          "click", () => { renderTrainingQuizzes();  toast("Refreshed.", "info"); });
-  bind("certsRefreshBtn",            "click", () => { renderTrainingCertificates(); toast("Refreshed.", "info"); });
+  bind("trainingUsersRefreshBtn", "click", () => { renderTrainingUsers(); toast("Refreshed.", "info"); });
+  bind("trainingRefreshBtn", "click", () => { renderTrainingProgress(); toast("Refreshed.", "info"); });
+  bind("quizzesRefreshBtn", "click", () => { renderTrainingQuizzes(); toast("Refreshed.", "info"); });
+  bind("certsRefreshBtn", "click", () => { renderTrainingCertificates(); toast("Refreshed.", "info"); });
 
   bind("trainingEnrollUserBtn", "click", () => TrainingVioraAPI.openEnrollUserModal());
   bind("teuConfirmBtn", "click", async () => {
-    const u = $("teuUser")?.value;
-    const c = $("teuCourse")?.value;
-    if (u && c) {
-      await TrainingVioraAPI.enrollUserInCourse(u, c);
-      closeModal("trainingEnrollModal");
-    }
+    const u = $("teuUser")?.value; const c = $("teuCourse")?.value;
+    if (u && c) { await TrainingVioraAPI.enrollUserInCourse(u, c); closeModal("trainingEnrollModal"); }
   });
   bind("manualAwardCertBtn", "click", () => openManualAwardModal());
-  bind("rerunAutoAwardBtn",  "click", () => AutoCertification?.backfillAll());
+  bind("rerunAutoAwardBtn", "click", () => AutoCertification?.backfillAll());
   bind("newCertTemplateBtn", "click", () => openCertTemplateEditor());
 
   document.querySelectorAll("[data-sa-tab]").forEach((b) => {
     if (b._saNavBound) return;
     b._saNavBound = true;
-    b.addEventListener("click", (e) => {
-      e.preventDefault();
-      const tab = b.dataset.saTab;
-      if (tab) switchTab(tab);
-    });
+    b.addEventListener("click", (e) => { e.preventDefault(); const tab = b.dataset.saTab; if (tab) switchTab(tab); });
   });
 
-  bind("saSignOutBtn", "click", () => {
-    if (confirm("Sign out of Scholar Admin?")) signOut(auth).then(() => location.reload());
-  });
+  bind("saSignOutBtn", "click", () => { if (confirm("Sign out of Scholar Admin?")) signOut(auth).then(() => location.reload()); });
   bind("saThemeBtn", "click", () => {
     const cur = document.documentElement.getAttribute("data-theme") || "dark";
     const next = cur === "dark" ? "light" : "dark";
     document.documentElement.setAttribute("data-theme", next);
     try { localStorage.setItem("viora_theme", next); } catch (e) {}
-    const btn = $("saThemeBtn");
-    if (btn) {
-      const icon = btn.querySelector("i");
-      if (icon) icon.className = next === "dark" ? "fa-solid fa-moon" : "fa-solid fa-sun";
-    }
+    const btn = $("saThemeBtn"); if (btn) { const icon = btn.querySelector("i"); if (icon) icon.className = next === "dark" ? "fa-solid fa-moon" : "fa-solid fa-sun"; }
   });
   bind("saMobileToggle", "click", () => $("saSidebar")?.classList.toggle("open"));
   bind("saSidebarOverlay", "click", () => $("saSidebar")?.classList.remove("open"));
 
   try { const saved = localStorage.getItem("viora_theme"); if (saved) document.documentElement.setAttribute("data-theme", saved); } catch (e) {}
 
-  /* CRITICAL: don't subscribe until auth is warm */
   if (!auth.currentUser) {
     console.warn("[sa] bootAdmin called before auth was ready — waiting for next onAuthStateChanged");
     _adminBooted = false;
@@ -700,13 +832,8 @@ function bootAdmin() {
 
   subscribeTraining();
   switchTab("command");
-
   setTimeout(() => switchTab("command"), 600);
-
-  setTimeout(() => {
-    try { bindTrainingEvents(); console.info("[sa] late bindTrainingEvents succeeded"); }
-    catch (e) { console.warn("[sa] late bindTrainingEvents failed:", e); }
-  }, 300);
+  setTimeout(() => { try { bindTrainingEvents(); console.info("[sa] late bindTrainingEvents succeeded"); } catch (e) { console.warn("[sa] late bindTrainingEvents failed:", e); } }, 300);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -714,11 +841,7 @@ function bootAdmin() {
    ═══════════════════════════════════════════════════════════════ */
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    setTimeout(() => {
-      if (!auth.currentUser) {
-        showSplash("deny", "Not signed in", "Scholar Admin requires an active VIORA session.");
-      }
-    }, 800);
+    setTimeout(() => { if (!auth.currentUser) showSplash("deny", "Not signed in", "Scholar Admin requires an active VIORA session."); }, 800);
     return;
   }
 
@@ -728,9 +851,7 @@ onAuthStateChanged(auth, async (user) => {
     `${ROOT}/${ORG}/training/users/${user.uid}`
   ];
 
-  let chosenProfile = null;
-  let chosenPath = null;
-
+  let chosenProfile = null, chosenPath = null;
   for (const path of candidatePaths) {
     try {
       const snap = await get(ref(db, path));
@@ -740,33 +861,20 @@ onAuthStateChanged(auth, async (user) => {
         const rawRole = val?.role ?? val?.type ?? val?.accessLevel ?? null;
         const normRole = typeof rawRole === "string" ? rawRole.toLowerCase().trim() : null;
         const isElevated = normRole === "admin" || normRole === "exec";
-        if (!chosenProfile || isElevated) {
-          chosenProfile = val;
-          chosenPath = path;
-          if (isElevated) break;
-        }
-      } else {
-        console.info(`[sa/auth] ${path} → (missing)`);
-      }
-    } catch (e) {
-      console.warn(`[sa/auth] ${path} read failed:`, e.message);
-    }
+        if (!chosenProfile || isElevated) { chosenProfile = val; chosenPath = path; if (isElevated) break; }
+      } else console.info(`[sa/auth] ${path} → (missing)`);
+    } catch (e) { console.warn(`[sa/auth] ${path} read failed:`, e.message); }
   }
 
   if (!chosenProfile) {
-    console.error("[sa/auth] No profile found in any of:", candidatePaths);
-    showSplash("deny", "Profile not found",
-      `No record for UID ${user.uid.slice(0,8)}… in any users node. Create one at viora_data/orgs/viora/users/${user.uid} with role "exec".`);
+    showSplash("deny", "Profile not found", `No record for UID ${user.uid.slice(0,8)}… in any users node.`);
     return;
   }
 
   const rawRole = chosenProfile.role ?? chosenProfile.type ?? chosenProfile.accessLevel ?? null;
   const role = typeof rawRole === "string" ? rawRole.toLowerCase().trim() : null;
-
   if (role !== "admin" && role !== "exec") {
-    console.error(`[sa/auth] Role from ${chosenPath} = "${rawRole}" — not admin/exec. Full profile:`, chosenProfile);
-    showSplash("deny", "Access denied",
-      `Your role ("${rawRole || "unknown"}") at ${chosenPath.replace(ROOT + "/", "")} does not have Scholar admin access.`);
+    showSplash("deny", "Access denied", `Your role ("${rawRole || "unknown"}") does not have Scholar admin access.`);
     return;
   }
 
