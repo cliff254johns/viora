@@ -5346,8 +5346,16 @@ window.vioraNotify = async function (opts) {
     ts: new Date().toISOString(),
     read: false
   };
-  try {
+    try {
     await set(ref(db, 'viora_data/orgs/viora/notifications/' + id), payload);
+    /* Force the local dashboard to paint immediately (don't wait for the
+       Firebase echo — this makes the notification appear within ~50ms). */
+    try { surfaceVioraNotification(payload, true); } catch (_) {}
+    try {
+      if (typeof window.renderDashboardNotifications === 'function') {
+        window.renderDashboardNotifications();
+      }
+    } catch (_) {}
     return id;
   } catch (e) {
     console.warn('[vioraNotify] write failed:', e.message);
