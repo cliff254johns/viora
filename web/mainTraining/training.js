@@ -1,7 +1,6 @@
 // File: mainTraining/training.js
-// Learner portal. Uses named Firebase app "training" (isolated auth session).
-// Signup writes accessRequests/{uid} with role:"learner" (or the role they
-// picked from pRegRole). Approved → shell appears via onValue live swap.
+// Learner portal. Named app "training" (isolated auth session).
+// All signups write role: "learner" — no role picker, no role field read.
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import {
@@ -156,11 +155,13 @@ async function doSignIn() {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   REGISTER — always learner
+   ═══════════════════════════════════════════════════════════════ */
 async function doRegister() {
   const name = ($("regName")?.value || "").trim();
   const email = ($("regEmail")?.value || "").trim().toLowerCase();
   const phone = ($("regPhone")?.value || "").trim();
-  const chosenRole = ($("pRegRole")?.value || "").trim();
   const password = $("regPassword")?.value || "";
   const btn = $("registerBtn");
 
@@ -176,12 +177,11 @@ async function doRegister() {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     const uid = cred.user.uid;
     const requestedAt = nowIso();
-    const role = "learner"; // Learners always register as "learner" regardless of pRegRole pick — admin can promote later.
 
+    /* Always learner — this portal is learner-only. No role picker. */
     await set(ref(db, `${SCHOLAR}/accessRequests/${uid}`), {
       uid, name, email, phone,
-      requestedRole: chosenRole || "learner",
-      role,
+      role: "learner",
       status: "pending",
       requestedAt,
       source: "training-portal"
@@ -192,9 +192,9 @@ async function doRegister() {
       if (!snap.exists()) {
         await set(ref(db, `${USERS}/${uid}`), {
           uid, name, email,
-          role: "learner",
+          role: "pending",
+          requestedRole: "learner",
           pendingApproval: true,
-          requestedRole: chosenRole || "learner",
           source: "training-portal",
           createdAt: requestedAt
         });
@@ -279,7 +279,6 @@ function bootLearnerApp() {
   subNode(`${SCHOLAR}/progress/${uid}`, (v) => { S.progress = v || {}; renderActiveTab(); });
   subNode(`${SCHOLAR}/checklistProgress/${uid}`, (v) => { S.checklistProgress = v || {}; if (S.currentTab === "checklists") renderChecklists(); });
   subNode(`${SCHOLAR}/quizSubmissions/${uid}`, (v) => { S.quizSubmissions = v || {}; renderActiveTab(); });
-
   subNode(`${SCHOLAR}/certificates`, (all) => {
     const filtered = {};
     for (const [id, c] of Object.entries(all || {})) if (c && c.uid === uid) filtered[id] = c;
