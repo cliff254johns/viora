@@ -1140,7 +1140,29 @@ case 'portalUsers': return (d.portalUsers || []).length;
       const awarded = new Set(Object.values(d.trainingCertificates || {}).map(c => `${c.uid}__${c.courseId}`));
       return Object.values(d.trainingQuizSubmissions || {}).flatMap(byCourse => Object.values(byCourse || {})).filter(q => q.status === 'graded' && !awarded.has(`${q.uid}__${q.courseId}`)).length;
     }
-    case 'ledger': return (d.ledger || []).length;
+     case 'ledger': return (d.ledger || []).length;
+
+    case 'archives': {
+      const clients  = Array.isArray(d.archivedClients)  ? d.archivedClients.length  : 0;
+      const deals    = Array.isArray(d.archivedDeals)    ? d.archivedDeals.length    : 0;
+      const projects = Array.isArray(d.archivedProjects) ? d.archivedProjects.length : 0;
+      return clients + deals + projects;
+    }
+
+    case 'personalDocs': {
+      const opName = state.operator?.name || '';
+      const docs = Array.isArray(d.documents) ? d.documents : [];
+      return docs.filter(x =>
+        x && (!x.parentId || x.parentId === '') &&
+        (x.uploadedBy === opName || !x.uploadedBy)
+      ).length;
+    }
+
+    case 'trainingRequestsPending': {
+      const reqs = d.trainingAccessRequests || {};
+      return Object.values(reqs).filter(r => r && (r.status || 'pending') === 'pending').length;
+    }
+
     default: return null;
   }
 }
