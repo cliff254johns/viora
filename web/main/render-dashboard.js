@@ -1446,6 +1446,9 @@ export function attachVioraNotificationListener() {
     const isFresh = !tsMs || (Date.now() - tsMs) < 5000;
     surfaceVioraNotification(n, isFresh);
 
+    /* Paint the dashboard notifications grid immediately */
+    try { renderDashboardNotifications(); } catch (_) {}
+
     if (typeof update === 'function') {
       try {
         update(ref(db, `${path}/${n.id}`), { read: true, readAt: new Date().toISOString() })
