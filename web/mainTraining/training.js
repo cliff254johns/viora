@@ -45,6 +45,129 @@ const S = {
 const $ = (id) => document.getElementById(id);
 const nowIso = () => new Date().toISOString();
 
+/* ═══════════════════════════════════════════════════════════════
+   COURSE ACCESS GATE
+   ═══════════════════════════════════════════════════════════════ */
+function tierLabel(tier) {
+  return {
+    free: 'Free',
+    individual: 'Individual',
+    subscription: 'Subscribers',
+    professional: 'Professional',
+    corporate: 'Corporate',
+    institutional: 'Institutional',
+    marketplace: 'Marketplace',
+    research: 'Research',
+  }[tier] || 'Locked';
+}
+
+function canAccessCourse(course) {
+  if (!course) return false;
+  const tier = course.accessTier || 'free';
+  if (tier === 'free') return true;
+
+  const profile = S.userProfile || {};
+  const myTiers = Array.isArray(profile.tiers) ? profile.tiers : ['free'];
+
+  if (myTiers.includes(tier)) return true;
+
+  if (tier === 'individual' &&
+      Array.isArray(profile.individualCourses) &&
+      profile.individualCourses.includes(course.id)) {
+    return true;
+  }
+
+  if (tier === 'subscription' && myTiers.includes('subscription')) {
+    if (!profile.subscriptionEndsAt) return true;
+    return Date.parse(profile.subscriptionEndsAt) > Date.now();
+  }
+
+  return false;
+}
+
+function showUpgradeModal(courseId) {
+  const course = S.courses[courseId];
+  if (!course) return;
+  const tier = course.accessTier || 'free';
+
+  const tierMessages = {
+    individual: {
+      title: 'Buy this course',
+      body: 'One-time payment. Lifetime access to this course and its certificates.',
+      cta: 'Buy Now',
+      action: () => window.open('https://viora.co.ke/contact_us.html?buy=' + encodeURIComponent(courseId), '_blank'),
+    },
+    subscription: {
+      title: 'Subscribe to unlock everything',
+      body: 'Monthly or annual subscription gives you access to every course in the VIORA Academy library.',
+      cta: 'Start Subscription',
+      action: () => window.open('https://viora.co.ke/contact_us.html?subscribe=1', '_blank'),
+    },
+    professional: {
+      title: 'Enroll in a professional programme',
+      body: 'Professional programmes bundle advanced courses with career-grade certification and priority instructor support.',
+      cta: 'View Programmes',
+      action: () => window.open('https://viora.co.ke/contact_us.html?programme=1', '_blank'),
+    },
+    corporate: {
+      title: 'Corporate training access',
+      body: "This course is available through corporate training contracts. Ask your manager to add you to your organization's VIORA Academy account.",
+      cta: 'Contact Support',
+      action: () => window.open('mailto:support@viora.co.ke?subject=Corporate%20training%20access', '_blank'),
+    },
+    institutional: {
+      title: 'Institutional access',
+      body: 'This course is available through institutional partnerships. Contact your institution to arrange access.',
+      cta: 'Contact VIORA',
+      action: () => window.open('mailto:support@viora.co.ke?subject=Institutional%20access', '_blank'),
+    },
+    marketplace: {
+      title: 'Instructor course',
+      body: 'This course is sold by an independent VIORA instructor. Purchase it directly from the marketplace.',
+      cta: 'Go to Marketplace',
+      action: () => window.open('https://viora.co.ke/market.html', '_blank'),
+    },
+    research: {
+      title: 'Specialist resource',
+      body: 'This is a paid research resource, priced individually. Contact us for access.',
+      cta: 'Request Access',
+      action: () => window.open('mailto:support@viora.co.ke?subject=Research%20resource%20access', '_blank'),
+    },
+  };
+
+  const msg = tierMessages[tier] || tierMessages.subscription;
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay active';
+  modal.style.zIndex = '3000';
+  modal.innerHTML = `
+    <div class="modal" style="max-width:480px;text-align:center;padding:32px;">
+      <div style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,var(--accent-purple,#7c3aed),var(--accent-blue,#00d4ff));display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.6rem;color:#fff;">
+        <i class="fa-solid fa-lock"></i>
+      </div>
+      <h2 style="margin:0 0 8px;font-size:1.3rem;font-family:'Space Grotesk',sans-serif;">${msg.title}</h2>
+      <p style="color:var(--text-secondary,#94a3b8);font-size:.9rem;line-height:1.6;margin:0 0 20px;">${msg.body}</p>
+      <div style="padding:12px;background:var(--bg-input,#0f1117);border-radius:10px;margin-bottom:20px;font-size:.82rem;color:var(--text-secondary,#94a3b8);">
+        <strong style="color:var(--text-primary,#f1f5f9);">${escapeHtml(course.title || '')}</strong><br>
+        Tier: ${tierLabel(tier)}
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <button type="button" class="btn btn-outline" id="upgradeCancel" style="padding:10px 20px;">Maybe Later</button>
+        <button type="button" class="btn btn-success" id="upgradeGo" style="padding:10px 20px;">
+          <i class="fa-solid fa-arrow-right"></i> ${msg.cta}
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+
+  modal.querySelector('#upgradeCancel').onclick = () => modal.remove();
+  modal.querySelector('#upgradeGo').onclick = () => {
+    msg.action();
+    modal.remove();
+  };
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+}
+
 function escapeHtml(s) {
   return String(s == null ? "" : s)
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -286,6 +409,12 @@ function bootLearnerApp() {
     if (S.currentTab === "certificates") renderCertificates();
   });
 
+    /* Learner's tier profile — drives course access */
+  subNode(`${SCHOLAR}/users/${uid}`, (v) => {
+    S.userProfile = v || {};
+    renderActiveTab();
+  });
+
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     if (btn._tnBound) return; btn._tnBound = true;
     btn.addEventListener("click", () => switchTab(btn.dataset.tab));
@@ -469,16 +598,22 @@ function courseCardHtml(course) {
   const cat = course.category || "General";
   const cidSafe = escapeHtml(course.id);
 
+  const allowed = canAccessCourse(course);
+  const tier = course.accessTier || 'free';
+
   let statusChip;
-  if (cert) statusChip = `<span class="badge badge-paid">🎓 Certified</span>`;
+  if (!allowed) statusChip = `<span class="badge badge-overdue">🔒 ${tierLabel(tier)}</span>`;
+  else if (cert) statusChip = `<span class="badge badge-paid">🎓 Certified</span>`;
   else if (awaitingGrade) statusChip = `<span class="badge badge-pending">Awaiting cert</span>`;
   else if (done) statusChip = `<span class="badge badge-pending">Completed</span>`;
   else if (enrolled) statusChip = `<span class="badge badge-active">In progress</span>`;
   else statusChip = `<span class="badge badge-gray">Not started</span>`;
 
-  const actionBtn = enrolled
-    ? `<button class="btn btn-primary btn-sm" onclick="VioraTraining.openCourse('${cidSafe}')"><i class="fa-solid fa-play"></i> ${done ? "Review" : "Continue"}</button>`
-    : `<button class="btn btn-success btn-sm" onclick="VioraTraining.enrollAndOpen('${cidSafe}')"><i class="fa-solid fa-plus"></i> Enroll</button>`;
+  const actionBtn = !allowed
+    ? `<button class="btn btn-outline btn-sm" onclick="VioraTraining.openCourse('${cidSafe}')"><i class="fa-solid fa-lock"></i> Locked — ${tierLabel(tier)}</button>`
+    : enrolled
+      ? `<button class="btn btn-primary btn-sm" onclick="VioraTraining.openCourse('${cidSafe}')"><i class="fa-solid fa-play"></i> ${done ? "Review" : "Continue"}</button>`
+      : `<button class="btn btn-success btn-sm" onclick="VioraTraining.enrollAndOpen('${cidSafe}')"><i class="fa-solid fa-plus"></i> Enroll</button>`;
 
   return `
     <div class="card-3d">
@@ -584,6 +719,13 @@ function resourceCardHtml(r) {
 function openCourse(courseId) {
   const course = S.courses[courseId];
   if (!course) { toast("Course not found.", "error"); return; }
+
+  /* ACCESS GATE — stop here if the learner doesn't have this tier */
+  if (!canAccessCourse(course)) {
+    showUpgradeModal(courseId);
+    return;
+  }
+
   if (!isEnrolled(courseId)) { enrollAndOpen(courseId); return; }
   const mod = firstIncompleteModule(course);
   if (!mod) { toast("This course has no modules yet.", "info"); return; }
