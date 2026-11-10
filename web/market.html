@@ -9,7 +9,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" type="image/png" href="https://viora.co.ke/viora.png">
@@ -34,11 +34,10 @@
   /* Set theme immediately to avoid flash of wrong theme */
   (function() {
     try {
-      const saved = localStorage.getItem('viora_theme');
-      if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
-      else document.documentElement.setAttribute('data-theme', 'light');
+      const saved = localStorage.getItem('viora-theme') || localStorage.getItem('viora_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', saved === 'light' ? 'light' : 'dark');
     } catch (_) {
-      document.documentElement.setAttribute('data-theme', 'light');
+      document.documentElement.setAttribute('data-theme', 'dark');
     }
   })();
 
@@ -416,6 +415,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
  .viora-global-mobile-nav button{cursor:pointer}
 }
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="/global-brand.css">
 </head>
 <body>
 
@@ -447,15 +447,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
         </span>
       </a>
 
-      <ul class="nav-links" id="navLinks" role="menu">
-        <li><a href="index.html" role="menuitem">Home</a></li>
-        <li><a href="support.html" role="menuitem">Solutions</a></li>
-        <li><a href="market.html" class="active" role="menuitem">Marketplace</a></li>
-        <li><a href="training.html" role="menuitem">Academy</a></li>
-        <li><a href="client.html" role="menuitem">Client Portal</a></li>
-        <li><a href="about.html" role="menuitem">About</a></li>
-        <li><a href="contact_us.html" role="menuitem">Contact</a></li>
-      </ul>
+      <ul class="nav-links" id="navLinks" role="menu"><li><a href="index.html" role="menuitem">Home</a></li><li><a href="market.html" class="active" role="menuitem">Market</a></li><li><a href="client.html" role="menuitem">Portal</a></li><li><a href="training.html" role="menuitem">Academy</a></li><li><a href="contact_us.html" role="menuitem">Contact</a></li></ul>
 
       <div class="nav-actions">
   <button class="theme-toggle-market" id="themeToggleMarket" aria-label="Toggle theme" type="button" title="Toggle theme">
@@ -1096,7 +1088,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
    Reads/writes localStorage key 'viora_theme' (shared across pages)
    ═══════════════════════════════════════════════════════════════ */
 (function() {
-  const STORAGE_KEY = 'viora_theme';
+  const STORAGE_KEY = 'viora-theme';
   const html = document.documentElement;
 
   function applyTheme(theme) {
@@ -1123,7 +1115,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
   }
 
   function toggleTheme() {
-    const current = html.getAttribute('data-theme') || 'light';
+    const current = html.getAttribute('data-theme') || 'dark';
     setTheme(current === 'dark' ? 'light' : 'dark');
   }
 
@@ -1131,7 +1123,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
   const saved = (() => {
     try { return localStorage.getItem(STORAGE_KEY); } catch (_) { return null; }
   })();
-  applyTheme(saved || 'light');
+  applyTheme(saved === 'light' ? 'light' : 'dark');
 
   /* Bind the toggle */
   document.addEventListener('DOMContentLoaded', function() {
@@ -1140,5 +1132,6 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
   });
 })();
 </script>
+<script src="/global-brand.js" defer></script>
 </body>
 </html>
