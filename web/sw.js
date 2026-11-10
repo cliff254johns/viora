@@ -247,17 +247,16 @@ function isStaticAsset(pathname) {
   if (/\.(?:bin|geojson|topojson)$/i.test(pathname)) return true;
   // Audio
   if (/\.(?:mp3|wav|ogg)$/i.test(pathname)) return true;
-  // CSS
-  if (/\.css$/i.test(pathname)) return true;
+  // CSS is app shell: network-first so refreshes pick up the latest styles.
+  if (/\.css$/i.test(pathname)) return false;
 
   // JS — split carefully. Application ES modules are shell, NOT static.
   if (/\.js$/i.test(pathname)) {
     if (pathname === '/main.js') return false;
     if (/^\/main\//.test(pathname)) return false;                 // ES module dir
     if (/^\/campaigns-bootstrap\.js$/.test(pathname)) return false;
-    // Any other root-level .js is treated as a static chunk
-    // (e.g. a legacy bundled script you don't touch often).
-    return true;
+    // Same-origin JavaScript is application code and must refresh from network.
+    return false;
   }
 
   return false;
@@ -283,7 +282,10 @@ function isAppShell(pathname) {
   // Industry microsites, dashboards and authenticated portal routes stay network-only.
   if (APP_SHELL_PATHS.has(pathname)) return true;
   if (pathname === '/main.js' || pathname === '/campaigns-bootstrap.js') return true;
-  return /^\/main\/[^/]+\.js$/.test(pathname);
+  if (/^\/main\/[^/]+\.js$/.test(pathname)) return true;
+  if (/^\/[^/]+\.(?:js|css)$/i.test(pathname)) return true;
+  if (pathname === '/campaigns.html' || pathname === '/about.html' || pathname === '/support.html' || pathname === '/contact_us.html') return true;
+  return false;
 }
 
 /* ═══════════════════════════════════════════════════════════════
