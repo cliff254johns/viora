@@ -752,9 +752,13 @@ function deriveTzFromLatLon(lat, lon) {
 
     let precipProb = null;
     if (Array.isArray(h.time) && Array.isArray(h.precipitation_probability)) {
-      const nowIso = new Date().toISOString().slice(0, 13);
+      // Both current.time and hourly.time are in Open-Meteo's requested
+      // location timezone. UTC comparison mislabels the current hour.
+      const currentHour = typeof c.time === 'string'
+        ? c.time.slice(0, 13)
+        : new Date().toISOString().slice(0, 13);
       for (let i = h.time.length - 1; i >= 0; i--) {
-        if (h.time[i].slice(0, 13) <= nowIso) {
+        if (String(h.time[i]).slice(0, 13) <= currentHour) {
           precipProb = h.precipitation_probability[i];
           break;
         }
