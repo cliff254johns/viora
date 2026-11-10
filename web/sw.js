@@ -291,6 +291,16 @@ const APP_SHELL_PATHS = new Set([
   '/about',
   '/support',
   '/contact_us',
+  '/industries',
+  '/industries/retail',
+  '/industries/healthcare',
+  '/industries/education',
+  '/industries/hospitality',
+  '/industries/logistics',
+  '/industries/agriculture',
+  '/industries/professional-services',
+  '/fr/',
+  '/es/',
   '/market.html',
   '/client.html',
   '/training.html',
@@ -303,7 +313,7 @@ const APP_SHELL_PATHS = new Set([
 
 function isAppShell(pathname) {
   // Only explicitly reviewed VIORA entry points are eligible for HTML caching.
-  // Industry microsites, dashboards and authenticated portal routes stay network-only.
+  // Authenticated dashboards and portal routes stay network-only; public industry and language landing pages are reviewed shell routes.
   if (APP_SHELL_PATHS.has(pathname)) return true;
   if (pathname === '/main.js' || pathname === '/campaigns-bootstrap.js') return true;
   if (/^\/main\/[^/]+\.js$/.test(pathname)) return true;
