@@ -26,3 +26,6 @@ html,body,button,input,select,textarea{font-family:"Plus Jakarta Sans","Segoe UI
 .mobile-bottom-nav .mnav-item>span:first-child{font-size:18px;line-height:1.1}
 .mobile-bottom-nav .mnav-item>span:last-child{font-family:"Plus Jakarta Sans",sans-serif;font-weight:700}
 [data-theme="dark"] .mobile-bottom-nav{background:rgba(0,0,0,.96);border-top:1px solid rgba(255,255,255,.12)}
+
+[data-theme="light"]{color-scheme:light}
+[data-theme="dark"] h1,[data-theme="dark"] h2,[data-theme="dark"] h3,[data-theme="dark"] h4,[data-theme="dark"] h5{color:#fff!important}
