@@ -75,6 +75,8 @@
     reducedMotion: REDUCED_MOTION,
     bound: false,
     destroyed: false,
+    resizeBound: false,
+    resizeObserver: null,
     hasPlacedOnce: false,
     disabled: false,
 
@@ -402,7 +404,7 @@
   function applyTransform() {
     const orb = state.orb;
     if (!orb) return;
-    const size = 64; // Fixed size
+    const size = state.lastSizePx || 64;
     const half = size / 2;
     
     // Translate based on current X/Y coords, keeping the orb centered
@@ -426,7 +428,15 @@
       
       ensurePaths();
       refreshRect();
-      
+      if (!state.resizeBound) {
+        const onResize = () => { if (refreshRect()) api.renderNow(); };
+        global.addEventListener('resize', onResize, { passive: true });
+        if (typeof global.ResizeObserver === 'function') {
+          state.resizeObserver = new global.ResizeObserver(onResize);
+          state.resizeObserver.observe(state.banner);
+        }
+        state.resizeBound = true;
+      }
       if (opts.sky) api.setSkyState(opts.sky);
       else api.refreshSkyFromSolar();
 
@@ -566,6 +576,7 @@
     destroy() {
       state.destroyed = true;
       cancelLerp();
+      try { state.resizeObserver?.disconnect(); } catch (_) {}
       state.orb = null;
       state.banner = null;
     }
