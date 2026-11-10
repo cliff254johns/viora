@@ -1182,9 +1182,9 @@ function renderPricing() {
   const host = $('#pricing-grid');
   if (!host) return;
   const tiers = S.homeContent?.pricing?.tiers || [
-    { name: 'Starter', tagline: 'Small teams', bullets: ['Core modules', 'Up to 5 users', 'Email support'], cta: 'Subscribe', ctaHref: 'client.html' },
-    { name: 'Growth', tagline: 'Growing businesses', featured: true, bullets: ['Everything in Starter', 'Up to 25 users', 'POS + Inventory + Accounting', 'Priority support'], cta: 'Subscribe', ctaHref: 'client.html' },
-    { name: 'Enterprise', tagline: 'Complex operations', bullets: ['All modules', 'Unlimited users', 'Custom development', 'SLA-backed uptime'], cta: 'Talk to sales', ctaHref: 'contact_us.html' },
+    { name: 'Starter', tagline: 'Small teams', bullets: ['Core modules', 'Up to 5 users', 'Email support'], cta: 'Subscribe', ctaHref: '/client' },
+    { name: 'Growth', tagline: 'Growing businesses', featured: true, bullets: ['Everything in Starter', 'Up to 25 users', 'POS + Inventory + Accounting', 'Priority support'], cta: 'Subscribe', ctaHref: '/client' },
+    { name: 'Enterprise', tagline: 'Complex operations', bullets: ['All modules', 'Unlimited users', 'Custom development', 'SLA-backed uptime'], cta: 'Talk to sales', ctaHref: '/contact_us' },
   ];
 
   host.innerHTML = tiers.map(t => {
