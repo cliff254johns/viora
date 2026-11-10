@@ -202,6 +202,7 @@
     color: #e2e8f0;
     letter-spacing: 0.01em;
   }
+</style>
 <style>
   /* Login stays hidden until preloader fully completes */
   #loginScreen {
@@ -295,6 +296,13 @@
   var v = document.getElementById('vioraPreloaderVideo');
   var preloader = document.getElementById('vioraPreloader');
   if (!v || !preloader) return;
+
+  /* Respect reduced-motion preferences: do not autoplay the splash video. */
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    try { v.pause(); } catch (_) {}
+    if (typeof window.vioraHidePreloader === "function") window.vioraHidePreloader();
+    return;
+  }
 
   /* Enforce muted + playsinline (some browsers ignore the attribute) */
   v.muted = true;
