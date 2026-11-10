@@ -18,7 +18,6 @@
   "icons": [
     {
       "src": "/viora.png",
-      "sizes": "1290x1219",
       "type": "image/png",
       "purpose": "any"
     }
