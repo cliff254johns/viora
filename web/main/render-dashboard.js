@@ -1389,7 +1389,7 @@ export function surfaceVioraNotification(payload, isFresh = true) {
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
       const n = new Notification(payload.title || 'VIORA', {
         body: payload.body || '',
-        icon: '/icons/icon-192.png',
+        icon: '/viora.png',
         tag: payload.id || payload.source || 'viora',
         data: { url: payload.url || '/main.html' }
       });
