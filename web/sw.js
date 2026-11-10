@@ -16,12 +16,12 @@
        immutable static chunks. Precedence was broken in v1.0.0.
      • Cache version bumped → old bad caches are purged on activate.
 
-   Strategy (v1.1.0):
-     • App shell (HTML, main.js, main/*.js)  → stale-while-revalidate
-     • Static assets (images, fonts, media)  → cache-first
-     • Firebase / Worker / CDN libs / auth   → NETWORK-ONLY (no SW)
-     • Google Fonts                          → dedicated cache
-     • Same-origin misc (non-shell)          → network-first
+   Strategy (v1.4.2):
+     • Reviewed VIORA entry pages + core modules → stale-while-revalidate
+     • Static assets (images, fonts, media)      → cache-first
+     • Firebase / Worker / CDN libs / auth       → NETWORK-ONLY (no SW)
+     • Industry microsites and unreviewed routes → network-only
+     • Google Fonts                              → dedicated cache
 
    Never intercepts:
      • non-GET requests
@@ -259,9 +259,8 @@ function isStaticAsset(pathname) {
 }
 
 /**
- * True for the app shell (HTML + entry ES modules).
- * These use stale-while-revalidate so code changes propagate
- * on the next load without requiring a hard refresh.
+ * True only for explicitly reviewed VIORA shell pages and core modules.
+ * Authenticated portal content and industry microsites are never HTML-cached.
  */
 const APP_SHELL_PATHS = new Set([
   '/',
