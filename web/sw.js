@@ -419,7 +419,8 @@ function isCacheableResponse(res) {
   if (res.status >= 400) return false;
 
   const cc = res.headers.get('cache-control') || '';
-  if (/no-store|no-cache|private/i.test(cc)) return false;\n  if (res.headers.get('vary') === '*') return false;
+  if (/no-store|no-cache|private/i.test(cc)) return false;
+  if (res.headers.get('vary') === '*') return false;
 
   return true;
 }
