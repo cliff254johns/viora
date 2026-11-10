@@ -352,7 +352,9 @@ async function staleWhileRevalidate(req, cacheName) {
 async function networkFirst(req, cacheName) {
   const cache = await caches.open(cacheName);
   try {
-    const res = await fetch(req);
+    // Bypass the browser HTTP cache as well as Cache Storage on normal refreshes.
+    const freshRequest = new Request(req, { cache: 'no-store' });
+    const res = await fetch(freshRequest);
     if (res && res.ok && isCacheableResponse(res)) {
       cache.put(req, res.clone()).catch(() => {});
     }
