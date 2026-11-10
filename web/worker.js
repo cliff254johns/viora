@@ -42,7 +42,9 @@ async function translate(request,env,ctx) {
   const cached=await cache.match(cacheKey);
   if(cached){const payload=await cached.json();return json(payload,200,origin);}
   const ip=request.headers.get("CF-Connecting-IP")||"unknown";
-  const now=Date.now(),slot=rate.get(ip)||{start:now,count:0};
+  const now=Date.now();
+  if(rate.size>1000)for(const [key,value] of rate)if(now-value.start>60000)rate.delete(key);
+  const slot=rate.get(ip)||{start:now,count:0};
   if(now-slot.start>60000){slot.start=now;slot.count=0;}
   slot.count++;rate.set(ip,slot);
   if(slot.count>300)return json({error:"Translation rate limit reached. Please wait a minute."},429,origin);
