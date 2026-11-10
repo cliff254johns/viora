@@ -210,16 +210,20 @@ function renderHero() {
   const cta2 = $('#hero-cta2');
 
   if (eyebrow) eyebrow.textContent = h.eyebrow || 'The VIORA Ecosystem';
-  if (line1) line1.textContent = h.titleLine1 || 'One Business.';
-  if (line2) line2.textContent = h.titleLine2 || 'One Connected Digital Ecosystem.';
-  if (sub) sub.textContent = h.subtitle || 'We design and build intelligent digital ecosystems that connect your business operations, people, workflows and data — around the way your industry actually works.';
+  const legacyHeroCopy = h.titleLine1 === 'Everything Your Business Needs.' || h.titleLine2 === 'Connected.';
+  if (line1) line1.textContent = !h.titleLine1 || legacyHeroCopy ? 'One Business.' : h.titleLine1;
+  if (line2) line2.textContent = !h.titleLine2 || legacyHeroCopy ? 'One Connected Digital Ecosystem.' : h.titleLine2;
+  const legacySubtitle = h.subtitle && /Run smarter, sell more and grow with an integrated ecosystem/i.test(h.subtitle);
+  if (sub) sub.textContent = !h.subtitle || legacySubtitle ? 'We design and build intelligent digital ecosystems that connect your business operations, people, workflows and data — around the way your industry actually works.' : h.subtitle;
   if (cta1 && h.primaryCta) {
-    cta1.textContent = h.primaryCta.label || 'Explore Industry Solutions →';
-    cta1.href = h.primaryCta.href || '/industries';
+    const legacyPrimary = !h.primaryCta.label || h.primaryCta.label === 'Explore the Ecosystem →';
+    cta1.textContent = legacyPrimary ? 'Explore Industry Solutions →' : h.primaryCta.label;
+    cta1.href = legacyPrimary || !h.primaryCta.href || h.primaryCta.href === '#tour' ? '/industries' : h.primaryCta.href;
   }
   if (cta2 && h.secondaryCta) {
-    cta2.textContent = h.secondaryCta.label || 'Build Your Ecosystem';
-    cta2.href = h.secondaryCta.href || '/contact_us';
+    const legacySecondary = !h.secondaryCta.label || h.secondaryCta.label === 'Book a demo';
+    cta2.textContent = legacySecondary ? 'Build Your Ecosystem' : h.secondaryCta.label;
+    cta2.href = !h.secondaryCta.href || h.secondaryCta.href === 'contact_us.html' ? '/contact_us' : h.secondaryCta.href;
   }
 }
 
