@@ -352,11 +352,6 @@ async function networkFirst(req, cacheName) {
     const cached = await cache.match(req);
     if (cached) return cached;
 
-    if (req.mode === 'navigate') {
-      const shell = await cache.match('/main.html');
-      if (shell) return shell;
-    }
-
     return new Response('Offline', {
       status: 503,
       headers: { 'Content-Type': 'text/plain' },
