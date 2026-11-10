@@ -1,24 +1,28 @@
-/* VIORA shared public navigation helpers */
-(() => {
-  'use strict';
-  const root=document.documentElement;
-  try {
-    const saved=localStorage.getItem('viora-theme')||localStorage.getItem('viora_theme')||'dark';
-    root.setAttribute('data-theme',saved==='light'?'light':'dark');
-  } catch (_) { root.setAttribute('data-theme','dark'); }
-  try { localStorage.setItem('viora-theme',root.getAttribute('data-theme')); } catch (_) {}
-  document.addEventListener('DOMContentLoaded',()=>{
-    const cleanPath=location.pathname.replace(/\/+$/,'')||'/';
-    const active=cleanPath==='/market'?'market':cleanPath==='/client'?'portal':cleanPath==='/training'?'academy':cleanPath==='/contact_us'?'contact':'home';
-    const nav=document.querySelector('.mobile-bottom-nav[aria-label="Mobile navigation"]');
-    if(nav && cleanPath!=='/market'){
-      const items=[['home','/','Home','🏠'],['market','/market','Market','🛍️'],['portal','/client','Portal','🧩'],['academy','/training','Academy','🎓'],['contact','/contact_us','Contact','✉️']];
-      nav.innerHTML=items.map(([id,url,label,icon])=>'<a class="mnav-item '+(id===active?'active':'')+'" href="'+url+'" aria-label="'+label+'"><span aria-hidden="true">'+icon+'</span><span>'+label+'</span></a>').join('');
-      nav.setAttribute('aria-label','VIORA navigation');
-    }
-    document.querySelectorAll('.nav-links a').forEach(a=>{
-      const href=new URL(a.getAttribute('href')||'/',location.origin).pathname.replace(/\/+$/,'')||'/';
-      a.classList.toggle('active',href===cleanPath);
-    });
-  });
+/* VIORA shared public navigation, language control and assistant bootstrap. */
+(()=>{
+'use strict';
+const root=document.documentElement;
+try{const theme=localStorage.getItem('viora-theme')||localStorage.getItem('viora_theme')||'dark';root.setAttribute('data-theme',theme==='light'?'light':'dark');localStorage.setItem('viora-theme',root.getAttribute('data-theme'));}catch(_){root.setAttribute('data-theme','dark');}
+function languageControl(){
+ if(document.getElementById('viora-global-language'))return;
+ const host=document.querySelector('.lang-toggle')||document.createElement('div');
+ if(!host.classList.contains('lang-toggle')){host.className='viora-language-control';document.body.appendChild(host);}else host.innerHTML='';
+ host.id='viora-language-control';host.setAttribute('aria-label','Choose website language');
+ host.innerHTML='<span aria-hidden="true">🌐</span><select id="viora-global-language" aria-label="Choose website language"><option value="en">English</option><option value="sw">Kiswahili</option><option value="fr">Français</option><option value="es">Español</option><option value="de">Deutsch</option><option value="pt">Português</option><option value="it">Italiano</option><option value="zh-CN">简体中文</option><option value="ja">日本語</option><option value="ar">العربية</option><option value="hi">हिन्दी</option><option value="ru">Русский</option><option value="nl">Nederlands</option><option value="tr">Türkçe</option><option value="ko">한국어</option></select>';
+ if(!document.getElementById('viora-language-style')){const st=document.createElement('style');st.id='viora-language-style';st.textContent='#viora-language-control,.lang-toggle{position:fixed;top:14px;right:16px;z-index:2147482000;display:flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid rgba(100,160,220,.3);border-radius:999px;background:rgba(7,17,31,.94);color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.18);backdrop-filter:blur(12px);font:600 12px system-ui}#viora-global-language{max-width:150px;border:0;outline:0;background:transparent;color:inherit;font:inherit;cursor:pointer}#viora-global-language option{background:#0d1b2d;color:#fff}@media(max-width:600px){#viora-language-control,.lang-toggle{top:10px;right:10px;padding:6px 8px}#viora-global-language{max-width:118px;font-size:11px}}';document.head.appendChild(st);}
+ let saved='en';try{saved=localStorage.getItem('viora_site_language')||'en';}catch(_){}const sel=document.getElementById('viora-global-language');if([...sel.options].some(o=>o.value===saved))sel.value=saved;
+ sel.addEventListener('change',()=>{const lang=sel.value;try{localStorage.setItem('viora_site_language',lang);}catch(_){}if(lang==='fr'&&location.pathname==='/'){location.href='/fr/';return;}if(lang==='es'&&location.pathname==='/'){location.href='/es/';return;}const src=(document.documentElement.lang||'en').split('-')[0]||'en';const val=lang===src?'':'/'+src+'/'+lang;document.cookie='googtrans='+encodeURIComponent(val)+';path=/;max-age='+(lang===src?'0':'31536000')+';SameSite=Lax';try{document.cookie='googtrans='+encodeURIComponent(val)+';domain=.viora.co.ke;path=/;max-age='+(lang===src?'0':'31536000')+';SameSite=Lax';}catch(_){}location.reload();});
+ const mount=document.createElement('div');mount.id='viora-translate-element';mount.hidden=true;document.body.appendChild(mount);
+ window.googleTranslateElementInit=()=>{try{if(window.google&&google.translate&&google.translate.TranslateElement)new google.translate.TranslateElement({pageLanguage:(document.documentElement.lang||'en').split('-')[0],includedLanguages:'en,sw,fr,es,de,pt,it,zh-CN,ja,ar,hi,ru,nl,tr,ko',autoDisplay:false},'viora-translate-element');}catch(e){console.warn('[VIORA] Translator unavailable',e);}};
+ if(!document.querySelector('script[data-viora-translate]')){const s=document.createElement('script');s.src='https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';s.async=true;s.dataset.vioraTranslate='true';s.onerror=()=>console.warn('[VIORA] Translation service unavailable');document.head.appendChild(s);}
+}
+function assistant(){if(document.querySelector('script[data-viora-site-assistant]'))return;const s=document.createElement('script');s.src='/mainIndex/site-assistant-loader.js';s.defer=true;s.dataset.vioraSiteAssistant='true';document.body.appendChild(s);}
+function nav(){
+ const path=location.pathname.replace(/\/+$/,'')||'/';const active=path==='/market'?'market':path==='/client'?'portal':path==='/training'?'academy':path==='/contact_us'?'contact':'home';
+ const n=document.querySelector('.mobile-bottom-nav[aria-label="Mobile navigation"]');
+ if(n&&path!=='/market'){const items=[['home','/','Home','🏠'],['market','/market','Market','🛍️'],['portal','/client','Portal','🧩'],['academy','/training','Academy','🎓'],['contact','/contact_us','Contact','✉️']];n.innerHTML=items.map(([id,url,label,icon])=>'<a class="mnav-item '+(id===active?'active':'')+'" href="'+url+'" aria-label="'+label+'"><span aria-hidden="true">'+icon+'</span><span>'+label+'</span></a>').join('');n.setAttribute('aria-label','VIORA navigation');}
+ document.querySelectorAll('.nav-links a').forEach(a=>{const href=new URL(a.getAttribute('href')||'/',location.origin).pathname.replace(/\/+$/,'')||'/';a.classList.toggle('active',href===path);});
+}
+const start=()=>{nav();languageControl();assistant();};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
