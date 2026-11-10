@@ -2392,17 +2392,11 @@ function deriveTzFromLatLon(lat, lon) {
     try {
       const sky = getSky();
       if (sky) {
-        banner.dataset.skyPhase = sky.phase;
+        // Keep the banner on a supported CSS phase. Raw Solar phases such as
+        // "day" or "sunrise" have no matching gradient and reveal the near-black fallback.
+        applySkyPhase(skyPhaseFor(Weather.get(), sky));
         banner.classList.toggle('viora-hero--is-day', !!sky.isDay);
         banner.classList.toggle('viora-hero--is-night', !!sky.isNight);
-
-        try {
-          const elev = Number(sky.sun && sky.sun.elevation);
-          if (Number.isFinite(elev)) {
-            const opacity = Math.max(0.35, Math.min(1.0, 0.35 + (elev + 12) / 24));
-            banner.style.setProperty('--hero-terminator-opacity', opacity.toFixed(3));
-          }
-        } catch (_) {}
       }
 
       if (global.VioraOrb && typeof global.VioraOrb.setSkyState === 'function') {
@@ -2894,17 +2888,11 @@ requestAnimationFrame(() => {
     try {
       const sky = getSky();
       if (sky && banner) {
-        banner.dataset.skyPhase = sky.phase;
+        // Keep the banner on a supported CSS phase. Raw Solar phases such as
+        // "day" or "sunrise" have no matching gradient and reveal the near-black fallback.
+        applySkyPhase(skyPhaseFor(Weather.get(), sky));
         banner.classList.toggle('viora-hero--is-day', !!sky.isDay);
         banner.classList.toggle('viora-hero--is-night', !!sky.isNight);
-
-        try {
-          const elev = Number(sky.sun && sky.sun.elevation);
-          if (Number.isFinite(elev)) {
-            const opacity = Math.max(0.35, Math.min(1.0, 0.35 + (elev + 12) / 24));
-            banner.style.setProperty('--hero-terminator-opacity', opacity.toFixed(3));
-          }
-        } catch (_) {}
       }
 
       if (global.VioraOrb && typeof global.VioraOrb.setSkyState === 'function') {
