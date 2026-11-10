@@ -1,9 +1,9 @@
 {
-  "id": "/campaigns.html",
+  "id": "/campaigns",
   "name": "VIORA Campaigns",
   "short_name": "VIORA Campaigns",
   "description": "VIORA social campaigns, content calendar and publishing workspace.",
-  "start_url": "/campaigns.html",
+  "start_url": "/campaigns",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
