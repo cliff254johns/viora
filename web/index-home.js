@@ -183,7 +183,7 @@ async function loadFirebase() {
    ═══════════════════════════════════════════════════════════════ */
 function renderAll() {
   renderHero();
-  renderStatsStrip();
+  renderWorkflowStrip();
   renderIntentRouter();
   renderChatTour();
   renderProductCarousel();
@@ -210,50 +210,41 @@ function renderHero() {
   const cta2 = $('#hero-cta2');
 
   if (eyebrow) eyebrow.textContent = h.eyebrow || 'The VIORA Ecosystem';
-  if (line1) line1.textContent = h.titleLine1 || 'Everything Your Business Needs.';
-  if (line2) line2.textContent = h.titleLine2 || 'Connected.';
-  if (sub) sub.textContent = h.subtitle || 'Run smarter, sell more and grow with an integrated ecosystem of business software, digital services, commerce and expert support.';
+  if (line1) line1.textContent = !h.titleLine1 || h.titleLine1 === 'Everything Your Business Needs.' ? 'One Business.' : h.titleLine1;
+  if (line2) line2.textContent = !h.titleLine2 || h.titleLine2 === 'Connected.' ? 'One Connected Digital Ecosystem.' : h.titleLine2;
+  const legacySubtitle = h.subtitle && /Run smarter, sell more and grow with an integrated ecosystem/i.test(h.subtitle);
+  if (sub) sub.textContent = !h.subtitle || legacySubtitle ? 'We design and build intelligent digital ecosystems that connect your business operations, people, workflows and data — around the way your industry actually works.' : h.subtitle;
   if (cta1 && h.primaryCta) {
-    cta1.textContent = h.primaryCta.label || 'Explore the Ecosystem →';
-    cta1.href = h.primaryCta.href || '#tour';
+    const legacyPrimary = !h.primaryCta.label || h.primaryCta.label === 'Explore the Ecosystem →';
+    cta1.textContent = legacyPrimary ? 'Explore Industry Solutions →' : h.primaryCta.label;
+    cta1.href = legacyPrimary || !h.primaryCta.href || h.primaryCta.href === '#tour' ? '/industries' : h.primaryCta.href;
   }
   if (cta2 && h.secondaryCta) {
-    cta2.textContent = h.secondaryCta.label || 'Book a demo';
-    cta2.href = h.secondaryCta.href || 'contact_us.html';
+    const legacySecondary = !h.secondaryCta.label || h.secondaryCta.label === 'Book a demo';
+    cta2.textContent = legacySecondary ? 'Build Your Ecosystem' : h.secondaryCta.label;
+    cta2.href = !h.secondaryCta.href || h.secondaryCta.href === 'contact_us.html' ? '/contact_us' : h.secondaryCta.href;
   }
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   2. STATS STRIP
+   2. WORKFLOW STRIP
    ═══════════════════════════════════════════════════════════════ */
-function renderStatsStrip() {
-  const host = $('#stats-strip-inner');
+function renderWorkflowStrip() {
+  const host = $('#workflow-strip-grid');
   if (!host) return;
-  const mc = S.marketContent || {};
-  const prodCount = mc.statProducts === 'auto' || !mc.statProducts
-    ? S.products.length
-    : parseInt(mc.statProducts, 10) || 0;
-  const clients = parseInt(mc.statClients, 10) || 128;
-  const projects = parseInt(mc.statProjects, 10) || S.products.length * 3;
-
-  host.innerHTML = `
-    <div class="stats-strip-item">
-      <div class="stats-strip-value">${prodCount}+</div>
-      <div class="stats-strip-label">${escHtml(mc.statProductsLabel || 'Solutions')}</div>
-    </div>
-    <div class="stats-strip-item">
-      <div class="stats-strip-value">${clients}+</div>
-      <div class="stats-strip-label">${escHtml(mc.statClientsLabel || 'Happy Clients')}</div>
-    </div>
-    <div class="stats-strip-item">
-      <div class="stats-strip-value">${projects}+</div>
-      <div class="stats-strip-label">${escHtml(mc.statProjectsLabel || 'Delivered')}</div>
-    </div>
-    <div class="stats-strip-item">
-      <div class="stats-strip-value">2022</div>
-      <div class="stats-strip-label">Founded</div>
-    </div>
-  `;
+  const steps = [
+    { number: '01', title: 'Understand', description: 'Map your people, processes and industry needs.' },
+    { number: '02', title: 'Design', description: 'Create a bespoke blueprint for your organisation.' },
+    { number: '03', title: 'Connect', description: 'Bring your portals, tools and workflows together.' },
+    { number: '04', title: 'See clearly', description: 'Make better decisions with connected information.' },
+  ];
+  host.innerHTML = steps.map(step => `
+    <article class="workflow-step">
+      <span class="workflow-step-number">${escHtml(step.number)}</span>
+      <h3>${escHtml(step.title)}</h3>
+      <p>${escHtml(step.description)}</p>
+    </article>
+  `).join('');
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -264,9 +255,9 @@ function renderIntentRouter() {
   if (!host) return;
   const tiles = S.homeContent?.intentTiles || [
     { title: 'Explore the ecosystem', desc: '45+ solutions across 35 industries', href: '#tour', icon: 'fa-layer-group' },
-    { title: 'Browse products', desc: 'Instant KES pricing, delivered live', href: 'market.html', icon: 'fa-store' },
-    { title: 'Subscribe to a plan', desc: 'Manage your subscription and invoices', href: 'client.html', icon: 'fa-crown' },
-    { title: 'Training academy', desc: 'Courses, checklists, certificates', href: 'training.html', icon: 'fa-graduation-cap' },
+    { title: 'Browse products', desc: 'Instant KES pricing, delivered live', href: '/market', icon: 'fa-store' },
+    { title: 'Subscribe to a plan', desc: 'Manage your subscription and invoices', href: '/client', icon: 'fa-crown' },
+    { title: 'Training academy', desc: 'Courses, checklists, certificates', href: '/training', icon: 'fa-graduation-cap' },
   ];
 
   host.innerHTML = tiles.map(t => `
@@ -1199,9 +1190,9 @@ function renderPricing() {
   const host = $('#pricing-grid');
   if (!host) return;
   const tiers = S.homeContent?.pricing?.tiers || [
-    { name: 'Starter', tagline: 'Small teams', bullets: ['Core modules', 'Up to 5 users', 'Email support'], cta: 'Subscribe', ctaHref: 'client.html' },
-    { name: 'Growth', tagline: 'Growing businesses', featured: true, bullets: ['Everything in Starter', 'Up to 25 users', 'POS + Inventory + Accounting', 'Priority support'], cta: 'Subscribe', ctaHref: 'client.html' },
-    { name: 'Enterprise', tagline: 'Complex operations', bullets: ['All modules', 'Unlimited users', 'Custom development', 'SLA-backed uptime'], cta: 'Talk to sales', ctaHref: 'contact_us.html' },
+    { name: 'Starter', tagline: 'Small teams', bullets: ['Core modules', 'Up to 5 users', 'Email support'], cta: 'Subscribe', ctaHref: '/client' },
+    { name: 'Growth', tagline: 'Growing businesses', featured: true, bullets: ['Everything in Starter', 'Up to 25 users', 'POS + Inventory + Accounting', 'Priority support'], cta: 'Subscribe', ctaHref: '/client' },
+    { name: 'Enterprise', tagline: 'Complex operations', bullets: ['All modules', 'Unlimited users', 'Custom development', 'SLA-backed uptime'], cta: 'Talk to sales', ctaHref: '/contact_us' },
   ];
 
   host.innerHTML = tiers.map(t => {

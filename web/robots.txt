@@ -1,5 +1,8 @@
 User-agent: *
 Allow: /
+Allow: /industries/
+Allow: /fr/
+Allow: /es/
 Disallow: /main
 Disallow: /main/
 Disallow: /clientportal

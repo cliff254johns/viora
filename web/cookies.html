@@ -99,7 +99,7 @@ footer.foot a{color:rgba(255,255,255,.9)}
   <p class="meta"><strong>Last updated:</strong> 3 November 2026 · <strong>Effective:</strong> 3 November 2026</p>
 
   <div class="callout">
-    <strong>Summary:</strong> We use a small number of cookies and similar technologies. Essential cookies are always set because the site cannot function without them. Non-essential cookies (analytics, marketing) are set only with your consent. You can change your choices at any time via the "Cookie settings" link in the footer.
+    <strong>Summary:</strong> We use a small number of cookies and similar technologies. Essential cookies are always set because the site cannot function without them. Non-essential cookies are set only with your consent. Website analytics are not activated unless VIORA configures a valid provider ID. You can change your choices at any time via the "Cookie settings" link in the footer.
   </div>
 
   <h2>1. What are cookies?</h2>
@@ -126,8 +126,8 @@ footer.foot a{color:rgba(255,255,255,.9)}
   <table>
     <thead><tr><th>Name</th><th>Provider</th><th>Purpose</th><th>Duration</th></tr></thead>
     <tbody>
-      <tr><td><code>_ga</code>, <code>_ga_*</code></td><td>Google Analytics (Firebase)</td><td>Aggregated usage analytics — pages visited, time on page, device type.</td><td>Up to 2 years</td></tr>
-      <tr><td><code>firebase_id</code></td><td>Google Firebase</td><td>Distinguishes unique users for analytics (aggregated).</td><td>Up to 2 years</td></tr>
+      <tr><td><code>_ga</code>, <code>_ga_*</code></td><td>Google Analytics 4, only if configured</td><td>Aggregated website usage analytics, only after the visitor opts in and VIORA activates a real measurement ID.</td><td>Provider-dependent</td></tr>
+      <tr><td><code>firebase_id</code></td><td>Firebase services, if enabled</td><td>Service-related identifiers may be used by authenticated VIORA applications; they are not enabled by this public-site analytics layer.</td><td>Provider-dependent</td></tr>
     </tbody>
   </table>
 
@@ -148,7 +148,7 @@ footer.foot a{color:rgba(255,255,255,.9)}
   <p>Some cookies are set by third parties whose services we use:</p>
   <ul>
     <li><strong>Cloudflare</strong> — security and content delivery. See <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">Cloudflare's privacy policy</a>.</li>
-    <li><strong>Google Firebase</strong> — hosting, authentication, analytics. See <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">Firebase privacy</a>.</li>
+    <li><strong>Google Firebase</strong> — application hosting, authentication and database services; optional analytics only where separately enabled. See <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">Firebase privacy</a>.</li>
     <li><strong>Google Fonts</strong> — font delivery (no cookies, but IP is logged by Google). See <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's privacy policy</a>.</li>
   </ul>
 

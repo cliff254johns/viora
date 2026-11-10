@@ -3,7 +3,7 @@
   <div class="vcb-inner">
     <div class="vcb-text">
       <h2 id="vcbTitle">We use cookies</h2>
-      <p id="vcbDesc">We use essential cookies to make the site work, and optional analytics cookies (Google Analytics via Firebase) to improve it. You can accept all, reject non-essential, or manage preferences. See our <a href="cookies.html">Cookie Policy</a>.</p>
+      <p id="vcbDesc">We use essential cookies to make the site work. Optional analytics tools may be enabled in future; they will only run after your consent and once VIORA configures them. See our <a href="/cookies">Cookie Policy</a>.</p>
     </div>
     <div class="vcb-actions">
       <button type="button" class="vcb-btn vcb-btn-ghost" data-vcb="reject">Reject non-essential</button>
@@ -25,7 +25,7 @@
       </label>
       <label class="vcs-row">
         <input type="checkbox" name="analytics">
-        <span><strong>Analytics</strong><br><small>Google Analytics via Firebase — aggregated usage data. Off by default.</small></span>
+        <span><strong>Analytics</strong><br><small>Optional website measurement tools, only when configured and after your consent.</small></span>
       </label>
       <label class="vcs-row">
         <input type="checkbox" name="functional">
@@ -97,19 +97,7 @@
     try { localStorage.setItem(KEY, JSON.stringify(c)); } catch(e){}
   }
   function applyConsent(c){
-    // Analytics: load GA4 only if consented
-    if (c && c.analytics === true && !window.__vioraGaLoaded) {
-      window.__vioraGaLoaded = true;
-      var s = document.createElement('script');
-      s.async = true;
-      s.src = 'https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX'; // ← replace with your GA4 ID
-      document.head.appendChild(s);
-      window.dataLayer = window.dataLayer || [];
-      window.gtag = function(){ window.dataLayer.push(arguments); };
-      window.gtag('js', new Date());
-      window.gtag('config', 'G-XXXXXXXXXX', { anonymize_ip: true });
-    }
-    // Dispatch event so any listener (Firebase analytics, etc.) can react
+    // Analytics listeners must verify that a real provider ID is configured.
     window.dispatchEvent(new CustomEvent('viora:consent', { detail: c }));
   }
   function showBanner(){

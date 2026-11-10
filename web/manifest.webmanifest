@@ -2,14 +2,14 @@
   "id": "/",
   "name": "VIORA Ecosystems",
   "short_name": "VIORA",
-  "description": "Complete Digital Ecosystems for Every Industry.",
+  "description": "Bespoke connected digital ecosystems for businesses and industries worldwide.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
   "theme_color": "#0A192F",
   "background_color": "#0A192F",
-  "lang": "en-KE",
+  "lang": "en",
   "categories": ["business", "productivity", "finance"],
   "icons": [
     { "src": "/viora.png", "type": "image/png", "purpose": "any" }
