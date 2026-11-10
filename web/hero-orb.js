@@ -261,6 +261,39 @@
   /* ─────────────────────────────────────────────────────────
      THE BULLETPROOF POSITIONING (Safe Zone)
      ───────────────────────────────────────────────────────── */
+  function noonAnchoredArcFraction(body) {
+    const fallback = clamp(Number(body && body.arcFraction) || 0, 0, 1);
+    const sunrise = body && body.sunrise instanceof Date ? body.sunrise.getTime() : NaN;
+    const sunset = body && body.sunset instanceof Date ? body.sunset.getTime() : NaN;
+    if (!Number.isFinite(sunrise) || !Number.isFinite(sunset) || sunset <= sunrise) return fallback;
+
+    try {
+      const now = (typeof global.__vioraNow === 'function') ? global.__vioraNow() : new Date();
+      const tz = (state.location && state.location.tz) || 'UTC';
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23'
+      }).formatToParts(now);
+      const values = {};
+      for (const part of parts) if (part.type !== 'literal') values[part.type] = Number(part.value);
+      const localAsUtc = Date.UTC(values.year, values.month - 1, values.day,
+        values.hour, values.minute, values.second);
+      const nowAtSecond = Math.floor(now.getTime() / 1000) * 1000;
+      const localOffset = localAsUtc - nowAtSecond;
+      const localNoon = Date.UTC(values.year, values.month - 1, values.day, 12) - localOffset;
+      const nowMs = now.getTime();
+
+      // Pin the visual apex to 12:00 local time, even where solar noon drifts.
+      if (localNoon <= sunrise || localNoon >= sunset) return fallback;
+      if (nowMs <= localNoon) {
+        return 0.5 * clamp((nowMs - sunrise) / (localNoon - sunrise), 0, 1);
+      }
+      return 0.5 + 0.5 * clamp((nowMs - localNoon) / (sunset - localNoon), 0, 1);
+    } catch (_) {
+      return fallback;
+    }
+  }
+
   function projectToScreen(body, centerAz, peakNorm) {
     if (!body) return null;
 
@@ -268,18 +301,15 @@
     const h = state.rectH;
     if (w < 2 || h < 2) return null;
 
-    // Hide if below horizon
+    // Keep the orb off the horizon at night; twilight remains visible.
     if (body.elevation < -12) return null;
 
-    // Clamp the arc fraction so the sun NEVER touches the far edges
-    const t = clamp(body.arcFraction, 0.1, 0.9); 
-    
-    // X: Moves smoothly from 15% to 85% of the screen width
-    let x = w * (0.15 + (t * 0.70)); 
-
-    // Y: Base height is 40% from the top, and it arcs up to 15% at noon
+    const t = noonAnchoredArcFraction(body);
+    // One clean 180-degree sweep: sunrise at left, 12:00 at the apex,
+    // sunset at right. The full 64px orb stays inside the banner.
+    const x = w * (0.10 + (t * 0.80));
     const parabola = 1 - (2 * t - 1) * (2 * t - 1);
-    let y = (h * 0.40) - (parabola * h * 0.25); 
+    const y = (h * 0.74) - (parabola * h * 0.59);
 
     return { x, y };
   }
@@ -544,7 +574,12 @@
     if (!sky || !sky.sun) return { elevation: -1, arcFraction: 0 };
     const sunElev = Number(sky.sun.elevation);
     const arcFraction = Number(sky.sun.arcFraction);
-    return { elevation: sunElev, arcFraction: arcFraction };
+    return {
+      elevation: sunElev,
+      arcFraction,
+      sunrise: sky.sun.sunrise,
+      sunset: sky.sun.sunset
+    };
   }
 
   function buildPathD(samples, centerAz) {

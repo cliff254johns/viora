@@ -2677,8 +2677,8 @@
 /* ─── MOBILE HERO GLOBE + QUICK ACTIONS ─── */
 @media (max-width: 760px) {
   .hero-visual {
-    width: min(100%, 380px);
-    max-width: 380px;
+    width: min(calc(100vw - 24px), 400px);
+    max-width: 400px;
     margin: 0 auto;
     aspect-ratio: 1 / 1;
   }
