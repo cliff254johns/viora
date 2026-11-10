@@ -679,5 +679,16 @@
   document.getElementById('yr').textContent = new Date().getFullYear();
 </script>
 
+
+<script>
+  (() => {
+    const backToTop = document.getElementById('mobileBackToTop');
+    if (!backToTop) return;
+    const updateVisibility = () => backToTop.classList.toggle('show', window.scrollY > 320);
+    window.addEventListener('scroll', updateVisibility, { passive: true });
+    updateVisibility();
+    backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  })();
+</script>
 </body>
 </html>
