@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   VIORA — SERVICE WORKER  (v1.4.2)
+   VIORA — SERVICE WORKER  (v1.4.3)
    ─────────────────────────────────────────────────────────────
    Registered by main/sw-bootstrap.js at scope '/'.
 
@@ -34,7 +34,7 @@
 'use strict';
 
 /* ─── Version bump invalidates every cache below ─────────────── */
-const SW_VERSION = 'viora-v1.4.2';
+const SW_VERSION = 'viora-v1.4.3';
 const CACHE_SHELL  = `${SW_VERSION}-shell`;
 const CACHE_STATIC = `${SW_VERSION}-static`;
 const CACHE_FONTS  = `${SW_VERSION}-fonts`;
@@ -104,6 +104,8 @@ const FONT_HOSTS = new Set([
    ═══════════════════════════════════════════════════════════════ */
 self.addEventListener('install', (event) => {
   console.info('[sw] install', SW_VERSION);
+  // Activate the newest worker promptly; existing pages continue until refresh.
+  self.skipWaiting();
 
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_SHELL);
@@ -132,6 +134,7 @@ self.addEventListener('activate', (event) => {
   console.info('[sw] activate', SW_VERSION);
 
   event.waitUntil((async () => {
+    await self.clients.claim();
     const allKeys = await caches.keys();
     const keep = new Set([CACHE_SHELL, CACHE_STATIC, CACHE_FONTS]);
 
@@ -202,7 +205,9 @@ self.addEventListener('fetch', (event) => {
 
   // ── (5) SAME-ORIGIN — route by path ───────────────────────
   if (isAppShell(url.pathname)) {
-    event.respondWith(staleWhileRevalidate(req, CACHE_SHELL));
+    // Always try the network first so a normal refresh gets current HTML/modules.
+    // The last successful shell response remains the offline fallback.
+    event.respondWith(networkFirst(req, CACHE_SHELL));
     return;
   }
 
