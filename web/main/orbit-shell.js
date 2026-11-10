@@ -35,6 +35,7 @@ import {
 
 let _ctx = null;
 let _activeModule = 'overview';
+let _renderGeneration = 0;
 
 const SIDEBAR = [
   { group: 'Workspace', items: [
@@ -194,6 +195,7 @@ export async function navigate(key, opts = {}) {
   if (!mod) return;
 
   _activeModule = key;
+  const renderGeneration = ++_renderGeneration;
   const ctx = C();
 
   try { renderSidebar(); } catch (_) {}
@@ -229,11 +231,14 @@ export async function navigate(key, opts = {}) {
     view.innerHTML = '<div class="muted small" style="padding:24px;">Loading…</div>';
     try {
       const html = await renderer(ctx);
+      // A slower earlier render must never overwrite a newer navigation.
+      if (renderGeneration !== _renderGeneration || _activeModule !== key) return;
       view.innerHTML = typeof html === 'string' ? html : (html?.html || '');
       if (html?.mount && typeof html.mount === 'function') {
         requestAnimationFrame(() => { try { html.mount(view); } catch (e) { console.warn(e); } });
       }
     } catch (e) {
+      if (renderGeneration !== _renderGeneration || _activeModule !== key) return;
       console.error('[orbit-shell] render failed:', key, e);
       view.innerHTML = `<div class="card"><div class="cardhead"><h3>${mod.label}</h3></div>
         <div class="empty">Failed to load: ${String(e.message || e)}</div></div>`;
