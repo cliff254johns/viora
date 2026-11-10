@@ -190,10 +190,10 @@
       ctx.fillRect(0, 0, w, h);
     }
 
-    const banner = document.getElementById('vioraHeroBanner');
-    if (banner) {
-      banner.style.setProperty('--hero-terminator-opacity', '1.0');
-    }
+    /* Opacity is owned by hero-banner.js, which derives it from
+       the active location's solar elevation. Do not overwrite that
+       value here: this renderer can run on a different cadence and
+       caused the daytime sky layer to pulse during location changes. */
   }
 
   function scheduleRender() {
