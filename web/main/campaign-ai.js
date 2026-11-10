@@ -827,18 +827,6 @@ async function _savePost(status = 'draft') {
     c.scheduledFor = scheduledFor;
   }
 
-  if (status === 'scheduled') {
-    const scheduleInput = document.getElementById('ccScheduledFor');
-    const scheduledFor = scheduleInput?.value || c.scheduledFor || '';
-    const scheduledDate = scheduledFor ? new Date(scheduledFor) : null;
-    if (!scheduledFor || !scheduledDate || Number.isNaN(scheduledDate.getTime()) || scheduledDate.getTime() <= Date.now()) {
-      SAFE.toast('Choose a valid future date and time before scheduling this post.', 'warning');
-      scheduleInput?.focus();
-      return;
-    }
-    c.scheduledFor = scheduledFor;
-  }
-
   if (!c.campaignId) {
     SAFE.toast('Pick a campaign first.', 'error');
     const el = document.getElementById('ccCampaign');
