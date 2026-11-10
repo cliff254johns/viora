@@ -34,7 +34,7 @@
 'use strict';
 
 /* ─── Version bump invalidates every cache below ─────────────── */
-const SW_VERSION = 'viora-v1.4.5';
+const SW_VERSION = 'viora-v1.4.6';
 const CACHE_SHELL  = `${SW_VERSION}-shell`;
 const CACHE_STATIC = `${SW_VERSION}-static`;
 const CACHE_FONTS  = `${SW_VERSION}-fonts`;
@@ -56,9 +56,30 @@ const PRECACHE_URLS = [
   '/about.html',
   '/support.html',
   '/contact_us.html',
+  '/market',
+  '/portal',
+  '/academy',
+  '/campaigns',
+  '/about',
+  '/solutions',
+  '/contact',
   '/global-brand.css',
   '/global-brand.js',
   '/patner.html',
+  '/market',
+  '/portal',
+  '/academy',
+  '/campaigns',
+  '/about',
+  '/solutions',
+  '/contact',
+  '/market',
+  '/portal',
+  '/academy',
+  '/campaigns',
+  '/about',
+  '/solutions',
+  '/contact',
 ];
 
 /* ─── Hosts we must NEVER cache / intercept ────────────────────
@@ -287,7 +308,7 @@ function isAppShell(pathname) {
   if (pathname === '/main.js' || pathname === '/campaigns-bootstrap.js') return true;
   if (/^\/main\/[^/]+\.js$/.test(pathname)) return true;
   if (pathname === '/main.css' || pathname === '/global-brand.css' || pathname === '/global-brand.js') return true;
-  if (pathname === '/campaigns.html' || pathname === '/about.html' || pathname === '/support.html' || pathname === '/contact_us.html') return true;
+  if (pathname === '/campaigns.html' || pathname === '/about.html' || pathname === '/support.html' || pathname === '/contact_us.html' || pathname === '/campaigns' || pathname === '/about' || pathname === '/solutions' || pathname === '/contact' || pathname === '/market' || pathname === '/portal' || pathname === '/academy') return true;
   return false;
 }
 
