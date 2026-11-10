@@ -36,3 +36,11 @@ html,body,button,input,select,textarea{font-family:"Plus Jakarta Sans","Segoe UI
 .viora-social-links a:hover{color:#fff;text-decoration:underline}
 
 [data-theme="dark"]{--ink:#fff!important;--text:#fff!important;--text-primary:#fff!important;--text-secondary:#d1d5db!important;--text-muted:#d1d5db!important;--text-white:#fff!important}
+
+/* International industry discovery section */
+.viora-industry-preview{padding:76px 0;background:linear-gradient(180deg,#07111f,#0a1728);border-block:1px solid rgba(255,255,255,.08)}
+.viora-industry-preview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:28px}
+.viora-industry-preview-grid a{display:flex;justify-content:space-between;gap:12px;padding:18px 20px;border:1px solid rgba(255,255,255,.12);border-radius:14px;background:rgba(255,255,255,.035);color:#fff;text-decoration:none;font-weight:700}
+.viora-industry-preview-grid a span{color:#8fc0ff;white-space:nowrap}
+.viora-industry-preview-grid a:hover{border-color:#3988f7;background:rgba(57,136,247,.09)}
+@media(max-width:700px){.viora-industry-preview{padding:52px 0}.viora-industry-preview-grid{grid-template-columns:1fr}}
