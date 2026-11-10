@@ -449,6 +449,19 @@ tr:last-child td{border-bottom:0}
   .mobile-nav button{position:relative}
   .mnav-label{line-height:1}
 }
+
+@media(max-width:760px){
+  .calendar{grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;width:100%;}
+  .calendar>.muted{font-size:9px;text-align:center;padding:4px 0!important;}
+  .calendar .day{min-width:0;min-height:66px;padding:4px 3px;font-size:9px;overflow:hidden;}
+  .calendar .day b{font-size:10px;margin-bottom:4px;white-space:nowrap;}
+  .calendar .event{font-size:7px;line-height:1.25;padding:3px 2px;margin:2px 0;overflow-wrap:anywhere;}
+  .calendar .event i{font-size:7px;}
+  #calPrevMonth,#calNextMonth,#calTodayMonth{padding:7px 8px;font-size:10px;}
+  #calPrevMonth,#calNextMonth{white-space:nowrap;}
+  .calendar .day-hint{display:none;}
+}
+
 @media(prefers-reduced-motion:reduce){
   *,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
 }
