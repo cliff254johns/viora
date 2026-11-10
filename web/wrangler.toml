@@ -1,6 +1,12 @@
 name = "viora-static-git"
-compatibility_date = "2026-10-30"
+main = "./worker.js"
+compatibility_date = "2026-11-11"
 
 [assets]
 directory = "."
+binding = "ASSETS"
 html_handling = "auto-trailing-slash"
+run_worker_first = ["/api/*"]
+
+[ai]
+binding = "AI"
