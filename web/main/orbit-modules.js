@@ -2278,7 +2278,6 @@ export async function renderCalendar(ctx) {
   const monthNames = ['January','February','March','April','May','June',
                       'July','August','September','October','November','December'];
 
-  const monthEventCount = Object.values(byDay).reduce((sum, list) => sum + list.length, 0);
   const today = new Date();
   const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
   const todayDate = today.getDate();
@@ -2291,6 +2290,7 @@ export async function renderCalendar(ctx) {
     (byDay[d] = byDay[d] || []).push(ev);
   }
 
+  const monthEventCount = Object.values(byDay).reduce((sum, list) => sum + list.length, 0);
   let cells = '';
   for (let i = 0; i < firstDay; i++) {
     cells += '<div class="day" style="opacity:.3;"></div>';
