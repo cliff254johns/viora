@@ -486,8 +486,10 @@
          ═══════════════════════════════════════════════════════ */
            /* FORCE THE SUN TO BE A SOLID BALL (Overrides all CSS) */
       orb.style.display = 'block';
-      orb.style.width = '64px';
-      orb.style.height = '64px';
+      const orbSize = state.rectW <= 480 ? Math.max(42, Math.min(54, state.rectW * 0.14)) : 64;
+      orb.style.width = orbSize + 'px';
+      orb.style.height = orbSize + 'px';
+      state.lastSizePx = orbSize;
       orb.style.borderRadius = '50%';
       orb.style.backgroundColor = '#fffbe6'; 
       orb.style.border = '2px solid rgba(255, 255, 255, 0.8)';
