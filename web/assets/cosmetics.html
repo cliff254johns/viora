@@ -67,7 +67,9 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
 }
 @media(max-width:1050px){.stats{grid-template-columns:repeat(2,1fr)}.products{grid-template-columns:repeat(3,1fr)}.two,.posgrid{grid-template-columns:1fr}.tile-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:700px){.side{display:none}.main{margin:0;width:100%;padding:18px 14px 90px}.top{align-items:flex-start}.top h1{font-size:21px}.actions .wide{display:none}.stats{gap:9px}.stat strong{font-size:20px}.card{padding:14px;border-radius:16px}.products{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.product img{height:115px}.three{grid-template-columns:1fr}.photoGrid{grid-template-columns:repeat(2,1fr)}.bottom{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--line);z-index:5;justify-content:space-around;padding:7px 2px calc(7px + env(safe-area-inset-bottom))}.bottom button{background:none;color:var(--muted);padding:6px 4px;font-size:10px}.bottom button.active{color:var(--blue)}.tile-grid{grid-template-columns:repeat(2,1fr)}}
-</style></head>
+</style><link rel="icon" type="image/png" href="/viora.png">
+<link rel="apple-touch-icon" href="/viora.png">
+</head>
 <body>
 <div id="login" class="login"><div class="loginbox"><div class="brand"><div class="logo">✿</div><div><b>GlowCart</b><small>Cosmetics Shop Manager + POS</small></div></div><h1 id="loginTitle">Welcome back</h1><p id="loginDesc">Sign in to manage your cosmetics business.</p><div class="field"><label>Your name</label><input id="loginName" autocomplete="username" placeholder="Enter your name"></div><div class="field"><label>Password</label><input id="loginPass" type="password" autocomplete="current-password" placeholder="Enter password"></div><button id="loginBtn" onclick="auth()">Sign in</button><button class="secondary" id="setupBtn" onclick="setupMode()" style="width:100%;margin-top:8px">Create first account</button><p class="hint">Your account and shop data are stored on this device. This is a local offline login, not cloud authentication.</p></div></div>
 <div id="app" class="shell hidden">
