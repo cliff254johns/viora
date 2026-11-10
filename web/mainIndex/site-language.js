@@ -3,9 +3,9 @@
 (()=>{
 'use strict';
 const LANGS=new Set(['en','sw','fr','es','de','pt','it','zh','ja','ar','hi','ru','nl','tr','ko']);
-const state={base:(document.documentElement.lang||'en').split('-')[0].toLowerCase(),target:'en',running:false,applied:false,pending:[],textOriginals:new Map(),attrOriginals:new Map(),cache:new Map(),observer:null};
+const state={base:(document.documentElement.lang||'en').split('-')[0].toLowerCase(),target:'en',running:false,applied:false,generation:0,pending:[],textOriginals:new Map(),attrOriginals:new Map(),cache:new Map(),observer:null};
 const SKIP='script,style,noscript,svg,code,pre,textarea,input,select,option,iframe,canvas,[contenteditable="true"],#chat,#captions,#signBox,#viora-language-control,[data-no-translate]';
-const ATTRS=['placeholder','title','aria-label'];
+const ATTRS=['placeholder','title','aria-label','alt'];
 const status=()=>document.getElementById('viora-language-status');
 const setStatus=(value)=>{const el=status();if(el)el.textContent=value||'';};
 const hash=(s)=>{let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return(h>>>0).toString(36);};
@@ -14,6 +14,7 @@ function restore(){
  for(const [el,attrs] of state.attrOriginals){if(el.isConnected)for(const [name,value] of Object.entries(attrs))el.setAttribute(name,value);}
 }
 function skipped(el){return !el||!!el.closest(SKIP);}
+function skippedAttribute(el){return !el||!!el.closest('script,style,noscript,svg,code,pre,iframe,#chat,#captions,#signBox,#viora-language-control,[data-no-translate]');}
 function collect(root){
  const textNodes=[],elements=[];
  const scope=root&&root.nodeType===1?root:document.body;
@@ -27,7 +28,7 @@ function collect(root){
  elements.push(...scope.querySelectorAll('*'));
  const attrTasks=[];
  for(const el of elements){
-  if(skipped(el))continue;
+  if(skippedAttribute(el))continue;
   for(const name of ATTRS){const value=el.getAttribute(name);if(value&&value.trim().length>2)attrTasks.push({el,name,value});}
  }
  return {textNodes,attrTasks};
@@ -46,7 +47,7 @@ async function translateOne(text,target){
   return translated;
  }finally{clearTimeout(timer);}
 }
-async function translateTasks(tasks,target){
+async function translateTasks(tasks,target,generation){
  let cursor=0,done=0,failed=0;
  const total=tasks.length;
  const worker=async()=>{
@@ -55,8 +56,8 @@ async function translateTasks(tasks,target){
    try{
     const original=task.type==='text'?task.node.nodeValue:task.value;
     const translated=await translateOne(original,target);
-    if(task.type==='text'&&task.node.isConnected)task.node.nodeValue=translated;
-    else if(task.type==='attr'&&task.el.isConnected)task.el.setAttribute(task.name,translated);
+    if(generation===state.generation&&task.type==='text'&&task.node.isConnected)task.node.nodeValue=translated;
+    else if(generation===state.generation&&task.type==='attr'&&task.el.isConnected)task.el.setAttribute(task.name,translated);
    }catch(error){failed++;console.warn('[VIORA language] translation skipped:',error.message);}
    done++;if(total>20&&done%10===0)setStatus('Translating '+done+'/'+total);
   }
@@ -75,7 +76,7 @@ async function processRoot(root){
   if(!(item.name in originals))originals[item.name]=item.value;
   const original=originals[item.name];if(original&&original.trim())tasks.push({type:'attr',el:item.el,name:item.name,value:original});
  }
- const result=await translateTasks(tasks,state.target);
+ const result=await translateTasks(tasks,state.target,state.generation);
  return result;
 }
 async function drain(){
@@ -97,7 +98,7 @@ async function apply(language){
  let target=String(language||state.base).toLowerCase();if(target==='zh-cn')target='zh';
  if(!LANGS.has(target)){setStatus('Language unavailable');return false;}
  if(target===state.target&&state.applied)return true;
- state.pending=[];state.target=target;state.applied=true;
+ state.generation++;state.pending=[];state.target=target;state.applied=true;
  try{localStorage.setItem('viora_site_language',target);}catch(_){}
  document.documentElement.dir=target==='ar'?'rtl':'ltr';
  document.documentElement.lang=target;
