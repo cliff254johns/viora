@@ -30,16 +30,8 @@
      Only overrides the CSS variables already defined in market.css.
      No rule duplication. No structural changes.
      ═══════════════════════════════════════════════════════════════ -->
+<script>try{const t=localStorage.getItem("viora-theme")||localStorage.getItem("viora_theme")||"dark";document.documentElement.setAttribute("data-theme",t==="light"?"light":"dark")}catch(_){document.documentElement.setAttribute("data-theme","dark")}</script>
 <style>
-  /* Set theme immediately to avoid flash of wrong theme */
-  (function() {
-    try {
-      const saved = localStorage.getItem('viora-theme') || localStorage.getItem('viora_theme') || 'dark';
-      document.documentElement.setAttribute('data-theme', saved === 'light' ? 'light' : 'dark');
-    } catch (_) {
-      document.documentElement.setAttribute('data-theme', 'dark');
-    }
-  })();
 
   /* ═══════════════════════════════════════════════════════════════
      DARK THEME TOKENS
