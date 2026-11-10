@@ -34,7 +34,7 @@
 'use strict';
 
 /* ─── Version bump invalidates every cache below ─────────────── */
-const SW_VERSION = 'viora-v1.4.1';
+const SW_VERSION = 'viora-v1.4.2';
 const CACHE_SHELL  = `${SW_VERSION}-shell`;
 const CACHE_STATIC = `${SW_VERSION}-static`;
 const CACHE_FONTS  = `${SW_VERSION}-fonts`;
@@ -263,13 +263,23 @@ function isStaticAsset(pathname) {
  * These use stale-while-revalidate so code changes propagate
  * on the next load without requiring a hard refresh.
  */
+const APP_SHELL_PATHS = new Set([
+  '/',
+  '/index.html',
+  '/main.html',
+  '/v0.html',
+  '/market.html',
+  '/client.html',
+  '/training.html',
+  '/patner.html',
+]);
+
 function isAppShell(pathname) {
-  if (pathname === '/' || pathname === '') return true;
-  if (pathname.endsWith('.html')) return true;
-  if (pathname === '/main.js') return true;
-  if (pathname === '/campaigns-bootstrap.js') return true;
-  if (/^\/main\/[^/]+\.js$/.test(pathname)) return true;
-  return false;
+  // Only explicitly reviewed VIORA entry points are eligible for HTML caching.
+  // Industry microsites, dashboards and authenticated portal routes stay network-only.
+  if (APP_SHELL_PATHS.has(pathname)) return true;
+  if (pathname === '/main.js' || pathname === '/campaigns-bootstrap.js') return true;
+  return /^\/main\/[^/]+\.js$/.test(pathname);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -323,12 +333,6 @@ async function staleWhileRevalidate(req, cacheName) {
 
   const network = await networkPromise;
   if (network) return network;
-
-  // Offline + not cached. Navigations get the shell.
-  if (req.mode === 'navigate') {
-    const shell = await cache.match('/main.html');
-    if (shell) return shell;
-  }
 
   return new Response('Offline', {
     status: 503,
