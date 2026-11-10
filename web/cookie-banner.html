@@ -105,7 +105,8 @@
   }
   function hideBanner(){
     banner.hidden = true;
-    settingsLink.hidden = false;
+    // Once a visitor accepts or declines, keep the floating settings shortcut hidden.
+    settingsLink.hidden = true;
   }
   function openSettings(){
     var c = loadConsent() || {};
@@ -164,7 +165,7 @@
     showBanner();
   } else {
     applyConsent(existing);
-    settingsLink.hidden = false;
+    settingsLink.hidden = true;
   }
 })();
 </script>
