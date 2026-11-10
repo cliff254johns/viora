@@ -12,7 +12,7 @@
   "lang": "en-KE",
   "categories": ["business", "productivity", "finance"],
   "icons": [
-    { "src": "/viora.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/viora.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+    { "src": "/viora.png", "sizes": "1290x1219", "type": "image/png", "purpose": "any" },
+    { "src": "/viora.png", "sizes": "1290x1219", "type": "image/png", "purpose": "any" }
   ]
 }
