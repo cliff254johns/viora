@@ -176,6 +176,7 @@ self.addEventListener('fetch', (event) => {
   // Sensitive same-origin endpoints and requests must bypass all caches.
   if (req.headers.has('authorization')) return;
   if (/^\/(?:api|auth|firebase|payment|payments|mpesa|webhook|tenant|tenants|user|users|session|sessions|uploads|private|account)(?:\/|$)/i.test(url.pathname)) return;
+  if ([...url.searchParams.keys()].some((key) => /token|auth|session|tenant|user|uid|email|signature|secret|api[_-]?key/i.test(key))) return;
 
   // ── (2) Never intercept Firebase WebSocket / long-poll ────
   if (url.pathname.startsWith('/.well-known/')) return;
