@@ -1,0 +1,17 @@
+/* VIORA global public design system */
+:root{font-family:"Plus Jakarta Sans","Segoe UI",sans-serif;color-scheme:dark}
+html,body,button,input,select,textarea{font-family:"Plus Jakarta Sans","Segoe UI",sans-serif!important}
+[data-theme="dark"]{--ink:#fff!important;--text-primary:#fff!important;--text-secondary:#d1d5db!important;--muted:#d1d5db!important;--text-muted:#d1d5db!important;--text-light:#bfc5ce!important}
+[data-theme="dark"] h1,[data-theme="dark"] h2,[data-theme="dark"] h3,[data-theme="dark"] h4,[data-theme="dark"] h5,[data-theme="dark"] strong{color:#fff}
+[data-theme="dark"] p,[data-theme="dark"] li,[data-theme="dark"] label,[data-theme="dark"] .section-sub{color:#d1d5db}
+.viora-global-value{padding:88px 0;background:#05070b;border-block:1px solid rgba(255,255,255,.08)}
+.viora-global-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-top:34px}
+.viora-global-grid article{padding:28px;border:1px solid rgba(255,255,255,.1);border-radius:20px;background:#0c111b}
+.viora-value-icon{display:inline-grid;place-items:center;width:48px;height:48px;border-radius:14px;background:rgba(10,132,255,.14);font-size:25px;margin-bottom:18px}
+.viora-global-grid h3{color:#fff;margin:0 0 10px}.viora-global-grid p{color:#d1d5db;line-height:1.75;margin:0}
+.viora-global-cta{display:flex;gap:14px;flex-wrap:wrap;margin-top:30px}
+@media(max-width:760px){.viora-global-grid{grid-template-columns:1fr}.viora-global-value{padding:60px 0}}
+/* Colorful semantic icon system */
+.v-icon.blue,.cm-icon.blue,.feature-icon.blue{color:#0a84ff}.v-icon.green,.cm-icon.green,.feature-icon.green{color:#30d158}
+.v-icon.violet,.cm-icon.violet,.feature-icon.violet{color:#bf5af2}.v-icon.amber,.cm-icon.amber,.feature-icon.amber{color:#ff9f0a}
+.v-icon.pink,.cm-icon.pink,.feature-icon.pink{color:#ff375f}.v-icon.teal,.cm-icon.teal,.feature-icon.teal{color:#64d2ff}
