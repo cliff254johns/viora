@@ -183,7 +183,7 @@ async function loadFirebase() {
    ═══════════════════════════════════════════════════════════════ */
 function renderAll() {
   renderHero();
-  renderStatsStrip();
+  renderWorkflowStrip();
   renderIntentRouter();
   renderChatTour();
   renderProductCarousel();
@@ -227,19 +227,24 @@ function renderHero() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   2. STATS STRIP
+   2. WORKFLOW STRIP
    ═══════════════════════════════════════════════════════════════ */
-function renderStatsStrip() {
-  const host = $('#stats-strip-inner');
+function renderWorkflowStrip() {
+  const host = $('#workflow-strip-grid');
   if (!host) return;
-  // Do not invent client or delivery totals. Use capability statements until
-  // independently verifiable metrics are configured in the content system.
-  host.innerHTML = `
-    <div class="stats-strip-item"><div class="stats-strip-value">Bespoke</div><div class="stats-strip-label">Industry blueprints</div></div>
-    <div class="stats-strip-item"><div class="stats-strip-value">Connected</div><div class="stats-strip-label">Shared data core</div></div>
-    <div class="stats-strip-item"><div class="stats-strip-value">Modular</div><div class="stats-strip-label">Business workflows</div></div>
-    <div class="stats-strip-item"><div class="stats-strip-value">Global</div><div class="stats-strip-label">Digital-first reach</div></div>
-  `;
+  const steps = [
+    { number: '01', title: 'Understand', description: 'Map your people, processes and industry needs.' },
+    { number: '02', title: 'Design', description: 'Create a bespoke blueprint for your organisation.' },
+    { number: '03', title: 'Connect', description: 'Bring your portals, tools and workflows together.' },
+    { number: '04', title: 'See clearly', description: 'Make better decisions with connected information.' },
+  ];
+  host.innerHTML = steps.map(step => `
+    <article class="workflow-step">
+      <span class="workflow-step-number">${escHtml(step.number)}</span>
+      <h3>${escHtml(step.title)}</h3>
+      <p>${escHtml(step.description)}</p>
+    </article>
+  `).join('');
 }
 
 /* ═══════════════════════════════════════════════════════════════
