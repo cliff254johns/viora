@@ -2,7 +2,7 @@
 # Keep the Worker entry point, static assets, and Workers AI binding together.
 name = "viora-static-git"
 main = "./worker.js"
-compatibility_date = "2026-11-11"
+compatibility_date = "2026-11-09"
 
 [assets]
 directory = "."
