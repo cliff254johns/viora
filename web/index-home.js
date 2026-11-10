@@ -210,9 +210,8 @@ function renderHero() {
   const cta2 = $('#hero-cta2');
 
   if (eyebrow) eyebrow.textContent = h.eyebrow || 'The VIORA Ecosystem';
-  const legacyHeroCopy = h.titleLine1 === 'Everything Your Business Needs.' || h.titleLine2 === 'Connected.';
-  if (line1) line1.textContent = !h.titleLine1 || legacyHeroCopy ? 'One Business.' : h.titleLine1;
-  if (line2) line2.textContent = !h.titleLine2 || legacyHeroCopy ? 'One Connected Digital Ecosystem.' : h.titleLine2;
+  if (line1) line1.textContent = !h.titleLine1 || h.titleLine1 === 'Everything Your Business Needs.' ? 'One Business.' : h.titleLine1;
+  if (line2) line2.textContent = !h.titleLine2 || h.titleLine2 === 'Connected.' ? 'One Connected Digital Ecosystem.' : h.titleLine2;
   const legacySubtitle = h.subtitle && /Run smarter, sell more and grow with an integrated ecosystem/i.test(h.subtitle);
   if (sub) sub.textContent = !h.subtitle || legacySubtitle ? 'We design and build intelligent digital ecosystems that connect your business operations, people, workflows and data — around the way your industry actually works.' : h.subtitle;
   if (cta1 && h.primaryCta) {
