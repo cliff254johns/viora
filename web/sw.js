@@ -34,7 +34,7 @@
 'use strict';
 
 /* ─── Version bump invalidates every cache below ─────────────── */
-const SW_VERSION = 'viora-v1.4.6';
+const SW_VERSION = 'viora-v1.4.7';
 const CACHE_SHELL  = `${SW_VERSION}-shell`;
 const CACHE_STATIC = `${SW_VERSION}-static`;
 const CACHE_FONTS  = `${SW_VERSION}-fonts`;
@@ -51,11 +51,11 @@ const PRECACHE_URLS = [
   '/market',
   '/campaigns',
   '/campaigns.webmanifest',
-  '/portal',
-  '/academy',
+  '/client',
+  '/training',
   '/about',
-  '/solutions',
-  '/contact',
+  '/support',
+  '/contact_us',
   '/global-brand.css',
   '/global-brand.js',
   '/patner.html',
@@ -275,12 +275,12 @@ const APP_SHELL_PATHS = new Set([
   '/main.html',
   '/v0.html',
   '/market',
-  '/portal',
-  '/academy',
+  '/client',
+  '/training',
   '/campaigns',
   '/about',
-  '/solutions',
-  '/contact',
+  '/support',
+  '/contact_us',
   '/market.html',
   '/client.html',
   '/training.html',
@@ -298,7 +298,7 @@ function isAppShell(pathname) {
   if (pathname === '/main.js' || pathname === '/campaigns-bootstrap.js') return true;
   if (/^\/main\/[^/]+\.js$/.test(pathname)) return true;
   if (pathname === '/main.css' || pathname === '/global-brand.css' || pathname === '/global-brand.js') return true;
-  if (pathname === '/campaigns.html' || pathname === '/about.html' || pathname === '/support.html' || pathname === '/contact_us.html' || pathname === '/campaigns' || pathname === '/about' || pathname === '/solutions' || pathname === '/contact' || pathname === '/market' || pathname === '/portal' || pathname === '/academy') return true;
+  if (pathname === '/campaigns.html' || pathname === '/about.html' || pathname === '/support.html' || pathname === '/contact_us.html' || pathname === '/campaigns' || pathname === '/about' || pathname === '/support' || pathname === '/contact_us' || pathname === '/market' || pathname === '/client' || pathname === '/training') return true;
   return false;
 }
 
