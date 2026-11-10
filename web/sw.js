@@ -34,7 +34,7 @@
 'use strict';
 
 /* ─── Version bump invalidates every cache below ─────────────── */
-const SW_VERSION = 'viora-v1.4.7';
+const SW_VERSION = 'viora-v1.4.8';
 const CACHE_SHELL  = `${SW_VERSION}-shell`;
 const CACHE_STATIC = `${SW_VERSION}-static`;
 const CACHE_FONTS  = `${SW_VERSION}-fonts`;
@@ -56,6 +56,16 @@ const PRECACHE_URLS = [
   '/about',
   '/support',
   '/contact_us',
+  '/industries',
+  '/industries/retail',
+  '/industries/healthcare',
+  '/industries/education',
+  '/industries/hospitality',
+  '/industries/logistics',
+  '/industries/agriculture',
+  '/industries/professional-services',
+  '/fr/',
+  '/es/',
   '/global-brand.css',
   '/global-brand.js',
   '/patner.html',
