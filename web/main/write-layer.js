@@ -459,7 +459,12 @@ async function _upsertDocLocked(collection, entity, existingRev) {
   validateRecord(collection, entity);
 
   /* ── 3. Dedupe guard (O(1) via fingerprint index) ── */
-  const { dup, fp } = findDuplicate(collection, entity);
+  // Campaigns are mutable aggregate records: dedupe-by-fingerprint can
+  // mistake an edit to the same campaign for a duplicate and return early,
+  // skipping the remote-post merge and persistence path entirely.
+  const { dup, fp } = collection === 'campaigns'
+    ? { dup: null, fp: null }
+    : findDuplicate(collection, entity);
   if (dup) {
     const merged = stampRecord({ ...dup, ...entity, id: dup.id });
     const path = `${deps.P(collection)}/${dup.id}`;

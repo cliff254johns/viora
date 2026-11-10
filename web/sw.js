@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   VIORA — SERVICE WORKER  (v1.4.2)
+   VIORA — SERVICE WORKER  (v1.4.5)
    ─────────────────────────────────────────────────────────────
    Registered by main/sw-bootstrap.js at scope '/'.
 
@@ -34,7 +34,7 @@
 'use strict';
 
 /* ─── Version bump invalidates every cache below ─────────────── */
-const SW_VERSION = 'viora-v1.4.2';
+const SW_VERSION = 'viora-v1.4.6';
 const CACHE_SHELL  = `${SW_VERSION}-shell`;
 const CACHE_STATIC = `${SW_VERSION}-static`;
 const CACHE_FONTS  = `${SW_VERSION}-fonts`;
@@ -48,9 +48,16 @@ const PRECACHE_URLS = [
   '/manifest.webmanifest',
   '/viora.png',
   '/v0.html',
-  '/market.html',
-  '/client.html',
-  '/training.html',
+  '/market',
+  '/campaigns',
+  '/campaigns.webmanifest',
+  '/portal',
+  '/academy',
+  '/about',
+  '/solutions',
+  '/contact',
+  '/global-brand.css',
+  '/global-brand.js',
   '/patner.html',
 ];
 
@@ -104,7 +111,6 @@ const FONT_HOSTS = new Set([
    ═══════════════════════════════════════════════════════════════ */
 self.addEventListener('install', (event) => {
   console.info('[sw] install', SW_VERSION);
-
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_SHELL);
 
@@ -202,7 +208,9 @@ self.addEventListener('fetch', (event) => {
 
   // ── (5) SAME-ORIGIN — route by path ───────────────────────
   if (isAppShell(url.pathname)) {
-    event.respondWith(staleWhileRevalidate(req, CACHE_SHELL));
+    // Always try the network first so a normal refresh gets current HTML/modules.
+    // The last successful shell response remains the offline fallback.
+    event.respondWith(networkFirst(req, CACHE_SHELL));
     return;
   }
 
@@ -242,17 +250,16 @@ function isStaticAsset(pathname) {
   if (/\.(?:bin|geojson|topojson)$/i.test(pathname)) return true;
   // Audio
   if (/\.(?:mp3|wav|ogg)$/i.test(pathname)) return true;
-  // CSS
-  if (/\.css$/i.test(pathname)) return true;
+  // CSS is app shell: network-first so refreshes pick up the latest styles.
+  if (/\.css$/i.test(pathname)) return false;
 
   // JS — split carefully. Application ES modules are shell, NOT static.
   if (/\.js$/i.test(pathname)) {
     if (pathname === '/main.js') return false;
     if (/^\/main\//.test(pathname)) return false;                 // ES module dir
     if (/^\/campaigns-bootstrap\.js$/.test(pathname)) return false;
-    // Any other root-level .js is treated as a static chunk
-    // (e.g. a legacy bundled script you don't touch often).
-    return true;
+    // Same-origin JavaScript is application code and must refresh from network.
+    return false;
   }
 
   return false;
@@ -267,9 +274,20 @@ const APP_SHELL_PATHS = new Set([
   '/index.html',
   '/main.html',
   '/v0.html',
+  '/market',
+  '/portal',
+  '/academy',
+  '/campaigns',
+  '/about',
+  '/solutions',
+  '/contact',
   '/market.html',
   '/client.html',
   '/training.html',
+  '/campaigns.html',
+  '/about.html',
+  '/support.html',
+  '/contact_us.html',
   '/patner.html',
 ]);
 
@@ -278,7 +296,10 @@ function isAppShell(pathname) {
   // Industry microsites, dashboards and authenticated portal routes stay network-only.
   if (APP_SHELL_PATHS.has(pathname)) return true;
   if (pathname === '/main.js' || pathname === '/campaigns-bootstrap.js') return true;
-  return /^\/main\/[^/]+\.js$/.test(pathname);
+  if (/^\/main\/[^/]+\.js$/.test(pathname)) return true;
+  if (pathname === '/main.css' || pathname === '/global-brand.css' || pathname === '/global-brand.js') return true;
+  if (pathname === '/campaigns.html' || pathname === '/about.html' || pathname === '/support.html' || pathname === '/contact_us.html' || pathname === '/campaigns' || pathname === '/about' || pathname === '/solutions' || pathname === '/contact' || pathname === '/market' || pathname === '/portal' || pathname === '/academy') return true;
+  return false;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -343,7 +364,9 @@ async function staleWhileRevalidate(req, cacheName) {
 async function networkFirst(req, cacheName) {
   const cache = await caches.open(cacheName);
   try {
-    const res = await fetch(req);
+    // Bypass the browser HTTP cache as well as Cache Storage on normal refreshes.
+    const freshRequest = new Request(req, { cache: 'no-store' });
+    const res = await fetch(freshRequest);
     if (res && res.ok && isCacheableResponse(res)) {
       cache.put(req, res.clone()).catch(() => {});
     }

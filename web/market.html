@@ -4,12 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
   <meta name="theme-color" content="#08080e" />
-  <title>Viora Marketplace — Premium Software Licenses</title>
-  <meta name="description" content="Instant access to premium software tools in Kenyan Shillings. Delivered instantly via email." />
+  <title>VIORA Market — Business Software &amp; Digital Products</title>
+  <meta name="description" content="Explore VIORA Market for business software, digital products and connected solutions. Discover tools designed to help organisations operate, sell and grow." /><link rel="canonical" href="https://viora.co.ke/market" /><meta name="robots" content="index,follow" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" type="image/png" href="https://viora.co.ke/viora.png">
@@ -17,7 +17,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="VIORA">
-  <meta property="og:title" content="Viora Marketplace — Premium Software Licenses">
+  <meta property="og:title" content="VIORA Market — Business Software &amp; Digital Products">
   <meta property="og:description" content="Instant access to premium software tools in Kenyan Shillings.">
   <meta property="og:image" content="https://viora.co.ke/viora.png">
   <meta property="og:type" content="website">
@@ -30,17 +30,8 @@
      Only overrides the CSS variables already defined in market.css.
      No rule duplication. No structural changes.
      ═══════════════════════════════════════════════════════════════ -->
+<script>try{const t=localStorage.getItem("viora-theme")||localStorage.getItem("viora_theme")||"dark";document.documentElement.setAttribute("data-theme",t==="light"?"light":"dark")}catch(_){document.documentElement.setAttribute("data-theme","dark")}</script>
 <style>
-  /* Set theme immediately to avoid flash of wrong theme */
-  (function() {
-    try {
-      const saved = localStorage.getItem('viora_theme');
-      if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
-      else document.documentElement.setAttribute('data-theme', 'light');
-    } catch (_) {
-      document.documentElement.setAttribute('data-theme', 'light');
-    }
-  })();
 
   /* ═══════════════════════════════════════════════════════════════
      DARK THEME TOKENS
@@ -404,6 +395,19 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 </script>
 <!-- TikTok Pixel Code End -->
 <script defer src="/shared-pwa.js"></script>
+<style>
+.viora-global-mobile-nav{display:none}
+@media(max-width:760px){
+ body{padding-bottom:calc(72px + env(safe-area-inset-bottom))!important}
+ .viora-global-mobile-nav{display:flex;position:fixed;z-index:9998;left:0;right:0;bottom:0;justify-content:space-around;gap:2px;padding:8px 4px calc(8px + env(safe-area-inset-bottom));background:rgba(255,255,255,.94);border-top:1px solid rgba(0,0,0,.1);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+ [data-theme="dark"] .viora-global-mobile-nav{background:rgba(10,10,10,.94);border-color:rgba(255,255,255,.1)}
+ .viora-global-mobile-nav a,.viora-global-mobile-nav button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;border:0;background:transparent;color:var(--text-primary,#333);font:600 10px/1.2 Inter,sans-serif;text-decoration:none;padding:0}
+ .viora-global-mobile-nav a.active{color:var(--accent,#0A84FF)}
+ .viora-global-mobile-nav svg,.viora-global-mobile-nav i{width:20px;height:20px;font-size:20px}
+ .viora-global-mobile-nav button{cursor:pointer}
+}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="/global-brand.css">
 </head>
 <body>
 
@@ -427,7 +431,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
   <!-- ═══ NAV ═══ -->
   <nav class="main-nav" id="mainNav">
     <div class="nav-container">
-      <a href="#" class="brand-logo" onclick="App.scrollToTop(event)" title="Viora Marketplace">
+      <a href="/" class="brand-logo" title="VIORA Ecosystems">
         <img src="https://viora.co.ke/viora.png" alt="Viora" height="40" />
         <span class="brand-text">
           <span class="brand-name">VIORA</span>
@@ -435,13 +439,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
         </span>
       </a>
 
-      <ul class="nav-links" id="navLinks" role="menu">
-        <li><a onclick="App.scrollToSection('carousel-section')" role="menuitem">Featured</a></li>
-        <li><a onclick="App.scrollToSection('products')" role="menuitem">Products</a></li>
-        <li><a onclick="App.scrollToSection('case-studies')" role="menuitem">Case Studies</a></li>
-        <li><a onclick="App.scrollToSection('how')" role="menuitem">How It Works</a></li>
-        <li><a onclick="App.scrollToSection('faq')" role="menuitem">FAQ</a></li>
-      </ul>
+      <ul class="nav-links" id="navLinks" role="menu"><li><a href="/" role="menuitem">Home</a></li><li><a href="/market" class="active" role="menuitem">Market</a></li><li><a href="/portal" role="menuitem">Portal</a></li><li><a href="/academy" role="menuitem">Academy</a></li><li><a href="/contact" role="menuitem">Contact</a></li></ul>
 
       <div class="nav-actions">
   <button class="theme-toggle-market" id="themeToggleMarket" aria-label="Toggle theme" type="button" title="Toggle theme">
@@ -773,20 +771,30 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
   </a>
 
   <!-- ═══ MOBILE BOTTOM NAV ═══ -->
-  <nav class="mobile-bottom-nav" id="mobileBottomNav" role="navigation">
-    <button class="mn-item active" data-target="home" onclick="App.mobileNav('home')">
-      <i class="fa-solid fa-house"></i><span>Home</span>
-    </button>
-    <button class="mn-item" data-target="products" onclick="App.mobileNav('products')">
-      <i class="fa-solid fa-box-open"></i><span>Products</span>
-    </button>
-    <button class="mn-item" data-target="cart" onclick="App.toggleCart()">
-      <i class="fa-solid fa-bag-shopping"></i><span>Cart</span>
-    </button>
-    <button class="mn-item" data-target="how" onclick="App.mobileNav('how')">
-      <i class="fa-solid fa-circle-question"></i><span>Help</span>
-    </button>
-  </nav>
+  <nav class="viora-global-mobile-nav" aria-label="VIORA mobile navigation">
+  <a href="/" class="mnav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Home</span>
+  </a>
+  <a href="/market" class="mnav-item active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h18v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"/><path d="M3 9l3-6h12l3 6"/></svg>
+    <span>Market</span>
+  </a>
+  <a href="/academy" class="mnav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+    <span>Academy</span>
+  </a>
+  <a href="/portal" class="mnav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+    <span>Portal</span>
+  </a>
+  <a href="/contact" class="mnav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <span>Contact</span>
+  </a>
+
+  <button type="button" onclick="App.toggleCart()" aria-label="Open cart"><i class="fa-solid fa-bag-shopping"></i><span>Cart</span></button>
+</nav>
 
   <!-- ═══ PRODUCT DETAIL MODAL ═══ -->
   <div class="modal-overlay" id="productDetailModal" role="dialog" aria-modal="true" aria-labelledby="pdmTitle">
@@ -1068,7 +1076,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
    Reads/writes localStorage key 'viora_theme' (shared across pages)
    ═══════════════════════════════════════════════════════════════ */
 (function() {
-  const STORAGE_KEY = 'viora_theme';
+  const STORAGE_KEY = 'viora-theme';
   const html = document.documentElement;
 
   function applyTheme(theme) {
@@ -1095,7 +1103,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
   }
 
   function toggleTheme() {
-    const current = html.getAttribute('data-theme') || 'light';
+    const current = html.getAttribute('data-theme') || 'dark';
     setTheme(current === 'dark' ? 'light' : 'dark');
   }
 
@@ -1103,7 +1111,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
   const saved = (() => {
     try { return localStorage.getItem(STORAGE_KEY); } catch (_) { return null; }
   })();
-  applyTheme(saved || 'light');
+  applyTheme(saved === 'light' ? 'light' : 'dark');
 
   /* Bind the toggle */
   document.addEventListener('DOMContentLoaded', function() {
@@ -1112,5 +1120,6 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
   });
 })();
 </script>
+<script src="/global-brand.js" defer></script>
 </body>
 </html>

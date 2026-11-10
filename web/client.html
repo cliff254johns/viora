@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -18,7 +18,7 @@
 <meta name="application-name" content="VIORA">
 
 <meta name="description" content="Sign in to your VIORA client portal. Projects, invoices, subscriptions, training, and support — all in one place.">
-<link rel="canonical" href="https://viora.co.ke/client.html">
+<link rel="canonical" href="https://viora.co.ke/portal">
 <meta name="theme-color" content="#0A192F">
 
 <!-- Prevent flash of wrong theme — same key as all other pages -->
@@ -257,6 +257,8 @@ try {
 
 
 <script defer src="/shared-pwa.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="/global-brand.css">
+<meta name="robots" content="noindex,nofollow,noarchive">
 </head>
 <body>
 <a href="#main" class="skip">Skip to content</a>
@@ -267,28 +269,19 @@ try {
 <!-- ============ NAV ============ -->
 <header class="nav" id="nav">
   <div class="nav-inner">
-    <a href="index.html" class="brand">
+    <a href="/" class="brand">
       <div class="brand-logo">
         <img src="https://viora.co.ke/viora.png" alt="VIORA" class="brand-logo-img" loading="eager" onerror="this.parentNode.classList.add('no-img');this.remove();" />
       </div>
       <div class="brand-text"><strong>VIORA</strong><small>ECOSYSTEMS</small></div>
     </a>
-    <nav aria-label="Primary">
-      <ul class="nav-links">
-        <li><a href="index.html">Home</a></li>
-        <li><a href="support.html">Solutions</a></li>
-        <li><a href="about.html">About</a></li>
-        <li><a href="client.html" class="active">Client Portal</a></li>
-        <li><a href="training.html">Academy</a></li>
-        <li><a href="contact_us.html">Contact</a></li>
-      </ul>
-    </nav>
+    <nav aria-label="Primary"><ul class="nav-links"><li><a href="/">Home</a></li><li><a href="/market">Market</a></li><li><a href="/portal" class="active">Portal</a></li><li><a href="/academy">Academy</a></li><li><a href="/contact">Contact</a></li></ul></nav>
     <div class="nav-actions">
       <button class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode">
         <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
       </button>
-      <a href="clientportal.html" class="btn btn-primary btn-sm">Sign in →</a>
+      <a href="/portal/sign-in" class="btn btn-primary btn-sm">Sign in →</a>
       <button class="burger" id="burger" aria-expanded="false" aria-controls="drawer" aria-label="Menu">
         <span></span><span></span><span></span>
       </button>
@@ -307,24 +300,14 @@ try {
       <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
     </button>
-    <a href="clientportal.html" class="mab-btn" aria-label="Sign in">
+    <a href="/portal/sign-in" class="mab-btn" aria-label="Sign in">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
     </a>
   </div>
 </div>
 
 <!-- ============ DRAWER ============ -->
-<aside class="drawer" id="drawer" aria-hidden="true">
-  <ul>
-    <li><a href="index.html">Home</a></li>
-    <li><a href="support.html">Solutions</a></li>
-    <li><a href="about.html">About</a></li>
-    <li><a href="client.html">Client Portal</a></li>
-    <li><a href="training.html">Academy</a></li>
-    <li><a href="contact_us.html">Contact</a></li>
-  </ul>
-  <a href="clientportal.html" class="btn btn-primary">Sign in to portal</a>
-</aside>
+<aside class="drawer" id="drawer" aria-hidden="true"><ul><li><a href="/">Home</a></li><li><a href="/market">Market</a></li><li><a href="/portal">Portal</a></li><li><a href="/academy">Academy</a></li><li><a href="/contact">Contact</a></li></ul><a href="/portal/sign-in" class="btn btn-primary">Sign in to portal</a></aside>
 
 <main id="main">
 
@@ -337,8 +320,8 @@ try {
         <h1 class="reveal">Everything we're building for you,<br><span style="background:linear-gradient(135deg,var(--accent),var(--accent-3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">in one place.</span></h1>
         <p class="reveal">Track projects in real time. Download invoices and receipts. Pay via M-Pesa. Chat with your project lead. Access training. All from one dashboard.</p>
         <div class="portal-ctas reveal">
-          <a href="clientportal.html" class="btn btn-primary btn-lg">Sign in to your portal →</a>
-          <a href="contact_us.html" class="btn btn-ghost btn-lg">Not a client yet?</a>
+          <a href="/portal/sign-in" class="btn btn-primary btn-lg">Sign in to your portal →</a>
+          <a href="/contact" class="btn btn-ghost btn-lg">Not a client yet?</a>
         </div>
         <div class="portal-trust reveal">
           <div class="pt-item">
@@ -465,10 +448,10 @@ try {
       <span class="eyebrow" style="justify-content:center;display:inline-flex">Sign in</span>
       <h2>Access your portal</h2>
       <p>Already a VIORA client? Click below to sign in with your email and password.</p>
-      <a href="clientportal.html" class="btn btn-primary btn-lg">Sign in to Client Portal →</a>
-      <a href="clientportal.html?mode=register" class="btn btn-ghost">First time? Request access →</a>
+      <a href="/portal/sign-in" class="btn btn-primary btn-lg">Sign in to Client Portal →</a>
+      <a href="/portal/sign-in?mode=register" class="btn btn-ghost">First time? Request access →</a>
       <div class="signin-links">
-        Need help? <a href="contact_us.html">Contact your project lead</a>
+        Need help? <a href="/contact">Contact your project lead</a>
       </div>
 
       <div class="signin-trust">
@@ -495,8 +478,8 @@ try {
     <h2 style="color:#fff;font-size:clamp(28px,3.6vw,42px);margin-bottom:16px" class="reveal">Not a VIORA client yet?</h2>
     <p style="color:rgba(255,255,255,.75);max-width:600px;margin:0 auto 32px;font-size:17px;line-height:1.7" class="reveal">Book a free consultation. We'll show you what your portal would look like with your own data.</p>
     <div class="reveal" style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
-      <a href="contact_us.html" class="btn btn-primary btn-lg">Book a demo →</a>
-      <a href="support.html" class="btn btn-ghost btn-lg" style="color:#fff;border-color:rgba(255,255,255,.3)">Explore solutions</a>
+      <a href="/contact" class="btn btn-primary btn-lg">Book a demo →</a>
+      <a href="/solutions" class="btn btn-ghost btn-lg" style="color:#fff;border-color:rgba(255,255,255,.3)">Explore solutions</a>
     </div>
   </div>
 </section>
@@ -508,7 +491,7 @@ try {
   <div class="wrap">
     <div class="foot-grid">
       <div>
-        <a href="index.html" class="brand">
+        <a href="/" class="brand">
           <div class="brand-logo">
             <img src="https://viora.co.ke/viora.png" alt="VIORA" class="brand-logo-img" loading="lazy" onerror="this.parentNode.classList.add('no-img');this.remove();" />
           </div>
@@ -520,20 +503,20 @@ try {
       <div class="foot-col">
         <h5>Solutions</h5>
         <ul>
-          <li><a href="support.html">Business Management</a></li>
-          <li><a href="support.html">ERP Systems</a></li>
-          <li><a href="support.html">POS Systems</a></li>
-          <li><a href="support.html">Accounting</a></li>
-          <li><a href="support.html">Custom Software</a></li>
+          <li><a href="/solutions">Business Management</a></li>
+          <li><a href="/solutions">ERP Systems</a></li>
+          <li><a href="/solutions">POS Systems</a></li>
+          <li><a href="/solutions">Accounting</a></li>
+          <li><a href="/solutions">Custom Software</a></li>
         </ul>
       </div>
       <div class="foot-col">
         <h5>Company</h5>
         <ul>
-          <li><a href="about.html">About VIORA</a></li>
-          <li><a href="contact_us.html">Contact</a></li>
-          <li><a href="client.html">Client Portal</a></li>
-          <li><a href="training.html">Academy</a></li>
+          <li><a href="/about">About VIORA</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a href="/portal">Client Portal</a></li>
+          <li><a href="/academy">Academy</a></li>
         </ul>
       </div>
       <div class="foot-col">
@@ -542,18 +525,18 @@ try {
           <li><a href="mailto:support@viora.co.ke">support@viora.co.ke</a></li>
           <li><a href="tel:+254713428774">+254 713 428 774</a></li>
           <li><a href="https://wa.me/254713428774" target="_blank" rel="noopener">WhatsApp</a></li>
-          <li><a href="contact_us.html">Book a demo</a></li>
+          <li><a href="/contact">Book a demo</a></li>
         </ul>
       </div>
     </div>
     <div class="foot-bottom">
       <span>© <span id="yr"></span> VIORA Ecosystems. All rights reserved.</span>
       <span>
-        <a href="privacy.html">Privacy</a> ·
-        <a href="terms.html">Terms</a> ·
-        <a href="cookies.html">Cookies</a> ·
-        <a href="accessibility.html">Accessibility</a> ·
-        <a href="dpa.html">DPA</a>
+        <a href="/privacy">Privacy</a> ·
+        <a href="/terms">Terms</a> ·
+        <a href="/cookies">Cookies</a> ·
+        <a href="/accessibility">Accessibility</a> ·
+        <a href="/dpa">DPA</a>
       </span>
     </div>
   </div>
@@ -561,23 +544,23 @@ try {
 
 <!-- ============ MOBILE BOTTOM NAV ============ -->
 <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
-  <a href="index.html" class="mnav-item">
+  <a href="/" class="mnav-item">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     <span>Home</span>
   </a>
-  <a href="support.html" class="mnav-item">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-    <span>Solutions</span>
+  <a href="/market" class="mnav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h18v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"/><path d="M3 9l3-6h12l3 6"/></svg>
+    <span>Market</span>
   </a>
-  <a href="client.html" class="mnav-item active">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-    <span>Portal</span>
-  </a>
-  <a href="training.html" class="mnav-item">
+  <a href="/academy" class="mnav-item">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
     <span>Academy</span>
   </a>
-  <a href="contact_us.html" class="mnav-item">
+  <a href="/portal" class="mnav-item active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+    <span>Portal</span>
+  </a>
+  <a href="/contact" class="mnav-item">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
     <span>Contact</span>
   </a>
@@ -587,5 +570,6 @@ try {
 <script>
   document.getElementById('yr').textContent = new Date().getFullYear();
 </script>
+<script src="/global-brand.js" defer></script>
 </body>
 </html>

@@ -1,0 +1,25 @@
+{
+  "id": "/campaigns",
+  "name": "VIORA Campaigns",
+  "short_name": "VIORA Campaigns",
+  "description": "VIORA social campaigns, content calendar and publishing workspace.",
+  "start_url": "/campaigns",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#0A192F",
+  "background_color": "#0A192F",
+  "lang": "en-KE",
+  "categories": [
+    "business",
+    "productivity",
+    "finance"
+  ],
+  "icons": [
+    {
+      "src": "/viora.png",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

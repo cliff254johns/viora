@@ -13,7 +13,7 @@
      1. THEME
      ============================================================ */
   const rootEl = document.documentElement;
-  const savedTheme = localStorage.getItem('viora-theme');
+  const savedTheme = localStorage.getItem('viora-theme') || localStorage.getItem('viora_theme') || 'dark';
   if (savedTheme === 'dark' || savedTheme === 'light') {
     rootEl.setAttribute('data-theme', savedTheme);
   }
@@ -22,6 +22,7 @@
     if (theme === 'dark') rootEl.setAttribute('data-theme', 'dark');
     else rootEl.removeAttribute('data-theme');
     localStorage.setItem('viora-theme', theme);
+    try { localStorage.setItem('viora_theme', theme); } catch (_) {}
     syncThemeMeta(theme);
   }
 
@@ -30,6 +31,7 @@
     if (meta) meta.setAttribute('content', theme === 'dark' ? '#0B1120' : '#0A192F');
   }
 
+  if (!rootEl.getAttribute('data-theme')) rootEl.setAttribute('data-theme', savedTheme === 'light' ? 'light' : 'dark');
   syncThemeMeta(rootEl.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
 
   document.addEventListener('click', (e) => {

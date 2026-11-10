@@ -2290,6 +2290,7 @@ export async function renderCalendar(ctx) {
     (byDay[d] = byDay[d] || []).push(ev);
   }
 
+  const monthEventCount = Object.values(byDay).reduce((sum, list) => sum + list.length, 0);
   let cells = '';
   for (let i = 0; i < firstDay; i++) {
     cells += '<div class="day" style="opacity:.3;"></div>';
@@ -2340,13 +2341,13 @@ export async function renderCalendar(ctx) {
             Today
           </button>
         </div>
-        <span class="pill">${events.length} scheduled</span>
+        <span class="pill">${monthEventCount} scheduled this month</span>
       </div>
       <div class="calendar">
         ${dayNames.map(n => `<div class="muted small" style="padding:5px;">${n}</div>`).join('')}
         ${cells}
       </div>
-      ${events.length === 0
+      ${monthEventCount === 0
         ? '<div class="empty" style="margin-top:14px;">No scheduled posts this month. Click any day to open the composer.</div>'
         : '<div class="small muted" style="margin-top:10px;">Click a day to open the composer with that date · click a post pill to preview / edit / post now</div>'}
     </div>
@@ -2413,7 +2414,10 @@ export async function renderCalendar(ctx) {
           e.stopPropagation();
           const postId = postEl.getAttribute('data-cal-post');
           const campId = postEl.getAttribute('data-cal-camp');
-          const camp = campaigns.find(x => x.id === campId);
+          // Read the live Firebase-backed state, not the campaign snapshot
+          // captured by the first calendar mount.
+          const latestCampaigns = Array.isArray(data(ctx).campaigns) ? data(ctx).campaigns : [];
+          const camp = latestCampaigns.find(x => x.id === campId);
           const post = camp && (camp.posts || []).find(p => p.id === postId);
           if (post) openFanoutDetail(ctx, [post]);
           return;
@@ -2424,7 +2428,17 @@ export async function renderCalendar(ctx) {
         if (!isoDate) return;
 
         try {
-          openComposer({ scheduledFor: `${isoDate}T09:00` });
+          const now = new Date();
+          const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+          if (isoDate < todayIso) {
+            toast(ctx, 'Choose today or a future date to schedule a post.', 'warning');
+            return;
+          }
+          let scheduledAt = new Date(`${isoDate}T09:00`);
+          if (scheduledAt.getTime() <= now.getTime()) scheduledAt = new Date(now.getTime() + 15 * 60 * 1000);
+          const pad = n => String(n).padStart(2, '0');
+          const scheduledLocal = `${scheduledAt.getFullYear()}-${pad(scheduledAt.getMonth() + 1)}-${pad(scheduledAt.getDate())}T${pad(scheduledAt.getHours())}:${pad(scheduledAt.getMinutes())}`;
+          openComposer({ scheduledFor: scheduledLocal });
         } catch (err) {
           console.error('[calendar] openComposer failed:', err);
           toast(ctx, 'Could not open composer: ' + (err.message || 'unknown'), 'error');

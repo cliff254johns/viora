@@ -1,0 +1,25 @@
+# VIORA Ecosystems
+
+> VIORA designs and builds complete digital ecosystems for every industry.
+
+VIORA creates connected digital environments around real business workflows. Each implementation starts with a bespoke industry blueprint, then connects the relevant portals, modules, integrations and services to a shared data core.
+
+## Public website
+
+- https://viora.co.ke/ — Main public homepage and overview of the VIORA ecosystem.
+- https://viora.co.ke/market.html — Marketplace for VIORA products and digital offerings.
+- https://viora.co.ke/training.html — VIORA Academy information for learners and trainers.
+- https://viora.co.ke/about.html — Company and ecosystem overview.
+- https://viora.co.ke/support.html — Solutions and product information.
+- https://viora.co.ke/contact_us.html — Contact and demo enquiries.
+
+## Capabilities described on the website
+
+Depending on the selected industry blueprint and implementation, connected business capabilities can include ERP, point of sale, customer relationship management, finance, HR, inventory, purchasing, sales, reporting, commerce, automation and AI integrations.
+
+## Important boundaries
+
+- VIORA's public website describes the platform and services; individual features and availability should be confirmed for each implementation.
+- The client portal and internal operations/control centre are not public product documentation.
+- The internal Main control centre is private and must not be treated as a public entry point.
+- Do not infer customer counts, certifications, integrations, outcomes or live product capabilities unless explicitly stated on the relevant public page.

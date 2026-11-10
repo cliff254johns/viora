@@ -22,7 +22,7 @@
    ───────────────────────────────────────────────────────────── */
 :root {
   font-size: 16px;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
 
   /* Semantic accents — Apple system colours */
   --accent-blue:     #0a84ff;
@@ -90,7 +90,7 @@
   --border-strong: rgba(255,255,255,0.16);
   --border-focus:  rgba(10,132,255,0.6);
 
-  --text:        #f5f5f7;
+  --text:        #ffffff;
   --text-muted:  #98989d;
   --text-dim:    #636366;
   --text-white:  #ffffff;
@@ -6098,4 +6098,21 @@ canvas { border-radius: var(--r-sm); }
   .wc-details { gap: 8px 6px; }
   .wc-detail { min-width: 0; gap: 6px; }
   .wc-detail strong { overflow-wrap: anywhere; }
+}
+
+
+/* Keep the live sky and solar path readable on narrow screens. */
+@media (max-width: 899px) {
+  #vioraHeroBanner,
+  .viora-hero-cover {
+    min-height: 300px !important;
+  }
+  #vioraHeroBanner > #vioraHeroOrb {
+    max-width: none !important;
+    max-height: none !important;
+  }
+  #vioraHeroBanner > #vioraHeroArcSvg {
+    width: 100% !important;
+    height: 100% !important;
+  }
 }

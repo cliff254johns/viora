@@ -391,7 +391,7 @@ function _renderComposer() {
 
         <div id="ccScheduleRow" style="display:${c.status === 'scheduled' ? 'block' : 'none'};margin-top:8px;">
           <label>Schedule for</label>
-          <input type="datetime-local" id="ccScheduledFor" value="${esc(c.scheduledFor)}" />
+          <input type="datetime-local" id="ccScheduledFor" value="${esc(c.scheduledFor)}" required />
         </div>
         <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
           <input type="file" id="ccUploadImageInput" accept="image/jpeg,image/png,image/webp" style="display:none;" />
@@ -813,6 +813,18 @@ async function _savePost(status = 'draft') {
   const campaignSelectEl = document.getElementById('ccCampaign');
   if (campaignSelectEl && campaignSelectEl.value) {
     c.campaignId = campaignSelectEl.value;
+  }
+
+  if (status === 'scheduled') {
+    const scheduleInput = document.getElementById('ccScheduledFor');
+    const scheduledFor = scheduleInput?.value || c.scheduledFor || '';
+    const scheduledDate = scheduledFor ? new Date(scheduledFor) : null;
+    if (!scheduledFor || !scheduledDate || Number.isNaN(scheduledDate.getTime()) || scheduledDate.getTime() <= Date.now()) {
+      SAFE.toast('Choose a valid future date and time before scheduling this post.', 'warning');
+      scheduleInput?.focus();
+      return;
+    }
+    c.scheduledFor = scheduledFor;
   }
 
   if (!c.campaignId) {
