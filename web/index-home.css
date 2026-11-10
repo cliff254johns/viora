@@ -2672,3 +2672,51 @@
   .hero-visual { width: min(100%, 300px); }
   .hero h1 { font-size: clamp(32px, 9vw, 38px); }
 }
+
+
+/* ─── MOBILE HERO GLOBE + QUICK ACTIONS ─── */
+@media (max-width: 760px) {
+  .hero-visual {
+    width: min(100%, 380px);
+    max-width: 380px;
+    margin: 0 auto;
+    aspect-ratio: 1 / 1;
+  }
+  #globe-container { border-radius: 50%; }
+  .mobile-floating-actions {
+    position: fixed;
+    right: calc(16px + env(safe-area-inset-right));
+    bottom: calc(82px + env(safe-area-inset-bottom));
+    z-index: 1250;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .mobile-fab {
+    width: 52px;
+    height: 52px;
+    border: 0;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    box-shadow: 0 8px 22px rgba(10,25,47,.25);
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mobile-fab svg { width: 25px; height: 25px; }
+  .mobile-fab-top {
+    background: #0A192F;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px);
+    transition: opacity .2s ease, transform .2s ease, visibility .2s;
+  }
+  .mobile-fab-top.show { opacity: 1; visibility: visible; transform: translateY(0); }
+  .mobile-fab-whatsapp { background: #25D366; }
+}
+@media (min-width: 761px) {
+  .mobile-floating-actions { display: none; }
+}
