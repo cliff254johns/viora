@@ -15,3 +15,9 @@ html,body,button,input,select,textarea{font-family:"Plus Jakarta Sans","Segoe UI
 .v-icon.blue,.cm-icon.blue,.feature-icon.blue{color:#0a84ff}.v-icon.green,.cm-icon.green,.feature-icon.green{color:#30d158}
 .v-icon.violet,.cm-icon.violet,.feature-icon.violet{color:#bf5af2}.v-icon.amber,.cm-icon.amber,.feature-icon.amber{color:#ff9f0a}
 .v-icon.pink,.cm-icon.pink,.feature-icon.pink{color:#ff375f}.v-icon.teal,.cm-icon.teal,.feature-icon.teal{color:#64d2ff}
+
+/* Shared site navigation treatment for the marketplace shell */
+.main-nav .nav-links a{font-family:"Plus Jakarta Sans",sans-serif;font-weight:600}
+.main-nav .nav-links a:hover,.main-nav .nav-links a.active{color:#fff}
+[data-theme="dark"] .main-nav{background:rgba(0,0,0,.88)}
+[data-theme="dark"] .main-nav .brand-name{color:#fff}
