@@ -19,7 +19,11 @@
     };
     document.head.appendChild(s);
   }
-  function setConsent(c){allowed=!!(c&&c.analytics===true);if(allowed)start();}
+  function setConsent(c){
+    allowed=!!(c&&c.analytics===true);
+    if(allowed)start();
+    else if(window.gtag)window.gtag('consent','update',{analytics_storage:'denied',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'});
+  }
   window.addEventListener('viora:consent',function(e){setConsent(e.detail||{});});
   try{var saved=JSON.parse(localStorage.getItem('viora_cookie_consent_v1')||'null');if(saved)setConsent(saved);}catch(_){}
   document.addEventListener('click',function(e){
