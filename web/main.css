@@ -6099,3 +6099,20 @@ canvas { border-radius: var(--r-sm); }
   .wc-detail { min-width: 0; gap: 6px; }
   .wc-detail strong { overflow-wrap: anywhere; }
 }
+
+
+/* Keep the live sky and solar path readable on narrow screens. */
+@media (max-width: 899px) {
+  #vioraHeroBanner,
+  .viora-hero-cover {
+    min-height: 300px !important;
+  }
+  #vioraHeroBanner > #vioraHeroOrb {
+    max-width: none !important;
+    max-height: none !important;
+  }
+  #vioraHeroBanner > #vioraHeroArcSvg {
+    width: 100% !important;
+    height: 100% !important;
+  }
+}
