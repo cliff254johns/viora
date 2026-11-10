@@ -69,6 +69,7 @@ const PRECACHE_URLS = [
   '/global-brand.css',
   '/global-brand.js',
   '/mainIndex/site-assistant-loader.js',
+  '/mainIndex/site-language.js',
   '/mainIndex/chatbot.js',
   '/mainIndex/chatbot.css',
   '/inde.html',
