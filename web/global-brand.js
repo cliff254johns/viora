@@ -18,7 +18,7 @@
     }
     document.querySelectorAll('.nav-links a').forEach(a=>{
       const href=(a.getAttribute('href')||'').split('/').pop();
-      if(href===path) a.classList.add('active');
+      a.classList.toggle('active',href===path);
     });
   });
 })();
