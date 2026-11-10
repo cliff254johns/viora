@@ -3,7 +3,7 @@
 (()=>{
 'use strict';
 const LANGS=new Set(['en','sw','fr','es','de','pt','it','zh','ja','ar','hi','ru','nl','tr','ko']);
-const state={base:(document.documentElement.lang||'en').split('-')[0].toLowerCase(),target:'en',running:false,pending:[],textOriginals:new Map(),attrOriginals:new Map(),cache:new Map(),observer:null};
+const state={base:(document.documentElement.lang||'en').split('-')[0].toLowerCase(),target:'en',running:false,applied:false,pending:[],textOriginals:new Map(),attrOriginals:new Map(),cache:new Map(),observer:null};
 const SKIP='script,style,noscript,svg,code,pre,textarea,input,select,option,iframe,canvas,[contenteditable="true"],#chat,#captions,#signBox,#viora-language-control,[data-no-translate]';
 const ATTRS=['placeholder','title','aria-label'];
 const status=()=>document.getElementById('viora-language-status');
@@ -81,7 +81,7 @@ async function processRoot(root){
 async function drain(){
  if(state.running)return;state.running=true;
  try{
-  while(state.pending.length){const root=state.pending.shift();const result=await processRoot(root);if(result&&result.failed&&result.failed===result.total)setStatus('Translation unavailable');else if(result&&result.done===result.total)setStatus('AI translated');}
+  while(state.pending.length){const root=state.pending.shift();const result=await processRoot(root);if(result&&result.failed===result.total)setStatus('Translation unavailable');else if(result&&result.failed>0)setStatus('Partially translated');else if(result&&result.done===result.total)setStatus('AI translated');}
  }finally{state.running=false;}
 }
 function queue(root){if(!root)return;state.pending.push(root);drain();}
@@ -96,7 +96,8 @@ function watch(){
 async function apply(language){
  let target=String(language||state.base).toLowerCase();if(target==='zh-cn')target='zh';
  if(!LANGS.has(target)){setStatus('Language unavailable');return false;}
- state.pending=[];state.target=target;
+ if(target===state.target&&state.applied)return true;
+ state.pending=[];state.target=target;state.applied=true;
  try{localStorage.setItem('viora_site_language',target);}catch(_){}
  document.documentElement.dir=target==='ar'?'rtl':'ltr';
  document.documentElement.lang=target;
@@ -117,5 +118,5 @@ window.VioraLanguage=api;
 const saved=(()=>{try{return localStorage.getItem('viora_site_language')||state.base;}catch(_){return state.base;}})();
 if(location.pathname==='/'&&saved==='fr'){location.replace('/fr/');}
 else if(location.pathname==='/'&&saved==='es'){location.replace('/es/');}
-else apply(saved);
+else { /* The shared bootstrap applies the selected language after this file loads. */ }
 })();
