@@ -210,16 +210,16 @@ function renderHero() {
   const cta2 = $('#hero-cta2');
 
   if (eyebrow) eyebrow.textContent = h.eyebrow || 'The VIORA Ecosystem';
-  if (line1) line1.textContent = h.titleLine1 || 'Everything Your Business Needs.';
-  if (line2) line2.textContent = h.titleLine2 || 'Connected.';
-  if (sub) sub.textContent = h.subtitle || 'Run smarter, sell more and grow with an integrated ecosystem of business software, digital services, commerce and expert support.';
+  if (line1) line1.textContent = h.titleLine1 || 'One Business.';
+  if (line2) line2.textContent = h.titleLine2 || 'One Connected Digital Ecosystem.';
+  if (sub) sub.textContent = h.subtitle || 'We design and build intelligent digital ecosystems that connect your business operations, people, workflows and data — around the way your industry actually works.';
   if (cta1 && h.primaryCta) {
-    cta1.textContent = h.primaryCta.label || 'Explore the Ecosystem →';
-    cta1.href = h.primaryCta.href || '#tour';
+    cta1.textContent = h.primaryCta.label || 'Explore Industry Solutions →';
+    cta1.href = h.primaryCta.href || '/industries';
   }
   if (cta2 && h.secondaryCta) {
-    cta2.textContent = h.secondaryCta.label || 'Book a demo';
-    cta2.href = h.secondaryCta.href || 'contact_us.html';
+    cta2.textContent = h.secondaryCta.label || 'Build Your Ecosystem';
+    cta2.href = h.secondaryCta.href || '/contact_us';
   }
 }
 
