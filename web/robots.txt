@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /main.html
+Disallow: /main/
+Disallow: /clientportal.html
+Disallow: /trainingportal.html
+Disallow: /campaigns.html
+Disallow: /campaigns-bootstrap.js
+Disallow: /api/
+Disallow: /auth/
+Disallow: /private/
+
+Sitemap: https://viora.co.ke/sitemap.xml
