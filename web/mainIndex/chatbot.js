@@ -2037,7 +2037,7 @@ document.addEventListener('keyup', (e)=>{
 guardLogo(miniLogo);
 guardLogo(bigLogo);
 
-window.Viora = {
+const assistantApi = {
   open, close, toggle,
   ask(q){ input.value = q; updateInputHint(); sendMessage(); },
   setVisemeProvider(fn){ state.visemeProvider = fn; },
@@ -2059,6 +2059,12 @@ window.Viora = {
   _config: CONFIG,
   _features: FEATURES
 };
+
+// Keep the assistant API separate from the VIORA systems application namespace.
+window.VioraAssistant = assistantApi;
+if (!/\/main\.html$/i.test(location.pathname) && typeof window.Viora === "undefined") {
+  window.Viora = assistantApi; // Backward compatibility for the public website widget.
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    BOOT
