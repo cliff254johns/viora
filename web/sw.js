@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   VIORA — SERVICE WORKER  (v1.4.3)
+   VIORA — SERVICE WORKER  (v1.4.5)
    ─────────────────────────────────────────────────────────────
    Registered by main/sw-bootstrap.js at scope '/'.
 
