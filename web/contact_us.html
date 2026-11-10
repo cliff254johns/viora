@@ -278,7 +278,7 @@
       <div class="contact-form-wrap reveal">
         <form class="form-card" id="contactForm" novalidate>
           <h2>Send us a message</h2>
-          <p class="form-sub">All fields marked * are required. Your details are never shared.</p>
+          <p class="form-sub">Share a little about your organisation so we can understand your requirements. Required fields are marked *.</p>
 
           <div class="form-row">
             <div class="field">
@@ -360,7 +360,7 @@
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
           </div>
           <h3>Thanks for reaching out!</h3>
-          <p>Your details look good. This demo form isn't connected to a mailbox yet — but you can reach us directly:</p>
+          <p>Your enquiry has been prepared. You can continue the conversation with the VIORA team using the direct contact options below.</p>
           <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
             <a href="mailto:support@viora.co.ke" class="btn btn-primary">Email us</a>
             <a href="https://wa.me/254713428774" target="_blank" rel="noopener" class="btn btn-ghost">WhatsApp</a>
@@ -648,6 +648,8 @@
         company:     (fresh.querySelector('#f-company')?.value || '').trim(),
         email:       (fresh.querySelector('#f-email')?.value || '').trim(),
         phone:       (fresh.querySelector('#f-phone')?.value || '').trim(),
+        country:     (fresh.querySelector('#f-country')?.value || '').trim(),
+        businessSize:(fresh.querySelector('#f-size')?.value || '').trim(),
         industry:    (fresh.querySelector('#f-industry')?.value || '').trim(),
         solution:    (fresh.querySelector('#f-solution')?.value || '').trim(),
         description: (fresh.querySelector('#f-desc')?.value || '').trim()
@@ -669,6 +671,8 @@
       lines.push("");
       lines.push("I'm " + (payload.name || 'a visitor') + " and I'm interested in VIORA.");
       if (payload.company) lines.push("Company: " + payload.company);
+      if (payload.country) lines.push("Country / region: " + payload.country);
+      if (payload.businessSize) lines.push("Business size: " + payload.businessSize);
       if (payload.email) lines.push("Email: " + payload.email);
       if (payload.phone) lines.push("WhatsApp: " + payload.phone);
       lines.push("");
