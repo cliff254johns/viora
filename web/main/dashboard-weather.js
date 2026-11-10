@@ -802,7 +802,7 @@ export async function refreshWeather(force) {
         label: location.city || 'My location',
         lat: Number(location.lat),
         lon: Number(location.lon),
-        tz: location.tz || 'UTC'
+        tz: location.tz || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
       }, { animate: false });
     }
   } catch (e) {
