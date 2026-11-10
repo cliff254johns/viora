@@ -49,6 +49,8 @@ const PRECACHE_URLS = [
   '/viora.png',
   '/v0.html',
   '/market.html',
+  '/campaigns.html',
+  '/campaigns.webmanifest',
   '/client.html',
   '/training.html',
   '/patner.html',
