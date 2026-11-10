@@ -31,7 +31,7 @@ async function mount(){
    document.body.appendChild(range.cloneContents());
   }catch(e){console.error('[VIORA Assistant] mount failed',e);return;}
  }
- try{await loadEngine();}catch(e){console.error('[VIORA Assistant] engine failed',e);}
+ try{await loadEngine();if(window.vioraApplySelectedLanguage)window.vioraApplySelectedLanguage();}catch(e){console.error('[VIORA Assistant] engine failed',e);}
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else mount();
 })();
