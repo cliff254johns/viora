@@ -5,8 +5,7 @@ Disallow: /main/
 Disallow: /portal
 Disallow: /academy/learn
 Disallow: /academy/instructors
-Disallow: /portal/sign-in
-Disallow: /academy/learn
+Disallow: /scholar/admin
 Disallow: /campaigns
 Disallow: /campaigns-bootstrap.js
 Disallow: /api/
