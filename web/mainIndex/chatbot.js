@@ -623,7 +623,9 @@ function fitSystemPrompt(prompt){
 }
 
 function getSelectedLanguageName(){
-  const raw = (document.documentElement.lang || localStorage.getItem('viora_site_language') || 'en').toLowerCase();
+  let preferred = 'en';
+  try { preferred = localStorage.getItem('viora_site_language') || document.documentElement.lang || 'en'; } catch (_) { preferred = document.documentElement.lang || 'en'; }
+  const raw = String(preferred).toLowerCase();
   const names = {en:'English',sw:'Swahili',fr:'French',es:'Spanish',de:'German',pt:'Portuguese',it:'Italian',zh:'Chinese (Simplified)','zh-cn':'Chinese (Simplified)',ja:'Japanese',ar:'Arabic',hi:'Hindi',ru:'Russian',nl:'Dutch',tr:'Turkish',ko:'Korean'};
   return names[raw] || names[raw.split('-')[0]] || 'the language selected by the visitor';
 }
