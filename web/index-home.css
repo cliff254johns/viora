@@ -2720,3 +2720,24 @@
 @media (min-width: 761px) {
   .mobile-floating-actions { display: none; }
 }
+
+/* ─── VIORA WORKFLOW STRIP (replaces unverified trust statistics) ─── */
+.workflow-strip{
+  padding:68px 0 72px;
+  background:var(--bg);
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+}
+[data-theme="dark"] .workflow-strip{background:rgba(15,23,42,.5)}
+.workflow-strip-heading{max-width:760px;margin:0 auto 34px;text-align:center}
+.workflow-strip-heading h2{margin:12px 0;font-family:'Manrope',sans-serif;font-size:clamp(24px,3vw,36px);line-height:1.18;letter-spacing:-.035em;color:var(--text)}
+.workflow-strip-heading p{max-width:640px;margin:0 auto;color:var(--muted);font-size:15px;line-height:1.7}
+.workflow-strip-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.workflow-step{position:relative;min-width:0;padding:24px 20px;border:1px solid var(--line);border-radius:16px;background:var(--white);transition:transform .2s ease,border-color .2s ease}
+[data-theme="dark"] .workflow-step{background:var(--bg-alt)}
+.workflow-step:hover{transform:translateY(-3px);border-color:var(--accent)}
+.workflow-step-number{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;margin-bottom:18px;border-radius:11px;background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);font-size:13px;font-weight:800;letter-spacing:.04em}
+.workflow-step h3{margin:0 0 8px;font-family:'Manrope',sans-serif;font-size:18px;font-weight:800;color:var(--text)}
+.workflow-step p{margin:0;color:var(--muted);font-size:13px;line-height:1.65}
+@media(max-width:900px){.workflow-strip-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.workflow-strip{padding:48px 0}.workflow-strip-grid{grid-template-columns:1fr;gap:12px}.workflow-step{display:grid;grid-template-columns:42px 1fr;column-gap:14px;align-items:start;padding:18px}.workflow-step-number{grid-row:1 / span 2;margin:0}.workflow-step h3{align-self:end}.workflow-step p{grid-column:2}}
