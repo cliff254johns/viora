@@ -235,7 +235,10 @@ export async function navigate(key, opts = {}) {
       if (renderGeneration !== _renderGeneration || _activeModule !== key) return;
       view.innerHTML = typeof html === 'string' ? html : (html?.html || '');
       if (html?.mount && typeof html.mount === 'function') {
-        requestAnimationFrame(() => { try { html.mount(view); } catch (e) { console.warn(e); } });
+        requestAnimationFrame(() => {
+          if (renderGeneration !== _renderGeneration || _activeModule !== key) return;
+          try { html.mount(view); } catch (e) { console.warn(e); }
+        });
       }
     } catch (e) {
       if (renderGeneration !== _renderGeneration || _activeModule !== key) return;
