@@ -5517,46 +5517,11 @@ canvas { border-radius: var(--r-sm); }
   overflow: visible !important;
 }
 
-/* ── 3. Kill the CSS sky-phase gradients. The sky is painted
-       entirely by #vioraHeroWeatherCanvas (dashboard-hero.js)
-       and #vioraHeroSkyCanvas (hero-sky.js). ── */
-#vioraHeroBanner[data-sky-phase],
-.viora-hero-cover[data-sky-phase] {
-  background: #0a0f1a !important;
-}
+/* The phase-specific sky gradients defined above remain active.
+   The weather canvas is transparent: hero-banner.js paints weather
+   particles over these daylight, twilight and night backgrounds. */
 
-#vioraHeroBanner[data-sky-phase="clear"],
-.viora-hero-cover[data-sky-phase="clear"],
-#vioraHeroBanner[data-sky-phase="partly"],
-.viora-hero-cover[data-sky-phase="partly"],
-#vioraHeroBanner[data-sky-phase="overcast"],
-.viora-hero-cover[data-sky-phase="overcast"],
-#vioraHeroBanner[data-sky-phase="drizzle"],
-.viora-hero-cover[data-sky-phase="drizzle"],
-#vioraHeroBanner[data-sky-phase="rain"],
-.viora-hero-cover[data-sky-phase="rain"],
-#vioraHeroBanner[data-sky-phase="snow"],
-.viora-hero-cover[data-sky-phase="snow"],
-#vioraHeroBanner[data-sky-phase="storm"],
-.viora-hero-cover[data-sky-phase="storm"],
-#vioraHeroBanner[data-sky-phase="golden"],
-.viora-hero-cover[data-sky-phase="golden"],
-#vioraHeroBanner[data-sky-phase="blue"],
-.viora-hero-cover[data-sky-phase="blue"],
-#vioraHeroBanner[data-sky-phase="civil"],
-.viora-hero-cover[data-sky-phase="civil"],
-#vioraHeroBanner[data-sky-phase="nautical"],
-.viora-hero-cover[data-sky-phase="nautical"],
-#vioraHeroBanner[data-sky-phase="astronomical"],
-.viora-hero-cover[data-sky-phase="astronomical"],
-#vioraHeroBanner[data-sky-phase="night"],
-.viora-hero-cover[data-sky-phase="night"] {
-  background: #0a0f1a !important;
-}
-
-/* ── 4. Disable the terminator canvas entirely (it fights
-       dashboard-hero.js). It's only referenced here; the JS file
-       is no longer loaded from main.html. ── */
+/* ── 4. The terminator canvas is not loaded in this dashboard build. ── */
 #vioraHeroTerminatorCanvas {
   display: none !important;
 }
@@ -6030,3 +5995,100 @@ canvas { border-radius: var(--r-sm); }
 /* ═══════════════════════════════════════════════════════════════
    END v5.2 PATCH
    ═══════════════════════════════════════════════════════════════ */
+
+
+/* ═══════════════════════════════════════════════════════════════
+   v5.5 — DASHBOARD WEATHER ACCURACY + MOBILE SAFETY
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 899px) {
+  #appShell,
+  #appShell > .main-content,
+  .main-content,
+  .tab-content,
+  .tab-content > *,
+  .chart-grid,
+  .chart-box,
+  .dashboard-two-col {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  .chart-grid,
+  .dashboard-two-col {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .table-wrapper {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-wrapper > table {
+    width: max-content;
+    min-width: 100%;
+  }
+
+  .chart-box canvas,
+  .chart-container canvas,
+  .tab-content img,
+  .tab-content video,
+  .tab-content iframe {
+    max-width: 100%;
+  }
+
+  .dashboard-weather-card {
+    width: 100%;
+    min-width: 0;
+    padding: 14px;
+  }
+
+  .dashboard-weather-card .wc-header {
+    align-items: flex-start;
+  }
+
+  .dashboard-weather-card .wc-header h4 {
+    min-width: 0;
+    flex: 1 1 160px;
+    flex-wrap: wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .wc-forecast {
+    grid-template-columns: repeat(5, minmax(42px, 1fr));
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+}
+
+@media (max-width: 380px) {
+  .kpi-grid,
+  .kpi-grid[style],
+  .kpi-grid[style*="grid-template"],
+  div.kpi-grid,
+  section .kpi-grid,
+  .tab-content .kpi-grid,
+  #dashboardStats,
+  #profileStats,
+  #portalReqStats,
+  #portalUsersStats,
+  #orchKpi,
+  #archKpi,
+  #trainingKpi,
+  #quizzesKpi,
+  #certsKpi,
+  #trainingProgressKpi,
+  #mpesaInlineStats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+  }
+
+  .main-content { padding-left: 10px; padding-right: 10px; }
+  .dashboard-weather-card { padding: 12px; }
+  .wc-details { gap: 8px 6px; }
+  .wc-detail { min-width: 0; gap: 6px; }
+  .wc-detail strong { overflow-wrap: anywhere; }
+}
