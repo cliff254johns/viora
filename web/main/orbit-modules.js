@@ -2278,6 +2278,7 @@ export async function renderCalendar(ctx) {
   const monthNames = ['January','February','March','April','May','June',
                       'July','August','September','October','November','December'];
 
+  const monthEventCount = Object.values(byDay).reduce((sum, list) => sum + list.length, 0);
   const today = new Date();
   const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
   const todayDate = today.getDate();
@@ -2340,13 +2341,13 @@ export async function renderCalendar(ctx) {
             Today
           </button>
         </div>
-        <span class="pill">${events.length} scheduled</span>
+        <span class="pill">${monthEventCount} scheduled this month</span>
       </div>
       <div class="calendar">
         ${dayNames.map(n => `<div class="muted small" style="padding:5px;">${n}</div>`).join('')}
         ${cells}
       </div>
-      ${events.length === 0
+      ${monthEventCount === 0
         ? '<div class="empty" style="margin-top:14px;">No scheduled posts this month. Click any day to open the composer.</div>'
         : '<div class="small muted" style="margin-top:10px;">Click a day to open the composer with that date · click a post pill to preview / edit / post now</div>'}
     </div>
@@ -2413,7 +2414,10 @@ export async function renderCalendar(ctx) {
           e.stopPropagation();
           const postId = postEl.getAttribute('data-cal-post');
           const campId = postEl.getAttribute('data-cal-camp');
-          const camp = campaigns.find(x => x.id === campId);
+          // Read the live Firebase-backed state, not the campaign snapshot
+          // captured by the first calendar mount.
+          const latestCampaigns = Array.isArray(data(ctx).campaigns) ? data(ctx).campaigns : [];
+          const camp = latestCampaigns.find(x => x.id === campId);
           const post = camp && (camp.posts || []).find(p => p.id === postId);
           if (post) openFanoutDetail(ctx, [post]);
           return;
