@@ -229,30 +229,13 @@ function renderHero() {
 function renderStatsStrip() {
   const host = $('#stats-strip-inner');
   if (!host) return;
-  const mc = S.marketContent || {};
-  const prodCount = mc.statProducts === 'auto' || !mc.statProducts
-    ? S.products.length
-    : parseInt(mc.statProducts, 10) || 0;
-  const clients = parseInt(mc.statClients, 10) || 128;
-  const projects = parseInt(mc.statProjects, 10) || S.products.length * 3;
-
+  // Do not invent client or delivery totals. Use capability statements until
+  // independently verifiable metrics are configured in the content system.
   host.innerHTML = `
-    <div class="stats-strip-item">
-      <div class="stats-strip-value">${prodCount}+</div>
-      <div class="stats-strip-label">${escHtml(mc.statProductsLabel || 'Solutions')}</div>
-    </div>
-    <div class="stats-strip-item">
-      <div class="stats-strip-value">${clients}+</div>
-      <div class="stats-strip-label">${escHtml(mc.statClientsLabel || 'Happy Clients')}</div>
-    </div>
-    <div class="stats-strip-item">
-      <div class="stats-strip-value">${projects}+</div>
-      <div class="stats-strip-label">${escHtml(mc.statProjectsLabel || 'Delivered')}</div>
-    </div>
-    <div class="stats-strip-item">
-      <div class="stats-strip-value">2022</div>
-      <div class="stats-strip-label">Founded</div>
-    </div>
+    <div class="stats-strip-item"><div class="stats-strip-value">Bespoke</div><div class="stats-strip-label">Industry blueprints</div></div>
+    <div class="stats-strip-item"><div class="stats-strip-value">Connected</div><div class="stats-strip-label">Shared data core</div></div>
+    <div class="stats-strip-item"><div class="stats-strip-value">Modular</div><div class="stats-strip-label">Business workflows</div></div>
+    <div class="stats-strip-item"><div class="stats-strip-value">Global</div><div class="stats-strip-label">Digital-first reach</div></div>
   `;
 }
 
