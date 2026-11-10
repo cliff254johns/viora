@@ -1,9 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════
-   VIORA — SERVICE WORKER  (v1.1.0)
+   VIORA — SERVICE WORKER  (v1.4.2)
    ─────────────────────────────────────────────────────────────
    Registered by main/sw-bootstrap.js at scope '/'.
 
-   v1.1.0 fixes (from v1.0.0):
+   Legacy v1.1.0 fixes retained:
      • Cross-origin requests are NO LONGER intercepted.
        Fixes: "Module source URI is not allowed in this document"
               "NS_ERROR_CORRUPTED_CONTENT" on Firebase modules.
@@ -25,7 +25,7 @@
 
    Never intercepts:
      • non-GET requests
-     • any cross-origin request (Firebase CDN, Chart.js, Font Awesome…)
+     • cross-origin API/CDN requests (except Google Fonts, which use a dedicated cache)
      • /main/*.js ES modules — they are shell, cached by SWR, but
        never returned from the "static" bucket
      • /.well-known/ (Firebase Auth handshakes)
@@ -310,7 +310,7 @@ async function cacheFirst(req, cacheName) {
   }
 }
 
-/** Stale-while-revalidate. Good for app shell + HTML. */
+/** Stale-while-revalidate. Used only for the reviewed VIORA shell allowlist. */
 async function staleWhileRevalidate(req, cacheName) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(req);
