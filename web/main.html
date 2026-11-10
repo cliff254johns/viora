@@ -36,7 +36,7 @@
 <script defer src="hero-banner.js"></script>
 
 <!-- PWA manifest + icons -->
-<link rel="manifest" href="/manifest.json">
+<link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" href="https://viora.co.ke/viora.png">
 <link rel="shortcut icon" type="image/png" href="https://viora.co.ke/viora.png">
 <link rel="apple-touch-icon" href="https://viora.co.ke/viora.png">
@@ -49,6 +49,7 @@
 <meta name="application-name" content="VIORA">
 
 <link rel="stylesheet" href="main.css">
+<script defer src="/shared-pwa.js"></script>
 <style>
   /* Preloader — video splash */
   #vioraPreloader{
@@ -79,6 +80,16 @@
   /* Reduce motion: pause animation, keep first frame */
   @media (prefers-reduced-motion:reduce){
     #vioraPreloader #vioraPreloaderVideo{ animation:none!important; }
+  }
+  /* Portrait phones: show the complete branded video frame without cropping. */
+  @media (max-aspect-ratio: 4/5) {
+    #vioraPreloader #vioraPreloaderVideo {
+      width: 100%;
+      height: 100%;
+      max-width: 100vw;
+      max-height: 100dvh;
+      object-fit: contain;
+    }
   }
 </style>
 <style>
@@ -191,6 +202,7 @@
     color: #e2e8f0;
     letter-spacing: 0.01em;
   }
+</style>
 <style>
   /* Login stays hidden until preloader fully completes */
   #loginScreen {
@@ -225,9 +237,9 @@
   var preloader = document.getElementById('vioraPreloader');
   if (!preloader) return;
 
-  var MIN_VISIBLE_MS = 10000,
+  var MIN_VISIBLE_MS = 1200,
       FADE_OUT_MS = 700,
-      SAFETY_MAX_MS = 15000;
+      SAFETY_MAX_MS = 7000;
   var startTime = Date.now(),
       hidden = false,
       pendingHide = false;
@@ -285,17 +297,30 @@
   var preloader = document.getElementById('vioraPreloader');
   if (!v || !preloader) return;
 
+  /* Respect reduced-motion preferences: do not autoplay the splash video. */
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    try { v.pause(); } catch (_) {}
+    if (typeof window.vioraHidePreloader === "function") window.vioraHidePreloader();
+    return;
+  }
+
   /* Enforce muted + playsinline (some browsers ignore the attribute) */
   v.muted = true;
   v.setAttribute('muted', '');
   v.playsInline = true;
   v.setAttribute('playsinline', '');
 
-  /* Try autoplay; swallow the rejection so it can't throw */
+  /* Try autoplay; swallow rejection so it can't throw. A failed or
+     blocked video must never hold the login screen behind a splash. */
   var p = v.play();
   if (p && typeof p.catch === 'function') {
-    p.catch(function(){ /* autoplay blocked — first frame still paints */ });
+    p.catch(function(){ /* muted poster/first frame remains a harmless fallback */ });
   }
+  v.addEventListener('error', function(){
+    if (typeof window.vioraHidePreloader === 'function') {
+      window.vioraHidePreloader();
+    }
+  }, { once: true });
 
   /* Pause the video the moment the hide class is added,
      then detach listeners — guarantees audio can never linger. */

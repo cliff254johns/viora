@@ -597,7 +597,9 @@ function deriveTzFromLatLon(lat, lon) {
                 (isDay ? 'd' : 'n') + ':' +
                 (tempC == null ? 'x' : Math.round(tempC)) + ':' +
                 (precipProb == null ? 'x' : Math.round(precipProb / 10)) + ':' +
-                (precip == null ? 'x' : Math.round(precip * 2));
+                (precip == null ? 'x' : Math.round(precip * 2)) + ':' +
+                (cloudPct == null ? 'x' : Math.round(cloudPct / 5)) + ':' +
+                (windDir == null ? 'x' : Math.round(windDir / 15));
 
     let p = _wpCache.get(key);
     if (p) return p;
@@ -661,6 +663,7 @@ function deriveTzFromLatLon(lat, lon) {
       p.cloudCover = Math.max(p.cloudCover, floor);
     }
 
+    if (_wpCache.size > 120) _wpCache.clear();
     _wpCache.set(key, p);
     return p;
   }
@@ -749,9 +752,13 @@ function deriveTzFromLatLon(lat, lon) {
 
     let precipProb = null;
     if (Array.isArray(h.time) && Array.isArray(h.precipitation_probability)) {
-      const nowIso = new Date().toISOString().slice(0, 13);
+      // Both current.time and hourly.time are in Open-Meteo's requested
+      // location timezone. UTC comparison mislabels the current hour.
+      const currentHour = typeof c.time === 'string'
+        ? c.time.slice(0, 13)
+        : new Date().toISOString().slice(0, 13);
       for (let i = h.time.length - 1; i >= 0; i--) {
-        if (h.time[i].slice(0, 13) <= nowIso) {
+        if (String(h.time[i]).slice(0, 13) <= currentHour) {
           precipProb = h.precipitation_probability[i];
           break;
         }
@@ -1234,7 +1241,7 @@ function deriveTzFromLatLon(lat, lon) {
     running: false,
     baseRain: 220,
     baseSnow: 180,
-    baseClouds: 14,
+    baseClouds: 20,
     rain: [], splashes: [], snow: [], fog: [], wind: [], rays: [],
     clouds: [],
     stars: [],
@@ -1324,7 +1331,7 @@ function deriveTzFromLatLon(lat, lon) {
     particles.clouds = new Array(particles.baseClouds);
     for (let i = 0; i < particles.baseClouds; i++) {
       const depth = Math.floor(Math.random() * 3);
-      const baseSize = depth === 0 ? 0.10 : depth === 1 ? 0.18 : 0.28;
+      const baseSize = depth === 0 ? 0.12 : depth === 1 ? 0.20 : 0.30;
       const puffCount = depth === 0 ? 3 : depth === 1 ? 5 : 7;
       const puffs = [];
       for (let p = 0; p < puffCount; p++) {
@@ -1332,7 +1339,7 @@ function deriveTzFromLatLon(lat, lon) {
           ox: (Math.random() - 0.5) * baseSize * 1.8,
           oy: (Math.random() - 0.5) * baseSize * 0.5,
           r: baseSize * (0.5 + Math.random() * 0.6),
-          a: 0.6 + Math.random() * 0.4
+          a: 0.68 + Math.random() * 0.32
         });
       }
       particles.clouds[i] = {
@@ -1497,7 +1504,7 @@ function deriveTzFromLatLon(lat, lon) {
     cur.lightning = lerp(cur.lightning, profile.lightning,  t);
 
     cur.cloudAlpha = lerp(cur.cloudAlpha,
-      Math.max(0, Math.min(1, profile.cloudCover * 1.15)),
+      Math.max(0, Math.min(1, profile.cloudCover * 1.22)),
       t);
 
      const cc = profile.cloudCover;

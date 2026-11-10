@@ -322,9 +322,13 @@ function normalizeOpenMeteo(json, location) {
 
   let precipProb = null;
   if (Array.isArray(h.time) && Array.isArray(h.precipitation_probability)) {
-    const nowIso = new Date().toISOString().slice(0, 13);
+    // Open-Meteo hourly timestamps use the requested location timezone.
+    // Compare with current.time from that same response, not UTC.
+    const currentHour = typeof c.time === 'string'
+      ? c.time.slice(0, 13)
+      : new Date().toISOString().slice(0, 13);
     for (let i = h.time.length - 1; i >= 0; i--) {
-      if (h.time[i].slice(0, 13) <= nowIso) {
+      if (String(h.time[i]).slice(0, 13) <= currentHour) {
         precipProb = h.precipitation_probability[i];
         break;
       }
@@ -498,9 +502,13 @@ function renderWeatherCard(weather, location) {
 
   const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-  const dailyHtml = (weather.daily || []).slice(0, 7).map((d) => {
-    const dt = new Date(d.date + 'T00:00:00');
-    const dayLabel = days[dt.getDay()];
+  const isNarrow = typeof window !== 'undefined' &&
+    window.matchMedia && window.matchMedia('(max-width: 600px)').matches;
+  const forecastCount = isNarrow ? 5 : 7;
+  const dailyHtml = (weather.daily || []).slice(0, forecastCount).map((d) => {
+    // UTC midday keeps weekday labels stable across device timezones.
+    const dt = new Date(d.date + 'T12:00:00Z');
+    const dayLabel = days[dt.getUTCDay()];
     const iconClass = weatherIcon(d.code, true);
     return `
       <div class="wc-day">
@@ -556,7 +564,18 @@ function renderWeatherCard(weather, location) {
       </div>
 
       <div class="wc-footer">
-        <span>Updated ${new Date(weather.fetchedAt).toLocaleTimeString()}</span>
+        <span>Updated ${(() => {
+          const stamp = weather.fetchedAt || new Date().toISOString();
+          const date = new Date(stamp);
+          try {
+            return date.toLocaleTimeString('en-KE', {
+              timeZone: weather.tz || location.tz || undefined,
+              hour: '2-digit', minute: '2-digit'
+            });
+          } catch (_) {
+            return date.toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' });
+          }
+        })()}</span>
         <button type="button" class="btn btn-outline btn-xs" id="weatherRefreshBtn">
           <i class="fa-solid fa-rotate"></i>
         </button>
@@ -766,6 +785,30 @@ export function openLocationPicker() {
 
 export async function refreshWeather(force) {
   const location = await loadWeatherLocation();
+
+  // Keep the solar clock and weather scene on the saved weather location.
+  // A returning operator may have a saved city different from the hero default.
+  try {
+    const hero = window.VioraHero;
+    const current = hero && typeof hero.getLocation === 'function' ? hero.getLocation() : null;
+    const changed = !current ||
+      Math.abs(Number(current.lat) - Number(location.lat)) > 0.0001 ||
+      Math.abs(Number(current.lon) - Number(location.lon)) > 0.0001 ||
+      (location.tz && current.tz !== location.tz);
+    if (changed && hero && typeof hero.setLocation === 'function') {
+      hero.setLocation({
+        id: 'user-weather',
+        name: location.city || 'My location',
+        label: location.city || 'My location',
+        lat: Number(location.lat),
+        lon: Number(location.lon),
+        tz: location.tz || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+      }, { animate: false });
+    }
+  } catch (e) {
+    console.warn('[weather] hero location sync failed:', e);
+  }
+
   const weather = await fetchWeather(location);
 
   if (!weather) {

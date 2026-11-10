@@ -2654,3 +2654,21 @@
   border-color: rgba(255, 255, 255, 0.1);
   color: #F5F5F7;
 }
+
+/* ─── Responsive globe framing: preserve breathing room on phones ─── */
+@media (max-width: 960px) {
+  .hero { padding-top: 104px; }
+  .hero-grid { gap: 28px; }
+  .hero-visual { width: min(100%, 420px); }
+}
+@media (max-width: 600px) {
+  .hero { padding: 88px 0 54px; }
+  .hero-grid { gap: 22px; }
+  .hero-visual { width: min(100%, 340px); }
+  #globe-container { overflow: hidden; }
+  .hero-globe-hint { bottom: -2px; font-size: 9px; letter-spacing: .06em; }
+}
+@media (max-width: 375px) {
+  .hero-visual { width: min(100%, 300px); }
+  .hero h1 { font-size: clamp(32px, 9vw, 38px); }
+}

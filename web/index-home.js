@@ -2372,6 +2372,10 @@ function initGlobe() {
     if (!w || !h) return;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
+    // The fixed 300-unit camera distance made the 200-unit globe fill
+    // almost the entire mobile viewport. Pull back at narrow breakpoints
+    // so the globe, cable arcs and atmosphere retain comfortable margins.
+    camera.position.z = w <= 480 ? 360 : (w <= 960 ? 330 : 300);
     camera.updateProjectionMatrix();
   }
   if ('ResizeObserver' in window) {

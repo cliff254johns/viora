@@ -52,14 +52,6 @@ export function bootServiceWorker() {
   if (!('serviceWorker' in navigator)) { _log('SW not supported'); return; }
   if (IS_DEV) { _log('dev mode — skipping SW to avoid stale cache'); return; }
 
-  /* ── Notify controller of a pending cache clear, safely ── */
-  function clearActiveCache() {
-    try {
-      const ctrl = navigator.serviceWorker.controller;
-      if (ctrl) ctrl.postMessage({ type: 'CLEAR_CACHE' });
-    } catch (e) { _warn('postMessage failed', e); }
-  }
-
   /* ── Throttled reload ── */
   function scheduleReload(reason) {
     if (_reloadScheduled) return;
@@ -80,23 +72,16 @@ export function bootServiceWorker() {
   function wireRegistration(reg) {
     if (!reg) return;
 
-    // Handle SW waiting from a previous session
-    if (reg.waiting && navigator.serviceWorker.controller) {
-      _log('update already waiting — activating');
-      try { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
-    }
+    // Leave an update waiting until the user is ready; never force a
+    // mid-session takeover or reload while forms/data are in use.
+    if (reg.waiting) _log('service worker update waiting for a safe refresh');
 
     reg.addEventListener('updatefound', () => {
       const nw = reg.installing;
       if (!nw) return;
       nw.addEventListener('statechange', () => {
-        if (nw.state === 'activated') {
-          // Only reload if there was a controller (i.e., this is an update, not first install)
-          if (navigator.serviceWorker.controller) {
-            scheduleReload('new SW activated');
-          } else {
-            _log('first SW activation — no reload needed');
-          }
+        if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+          _log('service worker update installed; current session will continue');
         }
       });
     });
@@ -113,8 +98,6 @@ export function bootServiceWorker() {
         if (timedOut) return;   // ignore late success
         _log('SW registered, scope:', reg.scope);
         wireRegistration(reg);
-        // Ask an existing controller to clear its cache
-        clearActiveCache();
       })
       .catch(err => {
         clearTimeout(timeoutId);
@@ -135,13 +118,7 @@ export function bootServiceWorker() {
     window.addEventListener('load', run, { once: true });
   }
 
-  /* ── When a new SW takes control mid-session, notify it of cache policy ── */
-  try {
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      _log('controller changed');
-      clearActiveCache();
-    });
-  } catch (e) { _warn('controllerchange listener failed', e); }
+  /* Do not clear caches or reload on controller changes. */
 }
 
 /* ═══════════════════════════════════════════════════════════════

@@ -1,9 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════
-   VIORA — SERVICE WORKER  (v1.1.0)
+   VIORA — SERVICE WORKER  (v1.4.2)
    ─────────────────────────────────────────────────────────────
    Registered by main/sw-bootstrap.js at scope '/'.
 
-   v1.1.0 fixes (from v1.0.0):
+   Legacy v1.1.0 fixes retained:
      • Cross-origin requests are NO LONGER intercepted.
        Fixes: "Module source URI is not allowed in this document"
               "NS_ERROR_CORRUPTED_CONTENT" on Firebase modules.
@@ -16,16 +16,16 @@
        immutable static chunks. Precedence was broken in v1.0.0.
      • Cache version bumped → old bad caches are purged on activate.
 
-   Strategy (v1.1.0):
-     • App shell (HTML, main.js, main/*.js)  → stale-while-revalidate
-     • Static assets (images, fonts, media)  → cache-first
-     • Firebase / Worker / CDN libs / auth   → NETWORK-ONLY (no SW)
-     • Google Fonts                          → dedicated cache
-     • Same-origin misc (non-shell)          → network-first
+   Strategy (v1.4.2):
+     • Reviewed VIORA entry pages + core modules → stale-while-revalidate
+     • Static assets (images, fonts, media)      → cache-first
+     • Firebase / Worker / CDN libs / auth       → NETWORK-ONLY (no SW)
+     • Industry microsites and unreviewed routes → network-only
+     • Google Fonts                              → dedicated cache
 
    Never intercepts:
      • non-GET requests
-     • any cross-origin request (Firebase CDN, Chart.js, Font Awesome…)
+     • cross-origin API/CDN requests (except Google Fonts, which use a dedicated cache)
      • /main/*.js ES modules — they are shell, cached by SWR, but
        never returned from the "static" bucket
      • /.well-known/ (Firebase Auth handshakes)
@@ -34,7 +34,7 @@
 'use strict';
 
 /* ─── Version bump invalidates every cache below ─────────────── */
-const SW_VERSION = 'viora-v1.4.0';
+const SW_VERSION = 'viora-v1.4.2';
 const CACHE_SHELL  = `${SW_VERSION}-shell`;
 const CACHE_STATIC = `${SW_VERSION}-static`;
 const CACHE_FONTS  = `${SW_VERSION}-fonts`;
@@ -45,7 +45,7 @@ const PRECACHE_URLS = [
   '/main.html',
   '/main.css',
   '/main.js',
-  '/manifest.json',
+  '/manifest.webmanifest',
   '/viora.png',
   '/v0.html',
   '/market.html',
@@ -112,7 +112,7 @@ self.addEventListener('install', (event) => {
     await Promise.all(PRECACHE_URLS.map(async (url) => {
       try {
         const res = await fetch(url, { cache: 'reload' });
-        if (res && res.ok) {
+        if (res && res.ok && isCacheableResponse(res)) {
           await cache.put(url, res);
         } else {
           console.warn('[sw] precache skipped', url, res && res.status);
@@ -122,8 +122,6 @@ self.addEventListener('install', (event) => {
       }
     }));
 
-    // Take over immediately on a fresh install.
-    await self.skipWaiting();
   })());
 });
 
@@ -139,14 +137,12 @@ self.addEventListener('activate', (event) => {
 
     await Promise.all(
       allKeys.map((key) => {
-        if (keep.has(key)) return null;
-        console.info('[sw] deleting stale cache', key);
+        if (keep.has(key) || !key.startsWith('viora-')) return null;
+        console.info('[sw] deleting stale VIORA cache', key);
         return caches.delete(key);
       })
     );
 
-    // Take control of all open tabs so requests immediately go through us.
-    await self.clients.claim();
   })());
 });
 
@@ -155,29 +151,8 @@ self.addEventListener('activate', (event) => {
    ═══════════════════════════════════════════════════════════════ */
 self.addEventListener('message', (event) => {
   const data = event.data || {};
-
-  if (data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-    return;
-  }
-
-  if (data.type === 'CLEAR_CACHE') {
-    event.waitUntil((async () => {
-      const keys = await caches.keys();
-      await Promise.all(keys.map(k => caches.delete(k)));
-      console.info('[sw] all caches cleared');
-      // Notify any controlled client that the cache is empty.
-      const clients = await self.clients.matchAll({ type: 'window' });
-      clients.forEach(c => c.postMessage({ type: 'CACHE_CLEARED' }));
-    })());
-    return;
-  }
-
-  if (data.type === 'PING') {
-    // Simple liveness probe.
-    if (event.source && event.source.postMessage) {
-      event.source.postMessage({ type: 'PONG', version: SW_VERSION });
-    }
+  if (data.type === 'PING' && event.source && event.source.postMessage) {
+    event.source.postMessage({ type: 'PONG', version: SW_VERSION });
   }
 });
 
@@ -197,6 +172,11 @@ self.addEventListener('fetch', (event) => {
   //     This covers Firebase, the Worker, Chart.js, Font Awesome,
   //     analytics beacons, and every other "must hit network" host.
   if (NETWORK_ONLY_HOSTS.has(url.hostname)) return;
+
+  // Sensitive same-origin endpoints and requests must bypass all caches.
+  if (req.headers.has('authorization')) return;
+  if (/^\/(?:api|auth|firebase|payment|payments|mpesa|webhook|tenant|tenants|user|users|session|sessions|uploads|private|account)(?:\/|$)/i.test(url.pathname)) return;
+  if ([...url.searchParams.keys()].some((key) => /token|auth|session|tenant|user|uid|email|signature|secret|api[_-]?key/i.test(key))) return;
 
   // ── (2) Never intercept Firebase WebSocket / long-poll ────
   if (url.pathname.startsWith('/.well-known/')) return;
@@ -231,8 +211,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Same-origin "other" (JSON data, etc.) → network-first.
-  event.respondWith(networkFirst(req, CACHE_STATIC));
+  // Dynamic same-origin responses (API, JSON, user data, and unknown
+  // routes) are network-only. Never put authenticated or tenant-specific
+  // responses into Cache Storage; public HTML and static assets are handled
+  // by the explicit shell/static branches above.
+  return;
 });
 
 /* ═══════════════════════════════════════════════════════════════
@@ -276,17 +259,26 @@ function isStaticAsset(pathname) {
 }
 
 /**
- * True for the app shell (HTML + entry ES modules).
- * These use stale-while-revalidate so code changes propagate
- * on the next load without requiring a hard refresh.
+ * True only for explicitly reviewed VIORA shell pages and core modules.
+ * Authenticated portal content and industry microsites are never HTML-cached.
  */
+const APP_SHELL_PATHS = new Set([
+  '/',
+  '/index.html',
+  '/main.html',
+  '/v0.html',
+  '/market.html',
+  '/client.html',
+  '/training.html',
+  '/patner.html',
+]);
+
 function isAppShell(pathname) {
-  if (pathname === '/' || pathname === '') return true;
-  if (pathname.endsWith('.html')) return true;
-  if (pathname === '/main.js') return true;
-  if (pathname === '/campaigns-bootstrap.js') return true;
-  if (/^\/main\/[^/]+\.js$/.test(pathname)) return true;
-  return false;
+  // Only explicitly reviewed VIORA entry points are eligible for HTML caching.
+  // Industry microsites, dashboards and authenticated portal routes stay network-only.
+  if (APP_SHELL_PATHS.has(pathname)) return true;
+  if (pathname === '/main.js' || pathname === '/campaigns-bootstrap.js') return true;
+  return /^\/main\/[^/]+\.js$/.test(pathname);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -318,7 +310,7 @@ async function cacheFirst(req, cacheName) {
   }
 }
 
-/** Stale-while-revalidate. Good for app shell + HTML. */
+/** Stale-while-revalidate. Used only for the reviewed VIORA shell allowlist. */
 async function staleWhileRevalidate(req, cacheName) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(req);
@@ -341,12 +333,6 @@ async function staleWhileRevalidate(req, cacheName) {
   const network = await networkPromise;
   if (network) return network;
 
-  // Offline + not cached. Navigations get the shell.
-  if (req.mode === 'navigate') {
-    const shell = await cache.match('/main.html');
-    if (shell) return shell;
-  }
-
   return new Response('Offline', {
     status: 503,
     headers: { 'Content-Type': 'text/plain' },
@@ -366,11 +352,6 @@ async function networkFirst(req, cacheName) {
     const cached = await cache.match(req);
     if (cached) return cached;
 
-    if (req.mode === 'navigate') {
-      const shell = await cache.match('/main.html');
-      if (shell) return shell;
-    }
-
     return new Response('Offline', {
       status: 503,
       headers: { 'Content-Type': 'text/plain' },
@@ -386,7 +367,7 @@ async function fontsStrategy(req) {
 
   try {
     const res = await fetch(req);
-    if (res && res.ok) {
+    if (res && res.ok && isCacheableResponse(res)) {
       cache.put(req, res.clone()).catch(() => {});
     }
     return res;
@@ -416,7 +397,9 @@ function isCacheableResponse(res) {
   if (res.status >= 400) return false;
 
   const cc = res.headers.get('cache-control') || '';
-  if (/no-store|no-cache/i.test(cc)) return false;
+  if (/no-store|no-cache|private/i.test(cc)) return false;
+  const vary = (res.headers.get('vary') || '').toLowerCase();
+  if (vary === '*' || /(?:^|,)\s*(?:cookie|authorization)(?:\s*,|$)/.test(vary)) return false;
 
   return true;
 }
