@@ -44,3 +44,7 @@ html,body,button,input,select,textarea{font-family:"Plus Jakarta Sans","Segoe UI
 .viora-industry-preview-grid a span{color:#8fc0ff;white-space:nowrap}
 .viora-industry-preview-grid a:hover{border-color:#3988f7;background:rgba(57,136,247,.09)}
 @media(max-width:700px){.viora-industry-preview{padding:52px 0}.viora-industry-preview-grid{grid-template-columns:1fr}}
+
+.viora-language-links{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin:10px 0 16px;font-size:12px;color:#9fb1c7}
+.viora-language-links a{font-weight:800;color:#9fc8ff;text-decoration:none}
+.viora-language-links a:hover{color:#fff;text-decoration:underline}
