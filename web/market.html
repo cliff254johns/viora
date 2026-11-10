@@ -404,6 +404,18 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 </script>
 <!-- TikTok Pixel Code End -->
 <script defer src="/shared-pwa.js"></script>
+<style>
+.viora-global-mobile-nav{display:none}
+@media(max-width:760px){
+ body{padding-bottom:calc(72px + env(safe-area-inset-bottom))!important}
+ .viora-global-mobile-nav{display:flex;position:fixed;z-index:9998;left:0;right:0;bottom:0;justify-content:space-around;gap:2px;padding:8px 4px calc(8px + env(safe-area-inset-bottom));background:rgba(255,255,255,.94);border-top:1px solid rgba(0,0,0,.1);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+ [data-theme="dark"] .viora-global-mobile-nav{background:rgba(10,10,10,.94);border-color:rgba(255,255,255,.1)}
+ .viora-global-mobile-nav a,.viora-global-mobile-nav button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;border:0;background:transparent;color:var(--text-primary,#333);font:600 10px/1.2 Inter,sans-serif;text-decoration:none;padding:0}
+ .viora-global-mobile-nav a.active{color:var(--accent,#0A84FF)}
+ .viora-global-mobile-nav svg,.viora-global-mobile-nav i{width:20px;height:20px;font-size:20px}
+ .viora-global-mobile-nav button{cursor:pointer}
+}
+</style>
 </head>
 <body>
 
@@ -436,11 +448,13 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
       </a>
 
       <ul class="nav-links" id="navLinks" role="menu">
-        <li><a onclick="App.scrollToSection('carousel-section')" role="menuitem">Featured</a></li>
-        <li><a onclick="App.scrollToSection('products')" role="menuitem">Products</a></li>
-        <li><a onclick="App.scrollToSection('case-studies')" role="menuitem">Case Studies</a></li>
-        <li><a onclick="App.scrollToSection('how')" role="menuitem">How It Works</a></li>
-        <li><a onclick="App.scrollToSection('faq')" role="menuitem">FAQ</a></li>
+        <li><a href="index.html" role="menuitem">Home</a></li>
+        <li><a href="support.html" role="menuitem">Solutions</a></li>
+        <li><a href="market.html" class="active" role="menuitem">Marketplace</a></li>
+        <li><a href="training.html" role="menuitem">Academy</a></li>
+        <li><a href="client.html" role="menuitem">Client Portal</a></li>
+        <li><a href="about.html" role="menuitem">About</a></li>
+        <li><a href="contact_us.html" role="menuitem">Contact</a></li>
       </ul>
 
       <div class="nav-actions">
@@ -798,6 +812,8 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
     <span>Contact</span>
   </a>
+
+  <button type="button" onclick="App.toggleCart()" aria-label="Open cart"><i class="fa-solid fa-bag-shopping"></i><span>Cart</span></button>
 </nav>
 
   <!-- ═══ PRODUCT DETAIL MODAL ═══ -->
