@@ -1,10 +1,10 @@
 User-agent: *
 Allow: /
-Disallow: /main.html
+Disallow: /main
 Disallow: /main/
-Disallow: /clientportal.html
-Disallow: /trainingportal.html
-Disallow: /campaigns.html
+Disallow: /portal/sign-in
+Disallow: /academy/learn
+Disallow: /campaigns
 Disallow: /campaigns-bootstrap.js
 Disallow: /api/
 Disallow: /auth/
