@@ -34,7 +34,7 @@
 'use strict';
 
 /* ─── Version bump invalidates every cache below ─────────────── */
-const SW_VERSION = 'viora-v1.4.4';
+const SW_VERSION = 'viora-v1.4.5';
 const CACHE_SHELL  = `${SW_VERSION}-shell`;
 const CACHE_STATIC = `${SW_VERSION}-static`;
 const CACHE_FONTS  = `${SW_VERSION}-fonts`;
@@ -111,9 +111,6 @@ const FONT_HOSTS = new Set([
    ═══════════════════════════════════════════════════════════════ */
 self.addEventListener('install', (event) => {
   console.info('[sw] install', SW_VERSION);
-  // Activate the newest worker promptly; existing pages continue until refresh.
-  self.skipWaiting();
-
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_SHELL);
 
@@ -141,7 +138,6 @@ self.addEventListener('activate', (event) => {
   console.info('[sw] activate', SW_VERSION);
 
   event.waitUntil((async () => {
-    await self.clients.claim();
     const allKeys = await caches.keys();
     const keep = new Set([CACHE_SHELL, CACHE_STATIC, CACHE_FONTS]);
 
@@ -290,7 +286,7 @@ function isAppShell(pathname) {
   if (APP_SHELL_PATHS.has(pathname)) return true;
   if (pathname === '/main.js' || pathname === '/campaigns-bootstrap.js') return true;
   if (/^\/main\/[^/]+\.js$/.test(pathname)) return true;
-  if (/^\/[^/]+\.(?:js|css)$/i.test(pathname)) return true;
+  if (pathname === '/main.css' || pathname === '/global-brand.css' || pathname === '/global-brand.js') return true;
   if (pathname === '/campaigns.html' || pathname === '/about.html' || pathname === '/support.html' || pathname === '/contact_us.html') return true;
   return false;
 }
