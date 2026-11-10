@@ -34,7 +34,7 @@
 'use strict';
 
 /* ─── Version bump invalidates every cache below ─────────────── */
-const SW_VERSION = 'viora-v1.4.0';
+const SW_VERSION = 'viora-v1.4.1';
 const CACHE_SHELL  = `${SW_VERSION}-shell`;
 const CACHE_STATIC = `${SW_VERSION}-static`;
 const CACHE_FONTS  = `${SW_VERSION}-fonts`;
@@ -45,7 +45,7 @@ const PRECACHE_URLS = [
   '/main.html',
   '/main.css',
   '/main.js',
-  '/manifest.json',
+  '/manifest.webmanifest',
   '/viora.png',
   '/v0.html',
   '/market.html',
@@ -112,7 +112,7 @@ self.addEventListener('install', (event) => {
     await Promise.all(PRECACHE_URLS.map(async (url) => {
       try {
         const res = await fetch(url, { cache: 'reload' });
-        if (res && res.ok) {
+        if (res && res.ok && isCacheableResponse(res)) {
           await cache.put(url, res);
         } else {
           console.warn('[sw] precache skipped', url, res && res.status);
@@ -122,8 +122,6 @@ self.addEventListener('install', (event) => {
       }
     }));
 
-    // Take over immediately on a fresh install.
-    await self.skipWaiting();
   })());
 });
 
@@ -139,14 +137,12 @@ self.addEventListener('activate', (event) => {
 
     await Promise.all(
       allKeys.map((key) => {
-        if (keep.has(key)) return null;
-        console.info('[sw] deleting stale cache', key);
+        if (keep.has(key) || !key.startsWith('viora-')) return null;
+        console.info('[sw] deleting stale VIORA cache', key);
         return caches.delete(key);
       })
     );
 
-    // Take control of all open tabs so requests immediately go through us.
-    await self.clients.claim();
   })());
 });
 
@@ -155,29 +151,8 @@ self.addEventListener('activate', (event) => {
    ═══════════════════════════════════════════════════════════════ */
 self.addEventListener('message', (event) => {
   const data = event.data || {};
-
-  if (data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-    return;
-  }
-
-  if (data.type === 'CLEAR_CACHE') {
-    event.waitUntil((async () => {
-      const keys = await caches.keys();
-      await Promise.all(keys.map(k => caches.delete(k)));
-      console.info('[sw] all caches cleared');
-      // Notify any controlled client that the cache is empty.
-      const clients = await self.clients.matchAll({ type: 'window' });
-      clients.forEach(c => c.postMessage({ type: 'CACHE_CLEARED' }));
-    })());
-    return;
-  }
-
-  if (data.type === 'PING') {
-    // Simple liveness probe.
-    if (event.source && event.source.postMessage) {
-      event.source.postMessage({ type: 'PONG', version: SW_VERSION });
-    }
+  if (data.type === 'PING' && event.source && event.source.postMessage) {
+    event.source.postMessage({ type: 'PONG', version: SW_VERSION });
   }
 });
 
@@ -197,6 +172,10 @@ self.addEventListener('fetch', (event) => {
   //     This covers Firebase, the Worker, Chart.js, Font Awesome,
   //     analytics beacons, and every other "must hit network" host.
   if (NETWORK_ONLY_HOSTS.has(url.hostname)) return;
+
+  // Sensitive same-origin endpoints and requests must bypass all caches.
+  if (req.headers.has('authorization')) return;
+  if (/^\/(?:api|auth|firebase|payment|payments|mpesa|webhook|tenant|tenants|user|users|session|sessions|uploads|private|account)(?:\/|$)/i.test(url.pathname)) return;
 
   // ── (2) Never intercept Firebase WebSocket / long-poll ────
   if (url.pathname.startsWith('/.well-known/')) return;
@@ -389,7 +368,7 @@ async function fontsStrategy(req) {
 
   try {
     const res = await fetch(req);
-    if (res && res.ok) {
+    if (res && res.ok && isCacheableResponse(res)) {
       cache.put(req, res.clone()).catch(() => {});
     }
     return res;
@@ -420,7 +399,8 @@ function isCacheableResponse(res) {
 
   const cc = res.headers.get('cache-control') || '';
   if (/no-store|no-cache|private/i.test(cc)) return false;
-  if (res.headers.get('vary') === '*') return false;
+  const vary = (res.headers.get('vary') || '').toLowerCase();
+  if (vary === '*' || /(?:^|,)\s*(?:cookie|authorization)(?:\s*,|$)/.test(vary)) return false;
 
   return true;
 }
