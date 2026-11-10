@@ -2428,7 +2428,17 @@ export async function renderCalendar(ctx) {
         if (!isoDate) return;
 
         try {
-          openComposer({ scheduledFor: `${isoDate}T09:00` });
+          const now = new Date();
+          const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+          if (isoDate < todayIso) {
+            toast(ctx, 'Choose today or a future date to schedule a post.', 'warning');
+            return;
+          }
+          let scheduledAt = new Date(`${isoDate}T09:00`);
+          if (scheduledAt.getTime() <= now.getTime()) scheduledAt = new Date(now.getTime() + 15 * 60 * 1000);
+          const pad = n => String(n).padStart(2, '0');
+          const scheduledLocal = `${scheduledAt.getFullYear()}-${pad(scheduledAt.getMonth() + 1)}-${pad(scheduledAt.getDate())}T${pad(scheduledAt.getHours())}:${pad(scheduledAt.getMinutes())}`;
+          openComposer({ scheduledFor: scheduledLocal });
         } catch (err) {
           console.error('[calendar] openComposer failed:', err);
           toast(ctx, 'Could not open composer: ' + (err.message || 'unknown'), 'error');
