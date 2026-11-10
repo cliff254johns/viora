@@ -231,8 +231,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Same-origin "other" (JSON data, etc.) → network-first.
-  event.respondWith(networkFirst(req, CACHE_STATIC));
+  // Dynamic same-origin responses (API, JSON, user data, and unknown
+  // routes) are network-only. Never put authenticated or tenant-specific
+  // responses into Cache Storage; public HTML and static assets are handled
+  // by the explicit shell/static branches above.
+  return;
 });
 
 /* ═══════════════════════════════════════════════════════════════
@@ -416,7 +419,7 @@ function isCacheableResponse(res) {
   if (res.status >= 400) return false;
 
   const cc = res.headers.get('cache-control') || '';
-  if (/no-store|no-cache/i.test(cc)) return false;
+  if (/no-store|no-cache|private/i.test(cc)) return false;\n  if (res.headers.get('vary') === '*') return false;
 
   return true;
 }
