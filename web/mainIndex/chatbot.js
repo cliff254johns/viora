@@ -1554,11 +1554,18 @@ function runTool(call){
   const { tool, args = {} } = call;
   try {
     switch(tool){
-      case 'openLeadModal':
+      case 'openLeadModal': {
         if (typeof window.openLeadModal === 'function') window.openLeadModal();
+        else {
+          const form = document.getElementById('contact-form') || document.getElementById('contact');
+          if (form) form.scrollIntoView({behavior:'smooth', block:'start'});
+          else window.location.href = '/contact_us';
+        }
         break;
+      }
       case 'openBlueprintPreview':
         if (typeof window.openBlueprintPreview === 'function') window.openBlueprintPreview();
+        else window.location.href = '/industries';
         break;
       case 'navigate': {
         const el = document.getElementById((args.sectionId||'').replace('#',''));
