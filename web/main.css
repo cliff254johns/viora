@@ -22,7 +22,7 @@
    ───────────────────────────────────────────────────────────── */
 :root {
   font-size: 16px;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
 
   /* Semantic accents — Apple system colours */
   --accent-blue:     #0a84ff;
