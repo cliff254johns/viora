@@ -421,6 +421,12 @@ function playAudioUrl(url, speakId, audioEl){
 }
 
 /* Speak a whole reply in as few TTS calls as possible. */
+function getActiveLanguageCode(){
+  let value='en';
+  try { value=localStorage.getItem('viora_site_language') || document.documentElement.lang || 'en'; }
+  catch(_) { value=document.documentElement.lang || 'en'; }
+  return String(value).toLowerCase().split('-')[0] || 'en';
+}
 async function speakReply(fullText, speakId){
   if (!state.readAloud || !fullText.trim()) return;
   if (speakId !== state.currentSpeakId) return;
@@ -438,6 +444,7 @@ async function speakReply(fullText, speakId){
 async function speakOneChunk(text, speakId){
   if (!text.trim()) return;
   const prefs = VoicePrefs.get();
+  if (getActiveLanguageCode() !== 'en') return browserSpeak(text, speakId);
   try {
     const url = await fetchTTS(text);
     if (speakId !== state.currentSpeakId) return;
@@ -463,13 +470,16 @@ function browserSpeak(text, speakId){
     try { speechSynthesis.cancel(); } catch(e){}
     const prefs = VoicePrefs.get();
     const u = new SpeechSynthesisUtterance(text);
+    const activeLang = getActiveLanguageCode();
+    u.lang = activeLang === 'zh' ? 'zh-CN' : activeLang;
     u.rate = prefs.rate;
     u.pitch = prefs.pitch;
-    if (prefs.browserVoiceURI){
-      const voices = speechSynthesis.getVoices();
-      const match = voices.find(v => v.voiceURI === prefs.browserVoiceURI);
-      if (match) u.voice = match;
-    }
+    const voices = speechSynthesis.getVoices();
+    const preferred = prefs.browserVoiceURI ? voices.find(v => v.voiceURI === prefs.browserVoiceURI) : null;
+    const localeVoice = voices.find(v => String(v.lang || '').toLowerCase().startsWith(activeLang));
+    if (preferred && String(preferred.lang || '').toLowerCase().startsWith(activeLang)) u.voice = preferred;
+    else if (localeVoice) u.voice = localeVoice;
+    else if (preferred) u.voice = preferred;
     state.currentUtterance = u;
     let settled = false;
     const finish = ()=>{
