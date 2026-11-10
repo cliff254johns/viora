@@ -2646,7 +2646,10 @@ textarea:focus { scroll-margin-top: 80px; }
     width: var(--drawer-w);
     min-width: var(--drawer-w);
     max-width: 86vw;
-    height: 100vh;
+    height: 100vh; /* fallback for browsers without dynamic viewport units */
+    height: 100dvh;
+    max-height: 100dvh;
+    box-sizing: border-box;
     z-index: 1301;
     transform: translateX(-100%);
     transition: transform var(--t-base) var(--ease-apple);
@@ -2719,7 +2722,11 @@ textarea:focus { scroll-margin-top: 80px; }
     font-size: var(--fs-xs);
   }
   .sidebar-footer {
-    padding: 14px 14px calc(18px + env(safe-area-inset-bottom, 0px));
+    display: flex !important;
+    flex: 0 0 auto !important;
+    flex-shrink: 0 !important;
+    visibility: visible !important;
+    padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px));
   }
   .sidebar-footer .theme-toggle {
     min-height: 44px;

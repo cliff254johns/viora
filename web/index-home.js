@@ -1929,6 +1929,14 @@ function initGlobe() {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   if (THREE.sRGBEncoding !== undefined) renderer.outputEncoding = THREE.sRGBEncoding;
+  /* WebGLRenderer.setSize(..., false) updates the drawing buffer but
+     deliberately leaves CSS dimensions untouched. Explicitly make the
+     canvas fill the responsive square container on every device. */
+  renderer.domElement.style.display = 'block';
+  renderer.domElement.style.width = '100%';
+  renderer.domElement.style.height = '100%';
+  renderer.domElement.style.position = 'absolute';
+  renderer.domElement.style.inset = '0';
   container.appendChild(renderer.domElement);
 
   const globeGroup = new THREE.Group();
