@@ -19,14 +19,7 @@
 <meta name="msapplication-TileColor" content="#070a13">
 <meta name="application-name" content="VIORA">
 
-<script>
-try {
-  var saved = localStorage.getItem('viora_theme');
-  document.documentElement.setAttribute('data-theme', saved === 'dark' ? 'dark' : 'light');
-} catch (_) {
-  document.documentElement.setAttribute('data-theme', 'light');
-}
-</script>
+<script>try{const t=localStorage.getItem('viora-theme')||localStorage.getItem('viora_theme')||'dark';document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark')}catch(_){document.documentElement.setAttribute('data-theme','dark')}</script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -522,6 +515,7 @@ try {
 
 
 <script defer src="/shared-pwa.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="/global-brand.css">
 </head>
 <body>
 <a href="#main" class="skip">Skip to content</a>
@@ -537,17 +531,7 @@ try {
       </div>
       <div class="brand-text"><strong>VIORA</strong><small>ECOSYSTEMS</small></div>
     </a>
-    <nav aria-label="Primary">
-      <ul class="nav-links">
-        <li><a href="index.html">Home</a></li>
-        <li><a href="support.html">Solutions</a></li>
-        <li><a href="market.html">Marketplace</a></li>
-        <li><a href="training.html" class="active">Academy</a></li>
-        <li><a href="client.html">Client Portal</a></li>
-        <li><a href="about.html">About</a></li>
-        <li><a href="contact_us.html">Contact</a></li>
-      </ul>
-    </nav>
+    <nav aria-label="Primary"><ul class="nav-links"><li><a href="index.html">Home</a></li><li><a href="market.html">Market</a></li><li><a href="client.html">Portal</a></li><li><a href="training.html" class="active">Academy</a></li><li><a href="contact_us.html">Contact</a></li></ul></nav>
     <div class="nav-actions">
       <button class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode">
         <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -577,19 +561,7 @@ try {
   </div>
 </div>
 
-<aside class="drawer" id="drawer" aria-hidden="true">
-  <ul>
-    <li><a href="index.html">Home</a></li>
-    <li><a href="support.html">Solutions</a></li>
-    <li><a href="market.html">Marketplace</a></li>
-    <li><a href="training.html">Academy</a></li>
-    <li><a href="client.html">Client Portal</a></li>
-    <li><a href="about.html">About</a></li>
-    <li><a href="contact_us.html">Contact</a></li>
-  </ul>
-  <a href="trainingportal.html" class="btn btn-gradient">Sign in as Learner</a>
-  <a href="trainer.html" class="btn btn-ghost" style="margin-top:8px;width:100%;justify-content:center;">Apply as Instructor</a>
-</aside>
+<aside class="drawer" id="drawer" aria-hidden="true"><ul><li><a href="index.html">Home</a></li><li><a href="market.html">Market</a></li><li><a href="client.html">Portal</a></li><li><a href="training.html">Academy</a></li><li><a href="contact_us.html">Contact</a></li></ul><a href="contact_us.html" class="btn btn-primary">Talk to VIORA</a></aside>
 
 <main id="main">
 
