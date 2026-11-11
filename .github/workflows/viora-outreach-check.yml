@@ -1,0 +1,40 @@
+name: VIORA Outreach checks
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "web/main.html"
+      - "web/outreach.html"
+      - "web/outreach.css"
+      - "web/outreach.js"
+      - ".github/workflows/viora-outreach-check.yml"
+  push:
+    branches: [feature/viora-outreach-centre]
+    paths:
+      - "web/main.html"
+      - "web/outreach.html"
+      - "web/outreach.css"
+      - "web/outreach.js"
+      - ".github/workflows/viora-outreach-check.yml"
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check outreach JavaScript syntax
+        run: node --input-type=module --check < web/outreach.js
+      - name: Verify separate frontend assets
+        run: |
+          grep -q 'href="/outreach.css"' web/outreach.html
+          grep -q 'src="/outreach.js"' web/outreach.html
+          ! grep -qi '<style' web/outreach.html
+      - name: Verify VIORA navigation entry and admin/exec visibility
+        run: |
+          grep -q 'data-group="outreach"' web/main.html
+          grep -q 'data-roles="admin,exec"' web/main.html
+          grep -q 'href="/outreach.html"' web/main.html
