@@ -83,7 +83,8 @@
 @media(max-width:640px){
   .vcb{
     padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px));
-    max-height:46dvh;
+    box-sizing:border-box;
+    max-height:42dvh;
     overflow-y:auto;
     overscroll-behavior:contain;
   }
