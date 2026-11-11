@@ -33,6 +33,7 @@
 
 <link rel="stylesheet" href="shared-app.css">
 <link rel="stylesheet" href="index-home.css">
+<link rel="stylesheet" href="viora-city.css">
 <link rel="stylesheet" href="/viora-mobile-app.css?v=20261111-99261369">
 
 <style>
@@ -118,6 +119,39 @@
       </div>
     </div>
   </div>
+</section>
+
+<!-- ═══════════ IMMERSIVE VIORA CITY ═══════════ -->
+<section id="viora-city" aria-labelledby="viora-city-title">
+  <div class="city-head">
+    <span class="eyebrow">ENTER THE VIORA WORLD</span>
+    <h2 id="viora-city-title">One connected city. Many possibilities.</h2>
+    <p>Explore the places, platforms and services that make up VIORA. Every destination connects to the wider ecosystem and its shared data core.</p>
+  </div>
+  <div class="city-stage">
+    <canvas id="viora-city-canvas" aria-label="Interactive three-dimensional VIORA city. Drag to rotate the view."></canvas>
+    <div class="city-hud" aria-live="polite">
+      <span class="city-pill"><i class="fa-regular fa-clock"></i><span data-city-time>Local time</span></span>
+      <span class="city-pill"><i class="fa-solid fa-cloud-sun"></i><span data-city-weather>Checking local weather</span></span>
+      <span class="city-pill"><i class="fa-solid fa-location-dot"></i><span data-city-status>Using your local time</span></span>
+    </div>
+    <div class="city-controls" aria-label="City atmosphere controls">
+      <button type="button" data-city-preview="morning">Morning</button>
+      <button type="button" data-city-preview="day">Day</button>
+      <button type="button" data-city-preview="sunset">Sunset</button>
+      <button type="button" data-city-preview="night">Night</button>
+      <button type="button" data-city-live><i class="fa-solid fa-clock"></i> Live</button>
+      <button type="button" data-city-pause><i class="fa-solid fa-pause"></i> Pause</button>
+    </div>
+  </div>
+  <div class="city-buildings" aria-label="Explore VIORA destinations">
+    <a class="city-link city-market" href="/market"><span class="city-icon"><i class="fa-solid fa-store"></i></span><span><strong>VIORA Market</strong><small>Discover products and services</small></span></a>
+    <a class="city-link city-client" href="/client"><span class="city-icon"><i class="fa-solid fa-user-group"></i></span><span><strong>Client Portal</strong><small>Projects, subscriptions and support</small></span></a>
+    <a class="city-link city-scholar" href="/training"><span class="city-icon"><i class="fa-solid fa-graduation-cap"></i></span><span><strong>VIORA Scholar</strong><small>Learning and training</small></span></a>
+    <a class="city-link city-industries" href="/industries"><span class="city-icon"><i class="fa-solid fa-city"></i></span><span><strong>Industries</strong><small>Explore connected solutions</small></span></a>
+    <a class="city-link city-core" href="#ecosystem"><span class="city-icon"><i class="fa-solid fa-globe"></i></span><span><strong>VIORA Ecosystem</strong><small>The shared connected core</small></span></a>
+  </div>
+  <p class="city-note">Drag the city to explore. Local weather is requested only with location permission; otherwise the scene follows your device's local time.</p>
 </section>
 
 <!-- ═══════════ 2. HOW VIORA CONNECTS YOUR BUSINESS ═══════════ -->
@@ -624,26 +658,12 @@
 
 <!-- ═══════════ MOBILE BOTTOM NAV ═══════════ -->
 <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
-  <a href="/" class="mnav-item active">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    <span>Home</span>
-  </a>
-  <a href="/market" class="mnav-item">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h18v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"/><path d="M3 9l3-6h12l3 6"/></svg>
-    <span>Market</span>
-  </a>
-  <a href="/training" class="mnav-item">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-    <span>Academy</span>
-  </a>
-  <a href="/client" class="mnav-item">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-    <span>Portal</span>
-  </a>
-  <a href="/contact_us" class="mnav-item">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-    <span>Contact</span>
-  </a>
+  <a href="/" class="mnav-item active"><i class="fa-solid fa-house" style="color:#2878e8"></i><span>Home</span></a>
+  <a href="/market" class="mnav-item"><i class="fa-solid fa-store" style="color:#2878e8"></i><span>Market</span></a>
+  <a href="/training" class="mnav-item"><i class="fa-solid fa-graduation-cap" style="color:#16a05a"></i><span>Scholar</span></a>
+  <a href="/client" class="mnav-item"><i class="fa-solid fa-user-group" style="color:#8653d8"></i><span>Client Portal</span></a>
+  <a href="/industries" class="mnav-item"><i class="fa-solid fa-city" style="color:#e77b28"></i><span>Industries</span></a>
+  <a href="/contact_us" class="mnav-item"><i class="fa-solid fa-envelope" style="color:#0b9caa"></i><span>Contact</span></a>
 </nav>
 
 
@@ -669,6 +689,7 @@
   <!-- Firebase compat SDK — REQUIRED for index-home.js to read/write data -->
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+<script src="viora-city.js" defer></script>
 <script type="module" src="index-home.js"></script>
 <script>
   document.getElementById('yr').textContent = new Date().getFullYear();
