@@ -8,7 +8,7 @@ const browserTz=()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone
 function updateClock(){const out=$('[data-city-time]'),name=$('[data-city-name]');if(!out||!activeLocation)return;
 const now=window.VioraTime?.now?window.VioraTime.now():new Date(),tz=activeLocation.tz||browserTz();
 try{out.textContent=new Intl.DateTimeFormat(undefined,{timeZone:tz,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}).format(now)}catch(_){out.textContent=new Date().toLocaleTimeString()}
-if(name)name.textContent=activeLocation.name||activeLocation.label||'Your local city'}
+if(name)name.textContent=activeLocation.name||activeLocation.label||'Your local city';stage.dataset.internetTimeSynced=String(!!window.VioraTime?.isSynced?.());stage.dataset.internetTimeSource=window.VioraTime?.source?.()||'local-clock-fallback'}
 function iconFor(code){const n=Number(code);if(n===0)return'fa-sun';if([1,2].includes(n))return'fa-cloud-sun';if([3,45,48].includes(n))return'fa-cloud';if(n>=51&&n<=67)return'fa-cloud-rain';if(n>=71&&n<=86)return'fa-snowflake';if(n>=95)return'fa-cloud-bolt';return'fa-cloud-sun'}
 function paintWeather(w){const out=$('[data-city-weather]'),icon=$('[data-city-weather-icon]');if(!out)return;
 if(!w||w.tempC==null){out.textContent='Live weather unavailable';if(icon)icon.className='fa-solid fa-cloud';stage.dataset.weatherStatus='unavailable';return}
@@ -40,7 +40,15 @@ window.VioraSky?.refreshCatalog?.();stage.dataset.starCatalogue='loaded';
 }
 function deviceLocation(){return new Promise(resolve=>{if(!navigator.geolocation)return resolve(null);navigator.geolocation.getCurrentPosition(p=>resolve({id:'visitor-device',name:'Your current city',lat:p.coords.latitude,lon:p.coords.longitude,tz:browserTz(),accuracy:'device'}),()=>resolve(null),{enableHighAccuracy:false,timeout:6000,maximumAge:900000})})}
 async function boot(){
-stage.querySelectorAll('#vioraHeroChangeLocationBtn,.viora-hero-location-trigger,[data-open-location-picker]').forEach(el=>el.remove());
+function removeLegacyLocationControls(){
+const selectors='#vioraHeroChangeLocationBtn,.viora-hero-location-trigger,[data-open-location-picker],#vioraHeroLocationBtn,.viora-hero-location-button,[aria-label="Select location" i],[title="Select location" i]';
+stage.querySelectorAll(selectors).forEach(el=>el.remove());
+stage.querySelectorAll('button,a,[role="button"]').forEach(el=>{
+const label=[el.textContent,el.getAttribute('aria-label'),el.getAttribute('title')].filter(Boolean).join(' ').replace(/\\s+/g,' ').trim();
+if(/^\\s*(select|change)\\s+location\\s*$/i.test(label))el.remove();
+});
+}
+removeLegacyLocationControls();
 const api=window.VioraHero;if(api?.on)api.on('cityChange',onCityChange);
 let loc=null;try{loc=await ipLocation()}catch(e){console.warn('[VIORA homepage] IP city lookup failed',e)}
 if(!loc)loc=await deviceLocation();
@@ -51,7 +59,7 @@ stage.dataset.homeSkyBoot='rendering';
 try{if(typeof window.renderVioraHero==='function'){await window.renderVioraHero(true);stage.dataset.homeSkyBoot='rendered'}else stage.dataset.homeSkyBoot='fallback'}
 catch(e){stage.dataset.homeSkyBoot='error';console.error('[VIORA homepage] full hero render failed',e)}
 try{window.VioraSky?.init?.({location:loc});window.VioraSky?.renderNow?.();window.VioraTerminator?.init?.({location:loc});window.VioraTerminator?.renderNow?.();window.VioraOrb?.init?.({location:loc,sky:api?.getSky?.()});window.VioraOrb?.setSkyState?.(api?.getSky?.())}catch(e){console.warn('[VIORA homepage] sky layer init',e)}
-updateClock();setInterval(updateClock,1000);await refreshWeather(true);loadStarCatalogue();
+updateClock();window.VioraTime?.on?.('synced',updateClock);window.VioraTime?.on?.('tzChange',updateClock);setInterval(updateClock,1000);await refreshWeather(true);loadStarCatalogue();
 window.addEventListener('resize',()=>{try{window.renderVioraHero?.(true)}catch(_){}window.VioraSky?.renderNow?.();window.VioraTerminator?.renderNow?.()},{passive:true})
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
