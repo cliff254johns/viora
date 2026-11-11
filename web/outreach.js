@@ -1,9 +1,11 @@
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js';
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js';
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js';
 import { getDatabase, ref, get, set, push, update, onValue } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js';
 
 const firebaseConfig={apiKey:'AIzaSyC9gCBt-xR8t9n6rTGNvDZ5usUGiW-Dqxc',authDomain:'cliffclient-35ec5.firebaseapp.com',databaseURL:'https://cliffclient-35ec5-default-rtdb.europe-west1.firebasedatabase.app',projectId:'cliffclient-35ec5',storageBucket:'cliffclient-35ec5.firebasestorage.app',messagingSenderId:'519782791696',appId:'1:519782791696:web:6e1a654ddeed14b72b2895',measurementId:'G-G0NB6JGQVF'};
 const app=getApps().length?getApps()[0]:initializeApp(firebaseConfig),auth=getAuth(app),db=getDatabase(app);
+// Match the main dashboard's durable, same-origin Firebase sign-in session.
+const authReady=setPersistence(auth,browserLocalPersistence);
 const ORG='viora_data/orgs/viora',ROOT=ORG+'/outreach',API='https://viora-api.cliff254johns.workers.dev';
 let currentUser=null,currentRole='',leads={},emails={},editingId=null,stopLeads=null,stopEmails=null,charts={};
 const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -62,8 +64,8 @@ function exportLeads(){downloadCsv('viora-outreach-leads.csv',[['Organisation','
 function exportEmails(){downloadCsv('viora-outreach-communication-ledger.csv',[['Timestamp','Direction','Recipient','Subject','Status','Provider ID','Recorded By','Message'],...emailList().map(e=>[e.timestamp,e.direction,e.to,e.subject,e.status,e.providerId,e.sentByEmail,e.text])]);}
 function bindData(){stopLeads?.();stopEmails?.();stopLeads=onValue(ref(db,ORG+'/leads'),s=>{leads=s.val()||{};renderLeadTables();renderFollowups();renderOverview();renderAiSelect();renderAnalytics();});stopEmails=onValue(ref(db,ROOT+'/emails'),s=>{emails=s.val()||{};renderEmails();renderAudit();renderOverview();renderAnalytics();});}
 async function startSession(user){currentUser=user;currentRole=String(await resolveRole(user.uid)).toLowerCase();if(!['admin','exec'].includes(currentRole)){await signOut(auth);$('loginView').classList.remove('hidden');$('appView').classList.add('hidden');status('loginStatus','Access denied. This workspace is restricted to VIORA admin and exec roles.',true);return;}$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');bindData();}
-$('loginForm').addEventListener('submit',async e=>{e.preventDefault();try{busy('loginBtn',true,'Signing in…');status('loginStatus','');await signInWithEmailAndPassword(auth,$('loginEmail').value.trim(),$('loginPassword').value);}catch(err){status('loginStatus',err.message,true);}finally{busy('loginBtn',false);}});
-onAuthStateChanged(auth,user=>{if(user)startSession(user).catch(e=>status('loginStatus',e.message,true));else{stopLeads?.();stopEmails?.();currentUser=null;$('loginView').classList.remove('hidden');$('appView').classList.add('hidden');}});
+$('loginForm').addEventListener('submit',async e=>{e.preventDefault();try{busy('loginBtn',true,'Signing in…');status('loginStatus','');await authReady;await signInWithEmailAndPassword(auth,$('loginEmail').value.trim(),$('loginPassword').value);}catch(err){status('loginStatus',err.message,true);}finally{busy('loginBtn',false);}});
+authReady.then(()=>onAuthStateChanged(auth,user=>{if(user)startSession(user).catch(e=>status('loginStatus',e.message,true));else{stopLeads?.();stopEmails?.();currentUser=null;$('loginView').classList.remove('hidden');$('appView').classList.add('hidden');}})).catch(err=>status('loginStatus','Firebase session could not be restored: '+err.message,true));
 bindNavigation();
 $('leadForm').addEventListener('submit',saveLead);$('emailForm').addEventListener('submit',sendEmail);
 $('mailLead').addEventListener('change',()=>{const l=leads[$('mailLead').value];if(l)$('mailTo').value=l.email||'';});
