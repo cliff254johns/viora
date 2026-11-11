@@ -26,7 +26,7 @@ function languageControl(){
  document.body.appendChild(script);
 }
 function assistant(){if(document.querySelector('script[data-viora-site-assistant]'))return;const s=document.createElement('script');s.src='/mainIndex/site-assistant-loader.js';s.defer=true;s.dataset.vioraSiteAssistant='true';document.body.appendChild(s);}
-function mobilePolish(){if(!document.querySelector('link[data-viora-mobile-app]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/viora-mobile-app.css';l.dataset.vioraMobileApp='true';document.head.appendChild(l);}if(!document.querySelector('script[src="/shared-pwa.js"]')){const p=document.createElement('script');p.src='/shared-pwa.js';p.defer=true;p.dataset.vioraPwa='true';document.body.appendChild(p);}}
+function mobilePolish(){if(!document.querySelector('link[data-viora-mobile-app]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/viora-mobile-app.css?v=20261111-99261369';l.dataset.vioraMobileApp='true';document.head.appendChild(l);}if(!document.querySelector('script[src="/shared-pwa.js"]')){const p=document.createElement('script');p.src='/shared-pwa.js';p.defer=true;p.dataset.vioraPwa='true';document.body.appendChild(p);}}
 function nav(){
  const path=location.pathname.replace(/\/+$/,'')||'/';const active=path==='/market'?'market':path==='/client'?'portal':path==='/training'?'academy':path==='/contact_us'?'contact':'home';
  const n=document.querySelector('.mobile-bottom-nav[aria-label="Mobile navigation"]');

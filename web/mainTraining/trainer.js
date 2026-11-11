@@ -268,6 +268,9 @@ function bootTrainerApp() {
 }
 
 function initLogin() {
+  const params = new URLSearchParams(window.location.search);
+  const requestMode = params.get("mode") === "request" || window.location.hash === "#request";
+  setLoginMode(requestMode ? "request" : "signin");
   $("trTabSignIn")?.addEventListener("click", () => setLoginMode("signin"));
   $("trTabRequest")?.addEventListener("click", () => setLoginMode("request"));
   $("trLoginBtn")?.addEventListener("click", doTrainerSignIn);
