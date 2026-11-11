@@ -257,6 +257,15 @@ function updateMeta(p) {
   setMeta('property', 'og:description', desc);
   setMeta('property', 'og:image', avatar);
   setMeta('property', 'og:type', 'profile');
+  const canonicalUrl = window.location.origin + window.location.pathname.replace(/\\.html$/i, '');
+  let canonical = document.querySelector('link[rel="canonical"]');
+  if (!canonical) {
+    canonical = document.createElement('link');
+    canonical.rel = 'canonical';
+    document.head.appendChild(canonical);
+  }
+  canonical.href = canonicalUrl;
+  setMeta('property', 'og:url', canonicalUrl);
   setMeta('name', 'twitter:card', 'summary');
   setMeta('name', 'twitter:title', `${name} · VIORA Ecosystems`);
   setMeta('name', 'twitter:description', desc);
