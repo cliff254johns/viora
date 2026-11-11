@@ -1,0 +1,26 @@
+{
+  "id": "/main.html",
+  "name": "VIORA Ecosystems — Main System",
+  "short_name": "VIORA",
+  "description": "VIORA integrated business ecosystem and management workspace.",
+  "start_url": "/main.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#0A192F",
+  "background_color": "#0A192F",
+  "lang": "en",
+  "categories": [
+    "business",
+    "productivity",
+    "finance"
+  ],
+  "icons": [
+    {
+      "src": "/viora-app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
