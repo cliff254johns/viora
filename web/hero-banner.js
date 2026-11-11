@@ -2708,7 +2708,8 @@ requestAnimationFrame(() => {
   function ensurePickerModal() {
     const banner = document.getElementById('vioraHeroBanner');
 
-    let overlay = banner ? banner.querySelector('.viora-hero-location-overlay') : null;
+    /* The active picker is mounted at document.body level to escape hero clipping. */
+    let overlay = document.querySelector('.viora-hero-location-overlay');
     if (overlay) return overlay;
 
     if (!banner) {
