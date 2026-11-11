@@ -5,12 +5,12 @@ if (window.__VIORA_SITE_ASSISTANT_LOADER__) return;
 window.__VIORA_SITE_ASSISTANT_LOADER__ = true;
 function loadCss(){
  if(document.querySelector('link[data-viora-chatbot-css]')) return;
- const l=document.createElement('link');l.rel='stylesheet';l.href='/mainIndex/chatbot.css';l.dataset.vioraChatbotCss='true';document.head.appendChild(l);
+ const l=document.createElement('link');l.rel='stylesheet';l.href='/mainIndex/chatbot.css?v=20261111-avatar-remove';l.dataset.vioraChatbotCss='true';document.head.appendChild(l);
 }
 function loadEngine(){
  return new Promise((resolve,reject)=>{
   if([...document.scripts].some(s=>/\/mainIndex\/chatbot\.js(?:\?|$)/.test(s.src))){resolve();return;}
-  const s=document.createElement('script');s.src='/mainIndex/chatbot.js';s.defer=true;s.onload=resolve;s.onerror=reject;document.body.appendChild(s);
+  const s=document.createElement('script');s.src='/mainIndex/chatbot.js?v=20261111-avatar-remove';s.defer=true;s.onload=resolve;s.onerror=reject;document.body.appendChild(s);
  });
 }
 async function mount(){
@@ -18,7 +18,7 @@ async function mount(){
  const ready=document.getElementById('viora-assistant')&&document.getElementById('panel')&&document.getElementById('userInput');
  if(!ready){
   try{
-   const res=await fetch('/inde.html',{credentials:'same-origin',cache:'no-cache'});
+   const res=await fetch('/inde.html?v=20261111-avatar-remove',{credentials:'same-origin',cache:'no-store'});
    if(!res.ok)throw Error('Assistant template unavailable: '+res.status);
    const doc=new DOMParser().parseFromString(await res.text(),'text/html');
    const walker=doc.createTreeWalker(doc,NodeFilter.SHOW_COMMENT);let start=null,end=null,n;
