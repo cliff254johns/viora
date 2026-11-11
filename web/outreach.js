@@ -1,11 +1,9 @@
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js';
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js';
-import { getDatabase, ref, get, set, push, update, onValue, forceLongPolling } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js';
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
+import { getDatabase, ref, get, set, push, update, onValue } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js';
 
-const firebaseConfig={apiKey:'AIzaSyC9gCBt-xR8t9n6rTGNvDZ5usUGiW-Dqxc',authDomain:'cliffclient-35ec5.firebaseapp.com',databaseURL:'https://cliffclient-35ec5-default-rtdb.europe-west1.firebasedatabase.app',projectId:'cliffclient-35ec5',storageBucket:'cliffclient-35ec5.firebasestorage.app',messagingSenderId:'519782791696',appId:'1:519782791696:web:6e1a654ddeed14b72b2895',measurementId:'G-G0NB6JGQVF'};
+const firebaseConfig={apiKey:'AIzaSyC9cGBt-xR8t9n6rTGNvDZ5usUGiW-Dqxc',authDomain:'cliffclient-35ec5.firebaseapp.com',databaseURL:'https://cliffclient-35ec5-default-rtdb.europe-west1.firebasedatabase.app',projectId:'cliffclient-35ec5',storageBucket:'cliffclient-35ec5.firebasestorage.app',messagingSenderId:'519782791696',appId:'1:519782791696:web:6e1a654ddeed14b72b2895',measurementId:'G-G0NB6JGQVF'};
 const app=getApps().length?getApps()[0]:initializeApp(firebaseConfig),auth=getAuth(app),db=getDatabase(app);
-// Match the main dashboard's Firebase transport and keep sign-in persistent across VIORA pages.
-forceLongPolling(db);
 const ORG='viora_data/orgs/viora',ROOT=ORG+'/outreach',API='https://viora-api.cliff254johns.workers.dev';
 let currentUser=null,currentRole='',leads={},emails={},editingId=null,stopLeads=null,stopEmails=null,charts={};
 const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -17,53 +15,7 @@ function busy(id,on,label){const b=$(id);if(!b)return;b.disabled=on;if(label){b.
 function openModal(id){$(id)?.classList.remove('hidden');document.body.style.overflow='hidden';const first=$(id)?.querySelector('input,select,textarea,button');setTimeout(()=>first?.focus(),60);}
 function closeModal(id){$(id)?.classList.add('hidden');if(!document.querySelector('.modal-backdrop:not(.hidden)'))document.body.style.overflow='';}
 function showConfirm(title,message,confirmLabel='Confirm send'){return new Promise(resolve=>{const wrap=document.createElement('div');wrap.className='modal-backdrop';wrap.innerHTML='<section class="modal" role="dialog" aria-modal="true"><header class="modal-head"><div><div class="eyebrow">FINAL REVIEW</div><h2>'+esc(title)+'</h2><p>'+esc(message)+'</p></div><button class="icon-btn" data-no aria-label="Close"><i class="fa-solid fa-xmark"></i></button></header><div class="modal-actions"><button class="btn" data-no>Cancel</button><button class="btn primary" data-yes>'+esc(confirmLabel)+'</button></div></section>';document.body.append(wrap);const done=v=>{wrap.remove();resolve(v)};wrap.querySelectorAll('[data-no]').forEach(b=>b.onclick=()=>done(false));wrap.querySelector('[data-yes]').onclick=()=>done(true);wrap.addEventListener('click',e=>{if(e.target===wrap)done(false)});});}
-async function readRoleRecord(path){
-  try{
-    const snap=await Promise.race([
-      get(ref(db,path)),
-      new Promise((_,reject)=>setTimeout(()=>reject(new Error('Profile read timed out')),10000))
-    ]);
-    if(!snap.exists())return {role:'',exists:false,error:''};
-    const profile=snap.val()||{};
-    return {role:String(profile.role||profile.orgRole||profile.userRole||profile.accessRole||profile.roleName||'').trim().toLowerCase(),exists:true,error:''};
-  }catch(err){
-    console.warn('[outreach] profile lookup failed at '+path,err);
-    return {role:'',exists:false,error:err?.message||String(err)};
-  }
-}
-async function readRoleValue(path){
-  try{
-    const snap=await Promise.race([
-      get(ref(db,path)),
-      new Promise((_,reject)=>setTimeout(()=>reject(new Error('Role read timed out')),10000))
-    ]);
-    return snap.exists()?String(snap.val()||'').trim().toLowerCase():'';
-  }catch(err){
-    console.warn('[outreach] direct role lookup failed at '+path,err);
-    return '';
-  }
-}
-async function resolveRole(uid){
-  // Match main/boot.js exactly: its operator profile lives under viora_data/users/{uid}.
-  // The organisation-scoped profile remains a secondary compatibility fallback.
-  const paths=['viora_data/users/'+uid,'viora_data/orgs/viora/users/'+uid];
-  let profileFound=false,lastError='';
-  for(const path of paths){
-    const result=await readRoleRecord(path);
-    profileFound=profileFound||result.exists;
-    lastError=lastError||result.error;
-    if(result.role)return {role:result.role,source:path,error:'',profileFound:true};
-    // Also try the role leaf in case rules allow it but deny parent reads.
-    const leafRole=await readRoleValue(path+'/role');
-    if(leafRole)return {role:leafRole,source:path+'/role',error:'',profileFound:true};
-  }
-  try{
-    const token=await auth.currentUser?.getIdTokenResult(true);
-    const claimRole=token?.claims?.role||token?.claims?.user_role||token?.claims?.accessRole;
-    if(claimRole)return {role:String(claimRole).trim().toLowerCase(),source:'Firebase custom claims',error:'',profileFound};
-  }catch(err){lastError=lastError||err?.message||String(err);}
-  return {role:'',source:'',error:lastError,profileFound};
-}
+async function resolveRole(uid){const rs=await Promise.all([get(ref(db,'viora_data/users/'+uid+'/role')),get(ref(db,'viora_data/orgs/viora/users/'+uid+'/role'))]);return rs[1].val()||rs[0].val()||'';}
 async function api(path,body){const token=await currentUser.getIdToken();const res=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body||{})});const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||data.message||('Request failed ('+res.status+')'));return data;}
 function showView(name){const valid=['overview','leads','investors','businesses','industries','followups','email','ai','analytics','audit'];if(!valid.includes(name))name='overview';document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+name));document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.view===name));const active=document.querySelector('.nav-item[data-view="'+name+'"]');$('crumbTitle').textContent=active?.querySelector('span')?.textContent||'Overview';if(name==='analytics')renderAnalytics();if(name==='ai')renderAiSelect();}
 function bindNavigation(){document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));document.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.nav)));document.querySelectorAll('[data-open-lead]').forEach(b=>b.addEventListener('click',()=>{resetLeadForm();const cat=b.dataset.category;if(cat)$('category').value=cat;openModal('leadModal');}));document.querySelectorAll('[data-open-email]').forEach(b=>b.addEventListener('click',()=>openEmailModal()));document.querySelectorAll('[data-close-modal]').forEach(b=>b.addEventListener('click',()=>{closeModal('leadModal');closeModal('emailModal')}));document.querySelectorAll('.modal-backdrop').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModal(m.id)}));document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('leadModal');closeModal('emailModal')}});}
@@ -108,48 +60,10 @@ function csvEscape(v){return '"'+String(v??'').replace(/"/g,'""')+'"';}
 function downloadCsv(name,rows){const csv=rows.map(r=>r.map(csvEscape).join(',')).join('\r\n'),blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);}
 function exportLeads(){downloadCsv('viora-outreach-leads.csv',[['Organisation','Contact','Email','Phone','Category','Country','Status','Follow-up','Website','Notes'],...leadList().map(l=>[l.company,l.contact,l.email,l.phone,l.category,l.country,l.status,l.followUp,l.website,l.notes])]);}
 function exportEmails(){downloadCsv('viora-outreach-communication-ledger.csv',[['Timestamp','Direction','Recipient','Subject','Status','Provider ID','Recorded By','Message'],...emailList().map(e=>[e.timestamp,e.direction,e.to,e.subject,e.status,e.providerId,e.sentByEmail,e.text])]);}
-function renderAllData(){renderLeadTables();renderFollowups();renderEmails();renderAudit();renderOverview();renderAiSelect();renderAnalytics();}
-function bindData(){stopLeads?.();stopEmails?.();stopLeads=onValue(ref(db,ORG+'/leads'),s=>{leads=s.val()||{};renderLeadTables();renderFollowups();renderOverview();renderAiSelect();renderAnalytics();},err=>toast('CRM live updates failed: '+err.message,true));stopEmails=onValue(ref(db,ROOT+'/emails'),s=>{emails=s.val()||{};renderEmails();renderAudit();renderOverview();renderAnalytics();},err=>toast('Outreach ledger live updates failed: '+err.message,true));}
-async function refreshData(){busy('refreshBtn',true,'Refreshing…');try{const [leadSnap,emailSnap]=await Promise.all([get(ref(db,ORG+'/leads')),get(ref(db,ROOT+'/emails'))]);leads=leadSnap.val()||{};emails=emailSnap.val()||{};renderAllData();toast('Latest CRM leads and Outreach records loaded from Firebase.');}catch(err){toast('Refresh failed: '+err.message,true);}finally{busy('refreshBtn',false);}}
-async function startSession(user){
-  currentUser=user;
-  status('loginStatus','Restoring your VIORA session and checking access…');
-  const access=await resolveRole(user.uid);
-  currentRole=access.role;
-  if(!['admin','exec'].includes(currentRole)){
-    $('loginView').classList.remove('hidden');
-    $('appView').classList.add('hidden');
-    const detail=access.error
-      ? ' Firebase could not read the role profile ('+access.error+').'
-      : access.profileFound
-        ? ' The profile was found, but its role is "'+(currentRole||'blank')+'".'
-        : ' No readable VIORA user profile or admin/exec custom claim was found.';
-    status('loginStatus','Firebase session detected for '+(user.email||user.uid)+', but Outreach could not verify admin/exec access.'+detail+' Check the role on the main dashboard profile and its Firebase read rules.',true);
-    return;
-  }
-  $('loginView').classList.add('hidden');
-  $('appView').classList.remove('hidden');
-  status('loginStatus','');
-  bindData();
-}
-$('loginForm').addEventListener('submit',async e=>{e.preventDefault();try{busy('loginBtn',true,'Signing in…');status('loginStatus','');await setPersistence(auth,browserLocalPersistence);await signInWithEmailAndPassword(auth,$('loginEmail').value.trim(),$('loginPassword').value);}catch(err){console.error('[outreach] sign-in failed:',err);status('loginStatus',err.code?err.code+': '+err.message:err.message,true);}finally{busy('loginBtn',false);}});
-onAuthStateChanged(auth,user=>{
-  if(user){
-    $('loginView').classList.remove('hidden');
-    $('appView').classList.add('hidden');
-    startSession(user).catch(e=>{
-      console.error('[outreach] automatic session restore failed:',e);
-      $('loginView').classList.remove('hidden');
-      $('appView').classList.add('hidden');
-      status('loginStatus','Could not restore your VIORA session: '+e.message,true);
-    });
-  }else{
-    stopLeads?.();stopEmails?.();currentUser=null;currentRole='';
-    $('loginView').classList.remove('hidden');
-    $('appView').classList.add('hidden');
-    status('loginStatus','');
-  }
-});
+function bindData(){stopLeads?.();stopEmails?.();stopLeads=onValue(ref(db,ORG+'/leads'),s=>{leads=s.val()||{};renderLeadTables();renderFollowups();renderOverview();renderAiSelect();renderAnalytics();});stopEmails=onValue(ref(db,ROOT+'/emails'),s=>{emails=s.val()||{};renderEmails();renderAudit();renderOverview();renderAnalytics();});}
+async function startSession(user){currentUser=user;currentRole=String(await resolveRole(user.uid)).toLowerCase();if(!['admin','exec'].includes(currentRole)){await signOut(auth);$('loginView').classList.remove('hidden');$('appView').classList.add('hidden');status('loginStatus','Access denied. This workspace is restricted to VIORA admin and exec roles.',true);return;}$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');bindData();}
+$('loginForm').addEventListener('submit',async e=>{e.preventDefault();try{busy('loginBtn',true,'Signing in…');status('loginStatus','');await signInWithEmailAndPassword(auth,$('loginEmail').value.trim(),$('loginPassword').value);}catch(err){status('loginStatus',err.message,true);}finally{busy('loginBtn',false);}});
+onAuthStateChanged(auth,user=>{if(user)startSession(user).catch(e=>status('loginStatus',e.message,true));else{stopLeads?.();stopEmails?.();currentUser=null;$('loginView').classList.remove('hidden');$('appView').classList.add('hidden');}});
 bindNavigation();
 $('leadForm').addEventListener('submit',saveLead);$('emailForm').addEventListener('submit',sendEmail);
 $('mailLead').addEventListener('change',()=>{const l=leads[$('mailLead').value];if(l)$('mailTo').value=l.email||'';});
@@ -161,7 +75,7 @@ $('leadRows').addEventListener('click',e=>{const b=e.target.closest('[data-edit]
 $('leadSearch').addEventListener('input',renderLeadTables);$('leadFilter').addEventListener('change',renderLeadTables);$('emailSearch').addEventListener('input',renderEmails);$('emailStatusFilter').addEventListener('change',renderEmails);$('auditSearch').addEventListener('input',renderAudit);
 document.querySelectorAll('[data-category-search]').forEach(el=>el.addEventListener('input',renderLeadTables));
 $('leadExport').onclick=exportLeads;$('auditExport').onclick=exportEmails;$('analyticsRefresh').onclick=renderAnalytics;$('analyticsRange').onchange=renderAnalytics;
-$('refreshBtn').onclick=refreshData;
+$('refreshBtn').onclick=()=>{renderLeadTables();renderFollowups();renderEmails();renderAudit();renderAnalytics();toast('Views refreshed from the latest subscribed records.');};
 $('logoutBtn').onclick=()=>signOut(auth);
 $('themeBtn').onclick=()=>{const t=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=t;localStorage.setItem('viora-outreach-theme',t);renderAnalytics();renderOverview();};
 document.documentElement.dataset.theme=localStorage.getItem('viora-outreach-theme')||'dark';
