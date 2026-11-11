@@ -665,3 +665,30 @@ body.va-large-text .msg{font-size:14.5px}
  #avatarButton::before{opacity:1;transform:none}
  #avatarButton::after{opacity:0}
 }
+
+
+/* VIORA reference artwork: one consistent 3D-styled robot in three distinct poses. */
+.va-pose-stack{position:absolute;inset:0;display:block;pointer-events:none;overflow:visible}
+.va-pose-stack .va-pose{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transform:translateY(7px) scale(.96);filter:drop-shadow(0 8px 10px rgba(0,95,150,.2));animation:va-reference-pose-cycle 12s ease-in-out infinite}
+.va-pose-stack .va-pose-success{animation-delay:0s}
+.va-pose-stack .va-pose-thumbs{animation-delay:4s}
+.va-pose-stack .va-pose-analytics{animation-delay:8s}
+@keyframes va-reference-pose-cycle{
+  0%,5%{opacity:0;transform:translateY(8px) scale(.94)}
+  10%,27%{opacity:1;transform:translateY(0) scale(1)}
+  33%,100%{opacity:0;transform:translateY(-5px) scale(.98)}
+}
+#avatarButton .va-pose-stack{inset:-8% -10% -3%}
+#bigAvatar .va-pose-stack{inset:-10% -12% -6%}
+#avatarButton>svg,#bigAvatar>svg{display:none!important}
+#avatarButton .avatar-logo-img,#bigAvatar .avatar-logo-img{display:none!important}
+#avatarButton .va-pose-label,#bigAvatar .va-pose-label{display:none!important}
+#avatarButton::before,#avatarButton::after,#bigAvatar::before,#bigAvatar::after{display:none!important}
+#avatarButton .va-pose-stack{animation:va-reference-float 4.4s ease-in-out infinite}
+#bigAvatar .va-pose-stack{animation:va-reference-float 4.4s ease-in-out infinite}
+@keyframes va-reference-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+#viora-assistant.is-thinking .va-pose-stack,.va-big.thinking .va-pose-stack{filter:drop-shadow(0 0 13px rgba(0,203,255,.45));animation:va-reference-think 1.7s ease-in-out infinite}
+@keyframes va-reference-think{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-3px) rotate(1deg)}}
+#viora-assistant.is-speaking .va-pose-stack,.va-big.speaking .va-pose-stack{animation:va-reference-speak .6s ease-in-out infinite alternate}
+@keyframes va-reference-speak{from{transform:translateY(0) scale(1)}to{transform:translateY(-3px) scale(1.012)}}
+@media(prefers-reduced-motion:reduce){.va-pose-stack,.va-pose-stack .va-pose{animation:none!important}.va-pose-stack .va-pose-success{opacity:0}.va-pose-stack .va-pose-thumbs{opacity:1;transform:none}}
