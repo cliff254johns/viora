@@ -1,217 +1,48 @@
-/* VIORA homepage sky adapter.
-   The dashboard hero engine is the single source of truth for location,
-   solar time, weather, stars, atmospheric effects, sun/moon and particles.
-   This adapter adds only the public homepage's compact time/weather readout. */
+/* VIORA public homepage: use the exact dashboard hero lifecycle and state. */
 (() => {
-  'use strict';
-  if (window.__vioraCitySkyAdapterBooted) return;
-  window.__vioraCitySkyAdapterBooted = true;
-
-  const stage = document.getElementById('vioraHeroBanner');
-  if (!stage) return;
-
-  const browserTz = () => {
-    try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; }
-    catch (_) { return 'UTC'; }
-  };
-  let activeLocation = null;
-  let weatherRequest = 0;
-
-  function updateClock() {
-    const target = stage.querySelector('[data-city-time]');
-    if (!target || !activeLocation) return;
-    const now = window.VioraTime?.now ? window.VioraTime.now() : new Date();
-    try {
-      target.textContent = new Intl.DateTimeFormat(undefined, {
-        timeZone: activeLocation.tz || browserTz(),
-        weekday: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit',
-        hour12: true
-      }).format(now);
-    } catch (_) {
-      target.textContent = new Date().toLocaleTimeString();
-    }
-  }
-
-  function paintWeather(weather) {
-    const target = stage.querySelector('[data-city-weather]');
-    const icon = stage.querySelector('[data-city-weather-icon]');
-    if (!target) return;
-    if (!weather || weather.tempC == null) {
-      target.textContent = 'Live weather unavailable';
-      if (icon) icon.className = 'fa-solid fa-cloud';
-      stage.dataset.weatherStatus = 'unavailable';
-      return;
-    }
-    const temp = Math.round(Number(weather.tempC));
-    const text = weather.text || 'Current conditions';
-    const humidity = weather.humidity != null && Number.isFinite(Number(weather.humidity)) ? Math.round(Number(weather.humidity)) : null;
-    const wind = weather.windKph != null && Number.isFinite(Number(weather.windKph)) ? Math.round(Number(weather.windKph)) : null;
-    target.textContent = `${temp}°C · ${text}${humidity == null ? '' : ` · ${humidity}% humidity`}${wind == null ? '' : ` · ${wind} km/h wind`}`;
-    try {
-      const iconName = window.VioraHero?.debug?.weatherIcon?.(weather.code);
-      if (icon && iconName) icon.className = 'fa-solid ' + iconName;
-    } catch (_) {}
-    stage.dataset.weatherStatus = 'ready';
-    stage.dataset.weatherCode = String(weather.code ?? '');
-  }
-
-  async function refreshWeather(force = false) {
-    const requestId = ++weatherRequest;
-    const api = window.VioraHero;
-    if (!api || typeof api.refreshWeather !== 'function') {
-      paintWeather(null);
-      return;
-    }
-    try {
-      const weather = await api.refreshWeather(force);
-      if (requestId !== weatherRequest) return;
-      paintWeather(weather);
-    } catch (error) {
-      console.warn('[VIORA homepage sky] Weather refresh failed', error);
-      if (requestId === weatherRequest) paintWeather(null);
-    }
-  }
-
-  async function loadStarCatalogue() {
-    try {
-      const response = await fetch('/main/stars.bin', { cache: 'force-cache' });
-      if (!response.ok) throw new Error('Star catalogue HTTP ' + response.status);
-      const buffer = await response.arrayBuffer();
-      if (buffer.byteLength < 2) throw new Error('Empty star catalogue');
-      const view = new DataView(buffer);
-      const count = view.getUint16(0, true), stars = [];
-      if (!count || count > 10000 || buffer.byteLength < 2 + count * 6) {
-        throw new Error('Invalid or truncated star catalogue');
-      }
-      let offset = 2;
-      for (let i = 0; i < count; i++, offset += 6) {
-        stars.push({
-          ra: view.getInt16(offset, true) / 100,
-          dec: view.getInt16(offset + 2, true) / 10,
-          mag: view.getInt16(offset + 4, true) / 10
-        });
-      }
-      const globe = window.VioraHeroGlobe || {};
-      globe._starCatalog = () => stars;
-      if (!window.VioraHeroGlobe) window.VioraHeroGlobe = globe;
-      window.VioraSky?.refreshCatalog?.();
-      stage.dataset.starCatalogue = 'loaded';
-    } catch (error) {
-      stage.dataset.starCatalogue = 'fallback';
-      console.warn('[VIORA homepage sky] Star catalogue fallback active', error);
-    }
-  }
-
-  function applyLocation(location) {
-    if (!location || !Number.isFinite(Number(location.lat)) || !Number.isFinite(Number(location.lon))) return;
-    activeLocation = {
-      ...location,
-      lat: Number(location.lat),
-      lon: Number(location.lon),
-      tz: location.tz || browserTz()
-    };
-    window.VioraCityLocation = activeLocation;
-    try { window.VioraTime?.setTimezone?.(activeLocation.tz); } catch (_) {}
-    updateClock();
-    stage.dataset.locationAccuracy = location.accuracy || (location.name === 'Approximate visitor location' ? 'approximate' : 'device');
-  }
-
-  function onHeroLocationChange(event) {
-    const location = event?.detail || window.VioraHero?.getLocation?.();
-    if (!location) return;
-    applyLocation(location);
-    // The shared hero engine starts the weather request itself on location
-    // changes; this reads its cache after that request has had time to settle.
-    window.setTimeout(() => refreshWeather(false), 900);
-  }
-
-  function mount(location) {
-    if (!location) return;
-    const normalized = { ...location, tz: location.tz || browserTz() };
-    if (window.VioraHero?.setLocation) {
-      // This updates the exact same location state used by main.html,
-      // including the dashboard's weather provider and all sky renderers.
-      window.VioraHero.setLocation(normalized);
-      applyLocation(window.VioraHero.getLocation?.() || normalized);
-    } else {
-      applyLocation(normalized);
-      try { window.VioraSky?.init?.({ location: activeLocation }); } catch (e) { console.warn('[city sky] stars', e); }
-      try { window.VioraTerminator?.init?.({ location: activeLocation }); } catch (e) { console.warn('[city sky] atmosphere', e); }
-      try { window.VioraOrb?.init?.({ location: activeLocation }); } catch (e) { console.warn('[city sky] sun/moon', e); }
-      const refresh = () => {
-        const sky = window.Solar?.getSkyState?.(activeLocation.lat, activeLocation.lon,
-          window.VioraTime?.now ? window.VioraTime.now() : new Date());
-        if (!sky) return;
-        window.VioraCitySkyState = sky;
-        window.VioraSky?.setSkyState?.(sky);
-        window.VioraTerminator?.setSkyState?.(sky);
-        window.VioraOrb?.setSkyState?.(sky);
-      };
-      refresh();
-      window.setInterval(refresh, 30000);
-    }
-    updateClock();
-    refreshWeather(false);
-    loadStarCatalogue();
-  }
-
-  function browserLocation() {
-    return new Promise(resolve => {
-      if (!navigator.geolocation) return resolve(null);
-      navigator.geolocation.getCurrentPosition(
-        p => resolve({ lat: p.coords.latitude, lon: p.coords.longitude, tz: browserTz(), name: 'Visitor location', id: 'visitor-location', accuracy: 'precise' }),
-        () => resolve(null),
-        { enableHighAccuracy: false, timeout: 6500, maximumAge: 900000 }
-      );
-    });
-  }
-
-  async function ipLocation() {
-    const controller = new AbortController();
-    const timer = window.setTimeout(() => controller.abort(), 4500);
-    try {
-      const response = await fetch('https://ipapi.co/json/', { cache: 'no-store', signal: controller.signal });
-      if (!response.ok) throw new Error('IP location HTTP ' + response.status);
-      const data = await response.json();
-      if (data.latitude != null && data.longitude != null && data.latitude !== '' && data.longitude !== '' && Number.isFinite(Number(data.latitude)) && Number.isFinite(Number(data.longitude))) {
-        return {
-          lat: Number(data.latitude), lon: Number(data.longitude),
-          tz: data.timezone || browserTz(),
-          name: data.city ? `${data.city}, ${data.country_name || ''}`.replace(/, $/, '') : 'Approximate visitor location',
-          id: 'visitor-location', accuracy: 'approximate'
-        };
-      }
-    } catch (error) {
-      console.warn('[VIORA homepage sky] Approximate location unavailable', error);
-    } finally {
-      window.clearTimeout(timer);
-    }
-    return null;
-  }
-
-  async function boot() {
-    window.addEventListener('viora:hero-location-change', onHeroLocationChange);
-    const location = await browserLocation() || await ipLocation();
-    if (location) {
-      mount(location);
-    } else {
-      stage.dataset.skyFallback = 'dashboard-location';
-      // If neither browser nor IP geolocation is available, retain the same
-      // real default location the dashboard uses instead of inventing 0°, 0°.
-      const fallback = window.VioraHero?.getLocation?.() || {
-        lat: -0.04626, lon: 37.65587, tz: 'Africa/Nairobi',
-        name: 'Meru, Kenya', id: 'meru'
-      };
-      mount(fallback);
-      stage.dataset.skyFallback = 'dashboard-location';
-    }
-    updateClock();
-    window.setInterval(updateClock, 1000);
-    // Dashboard weather is cached for ten minutes; refresh the public readout
-    // on the same cadence without creating a second independent weather feed.
-    window.setInterval(() => refreshWeather(true), 10 * 60 * 1000);
-  }
-
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
-  else boot();
+'use strict';
+if(window.__vioraCitySkyAdapterBooted)return;window.__vioraCitySkyAdapterBooted=true;
+const stage=document.getElementById('vioraHeroBanner');if(!stage)return;
+const $=s=>stage.querySelector(s);let activeLocation=null,weatherRequest=0;
+const browserTz=()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC'}catch(_){return'UTC'}};
+function updateClock(){const out=$('[data-city-time]'),name=$('[data-city-name]');if(!out||!activeLocation)return;
+const now=window.VioraTime?.now?window.VioraTime.now():new Date(),tz=activeLocation.tz||browserTz();
+try{out.textContent=new Intl.DateTimeFormat(undefined,{timeZone:tz,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}).format(now)}catch(_){out.textContent=new Date().toLocaleTimeString()}
+if(name)name.textContent=activeLocation.name||activeLocation.label||'Your local city'}
+function iconFor(code){const n=Number(code);if(n===0)return'fa-sun';if([1,2].includes(n))return'fa-cloud-sun';if([3,45,48].includes(n))return'fa-cloud';if(n>=51&&n<=67)return'fa-cloud-rain';if(n>=71&&n<=86)return'fa-snowflake';if(n>=95)return'fa-cloud-bolt';return'fa-cloud-sun'}
+function paintWeather(w){const out=$('[data-city-weather]'),icon=$('[data-city-weather-icon]');if(!out)return;
+if(!w||w.tempC==null){out.textContent='Live weather unavailable';if(icon)icon.className='fa-solid fa-cloud';stage.dataset.weatherStatus='unavailable';return}
+const h=w.humidity!=null&&Number.isFinite(Number(w.humidity))?Math.round(Number(w.humidity)):null;
+const wind=w.windKph!=null&&Number.isFinite(Number(w.windKph))?Math.round(Number(w.windKph)):null;
+out.textContent=Math.round(Number(w.tempC))+'°C · '+(w.text||'Current conditions')+(h==null?'':' · '+h+'% humidity')+(wind==null?'':' · '+wind+' km/h wind');
+if(icon)icon.className='fa-solid '+iconFor(w.code);stage.dataset.weatherStatus='ready';stage.dataset.weatherCode=String(w.code??'')}
+async function refreshWeather(force=true){const id=++weatherRequest,api=window.VioraHero;if(!api?.refreshWeather){paintWeather(null);return}
+try{const w=await api.refreshWeather(force);if(id===weatherRequest)paintWeather(w)}catch(e){console.warn('[VIORA homepage] weather refresh failed',e);if(id===weatherRequest)paintWeather(null)}}
+function applyLocation(loc){if(!loc||loc.lat==null||loc.lon==null||!Number.isFinite(Number(loc.lat))||!Number.isFinite(Number(loc.lon)))return;
+activeLocation={...loc,lat:Number(loc.lat),lon:Number(loc.lon),tz:loc.tz||browserTz()};window.VioraCityLocation=activeLocation;
+try{window.VioraTime?.setTimezone?.(activeLocation.tz)}catch(_){}stage.dataset.locationAccuracy=loc.accuracy||'approximate';stage.dataset.locationName=activeLocation.name||activeLocation.id||'local';updateClock()}
+function onCityChange(payload){const loc=payload?.location||window.VioraHero?.getLocation?.();if(!loc)return;applyLocation(loc);
+requestAnimationFrame(()=>{try{window.renderVioraHero?.(true)}catch(e){console.warn('[VIORA homepage] render',e)}refreshWeather(true)})}
+async function ipLocation(){const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),5000);try{
+const r=await fetch('https://ipapi.co/json/',{cache:'no-store',signal:ctrl.signal});if(!r.ok)throw Error('IP location HTTP '+r.status);const d=await r.json();
+if(d.latitude==null||d.longitude==null||!Number.isFinite(Number(d.latitude))||!Number.isFinite(Number(d.longitude)))throw Error('No IP coordinates');
+return{id:'visitor-ip-'+String(d.city||'local').toLowerCase().replace(/[^a-z0-9]+/g,'-'),name:[d.city,d.region].filter(Boolean).join(', ')||'Your local city',lat:Number(d.latitude),lon:Number(d.longitude),tz:d.timezone||browserTz(),accuracy:'internet'};
+}finally{clearTimeout(timer)}}
+function deviceLocation(){return new Promise(resolve=>{if(!navigator.geolocation)return resolve(null);navigator.geolocation.getCurrentPosition(p=>resolve({id:'visitor-device',name:'Your current city',lat:p.coords.latitude,lon:p.coords.longitude,tz:browserTz(),accuracy:'device'}),()=>resolve(null),{enableHighAccuracy:false,timeout:6000,maximumAge:900000})})}
+async function boot(){
+stage.querySelectorAll('#vioraHeroChangeLocationBtn,.viora-hero-location-trigger,[data-open-location-picker]').forEach(el=>el.remove());
+const api=window.VioraHero;if(api?.on)api.on('cityChange',onCityChange);
+let loc=null;try{loc=await ipLocation()}catch(e){console.warn('[VIORA homepage] IP city lookup failed',e)}
+if(!loc)loc=await deviceLocation();
+if(!loc){const cur=api?.getLocation?.();loc=cur&&cur.lat!=null&&cur.lon!=null?{...cur,accuracy:'timezone-fallback'}:{id:'timezone-fallback',name:'Your local time',lat:-0.04626,lon:37.65587,tz:browserTz(),accuracy:'timezone-fallback'}}
+applyLocation(loc);if(api?.setLocation)api.setLocation(loc);
+await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+stage.dataset.homeSkyBoot='rendering';
+try{if(typeof window.renderVioraHero==='function'){await window.renderVioraHero(true);stage.dataset.homeSkyBoot='rendered'}else stage.dataset.homeSkyBoot='fallback'}
+catch(e){stage.dataset.homeSkyBoot='error';console.error('[VIORA homepage] full hero render failed',e)}
+try{window.VioraSky?.init?.({location:loc});window.VioraSky?.renderNow?.();window.VioraTerminator?.init?.({location:loc});window.VioraTerminator?.renderNow?.();window.VioraOrb?.init?.({location:loc,sky:api?.getSky?.()});window.VioraOrb?.setSkyState?.(api?.getSky?.())}catch(e){console.warn('[VIORA homepage] sky layer init',e)}
+updateClock();setInterval(updateClock,1000);await refreshWeather(true);
+window.addEventListener('resize',()=>{try{window.renderVioraHero?.(true)}catch(_){}window.VioraSky?.renderNow?.();window.VioraTerminator?.renderNow?.()},{passive:true})
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
