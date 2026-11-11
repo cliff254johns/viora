@@ -195,3 +195,22 @@ body:has(#weatherLocationModal.active){overflow:hidden!important}
     pointer-events:none!important;
   }
 }
+
+
+/* Landing-page assistant placement: keep the hero actions unobstructed on desktop. */
+@media(min-width:900px){
+  body:has(.hero) #viora-assistant{
+    left:auto!important;
+    right:18px!important;
+    bottom:18px!important;
+    width:clamp(72px,6vw,92px)!important;
+    height:clamp(92px,8vw,116px)!important;
+  }
+  body:has(.hero) #viora-assistant .va-bubble{
+    left:auto!important;
+    right:105%!important;
+    bottom:48%!important;
+    max-width:min(230px,calc(100vw - 130px))!important;
+    border-radius:18px 18px 4px 18px!important;
+  }
+}
