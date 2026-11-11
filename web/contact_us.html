@@ -637,6 +637,7 @@
 
     fresh.addEventListener('submit', async function (e) {
       e.preventDefault();
+      if (fresh.dataset.submitting === '1') return;
       if (status) { status.className = 'form-status'; status.textContent = ''; }
       if (success) success.classList.remove('show');
 
@@ -653,6 +654,7 @@
         return;
       }
 
+      fresh.dataset.submitting = '1';
       const btn = fresh.querySelector('button[type="submit"]');
       const origHTML = btn ? btn.innerHTML : '';
       if (btn) {
@@ -678,10 +680,10 @@
 
       const result = await saveContactToFirebase(payload);
 
-      if (btn) { btn.disabled = false; btn.innerHTML = origHTML; }
+      if (btn) { btn.disabled = true; btn.innerHTML = origHTML; }
 
       if (status) {
-        status.className = 'form-status show ok';
+        status.className = result.saved ? 'form-status show ok' : 'form-status show warn';
         status.textContent = result.saved
           ? '✅ Saved. Opening WhatsApp so you can follow up instantly…'
           : '⚠️ Could not save to server. Opening WhatsApp instead…';
