@@ -872,19 +872,13 @@
 
 <!-- ═══ VIORA CHATBOT ═══ -->
 
-<!-- MINI (collapsed) avatar -->
+<!-- Compact assistant launcher — no character/avatar -->
 <div id="viora-assistant" aria-label="VIORA virtual assistant">
-  <div class="float-shadow"></div>
-  <button class="va-avatar" id="avatarButton" aria-label="Open VIORA assistant">
-    <div class="va-pose-stack" aria-label="VIORA robot in friendly assistant poses">
-  <img class="va-pose va-pose-success" src="/assets/assistant/viora-robot-success.svg" alt="VIORA robot holding a success check">
-  <img class="va-pose va-pose-thumbs" src="/assets/assistant/viora-robot-thumbs.svg" alt="VIORA robot giving a thumbs-up">
-  <img class="va-pose va-pose-analytics" src="/assets/assistant/viora-robot-analytics.svg" alt="VIORA robot presenting an analytics chart">
-</div>
-    <img class="avatar-logo-img" id="miniLogo" src="https://viora.co.ke/viora.png" alt="" onerror="this.style.display='none'"><span class="va-pose-label" aria-hidden="true"></span>
+  <button class="va-avatar va-chat-launcher" id="avatarButton" type="button" aria-label="Open VIORA assistant" title="Open VIORA assistant">
+    <i class="fa-solid fa-comments" aria-hidden="true"></i>
   </button>
   <div class="va-bubble" id="bubble" role="status" aria-live="polite">
-    <strong>VIORA</strong><span id="bubbleText">Hi! Tap me to chat.</span>
+    <strong>VIORA</strong><span id="bubbleText">Open VIORA Assistant.</span>
   </div>
 </div>
 
@@ -894,14 +888,7 @@
     <div class="va-hero-inner">
       <div class="va-status" id="statusPill" aria-live="polite"></div>
       <button class="va-stop" id="stopBtn" aria-label="Stop VIORA speaking" title="Stop (Esc)">⏹</button>
-      <div class="va-big idle" id="bigAvatar"><span class="va-pose-label" aria-hidden="true"></span>
-        <div class="va-pose-stack" aria-label="VIORA robot in friendly assistant poses">
-  <img class="va-pose va-pose-success" src="/assets/assistant/viora-robot-success.svg" alt="VIORA robot holding a success check">
-  <img class="va-pose va-pose-thumbs" src="/assets/assistant/viora-robot-thumbs.svg" alt="VIORA robot giving a thumbs-up">
-  <img class="va-pose va-pose-analytics" src="/assets/assistant/viora-robot-analytics.svg" alt="VIORA robot presenting an analytics chart">
-</div>
-        <img class="avatar-logo-img" id="bigLogo" src="https://viora.co.ke/viora.png" alt="" onerror="this.style.display='none'">
-      </div>
+      <div class="va-assistant-status" aria-hidden="true"><i class="fa-solid fa-sparkles"></i></div>
     </div>
   </div>
 
