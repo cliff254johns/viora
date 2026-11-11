@@ -722,17 +722,36 @@
         if (!res.ok) throw new Error('stars http ' + res.status);
         const buf = await res.arrayBuffer();
         const view = new DataView(buf);
-        const count = view.getUint16(0, true);
-        if (!count || count > 10000) throw new Error('bad star count ' + count);
+        // stars.bin is the packed 4×Float32 J2000 catalogue:
+        // RA radians, declination radians, visual magnitude, B−V colour.
+        // It contains no count header; each record is exactly 16 bytes.
+        const RECORD_BYTES = 16;
+        if (!view.byteLength || view.byteLength % RECORD_BYTES !== 0) {
+          throw new Error('invalid Float32 star catalogue length ' + view.byteLength);
+        }
+        const count = view.byteLength / RECORD_BYTES;
+        if (count < 2000 || count > 20000) throw new Error('invalid real star count ' + count);
 
         const stars = new Array(count);
-        let off = 2;
-        for (let i = 0; i < count; i++) {
-          if (off + 6 > view.byteLength) throw new Error('truncated stars');
-          const ra  = view.getInt16(off, true) / 100; off += 2;
-          const dec = view.getInt16(off, true) / 10;  off += 2;
-          const mag = view.getInt16(off, true) / 10;  off += 2;
-          stars[i] = { ra, dec, mag };
+        let off = 0;
+        for (let i = 0; i < count; i++, off += RECORD_BYTES) {
+          const raRad = view.getFloat32(off, true);
+          const decRad = view.getFloat32(off + 4, true);
+          const mag = view.getFloat32(off + 8, true);
+          const bv = view.getFloat32(off + 12, true);
+          if (!Number.isFinite(raRad) || !Number.isFinite(decRad) ||
+              !Number.isFinite(mag) || !Number.isFinite(bv) ||
+              raRad < 0 || raRad >= Math.PI * 2 ||
+              decRad < -Math.PI / 2 || decRad > Math.PI / 2 ||
+              mag < -2 || mag > 12 || bv < -1 || bv > 4) {
+            throw new Error('invalid astronomical record at index ' + i);
+          }
+          stars[i] = {
+            ra: raRad * 12 / Math.PI,
+            dec: decRad * 180 / Math.PI,
+            mag,
+            bv
+          };
         }
         state.stars = stars;
         return stars;
