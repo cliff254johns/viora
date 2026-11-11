@@ -15,7 +15,31 @@ function busy(id,on,label){const b=$(id);if(!b)return;b.disabled=on;if(label){b.
 function openModal(id){$(id)?.classList.remove('hidden');document.body.style.overflow='hidden';const first=$(id)?.querySelector('input,select,textarea,button');setTimeout(()=>first?.focus(),60);}
 function closeModal(id){$(id)?.classList.add('hidden');if(!document.querySelector('.modal-backdrop:not(.hidden)'))document.body.style.overflow='';}
 function showConfirm(title,message,confirmLabel='Confirm send'){return new Promise(resolve=>{const wrap=document.createElement('div');wrap.className='modal-backdrop';wrap.innerHTML='<section class="modal" role="dialog" aria-modal="true"><header class="modal-head"><div><div class="eyebrow">FINAL REVIEW</div><h2>'+esc(title)+'</h2><p>'+esc(message)+'</p></div><button class="icon-btn" data-no aria-label="Close"><i class="fa-solid fa-xmark"></i></button></header><div class="modal-actions"><button class="btn" data-no>Cancel</button><button class="btn primary" data-yes>'+esc(confirmLabel)+'</button></div></section>';document.body.append(wrap);const done=v=>{wrap.remove();resolve(v)};wrap.querySelectorAll('[data-no]').forEach(b=>b.onclick=()=>done(false));wrap.querySelector('[data-yes]').onclick=()=>done(true);wrap.addEventListener('click',e=>{if(e.target===wrap)done(false)});});}
-async function resolveRole(uid){const rs=await Promise.all([get(ref(db,'viora_data/users/'+uid+'/role')),get(ref(db,'viora_data/orgs/viora/users/'+uid+'/role'))]);return rs[1].val()||rs[0].val()||'';}
+async function readRoleRecord(path){
+  try{
+    const snap=await get(ref(db,path));
+    if(!snap.exists())return '';
+    return String(snap.val()?.role||'').trim().toLowerCase();
+  }catch(err){
+    console.warn('[outreach] role lookup unavailable at '+path+'; trying fallback.',err);
+    return '';
+  }
+}
+async function resolveRole(uid){
+  // Match the main Campaigns role lookup: read the complete profile record,
+  // prefer the VIORA organisation record, then fall back to the global user.
+  const orgRole=await readRoleRecord('viora_data/orgs/viora/users/'+uid);
+  if(orgRole)return orgRole;
+  const globalRole=await readRoleRecord('viora_data/users/'+uid);
+  if(globalRole)return globalRole;
+  // A server-issued Firebase custom claim is a final trusted fallback.
+  try{
+    const token=await auth.currentUser?.getIdTokenResult();
+    const claimRole=token?.claims?.role||token?.claims?.user_role||token?.claims?.accessRole;
+    if(claimRole)return String(claimRole).trim().toLowerCase();
+  }catch(err){console.warn('[outreach] custom-claim role lookup failed.',err);}
+  return '';
+}
 async function api(path,body){const token=await currentUser.getIdToken();const res=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body||{})});const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||data.message||('Request failed ('+res.status+')'));return data;}
 function showView(name){const valid=['overview','leads','investors','businesses','industries','followups','email','ai','analytics','audit'];if(!valid.includes(name))name='overview';document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+name));document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.view===name));const active=document.querySelector('.nav-item[data-view="'+name+'"]');$('crumbTitle').textContent=active?.querySelector('span')?.textContent||'Overview';if(name==='analytics')renderAnalytics();if(name==='ai')renderAiSelect();}
 function bindNavigation(){document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));document.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.nav)));document.querySelectorAll('[data-open-lead]').forEach(b=>b.addEventListener('click',()=>{resetLeadForm();const cat=b.dataset.category;if(cat)$('category').value=cat;openModal('leadModal');}));document.querySelectorAll('[data-open-email]').forEach(b=>b.addEventListener('click',()=>openEmailModal()));document.querySelectorAll('[data-close-modal]').forEach(b=>b.addEventListener('click',()=>{closeModal('leadModal');closeModal('emailModal')}));document.querySelectorAll('.modal-backdrop').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModal(m.id)}));document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('leadModal');closeModal('emailModal')}});}
@@ -61,9 +85,40 @@ function downloadCsv(name,rows){const csv=rows.map(r=>r.map(csvEscape).join(',')
 function exportLeads(){downloadCsv('viora-outreach-leads.csv',[['Organisation','Contact','Email','Phone','Category','Country','Status','Follow-up','Website','Notes'],...leadList().map(l=>[l.company,l.contact,l.email,l.phone,l.category,l.country,l.status,l.followUp,l.website,l.notes])]);}
 function exportEmails(){downloadCsv('viora-outreach-communication-ledger.csv',[['Timestamp','Direction','Recipient','Subject','Status','Provider ID','Recorded By','Message'],...emailList().map(e=>[e.timestamp,e.direction,e.to,e.subject,e.status,e.providerId,e.sentByEmail,e.text])]);}
 function bindData(){stopLeads?.();stopEmails?.();stopLeads=onValue(ref(db,ORG+'/leads'),s=>{leads=s.val()||{};renderLeadTables();renderFollowups();renderOverview();renderAiSelect();renderAnalytics();});stopEmails=onValue(ref(db,ROOT+'/emails'),s=>{emails=s.val()||{};renderEmails();renderAudit();renderOverview();renderAnalytics();});}
-async function startSession(user){currentUser=user;currentRole=String(await resolveRole(user.uid)).toLowerCase();if(!['admin','exec'].includes(currentRole)){await signOut(auth);$('loginView').classList.remove('hidden');$('appView').classList.add('hidden');status('loginStatus','Access denied. This workspace is restricted to VIORA admin and exec roles.',true);return;}$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');bindData();}
+async function startSession(user){
+  currentUser=user;
+  status('loginStatus','Restoring your VIORA session and checking access…');
+  currentRole=await resolveRole(user.uid);
+  if(!['admin','exec'].includes(currentRole)){
+    // Do not sign out of the shared VIORA Firebase session on an Outreach denial.
+    $('loginView').classList.remove('hidden');
+    $('appView').classList.add('hidden');
+    status('loginStatus','This signed-in account does not have an admin or exec role for Outreach. Your main VIORA session remains active.',true);
+    return;
+  }
+  $('loginView').classList.add('hidden');
+  $('appView').classList.remove('hidden');
+  status('loginStatus','');
+  bindData();
+}
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();try{busy('loginBtn',true,'Signing in…');status('loginStatus','');await signInWithEmailAndPassword(auth,$('loginEmail').value.trim(),$('loginPassword').value);}catch(err){status('loginStatus',err.message,true);}finally{busy('loginBtn',false);}});
-onAuthStateChanged(auth,user=>{if(user)startSession(user).catch(e=>status('loginStatus',e.message,true));else{stopLeads?.();stopEmails?.();currentUser=null;$('loginView').classList.remove('hidden');$('appView').classList.add('hidden');}});
+onAuthStateChanged(auth,user=>{
+  if(user){
+    $('loginView').classList.remove('hidden');
+    $('appView').classList.add('hidden');
+    startSession(user).catch(e=>{
+      console.error('[outreach] automatic session restore failed:',e);
+      $('loginView').classList.remove('hidden');
+      $('appView').classList.add('hidden');
+      status('loginStatus','Could not restore your VIORA session: '+e.message,true);
+    });
+  }else{
+    stopLeads?.();stopEmails?.();currentUser=null;currentRole='';
+    $('loginView').classList.remove('hidden');
+    $('appView').classList.add('hidden');
+    status('loginStatus','');
+  }
+});
 bindNavigation();
 $('leadForm').addEventListener('submit',saveLead);$('emailForm').addEventListener('submit',sendEmail);
 $('mailLead').addEventListener('change',()=>{const l=leads[$('mailLead').value];if(l)$('mailTo').value=l.email||'';});
