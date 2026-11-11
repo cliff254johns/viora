@@ -40,3 +40,71 @@
 @media(max-width:560px){#hero.hero{padding-top:88px}#hero .hero-grid{gap:10px}#hero .hero h1{font-size:clamp(32px,9vw,42px)}#hero .hero-visual{width:min(calc(100vw - 46px),300px);max-width:300px}#hero .hero-globe-hint{bottom:-3px;font-size:9px}#viora-city.hero-city-world{margin-top:8px;padding-bottom:20px}#viora-city .city-head{padding:0 16px;margin-bottom:10px}#viora-city .city-head h2{font-size:25px}#viora-city .city-head p{font-size:12px}#viora-city .city-stage{height:clamp(285px,72vw,390px);background-position:center 50%}#viora-city .city-hud{left:8px;top:8px;max-width:100%;right:8px;gap:5px}#viora-city .city-pill{font-size:9px;padding:6px 8px}#viora-city .city-buildings{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:0 10px;margin-top:-14px}#viora-city .city-link{padding:9px 8px;gap:7px;border-radius:12px}#viora-city .city-link .city-icon{width:31px;height:31px;flex-basis:31px;font-size:14px}#viora-city .city-link strong{font-size:10px}#viora-city .city-link small{font-size:8px}}
 @media(max-width:360px){#hero .hero-visual{width:min(calc(100vw - 58px),270px)}#viora-city .city-stage{height:255px}#viora-city .city-buildings{grid-template-columns:1fr 1fr}}
 @media(prefers-reduced-motion:reduce){#viora-city .city-link{transition:none}}
+
+
+/* VIORA animated city scene — immersive depth, no static skyline photograph */
+#viora-city .city-stage{
+  background:
+    radial-gradient(ellipse at 50% 5%,rgba(62,111,150,.32),transparent 44%),
+    linear-gradient(180deg,#10283e 0%,#172d40 44%,#0a1421 100%) !important;
+  filter:none !important;
+}
+#viora-city #viora-city-canvas{
+  position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0;
+}
+#viora-city .city-atmosphere{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(4,12,22,.04) 0%,rgba(4,12,22,0) 42%,rgba(3,9,17,.48) 100%),
+    linear-gradient(90deg,rgba(4,10,20,.18),transparent 20%,transparent 80%,rgba(4,10,20,.18));
+}
+#viora-city .city-stage:before{z-index:2}
+#viora-city .city-stage:after{z-index:2}
+#viora-city .city-hud{z-index:4}
+#viora-city .city-industry-district{
+  max-width:1220px;margin:24px auto 0;padding:0 20px;position:relative;z-index:3;
+}
+#viora-city .city-industry-heading{
+  display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:12px;
+}
+#viora-city .city-industry-heading span{
+  color:#8bd9ff;font-size:10px;font-weight:800;letter-spacing:.19em;
+}
+#viora-city .city-industry-heading strong{
+  color:#eaf4fc;font-size:13px;font-weight:650;
+}
+#viora-city .city-industry-grid{
+  display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;
+}
+#viora-city .city-industry-grid a{
+  min-width:0;display:flex;align-items:center;gap:9px;padding:11px 10px;
+  border:1px solid rgba(172,208,231,.15);border-radius:12px;
+  background:linear-gradient(145deg,rgba(19,42,62,.82),rgba(7,18,31,.88));
+  color:#dceaf5;text-decoration:none;font-size:11px;font-weight:650;
+  transition:transform .2s,border-color .2s,background .2s;
+}
+#viora-city .city-industry-grid a:hover{
+  transform:translateY(-3px);border-color:rgba(119,207,245,.65);
+  background:rgba(21,54,78,.96);
+}
+#viora-city .city-industry-grid i{width:18px;text-align:center;color:#8bd9ff;font-size:13px;flex:0 0 18px}
+#viora-city[data-phase="night"] .city-stage{filter:none !important}
+#viora-city[data-phase="sunset"] .city-stage{filter:none !important}
+@media(max-width:850px){
+  #viora-city .city-industry-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media(max-width:560px){
+  #viora-city .city-stage{height:clamp(300px,82vw,420px);background-position:center}
+  #viora-city .city-industry-district{padding:0 10px;margin-top:18px}
+  #viora-city .city-industry-heading{display:block}
+  #viora-city .city-industry-heading strong{display:block;margin-top:5px;font-size:12px}
+  #viora-city .city-industry-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  #viora-city .city-industry-grid a{padding:9px 7px;font-size:9px;gap:5px;border-radius:9px}
+  #viora-city .city-industry-grid i{font-size:11px;width:14px;flex-basis:14px}
+}
+@media(max-width:360px){
+  #viora-city .city-industry-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(prefers-reduced-motion:reduce){
+  #viora-city .city-industry-grid a{transition:none}
+}
