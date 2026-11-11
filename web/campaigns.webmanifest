@@ -15,4 +15,12 @@
     "productivity",
     "finance"
   ],
-  "icons": [{"src":"/viora-app-icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
+  "icons": [
+    {
+      "src": "/viora.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
