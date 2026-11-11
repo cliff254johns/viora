@@ -168,8 +168,19 @@ button,a,[role="button"],input,select{touch-action:manipulation}
 }
 #vioraHeroBanner>#vioraHeroCanvas{z-index:3!important;opacity:1!important}
 #vioraHeroBanner>#vioraHeroTerminatorCanvas{z-index:1!important}
+/* Keep the full dashboard hero content visible: the previous fixed 360px height
+   clipped the 390px mobile content and hid the lower summary tiles. */
 @media(max-width:899px){
-  #vioraHeroBanner{min-height:360px!important;height:360px!important}
+  #vioraHeroBanner{min-height:390px!important;height:auto!important}
+  #vioraHeroBanner .viora-hero-cover-content{
+    min-height:390px!important;
+    height:auto!important;
+  }
+  #vioraHeroBanner .viora-hero-strip{
+    flex:0 0 auto!important;
+    margin-top:auto!important;
+    padding-bottom:2px!important;
+  }
   #vioraHeroBanner>#vioraHeroOrb{z-index:8!important}
 }
 
