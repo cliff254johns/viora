@@ -508,3 +508,37 @@ body.va-large-text .msg{font-size:14.5px}
     animation:none!important;
   }
 }
+
+
+/* Avatar-level motion makes the character feel alive even at a glance.
+   All loops remain disabled for users who request reduced motion. */
+#viora-assistant .va-avatar svg,.va-big>svg{
+  transform-box:fill-box;
+  transform-origin:center bottom;
+  will-change:transform,filter;
+}
+#viora-assistant .va-avatar svg,.va-big.idle>svg{
+  animation:va-avatar-breathe 4.2s cubic-bezier(.45,.05,.55,.95) infinite;
+}
+@keyframes va-avatar-breathe{
+  0%,100%{transform:translateY(0) scale(1);filter:drop-shadow(0 0 0 rgba(8,207,255,0))}
+  50%{transform:translateY(-7px) scale(1.012);filter:drop-shadow(0 5px 8px rgba(8,207,255,.2))}
+}
+.va-big.speaking>svg{
+  animation:va-avatar-speaking .58s ease-in-out infinite alternate;
+}
+@keyframes va-avatar-speaking{
+  from{transform:translateY(0) scale(1)}
+  to{transform:translateY(-3px) scale(1.008)}
+}
+.va-big.thinking>svg{
+  animation:va-avatar-thinking 2.2s ease-in-out infinite;
+}
+@keyframes va-avatar-thinking{
+  0%,100%{transform:translateY(0) rotate(0)}
+  35%{transform:translateY(-2px) rotate(-.7deg)}
+  70%{transform:translateY(-1px) rotate(.7deg)}
+}
+@media(prefers-reduced-motion:reduce){
+  #viora-assistant .va-avatar svg,.va-big>svg{animation:none!important;will-change:auto}
+}
