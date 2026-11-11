@@ -237,14 +237,41 @@ const AvatarRenderer = (function(){
     if (emotion==='happy'||emotion==='excited'){ set(eyeL,9,11); set(eyeR,9,11); }
     else if (emotion==='concerned'){ set(eyeL,8,13); set(eyeR,8,13); }
     else { set(eyeL,9,12); set(eyeR,9,12); }
+    if(bigAvatar){
+      ['happy','excited','concerned','neutral'].forEach(name=>bigAvatar.classList.remove('emotion-'+name));
+      bigAvatar.classList.add('emotion-'+(emotion||'neutral'));
+    }
   }
   function setSpeaking(on){
     if (!bigAvatar) return;
     bigAvatar.classList.toggle('speaking',!!on);
     bigAvatar.classList.toggle('idle',!on);
+    if(on)bigAvatar.classList.remove('thinking');
   }
   function setThinking(on){ if (!bigAvatar) return; bigAvatar.classList.toggle('thinking',!!on); }
   function setExplaining(on){ if (!bigAvatar) return; bigAvatar.classList.toggle('explaining',!!on); }
+  function trackGaze(event){
+    if(!bigAvatar||!panel||!panel.classList.contains('open')||prefersReducedMotion())return;
+    const rect=bigAvatar.getBoundingClientRect();
+    if(!rect.width||!rect.height)return;
+    const x=Math.max(-2.5,Math.min(2.5,((event.clientX-(rect.left+rect.width/2))/rect.width)*7));
+    const y=Math.max(-1.5,Math.min(1.5,((event.clientY-(rect.top+rect.height/2))/rect.height)*4));
+    bigAvatar.querySelectorAll('.eye-pupil').forEach(pupil=>{
+      pupil.style.setProperty('--gaze-x',x.toFixed(2)+'px');
+      pupil.style.setProperty('--gaze-y',y.toFixed(2)+'px');
+    });
+  }
+  function resetGaze(){
+    if(!bigAvatar)return;
+    bigAvatar.querySelectorAll('.eye-pupil').forEach(pupil=>{
+      pupil.style.setProperty('--gaze-x','0px');
+      pupil.style.setProperty('--gaze-y','0px');
+    });
+  }
+  if(bigAvatar){
+    bigAvatar.addEventListener('pointermove',trackGaze,{passive:true});
+    bigAvatar.addEventListener('pointerleave',resetGaze,{passive:true});
+  }
   function bounce(){
     if (!bigAvatar || prefersReducedMotion()) return;
     bigAvatar.classList.remove('bouncing');
