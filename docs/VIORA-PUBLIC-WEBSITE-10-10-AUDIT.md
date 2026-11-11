@@ -86,7 +86,7 @@ The consent banner already hides its floating settings shortcut after accept, re
 - All 21 public routes load `global-brand.js`. That shared bootstrap injects the multilingual selector, site assistant loader, mobile styling, and shared PWA registration. The assistant loader fetches the noindex `inde.html` template and mounts only the chatbot fragment; the template must remain available even though it is excluded from indexing.
 - All 21 public routes now load the cookie-consent controller. The analytics controller checks explicit consent and a configured GA4 measurement ID; the repository's analytics IDs are currently blank, so third-party analytics remain disabled.
 - Static source review found two working submission paths: the home-page form writes a lead to Firebase and attempts a VIORA notification; the Contact page writes the lead and opens WhatsApp as a follow-up/fallback. No end-to-end submission was made during this audit.
-- The current `/viora.png` manifest icon is 1290×1219 pixels, not square. It is not suitable to declare as a proper 192×192 or 512×512 app icon. VIORA-branded square assets are still required.
+- The current `/viora.png` manifest icon is 1290×1219 pixels, not square. Both root manifests now declare the real dimensions rather than falsely claiming 192×192/512×512; the old maskable declaration was removed. The legacy manifest start URL and shortcuts were also corrected from nonexistent `/dash.html` routes to existing portal routes. VIORA-branded square 192×192 and 512×512 assets are still required for a fully polished install experience.
 
 ### P2 — Accessibility, performance and responsive validation
 
