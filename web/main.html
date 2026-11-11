@@ -823,11 +823,11 @@
                    style="position:relative;inset:auto;right:auto;bottom:auto;width:120px;height:120px;order:2;">
                 <canvas id="vioraHeroGlobeCanvas"></canvas>
               </div>
-              <!-- Change-location button -->
-              <button type="button" class="btn btn-outline btn-sm" id="vioraHeroChangeLocationBtn"
-                      style="order:1;"
+              <!-- Compact location control: icon-only to preserve dashboard space -->
+              <button type="button" class="btn btn-outline btn-sm viora-hero-location-trigger" id="vioraHeroChangeLocationBtn"
+                      style="order:1;" title="Change location" aria-label="Change location"
                       onclick="window.__vioraOpenHeroLocationPicker && window.__vioraOpenHeroLocationPicker(event)">
-                <i class="fa-solid fa-location-dot"></i> Change location
+                <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
               </button>
             </div>
           </div>
