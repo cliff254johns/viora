@@ -129,6 +129,10 @@
     <p>Explore the places, platforms and services that make up VIORA. Every destination connects to the wider ecosystem and its shared data core.</p>
   </div>
   <div class="city-stage viora-hero viora-hero-cover" id="vioraHeroBanner" aria-label="VIORA real-time sky with stars, sun and moon">
+    <!-- Dashboard-equivalent atmospheric/weather and particle layers. -->
+    <canvas id="vioraHeroWeatherCanvas" aria-hidden="true"></canvas>
+    <canvas id="vioraHeroCanvas" aria-hidden="true"></canvas>
+    <div class="viora-hero-scrim" aria-hidden="true"></div>
     <div id="vioraHeroOrb" aria-hidden="true"></div>
     <div class="city-hud" aria-live="polite">
       <span class="city-pill"><i class="fa-regular fa-clock"></i><span data-city-time>Local time</span></span>
