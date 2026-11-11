@@ -525,7 +525,7 @@
   position:absolute!important;inset:0!important;z-index:4!important;
   pointer-events:none!important;
 }
-#viora-city #vioraHeroOrb{z-index:5!important;pointer-events:none!important}
+#viora-city #vioraHeroOrb{z-index:9!important;pointer-events:none!important}
 #viora-city #vioraHeroBanner .city-hud{
   position:absolute!important;top:12px!important;left:12px!important;right:12px!important;bottom:auto!important;
   z-index:12!important;display:grid!important;
