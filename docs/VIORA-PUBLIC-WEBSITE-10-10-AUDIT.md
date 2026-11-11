@@ -79,6 +79,15 @@ The Market page previously contained an unused notification audio element with t
 
 The consent banner already hides its floating settings shortcut after accept, reject, or saved preferences. The preferences dialog previously closed on Escape but did not trap keyboard focus or restore focus to the control that opened it. The follow-up now traps Tab/Shift+Tab inside the dialog and restores focus on cancel, overlay close, or Escape. Saving preferences intentionally does not restore focus to a control inside the banner after that banner is hidden.
 
+### P1 — Legal-page consistency and public journey integration
+
+- The five legal/accessibility pages used `.html` canonicals even though Cloudflare redirects those URLs to extensionless routes. Their canonicals now point to the final route, and all five pages load the shared cookie-consent controller.
+- The sitemap now includes Privacy, Terms, Cookies, DPA, and Accessibility. The 21 public sitemap routes inspected have a title, meta description, canonical URL, and one H1.
+- All 21 public routes load `global-brand.js`. That shared bootstrap injects the multilingual selector, site assistant loader, mobile styling, and shared PWA registration. The assistant loader fetches the noindex `inde.html` template and mounts only the chatbot fragment; the template must remain available even though it is excluded from indexing.
+- All 21 public routes now load the cookie-consent controller. The analytics controller checks explicit consent and a configured GA4 measurement ID; the repository's analytics IDs are currently blank, so third-party analytics remain disabled.
+- Static source review found two working submission paths: the home-page form writes a lead to Firebase and attempts a VIORA notification; the Contact page writes the lead and opens WhatsApp as a follow-up/fallback. No end-to-end submission was made during this audit.
+- The current `/viora.png` manifest icon is 1290×1219 pixels, not square. It is not suitable to declare as a proper 192×192 or 512×512 app icon. VIORA-branded square assets are still required.
+
 ### P2 — Accessibility, performance and responsive validation
 
 Source presence alone cannot certify:
