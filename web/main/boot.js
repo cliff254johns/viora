@@ -101,7 +101,18 @@ export function boot(deps) {
     navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
       .then(async reg => {
         console.info('[viora] SW registered:', reg.scope);
-        try { await reg.update(); } catch (e) { console.warn('[viora] SW update check failed:', e); }
+        const checkForAppUpdate = async () => {
+          if (!navigator.onLine) return;
+          try { await reg.update(); }
+          catch (e) { console.warn('[viora] SW update check failed:', e); }
+        };
+        await checkForAppUpdate();
+        // Re-check when users return to the app or bring it back into focus.
+        window.addEventListener('focus', checkForAppUpdate, { passive: true });
+        window.addEventListener('pageshow', checkForAppUpdate, { passive: true });
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') checkForAppUpdate();
+        }, { passive: true });
       })
       .catch(err => console.warn('[viora] SW failed:', err));
   }
