@@ -26,12 +26,13 @@ function languageControl(){
  document.body.appendChild(script);
 }
 function assistant(){if(document.querySelector('script[data-viora-site-assistant]'))return;const s=document.createElement('script');s.src='/mainIndex/site-assistant-loader.js';s.defer=true;s.dataset.vioraSiteAssistant='true';document.body.appendChild(s);}
+function mobilePolish(){if(!document.querySelector('link[data-viora-mobile-app]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/viora-mobile-app.css';l.dataset.vioraMobileApp='true';document.head.appendChild(l);}if(!document.querySelector('script[src="/shared-pwa.js"]')){const p=document.createElement('script');p.src='/shared-pwa.js';p.defer=true;p.dataset.vioraPwa='true';document.body.appendChild(p);}}
 function nav(){
  const path=location.pathname.replace(/\/+$/,'')||'/';const active=path==='/market'?'market':path==='/client'?'portal':path==='/training'?'academy':path==='/contact_us'?'contact':'home';
  const n=document.querySelector('.mobile-bottom-nav[aria-label="Mobile navigation"]');
  if(n&&path!=='/market'){const items=[['home','/','Home','🏠'],['market','/market','Market','🛍️'],['portal','/client','Portal','🧩'],['academy','/training','Academy','🎓'],['contact','/contact_us','Contact','✉️']];n.innerHTML=items.map(([id,url,label,icon])=>'<a class="mnav-item '+(id===active?'active':'')+'" href="'+url+'" aria-label="'+label+'"><span aria-hidden="true">'+icon+'</span><span>'+label+'</span></a>').join('');n.setAttribute('aria-label','VIORA navigation');}
  document.querySelectorAll('.nav-links a').forEach(a=>{const href=new URL(a.getAttribute('href')||'/',location.origin).pathname.replace(/\/+$/,'')||'/';a.classList.toggle('active',href===path);});
 }
-const start=()=>{nav();languageControl();assistant();};
+const start=()=>{mobilePolish();nav();languageControl();assistant();};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
