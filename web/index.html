@@ -121,17 +121,15 @@
   </div>
 
 
-<!-- C2: photorealistic city banner, integrated with the original hero and globe -->
+<!-- C2: shared VIORA dashboard sky experience -->
 <div id="viora-city" class="hero-city-world" aria-labelledby="viora-city-title">
   <div class="city-head">
     <span class="eyebrow">ENTER THE VIORA WORLD</span>
     <h2 id="viora-city-title">One connected city. Many possibilities.</h2>
     <p>Explore the places, platforms and services that make up VIORA. Every destination connects to the wider ecosystem and its shared data core.</p>
   </div>
-  <div class="city-stage" id="vioraHeroBanner" aria-label="Tokyo cityscape with a real-time astronomical sky, sun, moon and stars">
-    <canvas id="viora-city-canvas" aria-hidden="true"></canvas>
+  <div class="city-stage" id="vioraHeroBanner" aria-label="VIORA real-time sky with stars, sun and moon">
     <div id="vioraHeroOrb" aria-hidden="true"></div>
-    <div class="city-atmosphere" aria-hidden="true"></div>
     <div class="city-hud" aria-live="polite">
       <span class="city-pill"><i class="fa-regular fa-clock"></i><span data-city-time>Local time</span></span>
       <span class="city-pill"><i class="fa-solid fa-location-dot"></i><span data-city-weather>Finding your local sky</span></span>
@@ -699,7 +697,6 @@
 <script src="/hero-terminator.js" defer></script>
 <script src="/hero-orb.js" defer></script>
 <script src="/viora-city-sky.js" defer></script>
-<script src="/viora-city.js" defer></script>
 <script type="module" src="index-home.js"></script>
 <script>
   document.getElementById('yr').textContent = new Date().getFullYear();
