@@ -320,3 +320,37 @@
 #viora-city .city-industry-grid a:nth-child(6n+4) i{background:rgba(235,83,110,.2)!important;color:#ff91a5!important}
 #viora-city .city-industry-grid a:nth-child(6n+5) i{background:rgba(159,112,255,.2)!important;color:#c5a7ff!important}
 #viora-city .city-industry-grid a:nth-child(6n) i{background:rgba(31,190,205,.2)!important;color:#69e5ef!important}
+
+
+/* Homepage sky must preserve the dashboard's full atmospheric stack. */
+#viora-city #vioraHeroBanner{position:relative;isolation:isolate;overflow:hidden;background:#071321}
+#viora-city #vioraHeroBanner > canvas,
+#viora-city #vioraHeroBanner > svg{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;margin:0!important;pointer-events:none!important}
+#viora-city #vioraHeroWeatherCanvas{z-index:0!important}
+#viora-city #vioraHeroSkyCanvas{z-index:1!important}
+#viora-city #vioraHeroTerminatorCanvas{z-index:2!important}
+#viora-city #vioraHeroArcSvg{z-index:3!important}
+#viora-city #vioraHeroCanvas{z-index:4!important}
+#viora-city #vioraHeroBanner > .viora-hero-scrim{position:absolute!important;inset:0!important;z-index:5!important;pointer-events:none!important}
+#viora-city #vioraHeroOrb{z-index:6!important;pointer-events:none!important}
+
+/* Keep every quick country/city selector visible on one compact mobile row. */
+@media(max-width:600px){
+  #viora-city #vioraHeroBanner #vioraQuickCityBar,
+  #viora-city #vioraQuickCityBar{
+    display:flex!important;flex-wrap:nowrap!important;align-items:center!important;
+    justify-content:space-between!important;gap:4px!important;width:100%!important;
+    max-width:100%!important;margin:6px 0 8px!important;padding:0 7px!important;
+    overflow-x:hidden!important;box-sizing:border-box!important;
+  }
+  #viora-city #vioraQuickCityBar .viora-quick-city-btn{
+    display:inline-flex!important;flex:1 1 0!important;min-width:0!important;
+    justify-content:center!important;gap:4px!important;padding:6px 4px!important;
+    font-size:10px!important;line-height:1!important;white-space:nowrap!important;
+    border-radius:999px!important;
+  }
+  #viora-city #vioraQuickCityBar .viora-quick-city-btn span:first-child{font-size:12px!important}
+  #viora-city #vioraQuickCityBar .viora-quick-city-btn span:last-child{
+    overflow:hidden!important;text-overflow:ellipsis!important;min-width:0!important
+  }
+}
