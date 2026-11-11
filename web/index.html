@@ -129,8 +129,7 @@
     <p>Explore the places, platforms and services that make up VIORA. Every destination connects to the wider ecosystem and its shared data core.</p>
   </div>
   <div class="city-stage viora-hero viora-hero-cover" id="vioraHeroBanner" aria-label="VIORA real-time sky with stars, sun and moon">
-    <!-- Shared dashboard controls and live sky layers. -->
-    <div id="vioraHeroQuickCityMount" class="viora-city-quick-mount"></div>
+    <!-- Dashboard sky render layers. -->
     <canvas id="vioraHeroWeatherCanvas" aria-hidden="true"></canvas>
     <canvas id="vioraHeroSkyCanvas" aria-hidden="true"></canvas>
     <canvas id="vioraHeroTerminatorCanvas" aria-hidden="true"></canvas>
@@ -139,11 +138,9 @@
     <canvas id="vioraHeroCanvas" aria-hidden="true"></canvas>
     <div class="viora-hero-scrim" aria-hidden="true"></div>
     <div class="city-hud" aria-live="polite">
-      <span class="city-pill"><i class="fa-regular fa-clock" aria-hidden="true"></i><span data-city-time>Loading local time…</span></span>
-      <span class="city-pill city-weather-pill">
-        <i class="fa-solid fa-cloud-sun" data-city-weather-icon aria-hidden="true"></i>
-        <span data-city-weather>Loading live weather…</span>
-      </span>
+      <span class="city-pill city-time-pill"><i class="fa-regular fa-clock" aria-hidden="true"></i><span class="city-time-copy"><strong data-city-name>Detecting your city</strong><span data-city-time>--:--:--</span></span></span>
+      <div id="vioraHeroQuickCityMount" class="viora-city-quick-mount" aria-label="Choose a city"></div>
+      <span class="city-pill city-weather-pill"><i class="fa-solid fa-cloud-sun" data-city-weather-icon aria-hidden="true"></i><span data-city-weather>Loading live weather…</span></span>
     </div>
 
   </div>
