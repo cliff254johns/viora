@@ -345,3 +345,24 @@ body:has(#weatherLocationModal.active){overflow:hidden!important}
     box-sizing:border-box!important;
   }
 }
+
+
+/* Final mobile dashboard composition: keep the taller hero mobile-only,
+   anchor the four compact summary tiles lower in the banner, and preserve the sky. */
+@media(max-width:899px){
+  #vioraHeroBanner.viora-hero-cover{
+    min-height:500px!important;
+    height:500px!important;
+    max-height:none!important;
+  }
+  #vioraHeroBanner>.viora-hero-content.viora-hero-cover-content{
+    min-height:500px!important;
+    height:500px!important;
+    justify-content:flex-start!important;
+  }
+  #vioraHeroBanner .viora-hero-strip{
+    margin-top:auto!important;
+    padding-top:8px!important;
+    align-self:stretch!important;
+  }
+}
