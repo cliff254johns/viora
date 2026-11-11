@@ -145,11 +145,11 @@
 
   /* ── Locations ── */
   global.VIORA_HERO_QUICK_CITIES = [
-    { id: 'meru',      name: 'Meru',      label: 'Meru, Kenya',    lat: -0.04626, lon: 37.65587,  tz: 'Africa/Nairobi', flag: '🇰🇪' },
+    { id: 'kenya',     name: 'Kenya',     label: 'Nairobi, Kenya', lat: -1.28639, lon: 36.81722,  tz: 'Africa/Nairobi', flag: '🇰🇪' },
     { id: 'newyork',   name: 'New York',  label: 'New York, USA',  lat: 40.71278, lon: -74.00594, tz: 'America/New_York', flag: '🇺🇸' },
     { id: 'singapore', name: 'Singapore', label: 'Singapore',      lat: 1.35208,  lon: 103.81984, tz: 'Asia/Singapore',  flag: '🇸🇬' },
-    { id: 'china',     name: 'China',     label: 'Beijing, China', lat: 39.90420, lon: 116.40740, tz: 'Asia/Shanghai',   flag: '🇨🇳' },
-    { id: 'england',   name: 'England',   label: 'London, England',lat: 51.50722, lon: -0.12750,  tz: 'Europe/London',   flag: '🇬🇧' }
+    { id: 'tokyo',     name: 'Tokyo',     label: 'Tokyo, Japan', lat: 35.67620, lon: 139.65030, tz: 'Asia/Tokyo', flag: '🇯🇵' },
+    { id: 'london',   name: 'London',   label: 'London, UK', lat: 51.50722, lon: -0.12750, tz: 'Europe/London', flag: '🇬🇧' }
   ];
 
   global.VIORA_HERO_LOCATIONS = [
