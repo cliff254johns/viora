@@ -32,7 +32,24 @@
     return date.getHours() + date.getMinutes() / 60 + date.getSeconds() / 3600;
   }
 
-  function phaseFor(hour) {
+  function solarAltitude(date, hour) {
+    if (latitude === null || longitude === null) return null;
+    const start = new Date(date.getFullYear(), 0, 0);
+    const day = Math.floor((date - start) / 86400000);
+    const declination = 23.44 * Math.PI / 180 * Math.sin(2 * Math.PI * (284 + day) / 365);
+    const lat = latitude * Math.PI / 180;
+    const hourAngle = (hour - 12) * 15 * Math.PI / 180;
+    return Math.asin(Math.sin(lat) * Math.sin(declination) + Math.cos(lat) * Math.cos(declination) * Math.cos(hourAngle));
+  }
+
+  function phaseFor(hour, altitude) {
+    if (altitude !== null) {
+      const degrees = altitude * 180 / Math.PI;
+      if (degrees > 8) return 'day';
+      if (degrees > -4) return hour < 12 ? 'dawn' : 'golden-hour';
+      if (degrees > -8) return 'blue-hour';
+      return 'night';
+    }
     if (hour >= 5 && hour < 6.5) return 'dawn';
     if (hour >= 6.5 && hour < 16.5) return 'day';
     if (hour >= 16.5 && hour < 18.5) return 'golden-hour';
@@ -121,12 +138,13 @@
 
   function drawSky(date) {
     const hour = localClock(date);
-    const phase = phaseFor(hour);
+    const altitude = solarAltitude(date, hour);
+    const phase = phaseFor(hour, altitude);
     root.dataset.phase = phase;
-    const sunUp = Math.max(0, Math.sin((hour - 6) / 12 * Math.PI));
-    const dawn = Math.max(0, 1 - Math.abs(hour - 5.8) / 1.7);
-    const dusk = Math.max(0, 1 - Math.abs(hour - 18.1) / 1.8);
-    const night = hour < 5 || hour >= 20;
+    const sunUp = altitude === null ? Math.max(0, Math.sin((hour - 6) / 12 * Math.PI)) : Math.max(0, Math.sin(altitude));
+    const dawn = phase === 'dawn' ? 1 : 0;
+    const dusk = phase === 'golden-hour' ? 1 : 0;
+    const night = phase === 'night' || phase === 'blue-hour';
     const topDay = [67, 151, 211], horizonDay = [193, 220, 236];
     const topNight = [5, 13, 34], horizonNight = [26, 43, 68];
     const twilight = Math.max(dawn, dusk);
@@ -161,7 +179,7 @@
 
     const sunX = width * (0.08 + (hour / 24) * 0.84);
     const sunY = height * (0.43 - sunUp * 0.34);
-    if (!night && hour >= 5.2 && hour <= 19.2) {
+    if (!night && sunUp > 0.015) {
       const halo = ctx.createRadialGradient(sunX, sunY, 2, sunX, sunY, width * 0.13);
       halo.addColorStop(0, 'rgba(255,239,194,.78)');
       halo.addColorStop(.22, 'rgba(255,208,151,.24)');
