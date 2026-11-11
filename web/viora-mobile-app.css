@@ -366,3 +366,47 @@ body:has(#weatherLocationModal.active){overflow:hidden!important}
     align-self:stretch!important;
   }
 }
+
+
+/* Mobile interaction and data-table scroll hardening.
+   Keep the page scrollable while giving long tables their own two-axis
+   touch scroll area so the final rows/actions are never clipped. */
+@media(max-width:899px){
+  .main-content{
+    min-height:0!important;
+    -webkit-overflow-scrolling:touch!important;
+    overscroll-behavior-y:contain;
+    touch-action:pan-y;
+    padding-bottom:calc(132px + env(safe-area-inset-bottom,0px))!important;
+  }
+  .table-wrapper,.table-responsive,.table-scroll,.data-table-wrap{
+    display:block;
+    width:100%;
+    max-width:100%;
+    max-height:min(72dvh,720px);
+    overflow:auto!important;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+    touch-action:pan-x pan-y;
+    scrollbar-width:thin;
+  }
+  .table-wrapper>table,.table-responsive>table,.table-scroll>table,.data-table-wrap>table{
+    width:max-content!important;
+    min-width:100%!important;
+    max-width:none!important;
+    margin-bottom:0;
+  }
+  .table-wrapper th,.table-responsive th,.table-scroll th,.data-table-wrap th{
+    position:sticky;top:0;z-index:3;
+  }
+  .modal-overlay,.modalback{touch-action:auto;overscroll-behavior:contain}
+  .modal-overlay>.modal,.modalback>.modal,.modal-overlay>.modal-card,
+  .modal-overlay>.dialog,.modal-overlay>.modal-content{
+    min-height:0!important;
+    max-height:calc(100dvh - 18px - env(safe-area-inset-top,0px))!important;
+    overflow-y:auto!important;overflow-x:hidden!important;
+    -webkit-overflow-scrolling:touch!important;
+    overscroll-behavior:contain;touch-action:pan-y;
+  }
+  button,[role="button"],a.btn{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+}
