@@ -475,13 +475,8 @@ body.va-large-text .msg{font-size:14.5px}
 .eye-pupil{
   transform-box:fill-box;
   transform-origin:center;
-  animation:va-eye-gaze 9s ease-in-out infinite;
-}
-@keyframes va-eye-gaze{
-  0%,18%,100%{transform:translate(0,0)}
-  26%,34%{transform:translate(2px,-1px)}
-  58%,66%{transform:translate(-2px,0)}
-  82%,88%{transform:translate(0,1px)}
+  transform:translate(var(--gaze-x,0px),var(--gaze-y,0px));
+  transition:transform .18s ease-out;
 }
 .eye-glint{opacity:.95;pointer-events:none}
 .va-big .antenna circle,#viora-assistant .antenna circle{
