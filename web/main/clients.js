@@ -482,16 +482,16 @@ function renderClientTile(cl) {
       '</div>' +
       '<div class="tile-actions">' +
         '<div class="tile-actions-primary">' +
-          '<button class="btn btn-success" data-act="pay" title="Record payment"><i class="fa-solid fa-money-bill-wave"></i><span class="btn-label">Pay</span></button>' +
-          '<button class="btn btn-primary" data-act="edit" title="Edit client"><i class="fa-solid fa-pen"></i><span class="btn-label">Edit</span></button>' +
-          '<button class="btn btn-gold" data-act="fees" title="Fees & installments"><i class="fa-solid fa-coins"></i><span class="btn-label">Fees</span></button>' +
-          '<button class="btn btn-outline" data-act="360" title="Open Client 360"><i class="fa-solid fa-id-card-clip"></i><span class="btn-label">360</span></button>' +
+          '<button type="button" class="btn btn-success" data-act="pay" title="Record payment"><i class="fa-solid fa-money-bill-wave"></i><span class="btn-label">Pay</span></button>' +
+          '<button type="button" class="btn btn-primary" data-act="edit" title="Edit client"><i class="fa-solid fa-pen"></i><span class="btn-label">Edit</span></button>' +
+          '<button type="button" class="btn btn-gold" data-act="fees" title="Fees & installments"><i class="fa-solid fa-coins"></i><span class="btn-label">Fees</span></button>' +
+          '<button type="button" class="btn btn-outline" data-act="360" title="Open Client 360"><i class="fa-solid fa-id-card-clip"></i><span class="btn-label">360</span></button>' +
         '</div>' +
         '<div class="tile-actions-secondary">' +
-          '<button class="btn btn-outline" data-act="docs" title="Documents"><i class="fa-solid fa-folder"></i></button>' +
-          '<button class="btn btn-outline" data-act="book" title="Book appointment"><i class="fa-solid fa-calendar-plus"></i></button>' +
-          '<button class="btn btn-outline" data-act="statement" title="Send statement"><i class="fa-solid fa-file-invoice-dollar"></i></button>' +
-          '<button class="btn btn-danger" data-act="delete" title="Delete client"><i class="fa-solid fa-trash"></i></button>' +
+          '<button type="button" class="btn btn-outline" data-act="docs" title="Documents"><i class="fa-solid fa-folder"></i></button>' +
+          '<button type="button" class="btn btn-outline" data-act="book" title="Book appointment"><i class="fa-solid fa-calendar-plus"></i></button>' +
+          '<button type="button" class="btn btn-outline" data-act="statement" title="Send statement"><i class="fa-solid fa-file-invoice-dollar"></i></button>' +
+          '<button type="button" class="btn btn-danger" data-act="delete" title="Delete client"><i class="fa-solid fa-trash"></i></button>' +
         '</div>' +
       '</div>' +
     '</div>';
@@ -499,26 +499,50 @@ function renderClientTile(cl) {
 
 (function installClientTileDelegate() {
   if (typeof document === 'undefined') return;
+  if (window.__vioraClientTileDelegateInstalled) return;
+  window.__vioraClientTileDelegateInstalled = true;
+
   document.addEventListener('click', (ev) => {
     const btn = ev.target.closest && ev.target.closest('[data-act]');
     if (!btn) return;
     const tile = btn.closest('[data-client-id]');
     if (!tile) return;
+
     const id = tile.getAttribute('data-client-id');
     const act = btn.getAttribute('data-act');
     if (!id || !act) return;
-    const V = window.Viora || {};
-    switch (act) {
-      case '360':       if (V.client360) V.client360(id); break;
-      case 'pay':       if (V.openPayChain) V.openPayChain(id); break;
-      case 'edit':      if (V.editClient) V.editClient(id); break;
-      case 'fees':      if (V.openFees) V.openFees(id); break;
-      case 'docs':      if (V.openClientDocs) V.openClientDocs(id); break;
-      case 'book':      if (V.bookAppointmentForClient) V.bookAppointmentForClient(id); break;
-      case 'statement': if (V.sendClientStatement) V.sendClientStatement(id); break;
-      case 'delete':    if (V.deleteClient) V.deleteClient(id); break;
+
+    const actions = {
+      '360': 'client360',
+      pay: 'openPayChain',
+      edit: 'editClient',
+      fees: 'openFees',
+      docs: 'openClientDocs',
+      book: 'bookAppointmentForClient',
+      statement: 'sendClientStatement',
+      delete: 'deleteClient'
+    };
+    const method = actions[act];
+    const api = window.Viora;
+    if (!method || !api || typeof api[method] !== 'function') {
+      console.error('[clients] Missing client action handler:', act, method);
+      if (api && typeof api.toast === 'function') api.toast('This client action is temporarily unavailable. Please refresh and try again.', 'error');
+      return;
     }
-  }, { passive: true });
+
+    try {
+      const result = api[method](id);
+      if (result && typeof result.catch === 'function') {
+        result.catch((error) => {
+          console.error('[clients] Client action failed:', act, error);
+          if (typeof api.toast === 'function') api.toast(error?.message || 'Client action failed. Please try again.', 'error');
+        });
+      }
+    } catch (error) {
+      console.error('[clients] Client action failed:', act, error);
+      if (typeof api.toast === 'function') api.toast(error?.message || 'Client action failed. Please try again.', 'error');
+    }
+  });
 })();
 
 export function renderClientCards(id, clients) {
