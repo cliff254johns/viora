@@ -32,8 +32,9 @@ async function loadStarCatalogue(){
 try{
 const r=await fetch('/main/stars.bin',{cache:'force-cache'});if(!r.ok)throw Error('Star catalogue HTTP '+r.status);
 const buf=await r.arrayBuffer();if(buf.byteLength<2)throw Error('Empty star catalogue');
-const view=new DataView(buf),count=view.getUint16(0,true);if(!count||count>10000||buf.byteLength<2+count*6)throw Error('Invalid star catalogue');
-const stars=[];let off=2;for(let i=0;i<count;i++,off+=6)stars.push({ra:view.getInt16(off,true)/100,dec:view.getInt16(off+2,true)/10,mag:view.getInt16(off+4,true)/10});
+const view=new DataView(buf),recordBytes=16;if(!buf.byteLength||buf.byteLength%recordBytes!==0)throw Error('Invalid Float32 star catalogue length');
+const count=buf.byteLength/recordBytes;if(count<2000||count>20000)throw Error('Invalid real star count '+count);
+const stars=[];for(let off=0,i=0;i<count;i++,off+=recordBytes){const raRad=view.getFloat32(off,true),decRad=view.getFloat32(off+4,true),mag=view.getFloat32(off+8,true),bv=view.getFloat32(off+12,true);if(!Number.isFinite(raRad)||!Number.isFinite(decRad)||!Number.isFinite(mag)||!Number.isFinite(bv)||raRad<0||raRad>=Math.PI*2||decRad< -Math.PI/2||decRad>Math.PI/2||mag< -2||mag>12||bv< -1||bv>4)throw Error('Invalid astronomical star record '+i);stars.push({ra:raRad*12/Math.PI,dec:decRad*180/Math.PI,mag,bv})}
 const globe=window.VioraHeroGlobe||{};globe._starCatalog=()=>stars;if(!window.VioraHeroGlobe)window.VioraHeroGlobe=globe;
 window.VioraSky?.refreshCatalog?.();stage.dataset.starCatalogue='loaded';
 }catch(e){stage.dataset.starCatalogue='fallback';console.warn('[VIORA homepage] star catalogue fallback',e)}
