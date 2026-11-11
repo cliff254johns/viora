@@ -72,7 +72,8 @@
   canvas.addEventListener('pointerdown',e=>{dragging=true;prevX=e.clientX;prevY=e.clientY;canvas.setPointerCapture(e.pointerId);});
   canvas.addEventListener('pointermove',e=>{if(!dragging)return;targetY+=(e.clientX-prevX)*.004;targetX=Math.max(-.5,Math.min(.5,targetX+(e.clientY-prevY)*.003));prevX=e.clientX;prevY=e.clientY;});
   ['pointerup','pointercancel'].forEach(n=>canvas.addEventListener(n,()=>dragging=false));
-  function resize(){const w=root.clientWidth,h=Math.max(390,root.clientHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+  const stage=root.querySelector('.city-stage');
+  function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
   new ResizeObserver(resize).observe(root);resize();
   let raf=0;function animate(){if(paused)return;raf=requestAnimationFrame(animate);if(!reduced&&!dragging){city.rotation.y+=(targetY-city.rotation.y)*.025;city.rotation.x+=(targetX-city.rotation.x)*.025;orb.rotation.y+=.003;ring.rotation.z+=.002;}if(isRaining){const a=rainGeo.attributes.position;for(let i=0;i<a.count;i++){let y=a.getY(i)-1.3;if(y<0)y=90;a.setY(i,y);}a.needsUpdate=true;}renderer.render(scene,camera);}
   document.addEventListener('visibilitychange',()=>{paused=document.hidden;if(!paused&&!raf)animate();if(paused&&raf){cancelAnimationFrame(raf);raf=0;}});
