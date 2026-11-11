@@ -289,7 +289,6 @@ const APP_SHELL_PATHS = new Set([
   '/',
   '/index.html',
   '/main.html',
-  '/v0.html',
   '/market',
   '/client',
   '/training',
