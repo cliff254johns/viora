@@ -546,9 +546,9 @@ function deriveTzFromLatLon(lat, lon) {
     /* v4.8 — alphas raised ~30–50% so cloud puffs read on
        a bright Preetham sky. */
     if (code == null)  s = { count: 3, alpha: 0.45, tint: '240,245,255' };
-    else if (code === 0) s = { count: 1, alpha: 0.28, tint: '255,255,255' };
-    else if (code === 1) s = { count: 2, alpha: 0.38, tint: '255,255,255' };
-    else if (code === 2) s = { count: 4, alpha: 0.55, tint: '255,255,255' };
+    else if (code === 0) s = { count: 2, alpha: 0.38, tint: '255,255,255' };
+    else if (code === 1) s = { count: 3, alpha: 0.46, tint: '255,255,255' };
+    else if (code === 2) s = { count: 4, alpha: 0.62, tint: '255,255,255' };
         /* ★ FIX: Overcast clouds need a bright, thick grey to look realistic 
        during the day, not transparent dark shapes. */
     else if (code === 3) s = { count: 8, alpha: 0.85, tint: '200,210,225' };
@@ -2708,7 +2708,8 @@ requestAnimationFrame(() => {
   function ensurePickerModal() {
     const banner = document.getElementById('vioraHeroBanner');
 
-    let overlay = banner ? banner.querySelector('.viora-hero-location-overlay') : null;
+    /* The active picker is mounted at document.body level to escape hero clipping. */
+    let overlay = document.querySelector('.viora-hero-location-overlay');
     if (overlay) return overlay;
 
     if (!banner) {
@@ -2749,7 +2750,8 @@ requestAnimationFrame(() => {
         '<div class="viora-hero-location-list" id="vioraHeroLocationList"></div>' +
       '</div>';
 
-    banner.appendChild(overlay);
+    /* Keep the picker outside the hero's overflow-hidden stacking context. */
+    document.body.appendChild(overlay);
 
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay || e.target.closest('[data-picker-close]')) {

@@ -3449,3 +3449,33 @@ h1, h2, h3, h4, h5, h6 {
   .float-chip { font-size: 0.7rem; padding: 0.5rem 0.9rem; }
 }
 
+
+
+/* VIORA Market — vivid, category-led product icon system. */
+.product-visual-fallback i,
+.carousel-image-fallback i,
+.pdm-visual>i{
+  display:inline-block;
+  font-size:clamp(2.7rem,5vw,4.2rem);
+  line-height:1;
+  background:linear-gradient(135deg,var(--viora-icon-a,#60a5fa),var(--viora-icon-b,#a78bfa));
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent!important;
+  filter:drop-shadow(0 8px 14px color-mix(in srgb,var(--viora-icon-a,#60a5fa) 28%,transparent));
+}
+.product-card:nth-child(6n+1),.carousel-card:nth-child(6n+1){--viora-icon-a:#38bdf8;--viora-icon-b:#2563eb}
+.product-card:nth-child(6n+2),.carousel-card:nth-child(6n+2){--viora-icon-a:#34d399;--viora-icon-b:#0d9488}
+.product-card:nth-child(6n+3),.carousel-card:nth-child(6n+3){--viora-icon-a:#fbbf24;--viora-icon-b:#f97316}
+.product-card:nth-child(6n+4),.carousel-card:nth-child(6n+4){--viora-icon-a:#c084fc;--viora-icon-b:#7c3aed}
+.product-card:nth-child(6n+5),.carousel-card:nth-child(6n+5){--viora-icon-a:#fb7185;--viora-icon-b:#e11d48}
+.product-card:nth-child(6n),.carousel-card:nth-child(6n){--viora-icon-a:#2dd4bf;--viora-icon-b:#0e7490}
+.product-visual-fallback{background:linear-gradient(145deg,var(--surface-2),color-mix(in srgb,var(--viora-icon-a,#60a5fa) 9%,var(--surface)))!important}
+.carousel-image-fallback{background:linear-gradient(145deg,var(--surface-2),color-mix(in srgb,var(--viora-icon-b,#7c3aed) 10%,var(--surface)))!important}
+#categoryBar .cat-btn:nth-child(6n+1) i:not([style*="color"]){color:#38bdf8}
+#categoryBar .cat-btn:nth-child(6n+2) i:not([style*="color"]){color:#34d399}
+#categoryBar .cat-btn:nth-child(6n+3) i:not([style*="color"]){color:#fbbf24}
+#categoryBar .cat-btn:nth-child(6n+4) i:not([style*="color"]){color:#c084fc}
+#categoryBar .cat-btn:nth-child(6n+5) i:not([style*="color"]){color:#fb7185}
+#categoryBar .cat-btn:nth-child(6n) i:not([style*="color"]){color:#2dd4bf}
+#categoryBar .cat-btn.active i{color:#fff!important;background:none!important}

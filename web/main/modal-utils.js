@@ -99,6 +99,8 @@ export function openModal(id) {
   }
   el.classList.add('active');
   el.style.display = '';
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-modal', 'true');
   el.removeAttribute('aria-hidden');
 
   if (!_modalStack.some((m) => m.id === id)) {
@@ -118,6 +120,7 @@ export function closeModal(id) {
   el.classList.remove('active');
   el.style.display = '';
   el.setAttribute('aria-hidden', 'true');
+  el.setAttribute('aria-modal', 'false');
 
   const inner = el.querySelector(':scope > .modal');
   if (inner) {

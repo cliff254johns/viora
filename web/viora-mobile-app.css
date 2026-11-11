@@ -1,0 +1,187 @@
+/* VIORA mobile app experience — shared, responsive, safe-area aware. */
+:root{--viora-mobile-nav-space:calc(76px + env(safe-area-inset-bottom,0px))}
+html{max-width:100%;overflow-x:clip;scroll-padding-top:76px}
+body{max-width:100%;overflow-x:clip}
+img,svg,video,canvas,iframe{max-width:100%}
+button,a,input,select,textarea{ -webkit-tap-highlight-color:transparent }
+button,a,[role="button"],input,select{touch-action:manipulation}
+@media(max-width:899px){
+  html,body{width:100%;min-width:0}
+  body{padding-bottom:var(--viora-mobile-nav-space)!important}
+  main,section,article,aside,header,footer,nav,form,fieldset{min-width:0;max-width:100%}
+  img,video,iframe,canvas{max-width:100%}
+  input,select,textarea{max-width:100%;font-size:16px}
+  button,a,[role="button"]{min-height:40px}
+  .container,.wrap,.page-shell,.page-container,.content-wrap,.main-content,.tab-content{min-width:0;max-width:100%}
+  .table-wrapper,.table-responsive,.table-scroll,.data-table-wrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+  table{max-width:100%}
+  .modal-overlay,.modal-backdrop{padding:12px!important;align-items:flex-end!important}
+  .modal-card,.modal,.dialog,.modal-content{max-width:100vw;max-height:calc(100dvh - 24px - env(safe-area-inset-top,0px));overflow:auto;-webkit-overflow-scrolling:touch}
+  .viora-global-mobile-nav,.mobile-bottom-nav,#mobileBottomNav,.mobile-dock{
+    padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))!important;
+  }
+  .whatsapp-float,.whatsapp-button{bottom:calc(88px + env(safe-area-inset-bottom,0px))!important}
+  #viora-assistant{left:7px!important;bottom:calc(82px + env(safe-area-inset-bottom,0px))!important;width:clamp(76px,22vw,104px)!important;height:clamp(98px,28vw,132px)!important}
+  .va-panel{left:8px!important;right:8px!important;bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;width:auto!important;max-width:none!important;height:min(68dvh,620px)!important;max-height:calc(100dvh - 104px - env(safe-area-inset-bottom,0px))!important}
+}
+@media(max-width:600px){
+  h1{overflow-wrap:anywhere}
+  .container,.wrap,.page-container,.content-wrap{padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+  .grid,.cards-grid,.feature-grid,.product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .hero-buttons,.hero-ctas{gap:8px;flex-wrap:wrap}
+  .hero-buttons>* ,.hero-ctas>*{max-width:100%}
+  .viora-global-mobile-nav,.mobile-bottom-nav,#mobileBottomNav{left:0;right:0;width:100%;min-height:60px}
+}
+@media(max-width:380px){
+  .grid,.cards-grid,.feature-grid,.product-grid{grid-template-columns:minmax(0,1fr)}
+  .viora-global-mobile-nav a,.viora-global-mobile-nav button{font-size:9px}
+}
+/* Main system dashboard: preserve the live banner and keep the moving orb above its scrim. */
+#vioraHeroBanner{position:relative;isolation:isolate}
+#vioraHeroBanner>.viora-hero-scrim{z-index:6!important;pointer-events:none}
+#vioraHeroBanner>#vioraHeroOrb{z-index:8!important;pointer-events:none}
+#vioraHeroBanner>.viora-hero-content{position:relative;z-index:10}
+@media(max-width:899px){
+  #vioraHeroBanner{height:auto!important;min-height:390px!important}
+  #vioraHeroBanner .viora-hero-cover-content{min-height:390px!important}
+  #vioraHeroBanner .viora-hero-strip{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  #vioraHeroBanner .viora-hero-strip-tile{min-width:0;overflow-wrap:anywhere}
+  #vioraHeroBanner>#vioraHeroOrb{width:auto;height:auto}
+}
+/* Small-phone dashboard grids and controls. */
+@media(max-width:480px){
+  #appShell,.main-content,.tab-content,.dashboard-section,.chart-box{min-width:0!important;max-width:100%!important}
+  .dashboard-section-header{gap:8px;align-items:flex-start;flex-wrap:wrap}
+  .dashboard-section-meta{max-width:100%;overflow-x:auto;white-space:nowrap}
+  .chart-grid,.dashboard-two-col{grid-template-columns:minmax(0,1fr)!important}
+  .chart-container{min-width:0;max-width:100%;overflow:hidden}
+  .chart-container canvas{max-width:100%!important}
+  .modal,.modal-card{width:100%;max-width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+}
+
+
+/* ── Global mobile data, typography and native-dialog layer ── */
+:root{
+  --viora-dialog-radius:22px;
+  --viora-dialog-shadow:0 24px 80px rgba(0,0,0,.32);
+}
+@media(max-width:899px){
+  body{font-size:14px}
+  p,li,label,small{overflow-wrap:anywhere}
+  th,td{font-size:clamp(11px,2.8vw,13px);line-height:1.4;padding:8px 9px}
+  th{font-weight:700}
+  table{font-size:12px}
+  table:not([data-mobile-layout="cards"]){display:block;width:100%;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+  table:not([data-mobile-layout="cards"]) th,
+  table:not([data-mobile-layout="cards"]) td{min-width:76px;white-space:normal;overflow-wrap:anywhere}
+  table:not([data-mobile-layout="cards"]) td:has(button),
+  table:not([data-mobile-layout="cards"]) th:last-child{white-space:nowrap}
+  .form-row,.formgrid,.form-grid,.field-grid{grid-template-columns:minmax(0,1fr)!important}
+  .form-row>* ,.formgrid>* ,.form-grid>* ,.field-grid>*{min-width:0;width:100%}
+  .modal-overlay,.modalback{
+    position:fixed!important;inset:0!important;z-index:100000!important;
+    padding:12px 12px max(12px,env(safe-area-inset-bottom,0px))!important;
+    align-items:flex-end!important;justify-content:center!important;
+    overflow:hidden!important;overscroll-behavior:contain;
+    background:rgba(5,10,20,.58)!important;
+    -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  }
+  .modal-overlay>.modal,.modalback>.modal,.modal-overlay>.modal-card,
+  .modal-overlay>.dialog,.modal-overlay>.modal-content{
+    position:relative!important;inset:auto!important;
+    width:min(100%,760px)!important;max-width:100%!important;
+    max-height:calc(100dvh - 18px - env(safe-area-inset-top,0px))!important;
+    margin:auto auto 0!important;padding:clamp(16px,4vw,22px)!important;
+    overflow:auto!important;overscroll-behavior:contain;
+    border-radius:var(--viora-dialog-radius) var(--viora-dialog-radius) 12px 12px!important;
+    box-shadow:var(--viora-dialog-shadow)!important;
+    -webkit-overflow-scrolling:touch;
+    animation:viora-sheet-in .22s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .modalhead,.modal-header{position:sticky;top:-1px;z-index:2;background:inherit}
+  .modal .close,.modal .btn-close,.modalhead .close{width:40px;height:40px;min-width:40px;min-height:40px}
+  .modal input,.modal select,.modal textarea,
+  [role="dialog"] input,[role="dialog"] select,[role="dialog"] textarea{font-size:16px!important;max-width:100%}
+  .modal .form-actions,.modal .modal-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .modal .form-actions>* ,.modal .modal-actions>*{flex:1 1 120px}
+  .toast,.toast-container{max-width:calc(100vw - 24px)}
+  #toastContainer{left:12px;right:12px;top:max(12px,env(safe-area-inset-top,0px));width:auto}
+}
+@keyframes viora-sheet-in{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* The hero picker was an unstyled div appended inside an overflow-hidden banner.
+   Keep it viewport-fixed so it can never collapse into the banner's bottom-left. */
+.viora-hero-location-overlay,.viora-hero-location-modal{
+  position:fixed!important;inset:0!important;z-index:100010!important;
+  display:none;align-items:center;justify-content:center;
+  padding:16px!important;background:rgba(3,8,18,.62);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+}
+.viora-hero-location-overlay.active,.viora-hero-location-modal.active{display:flex!important}
+.viora-hero-location-sheet{
+  width:min(440px,100%);max-height:min(72dvh,620px);
+  overflow:auto;overscroll-behavior:contain;
+  padding:18px;border:1px solid rgba(255,255,255,.13);
+  border-radius:22px;background:var(--bg-elev-1,#17191f);
+  color:var(--text,#fff);box-shadow:0 24px 80px rgba(0,0,0,.42);
+  -webkit-overflow-scrolling:touch;
+}
+.viora-hero-location-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.viora-hero-location-head strong{font-size:16px;font-weight:750}
+.viora-hero-location-close{width:40px;height:40px;min-width:40px;border:0;border-radius:12px;background:rgba(127,127,127,.16);color:inherit;font-size:24px;cursor:pointer}
+.viora-hero-location-list{display:grid;grid-template-columns:1fr;gap:8px}
+.viora-hero-location-list button{width:100%;min-height:52px;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left}
+@media(max-width:600px){
+  .viora-hero-location-overlay,.viora-hero-location-modal{align-items:flex-end;padding:10px 10px max(10px,env(safe-area-inset-bottom,0px))!important}
+  .viora-hero-location-sheet{width:100%;max-height:min(76dvh,680px);border-radius:22px 22px 12px 12px;padding:18px 16px}
+}
+
+/* Campaigns uses the same dialog contract as the master system. */
+#campaignEditorModal .modal{max-width:720px}
+#campaignEditorModal .modalhead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#campaignEditorModal .field{min-width:0}
+@media(max-width:899px){
+  #campaignEditorModal .modal{width:100%!important}
+  #campaignEditorModal .formgrid{grid-template-columns:minmax(0,1fr)!important}
+  #campaignEditorModal .modalhead h3{font-size:16px}
+}
+@media(prefers-reduced-motion:reduce){
+  .modal-overlay>.modal,.modalback>.modal{animation:none!important}
+}
+
+
+/* Solar disc: layered warm photosphere and corona, while JS keeps its true solar path. */
+#vioraHeroBanner>#vioraHeroOrb{
+  z-index:8!important;
+  background-image:
+    radial-gradient(circle at 34% 29%,rgba(255,255,255,.98) 0%,rgba(255,250,220,.94) 19%,rgba(255,221,137,.96) 48%,rgba(255,171,65,.98) 78%,rgba(239,116,35,.96) 100%)!important;
+  border:1px solid rgba(255,248,215,.95)!important;
+  box-shadow:0 0 22px 7px rgba(255,218,125,.62),0 0 54px 18px rgba(255,174,72,.32)!important;
+}
+#vioraHeroBanner>#vioraHeroOrb::after{
+  content:"";position:absolute;inset:8%;border-radius:50%;pointer-events:none;
+  background:radial-gradient(ellipse at 38% 32%,rgba(255,255,255,.28),transparent 62%);
+  mix-blend-mode:screen;
+}
+#vioraHeroBanner>#vioraHeroCanvas{z-index:3!important;opacity:1!important}
+#vioraHeroBanner>#vioraHeroTerminatorCanvas{z-index:1!important}
+@media(max-width:899px){
+  #vioraHeroBanner{min-height:360px!important;height:360px!important}
+  #vioraHeroBanner>#vioraHeroOrb{z-index:8!important}
+}
+
+
+.viora-dialog-close{
+  margin-left:auto;flex:0 0 40px;width:40px;height:40px;min-width:40px;min-height:40px;
+  display:inline-grid;place-items:center;border:1px solid var(--border,rgba(127,127,127,.2));
+  border-radius:12px;background:var(--bg-elev-2,#262a32);color:inherit;
+  font-size:24px;line-height:1;cursor:pointer;
+}
+@media(max-width:600px){
+  .modal h2 .viora-dialog-close{position:sticky;top:0}
+  .modal h2{gap:8px;flex-wrap:wrap}
+}
+body:has(#weatherLocationModal.active){overflow:hidden!important}

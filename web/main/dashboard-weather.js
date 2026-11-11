@@ -619,6 +619,9 @@ export function openLocationPicker() {
     modal = document.createElement('div');
     modal.className = 'modal-overlay';
     modal.id = 'weatherLocationModal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Choose weather location');
     document.body.appendChild(modal);
     modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
   }
@@ -678,6 +681,7 @@ export function openLocationPicker() {
   `;
 
   modal.classList.add('active');
+  modal.setAttribute('aria-hidden', 'false');
 
   modal.querySelectorAll('.weather-city-btn').forEach((btn) => {
     btn.addEventListener('click', async () => {
@@ -689,6 +693,7 @@ export function openLocationPicker() {
       const ok = await saveWeatherLocation({ lat, lon, city, country, tz });
       if (ok) {
         modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
         try {
           const heroPicker = document.querySelector('.viora-hero-location-overlay');
           if (heroPicker) heroPicker.classList.remove('active');
@@ -723,6 +728,7 @@ export function openLocationPicker() {
           gpsBtn.innerHTML = '<i class="fa-solid fa-crosshairs"></i> Detect my current location';
           if (ok) {
             modal.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
             if (typeof SAFE.toast === 'function') SAFE.toast('Location set from GPS.', 'success');
             refreshWeather(true);
           } else if (typeof SAFE.toast === 'function') {
@@ -780,7 +786,10 @@ export function openLocationPicker() {
   if (searchBtn) searchBtn.addEventListener('click', runSearch);
 
   const cancelBtn = modal.querySelector('#weatherCancelBtn');
-  if (cancelBtn) cancelBtn.addEventListener('click', () => modal.classList.remove('active'));
+  if (cancelBtn) cancelBtn.addEventListener('click', () => {
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+  });
 }
 
 export async function refreshWeather(force) {
