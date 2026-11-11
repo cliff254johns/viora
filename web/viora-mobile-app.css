@@ -172,3 +172,16 @@ button,a,[role="button"],input,select{touch-action:manipulation}
   #vioraHeroBanner{min-height:360px!important;height:360px!important}
   #vioraHeroBanner>#vioraHeroOrb{z-index:8!important}
 }
+
+
+.viora-dialog-close{
+  margin-left:auto;flex:0 0 40px;width:40px;height:40px;min-width:40px;min-height:40px;
+  display:inline-grid;place-items:center;border:1px solid var(--border,rgba(127,127,127,.2));
+  border-radius:12px;background:var(--bg-elev-2,#262a32);color:inherit;
+  font-size:24px;line-height:1;cursor:pointer;
+}
+@media(max-width:600px){
+  .modal h2 .viora-dialog-close{position:sticky;top:0}
+  .modal h2{gap:8px;flex-wrap:wrap}
+}
+body:has(#weatherLocationModal.active){overflow:hidden!important}
