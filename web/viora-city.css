@@ -135,3 +135,33 @@
 @media(prefers-reduced-motion:reduce){
   #viora-city .city-link,#viora-city .city-industry-grid a{transition:none!important}
 }
+
+/* Dashboard sky layers sit behind the transparent Tokyo skyline foreground. */
+#viora-city .city-stage{position:relative;isolation:isolate;overflow:hidden;background:#071321!important;filter:none!important}
+#viora-city #vioraHeroSkyCanvas,#viora-city #vioraHeroTerminatorCanvas,#viora-city #vioraHeroArcSvg{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;display:block;pointer-events:none}
+#viora-city #vioraHeroSkyCanvas{z-index:0!important}
+#viora-city #vioraHeroTerminatorCanvas{z-index:1!important}
+#viora-city #vioraHeroArcSvg{z-index:2!important}
+#viora-city #vioraHeroOrb{z-index:3!important;pointer-events:none!important}
+#viora-city #viora-city-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:4;pointer-events:none}
+#viora-city .city-atmosphere,#viora-city .city-stage:before,#viora-city .city-stage:after{display:none!important;background:none!important}
+#viora-city .city-hud{z-index:8}
+#viora-city .city-industry-district{margin:0 auto;padding:20px clamp(10px,2vw,24px) 0;max-width:1240px;position:relative;z-index:5}
+#viora-city .city-industry-heading{margin:0 auto 13px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+#viora-city .city-industry-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px}
+#viora-city .city-industry-grid a{min-height:58px;display:flex;align-items:center;gap:10px;padding:12px;border:1px solid rgba(180,211,239,.16);border-radius:14px;background:linear-gradient(145deg,rgba(12,30,50,.92),rgba(5,15,27,.96));color:#e7f1fb;text-decoration:none;font-size:12px;font-weight:700;box-shadow:0 10px 26px rgba(0,0,0,.15);transition:transform .2s,border-color .2s,background .2s}
+#viora-city .city-industry-grid a:hover{transform:translateY(-3px);border-color:rgba(111,190,255,.6);background:linear-gradient(145deg,rgba(20,49,77,.96),rgba(7,20,35,.98))}
+#viora-city .city-industry-grid i{display:grid;place-items:center;width:31px;height:31px;flex:0 0 31px;border-radius:10px;background:rgba(79,151,228,.15);color:#9bcaff;font-size:14px}
+@media(max-width:850px){#viora-city .city-industry-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:560px){
+ #viora-city .city-stage{height:clamp(310px,82vw,420px)}
+ #viora-city .city-hud{left:9px;right:9px;top:9px}
+ #viora-city .city-pill{font-size:9px;padding:6px 9px}
+ #viora-city .city-industry-district{padding:16px 10px 0}
+ #viora-city .city-industry-heading{display:block}
+ #viora-city .city-industry-heading strong{display:block;margin-top:4px;font-size:12px}
+ #viora-city .city-industry-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ #viora-city .city-industry-grid a{min-height:58px;flex-direction:column;justify-content:center;gap:5px;padding:8px 5px;text-align:center;font-size:10px}
+ #viora-city .city-industry-grid i{width:30px;height:30px;flex-basis:30px}
+}
+@media(max-width:360px){#viora-city .city-industry-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
