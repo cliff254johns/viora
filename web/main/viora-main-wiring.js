@@ -1042,10 +1042,22 @@ export function attachEvents() {
     });
   });
 
-  /* Mobile app bar */
-  on($('mobileLogoutBtn'), 'click', () => d.doSignOut?.());
+  /* Mobile app bar — bind each control to the same live desktop action. */
+  on($('mobileLogoutBtn'), 'click', () => {
+    if (typeof d.doSignOut === 'function') d.doSignOut();
+    else if (typeof window.doSignOut === 'function') window.doSignOut();
+  });
   on($('mobileCopilotBtn'), 'click', () => d.openCmdPalette?.());
   on($('copilotOpenBtn'), 'click', () => d.openCmdPalette?.());
+
+  /* The drawer close control must also release the mobile drawer scroll lock. */
+  on($('mobDrawerClose'), 'click', () => {
+    try { d.closeSidebar?.(); } catch (_) {}
+    $('sidebar')?.classList.remove('open');
+    $('sidebarOverlay')?.classList.remove('active');
+    document.body.classList.remove('mob-drawer-open');
+    document.querySelectorAll('#mobileBottomNav .mnav-item').forEach(x => x.classList.remove('active'));
+  });
 
   /* Support tickets */
   on($('ticketsRefreshBtn'), 'click', () => {
@@ -1716,9 +1728,17 @@ export function bindSafetyNets() {
     if (window.__vioraDynamicModalNet) return;
     window.__vioraDynamicModalNet = true;
 
+    const findWithin = (root, selector) => {
+      if (!root) return [];
+      const found = [];
+      if (root.nodeType === 1 && root.matches?.(selector)) found.push(root);
+      if (root.querySelectorAll) found.push(...root.querySelectorAll(selector));
+      return found;
+    };
+
     const wireDataCloseButtons = (root) => {
-      if (!root || !root.querySelectorAll) return;
-      root.querySelectorAll('[data-close]').forEach(b => {
+      if (!root) return;
+      findWithin(root, '[data-close]').forEach(b => {
         if (b._vioraDataCloseBound) return;
         b._vioraDataCloseBound = true;
         b.addEventListener('click', (e) => {
@@ -1732,8 +1752,8 @@ export function bindSafetyNets() {
 
     // Also wire any modal-overlay outside-click that we may have missed
     const wireOverlayClick = (root) => {
-      if (!root || !root.querySelectorAll) return;
-      root.querySelectorAll('.modal-overlay').forEach(m => {
+      if (!root) return;
+      findWithin(root, '.modal-overlay').forEach(m => {
         if (m._vioraOverlayBound) return;
         m._vioraOverlayBound = true;
         m.addEventListener('click', (e) => {
