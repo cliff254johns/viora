@@ -88,7 +88,7 @@ The consent banner already hides its floating settings shortcut after accept, re
 - Static source review found two working submission paths: the home-page form writes a lead to Firebase and attempts a VIORA notification; the Contact page writes the lead and opens WhatsApp as a follow-up/fallback. No end-to-end submission was made during this audit.
 - The current `/viora.png` manifest icon is 1290×1219 pixels, not square. Both root manifests now declare the real dimensions rather than falsely claiming 192×192/512×512; the old maskable declaration was removed. The legacy manifest start URL and shortcuts were also corrected from nonexistent `/dash.html` routes to existing portal routes. VIORA-branded square 192×192 and 512×512 assets are still required for a fully polished install experience.
 
-### P2 — Accessibility, performance and responsive validation
+### P1 — Browser permission policy\n\n- The global `_headers` policy previously disabled geolocation for every page (`geolocation=()`), while the VIORA dashboard weather location picker explicitly offers a user-triggered GPS action via `navigator.geolocation.getCurrentPosition()`.\n- The policy now permits geolocation for the same origin only (`geolocation=(self)`). The browser still requires the visitor's permission, and the app should only request location after the user selects the GPS action.\n### P2 — Accessibility, performance and responsive validation
 
 Source presence alone cannot certify:
 - keyboard navigation and visible focus,
