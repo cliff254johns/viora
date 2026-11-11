@@ -187,9 +187,11 @@ button,a,[role="button"],input,select{touch-action:manipulation}
 body:has(#weatherLocationModal.active){overflow:hidden!important}
 
 
-/* Keep the floating VIORA assistant clear of the first-visit cookie consent controls. */
+/* Avoid covering page content while the first-visit consent panel is active. */
 @media(max-width:899px){
   body:has(#vioraCookieBanner:not([hidden])) #viora-assistant{
-    bottom:calc(clamp(150px,32vh,270px) + env(safe-area-inset-bottom,0px))!important;
+    opacity:0!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
   }
 }
