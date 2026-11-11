@@ -10,7 +10,8 @@ const CONFIG = {
   TTS_ENDPOINT: '/tts',
   STT_ENDPOINT: '/stt',
   ANALYTICS_ENDPOINT: '/analytics',
-  REQUEST_TIMEOUT_MS: 25000,
+  REQUEST_TIMEOUT_MS: 12000,
+  CHAT_TOTAL_TIMEOUT_MS: 35000,
   MAX_HISTORY: 12,
   MAX_MESSAGE_LEN: 800,
   SESSION_STORAGE_KEY: 'viora_avatar_session',
@@ -33,9 +34,11 @@ const EXTERNAL_KB_MAX_CHARS = 6000;
 let EXTERNAL_KB = '';
 
 async function loadExternalKB(){
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 3000);
   try {
     console.info('[VIORA] Loading external KB from', EXTERNAL_KB_URL);
-    const r = await fetch(EXTERNAL_KB_URL, { cache: 'no-store' });
+    const r = await fetch(EXTERNAL_KB_URL, { cache: 'no-store', signal: controller.signal });
     if (!r.ok){
       console.warn('[VIORA] KB fetch failed:', r.status);
       return;
@@ -43,7 +46,9 @@ async function loadExternalKB(){
     EXTERNAL_KB = (await r.text()).slice(0, EXTERNAL_KB_MAX_CHARS);
     console.info('[VIORA] External KB loaded:', EXTERNAL_KB.length, 'chars');
   } catch(e){
-    console.warn('[VIORA] KB load error:', e.message);
+    console.warn('[VIORA] KB load skipped; local knowledge remains available:', e.message);
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -805,34 +810,38 @@ async function callChatNonStreaming(userMessage){
     { system: systemPrompt, messages, model:'llama-3.3-70b-versatile', temperature:0.5, max_tokens:600, sessionId: state.sessionId },
     { system: systemPrompt, messages, sessionId: state.sessionId }
   ];
+  const deadline = Date.now() + CONFIG.CHAT_TOTAL_TIMEOUT_MS;
   for (const ep of CONFIG.CHAT_ENDPOINTS){
     for (const body of bodies){
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) break;
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), Math.min(CONFIG.REQUEST_TIMEOUT_MS, remaining));
       try {
-        const controller = new AbortController();
-        const timer = setTimeout(()=>controller.abort(), CONFIG.REQUEST_TIMEOUT_MS);
         const res = await fetch(CONFIG.WORKER_URL + ep, {
           method:'POST',
           headers:{'Content-Type':'application/json'},
           body: JSON.stringify(body),
           signal: controller.signal
         });
-        clearTimeout(timer);
         if (!res.ok){
           const t = await res.text().catch(()=> '');
           console.warn('[VIORA] ' + ep + ' → ' + res.status, t.slice(0,200));
           continue;
         }
         const data = await res.json();
-        // Preserve any tool call before extractReply strips it
         const toolCall = tryParseToolCallObj(data);
         const reply = extractReply(data);
         if (reply || toolCall) return { reply: reply || '', tool: toolCall };
       } catch(e){
         console.warn('[VIORA] ' + ep + ' failed:', e.message);
+      } finally {
+        clearTimeout(timer);
       }
     }
+    if (Date.now() >= deadline) break;
   }
-  throw new Error('All chat endpoints failed');
+  throw new Error('All chat endpoints failed or exceeded the 35-second response budget');
 }
 function tryParseToolCallObj(data){
   if (!data || typeof data !== 'object') return null;
