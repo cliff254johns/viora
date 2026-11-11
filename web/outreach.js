@@ -1,6 +1,6 @@
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
-import { getDatabase, ref, get, set, push, update, onValue } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js';
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js';
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js';
+import { getDatabase, ref, get, set, push, update, onValue } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js';
 
 const firebaseConfig={apiKey:'AIzaSyC9cGBt-xR8t9n6rTGNvDZ5usUGiW-Dqxc',authDomain:'cliffclient-35ec5.firebaseapp.com',databaseURL:'https://cliffclient-35ec5-default-rtdb.europe-west1.firebasedatabase.app',projectId:'cliffclient-35ec5',storageBucket:'cliffclient-35ec5.firebasestorage.app',messagingSenderId:'519782791696',appId:'1:519782791696:web:6e1a654ddeed14b72b2895',measurementId:'G-G0NB6JGQVF'};
 const app=getApps().length?getApps()[0]:initializeApp(firebaseConfig),auth=getAuth(app),db=getDatabase(app);
