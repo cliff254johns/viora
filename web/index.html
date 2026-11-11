@@ -128,7 +128,7 @@
     <h2 id="viora-city-title">One connected city. Many possibilities.</h2>
     <p>Explore the places, platforms and services that make up VIORA. Every destination connects to the wider ecosystem and its shared data core.</p>
   </div>
-  <div class="city-stage" id="vioraHeroBanner" aria-label="VIORA real-time sky with stars, sun and moon">
+  <div class="city-stage viora-hero viora-hero-cover" id="vioraHeroBanner" aria-label="VIORA real-time sky with stars, sun and moon">
     <div id="vioraHeroOrb" aria-hidden="true"></div>
     <div class="city-hud" aria-live="polite">
       <span class="city-pill"><i class="fa-regular fa-clock"></i><span data-city-time>Local time</span></span>
@@ -691,11 +691,14 @@
   <!-- Firebase compat SDK — REQUIRED for index-home.js to read/write data -->
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+<!-- Use the exact dashboard hero engine and load order: solar → globe → sky → terminator → orb → time → banner. -->
 <script src="/hero-solar.js" defer></script>
-<script src="/hero-time.js" defer></script>
+<script src="/hero-globe.js" defer></script>
 <script src="/hero-sky.js" defer></script>
 <script src="/hero-terminator.js" defer></script>
 <script src="/hero-orb.js" defer></script>
+<script src="/hero-time.js" defer></script>
+<script src="/hero-banner.js" defer></script>
 <script src="/viora-city-sky.js" defer></script>
 <script type="module" src="index-home.js"></script>
 <script>
