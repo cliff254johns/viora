@@ -42,8 +42,9 @@ async function readRoleValue(path){
   }
 }
 async function resolveRole(uid){
-  // Read the same full profile node used by the main dashboard first.
-  const paths=['viora_data/orgs/viora/users/'+uid,'viora_data/users/'+uid];
+  // Match main/boot.js exactly: its operator profile lives under viora_data/users/{uid}.
+  // The organisation-scoped profile remains a secondary compatibility fallback.
+  const paths=['viora_data/users/'+uid,'viora_data/orgs/viora/users/'+uid];
   let profileFound=false,lastError='';
   for(const path of paths){
     const result=await readRoleRecord(path);
