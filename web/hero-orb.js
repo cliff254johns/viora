@@ -597,9 +597,18 @@
     if (!sky || !sky.sun) return { elevation: -1, arcFraction: 0 };
     const sunElev = Number(sky.sun.elevation);
     const arcFraction = Number(sky.sun.arcFraction);
+    // Always provide a finite daytime alpha. The old implementation
+    // omitted this field, so effectiveOpacity(undefined, ...) returned NaN
+    // and the browser discarded the orb's opacity declaration.
+    const daylightAlpha = Number.isFinite(sunElev)
+      ? clamp((sunElev + 0.833) / 6, 0, 1)
+      : 0;
     return {
       elevation: sunElev,
-      arcFraction,
+      alpha: Number.isFinite(Number(sky.sun.alpha))
+        ? clamp(Number(sky.sun.alpha), 0, 1)
+        : daylightAlpha,
+      arcFraction: Number.isFinite(arcFraction) ? arcFraction : 0.5,
       sunrise: sky.sun.sunrise,
       sunset: sky.sun.sunset
     };
