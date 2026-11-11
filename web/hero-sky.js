@@ -1192,8 +1192,11 @@
     }
     if (alpha < 0.02) { state.lastMoon = null; return; }
 
-    /* Larger, still proportionate lunar disc for mobile and desktop. */
-    const r = Math.max(28, Math.min(86, Math.min(w, h) * 0.105));
+    /* Keep the lunar disc naturally proportioned on mobile; retain the
+       larger high-resolution treatment on desktop. */
+    const r = w <= 899
+      ? Math.max(12, Math.min(22, Math.min(w, h) * 0.055))
+      : Math.max(28, Math.min(86, Math.min(w, h) * 0.105));
     const glowR = r * 2.35;
 
     const halo = ctx.createRadialGradient(pr.sx, pr.sy, 0, pr.sx, pr.sy, glowR);
