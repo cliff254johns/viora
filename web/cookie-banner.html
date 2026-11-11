@@ -108,9 +108,11 @@
   .vcb-actions [data-vcb="reject"]{grid-column:1/-1}
 }
 @media(max-width:360px){
-  .vcb{padding-left:11px;padding-right:11px}
-  .vcb-text p{font-size:10.5px}
-  .vcb-btn{font-size:10px;padding:8px 6px}
+  .vcb{padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));max-height:34dvh}
+  .vcb-inner{gap:6px}
+  .vcb-text h2{font-size:12px;margin-bottom:2px}
+  .vcb-text p{font-size:9px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .vcb-btn{font-size:9px;padding:7px 5px;min-height:34px}
 }
 
 </style>
