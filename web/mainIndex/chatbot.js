@@ -1920,7 +1920,7 @@ function close(){
 function toggle(){ state.isOpen ? close() : open(); }
 
 function bounceMini(){
-  if (prefersReducedMotion()) return;
+  if (!miniAvatar || prefersReducedMotion()) return;
   miniAvatar.classList.remove('bouncing');
   void miniAvatar.offsetWidth;
   miniAvatar.classList.add('bouncing');
@@ -1939,13 +1939,7 @@ miniAvatar.addEventListener('mouseenter', ()=>{
 });
 miniAvatar.addEventListener('mouseleave', ()=> setTimeout(()=>bubble.classList.remove('show'), 1300));
 
-bigAvatar.addEventListener('click', ()=>{ AvatarRenderer.bounce(); });
-bigAvatar.addEventListener('keydown', (e)=>{
-  if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); AvatarRenderer.bounce(); }
-});
-bigAvatar.setAttribute('tabindex','0');
-bigAvatar.setAttribute('role','button');
-bigAvatar.setAttribute('aria-label','VIORA avatar — tap to bounce');
+// The assistant character was removed; keep the chat engine independent of avatar DOM.
 
 sendBtn.addEventListener('click', ()=>{ AvatarRenderer.bounce(); sendMessage(); });
 input.addEventListener('keydown', (e)=>{
