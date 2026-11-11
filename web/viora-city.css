@@ -410,3 +410,57 @@
 #viora-city #vioraHeroBanner[data-sky-phase]{
   background-color:transparent!important;
 }
+
+
+/* 2026-11-12 homepage parity: live city selector and dashboard weather readout. */
+#viora-city #vioraHeroBanner #vioraQuickCityBar{
+  position:relative!important;z-index:8!important;flex-wrap:nowrap!important;
+  width:max-content;max-width:100%;margin:10px 12px 0!important;gap:6px!important;
+}
+#viora-city #vioraHeroBanner .viora-quick-city-btn{
+  min-width:0!important;padding:7px 11px!important;font-size:11px!important;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+#viora-city #vioraHeroBanner .city-hud{
+  position:absolute!important;left:12px!important;right:12px!important;top:auto!important;
+  bottom:14px!important;z-index:8!important;display:flex!important;flex-wrap:wrap!important;
+  align-items:flex-end!important;gap:7px!important;pointer-events:none!important;
+}
+#viora-city #vioraHeroBanner .city-pill{
+  max-width:100%;font-size:11px!important;line-height:1.35!important;
+  background:rgba(4,13,25,.72)!important;border-color:rgba(205,228,255,.3)!important;
+  box-shadow:0 8px 24px rgba(0,0,0,.18);
+}
+#viora-city #vioraHeroBanner .city-pill [data-city-weather]{
+  white-space:normal!important;overflow-wrap:anywhere;
+}
+#viora-city #vioraHeroBanner [data-city-weather-icon]{
+  color:#ffd166!important;flex:0 0 auto;
+}
+#viora-city #vioraHeroQuickCityMount{position:relative;z-index:8}
+@media(max-width:600px){
+  #viora-city #vioraHeroBanner #vioraQuickCityBar{
+    width:calc(100% - 14px)!important;margin:7px!important;gap:3px!important;
+  }
+  #viora-city #vioraHeroBanner .viora-quick-city-btn{
+    padding:6px 3px!important;font-size:9px!important;gap:3px!important;
+  }
+  #viora-city #vioraHeroBanner .viora-quick-city-btn span:first-child{font-size:11px!important}
+  #viora-city #vioraHeroBanner .city-hud{left:8px!important;right:8px!important;bottom:9px!important;gap:5px!important}
+  #viora-city #vioraHeroBanner .city-pill{font-size:9px!important;padding:6px 8px!important}
+}
+
+/* Each industry uses a recognizable Font Awesome pictogram and its own
+   semantic colour family, rather than a repeating single-colour treatment. */
+#viora-city .city-industry-grid a:nth-child(1) i{background:rgba(38,190,125,.2)!important;color:#55e6a5!important}
+#viora-city .city-industry-grid a:nth-child(2) i{background:rgba(245,158,48,.22)!important;color:#ffc16b!important}
+#viora-city .city-industry-grid a:nth-child(3) i{background:rgba(66,145,255,.22)!important;color:#83baff!important}
+#viora-city .city-industry-grid a:nth-child(4) i{background:rgba(235,83,110,.22)!important;color:#ff91a5!important}
+#viora-city .city-industry-grid a:nth-child(5) i{background:rgba(159,112,255,.22)!important;color:#c5a7ff!important}
+#viora-city .city-industry-grid a:nth-child(6) i{background:rgba(31,190,205,.22)!important;color:#69e5ef!important}
+#viora-city .city-industry-grid a:nth-child(7) i{background:rgba(242,104,64,.22)!important;color:#ff9b78!important}
+#viora-city .city-industry-grid a:nth-child(8) i{background:rgba(65,135,245,.22)!important;color:#91baff!important}
+#viora-city .city-industry-grid a:nth-child(9) i{background:rgba(231,169,57,.22)!important;color:#ffd27b!important}
+#viora-city .city-industry-grid a:nth-child(10) i{background:rgba(72,177,220,.22)!important;color:#8bdcff!important}
+#viora-city .city-industry-grid a:nth-child(11) i{background:rgba(72,181,112,.22)!important;color:#91e6a9!important}
+#viora-city .city-industry-grid a:nth-child(12) i{background:rgba(151,122,230,.22)!important;color:#c5b2ff!important}
