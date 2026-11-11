@@ -257,7 +257,7 @@ function updateMeta(p) {
   setMeta('property', 'og:description', desc);
   setMeta('property', 'og:image', avatar);
   setMeta('property', 'og:type', 'profile');
-  const canonicalUrl = window.location.origin + window.location.pathname.replace(/\\.html$/i, '');
+  const canonicalUrl = window.location.origin + window.location.pathname.replace(/\.html$/i, '');
   let canonical = document.querySelector('link[rel="canonical"]');
   if (!canonical) {
     canonical = document.createElement('link');
