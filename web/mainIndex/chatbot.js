@@ -30,7 +30,7 @@ const CONFIG = {
   BROWSER_RATE_DEFAULT: 0.98
 };
 const EXTERNAL_KB_URL = 'https://viora.co.ke/mainIndex/knowledge.md';
-const EXTERNAL_KB_MAX_CHARS = 6000;
+const EXTERNAL_KB_MAX_CHARS = 10000;
 let EXTERNAL_KB = '';
 
 async function loadExternalKB(){
@@ -643,7 +643,7 @@ function buildGroundingContext(msg){
     // Always inject the knowledge base. The prompt fitter will trim
     // the DOM scraping (middle) long before it touches this section.
     parts.push('\n## CORE KNOWLEDGE BASE');
-    parts.push(EXTERNAL_KB.slice(0, 5000));
+    parts.push(EXTERNAL_KB.slice(0, 9000));
   }
   return parts.join('\n');
 }
