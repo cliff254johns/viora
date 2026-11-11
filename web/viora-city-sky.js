@@ -44,8 +44,8 @@ function removeLegacyLocationControls(){
 const selectors='#vioraHeroChangeLocationBtn,.viora-hero-location-trigger,[data-open-location-picker],#vioraHeroLocationBtn,.viora-hero-location-button,[aria-label="Select location" i],[title="Select location" i]';
 stage.querySelectorAll(selectors).forEach(el=>el.remove());
 stage.querySelectorAll('button,a,[role="button"]').forEach(el=>{
-const label=[el.textContent,el.getAttribute('aria-label'),el.getAttribute('title')].filter(Boolean).join(' ').replace(/\\s+/g,' ').trim();
-if(/^\\s*(select|change)\\s+location\\s*$/i.test(label))el.remove();
+const label=[el.textContent,el.getAttribute('aria-label'),el.getAttribute('title')].filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+if(/^\s*(select|change)\s+location\s*$/i.test(label))el.remove();
 });
 }
 removeLegacyLocationControls();
