@@ -335,13 +335,13 @@ body:has(#weatherLocationModal.active){overflow:hidden!important}
    Keep tile sizing, spacing, typography and all other dashboard elements untouched. */
 @media(max-width:899px){
   #vioraHeroBanner.viora-hero-cover{
-    min-height:500px!important;
-    height:500px!important;
+    min-height:470px!important;
+    height:470px!important;
     max-height:none!important;
   }
   #vioraHeroBanner>.viora-hero-content.viora-hero-cover-content{
-    min-height:500px!important;
-    height:500px!important;
+    min-height:470px!important;
+    height:470px!important;
     box-sizing:border-box!important;
   }
 }
@@ -351,13 +351,13 @@ body:has(#weatherLocationModal.active){overflow:hidden!important}
    anchor the four compact summary tiles lower in the banner, and preserve the sky. */
 @media(max-width:899px){
   #vioraHeroBanner.viora-hero-cover{
-    min-height:500px!important;
-    height:500px!important;
+    min-height:470px!important;
+    height:470px!important;
     max-height:none!important;
   }
   #vioraHeroBanner>.viora-hero-content.viora-hero-cover-content{
-    min-height:500px!important;
-    height:500px!important;
+    min-height:470px!important;
+    height:470px!important;
     justify-content:flex-start!important;
   }
   #vioraHeroBanner .viora-hero-strip{
