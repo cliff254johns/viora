@@ -75,6 +75,10 @@ No matching audio files were found in the repository tree. The notification brid
 
 The Market page previously contained an unused notification audio element with three fallback paths that do not exist in the repository. No code references the element, so the dead audio block has been removed rather than leaving broken media requests. The notification bridge currently writes notification records; audible alerts remain unimplemented.
 
+### P2 — Cookie preferences keyboard accessibility
+
+The consent banner already hides its floating settings shortcut after accept, reject, or saved preferences. The preferences dialog previously closed on Escape but did not trap keyboard focus or restore focus to the control that opened it. The follow-up now traps Tab/Shift+Tab inside the dialog and restores focus on cancel, overlay close, or Escape. Saving preferences intentionally does not restore focus to a control inside the banner after that banner is hidden.
+
 ### P2 — Accessibility, performance and responsive validation
 
 Source presence alone cannot certify:
