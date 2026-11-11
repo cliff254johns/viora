@@ -2741,7 +2741,7 @@ textarea:focus { scroll-margin-top: 80px; }
     top: calc(var(--header-h) + var(--chips-h) + env(safe-area-inset-top, 0px));
     left: 0; right: 0;
     bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
-    padding: 14px 12px calc(40px + env(safe-area-inset-bottom, 0px));
+    padding: 14px 12px calc(124px + env(safe-area-inset-bottom, 0px));
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;

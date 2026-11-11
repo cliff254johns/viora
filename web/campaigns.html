@@ -1385,6 +1385,19 @@ tr:last-child td{border-bottom:0}
 <link rel="stylesheet" href="/viora-mobile-app.css?v=20261111-99261369">
 <link rel="manifest" href="/campaigns.webmanifest">
 <script defer src="/shared-pwa.js"></script>
+<style id="viora-campaign-accounts-mobile-fix">
+@media (max-width: 600px) {
+.accounts-grid{grid-template-columns:minmax(0,1fr);gap:10px}
+.account-card{min-width:0;padding:12px}
+.account-head{align-items:flex-start}
+.account-body{min-width:0}
+.account-name,.account-handle{overflow-wrap:anywhere;white-space:normal}
+.account-meta{flex-wrap:wrap;justify-content:flex-start;gap:6px 12px}
+.account-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.account-actions .btn{min-width:0;white-space:normal;line-height:1.25;padding:9px 7px;font-size:10px}
+}
+@media(max-width:360px){.account-actions{grid-template-columns:minmax(0,1fr)}}
+</style>
 </head>
 <body>
 

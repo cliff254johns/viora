@@ -32,6 +32,8 @@ const P = (path) => {
   return `${ROOT}/${ORG}/${clean}`;
 };
 
+const PRODUCT_CACHE_KEY = 'viora_market_products_v1';
+const PRODUCT_CACHE_MAX_AGE = 86400000;
 const FX_RATE = 129;
 const CURRENCY = { code: 'KES', symbol: 'KSh', rate: FX_RATE };
 const fmtKSh = (usd) => {
@@ -261,6 +263,12 @@ const App = {
       })).filter(p => p.status !== 'archived' && p.status !== 'draft');
 
       this.products = all.slice();
+      // Cache the public catalogue so repeat visits paint while Firebase refreshes.
+      try {
+        localStorage.setItem(PRODUCT_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), products: this.products }));
+      } catch (cacheError) {
+        console.debug('[market] product cache skipped:', cacheError?.message || cacheError);
+      }
 
       this.renderCategoryBar();
       this.renderProducts();
@@ -2412,6 +2420,20 @@ const heroVisual = (p.image && String(p.image).trim())
     this.loadWishlist();
     this.loadRecentSearches();
 
+    // Paint the last known public catalogue immediately while Firebase refreshes.
+    try {
+      const cached = JSON.parse(localStorage.getItem(PRODUCT_CACHE_KEY) || 'null');
+      if (cached && Array.isArray(cached.products) &&
+          Date.now() - Number(cached.savedAt || 0) < PRODUCT_CACHE_MAX_AGE) {
+        this.products = cached.products;
+        this.renderCategoryBar();
+        this.renderProducts();
+        this.renderCarousel();
+      }
+    } catch (cacheError) {
+      try { localStorage.removeItem(PRODUCT_CACHE_KEY); } catch (_) {}
+    }
+
     document.getElementById('cartToggle')?.addEventListener('click', () => this.toggleCart());
     document.getElementById('wishlistToggle')?.addEventListener('click', () => this.openWishlist());
     document.getElementById('mobileToggle')?.addEventListener('click', () => {
@@ -2486,14 +2508,6 @@ const heroVisual = (p.image && String(p.image).trim())
         }).catch(() => {});
       }
     });
-
-    setTimeout(async () => {
-      if (this.products.length) {
-        await Promise.all(this.products.slice(0, 20).map(p => this.loadReviews(p.id)));
-        this.renderProducts();
-        this.renderCarousel();
-      }
-    }, 1500);
 
     console.log('%c✅ Viora Marketplace ready', 'color:#00e0ff;font-weight:700;font-size:13px;');
   }
