@@ -193,3 +193,84 @@
 #viora-city #vioraHeroArcSvg{z-index:2!important}
 #viora-city #vioraHeroOrb{z-index:3!important;pointer-events:none!important}
 #viora-city .city-hud{z-index:5}
+
+
+/* 2026-11-12: industries float over the lower half of the live dashboard sky.
+   Keep the upper sky unobstructed so the real-time sun, moon, stars and clouds remain visible. */
+#viora-city.hero-city-world{
+  background:transparent!important;
+  overflow:visible;
+}
+#viora-city.hero-city-world:before{display:none!important}
+#viora-city .city-stage{
+  height:clamp(440px,48vw,620px)!important;
+  overflow:visible!important;
+  background:transparent!important;
+}
+#viora-city .city-industry-district{
+  position:relative!important;
+  z-index:10!important;
+  max-width:1240px!important;
+  margin:-270px auto 0!important;
+  padding:0 clamp(14px,2vw,24px) 24px!important;
+  pointer-events:none;
+}
+#viora-city .city-industry-heading{
+  margin:0 0 12px!important;
+  padding:0 2px;
+  align-items:center!important;
+  text-shadow:0 2px 14px rgba(0,0,0,.55);
+}
+#viora-city .city-industry-heading span,
+#viora-city .city-industry-heading strong{color:#f4f9ff!important}
+#viora-city .city-industry-grid{pointer-events:auto}
+#viora-city .city-industry-grid a{
+  min-height:62px!important;
+  background:linear-gradient(145deg,rgba(13,31,49,.64),rgba(5,15,28,.78))!important;
+  border:1px solid rgba(207,231,250,.28)!important;
+  box-shadow:0 12px 34px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.08)!important;
+  backdrop-filter:blur(18px) saturate(135%);
+  -webkit-backdrop-filter:blur(18px) saturate(135%);
+}
+#viora-city .city-industry-grid a:hover{
+  background:linear-gradient(145deg,rgba(24,57,83,.82),rgba(8,25,42,.9))!important;
+  border-color:rgba(165,221,255,.72)!important;
+}
+@media(max-width:850px){
+  #viora-city .city-stage{height:clamp(400px,68vw,500px)!important}
+  #viora-city .city-industry-district{margin-top:-220px!important}
+}
+@media(max-width:560px){
+  #viora-city.hero-city-world{padding-bottom:12px!important}
+  #viora-city .city-stage{height:clamp(360px,105vw,440px)!important}
+  #viora-city .city-industry-district{
+    margin-top:-190px!important;
+    padding:0 10px 20px!important;
+  }
+  #viora-city .city-industry-heading{margin-bottom:9px!important}
+  #viora-city .city-industry-heading span{font-size:9px!important}
+  #viora-city .city-industry-heading strong{font-size:11px!important}
+  #viora-city .city-industry-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important}
+  #viora-city .city-industry-grid a{
+    min-height:62px!important;
+    flex-direction:column!important;
+    justify-content:center!important;
+    gap:5px!important;
+    padding:8px 4px!important;
+    text-align:center!important;
+    font-size:10px!important;
+    border-radius:12px!important;
+  }
+  #viora-city .city-industry-grid i{
+    width:27px!important;height:27px!important;flex:0 0 27px!important;
+    font-size:12px!important;
+  }
+}
+@media(max-width:360px){
+  #viora-city .city-stage{height:350px!important}
+  #viora-city .city-industry-district{margin-top:-178px!important}
+  #viora-city .city-industry-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(prefers-reduced-motion:reduce){
+  #viora-city .city-industry-grid a{transition:none!important}
+}
