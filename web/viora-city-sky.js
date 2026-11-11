@@ -28,6 +28,16 @@ const r=await fetch('https://ipapi.co/json/',{cache:'no-store',signal:ctrl.signa
 if(d.latitude==null||d.longitude==null||!Number.isFinite(Number(d.latitude))||!Number.isFinite(Number(d.longitude)))throw Error('No IP coordinates');
 return{id:'visitor-ip-'+String(d.city||'local').toLowerCase().replace(/[^a-z0-9]+/g,'-'),name:[d.city,d.region].filter(Boolean).join(', ')||'Your local city',lat:Number(d.latitude),lon:Number(d.longitude),tz:d.timezone||browserTz(),accuracy:'internet'};
 }finally{clearTimeout(timer)}}
+async function loadStarCatalogue(){
+try{
+const r=await fetch('/main/stars.bin',{cache:'force-cache'});if(!r.ok)throw Error('Star catalogue HTTP '+r.status);
+const buf=await r.arrayBuffer();if(buf.byteLength<2)throw Error('Empty star catalogue');
+const view=new DataView(buf),count=view.getUint16(0,true);if(!count||count>10000||buf.byteLength<2+count*6)throw Error('Invalid star catalogue');
+const stars=[];let off=2;for(let i=0;i<count;i++,off+=6)stars.push({ra:view.getInt16(off,true)/100,dec:view.getInt16(off+2,true)/10,mag:view.getInt16(off+4,true)/10});
+const globe=window.VioraHeroGlobe||{};globe._starCatalog=()=>stars;if(!window.VioraHeroGlobe)window.VioraHeroGlobe=globe;
+window.VioraSky?.refreshCatalog?.();stage.dataset.starCatalogue='loaded';
+}catch(e){stage.dataset.starCatalogue='fallback';console.warn('[VIORA homepage] star catalogue fallback',e)}
+}
 function deviceLocation(){return new Promise(resolve=>{if(!navigator.geolocation)return resolve(null);navigator.geolocation.getCurrentPosition(p=>resolve({id:'visitor-device',name:'Your current city',lat:p.coords.latitude,lon:p.coords.longitude,tz:browserTz(),accuracy:'device'}),()=>resolve(null),{enableHighAccuracy:false,timeout:6000,maximumAge:900000})})}
 async function boot(){
 stage.querySelectorAll('#vioraHeroChangeLocationBtn,.viora-hero-location-trigger,[data-open-location-picker]').forEach(el=>el.remove());
@@ -41,7 +51,7 @@ stage.dataset.homeSkyBoot='rendering';
 try{if(typeof window.renderVioraHero==='function'){await window.renderVioraHero(true);stage.dataset.homeSkyBoot='rendered'}else stage.dataset.homeSkyBoot='fallback'}
 catch(e){stage.dataset.homeSkyBoot='error';console.error('[VIORA homepage] full hero render failed',e)}
 try{window.VioraSky?.init?.({location:loc});window.VioraSky?.renderNow?.();window.VioraTerminator?.init?.({location:loc});window.VioraTerminator?.renderNow?.();window.VioraOrb?.init?.({location:loc,sky:api?.getSky?.()});window.VioraOrb?.setSkyState?.(api?.getSky?.())}catch(e){console.warn('[VIORA homepage] sky layer init',e)}
-updateClock();setInterval(updateClock,1000);await refreshWeather(true);
+updateClock();setInterval(updateClock,1000);await refreshWeather(true);loadStarCatalogue();
 window.addEventListener('resize',()=>{try{window.renderVioraHero?.(true)}catch(_){}window.VioraSky?.renderNow?.();window.VioraTerminator?.renderNow?.()},{passive:true})
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
