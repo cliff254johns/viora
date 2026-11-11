@@ -503,9 +503,7 @@
          ═══════════════════════════════════════════════════════ */
            /* FORCE THE SUN TO BE A SOLID BALL (Overrides all CSS) */
       orb.style.display = 'block';
-      const orbSize = state.rectW <= 480
-        ? Math.max(20, Math.min(26, state.rectW * 0.07))
-        : state.rectW <= 899 ? 30 : 64;
+      const orbSize = state.rectW <= 899 ? 30 : 64;
       // Important sizing wins over mobile full-bleed layer selectors in CSS.
       orb.style.setProperty('width', orbSize + 'px', 'important');
       orb.style.setProperty('height', orbSize + 'px', 'important');
