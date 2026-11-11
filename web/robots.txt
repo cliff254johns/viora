@@ -1,15 +1,11 @@
 User-agent: *
+# Authenticated app shells publish noindex directives; allow crawlers to read them.
 Allow: /
 Allow: /industries/
 Allow: /fr/
 Allow: /es/
 Disallow: /main
 Disallow: /main/
-Disallow: /clientportal
-Disallow: /trainingportal
-Disallow: /trainer
-Disallow: /scholar-admin
-Disallow: /campaigns
 Disallow: /campaigns-bootstrap.js
 Disallow: /api/
 Disallow: /auth/
