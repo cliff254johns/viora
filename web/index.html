@@ -128,24 +128,18 @@
     <h2 id="viora-city-title">One connected city. Many possibilities.</h2>
     <p>Explore the places, platforms and services that make up VIORA. Every destination connects to the wider ecosystem and its shared data core.</p>
   </div>
-  <div class="city-stage" id="viora-city-stage" aria-label="Animated futuristic city with moving traffic, atmospheric clouds, sun and moon">
+  <div class="city-stage" id="vioraHeroBanner" aria-label="Tokyo cityscape with a real-time astronomical sky, sun, moon and stars">
     <canvas id="viora-city-canvas" aria-hidden="true"></canvas>
+    <div id="vioraHeroOrb" aria-hidden="true"></div>
     <div class="city-atmosphere" aria-hidden="true"></div>
     <div class="city-hud" aria-live="polite">
       <span class="city-pill"><i class="fa-regular fa-clock"></i><span data-city-time>Local time</span></span>
-      <span class="city-pill"><i class="fa-solid fa-cloud-sun"></i><span data-city-weather>Checking local weather</span></span>
+      <span class="city-pill"><i class="fa-solid fa-location-dot"></i><span data-city-weather>Finding your local sky</span></span>
     </div>
 
   </div>
-  <div class="city-buildings" aria-label="Explore VIORA destinations">
-    <a class="city-link city-market" href="/market"><span class="city-icon"><i class="fa-solid fa-store"></i></span><span><strong>VIORA Market</strong><small>Discover products and services</small></span></a>
-    <a class="city-link city-client" href="/client"><span class="city-icon"><i class="fa-solid fa-user-group"></i></span><span><strong>Client Portal</strong><small>Projects, subscriptions and support</small></span></a>
-    <a class="city-link city-scholar" href="/training"><span class="city-icon"><i class="fa-solid fa-graduation-cap"></i></span><span><strong>VIORA Scholar</strong><small>Learning and training</small></span></a>
-    <a class="city-link city-industries" href="/industries"><span class="city-icon"><i class="fa-solid fa-city"></i></span><span><strong>Industries</strong><small>Explore connected solutions</small></span></a>
-    <a class="city-link city-core" href="#ecosystem"><span class="city-icon"><i class="fa-solid fa-globe"></i></span><span><strong>VIORA Ecosystem</strong><small>The shared connected core</small></span></a>
-  </div>
-  <div class="city-industry-district" aria-label="Industries served by VIORA">
-    <div class="city-industry-heading"><span>INDUSTRY DISTRICTS</span><strong>One connected core. Every kind of business.</strong></div>
+  <div class="city-industry-district city-buildings" aria-label="Explore VIORA industry ecosystems">
+    <div class="city-industry-heading"><span>EXPLORE INDUSTRIES</span><strong>Choose the business environment you want to connect.</strong></div>
     <div class="city-industry-grid">
       <a href="/industries/retail"><i class="fa-solid fa-basket-shopping"></i><span>Retail</span></a>
       <a href="/industries/retail"><i class="fa-solid fa-screwdriver-wrench"></i><span>Hardware</span></a>
@@ -699,7 +693,13 @@
   <!-- Firebase compat SDK — REQUIRED for index-home.js to read/write data -->
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
-<script src="viora-city.js" defer></script>
+<script src="/hero-solar.js" defer></script>
+<script src="/hero-time.js" defer></script>
+<script src="/hero-sky.js" defer></script>
+<script src="/hero-terminator.js" defer></script>
+<script src="/hero-orb.js" defer></script>
+<script src="/viora-city-sky.js" defer></script>
+<script src="/viora-city.js" defer></script>
 <script type="module" src="index-home.js"></script>
 <script>
   document.getElementById('yr').textContent = new Date().getFullYear();
