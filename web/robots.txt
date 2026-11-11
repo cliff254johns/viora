@@ -4,7 +4,6 @@ Allow: /
 Allow: /industries/
 Allow: /fr/
 Allow: /es/
-Disallow: /main
 Disallow: /main/
 Disallow: /campaigns-bootstrap.js
 Disallow: /api/
