@@ -614,3 +614,54 @@ body.va-large-text .msg{font-size:14.5px}
     animation:none!important;will-change:auto
   }
 }
+
+
+/* VIORA reference-inspired 3D robot finish and rotating character poses */
+#avatarButton,#bigAvatar{isolation:isolate;overflow:visible}
+#avatarButton svg,#bigAvatar svg{filter:drop-shadow(0 5px 5px rgba(3,28,48,.16))}
+#avatarButton .headset-arch,#bigAvatar .headset-arch{filter:drop-shadow(0 0 5px rgba(0,205,255,.45))}
+#avatarButton .bot,#bigAvatar .bot{transform-box:fill-box;transform-origin:50% 78%;animation:vaRobotFloat 3.8s ease-in-out infinite}
+#avatarButton .bot .hand-left,#bigAvatar .bot .hand-left{transform-origin:70px 99px;animation:vaFriendlyWave 5.8s ease-in-out infinite}
+#avatarButton .bot .hand-right,#bigAvatar .bot .hand-right{transform-origin:160px 105px;animation:vaThumbBounce 3.6s ease-in-out infinite}
+#avatarButton::before,#bigAvatar::before{
+ content:"✓";position:absolute;z-index:6;left:-3%;top:45%;width:30%;aspect-ratio:1;
+ display:grid;place-items:center;border-radius:50%;border:3px solid #b9ffd1;
+ background:radial-gradient(circle at 32% 25%,#54ff91,#08b94d 72%);
+ color:#fff;font-size:clamp(17px,2vw,29px);font-weight:900;
+ text-shadow:0 2px 4px rgba(0,80,35,.45);
+ box-shadow:0 7px 16px rgba(0,130,65,.3),0 0 15px rgba(0,255,120,.25);
+ opacity:0;transform:scale(.65);pointer-events:none;
+ animation:vaPoseCheck 10.5s ease-in-out infinite;
+}
+#avatarButton::after,#bigAvatar::after{
+ content:"↗";position:absolute;z-index:6;right:-8%;top:48%;width:34%;height:37%;
+ display:flex;align-items:flex-start;justify-content:flex-end;padding:5% 7%;
+ box-sizing:border-box;border:2px solid rgba(67,235,255,.95);border-radius:8px;
+ background:
+  linear-gradient(to top,rgba(255,255,255,.95) 0 8%,transparent 8%) 12% 86%/12% 28% no-repeat,
+  linear-gradient(to top,rgba(255,255,255,.95) 0 8%,transparent 8%) 38% 86%/12% 48% no-repeat,
+  linear-gradient(to top,rgba(255,255,255,.95) 0 8%,transparent 8%) 64% 86%/12% 70% no-repeat,
+  linear-gradient(145deg,rgba(90,241,255,.86),rgba(0,124,220,.78));
+ color:#fff;font-size:clamp(17px,2vw,27px);font-weight:900;
+ box-shadow:0 5px 18px rgba(0,170,235,.3),inset 0 0 12px rgba(255,255,255,.35);
+ opacity:0;transform:translateY(8px) rotate(-7deg) scale(.85);pointer-events:none;
+ animation:vaPoseChart 10.5s ease-in-out infinite;
+}
+#bigAvatar::before{left:-4%;top:47%;width:28%}
+#bigAvatar::after{right:-7%;top:47%;width:31%;height:39%}
+#avatarButton .va-pose-label,#bigAvatar .va-pose-label{display:none}
+@keyframes vaRobotFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes vaFriendlyWave{0%,72%,100%{transform:rotate(0)}77%{transform:rotate(-12deg)}82%{transform:rotate(8deg)}87%{transform:rotate(-5deg)}}
+@keyframes vaThumbBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes vaPoseCheck{0%,8%,29%,35%,100%{opacity:0;transform:scale(.65)}12%,25%{opacity:1;transform:scale(1)}}
+@keyframes vaPoseChart{0%,58%,91%,100%{opacity:0;transform:translateY(8px) rotate(-7deg) scale(.85)}64%,86%{opacity:1;transform:translateY(0) rotate(-7deg) scale(1)}}
+#bigAvatar.speaking .bot{animation:vaSpeakingFloat 1.15s ease-in-out infinite}
+#bigAvatar.thinking .bot{animation:vaThinkingFloat 1.8s ease-in-out infinite}
+@keyframes vaSpeakingFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-3px) scale(1.012)}}
+@keyframes vaThinkingFloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-3px) rotate(1deg)}}
+@media(prefers-reduced-motion:reduce){
+ #avatarButton .bot,#bigAvatar .bot,#avatarButton .bot .hand-left,#bigAvatar .bot .hand-left,#avatarButton .bot .hand-right,#bigAvatar .bot .hand-right,
+ #avatarButton::before,#bigAvatar::before,#avatarButton::after,#bigAvatar::after{animation:none!important}
+ #avatarButton::before{opacity:1;transform:none}
+ #avatarButton::after{opacity:0}
+}
