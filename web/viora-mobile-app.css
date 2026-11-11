@@ -317,3 +317,15 @@ body:has(#weatherLocationModal.active){overflow:hidden!important}
   #vioraHeroBanner .viora-hero-strip-tile .tile-value{font-size:.68rem!important}
   #vioraHeroBanner .viora-hero-strip-tile .tile-label{font-size:.52rem!important}
 }
+
+
+/* Restore a taller mobile hero banner without changing the compact summary tiles. */
+@media(max-width:899px){
+  #vioraHeroBanner{
+    min-height:460px!important;
+  }
+  #vioraHeroBanner>.viora-hero-content,
+  #vioraHeroBanner .viora-hero-cover-content{
+    min-height:460px!important;
+  }
+}
