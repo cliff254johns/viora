@@ -6092,3 +6092,152 @@ canvas { border-radius: var(--r-sm); }
   .wc-detail { min-width: 0; gap: 6px; }
   .wc-detail strong { overflow-wrap: anywhere; }
 }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   VIORA DASHBOARD — compact mobile hero controls
+   Keep profile, globe and location control on one line so the
+   four summary tiles remain immediately visible beneath them.
+   ═══════════════════════════════════════════════════════════════ */
+.viora-hero-location-trigger {
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  min-height: 42px;
+  padding: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50% !important;
+  background: rgba(255,255,255,.16) !important;
+  border: 1px solid rgba(255,255,255,.48) !important;
+  color: #ff806b !important;
+  box-shadow: 0 3px 12px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.22);
+  -webkit-tap-highlight-color: transparent;
+}
+.viora-hero-location-trigger i {
+  font-size: 1.18rem;
+  color: #ff806b !important;
+  filter: drop-shadow(0 1px 2px rgba(20,30,45,.45));
+}
+.viora-hero-location-trigger:focus-visible {
+  outline: 2px solid #ffd166;
+  outline-offset: 3px;
+}
+
+@media (max-width: 899px) {
+  .viora-hero-cover-content {
+    gap: 9px !important;
+    padding: 12px 12px 13px !important;
+  }
+  .viora-hero-top {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100%;
+    min-width: 0;
+  }
+  .viora-hero-avatar-wrap {
+    flex: 0 0 46px !important;
+    width: 46px !important;
+  }
+  .viora-hero-avatar {
+    width: 46px !important;
+    height: 46px !important;
+    border-width: 2px !important;
+    font-size: 1.05rem !important;
+  }
+  .viora-hero-name-block {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: auto !important;
+    padding: 0 !important;
+  }
+  .viora-hero-greeting {
+    font-size: clamp(.92rem, 4vw, 1.12rem) !important;
+    line-height: 1.16 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .viora-hero-subtitle {
+    gap: 4px !important;
+    margin-top: 3px !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    min-width: 0;
+    overflow: hidden;
+  }
+  #vioraHeroWeatherLoc {
+    font-size: .72rem !important;
+    max-width: 92px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  #heroClock {
+    font-size: .88rem !important;
+    min-width: 7ch !important;
+    letter-spacing: .015em !important;
+  }
+  .viora-hero-status-line {
+    font-size: .66rem !important;
+    line-height: 1.2 !important;
+    margin-top: 3px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .viora-hero-actions {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 5px !important;
+    padding: 0 !important;
+  }
+  .viora-hero-actions .viora-hero-globe-wrap,
+  #vioraHeroGlobeWrap {
+    width: 48px !important;
+    height: 48px !important;
+    flex: 0 0 48px !important;
+  }
+  .viora-hero-actions .viora-hero-location-trigger {
+    width: 34px !important;
+    min-width: 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    flex: 0 0 34px !important;
+  }
+  .viora-hero-actions .viora-hero-location-trigger i {
+    font-size: 1rem !important;
+  }
+  .viora-hero-strip {
+    margin-top: 0 !important;
+    gap: 6px !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .viora-hero-strip-tile {
+    min-height: 54px !important;
+    padding: 7px 8px !important;
+    gap: 6px !important;
+  }
+  .viora-hero-strip-tile > i {
+    font-size: .9rem !important;
+    width: 16px !important;
+  }
+}
+@media (max-width: 360px) {
+  .viora-hero-cover-content { padding: 10px 9px 11px !important; }
+  .viora-hero-top { gap: 6px !important; }
+  .viora-hero-avatar-wrap,
+  .viora-hero-avatar { width: 42px !important; }
+  .viora-hero-avatar { height: 42px !important; }
+  .viora-hero-actions .viora-hero-globe-wrap,
+  #vioraHeroGlobeWrap { width: 42px !important; height: 42px !important; flex-basis: 42px !important; }
+  .viora-hero-actions .viora-hero-location-trigger { width: 32px !important; min-width: 32px !important; height: 32px !important; min-height: 32px !important; flex-basis: 32px !important; }
+  #vioraHeroWeatherLoc { max-width: 72px; }
+}
