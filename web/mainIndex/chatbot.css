@@ -451,3 +451,65 @@ body.va-large-text .msg{font-size:14.5px}
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
 }
+
+
+/* VIORA avatar polish: visible, natural idle motion and expressive eyes */
+#viora-assistant .bot,.va-big .bot{
+  animation:va-natural-idle 4.6s cubic-bezier(.45,.05,.55,.95) infinite;
+  transform-origin:50% 82%;
+}
+@keyframes va-natural-idle{
+  0%,100%{transform:translateY(0) scale(1,1)}
+  48%{transform:translateY(-5px) scale(1.008,.995)}
+  72%{transform:translateY(-2px) scale(.998,1.004)}
+}
+#viora-assistant .eye,.va-big .eye{
+  animation:va-natural-blink 6.2s infinite;
+  transform-box:fill-box;
+  transform-origin:center;
+}
+@keyframes va-natural-blink{
+  0%,40%,43%,78%,81%,100%{transform:scaleY(1)}
+  41.5%,79.5%{transform:scaleY(.08)}
+}
+.eye-pupil{
+  transform-box:fill-box;
+  transform-origin:center;
+  animation:va-eye-gaze 9s ease-in-out infinite;
+}
+@keyframes va-eye-gaze{
+  0%,18%,100%{transform:translate(0,0)}
+  26%,34%{transform:translate(2px,-1px)}
+  58%,66%{transform:translate(-2px,0)}
+  82%,88%{transform:translate(0,1px)}
+}
+.eye-glint{opacity:.95;pointer-events:none}
+.va-big .antenna circle,#viora-assistant .antenna circle{
+  transform-box:fill-box;
+  transform-origin:center;
+  animation:va-antenna-glow 2.8s ease-in-out infinite;
+}
+@keyframes va-antenna-glow{
+  0%,100%{opacity:.78;transform:scale(.92)}
+  50%{opacity:1;transform:scale(1.16)}
+}
+.va-big.idle .mouth{animation:va-soft-smile 3.8s ease-in-out infinite}
+@keyframes va-soft-smile{
+  0%,100%{transform:scaleX(1) translateY(0)}
+  50%{transform:scaleX(1.08) translateY(-.5px)}
+}
+.va-big.speaking .bot{animation:va-speaking-bob .72s ease-in-out infinite alternate}
+@keyframes va-speaking-bob{from{transform:translateY(0)}to{transform:translateY(-2.5px)}}
+.va-big.thinking .eye-pupil{animation:va-thinking-gaze 1.8s ease-in-out infinite}
+@keyframes va-thinking-gaze{0%,100%{transform:translate(0,0)}50%{transform:translate(0,-2px)}}
+.va-big.explaining .bot{animation:va-explain-bob 1.5s ease-in-out infinite}
+@keyframes va-explain-bob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-3px) rotate(.35deg)}}
+#viora-assistant .va-avatar:focus-visible,.va-big:focus-visible{
+  outline:3px solid #56efff;outline-offset:5px;border-radius:24px;
+}
+@media(prefers-reduced-motion:reduce){
+  #viora-assistant .bot,.va-big .bot,#viora-assistant .eye,.va-big .eye,
+  .eye-pupil,.va-big .antenna circle,#viora-assistant .antenna circle,.va-big.idle .mouth{
+    animation:none!important;
+  }
+}
