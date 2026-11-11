@@ -410,3 +410,39 @@ body:has(#weatherLocationModal.active){overflow:hidden!important}
   }
   button,[role="button"],a.btn{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 }
+
+
+/* Mobile table hardening: preserve full vertical reach and two-axis touch scrolling.
+   Apply to known wrappers and tables rendered without a dedicated wrapper. */
+@media(max-width:899px){
+  .table-wrapper,.table-responsive,.table-scroll,.data-table-wrap,
+  .table-container,.table-wrap,[data-table-scroll]{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    min-height:0!important;
+    max-height:min(76dvh,760px)!important;
+    overflow:auto!important;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch!important;
+    touch-action:pan-x pan-y!important;
+    scrollbar-width:thin;
+  }
+  .table-wrapper>table,.table-responsive>table,.table-scroll>table,
+  .data-table-wrap>table,.table-container>table,.table-wrap>table,
+  [data-table-scroll]>table{
+    width:max-content!important;
+    min-width:100%!important;
+    max-width:none!important;
+    margin:0!important;
+  }
+  .table-wrapper tbody,.table-responsive tbody,.table-scroll tbody,
+  .data-table-wrap tbody,.table-container tbody,.table-wrap tbody{
+    min-height:0;
+  }
+  .main-content,.tab-content,.dashboard-section{
+    min-height:0!important;
+    overflow-y:visible;
+  }
+}
