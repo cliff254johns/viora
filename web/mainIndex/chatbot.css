@@ -542,3 +542,75 @@ body.va-large-text .msg{font-size:14.5px}
 @media(prefers-reduced-motion:reduce){
   #viora-assistant .va-avatar svg,.va-big>svg{animation:none!important;will-change:auto}
 }
+
+
+/* VIORA avatar v2 — animate the complete character, not only its SVG details. */
+#viora-assistant .va-avatar svg,
+.va-big.idle>svg{
+  display:block;
+  transform-box:fill-box;
+  transform-origin:50% 88%;
+  will-change:transform,filter;
+  animation:viora-character-breathe 4.8s cubic-bezier(.45,.05,.55,.95) infinite;
+}
+@keyframes viora-character-breathe{
+  0%,100%{transform:translate3d(0,0,0) scale(1);filter:drop-shadow(0 3px 3px rgba(8,207,255,.08))}
+  48%{transform:translate3d(0,-7px,0) scale(1.012,1.008);filter:drop-shadow(0 8px 9px rgba(8,207,255,.2))}
+  72%{transform:translate3d(0,-2px,0) scale(1.004,.998)}
+}
+#viora-assistant .eye,.va-big .eye{
+  transform-box:fill-box;
+  transform-origin:center;
+  animation:viora-human-blink 7.1s ease-in-out infinite;
+}
+@keyframes viora-human-blink{
+  0%,31%,34%,67%,70%,100%{transform:scaleY(1)}
+  32.5%,68.5%{transform:scaleY(.075)}
+}
+#viora-assistant .eye-pupil,.va-big .eye-pupil{
+  transform-box:fill-box;
+  transform-origin:center;
+  transform:translate(var(--gaze-x,0px),var(--gaze-y,0px));
+  transition:transform .16s ease-out;
+}
+#viora-assistant .mouth,.va-big .mouth{
+  transform-box:fill-box;
+  transform-origin:center;
+  transition:transform .09s ease,opacity .09s ease;
+}
+#viora-assistant.is-speaking .va-avatar svg{animation:viora-character-speaking .62s ease-in-out infinite alternate}
+.va-big.speaking>svg{animation:viora-character-speaking .62s ease-in-out infinite alternate}
+@keyframes viora-character-speaking{
+  from{transform:translate3d(0,0,0) scale(1)}
+  to{transform:translate3d(0,-3px,0) scale(1.008,1.012)}
+}
+#viora-assistant.is-speaking .mouth{animation:viora-mini-mouth .19s ease-in-out infinite alternate}
+@keyframes viora-mini-mouth{from{transform:scaleY(.72)}to{transform:scaleY(1.28)}}
+#viora-assistant.is-thinking .va-avatar svg,
+.va-big.thinking>svg{animation:viora-character-thinking 1.9s ease-in-out infinite}
+@keyframes viora-character-thinking{
+  0%,100%{transform:translateY(0) rotate(0)}
+  35%{transform:translateY(-2px) rotate(-.8deg)}
+  70%{transform:translateY(-1px) rotate(.8deg)}
+}
+#viora-assistant.is-thinking .antenna,.va-big.thinking .antenna{animation:antenna .85s ease-in-out infinite}
+#viora-assistant.is-speaking .hand-left{animation:wave 1.45s ease-in-out infinite}
+#viora-assistant.is-speaking .hand-right{animation:thumb .9s ease-in-out infinite}
+#viora-assistant.is-happy .antenna circle,.va-big.emotion-happy .antenna circle{filter:drop-shadow(0 0 8px #4ef1ff)}
+#viora-assistant .va-avatar{overflow:visible}
+#viora-assistant .va-avatar:active{transform:scale(.96)}
+.va-big{will-change:transform,opacity}
+.va-big .eye-pupil{transition:transform .14s ease-out}
+@media(max-width:520px){
+  #viora-assistant{width:88px;height:112px}
+  .va-panel{left:8px;right:8px;bottom:calc(78px + env(safe-area-inset-bottom,0px));width:auto;height:min(68dvh,600px);max-height:calc(100dvh - 100px - env(safe-area-inset-bottom,0px))}
+  .va-hero{flex:0 0 116px;min-height:116px}
+  .va-big{width:118px;height:145px}
+}
+@media(prefers-reduced-motion:reduce){
+  #viora-assistant .va-avatar svg,.va-big.idle>svg,
+  #viora-assistant .eye,.va-big .eye,
+  #viora-assistant.is-speaking .mouth{
+    animation:none!important;will-change:auto
+  }
+}
