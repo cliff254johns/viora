@@ -168,20 +168,62 @@ button,a,[role="button"],input,select{touch-action:manipulation}
 }
 #vioraHeroBanner>#vioraHeroCanvas{z-index:3!important;opacity:1!important}
 #vioraHeroBanner>#vioraHeroTerminatorCanvas{z-index:1!important}
-/* Keep the full dashboard hero content visible: the previous fixed 360px height
-   clipped the 390px mobile content and hid the lower summary tiles. */
+/* Mobile dashboard: size the hero from its actual content, not a fixed-height box.
+   Keep all four summary tiles in a visible 2×2 grid. */
 @media(max-width:899px){
-  #vioraHeroBanner{min-height:390px!important;height:auto!important}
-  #vioraHeroBanner .viora-hero-cover-content{
-    min-height:390px!important;
+  #vioraHeroBanner{
     height:auto!important;
+    min-height:0!important;
+    overflow:hidden!important;
+  }
+  #vioraHeroBanner>.viora-hero-content,
+  #vioraHeroBanner .viora-hero-cover-content{
+    position:relative!important;
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:flex-start!important;
+    align-items:stretch!important;
+    gap:16px!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    padding:16px 14px 14px!important;
+    box-sizing:border-box!important;
+  }
+  #vioraHeroBanner .viora-hero-top{
+    flex:0 0 auto!important;
+    min-height:0!important;
+    align-items:flex-start!important;
   }
   #vioraHeroBanner .viora-hero-strip{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    grid-auto-rows:minmax(64px,auto)!important;
+    gap:8px!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    margin:0!important;
     flex:0 0 auto!important;
-    margin-top:auto!important;
-    padding-bottom:2px!important;
+    position:relative!important;
+    inset:auto!important;
   }
+  #vioraHeroBanner .viora-hero-strip-tile{
+    display:flex!important;
+    min-width:0!important;
+    min-height:64px!important;
+    height:auto!important;
+    padding:9px 10px!important;
+    overflow:hidden!important;
+  }
+  #vioraHeroBanner .viora-hero-strip-tile .tile-body{min-width:0!important}
   #vioraHeroBanner>#vioraHeroOrb{z-index:8!important}
+}
+@media(max-width:380px){
+  #vioraHeroBanner>.viora-hero-content,
+  #vioraHeroBanner .viora-hero-cover-content{padding:13px 11px 12px!important;gap:12px!important}
+  #vioraHeroBanner .viora-hero-strip{gap:6px!important}
+  #vioraHeroBanner .viora-hero-strip-tile{padding:8px!important}
 }
 
 
