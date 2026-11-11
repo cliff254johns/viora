@@ -113,7 +113,7 @@
     window.VioraCityLocation = activeLocation;
     try { window.VioraTime?.setTimezone?.(activeLocation.tz); } catch (_) {}
     updateClock();
-    stage.dataset.locationAccuracy = location.name === 'Approximate visitor location' ? 'approximate' : 'device';
+    stage.dataset.locationAccuracy = location.accuracy || (location.name === 'Approximate visitor location' ? 'approximate' : 'device');
   }
 
   function onHeroLocationChange(event) {
@@ -159,7 +159,7 @@
     return new Promise(resolve => {
       if (!navigator.geolocation) return resolve(null);
       navigator.geolocation.getCurrentPosition(
-        p => resolve({ lat: p.coords.latitude, lon: p.coords.longitude, tz: browserTz(), name: 'Visitor location', id: 'visitor-location' }),
+        p => resolve({ lat: p.coords.latitude, lon: p.coords.longitude, tz: browserTz(), name: 'Visitor location', id: 'visitor-location', accuracy: 'precise' }),
         () => resolve(null),
         { enableHighAccuracy: false, timeout: 6500, maximumAge: 900000 }
       );
@@ -173,12 +173,12 @@
       const response = await fetch('https://ipapi.co/json/', { cache: 'no-store', signal: controller.signal });
       if (!response.ok) throw new Error('IP location HTTP ' + response.status);
       const data = await response.json();
-      if (Number.isFinite(Number(data.latitude)) && Number.isFinite(Number(data.longitude))) {
+      if (data.latitude != null && data.longitude != null && data.latitude !== '' && data.longitude !== '' && Number.isFinite(Number(data.latitude)) && Number.isFinite(Number(data.longitude))) {
         return {
           lat: Number(data.latitude), lon: Number(data.longitude),
           tz: data.timezone || browserTz(),
           name: data.city ? `${data.city}, ${data.country_name || ''}`.replace(/, $/, '') : 'Approximate visitor location',
-          id: 'visitor-location'
+          id: 'visitor-location', accuracy: 'approximate'
         };
       }
     } catch (error) {
@@ -195,10 +195,15 @@
     if (location) {
       mount(location);
     } else {
-      stage.dataset.skyFallback = 'device-clock';
-      const fallback = { lat: 0, lon: 0, tz: browserTz(), name: 'Timezone fallback', id: 'timezone-fallback' };
+      stage.dataset.skyFallback = 'dashboard-location';
+      // If neither browser nor IP geolocation is available, retain the same
+      // real default location the dashboard uses instead of inventing 0°, 0°.
+      const fallback = window.VioraHero?.getLocation?.() || {
+        lat: -0.04626, lon: 37.65587, tz: 'Africa/Nairobi',
+        name: 'Meru, Kenya', id: 'meru'
+      };
       mount(fallback);
-      stage.dataset.skyFallback = 'timezone-fallback';
+      stage.dataset.skyFallback = 'dashboard-location';
     }
     updateClock();
     window.setInterval(updateClock, 1000);
