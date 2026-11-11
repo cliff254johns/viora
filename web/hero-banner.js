@@ -2590,17 +2590,19 @@ function deriveTzFromLatLon(lat, lon) {
     if (!banner) return;
 
     const currentTab = (getState() && getState().currentTab) || '';
-if (currentTab !== 'dashboard') {
-  banner.style.display = 'none';
-  /* ★ FIX: hide the sun orb too when leaving dashboard, otherwise
-     it floats over the tab content on other tabs. */
-  try {
-    const orb = document.getElementById('vioraHeroOrb');
-    if (orb) orb.style.opacity = '0';
-  } catch (_) {}
-  return;
-}
-banner.style.display = '';
+    // The shared hero engine also powers the public homepage. Only apply
+    // dashboard tab visibility rules when this banner actually lives inside
+    // the dashboard tab; otherwise the homepage sky and sun get hidden.
+    const dashboardHost = banner.closest('#tab-dashboard');
+    if (dashboardHost && currentTab !== 'dashboard') {
+      banner.style.display = 'none';
+      try {
+        const orb = document.getElementById('vioraHeroOrb');
+        if (orb) orb.style.opacity = '0';
+      } catch (_) {}
+      return;
+    }
+    banner.style.display = '';
 
 if (!state._heroLocation || !state._heroLocation.tz) state._heroLocation = DEFAULT_LOCATION;
 if (!state._heroWeatherCache || typeof state._heroWeatherCache !== 'object') state._heroWeatherCache = {};
