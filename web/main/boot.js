@@ -236,7 +236,7 @@ async function handleAuthChange(user) {
       // resolution, then fall back to the legacy global user profile.
       const orgProfile = profiles[0];
       const globalProfile = profiles[1];
-      const selectedProfile = orgProfile.exists()
+      const selectedProfile = orgProfile.exists() && orgProfile.val()?.role
         ? orgProfile
         : globalProfile;
 
