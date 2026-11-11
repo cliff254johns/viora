@@ -1038,6 +1038,12 @@ function _ceWire() {
     connectTikTok();
   });
 
+  // Explicit close control (the editor header button has an id, not data-close).
+  document.getElementById('campEditorClose')?.addEventListener('click', () => {
+    closeModal('campaignEditorModal');
+    _campEditor.isOpen = false;
+  });
+
   // Modal close via data-close
   document.querySelectorAll('[data-close="campaignEditorModal"]').forEach(b => {
     b.addEventListener('click', () => {
