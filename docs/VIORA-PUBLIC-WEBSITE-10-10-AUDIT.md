@@ -54,12 +54,13 @@ Required: create or supply VIORA-branded square icons, declare exact dimensions 
 
 ### P2 — Metadata consistency
 
-The main sitemap routes inspected have titles, descriptions, canonical URLs, viewport declarations and one H1. Some secondary/demo or portal pages do not:
-- `3d.html`: no description or canonical.
-- `campaigns.html`, `clientportal.html`, `cliff.html`, `patner.html`, `public.html`, `scholar-admin.html`, `trainer.html`, `trainingportal.html`: missing canonical and/or description.
-- Several portal pages are intentionally excluded from crawling in robots.txt, but access control and index directives must be reviewed together; robots.txt alone is not a privacy or access-control mechanism.
+The main sitemap routes inspected have titles, descriptions, canonical URLs, viewport declarations and one H1. Some secondary/demo or portal pages need distinct handling:
+- `3d.html`: description and canonical were added in the first implementation pass.
+- `campaigns.html`, `clientportal.html`, `scholar-admin.html`, `trainer.html`, and `trainingportal.html` are authenticated application entry points. The follow-up implementation adds `noindex,nofollow` to these pages and removes their `robots.txt` disallow rules so crawlers can read the noindex directives.
+- `cliff.html` and `public.html` are public-profile templates; their canonical/indexing behaviour still needs a deliberate dynamic-profile decision.
+- `patner.html` is a partner-facing portal and needs an authentication/canonical review before it is assigned an index policy.
 
-Next: classify every route as public/indexable, public/noindex, or authenticated/private. Apply metadata and crawl policy consistently; do not accidentally expose portal content in search.
+Robots rules are crawl controls, not access control. Firebase authentication and database rules must protect every private record regardless of indexing policy.
 
 ### P2 — Static asset references
 
@@ -69,6 +70,10 @@ The Market page references three fallback notification audio paths:
 - `/notification.mp3`
 
 No matching audio files were found in the repository tree. The notification bridge may still function without sound, but these fallbacks cannot play from the current repository assets. Decide whether to add a properly licensed VIORA sound or remove the unused audio element and provide silent notification behaviour.
+
+### P2 — Market notification sound
+
+The Market page previously contained an unused notification audio element with three fallback paths that do not exist in the repository. No code references the element, so the dead audio block has been removed rather than leaving broken media requests. The notification bridge currently writes notification records; audible alerts remain unimplemented.
 
 ### P2 — Accessibility, performance and responsive validation
 
