@@ -91,8 +91,18 @@ export function boot(deps) {
 
   /* ── Service Worker ── */
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.info('[viora] SW registered:', reg.scope))
+    const SW_RELOAD_KEY = 'viora-sw-controller-refresh';
+    if (sessionStorage.getItem(SW_RELOAD_KEY) === '1') sessionStorage.removeItem(SW_RELOAD_KEY);
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (sessionStorage.getItem(SW_RELOAD_KEY) === '1') return;
+      sessionStorage.setItem(SW_RELOAD_KEY, '1');
+      window.location.reload();
+    });
+    navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
+      .then(async reg => {
+        console.info('[viora] SW registered:', reg.scope);
+        try { await reg.update(); } catch (e) { console.warn('[viora] SW update check failed:', e); }
+      })
       .catch(err => console.warn('[viora] SW failed:', err));
   }
 
