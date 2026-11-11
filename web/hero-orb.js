@@ -113,7 +113,14 @@
     state.orb = orb;
 
     // Base positioning
-    orb.style.position = 'absolute';
+    // Keep the orb anchored at the banner origin. Mobile banner CSS uses
+    // full-bleed layer rules for canvases; inline !important sizing prevents
+    // those rules from stretching the sun to the full hero dimensions.
+    orb.style.setProperty('position', 'absolute', 'important');
+    orb.style.setProperty('top', '0', 'important');
+    orb.style.setProperty('left', '0', 'important');
+    orb.style.setProperty('right', 'auto', 'important');
+    orb.style.setProperty('bottom', 'auto', 'important');
     orb.style.willChange = 'transform, opacity';
     orb.style.transformOrigin = 'center center';
     orb.style.pointerEvents = 'none';
@@ -496,16 +503,19 @@
          ═══════════════════════════════════════════════════════ */
            /* FORCE THE SUN TO BE A SOLID BALL (Overrides all CSS) */
       orb.style.display = 'block';
-      const orbSize = state.rectW <= 480 ? Math.max(30, Math.min(38, state.rectW * 0.105)) : 64;
-      orb.style.width = orbSize + 'px';
-      orb.style.height = orbSize + 'px';
+      const orbSize = state.rectW <= 480
+        ? Math.max(20, Math.min(26, state.rectW * 0.07))
+        : state.rectW <= 899 ? 30 : 64;
+      // Important sizing wins over mobile full-bleed layer selectors in CSS.
+      orb.style.setProperty('width', orbSize + 'px', 'important');
+      orb.style.setProperty('height', orbSize + 'px', 'important');
       state.lastSizePx = orbSize;
       orb.style.borderRadius = '50%';
       orb.style.backgroundColor = '#fffbe6'; 
       orb.style.border = '2px solid rgba(255, 255, 255, 0.8)';
       // Massive glow that won't be clipped
       orb.style.boxShadow = state.rectW <= 480
-        ? '0 0 18px 5px rgba(255, 220, 120, 0.72), 0 0 38px 12px rgba(255, 180, 60, 0.32)'
+        ? '0 0 10px 3px rgba(255, 220, 120, 0.58), 0 0 20px 6px rgba(255, 180, 60, 0.24)'
         : '0 0 40px 15px rgba(255, 220, 120, 0.8), 0 0 80px 30px rgba(255, 180, 60, 0.4)';
       orb.style.filter = 'none';  
 
