@@ -274,3 +274,49 @@
 @media(prefers-reduced-motion:reduce){
   #viora-city .city-industry-grid a{transition:none!important}
 }
+
+
+/* 2026-11-12 sky parity repair:
+   The homepage now mounts the same weather, star, terminator, arc, particle,
+   scrim and orb layers as main.html. Keep their stacking and sizing identical. */
+#viora-city #vioraHeroBanner{
+  position:relative!important;
+  display:block!important;
+  isolation:isolate!important;
+  overflow:hidden!important;
+  min-height:420px!important;
+  height:420px!important;
+  border-radius:20px!important;
+}
+#viora-city #vioraHeroBanner > canvas,
+#viora-city #vioraHeroBanner > svg{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  display:block!important;
+  margin:0!important;
+  padding:0!important;
+  max-width:none!important;
+  max-height:none!important;
+  pointer-events:none!important;
+}
+#viora-city #vioraHeroWeatherCanvas{z-index:0!important}
+#viora-city #vioraHeroSkyCanvas{z-index:1!important}
+#viora-city #vioraHeroTerminatorCanvas{z-index:2!important}
+#viora-city #vioraHeroArcSvg{z-index:3!important}
+#viora-city #vioraHeroCanvas{z-index:4!important}
+#viora-city #vioraHeroBanner > .viora-hero-scrim{position:absolute!important;inset:0!important;z-index:5!important;pointer-events:none!important}
+#viora-city #vioraHeroOrb{position:absolute!important;inset:0 auto auto 0!important;z-index:6!important;pointer-events:none!important}
+#viora-city .city-hud{z-index:8!important}
+@media(max-width:560px){
+  #viora-city #vioraHeroBanner{height:420px!important;min-height:420px!important}
+}
+
+/* Distinct, accessible industry icon colours rather than one monochrome icon tint. */
+#viora-city .city-industry-grid a:nth-child(6n+1) i{background:rgba(38,190,125,.19)!important;color:#55e6a5!important}
+#viora-city .city-industry-grid a:nth-child(6n+2) i{background:rgba(245,158,48,.2)!important;color:#ffc16b!important}
+#viora-city .city-industry-grid a:nth-child(6n+3) i{background:rgba(66,145,255,.2)!important;color:#83baff!important}
+#viora-city .city-industry-grid a:nth-child(6n+4) i{background:rgba(235,83,110,.2)!important;color:#ff91a5!important}
+#viora-city .city-industry-grid a:nth-child(6n+5) i{background:rgba(159,112,255,.2)!important;color:#c5a7ff!important}
+#viora-city .city-industry-grid a:nth-child(6n) i{background:rgba(31,190,205,.2)!important;color:#69e5ef!important}
