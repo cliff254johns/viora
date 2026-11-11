@@ -2289,20 +2289,6 @@ function deriveTzFromLatLon(lat, lon) {
       const desigEl = document.getElementById('vioraHeroDesignation');
       if (desigEl) { desigEl.textContent = ''; desigEl.style.display = 'none'; }
 
-      const avatarEl = document.getElementById('vioraHeroAvatar');
-      if (avatarEl) {
-        const opAvatar = state.operator && (state.operator.avatar || state.operator.photoURL);
-        if (opAvatar) {
-          if (avatarEl.dataset.src !== opAvatar) {
-            avatarEl.dataset.src = opAvatar;
-            avatarEl.innerHTML = `<img src="${opAvatar}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none';this.parentNode.innerHTML='<i class=&quot;fa-solid fa-user&quot;></i>';" />`;
-          }
-        } else if (!avatarEl.dataset.src) {
-          const initials = (name || 'U').split(/\s+/).map(s => s[0]).join('').slice(0, 2).toUpperCase();
-          avatarEl.innerHTML = `<span style="font-weight:700;">${initials}</span>`;
-        }
-      }
-
       const statusEl = document.getElementById('vioraHeroStatusLine');
       if (statusEl) {
         let attentionCount = 0;
