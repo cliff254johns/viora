@@ -108,3 +108,30 @@
 @media(prefers-reduced-motion:reduce){
   #viora-city .city-industry-grid a{transition:none}
 }
+
+/* Tokyo photograph + independent simulated sky. These rules intentionally supersede
+   the former procedural Three.js city scene; the hero globe above remains unchanged. */
+#viora-city .city-stage{
+  background:#09172a!important;
+  filter:none!important;
+  isolation:isolate;
+}
+#viora-city #viora-city-canvas{
+  position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0;
+}
+#viora-city .city-atmosphere{
+  z-index:1;
+  background:linear-gradient(180deg,rgba(3,10,20,.02) 0%,rgba(3,10,20,0) 48%,rgba(3,9,17,.28) 100%);
+  pointer-events:none;
+}
+#viora-city .city-stage:before{z-index:2}
+#viora-city .city-stage:after{z-index:2}
+#viora-city .city-hud{z-index:4}
+#viora-city[data-phase="night"] .city-stage,
+#viora-city[data-phase="blue-hour"] .city-stage,
+#viora-city[data-phase="golden-hour"] .city-stage,
+#viora-city[data-phase="dawn"] .city-stage{filter:none!important}
+#viora-city .city-pill [data-city-weather]{white-space:nowrap}
+@media(prefers-reduced-motion:reduce){
+  #viora-city .city-link,#viora-city .city-industry-grid a{transition:none!important}
+}
