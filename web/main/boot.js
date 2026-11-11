@@ -184,7 +184,7 @@ async function handleAuthChange(user) {
       name: user.email,
       role: 'member',
       email: user.email,
-      avatar: null, accent: '#00d4ff', tagline: '', orgId: 'viora'
+      accent: '#00d4ff', tagline: '', orgId: 'viora'
     };
     document.getElementById('loginScreen')?.classList.add('hidden');
     document.getElementById('appShell')?.classList.remove('hidden');
@@ -199,7 +199,7 @@ async function handleAuthChange(user) {
     catch (e) { console.warn('[notif] attach failed', e); }
 
     /* ── Fetch the operator profile ── */
-    let role = 'member', name = user.email, avatar = null;
+    let role = 'member', name = user.email;
     let accent = '#00d4ff', tagline = '', orgId = 'viora';
     let operatorLoaded = false;
     try {
@@ -221,7 +221,6 @@ async function handleAuthChange(user) {
         const u = snap.val();
         role    = u.role    || 'member';
         name    = u.name    || user.email;
-        avatar  = u.avatar  || null;
         accent  = u.accent  || '#00d4ff';
         tagline = u.tagline || '';
         orgId   = u.orgId   || 'viora';
@@ -242,19 +241,13 @@ async function handleAuthChange(user) {
 
     state.operator = {
       uid: user.uid, name, role, email: user.email,
-      avatar, accent, tagline, orgId
+      accent, tagline, orgId
     };
     /* Only mark operator-loaded if the fetch actually succeeded,
        so roleAllows() doesn't lock the UI down on a transient
        network failure. */
     state._operatorLoaded = operatorLoaded;
     applyRoleGating();
-
-    const avatarEl = document.getElementById('operatorAvatar');
-    if (avatarEl) {
-      if (avatar) avatarEl.innerHTML = `<img src="${avatar}">`;
-      else avatarEl.textContent = (name || '?').charAt(0).toUpperCase();
-    }
 
     /* ── Hero refresh ── */
     try {
