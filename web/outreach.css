@@ -9,3 +9,16 @@
 .dashboard-return{height:37px;padding:0 11px;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);text-decoration:none;font-size:11px;font-weight:700;white-space:nowrap}.dashboard-return:hover{border-color:var(--blue);color:var(--blue)}
 @media(max-width:760px){.dashboard-return{height:33px;padding:0 8px;font-size:10px;gap:5px}}
 @media(max-width:390px){.dashboard-return{width:33px;height:33px;padding:0;font-size:0}.dashboard-return i{font-size:13px}}
+
+/* Distinct, accessible colours for real Font Awesome navigation icons. */
+.nav-item[data-view="overview"] i { color:#38bdf8; }
+.nav-item[data-view="leads"] i { color:#a78bfa; }
+.nav-item[data-view="investors"] i { color:#f6bd55; }
+.nav-item[data-view="businesses"] i { color:#35c99a; }
+.nav-item[data-view="industries"] i { color:#fb8b68; }
+.nav-item[data-view="followups"] i { color:#22d3ee; }
+.nav-item[data-view="email"] i { color:#60a5fa; }
+.nav-item[data-view="ai"] i { color:#c084fc; }
+.nav-item[data-view="analytics"] i { color:#34d399; }
+.nav-item[data-view="audit"] i { color:#f472b6; }
+.nav-item.active i { filter: saturate(1.15) brightness(1.12); }
