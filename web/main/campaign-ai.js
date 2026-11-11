@@ -215,11 +215,13 @@ function _buildComposerModal() {
         <span style="font-size:.75rem;color:var(--text-secondary);font-weight:400;margin-left:8px;">
           Generate once → post to N platforms
         </span>
+        <button type="button" class="viora-dialog-close" data-viora-close-composer aria-label="Close composer">×</button>
       </h2>
       <div id="ccBody"></div>
     </div>
   `;
   document.body.appendChild(overlay);
+  overlay.querySelector('[data-viora-close-composer]')?.addEventListener('click', _closeComposer);
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) _closeComposer();
   });
