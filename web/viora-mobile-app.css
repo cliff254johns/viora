@@ -267,3 +267,53 @@ body:has(#weatherLocationModal.active){overflow:hidden!important}
     border-radius:18px 18px 4px 18px!important;
   }
 }
+
+
+/* Compact mobile dashboard summary tiles so the live hero background remains visible. */
+@media(max-width:899px){
+  #vioraHeroBanner>.viora-hero-content,
+  #vioraHeroBanner .viora-hero-cover-content{
+    gap:9px!important;
+    padding:11px 13px 11px!important;
+  }
+  #vioraHeroBanner .viora-hero-strip{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    grid-auto-rows:minmax(42px,auto)!important;
+    gap:6px!important;
+  }
+  #vioraHeroBanner .viora-hero-strip-tile{
+    min-height:42px!important;
+    padding:5px 7px!important;
+    gap:5px!important;
+    border-radius:10px!important;
+    background:rgba(0,0,0,.20)!important;
+    -webkit-backdrop-filter:blur(5px)!important;
+    backdrop-filter:blur(5px)!important;
+    border:1px solid rgba(255,255,255,.13)!important;
+  }
+  #vioraHeroBanner .viora-hero-strip-tile>i{
+    width:14px!important;
+    font-size:.76rem!important;
+  }
+  #vioraHeroBanner .viora-hero-strip-tile .tile-body{gap:0!important}
+  #vioraHeroBanner .viora-hero-strip-tile .tile-value{
+    font-size:.72rem!important;
+    line-height:1.12!important;
+  }
+  #vioraHeroBanner .viora-hero-strip-tile .tile-label{
+    font-size:.55rem!important;
+    line-height:1.1!important;
+  }
+}
+@media(max-width:380px){
+  #vioraHeroBanner .viora-hero-strip{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:5px!important;
+  }
+  #vioraHeroBanner .viora-hero-strip-tile{
+    min-height:39px!important;
+    padding:4px 6px!important;
+  }
+  #vioraHeroBanner .viora-hero-strip-tile .tile-value{font-size:.68rem!important}
+  #vioraHeroBanner .viora-hero-strip-tile .tile-label{font-size:.52rem!important}
+}
