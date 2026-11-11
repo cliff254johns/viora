@@ -1192,11 +1192,9 @@
     }
     if (alpha < 0.02) { state.lastMoon = null; return; }
 
-         /* ★ FIX: Make the moon much bigger at night. 
-       Increased the base multiplier from 0.035 to 0.08 (roughly 8% of the banner height),
-       and raised the max clamp from 32px to 72px. */
-    const r = Math.max(24, Math.min(72, Math.min(w, h) * 0.08));
-    const glowR = r * 2.5;
+    /* Larger, still proportionate lunar disc for mobile and desktop. */
+    const r = Math.max(28, Math.min(86, Math.min(w, h) * 0.105));
+    const glowR = r * 2.35;
 
     const halo = ctx.createRadialGradient(pr.sx, pr.sy, 0, pr.sx, pr.sy, glowR);
     halo.addColorStop(0, `rgba(220, 225, 240, ${(0.25 * alpha).toFixed(3)})`);
@@ -1209,80 +1207,110 @@
 
     ctx.globalAlpha = alpha;
 
-    /* Dark side (the whole disc, so we have something to draw over). */
-    ctx.fillStyle = 'rgba(60, 65, 80, 1)';
+    /* Paint the unlit lunar disc first, then reveal the physically
+       correct illuminated region from the Sun–Moon elongation.
+       Solar.getMoonPosition() returns phase 0=new, .25=first quarter,
+       .5=full, .75=last quarter and 1=new again. */
+    const phase = ((Number(m.phase) % 1) + 1) % 1;
+    const disc = ctx.createRadialGradient(
+      pr.sx - r * .28, pr.sy - r * .34, r * .08,
+      pr.sx + r * .12, pr.sy + r * .10, r * 1.15
+    );
+    disc.addColorStop(0, 'rgba(103, 111, 128, 1)');
+    disc.addColorStop(.72, 'rgba(54, 61, 76, 1)');
+    disc.addColorStop(1, 'rgba(25, 31, 43, 1)');
+    ctx.fillStyle = disc;
     ctx.beginPath();
     ctx.arc(pr.sx, pr.sy, r, 0, Math.PI * 2);
     ctx.fill();
 
-    const phase = clamp(m.phase, 0, 1);
+    /* Clip all phase work to the circular lunar limb. */
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(pr.sx, pr.sy, r, 0, Math.PI * 2);
+    ctx.clip();
 
-    if (phase > 0.02) {
-      /* Waxing: lit side is the right half (phase < 0.5).
-         Waning: lit side is the left half (phase > 0.5).
-         We draw the lit half-disc, then carve out the shadow
-         ellipse. */
+    const waxing = phase < .5;
+    const rightSide = waxing;
+    const halfX = rightSide ? pr.sx : pr.sx - r;
+    const litGradient = ctx.createLinearGradient(pr.sx - r, pr.sy - r, pr.sx + r, pr.sy + r);
+    litGradient.addColorStop(0, '#c9c9c1');
+    litGradient.addColorStop(.48, '#f4f1e7');
+    litGradient.addColorStop(1, '#d8d6cc');
+    ctx.fillStyle = litGradient;
 
-      /* 1. Full bright disc as the base. */
-      ctx.fillStyle = 'rgba(235, 235, 225, 1)';
-      ctx.beginPath();
-      ctx.arc(pr.sx, pr.sy, r, 0, Math.PI * 2);
-      ctx.fill();
+    /* Every phase starts with its sun-facing half illuminated. */
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(halfX, pr.sy - r, r, r * 2);
+    ctx.clip();
+    ctx.fillRect(pr.sx - r, pr.sy - r, r * 2, r * 2);
 
-      /* 2. Shadow ellipse. Semi-minor axis r * |1 - 2*phase|. */
-      const shadowK = Math.abs(1 - phase * 2);
-      const shadowRx = shadowK * r;
+    /* The moving terminator is an ellipse whose projected width is
+       cos(elongation). Its side and fill switch at each quarter. */
+    let terminatorRx = 0;
+    let terminatorFill = 'bright';
+    let terminatorSide = rightSide ? 'right' : 'left';
 
-      if (phase < 0.02) {
-        /* New moon — nothing to shade, lit disc is empty. */
-        ctx.fillStyle = 'rgba(60, 65, 80, 1)';
-        ctx.beginPath();
-        ctx.arc(pr.sx, pr.sy, r, 0, Math.PI * 2);
-        ctx.fill();
-      } else if (phase > 0.98) {
-        /* Full moon — already lit. */
-      } else {
-        /* Draw the shadow half. We use a single ellipse clipped
-           to the disc so the boundary is smooth. */
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(pr.sx, pr.sy, r, 0, Math.PI * 2);
-        ctx.clip();
-
-        ctx.fillStyle = 'rgba(60, 65, 80, 1)';
-        ctx.beginPath();
-        /* Shadow sits on the side AWAY from the sun. Waxing
-           (phase < 0.5) → shadow on the left. Waning → right. */
-        ctx.ellipse(pr.sx, pr.sy, shadowRx, r, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        /* Cover the OTHER side of the ellipse so only the
-           crescent/gibbous shape remains. */
-        const litSide = phase < 0.5 ? 1 : -1;
-        ctx.fillStyle = 'rgba(60, 65, 80, 1)';
-        ctx.beginPath();
-        ctx.rect(
-          pr.sx + (litSide > 0 ? 0 : -r * 2),
-          pr.sy - r,
-          r * 2,
-          r * 2
-        );
-        ctx.fill();
-
-        ctx.restore();
-
-        /* Redraw the lit crescent so the anti-aliasing doesn't
-           leave a dark rim. */
-        ctx.globalAlpha = alpha * 0.9;
-        ctx.fillStyle = 'rgba(235, 235, 225, 1)';
-        ctx.beginPath();
-        ctx.arc(pr.sx, pr.sy, r * 0.96, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = alpha;
-      }
+    if (phase < .25) {
+      terminatorRx = Math.cos(phase * Math.PI * 2) * r;
+      terminatorFill = 'dark';
+      terminatorSide = 'right';
+    } else if (phase < .5) {
+      terminatorRx = -Math.cos(phase * Math.PI * 2) * r;
+      terminatorFill = 'bright';
+      terminatorSide = 'left';
+    } else if (phase < .75) {
+      terminatorRx = -Math.cos(phase * Math.PI * 2) * r;
+      terminatorFill = 'bright';
+      terminatorSide = 'right';
+    } else {
+      terminatorRx = Math.cos(phase * Math.PI * 2) * r;
+      terminatorFill = 'dark';
+      terminatorSide = 'left';
     }
 
+    if (terminatorRx > .25) {
+      ctx.save();
+      ctx.beginPath();
+      const clipX = terminatorSide === 'right' ? pr.sx : pr.sx - r;
+      ctx.rect(clipX, pr.sy - r, r, r * 2);
+      ctx.clip();
+      ctx.fillStyle = terminatorFill === 'bright' ? litGradient : 'rgba(43, 49, 63, 1)';
+      ctx.beginPath();
+      ctx.ellipse(pr.sx, pr.sy, Math.min(r, terminatorRx), r, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+
+    /* Subtle lunar maria/crater relief, masked to the illuminated
+       surface. These restrained marks keep the larger Moon from
+       looking like a flat white icon. */
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-atop';
+    ctx.globalAlpha = .12 * alpha;
+    const craters = [
+      [-.34, -.42, .12], [.27, -.28, .09], [-.08, -.04, .17],
+      [.39, .19, .075], [-.32, .34, .11], [.10, .49, .07]
+    ];
+    craters.forEach(([cx, cy, size]) => {
+      const x = pr.sx + cx * r, y = pr.sy + cy * r, cr = size * r;
+      const shade = ctx.createRadialGradient(x - cr * .25, y - cr * .3, cr * .08, x, y, cr);
+      shade.addColorStop(0, 'rgba(255,255,255,.42)');
+      shade.addColorStop(.72, 'rgba(90,94,101,.20)');
+      shade.addColorStop(1, 'rgba(35,40,50,.45)');
+      ctx.fillStyle = shade;
+      ctx.beginPath();
+      ctx.arc(x, y, cr, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.restore();
+    ctx.restore();
+
     ctx.globalAlpha = 1;
+
+
 
     if (alpha > 0.35 && w > 720) {
       ctx.save();
