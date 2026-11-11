@@ -709,9 +709,10 @@ body.va-large-text .msg{font-size:14.5px}
 @media(prefers-reduced-motion:reduce){.va-pose-stack,.va-pose-stack .va-pose{animation:none!important}.va-pose-stack .va-pose-success{opacity:0!important;visibility:hidden!important}.va-pose-stack .va-pose-thumbs{opacity:1!important;visibility:visible!important;transform:none!important}.va-pose-stack .va-pose-analytics{opacity:0!important;visibility:hidden!important}}
 
 
-/* Main-system avatar removal: retain a compact, conventional chat launcher only. */
-#viora-assistant{width:56px;height:56px;left:16px;bottom:calc(86px + env(safe-area-inset-bottom,0px));}
-#viora-assistant .va-chat-launcher{position:absolute;inset:0;width:56px;height:56px;border:1px solid rgba(8,207,255,.45);border-radius:18px;background:linear-gradient(145deg,#0b2942,#071827);color:#62e8ff;display:grid;place-items:center;font-size:23px;box-shadow:0 8px 24px rgba(0,25,45,.28);filter:none;}
-#viora-assistant .va-chat-launcher:hover{transform:translateY(-2px);filter:brightness(1.12);}
-#viora-assistant .va-chat-launcher:focus-visible{outline:3px solid #56efff;outline-offset:3px;}
-.va-assistant-status{display:flex;align-items:center;justify-content:center;min-height:36px;color:var(--v-cyan);font-size:22px;}
+/* Public-site mascot: compact while closed; the original large animated
+   mascot remains in the assistant hero when the chat panel is opened. */
+#viora-assistant{width:64px;height:78px;left:16px;bottom:calc(92px + env(safe-area-inset-bottom,0px));}
+#viora-assistant .va-avatar{width:100%;height:100%;}
+@media(max-width:520px){
+  #viora-assistant{width:58px;height:70px;left:12px;bottom:calc(88px + env(safe-area-inset-bottom,0px));}
+}
