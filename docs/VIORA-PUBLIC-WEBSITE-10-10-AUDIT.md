@@ -30,6 +30,9 @@ The public site has a good foundation: 26 top-level HTML pages, shared branding 
 
 ### P1 — Main public landing page architecture
 
+The homepage previously made two separate Google Fonts requests and repeated both font preconnect hints. The requests are now consolidated into one stylesheet request for the three families actually used by the page/global brand layer, with one preconnect pair.
+
+
 `web/index.html` is 37.7 KB and contains:
 - 4 inline script blocks
 - 4 inline style blocks
