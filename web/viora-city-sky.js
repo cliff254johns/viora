@@ -38,14 +38,14 @@
     if (!target) return;
     if (!weather || weather.tempC == null) {
       target.textContent = 'Live weather unavailable';
-      if (icon) icon.className = 'fa-solid fa-cloud-question';
+      if (icon) icon.className = 'fa-solid fa-cloud';
       stage.dataset.weatherStatus = 'unavailable';
       return;
     }
     const temp = Math.round(Number(weather.tempC));
     const text = weather.text || 'Current conditions';
-    const humidity = Number.isFinite(Number(weather.humidity)) ? Math.round(Number(weather.humidity)) : null;
-    const wind = Number.isFinite(Number(weather.windKph)) ? Math.round(Number(weather.windKph)) : null;
+    const humidity = weather.humidity != null && Number.isFinite(Number(weather.humidity)) ? Math.round(Number(weather.humidity)) : null;
+    const wind = weather.windKph != null && Number.isFinite(Number(weather.windKph)) ? Math.round(Number(weather.windKph)) : null;
     target.textContent = `${temp}°C · ${text}${humidity == null ? '' : ` · ${humidity}% humidity`}${wind == null ? '' : ` · ${wind} km/h wind`}`;
     try {
       const iconName = window.VioraHero?.debug?.weatherIcon?.(weather.code);
