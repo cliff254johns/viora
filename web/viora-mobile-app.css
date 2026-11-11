@@ -151,3 +151,24 @@ button,a,[role="button"],input,select{touch-action:manipulation}
 @media(prefers-reduced-motion:reduce){
   .modal-overlay>.modal,.modalback>.modal{animation:none!important}
 }
+
+
+/* Solar disc: layered warm photosphere and corona, while JS keeps its true solar path. */
+#vioraHeroBanner>#vioraHeroOrb{
+  z-index:8!important;
+  background-image:
+    radial-gradient(circle at 34% 29%,rgba(255,255,255,.98) 0%,rgba(255,250,220,.94) 19%,rgba(255,221,137,.96) 48%,rgba(255,171,65,.98) 78%,rgba(239,116,35,.96) 100%)!important;
+  border:1px solid rgba(255,248,215,.95)!important;
+  box-shadow:0 0 22px 7px rgba(255,218,125,.62),0 0 54px 18px rgba(255,174,72,.32)!important;
+}
+#vioraHeroBanner>#vioraHeroOrb::after{
+  content:"";position:absolute;inset:8%;border-radius:50%;pointer-events:none;
+  background:radial-gradient(ellipse at 38% 32%,rgba(255,255,255,.28),transparent 62%);
+  mix-blend-mode:screen;
+}
+#vioraHeroBanner>#vioraHeroCanvas{z-index:3!important;opacity:1!important}
+#vioraHeroBanner>#vioraHeroTerminatorCanvas{z-index:1!important}
+@media(max-width:899px){
+  #vioraHeroBanner{min-height:360px!important;height:360px!important}
+  #vioraHeroBanner>#vioraHeroOrb{z-index:8!important}
+}
