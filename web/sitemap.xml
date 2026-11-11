@@ -16,4 +16,9 @@
   <url><loc>https://viora.co.ke/about</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://viora.co.ke/support</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://viora.co.ke/contact_us</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://viora.co.ke/privacy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://viora.co.ke/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://viora.co.ke/cookies</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://viora.co.ke/dpa</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://viora.co.ke/accessibility</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
 </urlset>
