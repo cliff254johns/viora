@@ -1,137 +1,80 @@
 # VIORA public website — 10/10 readiness audit
+
 Date: 11 November 2026
 Repository: `cliff254johns/viora`
-Audit base: `main` at `a2d7424aa63810fcff5b15b9cb41d4b6781aef38`
-Working branch: `audit/public-website-10-of-10-20261111`
+Audit base: `main` at `9b6f945a7e92ab861e522a18fb8f7677c941abc3`
+Implementation: merged to `main` through PR #27
 
 ## Scope and evidence
 
-- Inspected all 26 top-level HTML files under `web/` for page size, title, description, canonical URL, viewport, H1 count, inline scripts/styles, style attributes, and linked stylesheets.
-- Inspected the root landing page, legacy assistant template, sitemap, robots.txt, PWA manifest, Cloudflare redirects, and public navigation references.
-- This is a static source audit. It is not a Lighthouse report, live-browser test, screen-reader test, or physical-device certification. No claim of production runtime verification is made.
+- Reviewed 26 top-level HTML files for metadata, canonical URLs, viewport, H1 count, inline CSS/JS and linked assets.
+- Validated the 22 URLs currently listed in `sitemap.xml`: each has a title, description, canonical URL and one H1; each loads the shared language/assistant bootstrap and cookie-consent controller.
+- Inspected `robots.txt`, Cloudflare redirects, both root PWA manifests, shared PWA registration, cookie consent, analytics configuration, contact forms, the chatbot loader and authenticated portal entry points.
+- This remains a static source audit. It is not a Lighthouse run, live-browser test, screen-reader test, real form submission, or physical-device certification.
 
 ## Executive assessment
 
-Provisional readiness scores (engineering judgement, not an automated grade):
-- Professional public website: **7/10**
-- Working multi-portal platform: **5/10** (out of scope for this phase; retained only as a baseline)
+Provisional source-readiness judgement (not an automated score):
+- Professional public website: **8/10**
+- Working multi-portal platform: **5/10 baseline**; the platform is intentionally the next phase, not certified by this public-site audit.
 
-The public site has a good foundation: 26 top-level HTML pages, shared branding styles, a sitemap, robots.txt, canonical redirects, multilingual landing pages, a manifest, and shared PWA registration. The remaining gap is consistency, maintainability, accessibility/performance validation, and real-device/browser testing.
+The public-site foundation is now materially more consistent. The remaining path to 10/10 is real-browser/device validation, correct square PWA artwork, accessibility/performance evidence, and careful refactoring of legacy inline code without regressions.
 
-## Findings
+## Completed and merged
 
-### P0 — Search identity and page ownership
+### Search identity, canonical URLs and indexability
 
-1. `web/index.html` is the root landing page and correctly declares `https://viora.co.ke/` as canonical.
-2. `web/inde.html` is also a complete legacy landing page, is used by `mainIndex/site-assistant-loader.js` as the source template for mounting the chatbot, but declared itself indexable and canonicalized to the competing `https://www.viora.co.ke/` root.
-3. This creates conflicting canonical signals and exposes an assistant-template/legacy page to search indexing.
+- The root homepage is canonical at `https://viora.co.ke/`.
+- The legacy `inde.html` chatbot source template is `noindex,follow` and uses the non-www canonical/Open Graph URL. It must remain available because the assistant loader extracts its chatbot markup.
+- `/3d` has description, canonical, robots and social metadata.
+- Authenticated entry points (`campaigns`, `clientportal`, `scholar-admin`, `trainer`, `trainingportal`, `patner`, `client`, `main`, and `finance`) carry noindex directives. The duplicate employee-profile source template `/public` is also noindex.
+- `robots.txt` no longer blocks the main login route before its noindex directive can be read. `/main/` remains disallowed for internal module paths. Robots rules are not access control; Firebase Auth and database rules remain the security boundary.
+- Legal page canonicals now match the extensionless routes served by Cloudflare redirects. The sitemap has 22 unique public URLs, including Privacy, Terms, Cookies, DPA, Accessibility and the published `/cliff` team profile.
+- The published `/cliff` page has a canonical; the shared profile renderer sets canonical and Open Graph URL dynamically for future employee profile pages.
 
-**Correction started on this branch:** set `inde.html` to `noindex,follow`, normalize its canonical and Open Graph URL to the non-www root. This preserves the page and its chatbot-template markers while avoiding a second competing search landing page.
+### Shared public experience
 
-### P1 — Main public landing page architecture
+- All 22 public sitemap pages load `global-brand.js`, which injects the language selector, site assistant loader, mobile polish stylesheet and shared PWA registration.
+- All 22 public sitemap pages load `cookie-consent.js`. The consent preferences dialog now traps Tab/Shift+Tab and restores focus when dismissed. The floating settings shortcut remains hidden after accept, reject or save.
+- The home-page contact form writes leads to Firebase and attempts a VIORA notification. The Contact page writes the lead to Firebase and provides WhatsApp follow-up/fallback. These paths have only been inspected in source; no live submission was made.
+- Analytics is consent-aware. GA4, GTM, Meta and TikTok IDs are blank in `analytics-config.js`, so third-party tracking remains disabled until the IDs are configured and consent is given.
 
-The homepage previously made two separate Google Fonts requests and repeated both font preconnect hints. The requests are now consolidated into one stylesheet request for the three families actually used by the page/global brand layer, with one preconnect pair.
+### Performance, browser policy and PWA metadata
 
+- The homepage's duplicate Google Fonts requests and repeated preconnect hints were consolidated into one font stylesheet request and one preconnect pair.
+- The global Permissions-Policy now allows same-origin geolocation (`geolocation=(self)`) so the dashboard's user-triggered GPS action can work. Browser permission is still required; the header itself does not request location.
+- The unused Market notification audio element and its missing fallback paths were removed. Notifications are recorded, but audible alerts are not implemented.
+- The legacy manifest's nonexistent `/dash.html` launch route and unsupported AI shortcut were corrected. Both root manifests now declare the real `/viora.png` dimensions rather than falsely claiming square icon sizes or maskable support.
 
-`web/index.html` is 37.7 KB and contains:
-- 4 inline script blocks
-- 4 inline style blocks
-- 61 inline style attributes
-- multiple font-family loads and repeated font preconnect declarations
+## Remaining blockers before 10/10
 
-The page already has external stylesheets, shared PWA registration, title/description, canonical, Open Graph/Twitter metadata, and Organization JSON-LD. The next refactor should move non-critical inline styles/scripts into dedicated files in small batches, preserving script order and checking for inline configuration dependencies.
+1. **VIORA app icons:** `/viora.png` is 1290×1219, not square. Supply or approve creation of VIORA-branded square 192×192 and 512×512 PNGs (including a maskable-safe variant if desired). Do not reuse the BodaBiz icons under `web/assets/r/icons/`.
+2. **Live browser QA:** test the 22 public routes on desktop Chrome and Android Chrome; include iOS Safari if available. Verify layout, image loading, navigation, language switching, cookie consent, assistant mounting, and PWA install/update.
+3. **Mobile hero:** visually verify globe framing, sun/cloud visibility, safe-area spacing, bottom navigation and floating controls at narrow widths and landscape. Source changes alone cannot certify appearance.
+4. **Dialogs and accessibility:** test keyboard order, visible focus, Escape, focus return, screen-reader labels/live regions, text scaling, contrast and reduced motion. The cookie preferences dialog has a source-level focus trap; other dialogs still need review.
+5. **Forms and assistant:** submit test leads in a safe test environment, confirm Firebase persistence and admin notification, verify WhatsApp fallback, and test chatbot responses/language switching against the live Worker. Check console and network errors.
+6. **Performance:** run Lighthouse and an accessibility audit; capture LCP, INP, CLS, image weight, unused JavaScript and third-party requests. No performance score is claimed yet.
+7. **Maintainability:** `index.html` still has 4 inline script blocks, 4 inline style blocks and 61 inline style attributes. `main.html` and `finance.html` are large application surfaces with substantial inline code. Refactor only in small batches after mapping globals, inline configuration and script order.
+8. **Deployment confirmation:** merge commits are on GitHub `main`, but no deployment was triggered or verified in this work. The owner will deploy and confirm the Cloudflare build.
 
-### P1 — Main application shell and finance page
+## Current route and repository checks
 
-These are application surfaces, not ordinary marketing pages, but they are part of the visitor journey and require a separate quality gate:
-- `web/main.html`: 249,975 bytes; 4 inline script blocks; 3 style blocks; 481 inline style attributes.
-- `web/finance.html`: 245,199 bytes; 3 inline script blocks; 2 style blocks; 151 inline style attributes.
-
-Do not bulk-extract their inline code. First map dependencies, inline configuration, global functions, and load order. Refactor one feature at a time with regression checks.
-
-### P1 — PWA readiness
-
-`web/manifest.webmanifest` declares only one icon, `/viora.png`, with no explicit 192x192 or 512x512 variants. The repository has 192/512 icon files under the BodaBiz-specific `web/assets/r/icons/` path, but those must not be reused as VIORA branding.
-
-Required: create or supply VIORA-branded square icons, declare exact dimensions and purpose, verify the image dimensions, and test install/update behaviour on Android and iOS.
-
-### P2 — Metadata consistency
-
-The main sitemap routes inspected have titles, descriptions, canonical URLs, viewport declarations and one H1. Some secondary/demo or portal pages need distinct handling:
-- `3d.html`: description and canonical were added in the first implementation pass.
-- `campaigns.html`, `clientportal.html`, `scholar-admin.html`, `trainer.html`, and `trainingportal.html` are authenticated application entry points. The follow-up implementation adds `noindex,nofollow` to these pages and removes their `robots.txt` disallow rules so crawlers can read the noindex directives.
-- `cliff.html` and `public.html` are public-profile templates; their canonical/indexing behaviour still needs a deliberate dynamic-profile decision.
-- `patner.html` is a partner-facing portal and needs an authentication/canonical review before it is assigned an index policy.
-
-Robots rules are crawl controls, not access control. Firebase authentication and database rules must protect every private record regardless of indexing policy.
-
-### P2 — Static asset references
-
-The Market page references three fallback notification audio paths:
-- `/sounds/viora-notification.mp3`
-- `/viora-notification.mp3`
-- `/notification.mp3`
-
-No matching audio files were found in the repository tree. The notification bridge may still function without sound, but these fallbacks cannot play from the current repository assets. Decide whether to add a properly licensed VIORA sound or remove the unused audio element and provide silent notification behaviour.
-
-### P2 — Market notification sound
-
-The Market page previously contained an unused notification audio element with three fallback paths that do not exist in the repository. No code references the element, so the dead audio block has been removed rather than leaving broken media requests. The notification bridge currently writes notification records; audible alerts remain unimplemented.
-
-### P2 — Cookie preferences keyboard accessibility
-
-The consent banner already hides its floating settings shortcut after accept, reject, or saved preferences. The preferences dialog previously closed on Escape but did not trap keyboard focus or restore focus to the control that opened it. The follow-up now traps Tab/Shift+Tab inside the dialog and restores focus on cancel, overlay close, or Escape. Saving preferences intentionally does not restore focus to a control inside the banner after that banner is hidden.
-
-### P2 — Profile and partner route classification\n\n- `patner.html` is an authenticated partner/member workspace (Firebase sign-in and registration), not a public marketing page. It is now marked `noindex,nofollow`; redundant Chart.js/font requests and its second conflicting manifest declaration were removed.\n- `public.html` is the source template for employee profile pages and currently points at the same `cliff` profile as the published `cliff.html` route. The template is now noindex to prevent duplicate indexing.\n- The published `/cliff` profile now has a canonical route; the profile renderer also updates canonical and Open Graph URL dynamically for future employee pages. `/cliff` is included in the sitemap.\n### P1 — Legal-page consistency and public journey integration
-
-- The five legal/accessibility pages used `.html` canonicals even though Cloudflare redirects those URLs to extensionless routes. Their canonicals now point to the final route, and all five pages load the shared cookie-consent controller.
-- The sitemap now includes Privacy, Terms, Cookies, DPA, and Accessibility. The 22 public sitemap routes inspected have a title, meta description, canonical URL, and one H1.
-- All 22 public routes load `global-brand.js`. That shared bootstrap injects the multilingual selector, site assistant loader, mobile styling, and shared PWA registration. The assistant loader fetches the noindex `inde.html` template and mounts only the chatbot fragment; the template must remain available even though it is excluded from indexing.
-- All 22 public routes now load the cookie-consent controller. The analytics controller checks explicit consent and a configured GA4 measurement ID; the repository's analytics IDs are currently blank, so third-party analytics remain disabled.
-- Static source review found two working submission paths: the home-page form writes a lead to Firebase and attempts a VIORA notification; the Contact page writes the lead and opens WhatsApp as a follow-up/fallback. No end-to-end submission was made during this audit.
-- The current `/viora.png` manifest icon is 1290×1219 pixels, not square. Both root manifests now declare the real dimensions rather than falsely claiming 192×192/512×512; the old maskable declaration was removed. The legacy manifest start URL and shortcuts were also corrected from nonexistent `/dash.html` routes to existing portal routes. VIORA-branded square 192×192 and 512×512 assets are still required for a fully polished install experience.
-
-### P1 — Browser permission policy\n\n- The global `_headers` policy previously disabled geolocation for every page (`geolocation=()`), while the VIORA dashboard weather location picker explicitly offers a user-triggered GPS action via `navigator.geolocation.getCurrentPosition()`.\n- The policy now permits geolocation for the same origin only (`geolocation=(self)`). The browser still requires the visitor's permission, and the app should only request location after the user selects the GPS action.\n### P1 — Remaining authenticated app entry points\n\n- `main.html` already carries `noindex,nofollow,noarchive`, but `robots.txt` previously blocked `/main` before crawlers could read it. The exact `/main` disallow has been removed; `/main/` remains disallowed to keep internal module paths out of crawl discovery.\n- `finance.html` is an authenticated finance workspace with a login gate and Firebase auth observer. It now carries `noindex,nofollow,noarchive` and is not listed in the sitemap.\n### P2 — Accessibility, performance and responsive validation
-
-Source presence alone cannot certify:
-- keyboard navigation and visible focus,
-- modal focus trapping and Escape handling,
-- screen-reader labels and live-region announcements,
-- colour contrast and text scaling,
-- reduced-motion behaviour,
-- layout at narrow widths and landscape,
-- image dimensions/lazy loading,
-- Core Web Vitals and JavaScript console cleanliness.
-
-These need automated checks plus real browser/device walkthroughs.
-
-## Public route inventory
-
-26 top-level HTML files were inspected. Main public sitemap routes include:
-- `/`, `/industries`, `/market`, `/training`, `/about`, `/support`, `/contact_us`, `/fr/`, and `/es/`.
-- Legal pages include privacy, cookies, terms, DPA and accessibility.
-- Product demos, staff pages, and portal/application routes need explicit indexability classification.
-
-## Implementation order
-
-1. Resolve duplicate/legacy search identity (started in this branch).
-2. Confirm public route ownership and canonical redirects against sitemap.
-3. Fix definite missing assets and page metadata where appropriate.
-4. Establish VIORA PWA icon set and verify manifest.
-5. Audit public navigation, CTA forms, chatbot mount and cookie consent behaviour.
-6. Refactor root landing page CSS/JS into external files in safe, testable increments.
-7. Audit and refactor remaining public pages.
-8. Test responsive layouts, dialogs, accessibility, performance and SEO.
-9. Run final browser/device acceptance checks and verify automatic Cloudflare deployment after merge.
+- `sitemap.xml`: 22 unique public URLs.
+- Public routes: title, description, canonical and one H1 checked in source; shared language/assistant and cookie-consent scripts present.
+- Authenticated route policy: noindex directives checked on the main app, Finance, Client, Campaigns, Client Portal, Scholar Admin, Trainer, Learner Portal and Partner Performance entry pages.
+- PWA manifests: JSON parses; launch paths now point to existing routes; square branded icon assets remain outstanding.
+- GitHub: PRs #18–#27 are merged; no open pull requests were returned at the final check.
+- No production deployment, Lighthouse report, automated browser test or device test is claimed.
 
 ## Definition of done
 
-- Every public route has one canonical URL and correct indexability.
-- No broken primary navigation, CTAs, forms, chatbot mount, or cookie consent.
-- No critical mobile/tablet/desktop layout defects.
-- No critical console/network errors.
-- Correct VIORA PWA icons and verified install/update flow.
-- Keyboard and screen-reader essentials pass.
-- No unverified customer counts, certifications, or performance claims.
-- All material CSS/JS separated from HTML without regressions, except documented minimal critical inline configuration.
-- Automated and manual acceptance evidence recorded.
+- Every public route has one correct canonical URL and intentional indexability.
+- No broken primary navigation, CTAs, forms, chatbot mount or cookie-consent flow.
+- No critical mobile/tablet/desktop layout defects or console/network errors.
+- Correct VIORA square PWA icons and verified Android/iOS install/update behaviour.
+- Keyboard and screen-reader essentials pass; dialogs work with touch and keyboard.
+- Core Web Vitals and accessibility audit results are recorded.
+- No unverified customer counts, certifications or performance claims.
+- Material CSS/JS is separated from HTML in safe increments, with documented exceptions for essential inline configuration.
+- Deployment and post-deploy smoke-test evidence are recorded.
+
