@@ -3,81 +3,85 @@
   "short_name": "VIORA",
   "description": "The Integrated Enterprise Operating System. A unified ecosystem for business management, client portals, training, and real-time data analytics.",
   "id": "/",
-  "start_url": "/dash.html",
+  "start_url": "/main",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui"],
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
   "orientation": "portrait-primary",
   "theme_color": "#05060a",
   "background_color": "#05060a",
   "lang": "en",
   "dir": "ltr",
-  "categories": ["business", "finance", "productivity", "utilities"],
+  "categories": [
+    "business",
+    "finance",
+    "productivity",
+    "utilities"
+  ],
   "prefer_related_applications": false,
-
   "icons": [
     {
       "src": "https://viora.co.ke/viora.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "https://viora.co.ke/viora.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "https://viora.co.ke/viora.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "https://viora.co.ke/viora.png",
-      "sizes": "180x180",
+      "sizes": "1290x1219",
       "type": "image/png",
       "purpose": "any"
     }
   ],
-
   "shortcuts": [
     {
       "name": "Master Dashboard",
       "short_name": "Dashboard",
-      "url": "/dash.html?tab=dashboard",
-      "icons": [{ "src": "https://viora.co.ke/viora.png", "sizes": "192x192", "type": "image/png" }]
+      "url": "/main",
+      "icons": [
+        {
+          "src": "https://viora.co.ke/viora.png",
+          "sizes": "1290x1219",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Client Portal",
       "short_name": "Clients",
-      "url": "/client.html",
-      "icons": [{ "src": "https://viora.co.ke/viora.png", "sizes": "192x192", "type": "image/png" }]
-    },
-    {
-      "name": "AI Copilot",
-      "short_name": "AI",
-      "url": "/dash.html?action=open-ai",
-      "icons": [{ "src": "https://viora.co.ke/viora.png", "sizes": "192x192", "type": "image/png" }]
+      "url": "/client",
+      "icons": [
+        {
+          "src": "https://viora.co.ke/viora.png",
+          "sizes": "1290x1219",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Partner Performance",
       "short_name": "Partners",
-      "url": "/patner.html",
-      "icons": [{ "src": "https://viora.co.ke/viora.png", "sizes": "192x192", "type": "image/png" }]
+      "url": "/patner",
+      "icons": [
+        {
+          "src": "https://viora.co.ke/viora.png",
+          "sizes": "1290x1219",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Marketplace",
       "short_name": "Market",
-      "url": "/market.html",
-      "icons": [{ "src": "https://viora.co.ke/viora.png", "sizes": "192x192", "type": "image/png" }]
+      "url": "/market",
+      "icons": [
+        {
+          "src": "https://viora.co.ke/viora.png",
+          "sizes": "1290x1219",
+          "type": "image/png"
+        }
+      ]
     }
   ],
-
   "launch_handler": {
     "client_mode": "auto"
   },
-
   "handle_links": "preferred"
 }
