@@ -92,27 +92,46 @@
       group.add(spire);
     }
 
-    const rows = Math.max(3, Math.floor(h / 2.7));
-    const cols = Math.max(2, Math.floor(w / 1.65));
+    const rows = Math.max(3, Math.floor(h / 3.8));
+    const cols = Math.max(2, Math.floor(w / 2.15));
+    const sideCols = Math.max(2, Math.floor(d / 2.25));
     const winW = Math.min(0.72, w / (cols + 1) * 0.55);
-    const winH = 0.82;
+    const winH = 0.78;
+    const maxWindows = rows * (cols + sideCols);
+    const windowMesh = new THREE.InstancedMesh(
+      new THREE.BoxGeometry(winW, winH, 0.045),
+      new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x182b3b, emissiveIntensity: 0.38, metalness: 0.22, roughness: 0.32 }),
+      maxWindows
+    );
+    const dummy = new THREE.Object3D();
+    const litColor = new THREE.Color(0xffd59a);
+    const coolColor = new THREE.Color(0x86b6cf);
+    const dimColor = new THREE.Color(0x294b62);
+    let windowCount = 0;
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
-        if (rand() < 0.2) continue;
-        const mat = rand() > 0.82 ? windowGlow : glassMats[Math.floor(rand() * glassMats.length)];
-        const win = new THREE.Mesh(new THREE.BoxGeometry(winW, winH, 0.045), mat);
-        win.position.set(-w / 2 + (c + 1) * w / (cols + 1), 1.8 + r * (h - 3) / rows, d / 2 + 0.035);
-        group.add(win);
+        if (rand() < 0.22) continue;
+        dummy.position.set(-w / 2 + (c + 1) * w / (cols + 1), 1.8 + r * (h - 3) / rows, d / 2 + 0.035);
+        dummy.rotation.set(0, 0, 0);
+        dummy.updateMatrix();
+        windowMesh.setMatrixAt(windowCount, dummy.matrix);
+        windowMesh.setColorAt(windowCount, rand() > 0.82 ? litColor : rand() > 0.45 ? coolColor : dimColor);
+        windowCount++;
+      }
+      for (let c = 0; c < sideCols; c++) {
+        if (rand() < 0.34) continue;
+        dummy.position.set(w / 2 + 0.03, 1.8 + r * (h - 3) / rows, -d / 2 + (c + 1) * d / (sideCols + 1));
+        dummy.rotation.set(0, Math.PI / 2, 0);
+        dummy.updateMatrix();
+        windowMesh.setMatrixAt(windowCount, dummy.matrix);
+        windowMesh.setColorAt(windowCount, rand() > 0.88 ? litColor : rand() > 0.48 ? coolColor : dimColor);
+        windowCount++;
       }
     }
-    // Side facade rhythm.
-    const sideCols = Math.max(2, Math.floor(d / 1.8));
-    for (let r = 0; r < rows; r++) for (let c = 0; c < sideCols; c++) {
-      if (rand() < 0.34) continue;
-      const win = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.72, Math.min(0.65, d / (sideCols + 1) * 0.5)), rand() > 0.9 ? windowGlow : glassMats[index % glassMats.length]);
-      win.position.set(w / 2 + 0.03, 1.8 + r * (h - 3) / rows, -d / 2 + (c + 1) * d / (sideCols + 1));
-      group.add(win);
-    }
+    windowMesh.count = windowCount;
+    windowMesh.instanceMatrix.needsUpdate = true;
+    if (windowMesh.instanceColor) windowMesh.instanceColor.needsUpdate = true;
+    group.add(windowMesh);
     city.add(group);
   }
 
