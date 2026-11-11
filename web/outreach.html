@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1220"><title>VIORA Outreach Centre</title>
+<link rel="icon" href="/viora.png"><link rel="apple-touch-icon" href="/viora.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#111c2e;--panel2:#16243a;--line:#263750;--ink:#edf4ff;--muted:#9aacc5;--blue:#60a5fa;--cyan:#22d3ee;--green:#34d399;--red:#fb7185;--amber:#fbbf24}
+[data-theme=light]{color-scheme:light;--bg:#f3f6fb;--panel:#fff;--panel2:#f7f9fd;--line:#e1e8f0;--ink:#142033;--muted:#63738a;--blue:#2563eb;--cyan:#0891b2;--green:#059669;--red:#e11d48;--amber:#b45309}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px Inter,system-ui,sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer}.shell{max-width:1500px;margin:auto;padding:22px}.top{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:22px}.brand{display:flex;align-items:center;gap:12px}.brand img{width:42px;height:42px;object-fit:contain;background:#fff;border-radius:12px;padding:4px}.brand h1{font-size:20px;margin:0}.brand p{margin:3px 0 0;color:var(--muted);font-size:12px}.actions,.toolbar{display:flex;gap:8px;flex-wrap:wrap}.btn{border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:var(--panel2);color:var(--ink);font-weight:650}.btn.primary{background:linear-gradient(135deg,#2563eb,#0891b2);border:0;color:white}.btn:disabled{opacity:.45;cursor:not-allowed}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;min-width:0}.stat small{color:var(--muted)}.stat strong{display:block;font-size:26px;margin-top:7px}.layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr);gap:16px}.card h2{font-size:16px;margin:0 0 14px}.toolbar{margin-bottom:12px}.toolbar input{flex:1;min-width:150px}.field{display:grid;gap:6px;margin-bottom:11px}.field label{color:var(--muted);font-size:12px;font-weight:650}.field input,.field select,.field textarea,.toolbar input{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:9px;padding:11px;min-width:0}.field textarea{min-height:120px;resize:vertical;line-height:1.5}.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:560px}th,td{text-align:left;padding:11px 9px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted);font-size:11px;text-transform:uppercase}td{font-size:13px}.muted{color:var(--muted)}.pill{display:inline-flex;border-radius:99px;padding:4px 8px;background:var(--panel2);border:1px solid var(--line);font-size:11px}.pill.good{color:var(--green)}.pill.warn{color:var(--amber)}.pill.bad{color:var(--red)}.list{display:grid;gap:8px}.item{padding:11px;border:1px solid var(--line);border-radius:11px;background:var(--panel2);display:flex;justify-content:space-between;gap:10px}.item button{border:0;background:none;color:var(--blue)}.hidden{display:none!important}.notice{padding:11px;border:1px solid var(--line);border-radius:10px;color:var(--muted);font-size:12px;line-height:1.5;margin-bottom:12px}.login{max-width:420px;margin:10vh auto;padding:22px}.status{min-height:20px;color:var(--muted);font-size:12px}.empty{text-align:center;color:var(--muted);padding:25px}.toolbar .btn{white-space:nowrap}.email-preview{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--bg);padding:12px;border:1px solid var(--line);border-radius:10px;min-height:100px;max-height:300px;overflow:auto}.footer{padding:20px 0;color:var(--muted);font-size:11px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.shell{padding:14px}.top{align-items:flex-start}.top .actions{justify-content:flex-end}.stats{gap:8px}.stat strong{font-size:22px}.row2{grid-template-columns:1fr}.top .brand h1{font-size:17px}}
+</style>
+</head>
+<body>
+<div id="loginView" class="login card">
+ <div class="brand"><img src="/viora.png" alt="VIORA"><div><h1>VIORA Outreach</h1><p>Investor relations · Business development</p></div></div>
+ <p class="muted">Sign in with your VIORA administrator account.</p>
+ <div class="field"><label>Email</label><input id="loginEmail" type="email" autocomplete="username"></div>
+ <div class="field"><label>Password</label><input id="loginPassword" type="password" autocomplete="current-password"></div>
+ <button class="btn primary" id="loginBtn">Sign in securely</button><p id="loginStatus" class="status"></p>
+</div>
+<div id="appView" class="shell hidden">
+ <header class="top"><div class="brand"><img src="/viora.png" alt="VIORA"><div><h1>Outreach Centre</h1><p>Investor relations · Business development · Industry partnerships</p></div></div><div class="actions"><button class="btn" id="themeBtn" title="Toggle theme"><i class="fa-solid fa-circle-half-stroke"></i></button><button class="btn" id="refreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button><button class="btn" id="logoutBtn">Sign out</button></div></header>
+ <div class="notice"><strong>Controlled outreach:</strong> AI-assisted drafts are reviewed before sending. Every send attempt is recorded. Use only relevant business contacts, respect opt-outs and applicable email/privacy laws. Delivery/open signals depend on provider events and are not guaranteed by this page.</div>
+ <section class="stats">
+  <div class="card stat"><small>Total leads</small><strong id="statLeads">0</strong></div><div class="card stat"><small>Emails recorded</small><strong id="statEmails">0</strong></div><div class="card stat"><small>Replies logged</small><strong id="statReplies">0</strong></div><div class="card stat"><small>Follow-ups due</small><strong id="statDue">0</strong></div>
+ </section>
+ <div class="layout">
+  <section class="card">
+   <h2><i class="fa-solid fa-address-book"></i> Prospect database</h2>
+   <div class="toolbar"><input id="leadSearch" placeholder="Search company, contact or email"><button class="btn primary" id="newLeadBtn"><i class="fa-solid fa-plus"></i> Add lead</button></div>
+   <div class="table-wrap"><table><thead><tr><th>Organisation / contact</th><th>Category</th><th>Status</th><th>Next follow-up</th><th></th></tr></thead><tbody id="leadRows"><tr><td colspan="5" class="empty">Loading leads…</td></tr></tbody></table></div>
+  </section>
+  <section class="card">
+   <h2><i class="fa-solid fa-pen-to-square"></i> Lead & email workspace</h2>
+   <div id="leadForm">
+    <div class="row2"><div class="field"><label>Organisation</label><input id="company" placeholder="Company / fund name"></div><div class="field"><label>Contact person</label><input id="contact" placeholder="Full name"></div></div>
+    <div class="row2"><div class="field"><label>Email address</label><input id="email" type="email" placeholder="name@company.com"></div><div class="field"><label>Category</label><select id="category"><option>Business</option><option>Investor</option><option>Industry</option><option>Partner</option></select></div></div>
+    <div class="row2"><div class="field"><label>Status</label><select id="leadStatus"><option>New</option><option>Researching</option><option>Qualified</option><option>Contacted</option><option>Replied</option><option>Meeting</option><option>Negotiation</option><option>Won</option><option>Lost</option><option>Do not contact</option></select></div><div class="field"><label>Follow-up date</label><input id="followUp" type="date"></div></div>
+    <div class="field"><label>Website / LinkedIn</label><input id="website" placeholder="https://"></div>
+    <div class="field"><label>Notes / reason for outreach</label><textarea id="notes" placeholder="Business context, fit, investment thesis, source…"></textarea></div>
+    <div class="actions"><button class="btn primary" id="saveLeadBtn">Save lead</button><button class="btn" id="clearLeadBtn">Clear</button></div><p id="leadStatusMsg" class="status"></p>
+   </div>
+   <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+   <h2><i class="fa-solid fa-envelope"></i> Compose email</h2>
+   <div class="field"><label>Recipient</label><input id="mailTo" type="email" placeholder="Select a lead or enter email"></div>
+   <div class="field"><label>Subject</label><input id="mailSubject" placeholder="A relevant subject line"></div>
+   <div class="field"><label>Message</label><textarea id="mailBody" placeholder="Write a personalised message…" style="min-height:180px"></textarea></div>
+   <div class="actions"><button class="btn" id="aiDraftBtn"><i class="fa-solid fa-wand-magic-sparkles"></i> Prepare AI draft</button><button class="btn primary" id="sendBtn"><i class="fa-solid fa-paper-plane"></i> Review & send</button></div>
+   <p class="status" id="mailStatus"></p>
+   <div class="notice">AI draft generation and actual sending are enabled only when the matching authenticated Worker routes are configured. Sending requires a final confirmation.</div>
+  </section>
+ </div>
+ <section class="card" style="margin-top:16px"><h2><i class="fa-solid fa-clock-rotate-left"></i> Communication ledger</h2><div class="toolbar"><input id="emailSearch" placeholder="Search recipient or subject"></div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Recipient</th><th>Subject</th><th>Result</th><th>Provider ID</th></tr></thead><tbody id="emailRows"><tr><td colspan="5" class="empty">Loading activity…</td></tr></tbody></table></div></section>
+ <footer class="footer">VIORA Ecosystems · Outreach records are stored in the VIORA Firebase database. Sent-message content is retained for audit history.</footer>
+</div>
+<script type="module" src="/outreach.js"></script>
+</body></html>
