@@ -214,22 +214,34 @@ async function handleAuthChange(user) {
     let accent = '#00d4ff', tagline = '', orgId = 'viora';
     let operatorLoaded = false;
     try {
-      let snap;
+      // Resolve the same two role locations used by Outreach. Some VIORA
+      // accounts are provisioned under orgs/viora/users while older accounts
+      // remain under the global users collection.
+      const readOperatorProfiles = () => Promise.race([
+        Promise.all([
+          get(ref(db, `${ROOT}/orgs/viora/users/${user.uid}`)),
+          get(ref(db, `${ROOT}/users/${user.uid}`))
+        ]),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000))
+      ]);
+      let profiles;
       try {
-        snap = await Promise.race([
-          get(ref(db, `${ROOT}/users/${user.uid}`)),
-          new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000))
-        ]);
+        profiles = await readOperatorProfiles();
       } catch (firstErr) {
-        console.warn('[boot] users read timed out once — retrying');
-        snap = await Promise.race([
-          get(ref(db, `${ROOT}/users/${user.uid}`)),
-          new Promise((_, rej) => setTimeout(() => rej(new Error('timeout-retry')), 8000))
-        ]);
+        console.warn('[boot] operator profile read timed out once — retrying');
+        profiles = await readOperatorProfiles();
       }
 
-      if (snap.exists()) {
-        const u = snap.val();
+      // Prefer the organisation-scoped profile, matching Outreach's role
+      // resolution, then fall back to the legacy global user profile.
+      const orgProfile = profiles[0];
+      const globalProfile = profiles[1];
+      const selectedProfile = orgProfile.exists()
+        ? orgProfile
+        : globalProfile;
+
+      if (selectedProfile.exists()) {
+        const u = selectedProfile.val();
         role    = u.role    || 'member';
         name    = u.name    || user.email;
         accent  = u.accent  || '#00d4ff';
