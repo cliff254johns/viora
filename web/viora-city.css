@@ -497,3 +497,88 @@
 #viora-city #vioraHeroBanner #vioraQuickCityBar .viora-quick-city-btn span:first-child{font-size:10px!important}
 #viora-city #vioraHeroBanner .city-weather-pill{font-size:9px!important;min-height:27px!important;padding:4px 7px!important}
 }
+
+/* VIORA FINAL SKY STACK REPAIR 2026-11-12
+   The terminator renderer paints an opaque full-banner gradient. It MUST be
+   the base layer; stars and moon must render above it, never underneath it. */
+#viora-city #vioraHeroBanner{
+  position:relative!important;
+  isolation:isolate!important;
+  overflow:hidden!important;
+  background:#071321!important;
+}
+#viora-city #vioraHeroBanner > canvas,
+#viora-city #vioraHeroBanner > svg{
+  position:absolute!important;inset:0!important;
+  width:100%!important;height:100%!important;
+  max-width:none!important;max-height:none!important;
+  margin:0!important;padding:0!important;
+  display:block!important;pointer-events:none!important;
+  mix-blend-mode:normal!important;visibility:visible!important;opacity:1!important;
+}
+/* Base atmospheric gradient first; transparent effects and star field above it. */
+#viora-city #vioraHeroTerminatorCanvas{z-index:0!important}
+#viora-city #vioraHeroSkyCanvas{z-index:1!important}
+#viora-city #vioraHeroArcSvg{z-index:2!important}
+#viora-city #vioraHeroCanvas{z-index:3!important}
+#viora-city #vioraHeroBanner > .viora-hero-scrim{
+  position:absolute!important;inset:0!important;z-index:4!important;
+  pointer-events:none!important;
+}
+#viora-city #vioraHeroOrb{z-index:5!important;pointer-events:none!important}
+#viora-city #vioraHeroBanner .city-hud{
+  position:absolute!important;top:12px!important;left:12px!important;right:12px!important;bottom:auto!important;
+  z-index:12!important;display:grid!important;
+  grid-template-columns:max-content minmax(0,1fr)!important;
+  grid-template-areas:"clock cities" "weather weather"!important;
+  align-items:center!important;column-gap:7px!important;row-gap:7px!important;
+  min-width:0!important;pointer-events:auto!important;
+}
+#viora-city #vioraHeroBanner .city-time-pill{
+  grid-area:clock!important;box-sizing:border-box!important;
+  display:inline-flex!important;align-items:center!important;
+  height:34px!important;min-height:34px!important;
+  padding:4px 9px!important;white-space:nowrap!important;
+}
+#viora-city #vioraHeroBanner #vioraHeroQuickCityMount{
+  grid-area:cities!important;display:flex!important;align-items:center!important;
+  width:100%!important;min-width:0!important;overflow:hidden!important;
+}
+#viora-city #vioraHeroBanner #vioraQuickCityBar{
+  display:flex!important;flex-wrap:nowrap!important;align-items:center!important;
+  justify-content:flex-start!important;gap:4px!important;
+  width:100%!important;min-width:0!important;max-width:100%!important;
+  margin:0!important;padding:0 0 2px!important;
+  overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none!important;
+}
+#viora-city #vioraHeroBanner #vioraQuickCityBar::-webkit-scrollbar{display:none!important}
+#viora-city #vioraHeroBanner #vioraQuickCityBar .viora-quick-city-btn{
+  box-sizing:border-box!important;display:inline-flex!important;flex:0 0 auto!important;
+  align-items:center!important;justify-content:center!important;
+  height:34px!important;min-height:34px!important;min-width:0!important;
+  padding:4px 8px!important;gap:4px!important;border-radius:999px!important;
+  font-size:10px!important;line-height:1!important;white-space:nowrap!important;
+}
+#viora-city #vioraHeroBanner #vioraQuickCityBar .viora-quick-city-btn span:first-child{font-size:11px!important}
+#viora-city #vioraHeroBanner .city-weather-pill{
+  grid-area:weather!important;justify-self:start!important;max-width:min(100%,520px)!important;
+  min-height:30px!important;padding:5px 9px!important;font-size:10px!important;
+}
+#viora-city #vioraHeroBanner #vioraHeroChangeLocationBtn,
+#viora-city #vioraHeroBanner .viora-hero-location-trigger,
+#viora-city #vioraHeroBanner [data-open-location-picker],
+#viora-city #vioraHeroBanner [aria-label="Select location" i],
+#viora-city #vioraHeroBanner [title="Select location" i]{display:none!important}
+@media(max-width:600px){
+  #viora-city #vioraHeroBanner .city-hud{top:8px!important;left:8px!important;right:8px!important;column-gap:5px!important;row-gap:5px!important}
+  #viora-city #vioraHeroBanner .city-time-pill,
+  #viora-city #vioraHeroBanner #vioraQuickCityBar .viora-quick-city-btn{
+    height:30px!important;min-height:30px!important;padding:3px 6px!important;
+  }
+  #viora-city #vioraHeroBanner .city-time-copy strong{font-size:8px!important}
+  #viora-city #vioraHeroBanner .city-time-copy [data-city-time]{font-size:10px!important}
+  #viora-city #vioraHeroBanner #vioraQuickCityBar{gap:3px!important}
+  #viora-city #vioraHeroBanner #vioraQuickCityBar .viora-quick-city-btn{font-size:8.5px!important;gap:3px!important}
+  #viora-city #vioraHeroBanner #vioraQuickCityBar .viora-quick-city-btn span:first-child{font-size:10px!important}
+  #viora-city #vioraHeroBanner .city-weather-pill{font-size:9px!important;min-height:27px!important;padding:4px 7px!important}
+}
