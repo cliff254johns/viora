@@ -255,11 +255,9 @@
 
   function tick() {
     const now = Date.now();
-    if (!lastClock || now - lastClock > 15000) {
+    if (!lastClock || now - lastClock > 1000) {
       draw(new Date());
       lastClock = now;
-    } else if (!reducedMotion) {
-      draw(new Date());
     }
     requestAnimationFrame(tick);
   }
