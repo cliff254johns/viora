@@ -10,7 +10,7 @@ on:
       - "web/outreach.js"
       - ".github/workflows/viora-outreach-check.yml"
   push:
-    branches: [feature/viora-outreach-centre]
+    branches: [feature/viora-outreach-enterprise-ui]
     paths:
       - "web/main.html"
       - "web/outreach.html"
@@ -38,3 +38,10 @@ jobs:
           grep -q 'data-group="outreach"' web/main.html
           grep -q 'data-roles="admin,exec"' web/main.html
           grep -q 'href="/outreach.html"' web/main.html
+      - name: Verify shared CRM and Communications integration
+        run: |
+          grep -Fq "onValue(ref(db,ORG+'/leads')" web/outreach.js
+          grep -Fq "set(ref(db,ORG+'/leads/'+id),record)" web/outreach.js
+          grep -Fq "set(ref(db,ORG+'/commLog/'+commLogId),comm)" web/outreach.js
+          grep -Fq "channel:'em'" web/outreach.js
+          grep -Fq "source:'Outreach Centre'" web/outreach.js
