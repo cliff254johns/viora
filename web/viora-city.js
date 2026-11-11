@@ -20,6 +20,15 @@
   let latitude = null, longitude = null;
   let locationLabel = 'Visitor local sky';
   let lastClock = 0;
+  let frameTime = 0;
+  const nightLights = Array.from({length:190}, (_,i) => {
+    const seed = (Math.sin(i * 127.1 + 311.7) * 43758.5453) % 1;
+    const rnd = Math.abs(seed);
+    return { x:.08 + ((i * .61803398875) % 1) * .84, y:.34 + rnd * .49,
+      w:.0012 + rnd * .0015, h:.0022 + rnd * .004,
+      phase:rnd * Math.PI * 2, speed:.45 + rnd * 1.4,
+      warm:i % 5 !== 0 };
+  });
   const timeLabel = root.querySelector('[data-city-time]');
   const weatherLabel = root.querySelector('[data-city-weather]');
   if (weatherLabel) weatherLabel.textContent = 'Tokyo · fixed city view';
@@ -148,12 +157,22 @@
     const topDay = [67, 151, 211], horizonDay = [193, 220, 236];
     const topNight = [5, 13, 34], horizonNight = [26, 43, 68];
     const twilight = Math.max(dawn, dusk);
-    const top = night ? topNight : (twilight ? [45, 83, 129] : topDay);
-    const horizon = night ? horizonNight : (twilight ? [232, 133, 99] : horizonDay);
+    const sunFactor = altitude === null ? sunUp : Math.max(0, Math.min(1, (altitude * 180 / Math.PI + 12) / 28));
+    const nightFactor = 1 - sunFactor;
+    const top = [
+      mix(topNight[0], topDay[0], sunFactor),
+      mix(topNight[1], topDay[1], sunFactor),
+      mix(topNight[2], topDay[2], sunFactor)
+    ];
+    const horizon = [
+      mix(horizonNight[0], horizonDay[0], sunFactor),
+      mix(horizonNight[1], horizonDay[1], sunFactor),
+      mix(horizonNight[2], horizonDay[2], sunFactor)
+    ];
     const g = ctx.createLinearGradient(0, 0, 0, height);
-    g.addColorStop(0, rgb(top, [8, 18, 42], night ? 0 : 0.06));
-    g.addColorStop(0.56, rgb(horizon, [247, 164, 117], twilight * 0.75));
-    g.addColorStop(1, night ? '#26394f' : '#9eb5c3');
+    g.addColorStop(0, rgb(top, [8, 18, 42], 0.03));
+    g.addColorStop(0.56, rgb(horizon, [247, 164, 117], Math.max(twilight, (1 - sunFactor) * sunFactor) * 0.72));
+    g.addColorStop(1, rgb(night ? [19,31,49] : [158,181,195], [38,57,79], nightFactor * .45));
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, width, height);
 
@@ -209,7 +228,7 @@
       ctx.beginPath(); ctx.arc(moonX + width * .004, moonY - width * .002, Math.max(5, width * .008), 0, Math.PI * 2);
       ctx.fillStyle = '#14233c'; ctx.fill();
     }
-    return { phase, sunUp, twilight };
+    return { phase, sunUp, twilight, nightFactor, sunFactor, hour };
   }
 
   function drawCity(info) {
@@ -219,21 +238,60 @@
     const dw = iw * scale, dh = ih * scale;
     const dx = (width - dw) / 2;
     const dy = (height - dh) / 2;
+    const elapsed = reducedMotion ? 0 : performance.now() / 1000;
+    const cinematicZoom = 1.018 + (reducedMotion ? 0 : .012 * (0.5 + 0.5 * Math.sin(elapsed * .035)));
+    const drawW = dw * cinematicZoom, drawH = dh * cinematicZoom;
+    const panX = Math.sin(elapsed * .018) * width * .006;
     ctx.save();
     ctx.globalAlpha = 1;
-    ctx.drawImage(cityLayer, dx, dy, dw, dh);
-    // Natural ambient exposure shifts while preserving the same image and composition.
-    if (info.phase === 'night') {
-      ctx.fillStyle = 'rgba(5,13,31,.43)';
-      ctx.fillRect(0, 0, width, height);
-      const glow = ctx.createLinearGradient(0, height * .48, 0, height);
-      glow.addColorStop(0, 'rgba(9,24,45,0)');
-      glow.addColorStop(1, 'rgba(5,12,25,.3)');
-      ctx.fillStyle = glow; ctx.fillRect(0, 0, width, height);
-    } else if (info.phase === 'blue-hour') {
-      ctx.fillStyle = 'rgba(24,43,72,.2)'; ctx.fillRect(0, 0, width, height);
-    } else if (info.phase === 'golden-hour' || info.phase === 'dawn') {
-      ctx.fillStyle = 'rgba(255,151,91,.12)'; ctx.fillRect(0, 0, width, height);
+    ctx.drawImage(cityLayer, (width - drawW) / 2 + panX, (height - drawH) / 2, drawW, drawH);
+
+    // Continuous cinematic exposure and color temperature. The underlying city image never changes.
+    const night = Math.max(0, Math.min(1, info.nightFactor));
+    ctx.fillStyle = 'rgba(5,13,31,' + (night * .47) + ')';
+    ctx.fillRect(0, 0, width, height);
+    const warmth = Math.max(info.twilight, Math.pow(info.sunFactor, 2) * .18);
+    if (warmth > .01) {
+      const warmWash = ctx.createLinearGradient(0, 0, width * .7, height);
+      warmWash.addColorStop(0, 'rgba(255,165,104,' + (warmth * .17) + ')');
+      warmWash.addColorStop(.55, 'rgba(255,188,139,' + (warmth * .09) + ')');
+      warmWash.addColorStop(1, 'rgba(255,188,139,0)');
+      ctx.fillStyle = warmWash; ctx.fillRect(0, 0, width, height);
+    }
+    const cityScaleX = drawW / iw, cityScaleY = drawH / ih;
+    const originX = (width - drawW) / 2 + panX, originY = (height - drawH) / 2;
+    const lightOpacity = Math.pow(night, 1.35);
+    if (lightOpacity > .025) {
+      for (let i = 0; i < nightLights.length; i++) {
+        const p = nightLights[i];
+        const flicker = .48 + .52 * Math.sin(elapsed * p.speed + p.phase);
+        const alpha = lightOpacity * (.26 + flicker * .58);
+        const x = originX + p.x * iw * cityScaleX;
+        const y = originY + p.y * ih * cityScaleY;
+        const w = Math.max(1.1, p.w * iw * cityScaleX);
+        const h = Math.max(1.8, p.h * ih * cityScaleY);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.warm ? '#ffd69a' : '#a8dfff';
+        ctx.shadowColor = p.warm ? 'rgba(255,176,87,.8)' : 'rgba(100,184,255,.75)';
+        ctx.shadowBlur = Math.min(7, w * 2.8);
+        ctx.fillRect(x, y, w, h);
+      }
+      ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+    }
+
+    // Distant vehicle light trails: slow, low-contrast motion along the street horizon.
+    if (lightOpacity > .08 && !reducedMotion) {
+      for (let i = 0; i < 5; i++) {
+        const travel = (elapsed * (.018 + i * .002) + i * .23) % 1;
+        const y = height * (.82 + i * .018);
+        const x = (travel * 1.3 - .15) * width;
+        ctx.globalAlpha = lightOpacity * .42;
+        ctx.strokeStyle = i % 2 ? '#ffb66f' : '#d8eaff';
+        ctx.lineWidth = i % 2 ? 1.4 : 1;
+        ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 6;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + width * .055, y); ctx.stroke();
+      }
+      ctx.globalAlpha = 1; ctx.shadowBlur = 0;
     }
     ctx.restore();
   }
@@ -255,11 +313,11 @@
 
   function tick() {
     const now = Date.now();
-    if (!lastClock || now - lastClock > 1000) {
+    if (!lastClock || now - lastClock > 1000 || (!reducedMotion && cityReady)) {
       draw(new Date());
       lastClock = now;
     }
-    requestAnimationFrame(tick);
+    if (!reducedMotion) requestAnimationFrame(tick);
   }
 
   photo.addEventListener('load', preparePhoto, { once: true });
