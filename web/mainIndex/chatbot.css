@@ -669,14 +669,29 @@ body.va-large-text .msg{font-size:14.5px}
 
 /* VIORA reference artwork: one consistent 3D-styled robot in three distinct poses. */
 .va-pose-stack{position:absolute;inset:0;display:block;pointer-events:none;overflow:visible}
-.va-pose-stack .va-pose{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transform:translateY(7px) scale(.96);filter:drop-shadow(0 8px 10px rgba(0,95,150,.2));animation:va-reference-pose-cycle 12s ease-in-out infinite}
-.va-pose-stack .va-pose-success{animation-delay:0s}
-.va-pose-stack .va-pose-thumbs{animation-delay:4s}
-.va-pose-stack .va-pose-analytics{animation-delay:8s}
-@keyframes va-reference-pose-cycle{
-  0%,5%{opacity:0;transform:translateY(8px) scale(.94)}
-  10%,27%{opacity:1;transform:translateY(0) scale(1)}
-  33%,100%{opacity:0;transform:translateY(-5px) scale(.98)}
+.va-pose-stack .va-pose{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;visibility:hidden;transform:translateY(5px) scale(.985);filter:drop-shadow(0 8px 10px rgba(0,95,150,.2));animation-duration:12s;animation-timing-function:linear;animation-iteration-count:infinite;animation-fill-mode:both;will-change:opacity,transform}
+.va-pose-stack .va-pose-success{visibility:visible;animation-name:va-pose-success-cycle}
+.va-pose-stack .va-pose-thumbs{animation-name:va-pose-thumbs-cycle}
+.va-pose-stack .va-pose-analytics{animation-name:va-pose-analytics-cycle}
+@keyframes va-pose-success-cycle{
+  0%,27%{opacity:1;visibility:visible;transform:translateY(0) scale(1)}
+  33%{opacity:0;visibility:visible;transform:translateY(-3px) scale(.99)}
+  34%,93%{opacity:0;visibility:hidden}
+  100%{opacity:1;visibility:visible;transform:translateY(0) scale(1)}
+}
+@keyframes va-pose-thumbs-cycle{
+  0%,26%{opacity:0;visibility:hidden}
+  27%{opacity:0;visibility:visible}
+  33%,59%{opacity:1;visibility:visible;transform:translateY(0) scale(1)}
+  65%{opacity:0;visibility:visible;transform:translateY(-3px) scale(.99)}
+  66%,100%{opacity:0;visibility:hidden}
+}
+@keyframes va-pose-analytics-cycle{
+  0%,59%{opacity:0;visibility:hidden}
+  60%{opacity:0;visibility:visible}
+  66%,92%{opacity:1;visibility:visible;transform:translateY(0) scale(1)}
+  98%{opacity:0;visibility:visible;transform:translateY(-3px) scale(.99)}
+  99%,100%{opacity:0;visibility:hidden}
 }
 #avatarButton .va-pose-stack{inset:-8% -10% -3%}
 #bigAvatar .va-pose-stack{inset:-10% -12% -6%}
@@ -691,4 +706,4 @@ body.va-large-text .msg{font-size:14.5px}
 @keyframes va-reference-think{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-3px) rotate(1deg)}}
 #viora-assistant.is-speaking .va-pose-stack,.va-big.speaking .va-pose-stack{animation:va-reference-speak .6s ease-in-out infinite alternate}
 @keyframes va-reference-speak{from{transform:translateY(0) scale(1)}to{transform:translateY(-3px) scale(1.012)}}
-@media(prefers-reduced-motion:reduce){.va-pose-stack,.va-pose-stack .va-pose{animation:none!important}.va-pose-stack .va-pose-success{opacity:0}.va-pose-stack .va-pose-thumbs{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.va-pose-stack,.va-pose-stack .va-pose{animation:none!important}.va-pose-stack .va-pose-success{opacity:0!important;visibility:hidden!important}.va-pose-stack .va-pose-thumbs{opacity:1!important;visibility:visible!important;transform:none!important}.va-pose-stack .va-pose-analytics{opacity:0!important;visibility:hidden!important}}
