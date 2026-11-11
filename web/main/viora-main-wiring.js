@@ -1739,7 +1739,7 @@ export function bindSafetyNets() {
     const wireDataCloseButtons = (root) => {
       if (!root) return;
       findWithin(root, '[data-close]').forEach(b => {
-        if (b._vioraDataCloseBound) return;
+        if (b._vioraDataCloseBound || (typeof b._vioraWired_ === 'string' && b._vioraWired_.startsWith('click:'))) return;
         b._vioraDataCloseBound = true;
         b.addEventListener('click', (e) => {
           const targetId = b.dataset.close;
@@ -1754,7 +1754,7 @@ export function bindSafetyNets() {
     const wireOverlayClick = (root) => {
       if (!root) return;
       findWithin(root, '.modal-overlay').forEach(m => {
-        if (m._vioraOverlayBound) return;
+        if (m._vioraOverlayBound || (typeof m._vioraWired_ === 'string' && m._vioraWired_.startsWith('click:'))) return;
         m._vioraOverlayBound = true;
         m.addEventListener('click', (e) => {
           if (e.target !== m) return;
