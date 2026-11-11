@@ -1,341 +1,276 @@
-/* VIORA World — independent animated 3D city scene.
-   Uses the site's existing Three.js r128 global; leaves the hero globe untouched. */
+/* VIORA Tokyo city banner — one fixed real photograph with a separately simulated local sky. */
 (() => {
   'use strict';
   const root = document.getElementById('viora-city');
   const stage = document.getElementById('viora-city-stage');
   const canvas = document.getElementById('viora-city-canvas');
-  if (!root || !stage || !canvas || !window.THREE) {
-    if (stage) stage.classList.add('city-fallback');
-    return;
-  }
+  if (!root || !stage || !canvas) return;
 
-  const THREE = window.THREE;
+  const ctx = canvas.getContext('2d', { alpha: false });
+  if (!ctx) return;
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x071426);
-  scene.fog = new THREE.FogExp2(0x0a1a2c, 0.014);
+  const photo = new Image();
+  photo.crossOrigin = 'anonymous';
+  photo.src = 'https://images.unsplash.com/photo-1596332996407-d8d5d3b60e8e?auto=format&fit=crop&w=2400&q=90';
 
-  const camera = new THREE.PerspectiveCamera(43, 1, 0.1, 420);
-  camera.position.set(0, 27, 78);
-  camera.lookAt(0, 8, -35);
-
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.65));
-  renderer.outputEncoding = THREE.sRGBEncoding;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.12;
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-  const hemi = new THREE.HemisphereLight(0x9fc9ed, 0x17202c, 0.82);
-  scene.add(hemi);
-  const sunLight = new THREE.DirectionalLight(0xffd6a0, 2.2);
-  sunLight.position.set(-35, 55, 20);
-  sunLight.castShadow = true;
-  sunLight.shadow.mapSize.set(1024, 1024);
-  sunLight.shadow.camera.left = -75;
-  sunLight.shadow.camera.right = 75;
-  sunLight.shadow.camera.top = 75;
-  sunLight.shadow.camera.bottom = -75;
-  scene.add(sunLight);
-  const moonLight = new THREE.DirectionalLight(0x8ab8ef, 0.1);
-  scene.add(moonLight);
-
-  const city = new THREE.Group();
-  scene.add(city);
-  const groundMat = new THREE.MeshStandardMaterial({ color: 0x172432, roughness: 0.92, metalness: 0.12 });
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(250, 240), groundMat);
-  ground.rotation.x = -Math.PI / 2;
-  ground.position.set(0, -0.3, -55);
-  ground.receiveShadow = true;
-  city.add(ground);
-
-  const roadMat = new THREE.MeshStandardMaterial({ color: 0x101923, roughness: 0.85 });
-  const road = new THREE.Mesh(new THREE.PlaneGeometry(250, 13), roadMat);
-  road.rotation.x = -Math.PI / 2;
-  road.position.set(0, -0.18, 13);
-  city.add(road);
-  const laneMat = new THREE.MeshBasicMaterial({ color: 0x9ab0bf, transparent: true, opacity: 0.26 });
-  for (let x = -115; x < 115; x += 12) {
-    const dash = new THREE.Mesh(new THREE.BoxGeometry(5, 0.035, 0.12), laneMat);
-    dash.position.set(x, -0.08, 13);
-    city.add(dash);
-  }
-
-  const palettes = [0x26394b, 0x344354, 0x1d3041, 0x485665, 0x253b4c, 0x3b4857, 0x1b2a3a];
-  const glassMats = [0x9fc6d9, 0x5e91aa, 0xd7b98c, 0x7ca8b9].map(c => new THREE.MeshStandardMaterial({ color: c, emissive: 0x172b3b, emissiveIntensity: 0.12, metalness: 0.38, roughness: 0.28 }));
-  const windowGlow = new THREE.MeshBasicMaterial({ color: 0xffd99b });
-  let seed = 82471;
-  const rand = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
-
-  function makeBuilding(x, z, w, d, h, index) {
-    const group = new THREE.Group();
-    group.position.set(x, 0, z);
-    const baseMat = new THREE.MeshStandardMaterial({ color: palettes[index % palettes.length], roughness: 0.66, metalness: 0.32 });
-    const base = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), baseMat);
-    base.position.y = h / 2;
-    base.castShadow = true; base.receiveShadow = true;
-    group.add(base);
-
-    // Varied stepped crowns, setbacks and roof forms break up the skyline.
-    if (index % 4 !== 0) {
-      const crownH = h * (0.08 + rand() * 0.13);
-      const crown = new THREE.Mesh(new THREE.BoxGeometry(w * (0.72 + rand() * 0.2), crownH, d * (0.72 + rand() * 0.2)), baseMat);
-      crown.position.y = h + crownH / 2;
-      crown.castShadow = true;
-      group.add(crown);
-    }
-    if (index % 7 === 0) {
-      const spire = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.35, h * 0.24, 8), new THREE.MeshStandardMaterial({ color: 0x8b9aa7, metalness: 0.8, roughness: 0.3 }));
-      spire.position.y = h + h * 0.13;
-      group.add(spire);
-    }
-
-    const rows = Math.max(3, Math.floor(h / 3.8));
-    const cols = Math.max(2, Math.floor(w / 2.15));
-    const sideCols = Math.max(2, Math.floor(d / 2.25));
-    const winW = Math.min(0.72, w / (cols + 1) * 0.55);
-    const winH = 0.78;
-    const maxWindows = rows * (cols + sideCols);
-    const windowMesh = new THREE.InstancedMesh(
-      new THREE.BoxGeometry(winW, winH, 0.045),
-      new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x182b3b, emissiveIntensity: 0.38, metalness: 0.22, roughness: 0.32 }),
-      maxWindows
-    );
-    const dummy = new THREE.Object3D();
-    const litColor = new THREE.Color(0xffd59a);
-    const coolColor = new THREE.Color(0x86b6cf);
-    const dimColor = new THREE.Color(0x294b62);
-    let windowCount = 0;
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        if (rand() < 0.22) continue;
-        dummy.position.set(-w / 2 + (c + 1) * w / (cols + 1), 1.8 + r * (h - 3) / rows, d / 2 + 0.035);
-        dummy.rotation.set(0, 0, 0);
-        dummy.updateMatrix();
-        windowMesh.setMatrixAt(windowCount, dummy.matrix);
-        windowMesh.setColorAt(windowCount, rand() > 0.82 ? litColor : rand() > 0.45 ? coolColor : dimColor);
-        windowCount++;
-      }
-      for (let c = 0; c < sideCols; c++) {
-        if (rand() < 0.34) continue;
-        dummy.position.set(w / 2 + 0.03, 1.8 + r * (h - 3) / rows, -d / 2 + (c + 1) * d / (sideCols + 1));
-        dummy.rotation.set(0, Math.PI / 2, 0);
-        dummy.updateMatrix();
-        windowMesh.setMatrixAt(windowCount, dummy.matrix);
-        windowMesh.setColorAt(windowCount, rand() > 0.88 ? litColor : rand() > 0.48 ? coolColor : dimColor);
-        windowCount++;
-      }
-    }
-    windowMesh.count = windowCount;
-    windowMesh.instanceMatrix.needsUpdate = true;
-    if (windowMesh.instanceColor) windowMesh.instanceColor.needsUpdate = true;
-    group.add(windowMesh);
-    city.add(group);
-  }
-
-  let buildingIndex = 0;
-  for (let z = -118; z < 20; z += 12) {
-    for (let x = -108; x <= 108; x += 13.5) {
-      if (Math.abs(x) < 11 && z > -22) continue;
-      const distance = Math.sqrt(x * x + (z + 38) * (z + 38));
-      const height = 11 + rand() * 30 + Math.max(0, 22 - distance * 0.23);
-      const width = 6.5 + rand() * 4.8;
-      const depth = 6.5 + rand() * 4.5;
-      makeBuilding(x + (rand() - 0.5) * 3, z + (rand() - 0.5) * 3, width, depth, height, buildingIndex++);
-    }
-  }
-
-  // Signature central towers and a suspended skybridge give the skyline a distinct silhouette.
-  const signatureMat = new THREE.MeshStandardMaterial({ color: 0x263d50, metalness: 0.72, roughness: 0.28 });
-  function tower(x, z, w, d, h, taper) {
-    const geometry = new THREE.CylinderGeometry(w * taper, w, h, 4, 1, false);
-    const mesh = new THREE.Mesh(geometry, signatureMat);
-    mesh.position.set(x, h / 2, z);
-    mesh.rotation.y = Math.PI / 4;
-    mesh.castShadow = true;
-    city.add(mesh);
-    const crown = new THREE.Mesh(new THREE.BoxGeometry(w * 1.5, 0.65, d * 1.5), new THREE.MeshStandardMaterial({ color: 0x8abbd0, emissive: 0x16384c, metalness: 0.8 }));
-    crown.position.set(x, h + 0.2, z);
-    city.add(crown);
-  }
-  tower(-8, -62, 8, 8, 58, 0.55);
-  tower(12, -70, 6, 6, 43, 0.72);
-  tower(34, -52, 7, 7, 49, 0.62);
-
-  const bridge = new THREE.Mesh(new THREE.BoxGeometry(39, 1.15, 2.2), new THREE.MeshStandardMaterial({ color: 0x40596a, metalness: 0.82, roughness: 0.24, emissive: 0x0a2332 }));
-  bridge.position.set(8, 22, -52);
-  city.add(bridge);
-
-  // A subtle moving traffic layer creates scale and a sense of life.
-  const vehicles = [];
-  for (let i = 0; i < 22; i++) {
-    const car = new THREE.Group();
-    const body = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.72, 0.92), new THREE.MeshStandardMaterial({ color: [0x9eb3c1, 0x243c50, 0x8b9da8, 0xc3a67a][i % 4], metalness: 0.7, roughness: 0.3 }));
-    body.position.y = 0.52;
-    car.add(body);
-    const headMat = new THREE.MeshBasicMaterial({ color: 0xffedc6 });
-    for (const side of [-1, 1]) {
-      const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.16, 0.06), headMat);
-      lamp.position.set(1.06, 0.55, side * 0.28);
-      car.add(lamp);
-    }
-    car.position.set(-112 + i * 10.2, 0, 13 + (i % 2 ? 2.6 : -2.6));
-    city.add(car);
-    vehicles.push(car);
-  }
-
-  // Atmospheric cloud banks and high-altitude stars.
-  const clouds = [];
-  const cloudMat = new THREE.MeshBasicMaterial({ color: 0x9cb6c9, transparent: true, opacity: 0.12, depthWrite: false });
-  for (let i = 0; i < 12; i++) {
-    const cloud = new THREE.Mesh(new THREE.SphereGeometry(1, 14, 9), cloudMat.clone());
-    cloud.scale.set(10 + rand() * 13, 1.5 + rand() * 2, 3 + rand() * 4);
-    cloud.position.set(-110 + rand() * 220, 37 + rand() * 23, -115 + rand() * 50);
-    scene.add(cloud);
-    clouds.push(cloud);
-  }
-  const starPositions = [];
-  for (let i = 0; i < 500; i++) starPositions.push((rand() - .5) * 260, 38 + rand() * 90, -135 - rand() * 60);
-  const starGeo = new THREE.BufferGeometry();
-  starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
-  const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xd7e9ff, size: 0.42, transparent: true, opacity: 0.65 }));
-  scene.add(stars);
-
-  const sun = new THREE.Mesh(new THREE.SphereGeometry(3.8, 28, 20), new THREE.MeshBasicMaterial({ color: 0xffd39a }));
-  scene.add(sun);
-  const sunHalo = new THREE.Mesh(new THREE.SphereGeometry(5.4, 24, 16), new THREE.MeshBasicMaterial({ color: 0xffb46e, transparent: true, opacity: 0.12, depthWrite: false }));
-  scene.add(sunHalo);
-  const moon = new THREE.Mesh(new THREE.SphereGeometry(2.7, 32, 24), new THREE.MeshStandardMaterial({ color: 0xe6edf4, roughness: 0.88, metalness: 0.02 }));
-  scene.add(moon);
-  const moonHalo = new THREE.Mesh(new THREE.SphereGeometry(4.1, 24, 16), new THREE.MeshBasicMaterial({ color: 0x8ab9e8, transparent: true, opacity: 0.1, depthWrite: false }));
-  scene.add(moonHalo);
-
+  const cityLayer = document.createElement('canvas');
+  const cityCtx = cityLayer.getContext('2d');
+  let cityReady = false;
+  let width = 0, height = 0, dpr = 1;
+  let latitude = null, longitude = null;
+  let locationLabel = 'Visitor local sky';
+  let lastClock = 0;
   const timeLabel = root.querySelector('[data-city-time]');
   const weatherLabel = root.querySelector('[data-city-weather]');
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Africa/Nairobi';
-  let latitude = -0.286, longitude = 36.817;
+  if (weatherLabel) weatherLabel.textContent = 'Tokyo · fixed city view';
 
-  function solarPosition(date) {
-    const jd = date.getTime() / 86400000 + 2440587.5;
-    const n = jd - 2451545;
-    const L = ((280.46 + .9856474 * n) % 360 + 360) % 360;
-    const g = ((357.528 + .9856003 * n) % 360 + 360) % 360 * Math.PI / 180;
-    const lam = (L + 1.915 * Math.sin(g) + .020 * Math.sin(2 * g)) * Math.PI / 180;
-    const ob = (23.439 - .0000004 * n) * Math.PI / 180;
-    const dec = Math.asin(Math.sin(ob) * Math.sin(lam));
-    const ra = Math.atan2(Math.cos(ob) * Math.sin(lam), Math.cos(lam));
-    const T = (jd - 2451545) / 36525;
-    const gmst = (280.46061837 + 360.98564736629 * (jd - 2451545) + .000387933 * T * T) * Math.PI / 180;
-    const H = ((gmst + longitude * Math.PI / 180 - ra + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
-    const p = latitude * Math.PI / 180;
-    const elevation = Math.asin(Math.sin(p) * Math.sin(dec) + Math.cos(p) * Math.cos(dec) * Math.cos(H));
-    const azimuth = Math.atan2(-Math.sin(H), Math.tan(dec) * Math.cos(p) - Math.sin(p) * Math.cos(H));
-    return { elevation, azimuth };
+  function visitorTime() {
+    return new Date();
   }
 
-  function updateCelestial(date) {
-    const solar = solarPosition(date);
-    const altitude = solar.elevation;
-    const az = solar.azimuth;
-    const horizontal = Math.cos(altitude);
-    const sx = Math.sin(az) * horizontal;
-    const sy = Math.sin(altitude);
-    const sz = -Math.cos(az) * horizontal;
-    const sunPos = new THREE.Vector3(sx * 118, 18 + Math.max(-0.8, sy) * 78, sz * 118);
-    sun.position.copy(sunPos);
-    sunHalo.position.copy(sunPos);
-    sunLight.position.set(sx * 90, Math.max(8, sy * 95), sz * 90);
-    sunLight.intensity = THREE.MathUtils.clamp((sy + 0.12) * 3.2, 0.08, 2.6);
-    moonLight.intensity = THREE.MathUtils.clamp((-sy + 0.18) * 0.42, 0.04, 0.42);
+  function localClock(date) {
+    return date.getHours() + date.getMinutes() / 60 + date.getSeconds() / 3600;
+  }
 
-    // Lunar phase and lunar orbital position, based on the synodic month.
-    const synodic = 29.530588853;
-    const phase = (((date.getTime() / 86400000 + 2440587.5) - 2451550.1) / synodic % 1 + 1) % 1;
-    const lunarAngle = phase * Math.PI * 2 + az;
-    const moonPos = new THREE.Vector3(Math.cos(lunarAngle) * 105, 22 + Math.sin(lunarAngle) * 52, -92 + Math.sin(lunarAngle * 0.7) * 26);
-    moon.position.copy(moonPos);
-    moonHalo.position.copy(moonPos);
-    // Directional illumination varies with the lunar phase instead of a fixed glowing disc.
-    moon.material.emissive = new THREE.Color(0x26384e);
-    moon.material.emissiveIntensity = 0.08;
-    moonLight.position.copy(sunPos.clone().sub(moonPos).normalize().multiplyScalar(75));
-    moon.visible = altitude < 0.28 || phase > 0.48;
-    moonHalo.visible = moon.visible;
-    sun.visible = altitude > -0.18;
-    sunHalo.visible = sun.visible;
-    root.dataset.phase = altitude < -0.08 ? 'night' : altitude < 0.12 ? 'sunset' : 'day';
-    if (timeLabel) timeLabel.textContent = new Intl.DateTimeFormat('en-KE', { hour: '2-digit', minute: '2-digit', timeZone: timezone, timeZoneName: 'short' }).format(date);
+  function phaseFor(hour) {
+    if (hour >= 5 && hour < 6.5) return 'dawn';
+    if (hour >= 6.5 && hour < 16.5) return 'day';
+    if (hour >= 16.5 && hour < 18.5) return 'golden-hour';
+    if (hour >= 18.5 && hour < 20) return 'blue-hour';
+    return 'night';
+  }
+
+  function preparePhoto() {
+    if (!photo.naturalWidth || !photo.naturalHeight) return;
+    const maxW = 1800;
+    const scale = Math.min(1, maxW / photo.naturalWidth);
+    const iw = Math.round(photo.naturalWidth * scale);
+    const ih = Math.round(photo.naturalHeight * scale);
+    cityLayer.width = iw;
+    cityLayer.height = ih;
+    cityCtx.clearRect(0, 0, iw, ih);
+    cityCtx.drawImage(photo, 0, 0, iw, ih);
+
+    // Remove only sky connected to the top edge. The skyline itself remains the
+    // same photograph at every hour; a soft alpha edge lets the simulated sky sit behind it.
+    try {
+      const frame = cityCtx.getImageData(0, 0, iw, ih);
+      const pixels = frame.data;
+      const count = iw * ih;
+      const seen = new Uint8Array(count);
+      const queue = new Int32Array(count);
+      let head = 0, tail = 0;
+      const skyLike = (i, y) => {
+        if (y > ih * 0.72) return false;
+        const p = i * 4, r = pixels[p], g = pixels[p + 1], b = pixels[p + 2];
+        const blueSky = b > r * 1.06 && g > r * 0.91 && b > 90;
+        const brightCloud = Math.min(r, g, b) > 150 && Math.max(r, g, b) - Math.min(r, g, b) < 58;
+        return blueSky || brightCloud;
+      };
+      for (let x = 0; x < iw; x++) {
+        const i = x;
+        if (skyLike(i, 0)) { seen[i] = 1; queue[tail++] = i; }
+      }
+      while (head < tail) {
+        const i = queue[head++], x = i % iw, y = (i / iw) | 0;
+        const neighbours = [x > 0 ? i - 1 : -1, x < iw - 1 ? i + 1 : -1, y > 0 ? i - iw : -1, y < ih - 1 ? i + iw : -1];
+        for (const n of neighbours) {
+          if (n < 0 || seen[n]) continue;
+          const ny = (n / iw) | 0;
+          if (skyLike(n, ny)) { seen[n] = 1; queue[tail++] = n; }
+        }
+      }
+      for (let i = 0; i < count; i++) {
+        if (seen[i]) pixels[i * 4 + 3] = 0;
+        else if (i % iw < 2 || i % iw > iw - 3) pixels[i * 4 + 3] = 255;
+      }
+      cityCtx.putImageData(frame, 0, 0);
+      // A tiny blur on the alpha edge softens the skyline cut without changing the source photo.
+      const softened = document.createElement('canvas');
+      softened.width = iw; softened.height = ih;
+      const sctx = softened.getContext('2d');
+      sctx.filter = 'blur(1.2px)';
+      sctx.drawImage(cityLayer, 0, 0);
+      cityCtx.clearRect(0, 0, iw, ih);
+      cityCtx.drawImage(softened, 0, 0);
+    } catch (_) {
+      // If the image host blocks pixel access, keep the same fixed photograph as a clean fallback.
+      cityCtx.clearRect(0, 0, iw, ih);
+      cityCtx.drawImage(photo, 0, 0, iw, ih);
+    }
+    cityReady = true;
+    resize();
   }
 
   function resize() {
-    const w = Math.max(1, stage.clientWidth);
-    const h = Math.max(1, stage.clientHeight);
-    renderer.setSize(w, h, false);
-    camera.aspect = w / h;
-    camera.fov = w < 560 ? 49 : 43;
-    camera.position.z = w < 560 ? 91 : 78;
-    camera.updateProjectionMatrix();
-  }
-  const observer = new ResizeObserver(resize);
-  observer.observe(stage);
-  resize();
-
-  async function loadWeather(lat, lon) {
-    try {
-      const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current=temperature_2m,precipitation,weather_code&timezone=auto';
-      const response = await fetch(url, { cache: 'no-store' });
-      if (!response.ok) throw new Error('weather unavailable');
-      const current = (await response.json()).current;
-      const code = current.weather_code;
-      const condition = current.precipitation > 0 ? 'Rain' : code === 0 ? 'Clear' : code <= 3 ? 'Partly cloudy' : code <= 48 ? 'Fog' : code <= 67 ? 'Rain' : code <= 77 ? 'Snow' : 'Showers';
-      if (weatherLabel) weatherLabel.textContent = Math.round(current.temperature_2m) + '°C · ' + condition;
-    } catch (_) { if (weatherLabel) weatherLabel.textContent = 'Local conditions unavailable'; }
+    const rect = stage.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    dpr = Math.min(window.devicePixelRatio || 1, 1.8);
+    width = Math.round(rect.width);
+    height = Math.round(rect.height);
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    draw(visitorTime());
   }
 
-  let lastSkyUpdate = 0;
-  const clock = new THREE.Clock();
-  let raf = 0;
-  function animate() {
-    raf = requestAnimationFrame(animate);
-    const elapsed = clock.getElapsedTime();
-    const delta = Math.min(clock.getDelta(), 0.05);
-    if (!reducedMotion) {
-      vehicles.forEach((car, i) => {
-        car.position.x += delta * (i % 2 ? -7.5 : 8.8);
-        if (car.position.x > 118) car.position.x = -118;
-        if (car.position.x < -118) car.position.x = 118;
-      });
-      clouds.forEach((cloud, i) => {
-        cloud.position.x += delta * (i % 2 ? -0.35 : 0.24);
-        if (cloud.position.x > 135) cloud.position.x = -135;
-        if (cloud.position.x < -135) cloud.position.x = 135;
-      });
-      camera.position.x = Math.sin(elapsed * 0.045) * 1.9;
-      camera.position.y = 27 + Math.sin(elapsed * 0.07) * 0.42;
-      camera.lookAt(0, 8, -35);
-      stars.material.opacity = 0.42 + Math.sin(elapsed * 0.32) * 0.12;
+  function mix(a, b, t) { return a + (b - a) * Math.max(0, Math.min(1, t)); }
+  function rgb(a, b, t) { return 'rgb(' + Math.round(mix(a[0], b[0], t)) + ',' + Math.round(mix(a[1], b[1], t)) + ',' + Math.round(mix(a[2], b[2], t)) + ')'; }
+
+  function drawSky(date) {
+    const hour = localClock(date);
+    const phase = phaseFor(hour);
+    root.dataset.phase = phase;
+    const sunUp = Math.max(0, Math.sin((hour - 6) / 12 * Math.PI));
+    const dawn = Math.max(0, 1 - Math.abs(hour - 5.8) / 1.7);
+    const dusk = Math.max(0, 1 - Math.abs(hour - 18.1) / 1.8);
+    const night = hour < 5 || hour >= 20;
+    const topDay = [67, 151, 211], horizonDay = [193, 220, 236];
+    const topNight = [5, 13, 34], horizonNight = [26, 43, 68];
+    const twilight = Math.max(dawn, dusk);
+    const top = night ? topNight : (twilight ? [45, 83, 129] : topDay);
+    const horizon = night ? horizonNight : (twilight ? [232, 133, 99] : horizonDay);
+    const g = ctx.createLinearGradient(0, 0, 0, height);
+    g.addColorStop(0, rgb(top, [8, 18, 42], night ? 0 : 0.06));
+    g.addColorStop(0.56, rgb(horizon, [247, 164, 117], twilight * 0.75));
+    g.addColorStop(1, night ? '#26394f' : '#9eb5c3');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, width, height);
+
+    // Warm atmospheric glow close to the horizon at dawn and sunset.
+    if (twilight > 0.01) {
+      const glow = ctx.createRadialGradient(width * 0.69, height * 0.57, 2, width * 0.69, height * 0.57, width * 0.65);
+      glow.addColorStop(0, 'rgba(255,177,126,' + (twilight * 0.48) + ')');
+      glow.addColorStop(1, 'rgba(255,177,126,0)');
+      ctx.fillStyle = glow; ctx.fillRect(0, 0, width, height);
     }
-    if (elapsed - lastSkyUpdate > 20) {
-      updateCelestial(new Date());
-      lastSkyUpdate = elapsed;
-    }
-    renderer.render(scene, camera);
-  }
-  updateCelestial(new Date());
-  animate();
-  loadWeather(latitude, longitude);
-  if (navigator.geolocation) navigator.geolocation.getCurrentPosition(pos => {
-    latitude = pos.coords.latitude;
-    longitude = pos.coords.longitude;
-    updateCelestial(new Date());
-    loadWeather(latitude, longitude);
-  }, () => {}, { timeout: 4500, maximumAge: 900000 });
 
-  window.addEventListener('pagehide', () => {
-    cancelAnimationFrame(raf);
-    observer.disconnect();
-    renderer.dispose();
+    // Soft, layered cloud forms; movement is intentionally slow and restrained.
+    const t = reducedMotion ? 0 : date.getTime() / 100000;
+    for (let i = 0; i < 7; i++) {
+      const x = ((i * 0.21 + t * (i % 2 ? -0.002 : 0.0015)) % 1.35) * width - width * 0.12;
+      const y = height * (0.12 + (i % 3) * 0.095);
+      const cloud = ctx.createRadialGradient(x, y, 2, x, y, width * 0.19);
+      const alpha = night ? 0.035 : 0.075;
+      cloud.addColorStop(0, 'rgba(255,255,255,' + alpha + ')');
+      cloud.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = cloud; ctx.fillRect(x - width * .2, y - height * .1, width * .4, height * .2);
+    }
+
+    const sunX = width * (0.08 + (hour / 24) * 0.84);
+    const sunY = height * (0.43 - sunUp * 0.34);
+    if (!night && hour >= 5.2 && hour <= 19.2) {
+      const halo = ctx.createRadialGradient(sunX, sunY, 2, sunX, sunY, width * 0.13);
+      halo.addColorStop(0, 'rgba(255,239,194,.78)');
+      halo.addColorStop(.22, 'rgba(255,208,151,.24)');
+      halo.addColorStop(1, 'rgba(255,208,151,0)');
+      ctx.fillStyle = halo; ctx.fillRect(sunX - width * .14, sunY - width * .14, width * .28, width * .28);
+      ctx.beginPath(); ctx.arc(sunX, sunY, Math.max(5, width * .009), 0, Math.PI * 2);
+      ctx.fillStyle = '#fff0cf'; ctx.fill();
+    }
+
+    if (night) {
+      // Stars fade naturally toward twilight and remain behind the fixed Tokyo skyline.
+      for (let i = 0; i < 74; i++) {
+        const x = ((i * 97.13) % 997) / 997 * width;
+        const y = ((i * 53.71) % 401) / 401 * height * .58;
+        ctx.globalAlpha = 0.22 + ((i * 17) % 60) / 100;
+        ctx.fillStyle = '#f2f5ff';
+        ctx.beginPath(); ctx.arc(x, y, i % 9 === 0 ? 1.25 : .65, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      const moonX = width * 0.78, moonY = height * 0.18;
+      const moonGlow = ctx.createRadialGradient(moonX, moonY, 1, moonX, moonY, width * .055);
+      moonGlow.addColorStop(0, 'rgba(224,237,255,.34)');
+      moonGlow.addColorStop(1, 'rgba(224,237,255,0)');
+      ctx.fillStyle = moonGlow; ctx.fillRect(moonX - width * .06, moonY - width * .06, width * .12, width * .12);
+      ctx.beginPath(); ctx.arc(moonX, moonY, Math.max(5, width * .008), 0, Math.PI * 2);
+      ctx.fillStyle = '#e5edf6'; ctx.fill();
+      ctx.beginPath(); ctx.arc(moonX + width * .004, moonY - width * .002, Math.max(5, width * .008), 0, Math.PI * 2);
+      ctx.fillStyle = '#14233c'; ctx.fill();
+    }
+    return { phase, sunUp, twilight };
+  }
+
+  function drawCity(info) {
+    if (!cityReady) return;
+    const iw = cityLayer.width, ih = cityLayer.height;
+    const scale = Math.max(width / iw, height / ih);
+    const dw = iw * scale, dh = ih * scale;
+    const dx = (width - dw) / 2;
+    const dy = (height - dh) / 2;
+    ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.drawImage(cityLayer, dx, dy, dw, dh);
+    // Natural ambient exposure shifts while preserving the same image and composition.
+    if (info.phase === 'night') {
+      ctx.fillStyle = 'rgba(5,13,31,.43)';
+      ctx.fillRect(0, 0, width, height);
+      const glow = ctx.createLinearGradient(0, height * .48, 0, height);
+      glow.addColorStop(0, 'rgba(9,24,45,0)');
+      glow.addColorStop(1, 'rgba(5,12,25,.3)');
+      ctx.fillStyle = glow; ctx.fillRect(0, 0, width, height);
+    } else if (info.phase === 'blue-hour') {
+      ctx.fillStyle = 'rgba(24,43,72,.2)'; ctx.fillRect(0, 0, width, height);
+    } else if (info.phase === 'golden-hour' || info.phase === 'dawn') {
+      ctx.fillStyle = 'rgba(255,151,91,.12)'; ctx.fillRect(0, 0, width, height);
+    }
+    ctx.restore();
+  }
+
+  function draw(date) {
+    if (!width || !height) return;
+    ctx.clearRect(0, 0, width, height);
+    const info = drawSky(date);
+    drawCity(info);
+    const shade = ctx.createLinearGradient(0, height * .55, 0, height);
+    shade.addColorStop(0, 'rgba(4,10,18,0)');
+    shade.addColorStop(1, 'rgba(3,9,17,.55)');
+    ctx.fillStyle = shade; ctx.fillRect(0, 0, width, height);
+    if (timeLabel) {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'local time';
+      timeLabel.textContent = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' }).format(date) + ' · ' + tz;
+    }
+  }
+
+  function tick() {
+    const now = Date.now();
+    if (!lastClock || now - lastClock > 15000) {
+      draw(new Date());
+      lastClock = now;
+    } else if (!reducedMotion) {
+      draw(new Date());
+    }
+    requestAnimationFrame(tick);
+  }
+
+  photo.addEventListener('load', preparePhoto, { once: true });
+  photo.addEventListener('error', () => {
+    stage.classList.add('city-photo-fallback');
+    if (weatherLabel) weatherLabel.textContent = 'Tokyo skyline photo unavailable';
   }, { once: true });
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      latitude = pos.coords.latitude;
+      longitude = pos.coords.longitude;
+      locationLabel = 'Visitor location';
+      root.dataset.skyLocation = 'visitor';
+      if (weatherLabel) weatherLabel.textContent = 'Sky for your location · Tokyo city view';
+      draw(new Date());
+    }, () => {
+      root.dataset.skyLocation = 'local-clock';
+      if (weatherLabel) weatherLabel.textContent = 'Simulated from your device clock';
+    }, { enableHighAccuracy: false, timeout: 7000, maximumAge: 900000 });
+  } else {
+    root.dataset.skyLocation = 'local-clock';
+  }
+
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(stage);
+  else window.addEventListener('resize', resize);
+  if (photo.complete && photo.naturalWidth) preparePhoto();
+  resize();
+  tick();
 })();
