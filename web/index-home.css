@@ -2134,14 +2134,17 @@
 }
 
 @media (max-width: 640px) {
+  .strip-carousel-wrap { min-width: 0; max-width: 100%; overflow: hidden; }
+  .strip-carousel { min-width: 0; max-width: 100%; overscroll-behavior-x: contain; }
   .strip-card { flex: 0 0 240px; }
   .strip-carousel-prev,
   .strip-carousel-next {
     width: 36px;
     height: 36px;
   }
-  .strip-carousel-prev { left: -8px; }
-  .strip-carousel-next { right: -8px; }
+  /* Keep carousel controls inside the viewport; the track itself remains swipeable. */
+  .strip-carousel-prev { left: 6px; }
+  .strip-carousel-next { right: 6px; }
 }
 /* ═══════════════════════════════════════════════════════════════
    TOUR PRODUCTS GRID (v3.1)
