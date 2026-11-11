@@ -415,9 +415,9 @@ code, pre, kbd, .mono {
   width: 16px;
   text-align: center;
   flex-shrink: 0;
-  color: var(--accent-blue);
-  opacity: 0.85;
-  transition: opacity var(--t-fast);
+  color: var(--group-color, var(--accent-blue));
+  opacity: 1;
+  transition: opacity var(--t-fast), color var(--t-fast);
 }
 .sb-group-toggle:hover .sb-group-icon { opacity: 1; }
 .sb-group-label { flex: 1; overflow: hidden; text-overflow: ellipsis; }
@@ -5784,7 +5784,7 @@ canvas { border-radius: var(--r-sm); }
   transition: color var(--t-fast), opacity var(--t-fast);
 }
 .sb-group-items a:hover i { opacity: 1; filter: brightness(1.15); }
-.sb-group-items a.active i { color: #ffffff; }
+.sb-group-items a.active i { color: var(--icon-color, var(--accent-blue)); }
 
 /* Sub-divider inside a group (Clients has 3) */
 .sb-sub-divider {
@@ -6329,3 +6329,22 @@ canvas { border-radius: var(--r-sm); }
   .viora-hero-strip { gap: 6px !important; }
   .viora-hero-strip-tile { padding: 6px 7px !important; }
 }
+
+
+/* VIORA navigation icon colours — consistent across desktop and mobile. */
+.sb-group-toggle .sb-group-icon { color: var(--group-color, var(--accent-blue)) !important; }
+.sb-group-toggle .sb-group-chevron { color: var(--group-color, var(--accent-blue)); }
+.sb-group-items a i { color: var(--icon-color, var(--accent-blue)); }
+#mobileBottomNav .mnav-item[data-mnav="exec"] i { color: #f6bd55; }
+#mobileBottomNav .mnav-item[data-mnav="clientportal"] i { color: #38bdf8; }
+#mobileBottomNav .mnav-item[data-mnav="sales"] i { color: #35c99a; }
+#mobileBottomNav .mnav-item[data-mnav="ops"] i { color: #a78bfa; }
+#mobileBottomNav .mnav-item[data-mnav="finance"] i { color: #22c55e; }
+#mobileBottomNav .mnav-item[data-mnav="more"] i { color: #fb7185; }
+#mobileSubChips .chip i { color: var(--chip-icon-color, #38bdf8); }
+#mobileSubChips .chip:nth-child(6n+1) i { color: #38bdf8; }
+#mobileSubChips .chip:nth-child(6n+2) i { color: #a78bfa; }
+#mobileSubChips .chip:nth-child(6n+3) i { color: #35c99a; }
+#mobileSubChips .chip:nth-child(6n+4) i { color: #f6bd55; }
+#mobileSubChips .chip:nth-child(6n+5) i { color: #fb7185; }
+#mobileSubChips .chip:nth-child(6n) i { color: #22d3ee; }
