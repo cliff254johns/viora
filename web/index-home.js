@@ -29,7 +29,7 @@ const FIREBASE_CONFIG = {
 };
 
 const ROOT = 'viora_data/orgs/viora';
-const KES_RATE = 129;
+let KES_RATE = 129;
 
 /* ── State ── */
 const S = {
@@ -71,8 +71,8 @@ const normalizeIcon = (raw, fallback = 'fa-solid fa-cube') => {
 };
 window.normalizeIcon = normalizeIcon;
 
-const fmtKSh = (usd) => 'KSh ' + Math.round((Number(usd) || 0) * KES_RATE).toLocaleString('en-KE');
-const fmtKShKes = (kes) => 'KSh ' + Math.round(Number(kes) || 0).toLocaleString('en-KE');
+const fmtKSh = (usd) => window.VioraCurrency ? window.VioraCurrency.format(Number(usd)||0,'USD') : 'KSh ' + Math.round((Number(usd)||0)*KES_RATE).toLocaleString('en-KE');
+const fmtKShKes = (kes) => window.VioraCurrency ? window.VioraCurrency.format(Number(kes)||0,'KES') : 'KSh ' + Math.round(Number(kes)||0).toLocaleString('en-KE');
 
 const debounceFn = (fn, ms) => {
   let t;
@@ -622,7 +622,7 @@ function renderTourStepDetail(host, buckets, families, industries) {
                       </div>
                       <div class="tour-product-body">
                         <div class="tour-product-name">${escHtml(p.name || '')}</div>
-                        <div class="tour-product-price">KSh ${kes.toLocaleString('en-KE')}</div>
+                        <div class="tour-product-price">${fmtKSh(p.price)}</div>
                         <div class="tour-product-actions">
                           <button type="button" class="tour-product-buy" data-tour-buy="${escAttr(p.id)}">
                             <i class="fa-solid fa-bolt"></i> Buy
@@ -768,7 +768,7 @@ function renderProductCarousel() {
           <div class="strip-card-cat">${escHtml(p.category || '')}</div>
           <h3 class="strip-card-name">${escHtml(p.name || '')}</h3>
           <p class="strip-card-desc">${escHtml((p.description || '').slice(0, 90))}${(p.description || '').length > 90 ? '…' : ''}</p>
-          <div class="strip-card-price">${isCustom ? 'Custom pricing' : 'KSh ' + kes.toLocaleString('en-KE')}</div>
+          <div class="strip-card-price">${isCustom ? 'Custom pricing' : fmtKSh(p.price)}</div>
           <div class="strip-card-actions">
             ${previewUrl ? `
               <a href="${escAttr(previewUrl)}" target="_blank" rel="noopener" class="strip-btn strip-btn-outline" title="Preview">
@@ -2559,6 +2559,8 @@ setInterval(() => {
    EXPOSE GLOBALLY
    ═══════════════════════════════════════════════════════════════ */
 window.VioraHome = { S, renderAll, openOrderModal, openCategoryModal };
+window.addEventListener('viora:currency-ready', () => { const fx=window.VioraCurrency; const rate=fx&&fx.convert(1,'USD','KES'); if(Number.isFinite(rate)&&rate>0)KES_RATE=rate; try{renderAll();}catch(e){console.warn('[VIORA currency] Homepage refresh skipped:',e);} });
+if(window.VioraCurrency?.getState().ready){const rate=window.VioraCurrency.convert(1,'USD','KES');if(Number.isFinite(rate)&&rate>0)KES_RATE=rate;}
 if (typeof window.App !== 'object' || !window.App) window.App = {};
 window.App.openOrderModal = openOrderModal;
 window.App.openCategoryModal = openCategoryModal;
