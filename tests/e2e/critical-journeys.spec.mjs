@@ -29,3 +29,31 @@ test('mobile main system has no document-level horizontal overflow',async({page}
  const dimensions=await page.evaluate(()=>({scrollWidth:document.documentElement.scrollWidth,clientWidth:document.documentElement.clientWidth}));
  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth+2);
 });
+
+test('homepage globe keeps satellite visuals, caption spacing and mobile page scrolling',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ const globe=page.locator('#globe-container');
+ await expect(globe).toBeVisible();
+ await expect(globe).toHaveAttribute('data-orbital-satellites','3',{timeout:20000});
+ await expect(globe).toHaveAttribute('data-orbital-tracks','2');
+ const layout=await page.evaluate(()=>{
+  const caption=document.querySelector('.globe-fibre-caption');
+  const next=document.querySelector('.workflow-strip');
+  const globe=document.querySelector('#globe-container');
+  if(!caption||!next||!globe)return null;
+  return {
+   captionBottom:caption.getBoundingClientRect().bottom,
+   nextSectionTop:next.getBoundingClientRect().top,
+   touchAction:getComputedStyle(globe).touchAction,
+   scrollHeight:document.documentElement.scrollHeight,
+   clientHeight:document.documentElement.clientHeight
+  };
+ });
+ expect(layout).not.toBeNull();
+ expect(layout.touchAction).toContain('pan-y');
+ expect(layout.captionBottom).toBeLessThanOrEqual(layout.nextSectionTop+2);
+ await page.evaluate(()=>window.scrollTo(0,0));
+ await page.mouse.wheel(0,650);
+ await expect.poll(()=>page.evaluate(()=>window.scrollY)).toBeGreaterThan(0);
+});
