@@ -1341,6 +1341,7 @@ const heroVisual = (p.image && String(p.image).trim())
           source: 'marketplace',
           leadId: leadResult.leadKey || null
         });
+        if (typeof window.vioraNotify === 'function') await window.vioraNotify({ eventId: quoteId, title: 'Marketplace: new quote request', body: 'A new marketplace quote request was received for ' + productName + '.', level: 'warning', icon: 'fa-file-invoice', source: 'marketplace-quote', url: '/main.html#marketplace-orders' });
       }
 
       document.getElementById('quoteThanksId').textContent = quoteId;
@@ -2004,6 +2005,7 @@ const heroVisual = (p.image && String(p.image).trim())
     try {
       if (firebaseReady && db) {
         await db.ref(P('orders') + '/' + orderId).set(order);
+        if (typeof window.vioraNotify === 'function') await window.vioraNotify({ eventId: orderId, title: 'Marketplace: new order received', body: 'A new marketplace order was placed. Payment status: ' + (paymentAccepted ? 'accepted' : 'pending review') + '.', level: 'warning', icon: 'fa-cart-shopping', source: 'marketplace-order', url: '/main.html#marketplace-orders' });
       }
 
       document.getElementById('licenseKeyDisplay').textContent = allKeys || '—';
