@@ -364,6 +364,7 @@ async function _submit(e) {
           icon: 'fa-shopping-bag',
           level: 'info',
           source: 'order-modal',
+          eventId: orderId,
         });
       }
     } catch (_) {}
