@@ -1,4 +1,4 @@
-# Cloudflare Workers Builds deploys this config from the repository root.
+# Cloudflare Workers Builds production and preview commands explicitly select this config.
 # Keep the Worker entry point, static assets, AI binding and DO migration together.
 name = "viora-static-git"
 main = "./worker.js"
