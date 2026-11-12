@@ -30,7 +30,7 @@
 .ecc-register-row strong{display:block;font-size:.78rem}
 .ecc-register-row small{display:block;color:var(--text-secondary);font-size:.7rem;line-height:1.5;margin-top:3px}
 .ecc-actions-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-.ecc-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:9px 12px;border:1px solid var(--border-color);border-radius:10px;background:var(--bg-primary,transparent);color:var(--text-primary);font:700 .73rem inherit;text-decoration:none;cursor:pointer;min-height:38px}
+.ecc-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:9px 12px;border:1px solid var(--border-color);border-radius:10px;background:var(--bg-primary,transparent);color:var(--text-primary);font:700 .73rem/1.2 'Plus Jakarta Sans',sans-serif;text-decoration:none;cursor:pointer;min-height:38px}
 .ecc-btn:hover{border-color:var(--accent-blue);text-decoration:none}
 .ecc-btn.ecc-primary{background:var(--accent-blue);color:#fff;border-color:var(--accent-blue)}
 .ecc-export,.ecc-incident{display:grid;gap:11px;max-width:780px}
@@ -46,3 +46,8 @@
 .ecc-hero .ecc-pill.ecc-bad{color:#fecaca}
 @media(max-width:900px){.ecc-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.ecc-hero{padding:18px;border-radius:16px}.ecc-section{padding:14px;border-radius:15px}.ecc-check-grid{grid-template-columns:1fr}.ecc-register-row{align-items:flex-start}.ecc-register-row .ecc-pill{flex-shrink:0}.ecc-two{grid-template-columns:1fr}.ecc-metrics{gap:8px}.ecc-metric{padding:13px}.ecc-metric strong{font-size:1.15rem}.ecc-actions-row .ecc-btn{flex:1 1 100%}}
+
+#sidebarNav>.sb-engineering-link{display:flex;align-items:center;gap:11px;padding:9px 18px 9px 20px;margin:5px 8px 12px;border:1px solid rgba(56,189,248,.28);border-radius:11px;color:var(--text-primary);font-size:var(--fs-md);font-weight:650;text-decoration:none;background:linear-gradient(110deg,rgba(14,165,233,.13),rgba(99,102,241,.08));cursor:pointer;white-space:nowrap}
+#sidebarNav>.sb-engineering-link i{width:16px;text-align:center;color:#38bdf8;flex-shrink:0}
+#sidebarNav>.sb-engineering-link:hover,#sidebarNav>.sb-engineering-link.active{background:var(--accent-blue);color:#fff;border-color:var(--accent-blue)}
+#sidebarNav>.sb-engineering-link:hover i,#sidebarNav>.sb-engineering-link.active i{color:#fff}
