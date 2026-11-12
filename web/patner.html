@@ -1339,11 +1339,14 @@
   window.vioraNotify = window.vioraNotify || async function (opts) {
     opts = opts || {};
     try {
-      const id = 'notif-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      const eventKey = String(opts.eventId || '');
+      const safeKey = eventKey.replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 100);
+      const id = safeKey ? 'partner-' + safeKey : 'notif-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
       const db = (typeof firebase !== 'undefined' && firebase.database) ? firebase.database() : null;
       if (!db) return;
       await db.ref('viora_data/orgs/viora/notifications/' + id).set({
         id,
+        sourceEventId: eventKey ? 'partner:' + safeKey : id,
         title: opts.title || 'VIORA',
         body: opts.body || '',
         icon: opts.icon || 'fa-bell',
