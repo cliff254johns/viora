@@ -34,7 +34,7 @@
 'use strict';
 
 /* ─── Version bump invalidates every cache below ─────────────── */
-const SW_VERSION = 'viora-v1.6.21';
+const SW_VERSION = 'viora-v1.6.22';
 const CACHE_SHELL  = `${SW_VERSION}-shell`;
 const CACHE_STATIC = `${SW_VERSION}-static`;
 const CACHE_FONTS  = `${SW_VERSION}-fonts`;
@@ -69,7 +69,7 @@ const PRECACHE_URLS = [
   '/es/',
   '/global-brand.css',
   '/global-brand.js',
-  '/currency-display.js?v=20261112-global-fx-7',
+  '/currency-display.js?v=20261112-global-fx-8',
   '/mainIndex/site-assistant-loader.js',
   '/mainIndex/site-language.js',
   '/mainIndex/chatbot.js',
