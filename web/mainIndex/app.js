@@ -604,7 +604,7 @@
             { ico: '🧾', h: 'Tax & e-invoicing integrations', p: 'Tax rules and fiscalisation depend on jurisdiction; authority integrations must be configured and verified before compliance claims.' },
             { ico: '💰', h: 'Finance portal', p: 'Financial dashboards, invoicing and reporting; currency and tax behavior depends on verified country and tenant configuration.' },
             { ico: '🤖', h: 'Groq AI engine', p: 'Recommendations on pricing, stock, collections and staffing — on your live data.' },
-            { ico: '🔐', h: 'Roles & audit logs', p: 'Granular permissions, 2FA, encrypted at rest, and a full who-did-what trail.' },
+            { ico: '🔐', h: 'Roles & audit logs', p: 'Role-based permissions and audit trails; MFA, encryption and key-management settings are verified per deployment.' },
             { ico: '🔔', h: 'SMS + WhatsApp alerts', p: 'Payment reminders, approvals, low stock, renewals — pushed where people look.' },
             { ico: '🗂️', h: 'Document vault', p: 'Versioned contracts, IDs and certificates with expiry reminders.' },
             { ico: '📊', h: 'Live dashboards', p: 'Owner view on any phone: cash, pipeline, attendance, margin — right now.' },
