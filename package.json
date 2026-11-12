@@ -1,0 +1,14 @@
+{
+  "name": "viora-engineering-quality-gates",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:unit": "node --test tests/unit/*.test.mjs",
+    "test:integration": "node --test tests/integration/*.test.mjs",
+    "test:contracts": "node scripts/viora-engineering-checks.mjs",
+    "test": "npm run test:contracts && npm run test:unit"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
