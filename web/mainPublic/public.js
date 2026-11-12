@@ -186,7 +186,7 @@ const DEFAULTS = {
       { q: "What types of businesses do you work with?", a: "Startups, SMEs, enterprises, government, and NGOs." },
       { q: "How long does a typical project take?", a: "Website 1–2 weeks. App 4–8 weeks. Complex systems 8–16 weeks." },
       { q: "Do you offer maintenance?", a: "Yes. 30 days free bug fixes, then affordable monthly plans." },
-      { q: "Can you integrate M-Pesa?", a: "Yes — M-Pesa Daraja, Airtel Money, banks, Flutterwave, Paystack." },
+      { q: "Can you integrate M-Pesa and other payment providers?", a: "We can scope integrations with M-Pesa Daraja, Airtel Money, banks, Flutterwave and Paystack. Availability depends on the provider, merchant onboarding, country, credentials and end-to-end testing." },
       { q: "What makes Viora different?", a: "One ecosystem, one database, one AI brain." }
     ]
   },
