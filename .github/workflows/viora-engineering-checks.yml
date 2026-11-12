@@ -36,6 +36,8 @@ jobs:
       - name: Parse JavaScript modules
         run: |
           node --input-type=module --check < web/main.js
+          node --input-type=module --check < web/main/render-dashboard.js
+          node --check web/sw.js
           node --input-type=module --check < web/worker.js
           node --input-type=module --check < web/engineering-command-centre.js
           node --input-type=module --check < workers/viora-static-next/worker.js
