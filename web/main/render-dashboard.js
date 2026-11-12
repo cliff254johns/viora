@@ -1137,8 +1137,9 @@ function _dnCollectDerived() {
   try {
     const list = buildNotifications() || [];
     return list.map(n => ({
-      id: 'derived-' + (n.id || Math.random().toString(36).slice(2, 8)),
+      id: 'derived-' + (n.id || ''),
       source: 'derived',
+      sourceEventId: n.sourceEventId || n.eventId || '',
       type: n.type || 'info',
       icon: n.icon || 'fa-bell',
       title: n.title || '',
@@ -1156,8 +1157,18 @@ function _dnCollectDerived() {
 function _dnDedupe(merged) {
   const seen = new Set();
   const out = [];
-  for (const n of merged) {
-    const key = String(n.title || '').toLowerCase().trim() + '|' + (n.page || '');
+  // Persisted events win over derived reminders so read state and source links survive.
+  const ordered = [...merged].sort((a, b) =>
+    (a.source === 'persisted' ? 0 : 1) - (b.source === 'persisted' ? 0 : 1)
+  );
+  for (const n of ordered) {
+    const explicit = n.sourceEventId || n.eventId || n.notificationKey || '';
+    const semantic = [
+      String(n.title || '').toLowerCase().replace(/\\s+/g, ' ').trim(),
+      String(n.sub || '').toLowerCase().replace(/\\s+/g, ' ').trim(),
+      String(n.page || '').trim()
+    ].join('|');
+    const key = explicit ? 'event:' + String(explicit) : 'content:' + semantic;
     if (seen.has(key)) continue;
     seen.add(key);
     out.push(n);
@@ -1229,6 +1240,8 @@ export function renderDashboardNotifications() {
       }
       if (page && window.Viora?.navigate) {
         window.Viora.navigate(page);
+      } else if (page && /^https?:\\/\\//i.test(page)) {
+        window.open(page, '_blank', 'noopener');
       }
     });
     grid.addEventListener('keydown', (e) => {
@@ -1273,6 +1286,8 @@ function _dnSubscribe() {
       list.push({
         id,
         source: 'persisted',
+        sourceEventId: n.sourceEventId || n.eventId || n.notificationKey || id,
+        category: n.category || n.source || 'system',
         type: n.level || 'info',
         icon: n.icon || 'fa-bell',
         title: n.title || 'Notification',
@@ -1362,6 +1377,15 @@ function _tsMs(t) {
 
 export function surfaceVioraNotification(payload, isFresh = true) {
   if (!payload) return;
+  const eventKey = String(payload.id || payload.sourceEventId || payload.eventId || '');
+  if (eventKey && _vioraNotifSeen.has(eventKey)) return;
+  if (eventKey) {
+    _vioraNotifSeen.add(eventKey);
+    if (_vioraNotifSeen.size > _vioraNotifSeenMax) {
+      const first = _vioraNotifSeen.values().next().value;
+      _vioraNotifSeen.delete(first);
+    }
+  }
 
   try {
     const level = payload.level === 'error'   ? 'error'
@@ -1429,32 +1453,16 @@ export function attachVioraNotificationListener() {
 
     const tsMs = _tsMs(n.ts);
     if (tsMs && attachTime - tsMs > 7 * 86400000) return;
-    if (_vioraNotifSeen.has(n.id)) return;
-
-    _vioraNotifSeen.add(n.id);
-    if (_vioraNotifSeen.size > _vioraNotifSeenMax) {
-      const drop = _vioraNotifSeen.size - _vioraNotifSeenMax;
-      let i = 0;
-      for (const k of _vioraNotifSeen) {
-        if (i++ >= drop) break;
-        _vioraNotifSeen.delete(k);
-      }
-    }
+    const eventKey = String(n.id || snap.key || n.sourceEventId || '');
+    if (eventKey && _vioraNotifSeen.has(eventKey)) return;
 
     if (n.by && state?.operator?.uid && n.by === state.operator.uid) return;
 
-    const isFresh = !tsMs || (Date.now() - tsMs) < 5000;
-    surfaceVioraNotification(n, isFresh);
+    const isFresh = !!tsMs && (Date.now() - tsMs) < 5000;
+    surfaceVioraNotification({ ...n, id: eventKey }, isFresh);
 
-    /* Paint the dashboard notifications grid immediately */
+    /* Keep unread state until the user opens the notification. */
     try { renderDashboardNotifications(); } catch (_) {}
-
-    if (typeof update === 'function') {
-      try {
-        update(ref(db, `${path}/${n.id}`), { read: true, readAt: new Date().toISOString() })
-          .catch(() => {});
-      } catch (_) {}
-    }
   });
 
   console.info('[viora] notification listener attached');
