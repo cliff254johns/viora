@@ -2,6 +2,9 @@ name = "viora-static-next"
 main = "./worker.js"
 compatibility_date = "2026-11-12"
 
+# Keep branch previews isolated from the production legacy service binding.
+previews = { }
+
 [assets]
 directory = "../../web"
 binding = "ASSETS"
