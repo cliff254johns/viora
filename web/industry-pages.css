@@ -86,3 +86,43 @@ body.viora-industry-page[data-industry="directory"] .grid .card:nth-child(7):bef
  body.viora-industry-page[data-industry="directory"] .grid .card:before{height:180px}
 }
 @media(prefers-reduced-motion:reduce){body.viora-industry-page .card,body.viora-industry-page .btn{transition:none}}
+
+/* Consistent VIORA logo, colour-coded industry iconography and six-item mobile dock. */
+body.viora-industry-page .top .brand.viora-industry-brand{display:inline-flex;flex-direction:row;align-items:center;gap:12px;min-width:0;letter-spacing:0;font-size:inherit}
+body.viora-industry-page .viora-industry-brand>img{display:block;width:56px;height:56px;flex:0 0 56px;object-fit:contain;border-radius:12px;filter:drop-shadow(0 5px 14px rgba(0,0,0,.3))}
+body.viora-industry-page .viora-industry-wordmark{display:flex;flex-direction:column;gap:4px;line-height:1}
+body.viora-industry-page .viora-industry-wordmark strong{font-size:19px;font-weight:950;letter-spacing:.15em;color:#fff}
+body.viora-industry-page .viora-industry-wordmark small{margin:0;color:#a8bdd4;font-size:9px;font-weight:800;letter-spacing:.28em}
+body.viora-industry-page .viora-footer-brand{display:inline-flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font-weight:900;letter-spacing:.1em}
+body.viora-industry-page .viora-footer-brand img{width:42px;height:42px;object-fit:contain;border-radius:9px}
+body.viora-industry-page .viora-footer-brand span{display:flex;flex-direction:column;gap:3px}
+body.viora-industry-page .viora-footer-brand small{font-size:8px;letter-spacing:.24em;color:#9fb3c9}
+body.viora-industry-page .industry-icon{font-size:15px;margin-right:5px}
+body.viora-industry-page .industry-card-icon{display:inline-grid;place-items:center;width:48px;height:48px;margin-bottom:14px;border:1px solid currentColor;border-radius:15px;background:color-mix(in srgb,currentColor 13%,transparent);font-size:21px}
+body.viora-industry-page .list li .industry-list-icon{width:22px;flex:0 0 22px;text-align:center;font-size:16px}
+body.viora-industry-page .tone-blue{color:#55a8ff!important}
+body.viora-industry-page .tone-orange{color:#ff9b45!important}
+body.viora-industry-page .tone-green{color:#42d392!important}
+body.viora-industry-page .tone-purple{color:#b18aff!important}
+body.viora-industry-page .tone-amber{color:#f4c45e!important}
+body.viora-industry-page .tone-teal{color:#39d2c4!important}
+body.viora-industry-page .tone-red{color:#ff7185!important}
+body.viora-industry-page .tone-violet{color:#c18aff!important}
+body.viora-industry-page .tone-lime{color:#a6d85c!important}
+body.viora-industry-page .tone-cyan{color:#53d4e8!important}
+@media(max-width:760px){
+ body.viora-industry-page .top{padding:9px 0}
+ body.viora-industry-page .viora-industry-brand>img{width:48px;height:48px;flex-basis:48px}
+ body.viora-industry-page .viora-industry-wordmark strong{font-size:17px}
+ body.viora-industry-page .industry-mobile-nav{position:fixed;z-index:2147481000;left:8px;right:8px;bottom:calc(7px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:2px;padding:7px 4px;border:1px solid rgba(189,216,244,.2);border-radius:18px;background:rgba(5,14,26,.96);box-shadow:0 14px 45px rgba(0,0,0,.48);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
+ body.viora-industry-page .industry-mobile-nav .mnav-item{display:flex;min-width:0;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:7px 1px;border-radius:11px;color:#aebed0;text-decoration:none;font-size:clamp(8px,2.15vw,10px);font-weight:750;line-height:1.1;white-space:nowrap}
+ body.viora-industry-page .industry-mobile-nav .mnav-item i{font-size:17px}
+ body.viora-industry-page .industry-mobile-nav .mnav-item[aria-current=page]{background:rgba(52,126,218,.17);color:#f4f8ff}
+ body.viora-industry-page .industry-mobile-nav .tone-blue i{color:#55a8ff}
+ body.viora-industry-page .industry-mobile-nav .tone-orange i{color:#ff9b45}
+ body.viora-industry-page .industry-mobile-nav .tone-green i{color:#42d392}
+ body.viora-industry-page .industry-mobile-nav .tone-purple i{color:#b18aff}
+ body.viora-industry-page .industry-mobile-nav .tone-amber i{color:#f4c45e}
+ body.viora-industry-page .industry-mobile-nav .tone-teal i{color:#39d2c4}
+ body.viora-industry-page{padding-bottom:100px}
+}
