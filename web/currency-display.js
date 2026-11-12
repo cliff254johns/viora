@@ -131,18 +131,65 @@
     const cached = readCache(FX_CACHE_KEY);
     if (cached && cached.rates && cached.rates.USD === 1) {
       state.rates = cached.rates;
-      state.rateDates = cached.rateDates || {};
       state.lastUpdated = cached.lastUpdated || '';
       state.nextUpdate = Number(cached.nextUpdate) || 0;
-      state.source = cached.source || 'Cached reference rates';
-      if (state.nextUpdate > Date.now()) return;
+      if (state.nextUpdate > Date.now() && Number(state.rates[state.currency]) > 0) return;
     }
+
+    let primaryLoaded = false;
     try {
-      await loadFrankfurter();
+      const data = await fetchJson(FX_URL, 9000);
+      if (data && data.result === 'success' && data.base_code === 'USD' && data.rates && Number(data.rates.USD) === 1) {
+        state.rates = data.rates;
+        state.lastUpdated = data.time_last_update_utc || '';
+        state.nextUpdate = Number(data.time_next_update_unix || 0) * 1000 || Date.now() + DAY;
+        state.source = 'Open Exchange Rate reference';
+        primaryLoaded = true;
+      }
     } catch (error) {
-      console.warn('[VIORA currency] Frankfurter unavailable; trying secondary rates.', error);
-      try { await loadFallbackRates(); }
-      catch (fallbackError) { console.warn('[VIORA currency] Secondary FX provider unavailable; keeping cached rates.', fallbackError); }
+      console.warn('[VIORA currency] Primary FX refresh unavailable; trying the backup daily rate feeds.', error);
+    }
+
+    // The primary feed covers most traded currencies. The independent daily
+    // feed fills gaps for additional national currencies and is mirrored on
+    // Cloudflare Pages in case jsDelivr is unavailable.
+    if (!Number(state.rates[state.currency]) || !primaryLoaded) {
+      for (const url of FX_BACKUP_URLS) {
+        try {
+          const data = await fetchJson(url, 8000);
+          const usdRates = data && (data.usd || data.USD);
+          if (!usdRates || typeof usdRates !== 'object') continue;
+          const normalized = { USD: 1 };
+          Object.keys(usdRates).forEach(code => {
+            const rate = Number(usdRates[code]);
+            if (/^[a-z]{3}$/i.test(code) && Number.isFinite(rate) && rate > 0) normalized[code.toUpperCase()] = rate;
+          });
+          if (Object.keys(normalized).length < 20) continue;
+          // Prefer the primary source where it has a quote; fill currencies
+          // absent from it with the second independent daily dataset.
+          Object.keys(normalized).forEach(code => {
+            if (!(Number(state.rates[code]) > 0)) state.rates[code] = normalized[code];
+          });
+          if (!Number(state.rates[state.currency]) && Number(normalized[state.currency]) > 0) {
+            state.rates[state.currency] = normalized[state.currency];
+          }
+          state.lastUpdated = state.lastUpdated || data.date || '';
+          state.nextUpdate = Math.max(state.nextUpdate || 0, Date.now() + DAY);
+          if (!primaryLoaded) state.source = 'Daily FX reference feed (backup)';
+          break;
+        } catch (error) {
+          console.debug('[VIORA currency] Backup FX feed unavailable:', error && error.message);
+        }
+      }
+    }
+
+    if (Number(state.rates[state.currency]) > 0 || primaryLoaded) {
+      writeCache(FX_CACHE_KEY, {
+        rates: state.rates,
+        lastUpdated: state.lastUpdated,
+        nextUpdate: state.nextUpdate || Date.now() + DAY,
+        savedAt: Date.now()
+      });
     }
   }
   function formatterLocale() {
