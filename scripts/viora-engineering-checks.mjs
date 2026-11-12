@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 const read = (p) => fs.readFileSync(p, 'utf8');
 const main = read('web/main.html');
+const sharedPwa = read('web/shared-pwa.js');
 const mainJs = read('web/main.js');
 const worker = read('web/worker.js');
 const wrangler = read('web/wrangler.toml');
@@ -18,6 +19,11 @@ for (const path of ['web/manifest.webmanifest','web/main.webmanifest','web/manif
   assert.ok(manifest.icons.some(i => i.src === '/viora-icon-192.png' && i.sizes === '192x192'), path+' missing 192 PNG icon');
   assert.ok(manifest.icons.some(i => i.src === '/viora-icon-512.png' && i.sizes === '512x512'), path+' missing 512 PNG icon');
 }
+assert.ok(main.includes('href="/main.webmanifest"'), 'main PWA manifest missing');
+assert.ok(main.includes('href="/viora-icon-192.png"'), 'main branded favicon missing');
+assert.ok(main.includes('src="/shared-pwa.js"'), 'main shared PWA bootstrap missing');
+assert.ok(sharedPwa.includes("logo.src = '/viora-icon-192.png'"), 'PWA install prompt is missing the VIORA company logo');
+assert.ok(sharedPwa.includes("localStorage.getItem('viora-install-dismissed')"), 'PWA install dismissal must persist across sessions');
 for (const [path, expected] of [['web/viora-icon-192.png',192],['web/viora-icon-512.png',512]]) {
   const png=fs.readFileSync(path);
   assert.equal(png.readUInt32BE(16),expected,path+' width mismatch');
