@@ -1344,7 +1344,10 @@
       const id = safeKey ? 'partner-' + safeKey : 'notif-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
       const db = (typeof firebase !== 'undefined' && firebase.database) ? firebase.database() : null;
       if (!db) return;
-      await db.ref('viora_data/orgs/viora/notifications/' + id).set({
+      const notificationRef = db.ref('viora_data/orgs/viora/notifications/' + id);
+      const existingSnap = await notificationRef.once('value');
+      const existing = existingSnap.val() || {};
+      await notificationRef.set({
         id,
         sourceEventId: eventKey ? 'partner:' + safeKey : id,
         title: opts.title || 'VIORA',
@@ -1353,8 +1356,9 @@
         level: opts.level || 'info',
         url: opts.url || '/dash.html',
         source: opts.source || 'unknown',
-        ts: new Date().toISOString(),
-        read: false
+        ts: existing.ts || new Date().toISOString(),
+        read: existing.read === true,
+        ...(existing.readAt ? { readAt: existing.readAt } : {})
       });
       return id;
     } catch (e) {
