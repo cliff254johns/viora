@@ -25,6 +25,8 @@ import {
 
 let _ctx = null;
 let _unsubInbound = null;
+let _inboundInitialized = false;
+const _inboundSeenIds = new Set();
 let _unsubInbox = null;
 let _unsubComm = null;
 let _activeThread = null;
@@ -67,7 +69,30 @@ export function subscribeInbox() {
   try {
     _unsubInbound = onValue(ref(db, P('waInbound')), (snap) => {
       const val = snap.exists() ? snap.val() : {};
-      const list = Object.entries(val).map(([k, v]) => ({ id: k, ...(v || {}) }));
+      const entries = Object.entries(val || {});
+      if (!_inboundInitialized) {
+        entries.forEach(([key]) => _inboundSeenIds.add(key));
+        _inboundInitialized = true; // load old messages quietly; only alert on new arrivals
+      } else {
+        for (const [key, message] of entries) {
+          if (_inboundSeenIds.has(key)) continue;
+          _inboundSeenIds.add(key);
+          try {
+            if (typeof window.vioraNotify === 'function') {
+              await window.vioraNotify({
+                eventId: 'wa-inbound-' + key,
+                title: 'WhatsApp: new inbound message',
+                body: 'A new WhatsApp message was received from ' + String(message?.profileName || message?.from || 'a contact').slice(0, 100) + '.',
+                icon: 'fa-whatsapp',
+                level: 'info',
+                source: 'whatsapp-inbound',
+                url: '/main.html#inbox'
+              });
+            }
+          } catch (e) { console.warn('[inbox] inbound notification failed', e); }
+        }
+      }
+      const list = entries.map(([k, v]) => ({ id: k, ...(v || {}) }));
       list.sort((a, b) => String(b.receivedAt || '').localeCompare(String(a.receivedAt || '')));
       _setData('inboxInbound', list);
       _scheduleRender();
