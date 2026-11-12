@@ -35,6 +35,7 @@ let _swBooted = false;
 let _soundInjected = false;
 let _reloadScheduled = false;
 let _lastReloadAt = 0;
+let _controllerWasPresent = false;
 
 /* ═══════════════════════════════════════════════════════════════
    SERVICE WORKER
@@ -50,6 +51,25 @@ export function bootServiceWorker() {
   }
 
   if (!('serviceWorker' in navigator)) { _log('SW not supported'); return; }
+  _controllerWasPresent = Boolean(navigator.serviceWorker.controller);
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!_controllerWasPresent) { _controllerWasPresent = true; return; }
+    const hasUnsavedForm = [...document.forms].some(form => [...form.elements].some(el => {
+      if (!el || el.disabled || ['button','submit','reset','hidden'].includes(el.type)) return false;
+      if (el.type === 'checkbox' || el.type === 'radio') return el.checked !== el.defaultChecked;
+      if (el.tagName === 'SELECT') return [...el.options].some((option, i) => option.selected !== option.defaultSelected);
+      return typeof el.value === 'string' && el.value !== (el.defaultValue || '');
+    }));
+    if (hasUnsavedForm) {
+      if (document.getElementById('vioraUpdateReady')) return;
+      const notice = document.createElement('div'); notice.id = 'vioraUpdateReady';
+      notice.style.cssText = 'position:fixed;z-index:2147483647;left:16px;right:16px;bottom:16px;padding:14px 16px;border-radius:14px;background:#10243a;color:#fff;box-shadow:0 12px 40px #0008;display:flex;align-items:center;justify-content:space-between;gap:12px;font:600 14px system-ui';
+      notice.innerHTML = '<span>VIORA has an update ready. Save your changes, then refresh.</span><button type="button" style="border:0;border-radius:9px;padding:9px 13px;background:#38bdf8;color:#071827;font-weight:800">Refresh</button>';
+      notice.querySelector('button').addEventListener('click', () => location.reload()); document.body.appendChild(notice);
+      return;
+    }
+    scheduleReload('service worker update');
+  });
   if (IS_DEV) { _log('dev mode — skipping SW to avoid stale cache'); return; }
 
   /* ── Throttled reload ── */
@@ -98,6 +118,7 @@ export function bootServiceWorker() {
         if (timedOut) return;   // ignore late success
         _log('SW registered, scope:', reg.scope);
         wireRegistration(reg);
+        reg.update().catch(() => {});
       })
       .catch(err => {
         clearTimeout(timeoutId);
