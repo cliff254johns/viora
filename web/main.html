@@ -2820,6 +2820,8 @@
   <input type="hidden" id="editLeadId" />
   <label>Full Name *</label><input id="leadName" required />
   <div class="form-row"><div><label>Email</label><input type="email" id="leadEmail" /></div><div><label>Phone</label><input id="leadPhone" /></div></div>
+  <div class="form-row"><div><label>Street address / building (optional)</label><input id="leadAddress" maxlength="220" placeholder="Street, building or postal address" /></div><div><label>City / town</label><input id="leadCity" maxlength="120" placeholder="City" /></div></div>
+  <label>Country</label><input id="leadCountry" maxlength="100" placeholder="Country" />
   <div class="form-row"><div><label>Source</label><select id="leadSource"><option>Website</option><option>Referral</option><option>Event</option><option>Social Media</option><option>Cold Outreach</option><option>Other</option></select></div><div><label>Status</label><select id="leadStatus"><option>New</option><option>Contacted</option><option>Qualified</option><option>Lost</option></select></div></div>
   <label>Campaign</label><select id="leadCampaign"><option value="">— None —</option></select>
   <label>Notes</label><textarea id="leadNotes" rows="2"></textarea>
