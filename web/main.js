@@ -5403,7 +5403,7 @@ onAuthStateChanged(auth, (user) => {
   _externalBridgeUid = user?.uid || null;
   if (!user) return;
 
-  const watchExternal = (path, source, title, body, url, icon, level = 'info') => {
+  const watchExternal = (path, source, title, body, url, icon, level = 'info', stableKey = null) => {
     let initial = true;
     const seen = new Set();
     try {
@@ -5420,7 +5420,7 @@ onAuthStateChanged(auth, (user) => {
           seen.add(key);
           try {
             window.vioraNotify({
-              eventId: key,
+              eventId: String(typeof stableKey === 'function' ? (stableKey(value || {}) || key) : key),
               source,
               title,
               body: typeof body === 'function' ? body(value || {}) : body,
@@ -5435,11 +5435,11 @@ onAuthStateChanged(auth, (user) => {
 
   watchExternal('waInbound', 'whatsapp-inbound', 'WhatsApp: new inbound message',
     value => 'A new WhatsApp message was received from ' + String(value.profileName || value.from || 'a contact').slice(0, 100) + '.',
-    '/main.html#inbox', 'fa-whatsapp');
+    '/main.html#inbox', 'fa-whatsapp', 'info', value => value.messageId || value.message_id || value.id);
 
   watchExternal('mpesaTransactions', 'mpesa-callback', 'M-Pesa: payment callback received',
     'A new M-Pesa transaction arrived and is awaiting reconciliation.',
-    '/main.html#fin-mpesa', 'fa-mobile-screen-button', 'warning');
+    '/main.html#fin-mpesa', 'fa-mobile-screen-button', 'warning', value => value.transactionId || value.receipt || value.TransID || value.id);
 });
 
 /* ═══════════════════════════════════════════════════════════════
