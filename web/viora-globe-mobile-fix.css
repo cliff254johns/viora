@@ -1,0 +1,26 @@
+/* Homepage globe spacing, orbital satellites and mobile touch scrolling. */
+.hero-visual { margin-bottom: 164px !important; }
+.globe-fibre-caption {
+  top: calc(100% + 76px) !important;
+  z-index: 6;
+  width: min(560px, calc(100vw - 32px)) !important;
+  line-height: 1.65 !important;
+}
+#globe-container, #globe-container canvas {
+  touch-action: pan-y !important;
+}
+#globe-container { overscroll-behavior: contain; }
+.hero-globe-hint { z-index: 5; }
+@media (max-width: 960px) {
+  .hero-visual { margin-bottom: 176px !important; }
+}
+@media (max-width: 600px) {
+  .hero-visual { margin-bottom: 188px !important; }
+  .globe-fibre-caption {
+    top: calc(100% + 74px) !important;
+    width: min(520px, calc(100vw - 28px)) !important;
+    padding: 0 8px !important;
+    font-size: 11px !important;
+    line-height: 1.55 !important;
+  }
+}
