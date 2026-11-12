@@ -128,7 +128,8 @@ async function renderWorldLeadMap(force=false){
  });
  if(window.L.heatLayer&&heat.length)worldHeat=L.heatLayer(heat,{radius:42,blur:30,maxZoom:6,minOpacity:.32,gradient:{0.12:'#2563eb',0.34:'#06b6d4',0.58:'#22c55e',0.8:'#f59e0b',1:'#ef4444'}}).addTo(worldMap);
  $('mapCityCount').textContent=points.length;
- if(points.length){const bounds=L.latLngBounds(points.map(p=>[p.lat,p.lng]));worldMap.fitBounds(bounds.pad(.16),{maxZoom:5});}
+ if(points.length===1){const p=points[0],precise=p.records.some(l=>String(l.address||'').trim());worldMap.setView([p.lat,p.lng],precise?15:10,{animate:true});}
+ else if(points.length>1){const bounds=L.latLngBounds(points.map(p=>[p.lat,p.lng]));worldMap.fitBounds(bounds.pad(.16),{maxZoom:6});}
  else worldMap.setView([20,5],2);
  if(!points.length&&located.length)$('worldLeadMap').insertAdjacentHTML('beforeend','<div class="map-geocode-note">City names could not be resolved. Check spelling and country values.</div>');
 }
