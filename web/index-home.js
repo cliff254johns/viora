@@ -1240,7 +1240,7 @@ function renderPricing() {
     const cls = t.featured ? 'growth featured' : t.name.toLowerCase();
     return `
       <div class="price-card ${cls}">
-        ${t.featured ? '<div class="badge" style="background:var(--accent-2);color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:999px;position:absolute;top:-12px;left:50%;transform:translateX(-50%);">Most popular</div>' : ''}
+        ${t.featured ? '<div class="badge" style="background:#166534;color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:999px;position:absolute;top:-12px;left:50%;transform:translateX(-50%);">Most popular</div>' : ''}
         <h3>${escHtml(t.name)}</h3>
         <p class="price-sub">${escHtml(t.tagline || '')}</p>
         <ul>${(t.bullets || []).map(b => `<li>${escHtml(b)}</li>`).join('')}</ul>
