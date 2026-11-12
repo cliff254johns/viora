@@ -1079,13 +1079,14 @@ export function renderNotifications() {
       }
     }
 
-    const countText = list.length > 9 ? '9+' : String(list.length);
+    const unreadCount = list.filter(n => n.source === 'persisted' ? !n.read : true).length;
+    const countText = unreadCount > 9 ? '9+' : String(unreadCount);
     if (R.notifCount) {
-      if (list.length) { R.notifCount.textContent = countText; R.notifCount.style.display = 'inline-block'; }
+      if (unreadCount) { R.notifCount.textContent = countText; R.notifCount.style.display = 'inline-block'; }
       else R.notifCount.style.display = 'none';
     }
     if (R.notifCountMobile) {
-      if (list.length) { R.notifCountMobile.textContent = countText; R.notifCountMobile.style.display = 'inline-block'; }
+      if (unreadCount) { R.notifCountMobile.textContent = countText; R.notifCountMobile.style.display = 'inline-block'; }
       else R.notifCountMobile.style.display = 'none';
     }
     if (!body) return;
