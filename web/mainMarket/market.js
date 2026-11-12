@@ -400,6 +400,7 @@ const App = {
     setTxt('heroTitle1', val('heroTitle1', DEFAULTS.heroTitle1));
     setTxt('heroTitle2', val('heroTitle2', DEFAULTS.heroTitle2));
     setTxt('heroSub', val('heroSub', DEFAULTS.heroSub), true);
+    if (window.VioraCurrency?.state?.ready) refreshLocalCurrencyLabels();
 
     const btn1 = document.getElementById('heroBtn1');
     const btn2 = document.getElementById('heroBtn2');
@@ -1343,7 +1344,7 @@ const heroVisual = (p.image && String(p.image).trim())
       }
 
       document.getElementById('quoteThanksId').textContent = quoteId;
-      const wa = (this.content && this.content.whatsApp) || DEFAULTS.whatsApp;
+      const wa = '254713428774'; // Verified VIORA WhatsApp Business line.
       const waMsg = encodeURIComponent(`Hi Viora, I just requested a quote (${quoteId}) for "${productName}". Looking forward to your reply!`);
       const qwa = document.getElementById('quoteThanksWhatsApp');
       if (qwa) qwa.href = `https://wa.me/${wa}?text=${waMsg}`;
