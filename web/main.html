@@ -495,6 +495,9 @@
       <a class="sb-engineering-link" data-tab="engineering-command" data-roles="admin,exec" title="Engineering Command Centre">
         <i class="fa-solid fa-microchip"></i><span>Engineering Command Centre</span>
       </a>
+      <a class="sb-engineering-link sb-engineering-sub-link" data-tab="engineering-visuals" data-roles="admin,exec" title="Engineering Visuals">
+        <i class="fa-solid fa-chart-area"></i><span>Engineering Visuals</span>
+      </a>
 
       <!-- ═══════════════════════════════════════════════════════════
            GROUP 1 · OVERVIEW
@@ -796,6 +799,20 @@
          ═══════════════════════════════════════════════════════ -->
     <section id="tab-engineering-command" class="tab-content" aria-labelledby="engineeringCommandHeading">
       <div id="engineeringCommandRoot" aria-live="polite"></div>
+    </section>
+    <section id="tab-engineering-visuals" class="tab-content" aria-labelledby="engineeringVisualsHeading">
+      <div id="engineeringVisualsRoot" class="ecc-wrap">
+        <header class="ecc-hero"><div><div class="ecc-eyebrow">VIORA ENGINEERING / VISUAL TELEMETRY</div><h1 id="engineeringVisualsHeading">Engineering Visuals</h1><p>Visual release readiness, quality gates, recovery objectives and accessibility targets. Values are targets or execution status, not fabricated live telemetry.</p></div><a class="ecc-btn ecc-primary" href="https://github.com/cliff254johns/viora/actions" target="_blank" rel="noopener">View CI runs</a></header>
+        <div class="ecc-visual-grid">
+          <article class="ecc-visual-card"><span>Quality gates</span><strong>CI + security</strong><div class="ecc-visual-track"><i style="width:45%"></i></div><small>Unit/contract checks added; workflow execution pending.</small></article>
+          <article class="ecc-visual-card"><span>Accessibility target</span><strong>WCAG 2.2 AA</strong><div class="ecc-visual-track"><i style="width:25%"></i></div><small>Target established; manual and automated audit pending.</small></article>
+          <article class="ecc-visual-card"><span>Recovery point objective</span><strong>24 hours proposed</strong><div class="ecc-visual-track"><i style="width:20%"></i></div><small>Planning target only; backup pipeline not yet active.</small></article>
+          <article class="ecc-visual-card"><span>Recovery time objective</span><strong>8 hours proposed</strong><div class="ecc-visual-track"><i style="width:20%"></i></div><small>Planning target only; restore drill not yet measured.</small></article>
+        </div>
+        <section class="ecc-section"><div class="ecc-section-head"><div><span class="ecc-eyebrow">RELEASE SCORECARD</span><h2>Evidence before green</h2><p>Use the linked run history and dated reports to move each control from planned to verified.</p></div></div><div class="ecc-visual-bars">
+          <div><span>Business unit tests</span><b>Added · run pending</b></div><div><span>Firebase integration and tenant isolation</span><b>Emulator setup required</b></div><div><span>Browser E2E and mobile</span><b>Not yet executed</b></div><div><span>Dependency and secret scans</span><b>Workflow added · run pending</b></div><div><span>Backup and restoration</span><b>Not configured</b></div><div><span>Core Web Vitals</span><b>Not measured</b></div>
+        </div></section>
+      </div>
     </section>
 
      <section id="tab-dashboard" class="tab-content active">
