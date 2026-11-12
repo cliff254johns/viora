@@ -63,6 +63,6 @@ jobs:
         with:
           node-version: "22"
       - name: Install Cloudflare Workers test dependencies
-        run: npm install --ignore-scripts --no-audit --no-fund
+        run: npm install --ignore-scripts --no-audit --no-fund --legacy-peer-deps
       - name: Verify SQLite Durable Object under concurrent requests
         run: npm run test:cloudflare
