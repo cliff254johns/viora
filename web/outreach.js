@@ -89,7 +89,7 @@ async function sendEmail(e){
  if(invalid.length){status('mailStatus','Check these email addresses: '+invalid.map(x=>x.to).join(', '),true);return;}
  const ok=await showConfirm('Confirm multi-recipient send','Send “'+subject+'” as '+recipients.length+' separate email'+(recipients.length===1?'':'s')+'? Each recipient will receive only their own message, and every send will be logged in Outreach and the main VIORA Communications log.','Send '+recipients.length+' email'+(recipients.length===1?'':'s'));
  if(!ok)return;
- let sent=0,failed=0;const failures=[];
+ let sent=0,failed=0;const failures=[],successAddresses=[];
  try{
   busy('sendBtn',true,'Sending 0/'+recipients.length+'…');
   for(let i=0;i<recipients.length;i++){
@@ -106,7 +106,7 @@ async function sendEmail(e){
     await update(ref(db,ROOT+'/emails/'+id),{status:'sent',providerId:result.id||null,sentAt});
     await update(ref(db,ORG+'/commLog/'+commLogId),{status:'sent',providerId:result.id||null,sentAt});
     if(lead?.id)await update(ref(db,ORG+'/leads/'+lead.id),{status:lead.status==='New'?'Contacted':lead.status,lastContactedAt:sentAt,updatedAt:sentAt});
-    sent++;
+    sent++;successAddresses.push(to.toLowerCase());
    }catch(err){
     failed++;failures.push(to);
     const failedAt=stamp();
@@ -116,8 +116,14 @@ async function sendEmail(e){
    busy('sendBtn',true,'Sending '+(i+1)+'/'+recipients.length+'…');
    status('mailStatus','Processed '+(i+1)+' of '+recipients.length+' · '+sent+' accepted · '+failed+' failed'+(failures.length?' · '+failures.join(', '):''));
   }
+  if(successAddresses.length){
+   const sentSet=new Set(successAddresses);
+   $('mailLeadList').querySelectorAll('input[name="mailLeadChoice"]').forEach(box=>{const lead=leads[box.value];if(lead&&sentSet.has(String(lead.email||'').trim().toLowerCase()))box.checked=false;});
+   $('mailTo').value=parseManualMailRecipients().filter(address=>!sentSet.has(address)).join(', ');
+   updateMailRecipientSummary();
+  }
   if(!failed){$('mailBody').value='';closeModal('emailModal');toast(sent+' separate email'+(sent===1?'':'s')+' accepted by the configured provider and recorded. Delivery confirmation depends on webhook tracking.');}
-  else{status('mailStatus',sent+' accepted; '+failed+' failed. Failed addresses: '+failures.join(', ')+'. Review the email log before retrying to avoid duplicates.',true);}
+  else{status('mailStatus',sent+' accepted; '+failed+' failed. Only failed recipients remain selected so you can retry safely.',true);}
  }finally{busy('sendBtn',false);renderEmails();renderAnalytics();renderOverview();}
 }
 function csvEscape(v){return '"'+String(v??'').replace(/"/g,'""')+'"';}
