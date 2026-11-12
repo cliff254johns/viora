@@ -132,12 +132,12 @@ function openProspectDetail(index){
 // The operator should be signed in to VIORA's verified WhatsApp Business account (0713428774).
 function prospectWhatsAppNumber(x){
  const raw=x?.phone||x?.whatsapp||x?.contactPhone||x?.contact_phone||x?.mobile||x?.telephone||x?.contactDetails?.phone||'';
- let digits=String(raw).replace(/\\D/g,'');
+ let digits=String(raw).replace(/\D/g,'');
  if(digits.startsWith('00'))digits=digits.slice(2);
  const isKenya=String(x?.country||'').toLowerCase().includes('kenya');
- if((digits.length===10&&/^0[17]\\d{8}$/.test(digits))||(isKenya&&digits.startsWith('0')))digits='254'+digits.slice(1);
- else if(digits.length===9&&(/^[17]\\d{8}$/.test(digits)||isKenya))digits='254'+digits;
- return /^\\d{8,15}$/.test(digits)?digits:'';
+ if((digits.length===10&&/^0[17]\d{8}$/.test(digits))||(isKenya&&digits.startsWith('0')))digits='254'+digits.slice(1);
+ else if(digits.length===9&&(/^[17]\d{8}$/.test(digits)||isKenya))digits='254'+digits;
+ return /^\d{8,15}$/.test(digits)?digits:'';
 }
 function openProspectWhatsApp(){
  if(!activeProspectDetail)return;
