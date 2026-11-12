@@ -31,7 +31,7 @@ export const MARKET_DEFAULTS = {
   heroLive: 'Live',
   heroTitle1: 'Software Licenses',
   heroTitle2: 'That Power Your Business',
-  heroSub: 'Instant access to premium software tools — all prices in Kenyan Shillings, delivered instantly.',
+  heroSub: 'Instant access to premium software tools — prices displayed in your local currency.',
   heroBtn1: 'Browse Products',
   heroBtn2: 'How It Works',
   statProducts: 'auto',
@@ -77,7 +77,7 @@ export const MARKET_DEFAULTS = {
   brandName: 'VIORA Marketplace',
   brandAccent: '#00e0ff',
   footerBrand: 'VIORA Marketplace',
-  footerText: 'Buy premium software licenses instantly in Kenyan Shillings.',
+  footerText: 'Explore software licenses with prices displayed in your local currency.',
   whatsApp: '254713428774',
   footerEmail: 'cliff254johns@gmail.com',
   promoCodes: { 'VIORA10': 10, 'LAUNCH15': 15, 'KES5': 5 }
