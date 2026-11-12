@@ -18,10 +18,10 @@ function _ensureMainLeadMap(){
  _mainLeadGeoMap=L.map(el,{worldCopyJump:true,scrollWheelZoom:true,preferCanvas:true,maxZoom:19}).setView([18,5],1);
  const streets=L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd',attribution:'© OpenStreetMap contributors © CARTO'});
  const osmStreets=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'});
- const terrain=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles © Esri — World Topographic Map'});
+ const terrain=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles © Esri — World Topographic Map'});
  const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles © Esri'});
  const boundaries=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,opacity:.95,attribution:'Country boundaries & place labels © Esri'});
- terrain.addTo(_mainLeadGeoMap);boundaries.addTo(_mainLeadGeoMap);_addMainVioraMapLayerControl(_mainLeadGeoMap,{vegetation:terrain,streets:streets,satellite:satellite,osm:osmStreets});_mainLeadGeoMap.fitBounds([[-82,-180],[82,180]],{padding:[8,8],maxZoom:2,animate:false});_mainLeadGeoMap.on('resize',()=>_mainLeadGeoMap.invalidateSize(true));
+ terrain.addTo(_mainLeadGeoMap);boundaries.addTo(_mainLeadGeoMap);_addMainVioraMapLayerControl(_mainLeadGeoMap,{vegetation:terrain,streets:streets,satellite:satellite,osm:osmStreets});_mainLeadGeoMap.fitBounds([[-82,-180],[82,180]],{padding:[8,8],maxZoom:2,animate:false});_mainLeadGeoMap._vioraWorldFitted=true;_mainLeadGeoMap._vioraUserZoomed=false;_mainLeadGeoMap.on('zoomend',()=>{if(_mainLeadGeoMap.getZoom()>2)_mainLeadGeoMap._vioraUserZoomed=true;});_mainLeadGeoMap.on('resize',()=>{_mainLeadGeoMap.invalidateSize(true);if(!_mainLeadGeoMap._vioraUserZoomed)_mainLeadGeoMap.fitBounds([[-82,-180],[82,180]],{padding:[8,8],maxZoom:2,animate:false});});
  _mainLeadGeoLayer=L.layerGroup().addTo(_mainLeadGeoMap);
  if(!_mainLeadMapResizeBound){window.addEventListener('resize',()=>{if(_mainLeadGeoMap)setTimeout(()=>_mainLeadGeoMap&&_mainLeadGeoMap.invalidateSize(true),120)});_mainLeadMapResizeBound=true}
  requestAnimationFrame(()=>requestAnimationFrame(()=>_mainLeadGeoMap&&_mainLeadGeoMap.invalidateSize(true)));
@@ -66,7 +66,7 @@ async function renderMainLeadGeoMap(force=false){
    const dot=L.circleMarker([p.lat,p.lng],{radius:Math.min(18,7+Math.sqrt(count)*2.2),color:'#e6f7ff',weight:1.5,fillColor:'#38bdf8',fillOpacity:.94});
    const safeLabel=String(p.label).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
    dot.bindPopup('<div class="viora-main-map-popup"><strong>'+safeLabel+'</strong><small>'+count+' recorded lead'+(count===1?'':'s')+'</small></div>');
-   dot.addTo(_mainLeadGeoLayer);dot.on('click',()=>_mainLeadGeoMap.setView([p.lat,p.lng],12,{animate:true}));
+   dot.addTo(_mainLeadGeoLayer);
    heat.push([p.lat,p.lng,Math.min(1,.35+count*.13)]);
  });
  if(window.L.heatLayer&&heat.length)_mainLeadHeatLayer=L.heatLayer(heat,{radius:42,blur:30,maxZoom:6,minOpacity:.3,gradient:{0.12:'#2563eb',0.34:'#06b6d4',0.58:'#22c55e',0.8:'#f59e0b',1:'#ef4444'}}).addTo(_mainLeadGeoMap);
