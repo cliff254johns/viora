@@ -47,7 +47,7 @@
   }
   async function loadGeo() {
     const cached = readCache(GEO_CACHE_KEY);
-    if (cached && cached.savedAt && Date.now() - cached.savedAt < 7 * DAY && cached.currency) {
+    if (cached && cached.savedAt && Date.now() - cached.savedAt < DAY && cached.currency) {
       state.countryCode = cached.countryCode || '';
       state.currency = cached.currency;
       state.source = 'IP country estimate';
@@ -118,7 +118,7 @@
   }
   function formatKES(amount) {
     const converted = convert(amount, 'KES', state.currency);
-    return converted == null ? formatAmount(Number(amount) / 129, 'USD') : formatAmount(converted, state.currency);
+    return converted == null ? formatAmount(amount, 'KES') : formatAmount(converted, state.currency);
   }
   function announce() {
     if (!(Number(state.rates[state.currency]) > 0)) { state.currency = 'USD'; state.source = 'USD fallback (local FX rate unavailable)'; }
