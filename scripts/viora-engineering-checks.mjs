@@ -25,6 +25,9 @@ for (const [path, expected] of [['web/viora-icon-192.png',192],['web/viora-icon-
 }
 
 assert.ok(main.includes('data-tab="engineering-command"'), 'main sidebar link missing');
+assert.ok(main.includes('data-tab="engineering-visuals"'), 'Engineering Visuals sidebar link missing');
+assert.ok(main.includes('id="tab-engineering-visuals"'), 'Engineering Visuals tab missing');
+assert.ok(mainJs.includes("case 'engineering-visuals'"), 'Engineering Visuals router case missing');
 assert.ok(main.includes('id="tab-engineering-command"'), 'main content tab missing');
 assert.ok(main.includes('engineering-command-centre.css'), 'command centre stylesheet missing');
 assert.ok(main.includes('engineering-command-centre.js'), 'command centre module missing');
@@ -55,6 +58,11 @@ assert.ok(staticConfig.includes('../../web'), 'static Worker is not configured t
 assert.ok(fs.existsSync('docs/VIORA-CLOUDFLARE-DEPLOYMENT.md'), 'missing Cloudflare deployment runbook');
 for (const p of [
   'docs/VIORA-ENGINEERING-DEEP-AUDIT-2026-11-12.md',
+  'docs/VIORA-TESTING-AND-RECOVERY-PLAN.md',
+  'docs/VIORA-BACKUP-RESTORE-RUNBOOK.md',
+  'tests/unit/business-calculations.test.mjs',
+  'tests/integration/firebase-emulator.test.mjs',
+  'scripts/backup-firebase-rtdb.mjs',
   'docs/compliance/VIORA-DATA-PROTECTION-GOVERNANCE.md',
   'docs/compliance/VIORA-RETENTION-AND-DELETION-POLICY.md',
   'docs/compliance/VIORA-SECURITY-INCIDENT-RESPONSE.md',
