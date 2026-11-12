@@ -2525,6 +2525,9 @@ function refreshLocalCurrencyLabels(){
   if(note)note.innerHTML='<i class="fa-solid fa-coins"></i> Prices shown in '+String(state.currency||'USD')+' using daily reference rates · Checkout records remain in KES';
   const select=document.getElementById('priceFilter');
   if(select){[['under-2k','Under '+fx.format(2000,'KES')],['2k-5k',fx.format(2000,'KES')+' – '+fx.format(5000,'KES')],['5k-10k',fx.format(5000,'KES')+' – '+fx.format(10000,'KES')],['over-10k','Over '+fx.format(10000,'KES')]].forEach(([value,label])=>{const option=select.querySelector('option[value="'+value+'"]');if(option)option.textContent=label;});}
+  const budget=document.getElementById('quoteBudget');
+  if(budget){[['under-20k','Under '+fx.format(20000,'KES')],['20k-50k',fx.format(20000,'KES')+' – '+fx.format(50000,'KES')],['50k-150k',fx.format(50000,'KES')+' – '+fx.format(150000,'KES')],['150k-500k',fx.format(150000,'KES')+' – '+fx.format(500000,'KES')],['over-500k','Over '+fx.format(500000,'KES')]].forEach(([value,label])=>{const option=budget.querySelector('option[value="'+value+'"]');if(option)option.textContent=label;});}
+  const budgetLabel=document.querySelector('label[for="quoteBudget"]');if(budgetLabel)budgetLabel.textContent='Budget Range ('+(state.currency||'USD')+' estimate) *';
 }
 window.addEventListener('viora:currency-ready', () => {
   refreshLocalCurrencyLabels();
