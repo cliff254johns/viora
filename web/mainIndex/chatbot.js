@@ -452,6 +452,90 @@ function playAudioUrl(url, speakId, audioEl){
   });
 }
 
+/* Start voice while the response is still streaming. Completed sentences are
+   queued immediately using the browser voice, avoiding a server-TTS round trip
+   after the full text has finished rendering. */
+function createStreamingSpeechQueue(speakId){
+  let seen=0;
+  let pending='';
+  let latestText='';
+  let queue=Promise.resolve();
+  let started=false;
+  let cancelled=false;
+
+  function activate(){
+    if(started)return;
+    started=true;
+    state.isSpeaking=true;
+    stopBtn.classList.add('show');
+    AvatarRenderer.setSpeaking(true);
+    AvatarRenderer.setExplaining(true);
+    setStatus('Speaking…');
+    armSpeakWatchdog(60000);
+  }
+  function enqueue(text){
+    const clean=stripForTTS(String(text||'').trim());
+    if(!clean)return;
+    activate();
+    queue=queue.then(()=>{
+      if(cancelled||speakId!==state.currentSpeakId)return;
+      armSpeakWatchdog(Math.max(8000,clean.length*180+5000));
+      return browserSpeak(clean,speakId);
+    });
+  }
+  function push(acc, final=false){
+    if(cancelled)return;
+    const value=String(acc||'');
+    if(value.length>=seen){
+      pending+=value.slice(seen);
+      seen=value.length;
+      latestText=value;
+    }
+    // Tool-call JSON is not spoken. finish() can still queue the human reply.
+    if(latestText.trimStart().startsWith('{')){
+      pending='';
+      if(!final)return;
+    }
+    const chunks=[];
+    let match;
+    const sentence=/^([\s\S]*?[.!?](?:["')\]]?))\s+/;
+    while((match=pending.match(sentence))){
+      chunks.push(match[1]);
+      pending=pending.slice(match[0].length);
+    }
+    if(!final&&pending.length>=110){
+      let cut=pending.lastIndexOf(' ',110);
+      if(cut<70)cut=110;
+      chunks.push(pending.slice(0,cut));
+      pending=pending.slice(cut).trimStart();
+    }
+    if(final&&pending.trim()){
+      chunks.push(pending.trim());
+      pending='';
+    }
+    chunks.forEach(enqueue);
+  }
+  return {
+    id:speakId,
+    push:(acc)=>push(acc,false),
+    finish:async(finalText)=>{
+      const finalValue=String(finalText||'');
+      if(finalValue && finalValue!==latestText){
+        // The model may have returned a tool envelope or post-processed reply.
+        pending=finalValue;
+        latestText=finalValue;
+        seen=finalValue.length;
+      }
+      push(latestText,true);
+      await queue;
+    },
+    cancel:()=>{
+      cancelled=true;
+      if(started&&speakId===state.currentSpeakId)stopSpeaking();
+    }
+  };
+}
+
 /* Speak a whole reply in as few TTS calls as possible. */
 function getActiveLanguageCode(){
   let value='en';
@@ -1448,6 +1532,8 @@ async function sendMessage(){
   AvatarRenderer.bounce();
   const typing = addTypingIndicator();
 
+  const progressiveSpeech = state.readAloud ? createStreamingSpeechQueue(++state.currentSpeakId) : null;
+
   const t0 = performance.now();
   let full = '';
   let toolCall = null;
@@ -1461,6 +1547,7 @@ async function sendMessage(){
         botDiv.innerHTML = renderMarkdownLite(acc);
         chat.scrollTop = chat.scrollHeight;
         setCaption(acc.slice(-160));
+        progressiveSpeech?.push(acc);
       });
       botDiv.classList.remove('streaming');
       if (!full) throw new Error('empty stream');
@@ -1478,6 +1565,7 @@ async function sendMessage(){
         botDiv.innerHTML = renderMarkdownLite(acc);
         chat.scrollTop = chat.scrollHeight;
         setCaption(acc.slice(-160));
+        progressiveSpeech?.push(acc);
         await new Promise(r => setTimeout(r, 16));
       }
       botDiv.classList.remove('streaming');
@@ -1524,9 +1612,10 @@ async function sendMessage(){
       AvatarRenderer.setSpeaking(true);
       AvatarRenderer.setExplaining(true);
       setStatus('Speaking…');
-      const speakId = ++state.currentSpeakId;
+      const speakId = progressiveSpeech ? progressiveSpeech.id : ++state.currentSpeakId;
       armSpeakWatchdog(60000);
-      await speakReply(full, speakId);
+      if (progressiveSpeech) await progressiveSpeech.finish(full);
+      else await speakReply(full, speakId);
       if (speakId === state.currentSpeakId) finishSpeaking();
     } else {
       state.isSpeaking = true;
@@ -1539,6 +1628,7 @@ async function sendMessage(){
       armSpeakWatchdog(Math.max(4000, total + 2000));
     }
   } catch(err){
+    progressiveSpeech?.cancel();
     removeTypingIndicator();
     console.warn('[VIORA]', err);
     state.metrics.errorCode = err.message || 'error';
