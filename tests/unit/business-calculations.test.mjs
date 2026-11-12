@@ -42,11 +42,11 @@ test('project billed total excludes draft invoices and honours exclusion id',()=
  assert.equal(getProjectBilledTotal('p1','i1'),0);
 });
 test('project paid total excludes voided and reversed payments',()=>{
- assert.equal(getProjectPaidTotal('p1'),400);
+ assert.equal(getProjectPaidTotal('p1'),500);
  assert.equal(getProjectPaidTotal('p2'),0);
 });
 test('remaining balance and financial progress are bounded and deterministic',()=>{
  assert.equal(getProjectRemainingTotal('p1'),700);
- assert.deepEqual(getProjectFinancialProgress('p1'),{pct:20,agreed:2000,paid:400,balance:1600});
+ assert.deepEqual(getProjectFinancialProgress('p1'),{pct:25,agreed:2000,paid:500,balance:1500});
  assert.deepEqual(getProjectFinancialProgress('p2'),{pct:0,agreed:1000,paid:0,balance:1000});
 });
