@@ -1362,11 +1362,10 @@ function updateSidebarCounters(force = false) {
   }
 
   /* Compare old vs new and notify dashboard on relevant changes */
+  // One counter-to-notification pipeline only. The former second bridge
+  // emitted the same counter changes again through vioraNotify.
   try { _compareCountersAndNotify(); }
   catch (e) { console.warn('[counter-notify] failed', e); }
-
-  try { maybeBroadcastCounterChanges(); }
-  catch (e) { console.warn('[counter-broadcast] failed', e); }
 }
 window.updateSidebarCounters = updateSidebarCounters;
 window.invalidateCountersFor = invalidateCountersFor;
