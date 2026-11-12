@@ -11,11 +11,14 @@
   const GEO_URLS = ['https://ipapi.co/json/', 'https://ipwho.is/'];
   const FX_CACHE_KEY = 'viora_fx_usd_v4';
   const GEO_CACHE_KEY = 'viora_geo_currency_v1';
+  const CURRENCY_OVERRIDE_KEY = 'viora_currency_override_v1';
   const DAY = 86400000;
   const CACHE_TTL = 6 * 60 * 60 * 1000;
   const state = {
     countryCode: '',
     currency: 'USD',
+    detectedCurrency: 'USD',
+    manualCurrency: false,
     rates: { USD: 1 },
     lastUpdated: '',
     nextUpdate: 0,
@@ -63,7 +66,8 @@
     const cached = readCache(GEO_CACHE_KEY);
     if (cached && cached.savedAt && Date.now() - cached.savedAt < DAY && cached.currency) {
       state.countryCode = cached.countryCode || '';
-      state.currency = String(cached.currency).toUpperCase();
+      state.detectedCurrency = String(cached.currency).toUpperCase();
+      state.currency = state.detectedCurrency;
       state.source = 'IP country estimate';
       return;
     }
@@ -73,6 +77,7 @@
         const geo = normalizeGeo(data, url.indexOf('ipapi.co') >= 0 ? 'ipapi' : 'ipwho');
         if (geo && /^[A-Z]{3}$/.test(geo.currency)) {
           state.countryCode = geo.countryCode;
+          state.detectedCurrency = geo.currency;
           state.currency = geo.currency;
           state.source = 'IP country estimate';
           writeCache(GEO_CACHE_KEY, Object.assign({ savedAt: Date.now() }, geo));
@@ -83,6 +88,34 @@
       }
     }
   }
+  function applySavedCurrencyPreference() {
+    try {
+      const saved = String(localStorage.getItem(CURRENCY_OVERRIDE_KEY) || '').toUpperCase();
+      if (/^[A-Z]{3}$/.test(saved)) {
+        state.currency = saved;
+        state.manualCurrency = true;
+      }
+    } catch (_) {}
+  }
+
+  function setCurrencyPreference(code) {
+    const currency = String(code || '').toUpperCase();
+    if (!/^[A-Z]{3}$/.test(currency) || !(Number(state.rates[currency]) > 0)) return false;
+    state.currency = currency;
+    state.manualCurrency = true;
+    try { localStorage.setItem(CURRENCY_OVERRIDE_KEY, currency); } catch (_) {}
+    announce();
+    return true;
+  }
+
+  function resetCurrencyPreference() {
+    try { localStorage.removeItem(CURRENCY_OVERRIDE_KEY); } catch (_) {}
+    state.manualCurrency = false;
+    state.currency = Number(state.rates[state.detectedCurrency]) > 0 ? state.detectedCurrency : 'USD';
+    announce();
+    return state.currency;
+  }
+
   function saveRateCache() {
     writeCache(FX_CACHE_KEY, {
       rates: state.rates,
@@ -193,7 +226,11 @@
   }
   function announce() {
     if (!(Number(state.rates[state.currency]) > 0)) {
-      state.currency = 'USD';
+      if (state.manualCurrency) {
+        state.manualCurrency = false;
+        try { localStorage.removeItem(CURRENCY_OVERRIDE_KEY); } catch (_) {}
+      }
+      state.currency = Number(state.rates[state.detectedCurrency]) > 0 ? state.detectedCurrency : 'USD';
       state.source = 'USD fallback (local FX rate unavailable)';
     }
     state.ready = true;
@@ -212,8 +249,24 @@
         try { return new Intl.DisplayNames([formatterLocale()], { type: 'currency' }).of(state.currency); }
         catch (_) { return state.currency; }
       })();
-      badge.innerHTML = '<span class="viora-currency-dot"></span><span>Prices in ' + state.currency + '</span><small>Indicative daily rates · <a href="https://frankfurter.dev/" target="_blank" rel="noopener noreferrer">Frankfurter</a> · <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer">backup rates</a></small>';
-      badge.title = 'Estimated country: ' + (state.countryCode || 'not detected') + '. Currency: ' + name + '. Latest source update: ' + (state.lastUpdated || 'not available') + '. Display estimates only; payment providers may apply different rates and fees.';
+      badge.innerHTML = '<span class="viora-currency-dot"></span><span id="vioraCurrencyLabel">Prices in ' + state.currency + '</span><select id="vioraCurrencySelect" aria-label="Choose display currency"></select><button id="vioraCurrencyAuto" type="button">Auto</button><small>Indicative reference rates · <a href="https://frankfurter.dev/" target="_blank" rel="noopener noreferrer">Frankfurter</a> · <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer">backup rates</a></small>';
+      const select = badge.querySelector('#vioraCurrencySelect');
+      if (select) {
+        Object.keys(state.rates).filter(code => /^[A-Z]{3}$/.test(code) && Number(state.rates[code]) > 0).sort().forEach(code => {
+          const option = document.createElement('option');
+          option.value = code;
+          let label = code;
+          try { label = code + ' — ' + new Intl.DisplayNames([formatterLocale()], { type: 'currency' }).of(code); } catch (_) {}
+          option.textContent = label;
+          option.selected = code === state.currency;
+          select.appendChild(option);
+        });
+        select.value = state.currency;
+        select.onchange = () => setCurrencyPreference(select.value);
+      }
+      const auto = badge.querySelector('#vioraCurrencyAuto');
+      if (auto) auto.onclick = () => resetCurrencyPreference();
+      badge.title = (state.manualCurrency ? 'Manually selected currency. ' : 'Estimated country: ' + (state.countryCode || 'not detected') + '. ') + 'Currency: ' + name + '. Latest reference-rate date: ' + (state.lastUpdated || 'not available') + '. Indicative display only; payment providers may apply different rates and fees.';
       badge.hidden = false;
     }
   }
@@ -235,6 +288,9 @@
     formatUSD,
     formatKES,
     convert,
+    setCurrency: setCurrencyPreference,
+    resetCurrency: resetCurrencyPreference,
+    getSupportedCurrencies() { return Object.keys(state.rates).filter(code => /^[A-Z]{3}$/.test(code) && Number(state.rates[code]) > 0).sort(); },
     format(amount, fromCurrency) {
       const source = String(fromCurrency || 'USD').toUpperCase();
       const result = convert(amount, source, state.currency);
@@ -247,6 +303,7 @@
     // Resolve country first so the FX loader knows which national currency
     // must be present before the currency-ready event triggers page rendering.
     await loadGeo();
+    applySavedCurrencyPreference();
     await loadRates();
     announce();
   }
