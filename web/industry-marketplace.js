@@ -8,7 +8,7 @@ const VIORA_INDUSTRY_MARKET={
   "professional-services":{label:"Professional Services",categories:["professional practice systems"],nameTerms:["law firm management","professional services automation","legal practice","professional advisory"]},
   agriculture:{label:"Agriculture",categories:["farm systems","greenhouse systems"],nameTerms:["farm integrated","farm management","greenhouse","soko ai"]}
 };
-const viPlain=value=>{const box=document.createElement("textarea");box.innerHTML=String(value??"");return box.value;};
+const viPlain=value=>{let text=String(value??"");for(let i=0;i<2;i++){const box=document.createElement("textarea");box.innerHTML=text;if(box.value===text)break;text=box.value;}return text;};
 const viNorm=value=>viPlain(value).toLowerCase().replace(/\s+/g," ").trim();
 const viEsc=value=>String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 const viAsset=value=>{const raw=String(value||"").trim();if(/^data:image\/(?:png|jpe?g|webp|gif);base64,[a-z0-9+/=\s]+$/i.test(raw))return raw;try{const url=new URL(raw,location.origin);return /^https?:$/.test(url.protocol)?url.href:"";}catch(_){return"";}};
@@ -16,7 +16,7 @@ function viPrice(product){
  const amount=Number(product.price);
  if(amount>0&&window.VioraCurrency?.formatUSD)return window.VioraCurrency.formatUSD(amount)+(product.period?" / "+viEsc(viPlain(product.period)):"");
  if(product.pricing==="quote")return"Request a quote";
- return"View pricing";
+ return"See in Marketplace";
 }
 async function viLoadProducts(){
  const endpoint="https://cliffclient-35ec5-default-rtdb.europe-west1.firebasedatabase.app/viora_data/orgs/viora/products.json";
