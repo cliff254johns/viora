@@ -4006,16 +4006,42 @@
     async function logFinance(action, detail = '') {
       try {
         const entryRef = push(ref(db, P('activityLog')));
+        const timestamp = new Date().toISOString();
+        const actor = state.operator?.uid || 'system';
+        const actorName = state.operator?.name || 'System';
         await set(entryRef, {
           id: entryRef.key,
           type: 'finance',
           title: action,
           description: detail,
-          by: state.operator?.uid || 'system',
-          byName: state.operator?.name || 'System',
-          timestamp: new Date().toISOString(),
+          by: actor,
+          byName: actorName,
+          timestamp,
           _fromFinanceApp: true
         });
+
+        // Publish only meaningful finance events to the shared Main Dashboard feed.
+        // The notification key is derived from the activity event key, making retries idempotent.
+        const important = /payment recorded|m-pesa matched|invoice (created|sent|issued)|expense recorded|payroll (processed|approved)|manual deposit|transfer/i.test(String(action || ''));
+        if (important) {
+          const notificationId = 'finance-' + entryRef.key;
+          const level = /failed|overdue|rejected/i.test(String(action || '')) ? 'warning' : 'info';
+          await set(ref(db, P('notifications/' + notificationId)), {
+            id: notificationId,
+            sourceEventId: entryRef.key,
+            source: 'finance',
+            category: 'finance',
+            level,
+            icon: 'fa-coins',
+            title: 'Finance: ' + action,
+            body: detail,
+            by: actor,
+            byName: actorName,
+            ts: timestamp,
+            url: '/finance.html',
+            read: false
+          });
+        }
       } catch (e) {
         console.warn('[finance] logFinance failed', e);
       }
