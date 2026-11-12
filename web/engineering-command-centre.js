@@ -134,14 +134,14 @@ function renderStatic() {
         <div class="ecc-section-head"><div><span class="ecc-eyebrow">02 / ENGINEERING CONTROLS</span><h2>Readiness register</h2><p>Statuses are intentionally conservative. A code artifact is not treated as proof that an operational control is working.</p></div></div>
         <div class="ecc-register" id="eccEngineeringRegister">
           ${[
-            ['Automated CI and browser regression suite','Partial','Narrow Outreach workflow exists; broad suite remains outstanding.'],
+            ['Automated CI and browser regression suite','Unit tests passing','Business calculation unit tests and repository contract checks passed; Firebase emulator and authenticated browser journeys require secrets and setup.'],
             ['Cloudflare Worker rate limiting','Updated in branch','Durable Object implementation requires deployed runtime verification.'],
             ['Workers logs and traces','Configured in branch','Confirm production telemetry after deployment.'],
             ['Central error alerting','Gap','Browser/session error counters are local only; central alert routing remains outstanding.'],
-            ['Backup and restore drills','Gap','No verified restore evidence recorded.'],
-            ['Dependency and secret scanning','Gap','Add automated scans and a reviewed patch cadence.'],
-            ['Accessibility and Core Web Vitals','Unverified','No current Lighthouse, screen-reader or device certification.'],
-            ['PWA square artwork','Gap','The source audit found the existing artwork is not square.']
+            ['Backup and restore drills','Automation prepared','Encrypted daily/monthly R2 backups, retention and guarded restore scripts added; secrets and a restore drill remain.'],
+            ['Dependency and secret scanning','Configured in branch','npm audit, Gitleaks and CodeQL workflows added; review their latest run results.'],
+            ['Accessibility and Core Web Vitals','Unverified','Playwright/axe smoke tests added; no completed Lighthouse, field Core Web Vitals or manual screen-reader certification.'],
+            ['PWA square artwork','Added in branch','192px and 512px square PNG icons added; verify installed app artwork after production deployment.']
           ].map(([name,status,detail])=>'<div class="ecc-register-row"><div><strong>'+esc(name)+'</strong><small>'+esc(detail)+'</small></div>'+statusPill(status==='Updated in branch'?'warn':status==='Configured in branch'?'warn':'bad',status)+'</div>').join('')}
         </div>
       </section>
