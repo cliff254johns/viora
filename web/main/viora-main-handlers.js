@@ -868,6 +868,9 @@ export function buildVioraHandlers(d) {
     $('leadName').value = l.fullName || '';
     $('leadEmail').value = l.email || '';
     $('leadPhone').value = l.phone || '';
+    $('leadAddress').value = l.address || '';
+    $('leadCity').value = l.city || '';
+    $('leadCountry').value = l.country || '';
     $('leadSource').value = l.source || 'Website';
     $('leadStatus').value = l.status || 'New';
     $('leadNotes').value = l.notes || '';
@@ -886,6 +889,9 @@ export function buildVioraHandlers(d) {
       fullName: f.name,
       email: f.email,
       phone: f.phone,
+      address: f.address || '',
+      city: f.city || '',
+      country: f.country || '',
       source: f.source,
       status: f.status,
       campaignId: f.campaignId,
@@ -945,6 +951,8 @@ export function buildVioraHandlers(d) {
 
     try { await remove(ref(db, `${P('leads')}/${id}`)); }
     catch (_) { await deleteDoc('leads', id); }
+    // Outreach stores a linked copy for its own workspace; remove it atomically with the CRM record lifecycle.
+    try { await remove(ref(db, `${P('outreach/leads')}/${id}`)); } catch (_) {}
 
     if (state) state.data.leads = (state.data.leads || []).filter(x => x.id !== id);
 
