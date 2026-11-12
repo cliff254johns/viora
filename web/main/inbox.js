@@ -67,7 +67,7 @@ export function subscribeInbox() {
 
   // inbound WhatsApp (worker already writes to waInbound)
   try {
-    _unsubInbound = onValue(ref(db, P('waInbound')), (snap) => {
+    _unsubInbound = onValue(ref(db, P('waInbound')), async (snap) => {
       const val = snap.exists() ? snap.val() : {};
       const entries = Object.entries(val || {});
       if (!_inboundInitialized) {
