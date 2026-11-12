@@ -1242,7 +1242,7 @@ export function renderDashboardNotifications() {
       }
       if (page && window.Viora?.navigate) {
         window.Viora.navigate(page);
-      } else if (page && /^https?:\\/\\//i.test(page)) {
+      } else if (page && /^https?:\/\//i.test(page)) {
         window.open(page, '_blank', 'noopener');
       }
     });
