@@ -361,7 +361,7 @@ import {
   syncMarketToLeads,           // ★ v9.2
   syncOrderLeads,              // ★ v9.2
   syncBlueprintLeads,          // ★ v9.2 (exposed but not auto-run)
-} from './main/viora-main-renderers.js';
+} from './main/viora-main-renderers.js?v=20261112-world-map-mobile-fit';
 
 import { buildVioraHandlers } from './main/viora-main-handlers.js';
 import { initMainWiring } from './main/viora-main-wiring.js';
