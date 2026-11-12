@@ -1,6 +1,6 @@
 # Generated module and API map
 
-Generated: 2026-11-12T22:22:05.899Z
+Generated: 2026-11-12T22:25:13.768Z
 
 Modules: 111
 
@@ -161,7 +161,7 @@ Modules: 111
 
 ### web/index-home.js
 
-- Size: 107008 bytes
+- Size: 110471 bytes
 - Imports: ./order-modal.js, ./category-modal.js
 - Exports: none detected
 - Worker routes: none detected
@@ -399,7 +399,7 @@ Modules: 111
 
 ### web/main/pp.js
 
-- Size: 67702 bytes
+- Size: 67751 bytes
 - Imports: none detected
 - Exports: initPP, PP_DEFAULTS, ppSeedCategoriesAndIndustriesFromV0, PP, bindPPEvents
 - Worker routes: none detected
@@ -555,7 +555,7 @@ Modules: 111
 
 ### web/mainIndex/app.js
 
-- Size: 63321 bytes
+- Size: 63358 bytes
 - Imports: https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js, https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js
 - Exports: none detected
 - Worker routes: none detected
@@ -577,7 +577,7 @@ Modules: 111
 
 ### web/mainIndex/industries.js
 
-- Size: 215092 bytes
+- Size: 215121 bytes
 - Imports: none detected
 - Exports: none detected
 - Worker routes: none detected
