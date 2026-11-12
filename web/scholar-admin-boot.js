@@ -227,7 +227,7 @@ async function doUnlock(recordPayment) {
       });
     }
 
-    await publishVioraEvent({ db, ref, set, eventId: uidKey + "-" + courseId, source: "scholar-unlock-approved", category: "scholar", title: "Scholar: course access approved", body: learnerName + " was granted access to " + courseTitle + ".", url: "/trainingportal.html", icon: "fa-unlock", actorUid: state.operator?.uid || "" });
+    await publishVioraEvent({ db, ref, set, get, eventId: uidKey + "-" + courseId, source: "scholar-unlock-approved", category: "scholar", title: "Scholar: course access approved", body: learnerName + " was granted access to " + courseTitle + ".", url: "/trainingportal.html", icon: "fa-unlock", actorUid: state.operator?.uid || "" });
     toast("Course unlocked.", "success");
 
     if (recordPayment) {
@@ -294,7 +294,7 @@ async function savePaymentRecord() {
 
   try {
     await set(ref(db, `${ROOT}/${ORG}/training/payments/${paymentId}`), payload);
-    await publishVioraEvent({ db, ref, set, eventId: paymentId, source: "scholar-payment", category: "finance", title: "Scholar: course payment recorded", body: "A VIORA Scholar course payment was recorded. Open Scholar Finance for authorised details.", url: "/scholar-admin.html", level: "success", icon: "fa-coins", actorUid: state.operator?.uid || "" });
+    await publishVioraEvent({ db, ref, set, get, eventId: paymentId, source: "scholar-payment", category: "finance", title: "Scholar: course payment recorded", body: "A VIORA Scholar course payment was recorded. Open Scholar Finance for authorised details.", url: "/scholar-admin.html", level: "success", icon: "fa-coins", actorUid: state.operator?.uid || "" });
     toast("Payment recorded.", "success");
     closeModal("finPaymentModal");
     _pendingUnlock = null;
@@ -315,7 +315,7 @@ async function revokeCourseForLearner(uidKey, courseId) {
       individualCourses: list,
       updatedAt: nowIso()
     });
-    await publishVioraEvent({ db, ref, set, eventId: uidKey + "-" + courseId, source: "scholar-access-revoked", category: "scholar", title: "Scholar: course access revoked", body: "Course access was revoked for " + (existing.name || "a learner") + ".", url: "/scholar-admin.html", level: "warning", icon: "fa-lock", actorUid: state.operator?.uid || "" });
+    await publishVioraEvent({ db, ref, set, get, eventId: uidKey + "-" + courseId, source: "scholar-access-revoked", category: "scholar", title: "Scholar: course access revoked", body: "Course access was revoked for " + (existing.name || "a learner") + ".", url: "/scholar-admin.html", level: "warning", icon: "fa-lock", actorUid: state.operator?.uid || "" });
     toast("Access revoked.", "info");
     renderFinancePane();
   } catch (e) { toast("Revoke failed: " + e.message, "error"); }
@@ -329,7 +329,7 @@ async function rejectUnlockRequest(requestId) {
       rejectedAt: nowIso(),
       rejectedBy: state.operator?.name || "admin"
     });
-    await publishVioraEvent({ db, ref, set, eventId: requestId, source: "scholar-unlock-rejected", category: "scholar", title: "Scholar: course access request rejected", body: "A course access request was rejected by the Scholar administrator.", url: "/scholar-admin.html", level: "warning", icon: "fa-ban", actorUid: state.operator?.uid || "" });
+    await publishVioraEvent({ db, ref, set, get, eventId: requestId, source: "scholar-unlock-rejected", category: "scholar", title: "Scholar: course access request rejected", body: "A course access request was rejected by the Scholar administrator.", url: "/scholar-admin.html", level: "warning", icon: "fa-ban", actorUid: state.operator?.uid || "" });
     toast("Request rejected.", "info");
     renderFinancePane();
   } catch (e) { toast("Reject failed: " + e.message, "error"); }
@@ -491,7 +491,7 @@ async function approveRequest(uidKey) {
         updatedAt: nowIso()
       });
     } catch (e) {}
-    await publishVioraEvent({ db, ref, set, eventId: uidKey, source: "scholar-request-approved", category: "scholar", title: "Scholar: " + role + " application approved", body: (req?.name || "A user") + " was approved for Scholar access.", url: role === "trainer" ? "/trainer.html" : "/trainingportal.html", level: "success", icon: "fa-user-check", actorUid: state.operator?.uid || "" });
+    await publishVioraEvent({ db, ref, set, get, eventId: uidKey, source: "scholar-request-approved", category: "scholar", title: "Scholar: " + role + " application approved", body: (req?.name || "A user") + " was approved for Scholar access.", url: role === "trainer" ? "/trainer.html" : "/trainingportal.html", level: "success", icon: "fa-user-check", actorUid: state.operator?.uid || "" });
     toast(`Approved ${role}.`, "success");
     await _fetchRequestsNow(); renderRequestsPane(); renderCommandCenter();
   } catch (e) { toast("Approve failed: " + e.message, "error"); }
@@ -501,7 +501,7 @@ async function rejectRequest(uidKey) {
   if (!confirm("Reject this request?")) return;
   try {
     await update(ref(db, P(`training/accessRequests/${uidKey}`)), { status: "rejected", rejectedAt: nowIso(), rejectedBy: state.operator?.name || "admin" });
-    await publishVioraEvent({ db, ref, set, eventId: uidKey, source: "scholar-request-rejected", category: "scholar", title: "Scholar: access application rejected", body: (req?.name || "A user") + "'s Scholar access application was rejected.", url: "/scholar-admin.html", level: "warning", icon: "fa-user-xmark", actorUid: state.operator?.uid || "" });
+    await publishVioraEvent({ db, ref, set, get, eventId: uidKey, source: "scholar-request-rejected", category: "scholar", title: "Scholar: access application rejected", body: (req?.name || "A user") + "'s Scholar access application was rejected.", url: "/scholar-admin.html", level: "warning", icon: "fa-user-xmark", actorUid: state.operator?.uid || "" });
     toast("Rejected.", "info");
     await _fetchRequestsNow(); renderRequestsPane(); renderCommandCenter();
   } catch (e) { toast("Reject failed: " + e.message, "error"); }
