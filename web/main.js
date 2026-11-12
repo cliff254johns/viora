@@ -3702,6 +3702,7 @@ try {
             break;
           case 'profile':                 renderProfile(); break;
           case 'engineering-command':     window.renderEngineeringCommandCentre?.(); break;
+          case 'engineering-visuals':      window.renderEngineeringVisuals?.(); break;
           case 'global-market':           try { setupGlobalMarket?.(); loadGlobalDashboard?.(); } catch (e) { console.warn('[tab render] global-market', e); } break;
 
           // ── Client ──
@@ -4158,6 +4159,7 @@ case 'training-progress':
         'dashboard':               'renderDashboard',
         'profile':                 'renderProfile',
         'engineering-command':     'renderEngineeringCommandCentre',
+        'engineering-visuals':      'renderEngineeringVisuals',
         'sales-clients':           'renderClients',
         'client360':               'renderClient360Page',
         'sales-deals':             'renderDeals',
