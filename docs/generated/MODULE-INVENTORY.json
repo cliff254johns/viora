@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-12T22:19:55.887Z",
+  "generatedAt": "2026-11-12T22:21:27.727Z",
   "moduleCount": 111,
   "modules": [
     {
@@ -853,7 +853,7 @@
     },
     {
       "file": "web/main/pp.js",
-      "bytes": 67476,
+      "bytes": 67702,
       "imports": [],
       "exports": [
         "initPP",
@@ -1318,7 +1318,7 @@
     },
     {
       "file": "web/mainIndex/app.js",
-      "bytes": 64354,
+      "bytes": 63321,
       "imports": [
         "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js",
         "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js"

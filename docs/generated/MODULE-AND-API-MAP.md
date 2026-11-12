@@ -1,6 +1,6 @@
 # Generated module and API map
 
-Generated: 2026-11-12T22:19:55.887Z
+Generated: 2026-11-12T22:21:27.727Z
 
 Modules: 111
 
@@ -399,7 +399,7 @@ Modules: 111
 
 ### web/main/pp.js
 
-- Size: 67476 bytes
+- Size: 67702 bytes
 - Imports: none detected
 - Exports: initPP, PP_DEFAULTS, ppSeedCategoriesAndIndustriesFromV0, PP, bindPPEvents
 - Worker routes: none detected
@@ -555,7 +555,7 @@ Modules: 111
 
 ### web/mainIndex/app.js
 
-- Size: 64354 bytes
+- Size: 63321 bytes
 - Imports: https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js, https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js
 - Exports: none detected
 - Worker routes: none detected
