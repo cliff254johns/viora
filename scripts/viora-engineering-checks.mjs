@@ -12,13 +12,14 @@ const dpa = read('web/dpa.html');
 
 for (const path of ['web/manifest.webmanifest','web/main.webmanifest']) {
   const manifest = JSON.parse(read(path));
-  assert.ok(manifest.icons.some(i => i.src === '/viora-icon-192.svg' && i.sizes === '192x192'), path+' missing 192 icon');
-  assert.ok(manifest.icons.some(i => i.src === '/viora-icon-512.svg' && i.sizes === '512x512'), path+' missing 512 icon');
+  assert.ok(manifest.icons.some(i => i.src === '/viora-icon-192.png' && i.sizes === '192x192'), path+' missing 192 PNG icon');
+  assert.ok(manifest.icons.some(i => i.src === '/viora-icon-512.png' && i.sizes === '512x512'), path+' missing 512 PNG icon');
 }
-for (const [path, expected] of [
-  ['web/viora-icon-192.svg','width="192" height="192"'],
-  ['web/viora-icon-512.svg','width="512" height="512"']
-]) assert.ok(read(path).includes(expected), path+' dimensions mismatch');
+for (const [path, expected] of [['web/viora-icon-192.png',192],['web/viora-icon-512.png',512]]) {
+  const png=fs.readFileSync(path);
+  assert.equal(png.readUInt32BE(16),expected,path+' width mismatch');
+  assert.equal(png.readUInt32BE(20),expected,path+' height mismatch');
+}
 
 assert.ok(main.includes('data-tab="engineering-command"'), 'main sidebar link missing');
 assert.ok(main.includes('id="tab-engineering-command"'), 'main content tab missing');
