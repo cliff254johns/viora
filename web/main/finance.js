@@ -1073,6 +1073,7 @@ async function _persistPayChain(payment, invoice, project) {
     paymentSaved = true;
     invalidateInvoicePaidMemo();
     await D.upsertDoc('invoices', invoice);
+    try { if (typeof window.vioraNotify === 'function') await window.vioraNotify({ eventId: invoice.id, source: 'main-finance-invoice', title: 'Finance: invoice created', body: 'A new invoice was created in the Main Finance system.', icon: 'fa-file-invoice', level: 'info', url: '/main.html#invoices' }); } catch (_) {}
   } catch (e) {
     if (!paymentSaved) {
       try { await D.queueOfflineMutation('payments', 'upsert', payment, null); } catch (e2) {}
@@ -1449,6 +1450,7 @@ async function _persistPayment(payment, allocations, cid, pickedProjId, pickedIn
   try {
     await D.upsertDoc('payments', payment);
     invalidateInvoicePaidMemo();
+    try { if (typeof window.vioraNotify === 'function') await window.vioraNotify({ eventId: payment.id, source: 'main-finance-payment', title: 'Finance: payment recorded', body: 'A payment was recorded in the Main Finance system.', icon: 'fa-coins', level: 'success', url: '/main.html#payments' }); } catch (_) {}
   } catch (e) {
     try { await D.queueOfflineMutation('payments', 'upsert', payment, null); } catch (e2) {}
     return;
