@@ -21,4 +21,8 @@ const now=new Date(),stamp=now.toISOString().replace(/[:.]/g,'-');
 const objectKey='rtdb/daily/'+stamp+'.viora.enc';
 const s3=new S3Client({region:'auto',endpoint:'https://'+process.env.R2_ACCOUNT_ID+'.r2.cloudflarestorage.com',credentials:{accessKeyId:process.env.R2_ACCESS_KEY_ID,secretAccessKey:process.env.R2_SECRET_ACCESS_KEY}});
 await s3.send(new PutObjectCommand({Bucket:process.env.R2_BUCKET,Key:objectKey,Body:envelope,ContentType:'application/octet-stream',Metadata:{sha256,encrypted:'aes-256-gcm',source:'firebase-realtime-database'}}));
+if(now.getUTCDate()===1){
+  const monthlyKey='rtdb/monthly/'+now.toISOString().slice(0,7)+'.viora.enc';
+  await s3.send(new PutObjectCommand({Bucket:process.env.R2_BUCKET,Key:monthlyKey,Body:envelope,ContentType:'application/octet-stream',Metadata:{sha256,encrypted:'aes-256-gcm',source:'firebase-realtime-database'}});
+}
 console.log(JSON.stringify({event:'backup_succeeded',objectKey,bytes:envelope.length,sha256,createdAt:now.toISOString()}));
