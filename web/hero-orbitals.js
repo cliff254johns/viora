@@ -90,15 +90,25 @@
       if(p.z<=0.02)continue;
       positions.push({...p,obj,geo});
     }
-    // Satellites behind Earth are intentionally occluded; only the visible hemisphere is drawn.
+    // Satellites behind Earth are intentionally occluded; draw spacecraft silhouettes.
+    lastPositions=positions;
     for(const item of positions){
       const isISS=item.obj.name.toUpperCase().includes('ISS');
-      const color=isISS?'#ffb547':'#67e8f9',size=isISS?5.2:3.1;
-      ctx.save();ctx.globalAlpha=clamp(.45+item.z*.55,.35,1);
-      ctx.shadowBlur=isISS?16:9;ctx.shadowColor=color;
-      ctx.fillStyle=color;ctx.beginPath();ctx.arc(item.x,item.y,size,0,Math.PI*2);ctx.fill();
-      if(isISS){ctx.strokeStyle='rgba(255,181,71,.8)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(item.x,item.y,10+Math.sin(ts/260)*2,0,Math.PI*2);ctx.stroke();}
+      const color=isISS?'#ffb547':'#67e8f9',size=isISS?6:3.6;
+      ctx.save();ctx.translate(item.x,item.y);ctx.rotate(-.42);
+      ctx.globalAlpha=clamp(.48+item.z*.52,.4,1);ctx.shadowBlur=isISS?18:10;ctx.shadowColor=color;
+      ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=isISS?1.5:1.1;
+      if(isISS){
+        ctx.fillRect(-3,-3,6,6);ctx.strokeRect(-3,-3,6,6);
+        ctx.fillRect(-15,-2,10,4);ctx.fillRect(5,-2,10,4);
+        ctx.beginPath();ctx.moveTo(-15,-5);ctx.lineTo(-15,5);ctx.moveTo(15,-5);ctx.lineTo(15,5);ctx.stroke();
+        ctx.beginPath();ctx.arc(0,0,13+Math.sin(ts/260)*2,0,Math.PI*2);ctx.stroke();
+      }else{
+        ctx.fillRect(-2,-2,4,4);ctx.fillRect(-size*2,-1,size*1.4,2);ctx.fillRect(size*.6,-1,size*1.4,2);
+        ctx.beginPath();ctx.moveTo(-size*2,-3);ctx.lineTo(-size*2,3);ctx.moveTo(size*2,-3);ctx.lineTo(size*2,3);ctx.stroke();
+      }
       ctx.restore();
+      if(active===item.obj.name){ctx.save();ctx.strokeStyle=color;ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(item.x,item.y,isISS?19:12,0,Math.PI*2);ctx.stroke();ctx.restore();}
     }
     // Keep selected satellite details in the accessible live status card.
     if(active){
