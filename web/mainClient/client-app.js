@@ -391,9 +391,10 @@ window._pRequestRenewal = async (subscriptionId) => {
     await set(ref(db, P(`subscriptionRequests/${requestId}`)), request);
 
     try {
-      const notifId = 'notif-' + Date.now().toString(36);
+      const notifId = 'client-renewal-' + requestId;
       await set(ref(db, `viora_data/orgs/viora/notifications/${notifId}`), {
         id: notifId,
+        sourceEventId: 'client-renewal:' + requestId,
         title: '🔁 Renewal request',
         body: `${S.client?.name || S.email} wants to renew ${sub.productName || sub.productId}`,
         icon: 'fa-rotate',
@@ -2924,9 +2925,10 @@ async function submitSubRequest() {
     });
 
     try {
-      const notifId = 'notif-' + Date.now().toString(36);
+      const notifId = 'client-subscription-' + requestId;
       await set(ref(db, `viora_data/orgs/viora/notifications/${notifId}`), {
         id: notifId,
+        sourceEventId: 'client-subscription:' + requestId,
         title: '🔔 New subscription request',
         body: `${S.client?.name || S.email} requested a subscription`,
         icon: 'fa-key',
@@ -3509,8 +3511,9 @@ async function confirmMarketBuy() {
       toast('M-Pesa prompt sent. Check your phone.', 'success');
 
       try {
-        await set(ref(db, `viora_data/orgs/viora/notifications/notif-${Date.now()}`), {
-          id: 'notif-' + Date.now(),
+        await set(ref(db, `viora_data/orgs/viora/notifications/client-purchase-${orderId}`), {
+          id: 'client-purchase-' + orderId,
+          sourceEventId: 'client-purchase:' + orderId,
           title: '💰 New purchase from ' + (S.client?.name || S.email),
           body: `${p.name} · KSh ${priceKES.toLocaleString()} · ${orderId}`,
           icon: 'fa-shopping-cart',
@@ -3623,8 +3626,9 @@ async function subscribeMarketItem(p) {
     await set(ref(db, P(`subscriptionRequests/${requestId}`)), request);
 
     try {
-      await set(ref(db, `viora_data/orgs/viora/notifications/notif-${Date.now()}`), {
-        id: 'notif-' + Date.now(),
+      await set(ref(db, `viora_data/orgs/viora/notifications/client-market-subscription-${requestId}`), {
+        id: 'client-market-subscription-' + requestId,
+        sourceEventId: 'client-market-subscription:' + requestId,
         title: '🔔 New subscription request',
         body: `${S.client?.name || S.email} requested: ${plan.name}`,
         icon: 'fa-key',
