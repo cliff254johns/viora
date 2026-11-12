@@ -1294,6 +1294,18 @@ body {
 }
 .icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+.subscribe-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+  padding: .52rem .9rem; border-radius: 50px;
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  border: 1px solid rgba(167, 139, 250, .45); color: #fff;
+  font-size: .74rem; font-weight: 700; text-decoration: none;
+  white-space: nowrap; cursor: pointer; transition: var(--transition);
+}
+.subscribe-btn:hover {
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  color: #fff; transform: translateY(-2px);
+}
 .buy-btn {
   background: linear-gradient(135deg, var(--accent), #0090ff);
   color: var(--primary);
@@ -1565,6 +1577,18 @@ body {
   border-color: var(--pink);
 }
 
+.carousel-subscribe-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .3rem;
+  padding: .42rem .72rem; border-radius: 50px;
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  border: 1px solid rgba(167, 139, 250, .45); color: #fff;
+  font-size: .68rem; font-weight: 700; text-decoration: none;
+  white-space: nowrap; transition: var(--transition);
+}
+.carousel-subscribe-btn:hover {
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  color: #fff; transform: translateY(-2px);
+}
 .carousel-buy-btn {
   padding: 0.45rem 0.85rem;
   border-radius: 50px;
