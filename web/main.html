@@ -222,6 +222,21 @@
   #appShell:not(.hidden) { opacity: 1; }
 </style>
 <meta name="robots" content="noindex,nofollow,noarchive">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+.viora-lead-map-card{margin:18px 0 20px;padding:16px;border:1px solid var(--border-color);border-radius:18px;background:linear-gradient(145deg,rgba(13,27,48,.97),rgba(8,16,31,.98));color:#e8f2ff;box-shadow:0 18px 48px rgba(5,15,35,.18)}
+.viora-lead-map-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:12px;flex-wrap:wrap}
+.viora-lead-map-kicker{font-size:.65rem;letter-spacing:.14em;color:#67d7ed;font-weight:800}
+.viora-lead-map-head h2{font-size:1.12rem;margin:5px 0;color:#f4f8ff}.viora-lead-map-head h2 i{color:#40c9df;margin-right:7px}
+.viora-lead-map-head p,.viora-lead-map-foot{font-size:.76rem;color:#9fb3cb;margin:0}
+.viora-lead-map-stats{display:flex;gap:8px;flex-wrap:wrap}.viora-lead-map-stats span{font-size:.68rem;color:#b8c9dd;background:#14283e;border:1px solid #28425d;padding:7px 10px;border-radius:30px}.viora-lead-map-stats b{color:#fff}
+#mainLeadMap{height:390px;border-radius:13px;overflow:hidden;background:#0b1d31;position:relative;border:1px solid #29445f}
+#mainLeadMap .viora-map-loading{height:100%;display:grid;place-items:center;color:#a8bfd7;font-size:.8rem}
+.viora-lead-map-foot{margin-top:10px;line-height:1.5}.viora-lead-map-foot i{color:#34d399;margin-right:5px}
+.viora-main-map-popup{min-width:170px;color:#17253b}.viora-main-map-popup strong{display:block}.viora-main-map-popup small{color:#52657a}
+@media(max-width:650px){.viora-lead-map-card{padding:11px}#mainLeadMap{height:320px}.viora-lead-map-head h2{font-size:1rem}}
+</style>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 </head>
 <body>
 
@@ -1503,6 +1518,11 @@
         <div class="stat-card"><div class="label">Converted</div><div class="number" id="mkConverted">0</div></div>
         <div class="stat-card"><div class="label">Rate</div><div class="number" id="mkRate">0%</div></div>
       </div>
+      <section class="viora-lead-map-card" aria-labelledby="mainLeadMapTitle">
+  <div class="viora-lead-map-head"><div><div class="viora-lead-map-kicker">GLOBAL PIPELINE INTELLIGENCE</div><h2 id="mainLeadMapTitle"><i class="fa-solid fa-earth-americas"></i> Lead locations worldwide</h2><p>Live city-level distribution from the main VIORA CRM.</p></div><div class="viora-lead-map-stats"><span><b id="mainMapCities">0</b> cities</span><span><b id="mainMapLocated">0</b> mapped leads</span><span><b id="mainMapUnlocated">0</b> missing city</span></div></div>
+  <div id="mainLeadMap" role="application" aria-label="Map of saved VIORA CRM leads by city"><div class="viora-map-loading">Loading geographic intelligence…</div></div>
+  <div class="viora-lead-map-foot"><i class="fa-solid fa-shield-halved"></i> Only saved city and country fields are mapped. Missing locations are never guessed.</div>
+</section>
       <div class="table-wrapper"><table><thead><tr><th>ID</th><th>Name</th><th>Contact</th><th>Source</th><th>Campaign</th><th>Stage</th><th>Created</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="leadsBody"></tbody></table></div>
     </section>
 
