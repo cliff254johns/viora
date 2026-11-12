@@ -60,7 +60,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: "npm"
       - name: Install Cloudflare Workers test dependencies
         run: npm install --ignore-scripts --no-audit --no-fund
       - name: Verify SQLite Durable Object under concurrent requests
