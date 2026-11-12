@@ -9,7 +9,9 @@
     "test": "npm run test:contracts && npm run test:unit",
     "docs:generate": "node scripts/generate-engineering-docs.mjs",
     "review:changes": "node scripts/review-changes.mjs",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:cloudflare": "vitest run --config vitest.config.mjs",
+    "test:all": "npm test && npm run test:cloudflare"
   },
   "engines": {
     "node": ">=22"
@@ -20,6 +22,8 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.56.0",
-    "@axe-core/playwright": "^4.10.2"
+    "@axe-core/playwright": "^4.10.2",
+    "vitest": "^4.1.0",
+    "@cloudflare/vitest-plugin": "^1.0.0"
   }
 }
