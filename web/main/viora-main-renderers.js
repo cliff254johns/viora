@@ -6,19 +6,22 @@ let _mainLeadMapResizeBound=false;
 const _mainGeoCacheKey='viora-main-lead-city-cache-v3';
 function _mainGeoCache(){try{return JSON.parse(localStorage.getItem(_mainGeoCacheKey)||'{}')}catch{return {}}}
 async function _mainGeocodeCity(q,cache){if(Object.prototype.hasOwnProperty.call(cache,q))return cache[q];const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q='+encodeURIComponent(q),{headers:{Accept:'application/json'}});if(!r.ok)throw new Error('Geocoder '+r.status);const a=await r.json();const p=a[0]?{lat:+a[0].lat,lng:+a[0].lon}:null;cache[q]=p;try{localStorage.setItem(_mainGeoCacheKey,JSON.stringify(cache))}catch{}return p}
+function _addMainVioraMapLayerControl(map,layers){
+ const control=L.control({position:'topright'});
+ control.onAdd=function(){const root=L.DomUtil.create('div','viora-map-layer-control leaflet-bar');const trigger=L.DomUtil.create('button','viora-map-layer-trigger',root);trigger.type='button';trigger.title='Map layers';trigger.setAttribute('aria-label','Choose map style');trigger.setAttribute('aria-expanded','false');trigger.innerHTML='<i class="fa-solid fa-layer-group"></i>';const menu=L.DomUtil.create('div','viora-map-layer-menu',root);menu.hidden=true;[['vegetation','Vegetation'],['streets','Street map'],['satellite','Satellite'],['osm','OpenStreetMap']].forEach(([key,label])=>{const b=L.DomUtil.create('button','viora-map-layer-option',menu);b.type='button';b.textContent=label;b.setAttribute('aria-pressed',String(key==='vegetation'));b.addEventListener('click',()=>{Object.values(layers).forEach(layer=>{if(map.hasLayer(layer))map.removeLayer(layer)});layers[key].addTo(map);menu.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));menu.hidden=true;trigger.setAttribute('aria-expanded','false');});});trigger.addEventListener('click',()=>{menu.hidden=!menu.hidden;trigger.setAttribute('aria-expanded',String(!menu.hidden));});L.DomEvent.disableClickPropagation(root);L.DomEvent.disableScrollPropagation(root);return root;};control.addTo(map);return control;
+}
 function _ensureMainLeadMap(){
  const el=document.getElementById('mainLeadMap');if(!el||!window.L)return;
  if(_mainLeadGeoMap){setTimeout(()=>_mainLeadGeoMap&&_mainLeadGeoMap.invalidateSize(true),100);return}
  if(el.clientWidth<80)return;
  el.replaceChildren();
- _mainLeadGeoMap=L.map(el,{worldCopyJump:true,scrollWheelZoom:true,preferCanvas:true,maxZoom:19}).setView([18,5],2);
+ _mainLeadGeoMap=L.map(el,{worldCopyJump:true,scrollWheelZoom:true,preferCanvas:true,maxZoom:19}).setView([18,5],1);
  const streets=L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd',attribution:'© OpenStreetMap contributors © CARTO'});
  const osmStreets=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'});
  const terrain=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles © Esri — World Topographic Map'});
  const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles © Esri'});
  const boundaries=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,opacity:.95,attribution:'Country boundaries & place labels © Esri'});
- streets.addTo(_mainLeadGeoMap);boundaries.addTo(_mainLeadGeoMap);
- L.control.layers({'Street · terrain colours & borders':streets,'OpenStreetMap streets':osmStreets,'Terrain · vegetation & deserts':terrain,'Satellite imagery':satellite},{'Country borders & place labels':boundaries},{collapsed:false}).addTo(_mainLeadGeoMap);
+ terrain.addTo(_mainLeadGeoMap);boundaries.addTo(_mainLeadGeoMap);_addMainVioraMapLayerControl(_mainLeadGeoMap,{vegetation:terrain,streets:streets,satellite:satellite,osm:osmStreets});_mainLeadGeoMap.fitBounds([[-82,-180],[82,180]],{padding:[8,8],maxZoom:2,animate:false});_mainLeadGeoMap.on('resize',()=>_mainLeadGeoMap.invalidateSize(true));
  _mainLeadGeoLayer=L.layerGroup().addTo(_mainLeadGeoMap);
  if(!_mainLeadMapResizeBound){window.addEventListener('resize',()=>{if(_mainLeadGeoMap)setTimeout(()=>_mainLeadGeoMap&&_mainLeadGeoMap.invalidateSize(true),120)});_mainLeadMapResizeBound=true}
  requestAnimationFrame(()=>requestAnimationFrame(()=>_mainLeadGeoMap&&_mainLeadGeoMap.invalidateSize(true)));
@@ -68,9 +71,8 @@ async function renderMainLeadGeoMap(force=false){
  });
  if(window.L.heatLayer&&heat.length)_mainLeadHeatLayer=L.heatLayer(heat,{radius:42,blur:30,maxZoom:6,minOpacity:.3,gradient:{0.12:'#2563eb',0.34:'#06b6d4',0.58:'#22c55e',0.8:'#f59e0b',1:'#ef4444'}}).addTo(_mainLeadGeoMap);
  set('mainMapCities',points.length);
- if(points.length===1)_mainLeadGeoMap.setView([points[0].lat,points[0].lng],10,{animate:true});
- else if(points.length>1)_mainLeadGeoMap.fitBounds(L.latLngBounds(points.map(p=>[p.lat,p.lng])).pad(.18),{maxZoom:6});
- else _mainLeadGeoMap.setView([18,5],2);
+ // Keep the full world visible instead of auto-zooming into one lead cluster.
+ if(!_mainLeadGeoMap._vioraWorldFitted){_mainLeadGeoMap.fitBounds([[-82,-180],[82,180]],{padding:[8,8],maxZoom:2,animate:false});_mainLeadGeoMap._vioraWorldFitted=true;}
  if(located.length&&!points.length)console.warn('[VIORA main map] No city locations could be geocoded.');
  requestAnimationFrame(()=>requestAnimationFrame(()=>_mainLeadGeoMap&&_mainLeadGeoMap.invalidateSize(true)));
 }
