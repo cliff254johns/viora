@@ -2744,3 +2744,7 @@
 .workflow-step p{margin:0;color:var(--muted);font-size:13px;line-height:1.65}
 @media(max-width:900px){.workflow-strip-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.workflow-strip{padding:48px 0}.workflow-strip-grid{grid-template-columns:1fr;gap:12px}.workflow-step{display:grid;grid-template-columns:42px 1fr;column-gap:14px;align-items:start;padding:18px}.workflow-step-number{grid-row:1 / span 2;margin:0}.workflow-step h3{align-self:end}.workflow-step p{grid-column:2}}
+
+/* Industry detail → category-matched Marketplace action */
+.tour-products-footer{display:flex;justify-content:flex-end;margin-top:16px;padding-top:13px;border-top:1px solid rgba(148,163,184,.18)}.tour-marketplace-cta{display:inline-flex;align-items:center;gap:9px;padding:11px 16px;border-radius:12px;text-decoration:none;color:#fff;background:linear-gradient(105deg,#2563eb,#0891b2 55%,#059669);font-size:12px;font-weight:800;box-shadow:0 8px 22px rgba(8,145,178,.2);transition:transform .18s,box-shadow .18s}.tour-marketplace-cta:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(8,145,178,.3)}.tour-products-empty{font-size:12px;color:var(--muted,#91a5bf);line-height:1.6;margin:8px 0}.tour-products-section{margin-top:22px}
+@media(max-width:600px){.tour-products-footer{justify-content:stretch}.tour-marketplace-cta{width:100%;justify-content:center}}
