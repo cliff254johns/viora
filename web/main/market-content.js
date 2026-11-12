@@ -50,7 +50,7 @@ export const MARKET_DEFAULTS = {
   floatChips: [
     { icon: 'fa-solid fa-circle-check', text: 'Instant delivery' },
     { icon: 'fa-solid fa-star', text: '4.9/5 rating' },
-    { icon: 'fa-solid fa-shield-halved', text: 'Secure M-Pesa' }
+    { icon: 'fa-solid fa-shield-halved', text: 'Secure checkout' }
   ],
   announcements: [],
   trustItems: [],
@@ -58,13 +58,13 @@ export const MARKET_DEFAULTS = {
   faqs: [],
   steps: [
     { title: 'Choose a License', body: 'Browse the catalog, pick your products, and add them to your cart.' },
-    { title: 'Pay in KSh', body: 'Use M-Pesa, card, or bank transfer. Payment is confirmed instantly.' },
+    { title: 'Choose a payment method', body: 'Available payment methods and final settlement details are confirmed at checkout.' },
     { title: 'Instant Delivery', body: 'Your license keys and download links are delivered immediately to your email inbox.' },
     { title: 'System Synced', body: 'The Viora system automatically records every purchase in its live dashboard.' }
   ],
   productsSubtitle: 'Our Catalog',
   productsHeading: 'Product UI Systems',
-  productsDesc: 'Browse by category or search. Add items to cart, then checkout securely with M-Pesa.',
+  productsDesc: 'Browse by category or search. Add items to cart, then choose an available payment method at checkout.',
   publicSubtitle: 'From the Viora Ecosystem',
   publicHeading: 'Public UI Platform',
   publicDesc: 'Explore live ventures from across the Viora Collective.',
@@ -73,7 +73,7 @@ export const MARKET_DEFAULTS = {
   faqSubtitle: 'Questions',
   faqHeading: 'Frequently Asked',
   newsletterHeading: 'Stay in the loop',
-  newsletterDesc: 'Get notified about new products and exclusive KSh discounts.',
+  newsletterDesc: 'Get notified about new products and exclusive local-currency offers.',
   brandName: 'VIORA Marketplace',
   brandAccent: '#00e0ff',
   footerBrand: 'VIORA Marketplace',
