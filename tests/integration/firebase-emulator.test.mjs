@@ -9,9 +9,13 @@ const enabled=!!(authHost&&dbHost);
 test('Firebase Auth emulator accepts a test sign-up and returns an ID token',{skip:!enabled&&'Set FIREBASE_AUTH_EMULATOR_HOST and FIREBASE_DATABASE_EMULATOR_HOST to run emulator integration tests'},async()=>{
  const email='ci-'+Date.now()+'@example.test',password='VioraTest!123456';
  const response=await fetch('http://'+authHost+'/identitytoolkit.googleapis.com/v1/accounts:signUp?key='+apiKey,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email,password,returnSecureToken:true})});
- assert.equal(response.status,200,await response.text());
- const result=await response.json();
+ const responseText=await response.text();
+ assert.equal(response.status,200,responseText);
+ const result=JSON.parse(responseText);
  assert.ok(result.localId);assert.ok(result.idToken);
+ const signIn=await fetch('http://'+authHost+'/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key='+apiKey,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email,password,returnSecureToken:true})});
+ assert.equal(signIn.status,200,await signIn.clone().text());
+ const signed=await signIn.json();assert.equal(signed.localId,result.localId);assert.ok(signed.idToken);
 });
 test('Firebase Realtime Database emulator isolates tenant-scoped paths',{skip:!enabled&&'Set Firebase emulator hosts and a CI auth token to run tenant tests'},async()=>{
  const token=process.env.FIREBASE_TEST_ID_TOKEN;
