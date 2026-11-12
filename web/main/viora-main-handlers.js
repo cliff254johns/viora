@@ -885,7 +885,12 @@ export function buildVioraHandlers(d) {
     const id = $('editLeadId').value;
     const existing = id ? getLead(id) : null;
     const alreadyConverted = (state?.data?.entities || []).some(e => e.type === 'client' && e.sourceLeadId === (id || ''));
+    // Preserve Outreach-only fields (organisation, contact, category, website,
+    // follow-up) when a shared lead is edited from the Main CRM.
+    const preserved = { ...(existing || {}) };
+    delete preserved._rev;
     const p = {
+      ...preserved,
       fullName: f.name,
       email: f.email,
       phone: f.phone,
@@ -898,7 +903,8 @@ export function buildVioraHandlers(d) {
       campaignName: $('leadCampaign').selectedOptions[0]?.textContent || '',
       notes: f.notes,
       id: id || uid(),
-      createdAt: id ? existing?.createdAt : new Date().toISOString()
+      createdAt: id ? existing?.createdAt : new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
     try {
       await upsertDoc('leads', p, existing?._rev);
