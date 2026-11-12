@@ -144,7 +144,7 @@
     }
 
     var marketplaceProductsPromise=null;
-var INDUSTRY_MARKET_FX_RATE=129;
+var INDUSTRY_MARKET_FX_RATE=129; // Fallback only; source prices are USD.
 function safeMarketplaceAssetUrl(value){try{var u=new URL(String(value||''),window.location.origin);return /^https?:$/.test(u.protocol)?u.href:'';}catch(_){return '';}}
 function loadIndustryMarketplaceProducts(){
  if(marketplaceProductsPromise)return marketplaceProductsPromise;
@@ -154,7 +154,270 @@ function renderIndustryMarketplace(ind,cat){
  var host=document.getElementById('bpMarketplaceProducts');if(!host)return;var categoryText=String(cat&&cat.name||'').toLowerCase(),industryText=String(ind&&ind.name||'').toLowerCase(),key=String(ind&&ind.cat||'').toLowerCase();
  var aliases={'retail_trade':['retail','trade','commerce','pos','inventory','wholesale'],'food_bev':['food','beverage','restaurant','hospitality'],'health_wellness':['health','medical','clinic','wellness'],'beauty_personal':['beauty','salon','personal care'],'prof_services':['professional','legal','accounting','consulting'],'creative_media':['creative','media','design'],'construction':['construction','building'],'transport_logi':['transport','logistics','fleet'],'agri_farming':['agriculture','farming','agri'],'education':['education','training','school'],'finance_ins':['finance','insurance'],'real_estate':['real estate','property'],'hospitality':['hospitality','hotel','tourism'],'manufacturing':['manufacturing','industry'],'tech_digital':['technology','digital','software'],'community_faith':['community','faith'],'informal_msme':['msme','small business']};
  var terms=[categoryText,industryText].concat(aliases[key]||[]).filter(Boolean);
- loadIndustryMarketplaceProducts().then(function(products){if(!document.getElementById('bpMarketplaceProducts'))return;var match=products.filter(function(p){var hay=[p.category,p.name,p.description].concat(Array.isArray(p.tags)?p.tags:[typeof p.tags==='string'?p.tags:''],Array.isArray(p.features)?p.features:[]).join(' ').toLowerCase();return terms.some(function(t){return t.length>2&&hay.includes(t);});}).slice(0,6);if(!match.length){host.innerHTML='<div class="bp-marketplace-empty"><i class="fa-solid fa-box-open"></i><span>No live Marketplace products are currently tagged for '+escHtml(ind.name)+'.</span><a href="/market">Browse the full Marketplace</a></div>';return;}host.innerHTML=match.map(function(p){var price=Number(p.price)>0?'KSh '+Math.round(Number(p.price)*INDUSTRY_MARKET_FX_RATE).toLocaleString('en-KE')+(p.period?' / '+escHtml(p.period):''):(p.pricing==='quote'?'Request a quote':'View product');var imageUrl=safeMarketplaceAssetUrl(p.image);var image=imageUrl?'<img src="'+escHtml(imageUrl)+'" alt="" loading="lazy">':'<span class="bp-product-icon"><i class="'+escHtml(p.icon||'fa-solid fa-cube')+'"></i></span>';return '<article class="bp-market-product">'+image+'<div class="bp-product-info"><b>'+escHtml(p.name||'VIORA product')+'</b><p>'+escHtml(p.description||'Explore this product in the VIORA Marketplace.')+'</p><strong>'+price+'</strong><a href="/market">View in Marketplace <i class="fa-solid fa-arrow-right"></i></a></div></article>';}).join('');});
+ loadIndustryMarketplaceProducts().then(function(products){if(!document.getElementById('bpMarketplaceProducts'))return;var match=products.filter(function(p){var hay=[p.category,p.name,p.description].concat(Array.isArray(p.tags)?p.tags:[typeof p.tags==='string'?p.tags:''],Array.isArray(p.features)?p.features:[]).join(' ').toLowerCase();return terms.some(function(t){return t.length>2&&hay.includes(t);});}).slice(0,6);if(!match.length){host.innerHTML='<div class="bp-marketplace-empty"><i class="fa-solid fa-box-open"></i><span>No live Marketplace products are currently tagged for '+escHtml(ind.name)+'.</span><a href="/market">Browse the full Marketplace</a></div>';return;}host.innerHTML=match.map(function(p){var price=Number(p.price)>0?(window.VioraCurrency?window.VioraCurrency.formatUSD(Number(p.price)):'var imageUrl=safeMarketplaceAssetUrl(p.image);var image=imageUrl?'<img src="'+escHtml(imageUrl)+'" alt="" loading="lazy">':'<span class="bp-product-icon"><i class="'+escHtml(p.icon||'fa-solid fa-cube')+'"></i></span>';return '<article class="bp-market-product">'+image+'<div class="bp-product-info"><b>'+escHtml(p.name||'VIORA product')+'</b><p>'+escHtml(p.description||'Explore this product in the VIORA Marketplace.')+'</p><strong>'+price+'</strong><a href="/market">View in Marketplace <i class="fa-solid fa-arrow-right"></i></a></div></article>';}).join('');});
+}
+
+window.addEventListener('viora:currency-ready',function(){if(activeIndustryKey&&INDUSTRIES[activeIndustryKey])renderIndustryMarketplace(INDUSTRIES[activeIndustryKey],catInfo(INDUSTRIES[activeIndustryKey].cat));});
+
+window.openBlueprintPreview = function () {
+        if (!activeIndustryKey || !INDUSTRIES[activeIndustryKey]) {
+            alert("Please pick an industry first.");
+            return;
+        }
+        var ind = INDUSTRIES[activeIndustryKey];
+        var cat = catInfo(ind.cat);
+
+        document.getElementById("bpIndustryBadge").textContent = ind.em;
+        document.getElementById("bpCategory").textContent = cat.name;
+        document.getElementById("bpTitle").textContent = ind.name;
+        document.getElementById("bpSubtitle").textContent = "Your personalised VIORA blueprint for " + ind.name;
+
+        document.getElementById("bpProblem").textContent = ind.problem || "—";
+
+        var solEl = document.getElementById("bpSolutions");
+        solEl.innerHTML = (ind.solutions || []).map(function (s) {
+            var parts = String(s).split(" — ");
+            if (parts.length >= 2) {
+                return '<li><div><strong>' + escHtml(parts[0]) + '</strong><span>' + escHtml(parts.slice(1).join(" — ")) + '</span></div></li>';
+            }
+            return '<li><div>' + escHtml(s) + '</div></li>';
+        }).join("");
+
+        var chgEl = document.getElementById("bpChanges");
+        chgEl.innerHTML = (ind.changes || []).map(function (c) {
+            var parts = String(c).split(" — ");
+            if (parts.length >= 2) {
+                return '<li><div><strong>' + escHtml(parts[0]) + '</strong><span>' + escHtml(parts.slice(1).join(" — ")) + '</span></div></li>';
+            }
+            return '<li><div>' + escHtml(c) + '</div></li>';
+        }).join("");
+
+        var modEl = document.getElementById("bpModules");
+        var mods = ind.modules || [];
+        if (!mods.length) {
+            modEl.innerHTML = '<span style="color:var(--text-muted);font-size:.82rem;">No modules recommended yet.</span>';
+        } else {
+            modEl.innerHTML = mods.map(function (key) {
+                var def = MODULE_DEFS[key];
+                if (!def) return "";
+                return '<span class="bp-module-chip"><span class="em" aria-hidden="true">' + def.em + '</span>' + escHtml(def.name) + '</span>';
+            }).join("");
+        }
+
+        renderIndustryMarketplace(ind,cat);
+        var marketLink=document.getElementById("bpMarketplaceLink");if(marketLink)marketLink.href="/market";
+        window.openModal("vioraBlueprintModal");
+    };
+
+    window.closeBlueprintModal = function () {
+        window.closeModal("vioraBlueprintModal");
+    };
+
+    window.populateLeadSummary = function () {
+        var sub = document.getElementById('vioraLeadSub');
+        var summary = document.getElementById('leadSummary');
+        var summaryIcon = document.getElementById('leadSummaryIcon');
+        var summaryTitle = document.getElementById('leadSummaryTitle');
+        var summaryCat = document.getElementById('leadSummaryCat');
+        var summaryModules = document.getElementById('leadModulesList');
+        var summaryProblem = document.getElementById('leadSummaryProblem');
+
+        if (activeIndustryKey && INDUSTRIES[activeIndustryKey]) {
+            var ind = INDUSTRIES[activeIndustryKey];
+            var cat = catInfo(ind.cat);
+            if (sub) sub.textContent = "You picked " + ind.name + ". Drop your details and we'll send the full blueprint on WhatsApp.";
+            if (summary) summary.style.display = "block";
+            if (summaryIcon) summaryIcon.textContent = ind.em;
+            if (summaryTitle) summaryTitle.textContent = ind.name;
+            if (summaryCat) summaryCat.textContent = cat.name;
+            if (summaryModules) {
+                summaryModules.innerHTML = (ind.modules || []).map(function (key) {
+                    var def = MODULE_DEFS[key];
+                    if (!def) return "";
+                    return '<span class="lead-module-tag"><span class="em" aria-hidden="true">' + def.em + '</span>' + escHtml(def.name) + '</span>';
+                }).join("");
+            }
+            if (summaryProblem) summaryProblem.textContent = ind.problem || "—";
+        } else {
+            if (sub) sub.textContent = "Drop your details and we'll continue on WhatsApp with your custom plan.";
+            if (summary) summary.style.display = "none";
+        }
+    };
+
+    window.getActiveIndustry = function () {
+        return activeIndustryKey && INDUSTRIES[activeIndustryKey] ? {
+            key: activeIndustryKey,
+            data: INDUSTRIES[activeIndustryKey],
+            cat: catInfo(INDUSTRIES[activeIndustryKey].cat)
+        } : null;
+    };
+
+    window.clearActiveIndustry = function () {
+        activeIndustryKey = null;
+    };
+
+    window.openModal = function (id) {
+        var m = document.getElementById(id);
+        if (!m) return;
+        m.classList.add("open");
+        m.setAttribute("aria-hidden", "false");
+        document.body.classList.add("locked");
+    };
+    window.closeModal = function (id) {
+        var m = document.getElementById(id);
+        if (!m) return;
+        m.classList.remove("open");
+        m.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("locked");
+    };
+
+    if (searchInp) {
+        searchInp.addEventListener("input", function () {
+            activeSearch = searchInp.value;
+            searchClear.classList.toggle("show", !!activeSearch.trim());
+            renderCategoryCards();
+            if (activeSearch.trim()) {
+                var open = categoryCardsEl.querySelector(".cat-wrap.expanded");
+                if (open) closeCategory(open.dataset.catWrap);
+            }
+        });
+    }
+    if (searchClear) {
+        searchClear.addEventListener("click", function () {
+            searchInp.value = "";
+            activeSearch = "";
+            searchClear.classList.remove("show");
+            renderCategoryCards();
+            var open = categoryCardsEl.querySelector(".cat-wrap.expanded");
+            if (open) closeCategory(open.dataset.catWrap);
+            searchInp.focus();
+        });
+    }
+
+    function initWizard() {
+        var modal = document.getElementById("vioraWizardModal");
+        var launch = document.getElementById("wizardLaunch");
+        var closeBtn = document.getElementById("vioraWizardClose");
+        var backBtn = document.getElementById("wizBack");
+        var nextBtn = document.getElementById("wizNext");
+        var progressBar = document.getElementById("wizProgressBar");
+        var painsEl = document.getElementById("wizPains");
+        var staffEl = document.getElementById("wizStaff");
+        var branchesEl = document.getElementById("wizBranches");
+        var toolsEl = document.getElementById("wizTools");
+        if (!modal || !launch) return;
+
+        var currentStep = 1;
+        var totalSteps = 4;
+        var answers = { pains: [], staff: null, branches: null, tools: [] };
+
+        function renderOptions(el, options, type, multi) {
+            el.innerHTML = options.map(function (o) {
+                return '<button type="button" class="wiz-' + (type === "tool" ? "tool" : "option") + '" data-id="' + o.id + '">' +
+                    (type === "tool" ? '<span class="check">✓</span>' : '') +
+                    '<span>' + escHtml(o.label || o.name) + '</span>' +
+                '</button>';
+            }).join("");
+            Array.prototype.forEach.call(el.querySelectorAll("button"), function (btn) {
+                btn.addEventListener("click", function () {
+                    var id = btn.dataset.id;
+                    if (multi) {
+                        btn.classList.toggle("selected");
+                        var arr = type === "tool" ? answers.tools : answers.pains;
+                        var idx = arr.indexOf(id);
+                        if (idx === -1) arr.push(id); else arr.splice(idx, 1);
+                    } else {
+                        Array.prototype.forEach.call(el.querySelectorAll("button"), function (b) { b.classList.remove("selected"); });
+                        btn.classList.add("selected");
+                        if (type === "staff") answers.staff = id;
+                        else if (type === "branches") answers.branches = id;
+                    }
+                });
+            });
+        }
+
+        renderOptions(painsEl, WIZARD_DATA.pains, "pain", true);
+        renderOptions(staffEl, WIZARD_DATA.staff, "staff", false);
+        renderOptions(branchesEl, WIZARD_DATA.branches, "branches", false);
+        renderOptions(toolsEl, window.COST_TOOLS.map(function (t) { return { id: t.id, label: t.name + " — " + (window.VioraCurrency ? window.VioraCurrency.formatKES(t.price) : "KES " + t.price.toLocaleString()) }; }), "tool", true);
+
+        function showStep(n) {
+            currentStep = n;
+            modal.querySelectorAll(".wiz-step").forEach(function (s) {
+                s.hidden = (parseInt(s.dataset.step, 10) !== n);
+            });
+            progressBar.style.width = (n / totalSteps * 100) + "%";
+            backBtn.disabled = n === 1;
+            nextBtn.textContent = n === totalSteps ? "See my blueprint →" : "Next →";
+        }
+
+        launch.addEventListener("click", function () {
+            answers = { pains: [], staff: null, branches: null, tools: [] };
+            renderOptions(painsEl, WIZARD_DATA.pains, "pain", true);
+            renderOptions(staffEl, WIZARD_DATA.staff, "staff", false);
+            renderOptions(branchesEl, WIZARD_DATA.branches, "branches", false);
+            renderOptions(toolsEl, window.COST_TOOLS.map(function (t) { return { id: t.id, label: t.name + " — KES " + t.price.toLocaleString() }; }), "tool", true);
+            showStep(1);
+            window.openModal("vioraWizardModal");
+        });
+
+        closeBtn.addEventListener("click", function () { window.closeModal("vioraWizardModal"); });
+        modal.addEventListener("click", function (e) { if (e.target === modal) window.closeModal("vioraWizardModal"); });
+
+        backBtn.addEventListener("click", function () {
+            if (currentStep > 1) showStep(currentStep - 1);
+        });
+
+        nextBtn.addEventListener("click", function () {
+            if (currentStep < totalSteps) {
+                showStep(currentStep + 1);
+            } else {
+                var map = {
+                    leakage: "supermarket", stockouts: "retail", late_reports: "accounting",
+                    leads_dying: "consultancy", compliance: "accounting", growth: "supermarket"
+                };
+                var suggested = null;
+                for (var i = 0; i < answers.pains.length; i++) {
+                    if (map[answers.pains[i]]) { suggested = map[answers.pains[i]]; break; }
+                }
+                if (!suggested) suggested = "retail";
+                activeIndustryKey = suggested;
+                window.closeModal("vioraWizardModal");
+                setTimeout(function () { window.openBlueprintPreview(); }, 200);
+            }
+        });
+    }
+
+    window.initBlueprintModule = function () {
+        renderCategoryCards();
+        initWizard();
+
+        var bpModal = document.getElementById("vioraBlueprintModal");
+        var bpClose = document.getElementById("vioraBlueprintClose");
+        var bpGetBtn = document.getElementById("bpGetBlueprintBtn");
+        if (bpClose) bpClose.addEventListener("click", window.closeBlueprintModal);
+        if (bpModal) bpModal.addEventListener("click", function (e) { if (e.target === bpModal) window.closeBlueprintModal(); });
+        if (bpGetBtn) bpGetBtn.addEventListener("click", function () {
+            if (bpGetBtn.disabled) return;
+            bpGetBtn.disabled = true;
+            window.closeBlueprintModal();
+            setTimeout(function () {
+                bpGetBtn.disabled = false;
+                if (typeof window.openLeadModal === "function") window.openLeadModal();
+            }, 250);
+        });
+
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") {
+                ["vioraLeadModal", "vioraBlueprintModal", "vioraWizardModal", "vioraVideoModal"].forEach(function (id) {
+                    var m = document.getElementById(id);
+                    if (m && m.classList.contains("open")) window.closeModal(id);
+                });
+            }
+        });
+    };
+})();
++Number(p.price).toFixed(2))+(p.period?' / '+escHtml(p.period):''):(p.pricing==='quote'?'Request a quote':'View product');var imageUrl=safeMarketplaceAssetUrl(p.image);var image=imageUrl?'<img src="'+escHtml(imageUrl)+'" alt="" loading="lazy">':'<span class="bp-product-icon"><i class="'+escHtml(p.icon||'fa-solid fa-cube')+'"></i></span>';return '<article class="bp-market-product">'+image+'<div class="bp-product-info"><b>'+escHtml(p.name||'VIORA product')+'</b><p>'+escHtml(p.description||'Explore this product in the VIORA Marketplace.')+'</p><strong>'+price+'</strong><a href="/market">View in Marketplace <i class="fa-solid fa-arrow-right"></i></a></div></article>';}).join('');});
 }
 
 window.openBlueprintPreview = function () {
