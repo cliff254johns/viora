@@ -1476,6 +1476,11 @@ async function flushCounterBroadcasts() {
    Only fires notifications when a counter INCREASES or crosses
    a danger threshold — never on decreases, never on minor churn.
    ═══════════════════════════════════════════════════════════ */
+const EXPLICIT_NOTIFICATION_COUNTERS = new Set([
+  'payments', 'orders', 'mpesaUnmatched', 'subscriptionRequestsPending',
+  'trainingRequestsPending', 'subscriptions'
+]);
+
 function _compareCountersAndNotify() {
   const prev = window.__vioraCounterLastSeen || {};
   const next = {};
@@ -1500,7 +1505,7 @@ function _compareCountersAndNotify() {
     const increased   = value > pv;
     const wentDanger  = !pd && danger;
 
-    if (increased || wentDanger) {
+    if ((increased || wentDanger) && !EXPLICIT_NOTIFICATION_COUNTERS.has(key)) {
       toNotify.push({
         key,
         delta:    value - pv,
