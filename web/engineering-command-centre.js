@@ -235,7 +235,7 @@ async function refreshHealth() {
   checks.push({name:'Workspace data snapshot',ok:loaded>0,detail:loaded+' data collections currently loaded in this browser session.'});
   let workerOk=false, workerDetail='Health endpoint unavailable.';
   try {
-    const response=await fetch('/api/health',{cache:'no-store',headers:{Accept:'application/json'}});
+    const response=await fetch('/api/translation-health',{cache:'no-store',headers:{Accept:'application/json'}});
     const type=response.headers.get('content-type')||'';
     if(response.ok&&type.includes('application/json')){
       const data=await response.json();
