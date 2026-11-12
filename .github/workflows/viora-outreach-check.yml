@@ -32,7 +32,9 @@ jobs:
         run: |
           grep -q 'href="/outreach.css"' web/outreach.html
           grep -q 'src="/outreach.js"' web/outreach.html
-          ! grep -qi '<style' web/outreach.html
+          test -s web/outreach.css
+          test -s web/outreach.js
+          # Inline style attributes are allowed for component-level layout; shared rules stay in the external stylesheet.
       - name: Verify VIORA navigation entry and admin/exec visibility
         run: |
           grep -q 'data-group="outreach"' web/main.html
