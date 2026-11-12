@@ -14,7 +14,7 @@ const staticWorker = read('workers/viora-static-next/worker.js');
 const staticConfig = read('workers/viora-static-next/wrangler.toml');
 const embeddedAssets = read('workers/viora-static-next/assets.generated.js');
 
-for (const path of ['web/manifest.webmanifest','web/main.webmanifest','web/manifest.json','web/campaigns.webmanifest']) {
+for (const path of ['web/manifest.webmanifest','web/main.webmanifest','web/manifest.json','web/campaigns.webmanifest','web/assets/r/manifest-public.json','web/assets/r/manifest-rider.json','web/assets/r/manifest-admin.json']) {
   const manifest = JSON.parse(read(path));
   assert.ok(manifest.icons.some(i => i.src === '/viora-icon-192.png' && i.sizes === '192x192'), path+' missing 192 PNG icon');
   assert.ok(manifest.icons.some(i => i.src === '/viora-icon-512.png' && i.sizes === '512x512'), path+' missing 512 PNG icon');
