@@ -1013,11 +1013,13 @@ const heroVisual = (p.image && String(p.image).trim())
     const ctaRow = isCustom
       ? `<div class="pdm-cta-row">
            ${previewUrl ? `<a href="${this.escape(previewUrl)}" class="btn-secondary" target="_blank" rel="noopener" onclick="event.stopPropagation();"><i class="fa-solid fa-eye"></i> See Live Demo</a>` : ''}
+           <a href="/client.html" class="btn-outline"><i class="fa-solid fa-key"></i> Subscribe</a>
            <button class="quote-btn" onclick="App.closeModal('productDetailModal'); App.openQuoteModal('${p.id}')"><i class="fa-solid fa-comments-dollar"></i> Request a Quote</button>
            <button class="btn-outline" onclick="App.closeModal('productDetailModal'); App.openWhatsAppQuote('${p.id}')"><i class="fa-brands fa-whatsapp"></i> Chat on WhatsApp</button>
          </div>`
       : `<div class="pdm-cta-row">
            ${previewUrl ? `<a href="${this.escape(previewUrl)}" class="btn-secondary" target="_blank" rel="noopener" onclick="event.stopPropagation();"><i class="fa-solid fa-eye"></i> See Live Demo</a>` : ''}
+           <a href="/client.html" class="btn-outline"><i class="fa-solid fa-key"></i> Subscribe</a>
            <button class="btn-outline" onclick="App.closeModal('productDetailModal'); App.addToCart('${p.id}')"><i class="fa-solid fa-cart-plus"></i> Add to Cart</button>
            <button class="btn-primary" onclick="App.closeModal('productDetailModal'); App.openPurchaseModal('${p.id}')"><i class="fa-solid fa-bolt"></i> Buy Now</button>
          </div>`;
