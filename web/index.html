@@ -230,7 +230,7 @@
       <div>
         <span class="eyebrow" id="strip-eyebrow">From the marketplace</span>
         <h2 class="section-h" id="strip-heading">Buy the systems we build.</h2>
-        <p class="section-sub" style="margin-bottom:0" id="strip-sub">Live pricing in KES. Instant delivery.</p>
+        <p class="section-sub" style="margin-bottom:0" id="strip-sub">Live local-currency pricing. Instant delivery.</p>
       </div>
       <a href="/market" class="btn btn-ghost" id="strip-cta">Browse all products →</a>
     </div>
@@ -330,7 +330,7 @@
           </div>
           <div class="dash-card">
             <div class="lbl">Expenses</div>
-            <div class="big">KSh 1.8M</div>
+            <div class="big" id="dash-expenses">KSh 1.8M</div>
             <div class="dash-donut-wrap">
               <div class="dash-donut" aria-hidden="true"></div>
               <div class="dash-legend">
@@ -342,10 +342,10 @@
           </div>
           <div class="dash-card span2">
             <div class="lbl">Recent transactions</div>
-            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--line);"><span>Order #4821</span><span style="font-weight:600;">KSh 24,500</span></div>
-            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--line);"><span>Order #4822</span><span style="font-weight:600;">KSh 8,200</span></div>
-            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--line);"><span>Invoice #119</span><span style="font-weight:600;">KSh 63,000</span></div>
-            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;"><span>Order #4823</span><span style="font-weight:600;">KSh 12,750</span></div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--line);"><span>Order #4821</span><span style="font-weight:600;" id="dash-txn-1">KSh 24,500</span></div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--line);"><span>Order #4822</span><span style="font-weight:600;" id="dash-txn-2">KSh 8,200</span></div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--line);"><span>Invoice #119</span><span style="font-weight:600;" id="dash-txn-3">KSh 63,000</span></div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;"><span>Order #4823</span><span style="font-weight:600;" id="dash-txn-4">KSh 12,750</span></div>
           </div>
         </div>
       </div>
@@ -465,7 +465,7 @@
     <div class="text-center reveal">
       <span class="eyebrow" style="justify-content:center">Pricing</span>
       <h2 class="section-h">Straightforward pricing. Flexible by design.</h2>
-      <p class="section-sub" style="margin-left:auto;margin-right:auto">Indicative starting prices — final pricing scoped per deployment. Indicative starting prices shown in your local currency; final pricing is scoped per deployment.</p>
+      <p class="section-sub" style="margin-left:auto;margin-right:auto">Indicative starting prices shown in your local currency; final pricing is scoped per deployment.</p>
     </div>
     <div class="price-grid" id="pricing-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:40px;">
       <!-- rendered by index-home.js -->
