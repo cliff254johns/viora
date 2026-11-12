@@ -6,6 +6,7 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { getDatabase, ref, get, set, update, onValue, off, forceLongPolling } from "firebase/database";
+import { publishVioraEvent } from "../shared/notification-bus.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC9gCBt-xR8t9n6rTGNvDZ5usUGiW-Dqxc",
@@ -109,6 +110,7 @@ async function doTrainerRequest() {
     const uidKey = cred.user.uid;
     const requestedAt = nowIso();
     await set(ref(db, P(`accessRequests/${uidKey}`)), { uid: uidKey, name, email, phone, expertise, role: "trainer", status: "pending", requestedAt, source: "trainer-portal" });
+    await publishVioraEvent({ db, ref, set, eventId: uidKey, source: "scholar-trainer", category: "scholar", title: "Scholar: trainer application", body: `${name} submitted a trainer access application.`, url: "/scholar-admin.html", level: "warning", icon: "fa-chalkboard-user", actorUid: uidKey });
     try {
       const userSnap = await get(ref(db, `${USERS_ROOT}/${uidKey}`));
       if (!userSnap.exists()) await set(ref(db, `${USERS_ROOT}/${uidKey}`), { uid: uidKey, name, email, phone, role: "trainer", pendingApproval: true, source: "trainer-portal", createdAt: requestedAt });
@@ -219,7 +221,7 @@ function renderGrading() { if ($("trGradingBody")) $("trGradingBody").innerHTML 
 
 window.submitForReview = async (id) => {
   if (!confirm("Submit this course to the Admin for review and publication?")) return;
-  try { await update(ref(db, P(`courses/${id}`)), { status: "review", updatedAt: nowIso() }); toast("Course submitted for review.", "success"); }
+  try { await update(ref(db, P(`courses/${id}`)), { status: "review", updatedAt: nowIso() }); await publishVioraEvent({ db, ref, set, eventId: id, source: "scholar-course-review", category: "scholar", title: "Scholar: course submitted for review", body: `${state.operator?.name || "A trainer"} submitted ${state.courses[id]?.title || id} for admin review.`, url: "/scholar-admin.html", level: "warning", icon: "fa-clipboard-check", actorUid: state.operator?.uid || "" }); toast("Course submitted for review.", "success"); }
   catch (e) { toast("Failed: " + e.message, "error"); }
 };
 
