@@ -1959,6 +1959,7 @@ window.setNavMode = setNavMode;
    ═══════════════════════════════════════════════════════════════ */
 const MOBILE_NAV_MAP = {
   exec: { icon: 'fa-crown', label: 'Exec', tabs: [
+    { tab: 'engineering-command', icon: 'fa-microchip', label: 'Engineering' },
     { tab: 'dashboard', icon: 'fa-chart-pie', label: 'Dashboard' },
     { tab: 'profile', icon: 'fa-building', label: 'Profile' },
     { tab: 'global-market', icon: 'fa-earth-africa', label: 'Global' },
@@ -3511,6 +3512,28 @@ function startApp() {
         app, db, ref, set, ROOT,
         state, toast, callFn, $,
       });
+      const deviceAlertsButton = $('vioraPushEnable');
+      if (deviceAlertsButton && !deviceAlertsButton.dataset.bound) {
+        deviceAlertsButton.dataset.bound = '1';
+        const refreshDeviceAlertsLabel = () => {
+          const permission = typeof Notification !== 'undefined' ? Notification.permission : 'unsupported';
+          deviceAlertsButton.innerHTML = permission === 'granted'
+            ? '<i class="fa-solid fa-bell"></i> Device alerts enabled'
+            : permission === 'denied'
+              ? '<i class="fa-solid fa-bell-slash"></i> Alerts blocked in browser'
+              : '<i class="fa-solid fa-bell"></i> Enable device alerts';
+          deviceAlertsButton.disabled = permission === 'unsupported' || permission === 'denied';
+          deviceAlertsButton.title = permission === 'denied'
+            ? 'Allow notifications for viora.co.ke in your browser or device settings'
+            : 'Enable notifications for this browser and installed PWA';
+        };
+        deviceAlertsButton.addEventListener('click', async () => {
+          deviceAlertsButton.disabled = true;
+          try { await PushNotifications.requestPermission(); }
+          finally { refreshDeviceAlertsLabel(); }
+        });
+        refreshDeviceAlertsLabel();
+      }
     } catch (e) { console.error('[viora] initPushNotifications:', e); }
 
     // 20. Smart import
@@ -3700,6 +3723,8 @@ try {
 } catch (e) { console.warn('[dashboard] weather refresh', e); }
             break;
           case 'profile':                 renderProfile(); break;
+          case 'engineering-command':     window.renderEngineeringCommandCentre?.(); break;
+          case 'engineering-visuals':      window.renderEngineeringVisuals?.(); break;
           case 'global-market':           try { setupGlobalMarket?.(); loadGlobalDashboard?.(); } catch (e) { console.warn('[tab render] global-market', e); } break;
 
           // ── Client ──
@@ -4155,6 +4180,8 @@ case 'training-progress':
       const ROUTES = {
         'dashboard':               'renderDashboard',
         'profile':                 'renderProfile',
+        'engineering-command':     'renderEngineeringCommandCentre',
+        'engineering-visuals':      'renderEngineeringVisuals',
         'sales-clients':           'renderClients',
         'client360':               'renderClient360Page',
         'sales-deals':             'renderDeals',

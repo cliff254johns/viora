@@ -1,0 +1,71 @@
+name: VIORA security and quality gates
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, "engineering/**"]
+  schedule:
+    - cron: "23 3 * * 1"
+  workflow_dispatch:
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: read
+jobs:
+  unit-and-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: "22"}
+      - name: Install project dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund --legacy-peer-deps
+      - run: npm audit --audit-level=high
+      - run: npm test
+      - run: npm run test:integration
+        env:
+          FIREBASE_AUTH_EMULATOR_HOST: ${{ vars.FIREBASE_AUTH_EMULATOR_HOST }}
+          FIREBASE_DATABASE_EMULATOR_HOST: ${{ vars.FIREBASE_DATABASE_EMULATOR_HOST }}
+          FIREBASE_API_KEY: ${{ vars.FIREBASE_API_KEY }}
+          FIREBASE_TEST_ID_TOKEN: ${{ secrets.FIREBASE_TEST_ID_TOKEN }}
+          FIREBASE_TENANT_B_ID_TOKEN: ${{ secrets.FIREBASE_TENANT_B_ID_TOKEN }}
+          FIREBASE_AUTHZ_PROBE_PATH: ${{ vars.FIREBASE_AUTHZ_PROBE_PATH }}
+          FIREBASE_ADMIN_ID_TOKEN: ${{ secrets.FIREBASE_ADMIN_ID_TOKEN }}
+          FIREBASE_NONADMIN_ID_TOKEN: ${{ secrets.FIREBASE_NONADMIN_ID_TOKEN }}
+  dependency-review:
+    if: github.event_name == 'pull_request' && vars.DEPENDENCY_GRAPH_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  codeql:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with: {languages: javascript}
+      - uses: github/codeql-action/analyze@v3
+  config-and-permission-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure workflow permissions are explicit and read-only by default
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f .github/workflows/security-quality.yml
+          grep -q 'contents: read' .github/workflows/security-quality.yml
+          pattern='permissions:.*write-'
+          pattern="${pattern}all"
+          if grep -R -E "$pattern" .github/workflows; then
+            echo "Broad write-all permissions are not allowed." >&2
+            exit 1
+          fi

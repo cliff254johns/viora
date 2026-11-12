@@ -1098,7 +1098,7 @@
   min-width: 80px;
 }
 .product-strip-actions .btn-primary {
-  background: var(--accent);
+  background: #005FCC;
   color: #fff;
   border: none;
 }
@@ -2499,10 +2499,10 @@
   color: #0A84FF;
 }
 [data-theme="dark"] .strip-btn-primary {
-  background: #0A84FF;
+  background: #005FCC;
 }
 [data-theme="dark"] .strip-btn-primary:hover {
-  background: #0070E0;
+  background: #004FA3;
 }
 [data-theme="dark"] .strip-btn-outline {
   border-color: rgba(255, 255, 255, 0.15);

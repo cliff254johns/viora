@@ -14,8 +14,9 @@
 <link rel="canonical" href="https://viora.co.ke/">
 <meta name="theme-color" content="#0A192F">
 <link rel="manifest" href="/manifest.webmanifest">
-<link rel="icon" type="image/png" href="/viora.png">
-<link rel="apple-touch-icon" href="/viora.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/viora-icon-192.png">
+<link rel="icon" type="image/svg+xml" href="/viora-app-icon.svg">
+<link rel="apple-touch-icon" sizes="192x192" href="/viora-icon-192.png">
 <script defer src="/shared-pwa.js"></script>
 
 
@@ -31,8 +32,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-<link rel="stylesheet" href="shared-app.css">
-<link rel="stylesheet" href="index-home.css">
+<link rel="stylesheet" href="shared-app.css?v=20261113-a11y-2">
+<link rel="stylesheet" href="index-home.css?v=20261113-a11y-2">
 <style>
 .globe-fibre-caption{position:absolute;top:calc(100% + 72px);left:50%;transform:translateX(-50%);width:min(520px,calc(100vw - 28px));margin:0;padding:0 18px;text-align:center;color:var(--muted);font-size:clamp(12px,1.1vw,14px);line-height:1.8;letter-spacing:.01em}
 .globe-fibre-caption em{font-style:italic}
@@ -286,7 +287,7 @@
     </div>
     <div class="eco-grid">
       <div class="eco-map">
-        <svg id="eco-svg" viewBox="0 0 400 400" role="img" aria-label="VIORA ecosystem with ten connected orbs"></svg>
+        <svg id="eco-svg" viewBox="0 0 400 400" role="group" aria-label="Interactive VIORA ecosystem map with ten selectable domains"></svg>
       </div>
       <div class="eco-info" id="eco-info">
         <h3>VIORA Core</h3>
@@ -454,7 +455,7 @@
         </div>
       </article>
       <article class="case-strip-card">
-        <span class="case-strip-tag" style="background:#10B981;">Healthcare</span>
+        <span class="case-strip-tag" style="background:#047857;">Healthcare</span>
         <h3>Clinic network, 3 locations</h3>
         <p>Payroll ran on paper. Payslips were delayed and statutory deductions were frequently wrong.</p>
         <p style="font-size:13px;"><strong>Deployed:</strong> VIORA HR + Payroll + Attendance.</p>
@@ -629,7 +630,8 @@
 <section class="viora-global-value"><div class="wrap"><span class="eyebrow">Built around your business</span><h2 class="section-h">Not another collection of disconnected tools.</h2><p class="section-sub">VIORA designs a bespoke operating blueprint around the way your industry works, then connects the portals, workflows and services to one real-time data core.</p><div class="viora-global-grid"><article><span class="viora-value-icon">🧭</span><h3>Designed around real workflows</h3><p>Start with your operations, teams, customers and industry requirements — not a one-size-fits-all template.</p></article><article><span class="viora-value-icon">🔗</span><h3>Connected from day one</h3><p>Bring sales, inventory, finance, customer relationships, people and reporting into one coherent environment.</p></article><article><span class="viora-value-icon">📈</span><h3>Ready to evolve</h3><p>Expand with new modules, integrations, automation and AI as your organisation grows.</p></article></div><div class="viora-global-cta"><a class="btn btn-primary btn-lg" href="/contact_us">Plan your ecosystem</a><a class="btn btn-ghost btn-lg" href="/market">Explore the Market</a></div><div class="viora-social-links" aria-label="Follow VIORA Ecosystems"><span>Follow VIORA</span><a href="https://www.facebook.com/vioraecosystems" target="_blank" rel="noopener noreferrer">Facebook</a><a href="https://www.instagram.com/vioraecosystems/" target="_blank" rel="noopener noreferrer">Instagram</a><a href="https://www.tiktok.com/@vioraecosystems" target="_blank" rel="noopener noreferrer">TikTok</a><a href="https://www.linkedin.com/company/vioraecosystems/" target="_blank" rel="noopener noreferrer">LinkedIn</a><a href="https://www.youtube.com/@vioraecosystems" target="_blank" rel="noopener noreferrer">YouTube</a><a href="https://x.com/vioraecosystems" target="_blank" rel="noopener noreferrer">X</a><a href="https://www.threads.net/@vioraecosystems" target="_blank" rel="noopener noreferrer">Threads</a></div></div></section>
 <section class="viora-industry-preview"><div class="wrap"><span class="eyebrow">Built for the way industries work</span><h2 class="section-h">A different blueprint for every industry.</h2><p class="section-sub">From retail and healthcare to education, logistics and professional services, VIORA starts with your real workflows — then connects the systems and data that keep your organisation moving.</p><div class="viora-industry-preview-grid"><a href="/industries/retail">Retail &amp; Wholesale <span>Explore →</span></a><a href="/industries/healthcare">Healthcare <span>Explore →</span></a><a href="/industries/education">Education <span>Explore →</span></a><a href="/industries/hospitality">Hospitality <span>Explore →</span></a><a href="/industries/logistics">Transport &amp; Logistics <span>Explore →</span></a><a href="/industries/agriculture">Agriculture <span>Explore →</span></a><a href="/industries/professional-services">Professional Services <span>Explore →</span></a></div><div class="viora-global-cta"><a href="/industries" class="btn btn-primary">Explore all industry solutions →</a></div></div></section></main>
 
-<!-- ═══════════ FOOTER ═══════════ -->\n<footer class="foot">
+<!-- ═══════════ FOOTER ═══════════ -->
+<footer class="foot">
   <div class="wrap">
     <div class="foot-grid">
       <div>
@@ -742,7 +744,7 @@
 <script src="/hero-banner.js" defer></script>
 <script src="/viora-city-sky.js?v=20261112-hide-unselected-city-1" defer></script>
 <script src="/currency-display.js?v=20261112-global-fx-9" defer></script>
-<script type="module" src="index-home.js?v=20261112-global-currency-3"></script>
+<script type="module" src="index-home.js?v=20261113-a11y-2"></script>
 <script>
   document.getElementById('yr').textContent = new Date().getFullYear();
 </script>

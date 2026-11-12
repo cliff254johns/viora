@@ -1,10 +1,12 @@
 import { cloudflareTest } from "@cloudflare/vitest-plugin";
 import { defineConfig } from "vitest/config";
 
+// Use a test-only Wrangler config without preview/remote bindings.
+// CI runs Durable Objects locally in workerd; it must never need production credentials.
 export default defineConfig({
   plugins: [
     cloudflareTest({
-      wrangler: { configPath: "./web/wrangler.toml" },
+      wrangler: { configPath: "./wrangler.test.toml" },
     }),
   ],
   test: {

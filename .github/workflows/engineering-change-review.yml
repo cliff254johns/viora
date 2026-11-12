@@ -1,0 +1,25 @@
+name: VIORA engineering change review
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  deterministic-triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-node@v4
+        with: {node-version: "22"}
+      - name: Analyze changed modules and regression risks
+        run: node scripts/review-changes.mjs
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+      - name: Publish review artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: viora-engineering-change-review
+          path: artifacts/engineering-change-review.json

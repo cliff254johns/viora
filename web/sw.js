@@ -34,7 +34,7 @@
 'use strict';
 
 /* ─── Version bump invalidates every cache below ─────────────── */
-const SW_VERSION = 'viora-v1.6.25';
+const SW_VERSION = 'viora-v1.6.27';
 const CACHE_SHELL  = `${SW_VERSION}-shell`;
 const CACHE_STATIC = `${SW_VERSION}-static`;
 const CACHE_FONTS  = `${SW_VERSION}-fonts`;
@@ -49,6 +49,10 @@ const PRECACHE_URLS = [
   '/main.webmanifest',
   '/viora.png',
   '/viora-app-icon.svg',
+  '/viora-icon-192.png',
+  '/viora-icon-512.png',
+  '/engineering-command-centre.css?v=20261112-1',
+  '/engineering-command-centre.js?v=20261112-1',
   '/market',
   '/campaigns',
   '/campaigns.webmanifest',
@@ -477,8 +481,8 @@ self.addEventListener('push', (event) => {
   const title = n.title || d.title || 'VIORA';
   const body  = n.body  || d.body  || '';
   const url   = d.url   || '/main.html';
-  const icon  = n.icon  || '/viora.png';
-  const badge = '/viora.png';
+  const icon  = n.icon  || '/viora-icon-192.png';
+  const badge = '/viora-icon-192.png';
 
   event.waitUntil((async () => {
     // If a VIORA tab is focused, forward the event instead of showing
@@ -498,13 +502,22 @@ self.addEventListener('push', (event) => {
       return;
     }
 
+    // A background push can set an app-icon dot; the open app reconciles
+    // this to the exact unread count from the notification database.
+    try {
+      if (self.navigator && typeof self.navigator.setAppBadge === 'function') {
+        await self.navigator.setAppBadge();
+      }
+    } catch (_) {}
+
     await self.registration.showNotification(title, {
       body,
       icon,
       badge,
-      tag: d.tag || 'viora',
-      data: { url },
+      tag: d.tag || ('viora-' + Date.now()),
+      data: { url, eventId: d.eventId || d.id || '' },
       vibrate: [80, 40, 80],
+      silent: false,
       requireInteraction: false,
     });
   })());

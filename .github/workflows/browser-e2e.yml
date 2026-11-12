@@ -1,0 +1,25 @@
+name: VIORA browser and accessibility tests
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, "engineering/**"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  chromium:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: "22"}
+      - name: Install project dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund --legacy-peer-deps
+      - run: npx playwright install --with-deps chromium
+      - name: Run browser, accessibility and mobile layout checks
+        run: npm run test:e2e
+        env:
+          VIORA_BASE_URL: https://engineering-command-centre-deep-audit-20261112-viora-static-git.cliff254johns.workers.dev
+          VIORA_TEST_EMAIL: ${{ secrets.VIORA_TEST_EMAIL }}
+          VIORA_TEST_PASSWORD: ${{ secrets.VIORA_TEST_PASSWORD }}

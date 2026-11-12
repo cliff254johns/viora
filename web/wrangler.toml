@@ -1,8 +1,8 @@
-# Cloudflare Workers Builds deploys this config from the repository root.
-# Keep the Worker entry point, static assets, and Workers AI binding together.
+# Cloudflare Workers Builds production and preview commands explicitly select this config.
+# Keep the Worker entry point, static assets, AI binding and DO migration together.
 name = "viora-static-git"
 main = "./worker.js"
-compatibility_date = "2026-11-09"
+compatibility_date = "2026-11-12"
 
 [assets]
 directory = "."
@@ -12,3 +12,34 @@ run_worker_first = ["/api/*"]
 
 [ai]
 binding = "AI"
+
+[[durable_objects.bindings]]
+name = "TRANSLATION_RATE_LIMITER"
+class_name = "TranslationRateLimiter"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["TranslationRateLimiter"]
+
+# Workers Builds invokes wrangler preview; this must be a top-level table.
+[previews]
+
+[previews.ai]
+binding = "AI"
+
+[[previews.durable_objects.bindings]]
+name = "TRANSLATION_RATE_LIMITER"
+class_name = "TranslationRateLimiter"
+
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1.0
+
+[observability.traces]
+enabled = true
+head_sampling_rate = 0.1
+
+# Preview builds use the same explicit config path as production builds.
