@@ -128,8 +128,24 @@ function openProspectDetail(index){
  '<section class="prospect-detail-section"><h4><i class="fa-solid fa-lightbulb"></i> Opportunity analysis</h4><p><b>Potential VIORA opportunity areas:</b> '+esc((x.opportunityAreas||[]).join(' · ')||'Not separately identified from the current source set.')+'</p><p><b>Observed public signals:</b> '+esc((x.observedSignals||[]).join(' · ')||'No specific public signals extracted.')+'</p><p><b>Recommended entry point:</b> '+esc(x.recommendedEntryPoint||x.approach||'Start with a short discovery conversation.')+'</p></section><section class="prospect-detail-section"><h4><i class="fa-solid fa-link"></i> Research evidence</h4><div class="prospect-sources">'+(sources.length?sources.map((s,i)=>'<a href="'+esc(s.url)+'" target="_blank" rel="noopener"><span>'+String(i+1).padStart(2,'0')+'</span><div><b>'+esc(s.title||'Public source')+'</b><small>'+esc(s.url)+'</small></div><i class="fa-solid fa-arrow-up-right-from-square"></i></a>').join(''):'<p>No source links retained. Verify the organisation before outreach.</p>')+'</div></section><p class="prospect-disclaimer"><i class="fa-solid fa-circle-info"></i> Fit score and opportunity notes are AI-assisted research hypotheses, not verified buying intent, financial performance or confirmed requirements. Validate details before contacting.</p>';
  $('prospectDetailTitle').textContent=x.organisation||'Prospect overview';$('prospectDetailMeta').textContent=[x.industry,x.city,x.country].filter(Boolean).join(' · ')||'Research-backed opportunity profile';$('prospectDetailContent').innerHTML=html;$('prospectWhatsAppDraft').value=prospectWhatsAppMessage(x);openModal('prospectDetailModal');
 }
-const VIORA_OUTREACH_WHATSAPP='254713428774'; // Verified VIORA WhatsApp Business line.
-function openProspectWhatsApp(){if(!activeProspectDetail)return;const message=$('prospectWhatsAppDraft').value.trim();if(!message){toast('Write a message before opening WhatsApp.',true);return;}window.open('https://wa.me/'+VIORA_OUTREACH_WHATSAPP+'?text='+encodeURIComponent(message),'_blank','noopener,noreferrer');}
+// Opens the prospect's WhatsApp number in the device's WhatsApp app/web.
+// The operator should be signed in to VIORA's verified WhatsApp Business account (0713428774).
+function prospectWhatsAppNumber(x){
+ const raw=x?.phone||x?.whatsapp||x?.contactPhone||x?.contact_phone||x?.mobile||x?.telephone||x?.contactDetails?.phone||'';
+ let digits=String(raw).replace(/\\D/g,'');
+ if(digits.startsWith('00'))digits=digits.slice(2);
+ if(digits.startsWith('0')&&String(x?.country||'').toLowerCase().includes('kenya'))digits='254'+digits.slice(1);
+ else if(digits.length===9&&String(x?.country||'').toLowerCase().includes('kenya'))digits='254'+digits;
+ return /^\\d{8,15}$/.test(digits)?digits:'';
+}
+function openProspectWhatsApp(){
+ if(!activeProspectDetail)return;
+ const message=$('prospectWhatsAppDraft').value.trim();
+ if(!message){toast('Write a message before opening WhatsApp.',true);return;}
+ const number=prospectWhatsAppNumber(activeProspectDetail);
+ if(!number){toast('This prospect has no valid direct WhatsApp number. Add a verified phone number to the lead first.',true);return;}
+ window.open('https://wa.me/'+number+'?text='+encodeURIComponent(message),'_blank','noopener,noreferrer');
+}
 async function addActiveProspectToCrm(){if(!activeProspectDetail)return;try{const id=await saveDiscovered(activeProspectDetail.index);if(id){toast('Prospect saved to the shared CRM.');closeModal('prospectDetailModal');}}catch(e){toast('Could not save prospect: '+e.message,true);}}
 function renderDiscovered(){const el=$('discoveredLeadResults');if(!el)return;el.innerHTML=discoveredLeads.length?discoveredLeads.map((x,i)=>'<article class="discovered-card"><div class="discovered-card-head"><div><h3>'+esc(x.organisation)+'</h3><div class="meta">'+esc([x.industry,x.city,x.country,x.category,x.researchStatus].filter(Boolean).join(' · '))+'</div></div><div class="fit-score">'+esc(x.priorityScore||50)+' / 100</div></div><p>'+esc(x.summary||'')+'</p><p><b>Why VIORA may fit:</b> '+esc(x.fitReason||'Potential fit to validate.')+'</p><div class="card-actions"><button class="btn" data-discover-detail="'+i+'"><i class="fa-solid fa-chart-pie"></i> Lead intelligence</button><button class="btn" data-discover-save="'+i+'">Add to CRM</button><button class="btn primary" data-discover-draft="'+i+'">Prepare email draft</button></div></article>').join(''):'<div class="empty">No public-source results were returned this time. Try a broader industry or region, or retry when the search connection is available.</div>';}
 async function discoverGlobalLeads(){
