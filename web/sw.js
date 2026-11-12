@@ -34,7 +34,7 @@
 'use strict';
 
 /* ─── Version bump invalidates every cache below ─────────────── */
-const SW_VERSION = 'viora-v1.5.9';
+const SW_VERSION = 'viora-v1.6.0';
 const CACHE_SHELL  = `${SW_VERSION}-shell`;
 const CACHE_STATIC = `${SW_VERSION}-static`;
 const CACHE_FONTS  = `${SW_VERSION}-fonts`;
@@ -73,7 +73,7 @@ const PRECACHE_URLS = [
   '/mainIndex/site-language.js',
   '/mainIndex/chatbot.js',
   '/mainIndex/chatbot.css',
-  '/viora-mobile-app.css?v=20261111-99261369',
+  '/viora-mobile-app.css?v=20261112-main-scroll-lead-sync',
   '/hero-terminator.js',
   '/inde.html',
   '/patner.html',
