@@ -47,7 +47,7 @@ export class TranslationRateLimiter extends DurableObject {
     `);
   }
 
-  check(limit, windowMs) {
+  async check(limit, windowMs) {
     const now = Date.now();
     const rows = this.ctx.storage.sql.exec(
       "SELECT window_start, request_count FROM rate_window WHERE slot = 1"
