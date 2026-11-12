@@ -60,4 +60,5 @@ jobs:
         run: |
           test -f .github/workflows/security-quality.yml
           grep -q 'contents: read' .github/workflows/security-quality.yml
-          ! grep -R -E 'permissions:.*write-all' .github/workflows
+          pattern='permissions:.*write-' 'all'
+          ! grep -R -E "$pattern" .github/workflows
