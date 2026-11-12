@@ -21,7 +21,8 @@
     lastUpdated: '',
     nextUpdate: 0,
     ready: false,
-    source: 'USD fallback'
+    source: 'USD fallback',
+    primaryLoaded: false
   };
 
   function readCache(key) {
@@ -103,6 +104,7 @@
     state.rates = rates;
     state.rateDates = dates;
     state.source = 'Frankfurter daily reference rates';
+    state.primaryLoaded = true;
     state.lastUpdated = dates[state.currency] || '';
     saveRateCache();
   }
@@ -111,7 +113,7 @@
     if (!data || data.result !== 'success' || !data.rates || Number(data.rates.USD) !== 1) {
       throw new Error('Fallback FX provider returned no usable rates');
     }
-    const merged = Object.assign({}, data.rates, state.rates);
+    const merged = state.primaryLoaded ? Object.assign({}, data.rates, state.rates) : Object.assign({}, state.rates, data.rates);
     merged.USD = 1;
     state.rates = merged;
     state.rateDates = Object.assign({}, state.rateDates);
@@ -119,7 +121,7 @@
     Object.keys(data.rates).forEach(code => {
       if (!state.rateDates[code]) state.rateDates[code] = fallbackDate;
     });
-    state.source = state.source.indexOf('Frankfurter') >= 0
+    state.source = state.primaryLoaded
       ? 'Frankfurter with ExchangeRate-API coverage fallback'
       : 'ExchangeRate-API daily fallback';
     state.lastUpdated = state.rateDates[state.currency] || fallbackDate;
