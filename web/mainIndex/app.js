@@ -1024,6 +1024,14 @@
             });
             if (wrap.querySelector('input:checked')) wrap.dispatchEvent(new Event('change', { bubbles: true }));
         });
+        window.addEventListener('viora:currency-ready', function () {
+            wrap.querySelectorAll('.calc-tool').forEach(function (label) {
+                var input = label.querySelector('input[data-price]');
+                var price = label.querySelector('.tool-price');
+                if (input && price) price.textContent = fmtKes(Number(input.dataset.price) || 0) + ' one-time';
+            });
+            if (wrap.querySelector('input:checked')) wrap.dispatchEvent(new Event('change', { bubbles: true }));
+        });
 
         requestAnimationFrame(function () {
             update();
