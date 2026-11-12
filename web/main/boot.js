@@ -480,15 +480,13 @@ function wireCoreAndDeferredListeners() {
     let _lastFingerprint = '';
 
     const unsub = onValue(colRef, snap => {
-      if (state.localMutationLock) return;
+      // Always accept authoritative lead snapshots, including while another local write is in flight.
+      if (state.localMutationLock && col !== 'leads') return;
       const val = snap.val() || {};
       const arr = Object.entries(val)
         .map(([k, v]) => ({ ...(v || {}), id: (v && v.id) || k }));
 
-      // Leads can be edited by Outreach without changing collection size.
-      // Fingerprint their actual record fields so same-count edits are not skipped.
-      // The shared lead node can change without changing its record count.
-      // Fingerprint the complete snapshot so every field edit/deletion is observed.
+      // Fingerprint the complete shared lead snapshot so same-count edits are observed.
       const fp = col === 'leads' ? col + ':' + JSON.stringify(arr) : col + ':' + arr.length;
       if (fp === _lastFingerprint) return;
       _lastFingerprint = fp;
