@@ -1959,6 +1959,7 @@ window.setNavMode = setNavMode;
    ═══════════════════════════════════════════════════════════════ */
 const MOBILE_NAV_MAP = {
   exec: { icon: 'fa-crown', label: 'Exec', tabs: [
+    { tab: 'engineering-command', icon: 'fa-microchip', label: 'Engineering' },
     { tab: 'dashboard', icon: 'fa-chart-pie', label: 'Dashboard' },
     { tab: 'profile', icon: 'fa-building', label: 'Profile' },
     { tab: 'global-market', icon: 'fa-earth-africa', label: 'Global' },
