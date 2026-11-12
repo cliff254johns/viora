@@ -28,6 +28,9 @@ jobs:
           FIREBASE_API_KEY: ${{ vars.FIREBASE_API_KEY }}
           FIREBASE_TEST_ID_TOKEN: ${{ secrets.FIREBASE_TEST_ID_TOKEN }}
           FIREBASE_TENANT_B_ID_TOKEN: ${{ secrets.FIREBASE_TENANT_B_ID_TOKEN }}
+          FIREBASE_AUTHZ_PROBE_PATH: ${{ vars.FIREBASE_AUTHZ_PROBE_PATH }}
+          FIREBASE_ADMIN_ID_TOKEN: ${{ secrets.FIREBASE_ADMIN_ID_TOKEN }}
+          FIREBASE_NONADMIN_ID_TOKEN: ${{ secrets.FIREBASE_NONADMIN_ID_TOKEN }}
   dependency-review:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
