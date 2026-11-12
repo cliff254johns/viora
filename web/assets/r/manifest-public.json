@@ -1,6 +1,6 @@
 {
   "id": "./ride.html",
-  "name": "BodaBiz \u2014 Rider & Service Directory",
+  "name": "BodaBiz — Rider & Service Directory",
   "short_name": "BodaBiz",
   "description": "Discover local boda boda riders and services across Kenya.",
   "start_url": "./ride.html",
@@ -11,19 +11,19 @@
   "orientation": "any",
   "icons": [
     {
-      "src": "./icons/icon-192.png",
+      "src": "/viora-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./icons/icon-512.png",
+      "src": "/viora-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "./icons/icon.svg",
+      "src": "/viora-app-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
