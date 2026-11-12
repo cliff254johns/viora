@@ -60,7 +60,7 @@
     wrap.setAttribute('aria-label', 'Install VIORA');
     wrap.style.cssText = 'position:fixed;z-index:10000;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));max-width:440px;margin:0 auto;padding:14px 16px;border:1px solid rgba(120,160,220,.35);border-radius:16px;background:#0A192F;color:#fff;box-shadow:0 12px 40px rgba(0,0,0,.28);display:flex;align-items:center;gap:12px;font:500 14px/1.4 system-ui,sans-serif;';
     var logo = document.createElement('img');
-    logo.src = '/viora-icon-192.png';
+    logo.src = '/viora.png';
     logo.alt = 'VIORA Ecosystems';
     logo.width = 48; logo.height = 48;
     logo.decoding = 'async';
