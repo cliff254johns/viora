@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-12T21:53:24.317Z",
+  "generatedAt": "2026-11-12T22:19:55.887Z",
   "moduleCount": 111,
   "modules": [
     {
@@ -853,7 +853,7 @@
     },
     {
       "file": "web/main/pp.js",
-      "bytes": 67340,
+      "bytes": 67476,
       "imports": [],
       "exports": [
         "initPP",
@@ -1318,7 +1318,7 @@
     },
     {
       "file": "web/mainIndex/app.js",
-      "bytes": 64215,
+      "bytes": 64354,
       "imports": [
         "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js",
         "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js"
@@ -1338,7 +1338,7 @@
     },
     {
       "file": "web/mainIndex/chatbot.js",
-      "bytes": 93342,
+      "bytes": 93575,
       "imports": [
         ", EXTERNAL_KB_URL);\n    const r = await fetch(EXTERNAL_KB_URL, { cache: "
       ],
@@ -1397,7 +1397,7 @@
     },
     {
       "file": "web/mainPublic/public.js",
-      "bytes": 45893,
+      "bytes": 46051,
       "imports": [],
       "exports": [],
       "workerRoutes": []

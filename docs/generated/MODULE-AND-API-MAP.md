@@ -1,6 +1,6 @@
 # Generated module and API map
 
-Generated: 2026-11-12T21:53:24.318Z
+Generated: 2026-11-12T22:19:55.887Z
 
 Modules: 111
 
@@ -399,7 +399,7 @@ Modules: 111
 
 ### web/main/pp.js
 
-- Size: 67340 bytes
+- Size: 67476 bytes
 - Imports: none detected
 - Exports: initPP, PP_DEFAULTS, ppSeedCategoriesAndIndustriesFromV0, PP, bindPPEvents
 - Worker routes: none detected
@@ -555,7 +555,7 @@ Modules: 111
 
 ### web/mainIndex/app.js
 
-- Size: 64215 bytes
+- Size: 64354 bytes
 - Imports: https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js, https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js
 - Exports: none detected
 - Worker routes: none detected
@@ -569,7 +569,7 @@ Modules: 111
 
 ### web/mainIndex/chatbot.js
 
-- Size: 93342 bytes
+- Size: 93575 bytes
 - Imports: , EXTERNAL_KB_URL);
     const r = await fetch(EXTERNAL_KB_URL, { cache: 
 - Exports: none detected
@@ -612,7 +612,7 @@ Modules: 111
 
 ### web/mainPublic/public.js
 
-- Size: 45893 bytes
+- Size: 46051 bytes
 - Imports: none detected
 - Exports: none detected
 - Worker routes: none detected
