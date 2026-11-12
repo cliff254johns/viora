@@ -1089,7 +1089,10 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
         const id = safeKey ? 'market-' + safeKey : 'notif-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
         const db = (typeof firebase !== 'undefined' && firebase.database) ? firebase.database() : null;
         if (!db) return;
-        await db.ref('viora_data/orgs/viora/notifications/' + id).set({
+        const notificationRef = db.ref('viora_data/orgs/viora/notifications/' + id);
+        const existingSnap = await notificationRef.once('value');
+        const existing = existingSnap.val() || {};
+        await notificationRef.set({
           id,
           sourceEventId: eventKey ? 'market:' + safeKey : id,
           title: opts.title || 'VIORA',
@@ -1098,8 +1101,9 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
           level: opts.level || 'info',
           url: opts.url || '/dash.html',
           source: opts.source || 'unknown',
-          ts: new Date().toISOString(),
-          read: false
+          ts: existing.ts || new Date().toISOString(),
+          read: existing.read === true,
+          ...(existing.readAt ? { readAt: existing.readAt } : {})
         });
         return id;
       } catch (e) {
