@@ -2560,7 +2560,7 @@ setInterval(() => {
    ═══════════════════════════════════════════════════════════════ */
 window.VioraHome = { S, renderAll, openOrderModal, openCategoryModal };
 window.addEventListener('viora:currency-ready', () => { const fx=window.VioraCurrency; const rate=fx&&fx.convert(1,'USD','KES'); if(Number.isFinite(rate)&&rate>0)KES_RATE=rate; try{renderAll();}catch(e){console.warn('[VIORA currency] Homepage refresh skipped:',e);} });
-if(window.VioraCurrency?.getState().ready){const rate=window.VioraCurrency.convert(1,'USD','KES');if(Number.isFinite(rate)&&rate>0)KES_RATE=rate;}
+if(window.VioraCurrency?.state?.ready){const rate=window.VioraCurrency.convert(1,'USD','KES');if(Number.isFinite(rate)&&rate>0)KES_RATE=rate;}
 if (typeof window.App !== 'object' || !window.App) window.App = {};
 window.App.openOrderModal = openOrderModal;
 window.App.openCategoryModal = openCategoryModal;
