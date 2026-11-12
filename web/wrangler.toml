@@ -21,8 +21,8 @@ class_name = "TranslationRateLimiter"
 tag = "v1"
 new_sqlite_classes = ["TranslationRateLimiter"]
 
-# Worker Previews use isolated Durable Object storage and the preview AI binding.
-previews = { }
+# Workers Builds invokes wrangler preview; this must be a top-level table.
+[previews]
 
 [previews.ai]
 binding = "AI"
