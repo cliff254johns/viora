@@ -7,15 +7,16 @@ permissions:
   contents: read
 jobs:
   chromium:
-    if: ${{ vars.VIORA_E2E_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: {node-version: "22"}
-      - run: npm install --ignore-scripts
+      - name: Install project dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund --legacy-peer-deps
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
+      - name: Run browser, accessibility and mobile layout checks
+        run: npm run test:e2e
         env:
           VIORA_BASE_URL: https://viora.co.ke
           VIORA_TEST_EMAIL: ${{ secrets.VIORA_TEST_EMAIL }}
