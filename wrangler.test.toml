@@ -1,0 +1,11 @@
+name = "viora-durable-object-tests"
+main = "./web/worker.js"
+compatibility_date = "2026-11-12"
+
+[[durable_objects.bindings]]
+name = "TRANSLATION_RATE_LIMITER"
+class_name = "TranslationRateLimiter"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["TranslationRateLimiter"]
