@@ -1052,7 +1052,10 @@ function _notifSignature(list) {
 
 export function renderNotifications() {
   try {
-    const list = buildNotifications();
+    const derived = buildNotifications();
+    const central = (typeof _dnState !== 'undefined' && Array.isArray(_dnState.persisted))
+      ? _dnState.persisted : [];
+    const list = _dnDedupe([...central, ...derived]);
     const sig = _notifSignature(list);
     if (sig === _notifSig.list) return;
     _notifSig.list = sig;
@@ -1093,7 +1096,8 @@ export function renderNotifications() {
           const t = n.time;
           const isIsoDate = typeof t === 'string' && t.length >= 10 && t.charCodeAt(4) === 45;
           const timeHtml = isIsoDate ? callOr('timeAgo', t, t) : (t || '');
-          return `<div class="notif-item ${n.type}" data-page="${q(n.page)}">
+          return `<div class="notif-item ${n.type}" data-page="${q(n.page)}"
+            data-notif-id="${E(n.id || '')}" data-notif-source="${E(n.source || 'derived')}">
             <div class="ni-icon"><i class="fas ${n.icon}"></i></div>
             <div class="ni-body">
               <div class="ni-title">${E(n.title)}</div>
@@ -1111,7 +1115,11 @@ export function renderNotifications() {
           const item = e.target.closest('.notif-item');
           if (!item) return;
           const page = item.dataset.page;
-          if (page && window.Viora?.navigate) window.Viora.navigate(page);
+          if (item.dataset.notifSource === 'persisted' && item.dataset.notifId) {
+            _dnMarkRead(item.dataset.notifId).catch(() => {});
+          }
+          if (page && /^https?:\/\//i.test(page)) window.open(page, '_blank', 'noopener');
+          else if (page && window.Viora?.navigate) window.Viora.navigate(page);
           const dd = refs().notifDropdown;
           if (dd) dd.classList.remove('show');
         });
@@ -1274,6 +1282,7 @@ async function _dnMarkRead(id) {
     const item = _dnState.persisted.find(n => n.id === id);
     if (item) item.read = true;
     renderDashboardNotifications();
+    renderNotifications();
   } catch (e) {
     if (e && e.code !== 'PERMISSION_DENIED') console.warn('[dn] mark read failed', e);
   }
@@ -1311,6 +1320,7 @@ function _dnSubscribe() {
     list.sort((a, b) => String(b.time || '').localeCompare(String(a.time || '')));
     _dnState.persisted = list.slice(0, 200);
     renderDashboardNotifications();
+    renderNotifications();
   };
 
   try {
