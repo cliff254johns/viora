@@ -485,7 +485,11 @@ function wireCoreAndDeferredListeners() {
       const arr = Object.entries(val)
         .map(([k, v]) => ({ ...(v || {}), id: (v && v.id) || k }));
 
-      const fp = col + ':' + arr.length;
+      // Leads can be edited by Outreach without changing collection size.
+      // Fingerprint their actual record fields so same-count edits are not skipped.
+      const fp = col === 'leads'
+        ? col + ':' + arr.map(x => [x.id,x.updatedAt,x._updatedAt,x.email,x.status,x.fullName,x.company,x.city,x.country,x.notes].join('~')).join('|')
+        : col + ':' + arr.length;
       if (fp === _lastFingerprint) return;
       _lastFingerprint = fp;
 
@@ -495,7 +499,11 @@ function wireCoreAndDeferredListeners() {
          This was causing the HR table to render empty while the
          counter (which reads the state proxy fresh each call) showed
          the correct count. */
-      if (col === 'tasks') {
+      if (col === 'leads') {
+        // This node is the shared source of truth for Main CRM and Outreach.
+        // Replace the snapshot so remote deletions and edits are reflected too.
+        state.data.leads = arr;
+      } else if (col === 'tasks') {
         const existing = new Map((state.data.tasks || []).map(t => [t.id, t]));
         arr.forEach(t => existing.set(t.id, t));
         state.data.tasks = Array.from(existing.values());
