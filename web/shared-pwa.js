@@ -47,7 +47,9 @@
     }, { once: true });
   }
 
-  if (installed) return;
+  // The install invitation is intentionally reserved for the main VIORA workspace.
+  var isMainApp = /\\/main(?:\\.html)?\\/?$/.test(location.pathname);
+  if (installed || !isMainApp) return;
 
   var deferredPrompt = null;
   var dismissed = false;
