@@ -163,13 +163,15 @@ async function _refreshAllStats() {
         _notify(
           'Spike detected',
           `${post.caption?.slice(0, 60) || 'Post'} on ${post.platform} — ${a.multiple.toFixed(1)}x median engagement.`,
-          'success'
+          'success',
+          post.id + '-spike'
         );
       } else if (a.type === 'drop') {
         _notify(
           'Engagement drop',
           `${post.caption?.slice(0, 60) || 'Post'} on ${post.platform} — ${(a.multiple).toFixed(2)}x median engagement.`,
-          'warning'
+          'warning',
+          post.id + '-drop'
         );
       }
       dirty = true;
@@ -197,10 +199,10 @@ async function _refreshAllStats() {
   }
 }
 
-function _notify(title, body, level) {
+function _notify(title, body, level, eventId) {
   try {
     if (typeof window.vioraNotify === 'function') {
-      window.vioraNotify({ title, body, level, icon: 'fa-chart-line', source: 'campaign-cron' });
+      window.vioraNotify({ title, body, level, icon: 'fa-chart-line', source: 'campaign-cron', eventId });
     }
   } catch (_) {}
 }
