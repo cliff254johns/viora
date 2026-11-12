@@ -22,7 +22,10 @@ tag = "v1"
 new_sqlite_classes = ["TranslationRateLimiter"]
 
 # Worker Previews use isolated Durable Object storage and the preview AI binding.
-previews = { ai = { binding = "AI" } }
+previews = { }
+
+[previews.ai]
+binding = "AI"
 
 [[previews.durable_objects.bindings]]
 name = "TRANSLATION_RATE_LIMITER"
