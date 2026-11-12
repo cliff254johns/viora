@@ -1301,7 +1301,7 @@ function renderContact() {
   const sub = $('#contact-sub');
 
   if (email && c.email) { email.textContent = c.email; email.href = 'mailto:' + c.email; }
-  if (wa && c.whatsapp) { wa.href = `https://wa.me/${c.whatsapp}`; }
+  if (wa) { wa.href = 'https://wa.me/254713428774'; }
   if (hours && c.hours) hours.textContent = c.hours;
   if (h && c.heading) h.textContent = c.heading;
   if (sub && c.sub) sub.textContent = c.sub;
