@@ -121,6 +121,7 @@
     return converted == null ? formatAmount(Number(amount) / 129, 'USD') : formatAmount(converted, state.currency);
   }
   function announce() {
+    if (!(Number(state.rates[state.currency]) > 0)) { state.currency = 'USD'; state.source = 'USD fallback (local FX rate unavailable)'; }
     state.ready = true;
     const detail = {
       countryCode: state.countryCode,
