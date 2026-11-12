@@ -1168,9 +1168,11 @@ function _dnDedupe(merged) {
       String(n.sub || '').toLowerCase().replace(/\\s+/g, ' ').trim(),
       String(n.page || '').trim()
     ].join('|');
-    const key = explicit ? 'event:' + String(explicit) : 'content:' + semantic;
-    if (seen.has(key)) continue;
-    seen.add(key);
+    const eventKey = explicit ? 'event:' + String(explicit) : '';
+    const contentKey = 'content:' + semantic;
+    if ((eventKey && seen.has(eventKey)) || seen.has(contentKey)) continue;
+    if (eventKey) seen.add(eventKey);
+    seen.add(contentKey);
     out.push(n);
   }
   return out;
@@ -1293,7 +1295,9 @@ function _dnSubscribe() {
         title: n.title || 'Notification',
         sub: n.body || '',
         time: n.ts || '',
-        page: n.url && n.url.startsWith('#') ? n.url.slice(1) : (n.page || ''),
+        page: n.url
+          ? (n.url.startsWith('#') ? n.url.slice(1) : n.url)
+          : (n.page || ''),
         read: !!n.read,
       });
     }
