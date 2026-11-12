@@ -1255,10 +1255,10 @@ export function renderDashboardNotifications() {
       if (source === 'persisted' && id) {
         _dnMarkRead(id).catch(() => {});
       }
-      if (page && window.Viora?.navigate) {
-        window.Viora.navigate(page);
-      } else if (page && /^https?:\/\//i.test(page)) {
+      if (page && /^https?:\/\//i.test(page)) {
         window.open(page, '_blank', 'noopener');
+      } else if (page && window.Viora?.navigate) {
+        window.Viora.navigate(page);
       }
     });
     grid.addEventListener('keydown', (e) => {
@@ -1311,9 +1311,15 @@ function _dnSubscribe() {
         title: n.title || 'Notification',
         sub: n.body || '',
         time: n.ts || '',
-        page: n.url
-          ? (n.url.startsWith('#') ? n.url.slice(1) : n.url)
-          : (n.page || ''),
+        page: (() => {
+          const target = String(n.url || '');
+          if (!target) return n.page || '';
+          if (target.startsWith('#')) return target.slice(1);
+          if (target.startsWith('/main.html#')) return target.slice(target.indexOf('#') + 1);
+          if (target === '/main.html') return 'dashboard';
+          if (target.startsWith('/')) return window.location.origin + target;
+          return target;
+        })(),
         read: !!n.read,
       });
     }
