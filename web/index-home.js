@@ -255,7 +255,7 @@ function renderIntentRouter() {
   if (!host) return;
   const tiles = S.homeContent?.intentTiles || [
     { title: 'Explore the ecosystem', desc: '45+ solutions across 35 industries', href: '#tour', icon: 'fa-layer-group' },
-    { title: 'Browse products', desc: 'Instant KES pricing, delivered live', href: '/market', icon: 'fa-store' },
+    { title: 'Browse products', desc: 'Local-currency pricing, updated daily', href: '/market', icon: 'fa-store' },
     { title: 'Subscribe to a plan', desc: 'Manage your subscription and invoices', href: '/client', icon: 'fa-crown' },
     { title: 'Training academy', desc: 'Courses, checklists, certificates', href: '/training', icon: 'fa-graduation-cap' },
   ];
