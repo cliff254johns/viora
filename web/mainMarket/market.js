@@ -526,7 +526,7 @@ const App = {
     setTxt('footerBrand', c.brandName ? c.brandName + ' Marketplace' : DEFAULTS.brandName + ' Marketplace');
     setTxt('footerText', val('footerText', DEFAULTS.footerText));
 
-    const waNumber = c.whatsApp || DEFAULTS.whatsApp;
+    const waNumber = '254713428774'; // Verified VIORA WhatsApp Business line.
     if (waNumber) {
       const wa = document.getElementById('whatsappFloat');
       const fwa = document.getElementById('footerWhatsApp');
@@ -1287,7 +1287,7 @@ const heroVisual = (p.image && String(p.image).trim())
 
   openWhatsAppQuote(productId) {
     const p = this.products.find(x => x.id === productId);
-    const wa = (this.content && this.content.whatsApp) || DEFAULTS.whatsApp;
+    const wa = '254713428774'; // Verified VIORA WhatsApp Business line.
     const msg = p ? `Hi Viora, I'm interested in "${p.name}". Can we discuss a custom build for my business?` : `Hi Viora, I'd like to discuss a custom build.`;
     window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
   },
@@ -2528,6 +2528,7 @@ function refreshLocalCurrencyLabels(){
   const budget=document.getElementById('quoteBudget');
   if(budget){[['under-20k','Under '+fx.format(20000,'KES')],['20k-50k',fx.format(20000,'KES')+' – '+fx.format(50000,'KES')],['50k-150k',fx.format(50000,'KES')+' – '+fx.format(150000,'KES')],['150k-500k',fx.format(150000,'KES')+' – '+fx.format(500000,'KES')],['over-500k','Over '+fx.format(500000,'KES')]].forEach(([value,label])=>{const option=budget.querySelector('option[value="'+value+'"]');if(option)option.textContent=label;});}
   const budgetLabel=document.querySelector('label[for="quoteBudget"]');if(budgetLabel)budgetLabel.textContent='Budget Range ('+(state.currency||'USD')+' estimate) *';
+  const heroSub=document.getElementById('heroSub');if(heroSub)heroSub.innerHTML='Instant access to premium software tools — prices displayed in '+String(state.currency||'USD')+' using daily reference rates.';
 }
 window.addEventListener('viora:currency-ready', () => {
   refreshLocalCurrencyLabels();
