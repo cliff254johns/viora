@@ -374,7 +374,8 @@ async function sendToUid(uidKey, title, body, data = {}) {
           title, body,
           level: 'info',
           url: data?.url || '/main.html',
-          source: 'push-fallback'
+          source: 'push-fallback',
+          eventId: data?.eventId || data?.id || (uidKey + '-' + title)
         });
         if (r && typeof r.then === 'function') await r;
         notified = true;
