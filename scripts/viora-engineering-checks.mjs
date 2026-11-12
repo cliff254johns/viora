@@ -9,8 +9,10 @@ const wrangler = read('web/wrangler.toml');
 const command = read('web/engineering-command-centre.js');
 const chatbot = read('web/mainIndex/chatbot.js');
 const dpa = read('web/dpa.html');
+const staticWorker = read('workers/viora-static-next/worker.js');
+const staticConfig = read('workers/viora-static-next/wrangler.toml');
 
-for (const path of ['web/manifest.webmanifest','web/main.webmanifest']) {
+for (const path of ['web/manifest.webmanifest','web/main.webmanifest','web/manifest.json','web/campaigns.webmanifest']) {
   const manifest = JSON.parse(read(path));
   assert.ok(manifest.icons.some(i => i.src === '/viora-icon-192.png' && i.sizes === '192x192'), path+' missing 192 PNG icon');
   assert.ok(manifest.icons.some(i => i.src === '/viora-icon-512.png' && i.sizes === '512x512'), path+' missing 512 PNG icon');
@@ -45,6 +47,10 @@ assert.ok(chatbot.includes('progressiveSpeech?.push(acc)'), 'stream tokens not c
 assert.ok(chatbot.includes('await progressiveSpeech.finish(full)'), 'progressive voice queue not flushed');
 
 assert.ok(dpa.includes('forty-eight (48) hours'), 'Kenya processor 48-hour notice not present');
+assert.ok(staticWorker.includes('env.ASSETS.fetch(request)'), 'new static Worker does not serve repository assets');
+assert.ok(staticWorker.includes('env.LEGACY.fetch(request)'), 'new static Worker does not preserve legacy fallback');
+assert.ok(staticConfig.includes('../../web'), 'static Worker is not configured to deploy the complete web directory');
+assert.ok(fs.existsSync('docs/VIORA-CLOUDFLARE-DEPLOYMENT.md'), 'missing Cloudflare deployment runbook');
 for (const p of [
   'docs/VIORA-ENGINEERING-DEEP-AUDIT-2026-11-12.md',
   'docs/compliance/VIORA-DATA-PROTECTION-GOVERNANCE.md',
