@@ -441,8 +441,21 @@ body:has(#weatherLocationModal.active){overflow:hidden!important}
   .data-table-wrap tbody,.table-container tbody,.table-wrap tbody{
     min-height:0;
   }
-  .main-content,.tab-content,.dashboard-section{
+  /* The main-content element is the mobile scroll viewport. Never let the
+     generic tab reset turn its overflow back to visible: that disables
+     scrolling and leaves the final content underneath the fixed nav. */
+  .main-content{
     min-height:0!important;
-    overflow-y:visible;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    padding-bottom:calc(148px + env(safe-area-inset-bottom,0px))!important;
+    -webkit-overflow-scrolling:touch!important;
+    overscroll-behavior-y:contain;
+    touch-action:pan-y;
+    scroll-padding-bottom:calc(148px + env(safe-area-inset-bottom,0px));
+  }
+  .tab-content,.dashboard-section{
+    min-height:0!important;
+    overflow:visible;
   }
 }
