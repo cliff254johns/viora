@@ -25,7 +25,7 @@
 
   var deferredPrompt = null;
   var dismissed = false;
-  try { dismissed = sessionStorage.getItem('viora-install-dismissed') === '1'; } catch (_) {}
+  try { dismissed = localStorage.getItem('viora-install-dismissed') === '1'; } catch (_) {}
 
   function createPrompt() {
     if (dismissed || document.getElementById('vioraInstallPrompt')) return;
@@ -33,6 +33,12 @@
     wrap.id = 'vioraInstallPrompt';
     wrap.setAttribute('aria-label', 'Install VIORA');
     wrap.style.cssText = 'position:fixed;z-index:10000;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));max-width:440px;margin:0 auto;padding:14px 16px;border:1px solid rgba(120,160,220,.35);border-radius:16px;background:#0A192F;color:#fff;box-shadow:0 12px 40px rgba(0,0,0,.28);display:flex;align-items:center;gap:12px;font:500 14px/1.4 system-ui,sans-serif;';
+    var logo = document.createElement('img');
+    logo.src = '/viora-icon-192.png';
+    logo.alt = 'VIORA Ecosystems';
+    logo.width = 48; logo.height = 48;
+    logo.decoding = 'async';
+    logo.style.cssText = 'width:48px;height:48px;flex:0 0 48px;object-fit:contain;border-radius:12px;background:#fff;padding:3px';
     var copy = document.createElement('div');
     copy.style.cssText = 'flex:1;min-width:0';
     var title = document.createElement('strong');
@@ -50,7 +56,7 @@
     close.style.cssText = 'border:0;background:transparent;color:#cbd5e1;font-size:22px;padding:2px 4px;cursor:pointer';
     close.addEventListener('click', function () {
       dismissed = true;
-      try { sessionStorage.setItem('viora-install-dismissed','1'); } catch (_) {}
+      try { localStorage.setItem('viora-install-dismissed','1'); } catch (_) {}
       wrap.remove();
     });
     install.addEventListener('click', async function () {
@@ -64,7 +70,7 @@
       deferredPrompt = null;
       wrap.remove();
     });
-    wrap.appendChild(copy); wrap.appendChild(install); wrap.appendChild(close);
+    wrap.appendChild(logo); wrap.appendChild(copy); wrap.appendChild(install); wrap.appendChild(close);
     document.body.appendChild(wrap);
   }
 
