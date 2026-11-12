@@ -2519,9 +2519,18 @@ const heroVisual = (p.image && String(p.image).trim())
 };
 
 window.App = App;
+function refreshLocalCurrencyLabels(){
+  const fx=window.VioraCurrency;if(!fx)return;
+  const state=fx.state||{},note=document.getElementById('currencyNote');
+  if(note)note.innerHTML='<i class="fa-solid fa-coins"></i> Prices shown in '+String(state.currency||'USD')+' using daily reference rates · Checkout records remain in KES';
+  const select=document.getElementById('priceFilter');
+  if(select){[['under-2k','Under '+fx.format(2000,'KES')],['2k-5k',fx.format(2000,'KES')+' – '+fx.format(5000,'KES')],['5k-10k',fx.format(5000,'KES')+' – '+fx.format(10000,'KES')],['over-10k','Over '+fx.format(10000,'KES')]].forEach(([value,label])=>{const option=select.querySelector('option[value="'+value+'"]');if(option)option.textContent=label;});}
+}
 window.addEventListener('viora:currency-ready', () => {
+  refreshLocalCurrencyLabels();
   try { App.renderFeatured(); App.renderProducts(); App.renderCarousel(); App.renderCart(); } catch (e) { console.warn('[market] currency refresh render skipped:', e); }
 });
+if(window.VioraCurrency?.state?.ready)refreshLocalCurrencyLabels();
 
 let _appInitialized = false;
 function bootMarket() {
