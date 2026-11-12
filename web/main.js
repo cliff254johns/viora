@@ -3512,6 +3512,28 @@ function startApp() {
         app, db, ref, set, ROOT,
         state, toast, callFn, $,
       });
+      const deviceAlertsButton = $('vioraPushEnable');
+      if (deviceAlertsButton && !deviceAlertsButton.dataset.bound) {
+        deviceAlertsButton.dataset.bound = '1';
+        const refreshDeviceAlertsLabel = () => {
+          const permission = typeof Notification !== 'undefined' ? Notification.permission : 'unsupported';
+          deviceAlertsButton.innerHTML = permission === 'granted'
+            ? '<i class="fa-solid fa-bell"></i> Device alerts enabled'
+            : permission === 'denied'
+              ? '<i class="fa-solid fa-bell-slash"></i> Alerts blocked in browser'
+              : '<i class="fa-solid fa-bell"></i> Enable device alerts';
+          deviceAlertsButton.disabled = permission === 'unsupported' || permission === 'denied';
+          deviceAlertsButton.title = permission === 'denied'
+            ? 'Allow notifications for viora.co.ke in your browser or device settings'
+            : 'Enable notifications for this browser and installed PWA';
+        };
+        deviceAlertsButton.addEventListener('click', async () => {
+          deviceAlertsButton.disabled = true;
+          try { await PushNotifications.requestPermission(); }
+          finally { refreshDeviceAlertsLabel(); }
+        });
+        refreshDeviceAlertsLabel();
+      }
     } catch (e) { console.error('[viora] initPushNotifications:', e); }
 
     // 20. Smart import
