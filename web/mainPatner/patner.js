@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getDatabase, ref, onValue, set, push, remove, update, onDisconnect, goOnline, goOffline } from "firebase/database";
+import { getDatabase, ref, get, onValue, set, push, remove, update, onDisconnect, goOnline, goOffline } from "firebase/database";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
 import { publishVioraEvent } from "../shared/notification-bus.js";
 
@@ -405,7 +405,7 @@ async function logHistory(action, entity, entityId, title, details = {}) {
   const entry = { id: uid(), uid: state.user.uid, action, entity, entityId: String(entityId || ''), title: String(title || '').slice(0, 200), details, ts: Date.now() };
   await safeSet(`history/${entry.id}`, entry);
   const important = (action === 'create' && ['task','todo','goal','event','expense','savings','subscription','handoff'].includes(entity)) || (action === 'complete' && ['task','todo','goal','activity','handoff'].includes(entity)) || (action === 'assign' && ['task','handoff'].includes(entity));
-  if (important) { const verb = action === 'create' ? 'created' : action === 'complete' ? 'completed' : 'assigned'; await publishVioraEvent({ db, ref, set, eventId: entry.id, source: 'partner-portal', category: 'operations', title: 'Partner workspace: ' + verb + ' ' + entity, body: (state.profile?.name || state.user.email || 'A partner') + ' ' + verb + ' ' + String(title || entity).slice(0, 140) + '.', url: '/patner.html', icon: entity === 'expense' ? 'fa-receipt' : entity === 'handoff' ? 'fa-people-arrows-left-right' : 'fa-list-check', actorUid: state.user.uid }); }
+  if (important) { const verb = action === 'create' ? 'created' : action === 'complete' ? 'completed' : 'assigned'; await publishVioraEvent({ db, ref, set, get, eventId: entry.id, source: 'partner-portal', category: 'operations', title: 'Partner workspace: ' + verb + ' ' + entity, body: (state.profile?.name || state.user.email || 'A partner') + ' ' + verb + ' ' + String(title || entity).slice(0, 140) + '.', url: '/patner.html', icon: entity === 'expense' ? 'fa-receipt' : entity === 'handoff' ? 'fa-people-arrows-left-right' : 'fa-list-check', actorUid: state.user.uid }); }
   state.history = state.history || {};
   state.history[entry.id] = entry;
   const cnt = Object.keys(state.history).length;
