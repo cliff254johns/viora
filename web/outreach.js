@@ -10,7 +10,7 @@ const ORG='viora_data/orgs/viora',ROOT=ORG+'/outreach',API='https://viora-api.cl
 let currentUser=null,currentRole='',leads={},emails={},editingId=null,stopLeads=null,stopEmails=null,charts={},worldMap=null,worldMarkers=null,worldHeat=null,mapRenderToken=0;
 const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const stamp=()=>new Date().toISOString(),today=()=>new Date().toISOString().slice(0,10);
-const values=o=>Object.values(o||{}),leadList=()=>values(leads),emailList=()=>values(emails);
+const values=o=>Object.values(o||{}),leadList=()=>values(leads).map(l=>({...l,company:l.company||l.fullName||'Unnamed lead',contact:l.contact||l.fullName||'',category:l.category||'Lead',status:l.status||'New'})),emailList=()=>values(emails);
 function status(id,msg,bad=false){const el=$(id);if(!el)return;el.textContent=msg;el.style.color=bad?'var(--red)':'var(--muted)';}
 function toast(message,bad=false){const el=document.createElement('div');el.className='toast'+(bad?' error':'');el.textContent=message;$('toastRegion').append(el);setTimeout(()=>el.remove(),4200);}
 function busy(id,on,label){const b=$(id);if(!b)return;b.disabled=on;if(label){b.dataset.original=b.dataset.original||b.innerHTML;b.innerHTML=on?'<i class="fa-solid fa-circle-notch fa-spin"></i> '+label:b.dataset.original;}}
