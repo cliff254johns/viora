@@ -1,7 +1,7 @@
 # VIORA Firebase backup and restore runbook
 
 ## Backup pipeline
-The scheduled GitHub Actions workflow exports the Firebase Realtime Database with a dedicated Admin SDK service identity, encrypts the snapshot using AES-256-GCM before upload, and stores it in a private Cloudflare R2 bucket. The encryption key is independent of R2 credentials.
+The scheduled GitHub Actions workflow exports the Firebase Realtime Database with a dedicated Admin SDK service identity, encrypts the snapshot using AES-256-GCM before upload, and stores daily recovery points plus a monthly point on the first day of each month in a private Cloudflare R2 bucket. A retention job deletes daily objects older than 35 days and monthly objects older than 365 days. The encryption key is independent of R2 credentials.
 
 ## Required GitHub configuration
 Repository variables: `FIREBASE_DATABASE_URL`, `R2_ACCOUNT_ID`, `R2_BACKUP_BUCKET`.
