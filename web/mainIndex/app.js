@@ -508,7 +508,7 @@
             product: "Digital products, physical catalogue, and marketplace listings. Manage SKUs, variants, and delivery across every channel.",
             youtube: "Video hub for brand stories, tutorials, and community content. Embed playlists, track engagement, monetise attention.",
             presentation: "Interactive demos and live product tours for sales teams. Walk a client through exactly what they'll get, on any device.",
-            finance: "Real-time P&L, cash-flow forecasting, multi-currency ledgers, automated bank and M-Pesa reconciliation, VAT/PAYE/NSSF/SHIF/Housing Levy computation, eTIMS-ready invoices, and board-ready reports. The Finance portal reads from the same ledger every other portal writes to — so there's never a double entry."
+            finance: "Financial dashboards, invoicing and business reporting connected to the shared data core. Currency, tax, statutory payroll, bank feeds, M-Pesa reconciliation and e-invoicing depend on each customer's country, provider credentials and verified configuration; confirm enabled integrations before relying on them."
         };
 
         trackEl.innerHTML = cards.map(function (c, i) {
@@ -600,8 +600,8 @@
         var tiles = [
             { ico: '📶', h: 'Offline-first', p: 'Keep working through blackouts. Everything syncs the moment you\'re back online.' },
             { ico: '📱', h: 'Installable PWA', p: 'Add to home screen on any Android or iPhone. Native-feel, no app store needed.' },
-            { ico: '💚', h: 'M-Pesa Daraja', p: 'STK push, C2B and B2C with automatic reconciliation against your ledger.' },
-            { ico: '🧾', h: 'KRA eTIMS-ready', p: 'Compliant invoices, credit notes and statutory reports generated automatically.' },
+            { ico: '💚', h: 'M-Pesa Daraja integration', p: 'Configurable integration; live collections require provider credentials, verified callbacks and end-to-end reconciliation tests.' },
+            { ico: '🧾', h: 'Tax & e-invoicing integrations', p: 'Tax rules and fiscalisation depend on jurisdiction; authority integrations must be configured and verified before compliance claims.' },
             { ico: '💰', h: 'Finance portal', p: 'Real-time P&L, cash-flow forecasting, multi-currency ledgers, tax compliance.' },
             { ico: '🤖', h: 'Groq AI engine', p: 'Recommendations on pricing, stock, collections and staffing — on your live data.' },
             { ico: '🔐', h: 'Roles & audit logs', p: 'Granular permissions, 2FA, encrypted at rest, and a full who-did-what trail.' },
