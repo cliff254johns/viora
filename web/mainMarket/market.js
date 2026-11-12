@@ -54,7 +54,7 @@ const DEFAULTS = {
   floatChips: [
     { icon: 'fa-solid fa-circle-check', text: 'Instant delivery' },
     { icon: 'fa-solid fa-star', text: '4.9/5 rating' },
-    { icon: 'fa-solid fa-shield-halved', text: 'Secure M-Pesa' }
+    { icon: 'fa-solid fa-shield-halved', text: 'Secure checkout' }
   ],
   featuredLabel: 'Most Popular',
   featuredProductId: '',
@@ -81,7 +81,7 @@ const DEFAULTS = {
   footerEmail: 'support@viora.co.ke',
   productsSubtitle: 'Our Catalog',
   productsHeading: 'Product Collection',
-  productsDesc: 'Browse by category or search. Add items to cart, then checkout securely with M-Pesa.',
+  productsDesc: 'Browse by category or search. Add items to cart, then choose an available payment method at checkout.',
   carouselSubtitle: 'Browse the Collection',
   carouselHeading: 'Featured Products',
   carouselDesc: 'Swipe or scroll through our catalog. Click any product to see details or add it to your cart.',
@@ -490,7 +490,10 @@ const App = {
       }
     }
 
-    const steps = Array.isArray(c.steps) && c.steps.length ? c.steps : DEFAULTS.steps;
+    const rawSteps = Array.isArray(c.steps) && c.steps.length ? c.steps : DEFAULTS.steps;
+    const steps = rawSteps.map(step => (/pay in ksh|pay in kes/i.test(String(step.title || '')) || /payment is confirmed instantly/i.test(String(step.body || '')))
+      ? { ...step, title: 'Choose a payment method', body: 'Local-currency prices are indicative. Available payment methods and final settlement details are confirmed at checkout.' }
+      : step);
     this.renderSteps(steps);
 
     setTxt('productsSubtitle', val('productsSubtitle', DEFAULTS.productsSubtitle));
