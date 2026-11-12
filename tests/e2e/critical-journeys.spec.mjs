@@ -5,6 +5,7 @@ test('public homepage passes serious/critical WCAG axe checks',async({page})=>{
  await page.goto('/');await expect(page.locator('body')).toBeVisible();
  const results=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']).analyze();
  const serious=results.violations.filter(v=>['critical','serious'].includes(v.impact));
+ console.log('VIORA_AXE_DETAILS',JSON.stringify(serious.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>({target:n.target,html:n.html,summary:n.failureSummary}))}))));
  expect(serious.map(v=>({id:v.id,help:v.help,nodes:v.nodes.length}))).toEqual([]);
 });
 test('exec/admin signs in and opens Engineering Command Centre and Visuals',async({page})=>{
