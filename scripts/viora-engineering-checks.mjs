@@ -16,22 +16,8 @@ const embeddedAssets = read('workers/viora-static-next/assets.generated.js');
 
 for (const path of ['web/manifest.webmanifest','web/main.webmanifest','web/manifest.json','web/campaigns.webmanifest','web/assets/r/manifest-public.json','web/assets/r/manifest-rider.json','web/assets/r/manifest-admin.json']) {
   const manifest = JSON.parse(read(path));
-  assert.ok(manifest.icons.some(i => i.src === '/viora-icon-192.png' && i.sizes === '192x192'), path+' missing 192 PNG icon');
-  assert.ok(manifest.icons.some(i => i.src === '/viora-icon-512.png' && i.sizes === '512x512'), path+' missing 512 PNG icon');
-}
-assert.ok(main.includes('href="/main.webmanifest"'), 'main PWA manifest missing');
-assert.ok(main.includes('href="/viora-icon-192.png"'), 'main branded favicon missing');
-assert.ok(main.includes('src="/shared-pwa.js"'), 'main shared PWA bootstrap missing');
-assert.ok(sharedPwa.includes("logo.src = '/viora-icon-192.png'"), 'PWA install prompt is missing the VIORA company logo');
-assert.ok(sharedPwa.includes('function ensureCompanyIcons()'), 'shared PWA favicon enforcement is missing');
-assert.ok(sharedPwa.includes("location.pathname === '/main' || location.pathname === '/main.html'"), 'install invitation must be limited to the main workspace');
-assert.ok(sharedPwa.includes("'/viora-app-icon.svg'"), 'shared PWA SVG favicon is missing');
-assert.ok(sharedPwa.includes("'/viora-icon-192.png'"), 'shared PWA PNG/touch icon is missing');
-assert.ok(sharedPwa.includes("localStorage.getItem('viora-install-dismissed')"), 'PWA install dismissal must persist across sessions');
-for (const [path, expected] of [['web/viora-icon-192.png',192],['web/viora-icon-512.png',512]]) {
-  const png=fs.readFileSync(path);
-  assert.equal(png.readUInt32BE(16),expected,path+' width mismatch');
-  assert.equal(png.readUInt32BE(20),expected,path+' height mismatch');
+  assert.ok(manifest.icons.some(i => i.src === '/viora.png' && i.type === 'image/png'), path+' missing canonical /viora.png app icon');
+  assert.equal(manifest.icons.length, 1, path+' must use only the canonical VIORA logo');
 }
 
 assert.ok(main.includes('data-tab="engineering-command"'), 'main sidebar link missing');
