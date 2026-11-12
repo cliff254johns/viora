@@ -1,35 +1,36 @@
 /* VIORA Industry Marketplace — live category-matched products for standalone industry pages. */
 const VIORA_INDUSTRY_MARKET={
-  retail:{label:"Retail & Wholesale",category:"retail_trade",terms:["retail","trade","commerce","pos","inventory","wholesale","hardware","shop"]},
-  healthcare:{label:"Healthcare",category:"health_wellness",terms:["health","healthcare","medical","clinic","diagnostic","laboratory","hospital","wellness"]},
-  hospitality:{label:"Hospitality",category:"hospitality",terms:["hospitality","hotel","tourism","restaurant","food","beverage","laundry","butchery"]},
-  education:{label:"Education",category:"education",terms:["education","training","school","academy","learning","student"]},
-  logistics:{label:"Transport & Logistics",category:"transport_logi",terms:["transport","logistics","fleet","delivery","courier","supply chain"]},
-  "professional-services":{label:"Professional Services",category:"prof_services",terms:["professional","legal","accounting","consulting","advisory","law","finance"]},
-  agriculture:{label:"Agriculture",category:"agri_farming",terms:["agriculture","farming","agri","farm","livestock","greenhouse"]}
+  retail:{label:"Retail & Wholesale",categories:["retail & wholesale systems","fashion & apparel systems"],nameTerms:["retail","wholesale","shop management","pos system","boutique","hardware management","butchery","fashion house"]},
+  healthcare:{label:"Healthcare",categories:["clinic systems","hospital systems","pharmacy systems"],nameTerms:["clinic","hospital","pharmacy","diagnostic","healthcare"]},
+  hospitality:{label:"Hospitality",categories:["hotel & guest house systems","restaurant & catering systems","laundry & dry cleaning systems","clubs & entertainment systems"],nameTerms:["hotel","guest house","restaurant","catering","laundry","club management"]},
+  education:{label:"Education",categories:["school systems"],nameTerms:["school management","campus connect","student management","academy"]},
+  logistics:{label:"Transport & Logistics",categories:[],nameTerms:["boda riders","salama movers","fleet management","transport management","logistics management","delivery management"]},
+  "professional-services":{label:"Professional Services",categories:["professional practice systems"],nameTerms:["law firm management","professional services automation","legal practice","professional advisory"]},
+  agriculture:{label:"Agriculture",categories:["farm systems","greenhouse systems"],nameTerms:["farm integrated","farm management","greenhouse","soko ai"]}
 };
+const viPlain=value=>{const box=document.createElement("textarea");box.innerHTML=String(value??"");return box.value;};
+const viNorm=value=>viPlain(value).toLowerCase().replace(/\s+/g," ").trim();
 const viEsc=value=>String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
-const viAsset=value=>{try{const url=new URL(String(value||""),location.origin);return /^https?:$/.test(url.protocol)?url.href:"";}catch(_){return"";}};
+const viAsset=value=>{const raw=String(value||"").trim();if(/^data:image\/(?:png|jpe?g|webp|gif);base64,[a-z0-9+/=\s]+$/i.test(raw))return raw;try{const url=new URL(raw,location.origin);return /^https?:$/.test(url.protocol)?url.href:"";}catch(_){return"";}};
 function viPrice(product){
  const amount=Number(product.price);
- if(amount>0&&window.VioraCurrency?.formatUSD)return window.VioraCurrency.formatUSD(amount)+(product.period?" / "+viEsc(product.period):"");
+ if(amount>0&&window.VioraCurrency?.formatUSD)return window.VioraCurrency.formatUSD(amount)+(product.period?" / "+viEsc(viPlain(product.period)):"");
  if(product.pricing==="quote")return"Request a quote";
  return"View pricing";
 }
 async function viLoadProducts(){
- const appMod=await import("https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js");
- const dbMod=await import("https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js");
- const config={apiKey:"AIzaSyC9gCBt-xR8t9n6rTGNdVZ5usUGiW-Dqxc",authDomain:"cliffclient-35ec5.firebaseapp.com",databaseURL:"https://cliffclient-35ec5-default-rtdb.europe-west1.firebasedatabase.app",projectId:"cliffclient-35ec5",storageBucket:"cliffclient-35ec5.firebasestorage.app",messagingSenderId:"519782791696",appId:"1:519782791696:web:6e1a654ddeed14b72b2895"};
- let app;try{app=appMod.getApp();}catch(_){app=appMod.initializeApp(config);}
- const snap=await dbMod.get(dbMod.ref(dbMod.getDatabase(app),"viora_data/orgs/viora/products"));
- const raw=snap.exists()?snap.val():{};
+ const endpoint="https://cliffclient-35ec5-default-rtdb.europe-west1.firebasedatabase.app/viora_data/orgs/viora/products.json";
+ const response=await fetch(endpoint,{method:"GET",mode:"cors",cache:"no-store",headers:{Accept:"application/json"}});
+ if(!response.ok)throw new Error("Marketplace catalogue returned HTTP "+response.status);
+ const raw=await response.json();
  return Object.keys(raw||{}).map(id=>Object.assign({id},raw[id]||{})).filter(p=>p.status!=="archived"&&p.status!=="draft");
 }
 function viRenderProduct(product){
  const image=viAsset(product.image);
- const media=image?'<img class="industry-product-image" src="'+viEsc(image)+'" alt="'+viEsc(product.name||"Marketplace product")+'" loading="lazy">':'<div class="industry-product-placeholder" aria-hidden="true"><i class="'+viEsc(product.icon||"fa-solid fa-cube")+'"></i></div>';
- const description=product.description||"Explore this solution in the VIORA Marketplace.";
- return '<article class="industry-product-card">'+media+'<div class="industry-product-copy"><span class="industry-product-kicker">VIORA MARKETPLACE</span><h3>'+viEsc(product.name||"VIORA product")+'</h3><p>'+viEsc(description)+'</p><div class="industry-product-bottom"><strong>'+viPrice(product)+'</strong><a href="/market">View product <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div></div></article>';
+ const name=viPlain(product.name||"VIORA product");
+ const description=viPlain(product.description||"Explore this solution in the VIORA Marketplace.");
+ const media=image?'<img class="industry-product-image" src="'+viEsc(image)+'" alt="'+viEsc(name)+'" loading="lazy">':'<div class="industry-product-placeholder" aria-hidden="true"><i class="'+viEsc(product.icon||"fa-solid fa-cube")+'"></i></div>';
+ return '<article class="industry-product-card">'+media+'<div class="industry-product-copy"><span class="industry-product-kicker">VIORA MARKETPLACE</span><h3>'+viEsc(name)+'</h3><p>'+viEsc(description)+'</p><div class="industry-product-bottom"><strong>'+viPrice(product)+'</strong><a href="/market">View product <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div></div></article>';
 }
 async function viInitIndustryMarketplace(){
  const host=document.getElementById("industryMarketplaceGrid");
@@ -39,12 +40,13 @@ async function viInitIndustryMarketplace(){
  host.setAttribute("aria-busy","true");
  try{
   const products=await viLoadProducts();
-  const matches=products.filter(product=>{
-   const tags=Array.isArray(product.tags)?product.tags:[typeof product.tags==="string"?product.tags:""];
-   const features=Array.isArray(product.features)?product.features:[];
-   const hay=[product.category,product.categoryId,product.categoryName,product.industry,product.name,product.description,...tags,...features].join(" ").toLowerCase();
-   return config.terms.some(term=>hay.includes(term));
-  }).slice(0,6);
+  const matches=products.map(product=>{
+   const category=viNorm(product.category||product.categoryName||product.categoryId||"");
+   const name=viNorm(product.name||"");
+   const categoryMatch=config.categories.includes(category);
+   const nameMatch=config.nameTerms.some(term=>name.includes(term));
+   return {product,rank:categoryMatch?0:nameMatch?1:9};
+  }).filter(item=>item.rank<9).sort((a,b)=>a.rank-b.rank).map(item=>item.product).slice(0,6);
   if(!matches.length){
    host.innerHTML='<div class="industry-marketplace-empty"><span class="industry-product-placeholder"><i class="fa-solid fa-box-open"></i></span><div><strong>No matching products are listed yet.</strong><p>Browse the Marketplace to see the full catalogue or check back as this category grows.</p><a class="btn" href="/market">Explore the Marketplace <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div></div>';
   }else{
