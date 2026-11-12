@@ -110,7 +110,7 @@ export const PP_DEFAULTS = {
     { icon: "💚", title: "M-Pesa Daraja integration", body: "Configurable integration; live collections require provider credentials, verified callbacks and end-to-end reconciliation tests." },
     { icon: "🧾", title: "Tax & e-invoicing integrations", body: "Tax rules and fiscalisation depend on jurisdiction; authority integrations must be configured and verified before compliance claims." },
     { icon: "🤖", title: "Groq AI engine", body: "Recommendations on pricing, stock, collections and staffing — on your live data." },
-    { icon: "🔐", title: "Roles & audit logs", body: "Granular permissions, 2FA, encrypted at rest, and a full who-did-what trail." },
+    { icon: "🔐", title: "Roles & audit logs", body: "Role-based permissions and audit trails; MFA, encryption and key-management settings are verified per deployment." },
     { icon: "🔔", title: "SMS + WhatsApp alerts", body: "Payment reminders, approvals, low stock, renewals — pushed where people look." },
     { icon: "🗂️", title: "Document vault", body: "Versioned contracts, IDs and certificates with expiry reminders." },
     { icon: "📊", title: "Live dashboards", body: "Owner view on any phone: cash, pipeline, attendance, margin — right now." },
@@ -142,8 +142,8 @@ export const PP_DEFAULTS = {
     kpis: [
       { val: "Illustrative", lbl: "Potential admin-time improvement" },
       { val: "Illustrative", lbl: "Potential margin improvement" },
-      { val: "0", lbl: "Double entries needed" },
-      { val: "1", lbl: "System to train on" }
+      { val: "Goal", lbl: "Reduce duplicate entry" },
+      { val: "One", lbl: "Connected operating core" }
     ]
   },
   steps: { eyebrow: "How it goes", title: "From conversation to living system", items: [
