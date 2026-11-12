@@ -1,7 +1,7 @@
 /* ============================================================
    VIORA MARKETPLACE — v3.2 (carousel fixed + seamless loop)
    ============================================================ */
-import '../currency-display.js';
+import '../currency-display.js?v=20261112-global-fx-2';
 import { initOrderModal, openOrderModal } from '../order-modal.js';
 
 const firebaseConfig = {
