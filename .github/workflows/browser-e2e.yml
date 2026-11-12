@@ -2,6 +2,8 @@ name: VIORA browser and accessibility tests
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main, "engineering/**"]
   workflow_dispatch:
 permissions:
   contents: read
