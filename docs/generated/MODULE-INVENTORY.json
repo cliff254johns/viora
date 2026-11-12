@@ -1,0 +1,1658 @@
+{
+  "generatedAt": "2026-11-12T21:53:24.317Z",
+  "moduleCount": 111,
+  "modules": [
+    {
+      "file": "web/analytics-config.js",
+      "bytes": 341,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/assets/mamamboga/firebase.js",
+      "bytes": 5963,
+      "imports": [
+        "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
+        "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js",
+        "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js",
+        "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js"
+      ],
+      "exports": [
+        "auth",
+        "db",
+        "storage",
+        "deductStock",
+        "formatKES",
+        "generateCode",
+        "showToast",
+        "uploadImage",
+        "getUserRole",
+        "isPlatformAdmin",
+        "deleteProduct"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/assets/mamamboga/sw.js",
+      "bytes": 1895,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/assets/r/shared/firebase.js",
+      "bytes": 1567,
+      "imports": [
+        "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js",
+        "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js",
+        "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js"
+      ],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/assets/r/sw.js",
+      "bytes": 1496,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/campaigns-bootstrap.js",
+      "bytes": 43911,
+      "imports": [
+        "firebase/app",
+        "firebase/database",
+        "firebase/auth",
+        "./main/orbit-shell.js",
+        "./main/helpers.js",
+        "./main/inbox.js",
+        "./main/agent-runner.js",
+        "./main/idb.js",
+        "./main/modal-utils.js",
+        "./main/charts.js",
+        "./main/write-layer.js",
+        "./main/ai-services.js",
+        "./main/render-marketplace.js",
+        "./main/campaign-accounts.js",
+        "./main/campaign-trends.js",
+        "./main/campaign-ai.js",
+        "./main/campaign-analytics.js",
+        "./main/campaign-cron.js",
+        "./main/campaign-analytics.js"
+      ],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/category-modal.js",
+      "bytes": 10421,
+      "imports": [],
+      "exports": [
+        "initCategoryModal",
+        "openCategoryModal"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/cookie-consent.js",
+      "bytes": 937,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/currency-display.js",
+      "bytes": 11519,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/engineering-command-centre.js",
+      "bytes": 20446,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/global-brand.js",
+      "bytes": 5808,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/globe-tier1.js",
+      "bytes": 13246,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/guard.js",
+      "bytes": 15310,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/hero-banner.js",
+      "bytes": 124682,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/hero-globe.js",
+      "bytes": 80876,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/hero-orb.js",
+      "bytes": 25135,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/hero-orbitals.js",
+      "bytes": 8585,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/hero-sky.js",
+      "bytes": 64524,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/hero-solar.js",
+      "bytes": 50930,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/hero-terminator.js",
+      "bytes": 10050,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/hero-time.js",
+      "bytes": 13062,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/hero-tooltip.js",
+      "bytes": 24574,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/index-home.js",
+      "bytes": 107008,
+      "imports": [
+        "./order-modal.js",
+        "./category-modal.js"
+      ],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/industry-app-nav.js",
+      "bytes": 5023,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/industry-marketplace.js",
+      "bytes": 5946,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/agent-runner.js",
+      "bytes": 2998,
+      "imports": [],
+      "exports": [
+        "initAgentRunner",
+        "runAgent"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/ai-services.js",
+      "bytes": 13251,
+      "imports": [],
+      "exports": [
+        "initAIServices",
+        "AIFiling",
+        "AIRank",
+        "AIAnomaly"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/boot.js",
+      "bytes": 58761,
+      "imports": [
+        "firebase/database",
+        "firebase/auth",
+        "./idb.js",
+        "./orchestration.js"
+      ],
+      "exports": [
+        "boot",
+        "registerNetworkEvents"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/campaign-accounts.js",
+      "bytes": 25697,
+      "imports": [],
+      "exports": [
+        "initCampaignAccounts",
+        "platformMeta",
+        "allPlatforms",
+        "loadAccounts",
+        "getAccountForPlatform",
+        "getAccountForPlatformSync",
+        "subscribeToAccounts",
+        "unsubscribeAccounts",
+        "deleteAccount",
+        "renderAccountsPanel",
+        "openAccountEditor",
+        "mentionForPlatform",
+        "postingAsLabel"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/campaign-ai.js",
+      "bytes": 55009,
+      "imports": [
+        "./campaign-utils.js"
+      ],
+      "exports": [
+        "initCampaignAI",
+        "openComposer",
+        "openComposerWithTrend",
+        "openComposerForCampaign",
+        "openComposerForDraft",
+        "renderDraftLibrary",
+        "renderPromptLibrary"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/campaign-analytics.js",
+      "bytes": 42251,
+      "imports": [
+        "./campaign-utils.js"
+      ],
+      "exports": [
+        "initCampaignAnalytics",
+        "renderAnalyticsDashboard"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/campaign-cron.js",
+      "bytes": 7180,
+      "imports": [
+        "./campaign-utils.js"
+      ],
+      "exports": [
+        "initCampaignCron",
+        "startCampaignCron",
+        "stopCampaignCron"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/campaign-trends.js",
+      "bytes": 6023,
+      "imports": [],
+      "exports": [
+        "initCampaignTrends",
+        "renderTrendRadar"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/campaign-utils.js",
+      "bytes": 27841,
+      "imports": [],
+      "exports": [
+        "PILLARS",
+        "pillarByKey",
+        "PLATFORMS",
+        "platformMeta",
+        "captionForPlatform",
+        "composeUrlFor",
+        "escHtml",
+        "q",
+        "fmtNum",
+        "fmtPercent",
+        "fmtMoney",
+        "engagementRate",
+        "engagementRateFor",
+        "makePost",
+        "makeFanoutItem",
+        "buildUtmUrl",
+        "utmFromPost",
+        "detectAnomaly",
+        "buildTimeHeatmap",
+        "summarizeCampaign",
+        "bestPillar",
+        "groupPostsByFanout",
+        "summarizeFanout",
+        "statsHistoryFor",
+        "combineStatsHistory",
+        "toUtcIso",
+        "readImageFile"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/charts.js",
+      "bytes": 23458,
+      "imports": [],
+      "exports": [
+        "initCharts",
+        "getTextColor",
+        "clearTextColorCache",
+        "destroyChart",
+        "destroyAllCharts",
+        "safeCanvas",
+        "renderCharts",
+        "renderMarketplaceCharts",
+        "C"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/clients.js",
+      "bytes": 59581,
+      "imports": [
+        "./projects.js",
+        "./contacts.js",
+        "./finance.js"
+      ],
+      "exports": [
+        "initClients",
+        "getEntities",
+        "getClients",
+        "getEmployees",
+        "getClient",
+        "getClientName",
+        "getClientProjects",
+        "getClientDocs",
+        "getClientInvoices",
+        "getClientPayments",
+        "getClientDeals",
+        "getClientContracts",
+        "getClientTasks",
+        "getClientComms",
+        "getClientAppointments",
+        "getClientPresentations",
+        "computeClientRollup",
+        "getClientAgreedTotal",
+        "getClientPaidTotal",
+        "getClientBilledTotal",
+        "getClientRemainingTotal",
+        "getClientCreditTotal",
+        "getFeeSummary",
+        "recomputeClientRollup",
+        "recomputeClientInstallments",
+        "renderClients",
+        "renderClientCards",
+        "renderClient360Page",
+        "openClient360",
+        "renderClientAvatarPreview",
+        "generateClientReport",
+        "downloadReportPdf",
+        "buildClientStatementPdf",
+        "openWelcomeEmailPreview"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/command-palette.js",
+      "bytes": 23346,
+      "imports": [],
+      "exports": [
+        "initCommandPalette",
+        "openCmdPalette",
+        "closeCmdPalette",
+        "setupCommandPalette"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/contacts.js",
+      "bytes": 30883,
+      "imports": [],
+      "exports": [
+        "initContacts",
+        "contactButtons",
+        "getEntityById",
+        "openCommModal",
+        "switchCommChannel",
+        "buildTemplates",
+        "updateCommPreview",
+        "sendComm",
+        "renderCommunications",
+        "openCommFullPreview"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/dashboard-attention.js",
+      "bytes": 8903,
+      "imports": [],
+      "exports": [
+        "initDashboardAttention",
+        "renderDashboardAttention"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/dashboard-hero.js",
+      "bytes": 13175,
+      "imports": [],
+      "exports": [
+        "initDashboardHero",
+        "startHeroWeather",
+        "stopHeroWeather",
+        "updateHeroWeather"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/dashboard-kpis.js",
+      "bytes": 14088,
+      "imports": [],
+      "exports": [
+        "initDashboardKpis",
+        "renderDashboardKpis"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/dashboard-weather.js",
+      "bytes": 41379,
+      "imports": [],
+      "exports": [
+        "initDashboardWeather",
+        "loadWeatherLocation",
+        "saveWeatherLocation",
+        "fetchWeather",
+        "openLocationPicker",
+        "refreshWeather",
+        "bootDashboardWeather",
+        "forceWeatherRefresh",
+        "stopDashboardWeather",
+        "getLastWeather"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/employee-profiles.js",
+      "bytes": 22682,
+      "imports": [
+        " data-idx="
+      ],
+      "exports": [
+        "initEmployeeProfiles",
+        "renderEmployeeProfiles"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/finance.js",
+      "bytes": 123359,
+      "imports": [
+        "./helpers.js"
+      ],
+      "exports": [
+        "initFinance",
+        "invalidateInvoicePaidMemo",
+        "getInvoicePaidAmount",
+        "getInvoiceTotals",
+        "getInvoiceStatusDerived",
+        "generateInvoiceNumber",
+        "nextProjectInvoiceNumber",
+        "buildInvoiceProgressMessage",
+        "reconcilePayment",
+        "handleSubscriptionInvoicePaid",
+        "onInvoicePaid",
+        "sendInvoiceReceipt",
+        "applyClientCreditToInvoice",
+        "openPayChain",
+        "confirmPayChain",
+        "openPaymentModal",
+        "renderPaymentProjectPicker",
+        "renderPaymentAllocation",
+        "updatePaymentSummary",
+        "savePayment",
+        "deletePayment",
+        "openInvoiceGenModal",
+        "refreshInvoiceProjects",
+        "renderExtraCharges",
+        "removeCharge",
+        "updateInvoicePreview",
+        "openInvoiceViewModal",
+        "deleteInvoice",
+        "openStkModal",
+        "sendStkPush",
+        "openMpesaModal",
+        "findInvoiceCandidates",
+        "autoMatchMpesa",
+        "applyMpesaMatch",
+        "processMpesaQueue",
+        "renderMpesaModal",
+        "openManualMpesaMatch",
+        "confirmMpesaMatch",
+        "renderMpesaInline",
+        "openServiceAgreementModal",
+        "attachServiceAgreement",
+        "sendClientStatement",
+        "transferProjectCredit",
+        "openFeesModal",
+        "openCreditTransfer",
+        "bulkRemind",
+        "F"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/global-market.js",
+      "bytes": 32421,
+      "imports": [
+        "./charts.js",
+        "./helpers.js"
+      ],
+      "exports": [
+        "initGlobalMarket",
+        "destroyGChart",
+        "gFetch",
+        "gFetchBatch",
+        "loadGlobalDashboard",
+        "loadTechPenetration",
+        "loadTechBroadband",
+        "loadTechServers",
+        "loadTechExports",
+        "loadTechRd",
+        "loadEconomicIndicators",
+        "loadInflationTrend",
+        "loadExchangeRates",
+        "loadPopulationTrend",
+        "loadCountryComparison",
+        "gChatSend",
+        "setupGlobalMarket",
+        "G"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/helpers.js",
+      "bytes": 9797,
+      "imports": [],
+      "exports": [
+        "$",
+        "uid",
+        "dateToStr",
+        "todayStr",
+        "fmtDate",
+        "fmtDateTime",
+        "timeAgo",
+        "daysBetween",
+        "isOverdue",
+        "FX_RATE",
+        "fmtKES",
+        "fmtUSD",
+        "usdToKes",
+        "kpiFormat",
+        "escapeHtml",
+        "fmtBytes",
+        "normalizePhone",
+        "normalizeEmail",
+        "simpleHash",
+        "emailToId",
+        "generateLicenseKey",
+        "isMobile",
+        "debounce",
+        "pickFile",
+        "pickFileMobileSplit",
+        "H"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/home-content.js",
+      "bytes": 95219,
+      "imports": [],
+      "exports": [
+        "initHomeContent",
+        "renderHomeContent"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/idb.js",
+      "bytes": 16402,
+      "imports": [
+        "./helpers.js"
+      ],
+      "exports": [
+        "IDB_NAME",
+        "IDB_STORE",
+        "IDB_QUEUE_STORE",
+        "IDB_EVENT_QUEUE_STORE",
+        "IDB_VERSION",
+        "initIdb",
+        "idbOpen",
+        "idbReset",
+        "idbSave",
+        "idbLoad",
+        "idbClear",
+        "queueOfflineMutation",
+        "removeFromQueue",
+        "updateQueueEntry",
+        "updatePendingCount",
+        "flushOfflineQueue",
+        "eventQueuePush",
+        "eventQueuePushBatch",
+        "eventQueueDrain",
+        "eventQueueRemove",
+        "eventQueueRemoveBatch",
+        "eventQueueClear",
+        "idbGetDedupeStamp",
+        "idbSetDedupeStamp"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/inbox.js",
+      "bytes": 24352,
+      "imports": [
+        "firebase/database",
+        " + String(message?.profileName || message?.from || "
+      ],
+      "exports": [
+        "initInbox",
+        "subscribeInbox",
+        "unsubscribeInbox",
+        "renderInbox",
+        "getInboxUnreadCount",
+        "openThreadByAddress"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/main-subscription-plans.js",
+      "bytes": 75873,
+      "imports": [],
+      "exports": [
+        "initSubscriptionPlans",
+        "renderSubscriptionPlans",
+        "destroySubscriptionPlans"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/market-content.js",
+      "bytes": 40275,
+      "imports": [],
+      "exports": [
+        "initMarketContent",
+        "MARKET_DEFAULTS",
+        "renderMarketContent",
+        "savePromos",
+        "saveProductExtras",
+        "saveMarketContent",
+        "bindMarketContentEvents",
+        "destroyMarketContent"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/misc-helpers.js",
+      "bytes": 16587,
+      "imports": [],
+      "exports": [
+        "initMiscHelpers",
+        "exportCsv",
+        "openJournalModal",
+        "renderJeLines",
+        "updateJeBalance",
+        "postJournalEntry",
+        "openProposalStudio",
+        "generateProposalDraft",
+        "saveProposalDraft",
+        "proposalToVault",
+        "proposalToInvoice"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/modal-utils.js",
+      "bytes": 18213,
+      "imports": [],
+      "exports": [
+        "initModalUtils",
+        "openModal",
+        "closeModal",
+        "showModal",
+        "hideModal",
+        "toast",
+        "setSyncStatus",
+        "vioraConfirm",
+        "vioraPrompt",
+        "applyLogoEverywhere",
+        "getLogoImg"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/orbit-modules.js",
+      "bytes": 176752,
+      "imports": [
+        "./campaign-ai.js",
+        "./campaign-analytics.js",
+        "./campaign-utils.js",
+        "./campaign-accounts.js",
+        "./inbox.js",
+        "./agent-runner.js",
+        "firebase/storage",
+        " + (account.handle || "
+      ],
+      "exports": [
+        "renderOverview",
+        "renderAccountsModule",
+        "renderCampaignsModule",
+        "renderPostLibrary",
+        "openFanoutDetail",
+        "closeFanoutDetail",
+        "openAddPlatformDialog",
+        "openEditScheduleDialog",
+        "cancelFanoutSchedule",
+        "openImportModal",
+        "renderContentStudio",
+        "renderCalendar",
+        "renderPublishingCentre",
+        "renderCreativeStudio",
+        "renderInbox",
+        "renderCRM",
+        "renderListening",
+        "renderAgents",
+        "renderAutomation",
+        "renderAnalyticsModule",
+        "renderCompetitorsModule",
+        "renderReports",
+        "renderClients",
+        "renderApprovals",
+        "renderMediaLibrary",
+        "renderKnowledge",
+        "renderTeam",
+        "renderIntegrations",
+        "renderSettings",
+        "renderAdmin"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/orbit-shell.js",
+      "bytes": 9693,
+      "imports": [
+        "./orbit-modules.js"
+      ],
+      "exports": [
+        "initOrbitShell",
+        "navigate",
+        "currentModule",
+        "findModuleByName",
+        "renderActiveOrbitModule"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/orchestration.js",
+      "bytes": 100087,
+      "imports": [
+        "./helpers.js"
+      ],
+      "exports": [
+        "initOrchestration",
+        "ORCHESTRATION_HANDOFFS",
+        "HANDLERS",
+        "Orchester",
+        "EventBus",
+        "renderOrchestrationPanel",
+        "Archiver",
+        "renderArchivesPanel",
+        "OrchestrationConsole"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/pp.js",
+      "bytes": 67340,
+      "imports": [],
+      "exports": [
+        "initPP",
+        "PP_DEFAULTS",
+        "ppSeedCategoriesAndIndustriesFromV0",
+        "PP",
+        "bindPPEvents"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/projects.js",
+      "bytes": 51371,
+      "imports": [],
+      "exports": [
+        "initProjects",
+        "getProjectAgreedTotal",
+        "getProjectBilledTotal",
+        "getProjectPaidTotal",
+        "getProjectRemainingTotal",
+        "getProjectFinancialProgress",
+        "recomputeProjectProgress",
+        "bulkGenerateTasksForClient",
+        "createAutoWorklog",
+        "renderProjects",
+        "renderTasks",
+        "renderProjectTasksEditor",
+        "bindProjectAddTaskButton",
+        "renderProjectInstallmentEditor",
+        "removeProjectInstallment",
+        "renderClientProjectsFeeEditor",
+        "openProjectDeliverables"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/push-notifications.js",
+      "bytes": 19486,
+      "imports": [
+        "firebase/messaging"
+      ],
+      "exports": [
+        "initPushNotifications",
+        "PushNotifications"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/render-admin.js",
+      "bytes": 55719,
+      "imports": [],
+      "exports": [
+        "initRenderAdmin",
+        "renderEmployees",
+        "renderAssets",
+        "renderCompliance",
+        "renderUsers",
+        "renderDocumentVault",
+        "renderActivity",
+        "renderTrash",
+        "renderSupportTickets",
+        "viewTicket",
+        "closeTicketView",
+        "sendTicketReply",
+        "toggleTicketStatus",
+        "markTicketResolved",
+        "deleteTicket",
+        "renderPortalRequests",
+        "renderPortalUsers",
+        "getViewingTicketId",
+        "renderProfile",
+        "renderClientsite"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/render-dashboard.js",
+      "bytes": 80880,
+      "imports": [],
+      "exports": [
+        "initRenderDashboard",
+        "renderDashboard",
+        "renderDashboardCharts",
+        "renderAdminAnalytics",
+        "buildNotifications",
+        "renderNotifications",
+        "renderDashboardNotifications",
+        "initDashboardNotifications",
+        "surfaceVioraNotification",
+        "attachVioraNotificationListener",
+        "detachVioraNotificationListener",
+        "buildLocalRecommendations",
+        "refreshRecommendations",
+        "renderRecommendations",
+        "scheduleIdleRefresh",
+        "renderRecommendationsV2"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/render-marketplace.js",
+      "bytes": 93665,
+      "imports": [],
+      "exports": [
+        "initRenderMarketplace",
+        "getMarketplaceMetrics",
+        "getProductSalesMetrics",
+        "invalidateMarketplaceMetrics",
+        "renderMarketplaceProducts",
+        "renderPublicUiProducts",
+        "renderMarketplaceOrders",
+        "computeMarketAnalytics",
+        "invalidateMarketAnalytics",
+        "materializeMarketplaceLeads",
+        "renderMarketplaceAnalytics",
+        "openOrderDetail",
+        "renderMyOrders",
+        "renderMyWishlist",
+        "renderCampaigns",
+        "applyCampMediaTypeUI",
+        "renderCampaignStats",
+        "fetchCampaignStats",
+        "connectTikTok",
+        "startCampaignStatsAutoRefresh",
+        "stopCampaignStatsAutoRefresh",
+        "refreshAllCampaignStats",
+        "openManualSale",
+        "renderMsProductsList",
+        "renderMsSummary",
+        "updateManualSaleItem",
+        "removeManualSaleItem",
+        "submitManualSale",
+        "addToWishlist",
+        "removeFromWishlist",
+        "buyFromWishlist"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/render-partner.js",
+      "bytes": 24570,
+      "imports": [
+        ", "
+      ],
+      "exports": [
+        "initRenderPartner",
+        "renderPartnerTasks",
+        "renderPartnerHourly",
+        "renderPartnerSchedule",
+        "renderPartnerHandoffs",
+        "renderPartnerFinancials",
+        "renderPartnerActivities",
+        "renderPartnerChat",
+        "renderPartnerPresence",
+        "renderPartnerGames",
+        "invalidatePartnerCaches"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/render-personal.js",
+      "bytes": 20561,
+      "imports": [],
+      "exports": [
+        "initRenderPersonal",
+        "computeGoalProgress",
+        "personalOwnerFilter",
+        "renderPersonalTodos",
+        "renderPersonalGoals",
+        "renderPersonalSkills",
+        "renderGoalMilestoneEditor",
+        "invalidatePersonalCaches"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/renewal-cron.js",
+      "bytes": 15800,
+      "imports": [
+        "../subscription-schema.js",
+        "./finance.js"
+      ],
+      "exports": [
+        "initRenewalCron",
+        "runRenewalCron",
+        "getExpiryOverview",
+        "bulkNotifyExpiring",
+        "RenewalCron"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/smart-import.js",
+      "bytes": 30380,
+      "imports": [],
+      "exports": [
+        "initSmartImport",
+        "setupImportDropzone",
+        "abortImport",
+        "getImportState"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/subscriptions.js",
+      "bytes": 68709,
+      "imports": [],
+      "exports": [
+        "initSubscriptions",
+        "renderSubscriptions",
+        "abortSubscriptionsModals",
+        "SubscriptionsAdmin"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/sw-bootstrap.js",
+      "bytes": 12321,
+      "imports": [],
+      "exports": [
+        "bootServiceWorker",
+        "injectNotificationSound",
+        "playNotificationSound"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/training-admin-bridge.js",
+      "bytes": 9832,
+      "imports": [],
+      "exports": [
+        "initTrainingAdminBridge",
+        "subscribeTrainingRequests",
+        "approveTrainingRequest",
+        "rejectTrainingRequest",
+        "reopenTrainingRequest",
+        "deleteTrainingRequest",
+        "renderTrainingRequests"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/training.js",
+      "bytes": 131042,
+      "imports": [
+        "${req.name || req.email}",
+        "${course.title}"
+      ],
+      "exports": [
+        "initTraining",
+        "setTrainingContext",
+        "renderTrainingOverview",
+        "renderTrainingRequests",
+        "renderTrainingUsers",
+        "renderTrainingProgress",
+        "renderTrainingQuizzes",
+        "viewQuizSubmission",
+        "renderTrainingCertificates",
+        "renderCertTemplatesGrid",
+        "openCourseEditor",
+        "renderCeModules",
+        "toggleCeQuiz",
+        "addQuizQuestion",
+        "removeQuizQuestion",
+        "updateQuizQuestion",
+        "updateQuizOption",
+        "setQuizAnswer",
+        "addQuizOption",
+        "removeQuizOption",
+        "updateCeModule",
+        "addCeModule",
+        "removeCeModule",
+        "moveCeModule",
+        "saveCourse",
+        "deleteCourse",
+        "openChecklistEditor",
+        "renderCleTasks",
+        "updateCleTask",
+        "addCleTask",
+        "removeCleTask",
+        "saveChecklist",
+        "openResourceEditor",
+        "handleReFile",
+        "saveResource",
+        "deleteResource",
+        "openResourceFile",
+        "awardTrainingCertificate",
+        "viewTrainingCert",
+        "revokeTrainingCertImpl",
+        "openCertTemplateEditor",
+        "refreshCertTemplateModules",
+        "showCertTemplatePreview",
+        "paintCertTemplateStamps",
+        "saveCertTemplate",
+        "deleteCertTemplate",
+        "handleCertTemplateImage",
+        "renderCertificateImage",
+        "openManualAwardModal",
+        "T",
+        "AutoCertification",
+        "setupCertStampDragging",
+        "TrainingVioraAPI",
+        "bindTrainingEvents"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/viora-lazy-libs.js",
+      "bytes": 1430,
+      "imports": [
+        "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/xlsx.full.min.js",
+        "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js",
+        "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"
+      ],
+      "exports": [
+        "getXLSX",
+        "getJsPDF",
+        "getHtml2Canvas"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/viora-main-handlers.js",
+      "bytes": 217739,
+      "imports": [],
+      "exports": [
+        "buildVioraHandlers"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/viora-main-renderers.js",
+      "bytes": 84507,
+      "imports": [],
+      "exports": [
+        "renderEmployeeList",
+        "initMainRenderers",
+        "renderLeads",
+        "renderDeals",
+        "renderPipelineKanban",
+        "renderContracts",
+        "renderProposals",
+        "renderAppointments",
+        "renderPresentations",
+        "renderInventory",
+        "renderInvoices",
+        "renderPayments",
+        "renderLedger",
+        "renderExpenses",
+        "renderPayroll",
+        "getFeeSummary",
+        "renderPresAttachments",
+        "dedupeLeads",
+        "syncMarketToLeads",
+        "syncBlueprintLeads",
+        "syncOrderLeads"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/viora-main-wiring.js",
+      "bytes": 74034,
+      "imports": [],
+      "exports": [
+        "initMainWiring",
+        "attachEvents",
+        "attachForms",
+        "attachTrainingAndUiEvents",
+        "bindSafetyNets"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main/write-layer.js",
+      "bytes": 31877,
+      "imports": [
+        "./helpers.js"
+      ],
+      "exports": [
+        "initWriteLayer",
+        "ValidationError",
+        "validateRecord",
+        "fingerprintFor",
+        "dedupeWriteGuard",
+        "directWrite",
+        "directDelete",
+        "upsertDoc",
+        "upsertPersonal",
+        "upsertTrackFlat",
+        "deletePersonal",
+        "deleteTrackFlat",
+        "deleteDoc"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main-clientsite-editor.js",
+      "bytes": 37404,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/main.js",
+      "bytes": 240600,
+      "imports": [
+        "firebase/app",
+        "./main/boot.js",
+        "firebase/database",
+        "firebase/auth",
+        "./viora-history.js",
+        "./main/helpers.js",
+        "./main/idb.js",
+        "./main/render-dashboard.js",
+        "./main/dashboard-weather.js",
+        "./main/dashboard-kpis.js",
+        "./main/dashboard-attention.js",
+        "./main/write-layer.js",
+        "./main/orchestration.js",
+        "./main/ai-services.js",
+        "./main/finance.js",
+        "./main/push-notifications.js",
+        "./main/smart-import.js",
+        "./main/command-palette.js",
+        "./main/render-admin.js",
+        "./main/subscriptions.js",
+        "./main/render-partner.js",
+        "./main/render-personal.js",
+        "./main/main-subscription-plans.js",
+        "./main/training-admin-bridge.js",
+        "./main/pp.js",
+        "./main/market-content.js",
+        "./main/charts.js",
+        "./main/global-market.js",
+        "./main/modal-utils.js",
+        "./main/projects.js",
+        "./main/contacts.js",
+        "./main/clients.js",
+        "./main/render-marketplace.js",
+        "./main/misc-helpers.js",
+        "./main/viora-main-renderers.js?v=20261112-world-map-mobile-fit",
+        "./main/viora-main-handlers.js",
+        "./main/viora-main-wiring.js",
+        "./main/home-content.js",
+        "./main/employee-profiles.js",
+        " + String(value.profileName || value.from || "
+      ],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/mainClient/client-app.js",
+      "bytes": 165390,
+      "imports": [
+        "firebase/app",
+        "firebase/database",
+        "firebase/auth",
+        " + (S.client?.name || S.email),\n          body: `${p.name} · KSh ${priceKES.toLocaleString()} · ${orderId}`,\n          icon: "
+      ],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/mainIndex/app.js",
+      "bytes": 64215,
+      "imports": [
+        "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js",
+        "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js"
+      ],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/mainIndex/blueprint.js",
+      "bytes": 23801,
+      "imports": [
+        "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js",
+        "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js"
+      ],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/mainIndex/chatbot.js",
+      "bytes": 93342,
+      "imports": [
+        ", EXTERNAL_KB_URL);\n    const r = await fetch(EXTERNAL_KB_URL, { cache: "
+      ],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/mainIndex/industries.js",
+      "bytes": 215092,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/mainIndex/site-assistant-loader.js",
+      "bytes": 2128,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/mainIndex/site-language.js",
+      "bytes": 7516,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": [
+        "/fr/",
+        "/fr",
+        "/es/",
+        "/es",
+        "/",
+        "/index.html"
+      ]
+    },
+    {
+      "file": "web/mainMarket/market.js",
+      "bytes": 115341,
+      "imports": [
+        "../order-modal.js"
+      ],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/mainPatner/patner.js",
+      "bytes": 251339,
+      "imports": [
+        "firebase/app",
+        "firebase/database",
+        "firebase/auth",
+        "../shared/notification-bus.js",
+        " + profileName(pu), sub: m.text.slice(0,60), time: timeAgo(m.ts), tab:"
+      ],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/mainPublic/public.js",
+      "bytes": 45893,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/mainTraining/trainer.js",
+      "bytes": 23411,
+      "imports": [
+        "firebase/app",
+        "firebase/auth",
+        "firebase/database",
+        "../shared/notification-bus.js"
+      ],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/mainTraining/training.js",
+      "bytes": 65618,
+      "imports": [
+        "firebase/app",
+        "firebase/auth",
+        "firebase/database",
+        "../shared/notification-bus.js"
+      ],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/order-modal.js",
+      "bytes": 21686,
+      "imports": [],
+      "exports": [
+        "initOrderModal",
+        "openOrderModal"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/outreach.js",
+      "bytes": 77254,
+      "imports": [
+        "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js",
+        "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js",
+        "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js",
+        "+sources.length+"
+      ],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/public-profile.js",
+      "bytes": 12159,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/scholar-admin-boot.js",
+      "bytes": 66666,
+      "imports": [
+        "firebase/app",
+        "firebase/auth",
+        "firebase/database",
+        "./main/training.js"
+      ],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/script.js",
+      "bytes": 150422,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/shared/notification-bus.js",
+      "bytes": 1881,
+      "imports": [],
+      "exports": [
+        "publishVioraEvent"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/shared-app.js",
+      "bytes": 15785,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/shared-pwa.js",
+      "bytes": 4305,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/subscription-schema.js",
+      "bytes": 9645,
+      "imports": [],
+      "exports": [
+        "SUBSCRIPTION_PATH",
+        "LICENSES_PATH",
+        "PLAN",
+        "STATUS",
+        "DEFAULT_GRACE_HOURS",
+        "PLAN_DAYS",
+        "PLAN_LABELS",
+        "STATUS_LABELS",
+        "computeEndDate",
+        "buildSubscription",
+        "validateSubscription",
+        "evaluateSubscription",
+        "subscriptionPill"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/sw.js",
+      "bytes": 23404,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/viora-analytics.js",
+      "bytes": 2068,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/viora-city-sky.js",
+      "bytes": 8522,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/viora-history.js",
+      "bytes": 12638,
+      "imports": [],
+      "exports": [
+        "initHistoryGuard",
+        "watchModals",
+        "pushModalToHistory",
+        "closeTopModalFromHistory",
+        "isAnyModalOpen",
+        "getOpenModals"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/worker.js",
+      "bytes": 5814,
+      "imports": [
+        "cloudflare:workers"
+      ],
+      "exports": [
+        "TranslationRateLimiter"
+      ],
+      "workerRoutes": [
+        "/api/translate",
+        "/api/translation-health",
+        "/api/health"
+      ]
+    },
+    {
+      "file": "workers/viora-static-next/assets.generated.js",
+      "bytes": 220535,
+      "imports": [],
+      "exports": [
+        "EMBEDDED_ASSETS_GZIP_BASE64"
+      ],
+      "workerRoutes": []
+    },
+    {
+      "file": "workers/viora-static-next/worker.js",
+      "bytes": 2152,
+      "imports": [
+        "./assets.generated.js"
+      ],
+      "exports": [],
+      "workerRoutes": [
+        "/"
+      ]
+    },
+    {
+      "file": "scripts/backup-firebase-rtdb.mjs",
+      "bytes": 2502,
+      "imports": [
+        "firebase-admin/app",
+        "firebase-admin/database",
+        "@aws-sdk/client-s3",
+        "node:crypto"
+      ],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "scripts/generate-engineering-docs.mjs",
+      "bytes": 1796,
+      "imports": [
+        "node:fs",
+        "node:path"
+      ],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "scripts/restore-firebase-rtdb.mjs",
+      "bytes": 2620,
+      "imports": [
+        "firebase-admin/app",
+        "firebase-admin/database",
+        "@aws-sdk/client-s3",
+        "node:crypto"
+      ],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "scripts/retain-r2-backups.mjs",
+      "bytes": 1438,
+      "imports": [
+        "@aws-sdk/client-s3"
+      ],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "scripts/review-changes.mjs",
+      "bytes": 1679,
+      "imports": [
+        "node:fs",
+        "node:child_process"
+      ],
+      "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "scripts/viora-engineering-checks.mjs",
+      "bytes": 5185,
+      "imports": [
+        "node:fs",
+        "node:assert/strict"
+      ],
+      "exports": [
+        "TranslationRateLimiter",
+        "EMBEDDED_ASSETS_GZIP_BASE64"
+      ],
+      "workerRoutes": []
+    }
+  ]
+}
