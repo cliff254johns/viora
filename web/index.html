@@ -34,15 +34,15 @@
 <link rel="stylesheet" href="shared-app.css">
 <link rel="stylesheet" href="index-home.css">
 <style>
-.globe-fibre-caption{max-width:520px;margin:32px auto 0;padding:0 18px;text-align:center;color:var(--muted);font-size:clamp(12px,1.1vw,14px);line-height:1.8;letter-spacing:.01em}
+.globe-fibre-caption{position:absolute;top:calc(100% + 72px);left:50%;transform:translateX(-50%);width:min(520px,calc(100vw - 28px));margin:0;padding:0 18px;text-align:center;color:var(--muted);font-size:clamp(12px,1.1vw,14px);line-height:1.8;letter-spacing:.01em}
 .globe-fibre-caption em{font-style:italic}
-.viora-orbit-legend{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin:16px auto 0;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.viora-orbit-legend{position:absolute;left:50%;bottom:-27px;transform:translateX(-50%);width:max-content;max-width:100%;display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin:0 auto;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
 .viora-orbit-legend span{display:inline-flex;align-items:center;gap:7px}
 .viora-orbit-dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:#67e8f9;box-shadow:0 0 10px currentColor}
 .viora-orbit-dot.iss{background:#ffb547;color:#ffb547}
-.viora-orbit-detail{margin:8px auto 0;text-align:center;max-width:520px;min-height:16px;font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums}
-#globe-container{position:relative;overflow:visible}
-@media(max-width:600px){.globe-fibre-caption{margin-top:24px;padding:0 10px;font-size:12px}.viora-orbit-legend{gap:12px;font-size:9px}}
+.viora-orbit-detail{position:absolute;left:50%;bottom:-51px;transform:translateX(-50%);width:min(520px,100%);margin:0;text-align:center;max-width:520px;min-height:16px;font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums}
+#globe-container{position:relative;overflow:visible}.hero-visual{margin-bottom:105px}
+@media(max-width:600px){.hero-visual{margin-bottom:118px}.globe-fibre-caption{padding:0 10px;font-size:12px}.viora-orbit-legend{gap:12px;font-size:9px}}
 </style>
 <link rel="stylesheet" href="viora-city.css?v=20261112-real-stars-layer-fix">
 <link rel="stylesheet" href="/viora-mobile-app.css?v=20261111-99261369">
