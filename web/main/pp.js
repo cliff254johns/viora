@@ -107,8 +107,8 @@ export const PP_DEFAULTS = {
   capabilities: { eyebrow: "Inside every portal", title: "Built-in superpowers", subtitle: "Whatever you pick, these ship with it. No plugins to buy, no consultants to call.", items: [
     { icon: "📶", title: "Offline-first", body: "Keep working through blackouts. Everything syncs the moment you're back online." },
     { icon: "📱", title: "Installable PWA", body: "Add to home screen on any Android or iPhone. Native-feel, no app store needed." },
-    { icon: "💚", title: "M-Pesa Daraja", body: "STK push, C2B and B2C with automatic reconciliation against your ledger." },
-    { icon: "🧾", title: "KRA eTIMS-ready", body: "Compliant invoices, credit notes and statutory reports generated automatically." },
+    { icon: "💚", title: "M-Pesa Daraja integration", body: "Configurable integration; live collections require provider credentials, verified callbacks and end-to-end reconciliation tests." },
+    { icon: "🧾", title: "Tax & e-invoicing integrations", body: "Tax rules and fiscalisation depend on jurisdiction; authority integrations must be configured and verified before compliance claims." },
     { icon: "🤖", title: "Groq AI engine", body: "Recommendations on pricing, stock, collections and staffing — on your live data." },
     { icon: "🔐", title: "Roles & audit logs", body: "Granular permissions, 2FA, encrypted at rest, and a full who-did-what trail." },
     { icon: "🔔", title: "SMS + WhatsApp alerts", body: "Payment reminders, approvals, low stock, renewals — pushed where people look." },
