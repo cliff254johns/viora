@@ -85,6 +85,8 @@ async function sendEmail(e){
  for(const lead of chosen){const to=String(lead.email||'').trim(),key=to.toLowerCase();if(!to||seen.has(key))continue;seen.add(key);recipients.push({to,lead});}
  for(const to of manual){if(seen.has(to))continue;seen.add(to);recipients.push({to,lead:leadList().find(l=>(l.email||'').trim().toLowerCase()===to)||null});}
  if(!recipients.length){status('mailStatus','Select at least one saved lead or enter one or more email addresses.',true);return;}
+ const blockedManual=recipients.filter(x=>x.lead&&String(x.lead.status||'').toLowerCase()==='do not contact');
+ if(blockedManual.length){status('mailStatus','These recipients are marked Do not contact: '+blockedManual.map(x=>x.to).join(', '),true);return;}
  const invalid=recipients.filter(x=>!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x.to));
  if(invalid.length){status('mailStatus','Check these email addresses: '+invalid.map(x=>x.to).join(', '),true);return;}
  const ok=await showConfirm('Confirm multi-recipient send','Send “'+subject+'” as '+recipients.length+' separate email'+(recipients.length===1?'':'s')+'? Each recipient will receive only their own message, and every send will be logged in Outreach and the main VIORA Communications log.','Send '+recipients.length+' email'+(recipients.length===1?'':'s'));
