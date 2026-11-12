@@ -5358,9 +5358,13 @@ window._internals = (function () {
    ═══════════════════════════════════════════════════════════════ */
 window.vioraNotify = async function (opts) {
   opts = opts || {};
-  const id = 'notif-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const source = String(opts.source || 'unknown').replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 60);
+  const eventKey = String(opts.eventId || '').replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 100);
+  const id = eventKey ? 'notif-' + source + '-' + eventKey : 'notif-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const payload = {
     id,
+    sourceEventId: eventKey ? source + ':' + eventKey : id,
+    eventId: eventKey ? source + ':' + eventKey : id,
     title: opts.title || 'VIORA',
     body: opts.body || '',
     icon: opts.icon || 'fa-bell',
