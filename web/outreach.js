@@ -97,11 +97,11 @@ function parseDiscoveryJson(v){
  const raw=String(v||'').trim().replace(/^```(?:json)?/i,'').replace(/```$/,'').trim();
  const first=raw.indexOf('{');if(first<0)throw new Error('AI response did not contain a JSON object');
  let depth=0,inString=false,escaped=false,last=-1;
- for(let i=first;i<raw.length;i++){const ch=raw[i];if(inString){if(escaped)escaped=false;else if(ch==='\\\\')escaped=true;else if(ch==='"')inString=false;continue;}if(ch==='"'){inString=true;continue;}if(ch==='{')depth++;else if(ch==='}'&&--depth===0){last=i;break;}}
+ for(let i=first;i<raw.length;i++){const ch=raw[i];if(inString){if(escaped)escaped=false;else if(ch==='\\')escaped=true;else if(ch==='"')inString=false;continue;}if(ch==='"'){inString=true;continue;}if(ch==='{')depth++;else if(ch==='}'&&--depth===0){last=i;break;}}
  if(last<0)throw new Error('AI returned incomplete JSON');
  const candidate=raw.slice(first,last+1);
  try{return JSON.parse(candidate);}catch(firstError){
-  const repaired=candidate.replace(/,\\s*([}\\]])/g,'$1').replace(/([{,]\\s*)([A-Za-z_][\\w-]*)(\\s*:)/g,'$1"$2"$3');
+  const repaired=candidate.replace(/,\s*([}\]])/g,'$1').replace(/([{,]\s*)([A-Za-z_][\w-]*)(\s*:)/g,'$1"$2"$3');
   try{return JSON.parse(repaired);}catch(_){throw firstError;}
  }
 }
