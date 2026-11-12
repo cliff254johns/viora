@@ -933,6 +933,7 @@ const App = {
       const cartBtn = isCustom
         ? ''
         : `<button class="icon-btn" ${soldOut ? 'disabled' : ''} onclick="event.stopPropagation(); App.addToCart('${p.id}')" title="Add to cart" aria-label="Add to cart"><i class="fa-solid fa-cart-plus"></i></button>`;
+      const subscribeBtn = `<a class="subscribe-btn" href="/client.html" onclick="event.stopPropagation();" title="Subscribe through your VIORA Client Portal"><i class="fa-solid fa-key"></i> Subscribe</a>`;
 
       return `
         <div class="product-card${soldOut ? ' sold-out' : ''}" data-product-id="${this.escape(p.id)}" onclick="App.openProductDetail('${p.id}')">
@@ -955,6 +956,7 @@ const App = {
                 <div class="product-price${isCustom ? ' quote-price' : ''}">${isCustom ? 'Custom pricing' : fmtKShFromKes(priceKes)}</div>
                 <div class="product-action-buttons">
                   ${previewBtn}
+                  ${subscribeBtn}
                   <button class="icon-btn ${inWish ? 'active' : ''}" onclick="event.stopPropagation(); App.toggleWishlist('${p.id}')" title="Wishlist" aria-label="Toggle wishlist"><i class="fa-solid fa-heart"></i></button>
                   ${cartBtn}
                   ${primaryBtn}
@@ -1436,6 +1438,7 @@ const heroVisual = (p.image && String(p.image).trim())
               <div class="carousel-price">${isCustom ? 'Custom' : fmtKShFromKes(priceKes)}</div>
               <div class="carousel-actions">
                 ${previewBtn}
+                <a class="carousel-subscribe-btn" href="/client.html" onclick="event.stopPropagation();" title="Subscribe through your VIORA Client Portal"><i class="fa-solid fa-key"></i> Subscribe</a>
                 <button class="carousel-wish-btn ${inWish ? 'active' : ''}" onclick="event.stopPropagation(); App.toggleWishlist('${p.id}');" title="Wishlist"><i class="fa-solid fa-heart"></i></button>
                 ${actionBtns}
               </div>
