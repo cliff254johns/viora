@@ -41,6 +41,11 @@ jobs:
           node --input-type=module --check < workers/viora-static-next/worker.js
           node --input-type=module --check < workers/viora-static-next/assets.generated.js
           node --input-type=module --check < web/mainIndex/chatbot.js
+          node --input-type=module --check < scripts/backup-firebase-rtdb.mjs
+          node --input-type=module --check < scripts/restore-firebase-rtdb.mjs
+          node --input-type=module --check < scripts/retain-r2-backups.mjs
+          node --input-type=module --check < scripts/generate-engineering-docs.mjs
+          node --input-type=module --check < scripts/review-changes.mjs
       - name: Run business calculation unit tests
         run: npm run test:unit
       - name: Validate manifests, routing, Durable Object and governance contracts
