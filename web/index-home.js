@@ -1144,18 +1144,39 @@ function renderDashboard() {
 function renderTestimonials() {
   const host = $('#testimonials-grid');
   if (!host) return;
-  const list = (S.marketContent?.testimonials || []).slice(0, 4);
 
-  if (!list.length) {
-    host.innerHTML = `
-      <figure class="testi" style="grid-column:1/-1;text-align:center;color:var(--muted);">
-        <p>No testimonials yet — add them in the admin dashboard under <strong>Market Content</strong>.</p>
-      </figure>
-    `;
-    return;
-  }
+  // These are client project showcases, not attributed customer quotations.
+  // The project relationship is supplied by VIORA; sector descriptions are
+  // grounded in each organisation's public website.
+  const projects = [
+    {
+      name: 'Kuria Karatu & Company Advocates',
+      sector: 'Legal services · Professional services',
+      summary: 'A digital presence for a litigation-focused law firm, presenting its practice areas, legal expertise and client enquiry journey.',
+      url: 'https://www.kuriakaratuadvocates.com/',
+      initials: 'KK',
+      color: '#2563eb'
+    },
+    {
+      name: 'Viva Homes',
+      sector: 'Construction · Real estate · Wealth management',
+      summary: 'A business website showcasing construction, property development, interiors and investment services in one connected brand experience.',
+      url: 'https://www.vivahomes.co.ke/',
+      initials: 'VH',
+      color: '#0f9f86'
+    },
+    {
+      name: 'ELMA',
+      sector: 'Property management · Waste management',
+      summary: 'A digital platform presenting property listings, sales and rentals, property management and sustainable waste solutions.',
+      url: 'https://www.elma.co.ke/',
+      initials: 'EL',
+      color: '#b7791f'
+    }
+  ];
 
-  host.innerHTML = list.map((t, i) => {
+  const feedback = (S.marketContent?.testimonials || []).slice(0, 4);
+  const feedbackMarkup = feedback.map((t, i) => {
     const initials = (t.name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
     const colors = ['#2267EE', '#10B981', '#8B5CF6', '#F59E0B'];
     const bg = colors[i % colors.length];
@@ -1164,14 +1185,26 @@ function renderTestimonials() {
         <blockquote>${escHtml(t.text || '')}</blockquote>
         <figcaption>
           <span class="avatar" style="background:${bg};width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0;">${initials}</span>
-          <div>
-            <strong>${escHtml(t.name || 'Client')}</strong>
-            <small>${escHtml(t.role || '')}</small>
-          </div>
+          <div><strong>${escHtml(t.name || 'Client')}</strong><small>${escHtml(t.role || '')}</small></div>
         </figcaption>
       </figure>
     `;
   }).join('');
+
+  const projectMarkup = projects.map(p => `
+    <article class="testi-project">
+      <div class="testi-project-top">
+        <span class="testi-project-mark" style="--project-color:${p.color}">${p.initials}</span>
+        <span class="testi-project-label">VIORA client project</span>
+      </div>
+      <h3>${escHtml(p.name)}</h3>
+      <p class="testi-project-sector">${escHtml(p.sector)}</p>
+      <p class="testi-project-summary">${escHtml(p.summary)}</p>
+      <a href="${escAttr(p.url)}" target="_blank" rel="noopener noreferrer">Explore website <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+    </article>
+  `).join('');
+
+  host.innerHTML = feedbackMarkup + projectMarkup;
 }
 
 /* ═══════════════════════════════════════════════════════════════
