@@ -6,6 +6,9 @@ on:
     paths:
       - "web/**"
       - "docs/**"
+      - "tests/**"
+      - "scripts/**"
+      - "package.json"
       - ".github/workflows/viora-engineering-checks.yml"
   push:
     branches:
@@ -14,6 +17,9 @@ on:
     paths:
       - "web/**"
       - "docs/**"
+      - "tests/**"
+      - "scripts/**"
+      - "package.json"
       - ".github/workflows/viora-engineering-checks.yml"
 
 permissions:
@@ -35,5 +41,7 @@ jobs:
           node --input-type=module --check < workers/viora-static-next/worker.js
           node --input-type=module --check < workers/viora-static-next/assets.generated.js
           node --input-type=module --check < web/mainIndex/chatbot.js
+      - name: Run business calculation unit tests
+        run: npm run test:unit
       - name: Validate manifests, routing, Durable Object and governance contracts
         run: node scripts/viora-engineering-checks.mjs
