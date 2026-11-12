@@ -1155,24 +1155,31 @@ function _dnCollectDerived() {
 }
 
 function _dnDedupe(merged) {
-  const seen = new Set();
+  const seenEvents = new Set();
+  const persistedSemantics = new Set();
+  const derivedSemantics = new Set();
   const out = [];
-  // Persisted events win over derived reminders so read state and source links survive.
+  // Persisted events are authoritative; derived reminders only fill gaps.
   const ordered = [...merged].sort((a, b) =>
     (a.source === 'persisted' ? 0 : 1) - (b.source === 'persisted' ? 0 : 1)
   );
   for (const n of ordered) {
     const explicit = n.sourceEventId || n.eventId || n.notificationKey || '';
     const semantic = [
-      String(n.title || '').toLowerCase().replace(/\\s+/g, ' ').trim(),
-      String(n.sub || '').toLowerCase().replace(/\\s+/g, ' ').trim(),
+      String(n.title || '').toLowerCase().replace(/\s+/g, ' ').trim(),
+      String(n.sub || '').toLowerCase().replace(/\s+/g, ' ').trim(),
       String(n.page || '').trim()
     ].join('|');
-    const eventKey = explicit ? 'event:' + String(explicit) : '';
-    const contentKey = 'content:' + semantic;
-    if ((eventKey && seen.has(eventKey)) || seen.has(contentKey)) continue;
-    if (eventKey) seen.add(eventKey);
-    seen.add(contentKey);
+    if (explicit && seenEvents.has(String(explicit))) continue;
+    if (explicit) seenEvents.add(String(explicit));
+
+    if (n.source === 'persisted') {
+      // Do not merge two different persisted events merely because their text matches.
+      persistedSemantics.add(semantic);
+    } else {
+      if (persistedSemantics.has(semantic) || derivedSemantics.has(semantic)) continue;
+      derivedSemantics.add(semantic);
+    }
     out.push(n);
   }
   return out;
