@@ -1,0 +1,68 @@
+name: VIORA Engineering checks
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "web/**"
+      - "docs/**"
+      - "tests/**"
+      - "scripts/**"
+      - "package.json"
+      - ".github/workflows/viora-engineering-checks.yml"
+  push:
+    branches:
+      - main
+      - "engineering/**"
+    paths:
+      - "web/**"
+      - "docs/**"
+      - "tests/**"
+      - "scripts/**"
+      - "package.json"
+      - ".github/workflows/viora-engineering-checks.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  static-and-contract-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Parse JavaScript modules
+        run: |
+          node --input-type=module --check < web/main.js
+          node --input-type=module --check < web/main/render-dashboard.js
+          node --check web/sw.js
+          node --input-type=module --check < web/worker.js
+          node --input-type=module --check < web/engineering-command-centre.js
+          node --input-type=module --check < workers/viora-static-next/worker.js
+          node --input-type=module --check < workers/viora-static-next/assets.generated.js
+          node --input-type=module --check < web/mainIndex/chatbot.js
+          node --input-type=module --check < scripts/backup-firebase-rtdb.mjs
+          node --input-type=module --check < scripts/restore-firebase-rtdb.mjs
+          node --input-type=module --check < scripts/retain-r2-backups.mjs
+          node --input-type=module --check < scripts/generate-engineering-docs.mjs
+          node --input-type=module --check < scripts/review-changes.mjs
+          node --input-type=module --check < playwright.config.mjs
+          node --input-type=module --check < tests/e2e/critical-journeys.spec.mjs
+      - name: Run business calculation unit tests
+        run: npm run test:unit
+      - name: Validate manifests, routing, Durable Object and governance contracts
+        run: node scripts/viora-engineering-checks.mjs
+
+  durable-object-concurrency:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Cloudflare Workers test dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund --legacy-peer-deps
+      - name: Verify SQLite Durable Object under concurrent requests
+        run: npm run test:cloudflare

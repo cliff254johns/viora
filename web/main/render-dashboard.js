@@ -1208,6 +1208,17 @@ export function renderDashboardNotifications() {
 
   if (countEl) countEl.textContent = String(list.length);
 
+  // Reconcile the installed-app badge with the unread notification centre count.
+  const unreadTotal = merged.filter(n => !n.read).length;
+  try {
+    if (navigator.setAppBadge) {
+      if (unreadTotal > 0) navigator.setAppBadge(unreadTotal).catch(() => {});
+      else if (navigator.clearAppBadge) navigator.clearAppBadge().catch(() => {});
+    }
+  } catch (_) {}
+  const soundControl = document.getElementById('vioraNotifSoundToggle');
+  if (soundControl) _vioraBindNotificationSoundControl();
+
   if (!list.length) {
     grid.innerHTML = `
       <div class="dn-empty" style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text-secondary);">
@@ -1403,6 +1414,63 @@ function _tsMs(t) {
   return 0;
 }
 
+/* VIORA notification audio: generated locally so no external audio dependency is required. */
+let _vioraAudioContext = null;
+let _vioraSoundEnabled = false;
+try { _vioraSoundEnabled = localStorage.getItem('viora.notificationSound') === 'on'; } catch (_) {}
+
+function _vioraPlayChime() {
+  if (!_vioraSoundEnabled) return;
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    _vioraAudioContext = _vioraAudioContext || new AudioCtx();
+    if (_vioraAudioContext.state === 'suspended') _vioraAudioContext.resume().catch(() => {});
+    const ctxAudio = _vioraAudioContext;
+    const now = ctxAudio.currentTime;
+    [880, 1174.66].forEach((frequency, index) => {
+      const osc = ctxAudio.createOscillator();
+      const gain = ctxAudio.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(frequency, now + index * 0.105);
+      gain.gain.setValueAtTime(0.0001, now + index * 0.105);
+      gain.gain.exponentialRampToValueAtTime(0.12, now + index * 0.105 + 0.018);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + index * 0.105 + 0.19);
+      osc.connect(gain); gain.connect(ctxAudio.destination);
+      osc.start(now + index * 0.105); osc.stop(now + index * 0.105 + 0.2);
+    });
+  } catch (error) { console.debug('[viora-audio] playback unavailable', error?.message || error); }
+}
+
+function _vioraBindNotificationSoundControl() {
+  const button = document.getElementById('vioraNotifSoundToggle');
+  if (!button || button.dataset.bound === '1') return;
+  button.dataset.bound = '1';
+  const paint = () => {
+    button.setAttribute('aria-pressed', String(_vioraSoundEnabled));
+    button.innerHTML = _vioraSoundEnabled
+      ? '<i class="fa-solid fa-volume-high"></i> Sound on'
+      : '<i class="fa-solid fa-volume-xmark"></i> Enable sound';
+    button.title = _vioraSoundEnabled ? 'Mute notification sound' : 'Enable notification sound';
+  };
+  paint();
+  button.addEventListener('click', async () => {
+    _vioraSoundEnabled = !_vioraSoundEnabled;
+    try { localStorage.setItem('viora.notificationSound', _vioraSoundEnabled ? 'on' : 'off'); } catch (_) {}
+    if (_vioraSoundEnabled) {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          _vioraAudioContext = _vioraAudioContext || new AudioCtx();
+          if (_vioraAudioContext.state === 'suspended') await _vioraAudioContext.resume();
+          _vioraPlayChime();
+        }
+      } catch (_) {}
+    }
+    paint();
+  });
+}
+
 export function surfaceVioraNotification(payload, isFresh = true) {
   if (!payload) return;
   const eventKey = String(payload.id || payload.sourceEventId || payload.eventId || '');
@@ -1426,16 +1494,7 @@ export function surfaceVioraNotification(payload, isFresh = true) {
     }
   } catch (e) {}
 
-  if (isFresh) {
-    try {
-      const audio = document.getElementById('vioraNotifSound');
-      if (audio) {
-        audio.currentTime = 0;
-        const p = audio.play();
-        if (p && typeof p.catch === 'function') p.catch(() => {});
-      }
-    } catch (e) {}
-  }
+  if (isFresh) _vioraPlayChime();
 
   try {
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
@@ -1458,6 +1517,22 @@ export function surfaceVioraNotification(payload, isFresh = true) {
   } catch (e) {}
 
   renderNotifications();
+}
+
+if (typeof window !== 'undefined' && !window.__vioraPushMessageBound && 'serviceWorker' in navigator) {
+  window.__vioraPushMessageBound = true;
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    const data = event.data || {};
+    if (data.type === 'PUSH_FOREGROUND') {
+      surfaceVioraNotification({
+        id: data.data?.eventId || data.data?.tag || ('push-' + (data.title || 'viora') + '-' + (data.body || '')),
+        title: data.title || 'VIORA',
+        body: data.body || '',
+        url: data.url || '/main.html',
+        level: data.data?.level || 'info'
+      }, true);
+    }
+  });
 }
 
 export function attachVioraNotificationListener() {

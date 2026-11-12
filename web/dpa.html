@@ -55,7 +55,7 @@ footer.foot a{color:rgba(255,255,255,.9)}
   <a href="index.html" class="back">← Back to home</a>
   <button class="print-btn" onclick="window.print()">🖨 Print / Save as PDF</button>
   <h1>Data Processing Agreement</h1>
-  <p class="meta"><strong>Last updated:</strong> 3 November 2026 · <strong>Effective:</strong> 3 November 2026</p>
+  <p class="meta"><strong>Last updated:</strong> 12 November 2026 · <strong>Effective:</strong> 12 November 2026</p>
 
   <div class="callout">
     <strong>How to use this DPA:</strong> This Data Processing Agreement ("DPA") forms part of the agreement between VIORA Ecosystems (Processor) and the Client (Controller) for services involving the processing of personal data. It is governed by Kenyan law and includes optional international arbitration. To execute it, both parties sign a copy or reference it in the main service agreement.
@@ -89,7 +89,7 @@ footer.foot a{color:rgba(255,255,255,.9)}
     <li>(c) Implement appropriate technical and organisational measures to protect Personal Data, taking into account the state of the art, the costs of implementation, and the nature, scope, context and purposes of Processing;</li>
     <li>(d) Assist the Controller in responding to Data Subject requests;</li>
     <li>(e) Assist the Controller in ensuring compliance with Articles 32–36 of the GDPR and equivalent provisions of the KDPA, taking into account the nature of Processing and the information available to VIORA;</li>
-    <li>(f) Notify the Controller without undue delay after becoming aware of a Personal Data Breach, and provide reasonable assistance in the Controller's breach notification obligations;</li>
+    <li>(f) Notify the Controller without undue delay after becoming aware of a Personal Data Breach and, for Personal Data subject to the Kenya Data Protection Act, where reasonably practicable within forty-eight (48) hours of becoming aware; provide reasonable assistance in the Controller's breach notification obligations. This processor-to-controller notice period does not replace any separate controller notification duty;</li>
     <li>(g) At the Controller's choice, delete or return all Personal Data at the end of the provision of Services, and delete existing copies unless storage is required by law;</li>
     <li>(h) Make available all information reasonably necessary to demonstrate compliance with this DPA, and allow for and contribute to audits, including inspections, by the Controller or an auditor mandated by the Controller (subject to reasonable notice and confidentiality).</li>
   </ul>
@@ -99,13 +99,15 @@ footer.foot a{color:rgba(255,255,255,.9)}
   <p>4.2 VIORA currently engages the following sub-processors:</p>
   <ul>
     <li><strong>Cloudflare, Inc.</strong> — content delivery, security, and DNS. Data may be Processed in Cloudflare's global network.</li>
-    <li><strong>Google Firebase (Google LLC)</strong> — hosting, authentication, database, and messaging. Data may be Processed in Google Cloud regions selected by VIORA.</li>
+    <li><strong>Google LLC / Firebase</strong> — authentication, Realtime Database, Storage and related Firebase services where enabled. The exact project regions and service-specific terms must be confirmed in the applicable service order and current sub-processor register.</li>
+    <li><strong>Groq, Inc. (where enabled)</strong> — AI inference for assistant features where the deployed integration sends Controller Personal Data to Groq. VIORA shall not send sensitive Personal Data to this service unless the purpose, lawful basis, minimisation, applicable contract and transfer safeguards have been assessed and approved.</li>
   </ul>
   <p>4.3 VIORA shall impose data protection obligations on each sub-processor that are no less protective than those in this DPA.</p>
-  <p>4.4 VIORA shall notify the Controller of any intended changes to sub-processors, giving the Controller the opportunity to object.</p>
+  <p>4.4 VIORA shall notify the Controller of any intended changes to sub-processors, giving the Controller the opportunity to object on reasonable data-protection grounds in accordance with the main agreement.</p>
+  <p>4.5 A current service inventory, including providers used only for website asset delivery and providers that may receive prompts or voice text, is maintained separately. A provider shall not be treated as approved for Controller Personal Data merely because a library or endpoint is present in source code; the actual deployed data flow, contract, processing location and transfer basis must be verified before use.</p>
 
   <h2>5. International transfers</h2>
-  <p>5.1 The Controller acknowledges that VIORA and its sub-processors operate internationally, and that Personal Data may be transferred to and Processed in countries outside the Controller's jurisdiction, including but not limited to the European Economic Area, the United Kingdom, the United States, and other locations where Cloudflare and Google operate.</p>
+  <p>5.1 The Controller acknowledges that VIORA and its sub-processors may operate internationally. Before a transfer of Controller Personal Data, VIORA shall identify the recipient and destination, assess the applicable transfer requirements and implement the safeguards required by the relevant Data Protection Law. Provider locations must be confirmed in the current sub-processor register and applicable provider terms.</p>
   <p>5.2 Where Personal Data originating in the EEA or UK is transferred outside those regions, VIORA shall implement appropriate safeguards, including the European Commission's Standard Contractual Clauses (SCCs) or equivalent mechanisms.</p>
   <p>5.3 For Personal Data originating in Kenya, VIORA shall comply with the cross-border transfer requirements of the KDPA, including any registration or notification obligations.</p>
 
@@ -123,7 +125,8 @@ footer.foot a{color:rgba(255,255,255,.9)}
 
   <h2>7. Data subject rights</h2>
   <p>7.1 Taking into account the nature of the Processing, VIORA shall assist the Controller by appropriate technical and organisational measures in fulfilling the Controller's obligation to respond to requests to exercise Data Subject rights.</p>
-  <p>7.2 If VIORA receives a request directly from a Data Subject, it shall, where permitted, forward the request to the Controller and shall not respond directly unless instructed.</p>
+  <p>7.2 If VIORA receives a request directly from a Data Subject in respect of Controller Personal Data, it shall, where permitted, promptly forward the request to the Controller and shall not respond directly unless instructed or required by law.</p>
+  <p>7.3 VIORA shall provide reasonable assistance with access, correction, deletion, restriction, objection and portability requests, taking account of the nature of Processing and the information available to VIORA. Any export or deletion must be scoped to the relevant Controller and tenant and remain subject to applicable law, retention duties and legal holds.</p>
 
   <h2>8. Liability and indemnity</h2>
   <p>8.1 Each party's liability under this DPA is subject to the limitations set out in the main agreement, except where Data Protection Law requires otherwise.</p>

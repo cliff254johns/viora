@@ -79,9 +79,9 @@
   --nav-toggle-bg:rgba(255,255,255,.04);
 
   /* Accent — Apple Blue (softer than #2267EE) */
-  --accent:#0A84FF;
+  --accent:#64B5FF;
   --accent-glow:rgba(10,132,255,.4);
-  --accent-2:#30D158;
+  --accent-2:#4ADE80;
   --accent-3:#BF5AF2;
   --accent-4:#30D158;
   --accent-5:#FF9F0A;
@@ -714,13 +714,13 @@ h2.section-h{font-size:clamp(28px,3.6vw,42px);margin-bottom:16px;letter-spacing:
 
 /* ── Buttons — Apple-styled ── */
 [data-theme="dark"] .btn-primary {
-  background: #0A84FF;
+  background: #005FCC;
   color: #FFFFFF;
   border: none;
   box-shadow: 0 4px 12px -4px rgba(10, 132, 255, 0.5);
 }
 [data-theme="dark"] .btn-primary:hover {
-  background: #0070E0;
+  background: #004FA3;
   box-shadow: 0 8px 20px -6px rgba(10, 132, 255, 0.6);
 }
 [data-theme="dark"] .btn-ghost {
@@ -736,7 +736,7 @@ h2.section-h{font-size:clamp(28px,3.6vw,42px);margin-bottom:16px;letter-spacing:
 
 /* ── Chat bubble user accent — iMessage blue ── */
 [data-theme="dark"] .chat-bubble.user .chat-bubble-body {
-  background: #0A84FF;
+  background: #005FCC;
   color: #FFFFFF;
 }
 
