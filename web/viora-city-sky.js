@@ -8,7 +8,7 @@ const browserTz=()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone
 function updateClock(){const out=$('[data-city-time]'),name=$('[data-city-name]');if(!out||!activeLocation)return;
 const now=window.VioraTime?.now?window.VioraTime.now():new Date(),tz=activeLocation.tz||browserTz();
 try{out.textContent=new Intl.DateTimeFormat(undefined,{timeZone:tz,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}).format(now)}catch(_){out.textContent=new Date().toLocaleTimeString()}
-if(name)name.textContent=activeLocation.name||activeLocation.label||'Your local city';stage.dataset.internetTimeSynced=String(!!window.VioraTime?.isSynced?.());stage.dataset.internetTimeSource=window.VioraTime?.source?.()||'local-clock-fallback'}
+const userSelected=stage.dataset.cityUserSelected==='true';if(name){name.textContent=userSelected?(activeLocation.name||activeLocation.label||'Selected city'):'';name.hidden=!userSelected;name.setAttribute('aria-hidden',String(!userSelected))}stage.dataset.internetTimeSynced=String(!!window.VioraTime?.isSynced?.());stage.dataset.internetTimeSource=window.VioraTime?.source?.()||'local-clock-fallback'}
 function iconFor(code){const n=Number(code);if(n===0)return'fa-sun';if([1,2].includes(n))return'fa-cloud-sun';if([3,45,48].includes(n))return'fa-cloud';if(n>=51&&n<=67)return'fa-cloud-rain';if(n>=71&&n<=86)return'fa-snowflake';if(n>=95)return'fa-cloud-bolt';return'fa-cloud-sun'}
 function paintWeather(w){const out=$('[data-city-weather]'),icon=$('[data-city-weather-icon]');if(!out)return;
 if(!w||w.tempC==null){out.textContent='Live weather unavailable';if(icon)icon.className='fa-solid fa-cloud';stage.dataset.weatherStatus='unavailable';return}
@@ -21,7 +21,7 @@ try{const w=await api.refreshWeather(force);if(id===weatherRequest)paintWeather(
 function applyLocation(loc){if(!loc||loc.lat==null||loc.lon==null||!Number.isFinite(Number(loc.lat))||!Number.isFinite(Number(loc.lon)))return;
 activeLocation={...loc,lat:Number(loc.lat),lon:Number(loc.lon),tz:loc.tz||browserTz()};window.VioraCityLocation=activeLocation;
 try{window.VioraTime?.setTimezone?.(activeLocation.tz)}catch(_){}stage.dataset.locationAccuracy=loc.accuracy||'approximate';stage.dataset.locationName=activeLocation.name||activeLocation.id||'local';updateClock()}
-function onCityChange(payload){const loc=payload?.location||window.VioraHero?.getLocation?.();if(!loc)return;applyLocation(loc);
+function onCityChange(payload){const loc=payload?.location||window.VioraHero?.getLocation?.();if(!loc)return;if(stage.dataset.homeSkyBoot==='rendered'){stage.dataset.cityUserSelected='true'}applyLocation(loc);
 requestAnimationFrame(()=>{try{window.renderVioraHero?.(true)}catch(e){console.warn('[VIORA homepage] render',e)}refreshWeather(true)})}
 async function ipLocation(){const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),5000);try{
 const r=await fetch('https://ipapi.co/json/',{cache:'no-store',signal:ctrl.signal});if(!r.ok)throw Error('IP location HTTP '+r.status);const d=await r.json();
@@ -50,6 +50,8 @@ if(/^\s*(select|change)\s+location\s*$/i.test(label))el.remove();
 });
 }
 removeLegacyLocationControls();
+const initialCityName=$('[data-city-name]');if(initialCityName){initialCityName.textContent='';initialCityName.hidden=true;initialCityName.setAttribute('aria-hidden','true')}
+stage.dataset.cityUserSelected='false';
 // Load the real J2000 star catalogue immediately; do not wait for IP lookup or weather.
 loadStarCatalogue();
 const api=window.VioraHero;if(api?.on)api.on('cityChange',onCityChange);
