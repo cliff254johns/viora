@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: {node-version: "22", cache: "npm"}
+        with: {node-version: "22"}
       - run: npm install --ignore-scripts
       - name: Export and encrypt RTDB snapshot to private Cloudflare R2
         run: node scripts/backup-firebase-rtdb.mjs
