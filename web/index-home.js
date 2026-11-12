@@ -589,7 +589,13 @@ function renderTourStepDetail(host, buckets, families, industries) {
             return String(p.category || '').trim().toLowerCase() === marketCat;
           });
 
-          if (products.length === 0) return '';
+          if (products.length === 0) return `
+            <div class="tour-products-section">
+              <div class="tour-products-head"><span class="tour-products-label"><i class="fa-solid fa-box-open"></i> Marketplace products for this industry</span></div>
+              <p class="tour-products-empty">There are no live products tagged to this exact industry category yet. Explore the full Marketplace catalogue.</p>
+              <div class="tour-products-footer"><a class="tour-marketplace-cta" href="/market"><i class="fa-solid fa-store"></i> Explore Marketplace</a></div>
+            </div>`;
+
 
           products.sort((a, b) => (Number(b.totalSold) || 0) - (Number(a.totalSold) || 0));
 
@@ -632,6 +638,7 @@ function renderTourStepDetail(host, buckets, families, industries) {
                   `;
                 }).join('')}
               </div>
+              <div class="tour-products-footer"><a class="tour-marketplace-cta" href="/market"><i class="fa-solid fa-store"></i> Explore Marketplace <i class="fa-solid fa-arrow-right"></i></a></div>
             </div>
           `;
         })()}
