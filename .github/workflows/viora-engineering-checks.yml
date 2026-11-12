@@ -32,6 +32,7 @@ jobs:
           node --input-type=module --check < web/main.js
           node --input-type=module --check < web/worker.js
           node --input-type=module --check < web/engineering-command-centre.js
+          node --input-type=module --check < workers/viora-static-next/worker.js
           node --input-type=module --check < web/mainIndex/chatbot.js
       - name: Validate manifests, routing, Durable Object and governance contracts
         run: node scripts/viora-engineering-checks.mjs
