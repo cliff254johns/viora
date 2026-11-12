@@ -5392,6 +5392,56 @@ window.vioraNotify = async function (opts) {
   }
 };
 
+// Watch external event streams that are written by integrations/webhooks.
+// Existing records are loaded quietly; only newly arriving event IDs notify.
+let _externalBridgeUid = null;
+let _externalBridgeUnsubs = [];
+onAuthStateChanged(auth, (user) => {
+  if (_externalBridgeUid === user?.uid) return;
+  _externalBridgeUnsubs.forEach(fn => { try { fn(); } catch (_) {} });
+  _externalBridgeUnsubs = [];
+  _externalBridgeUid = user?.uid || null;
+  if (!user) return;
+
+  const watchExternal = (path, source, title, body, url, icon, level = 'info') => {
+    let initial = true;
+    const seen = new Set();
+    try {
+      const unsubscribe = onValue(ref(db, P(path)), (snap) => {
+        const values = snap.exists() ? snap.val() : {};
+        const entries = Object.entries(values || {});
+        if (initial) {
+          entries.forEach(([key]) => seen.add(key));
+          initial = false;
+          return;
+        }
+        for (const [key, value] of entries) {
+          if (seen.has(key)) continue;
+          seen.add(key);
+          try {
+            window.vioraNotify({
+              eventId: key,
+              source,
+              title,
+              body: typeof body === 'function' ? body(value || {}) : body,
+              url, icon, level
+            });
+          } catch (e) { console.warn('[external-notify] event publish failed', source, key, e); }
+        }
+      }, (error) => console.warn('[external-notify] listener failed', source, error?.code || error?.message));
+      _externalBridgeUnsubs.push(unsubscribe);
+    } catch (e) { console.warn('[external-notify] watcher setup failed', source, e); }
+  };
+
+  watchExternal('waInbound', 'whatsapp-inbound', 'WhatsApp: new inbound message',
+    value => 'A new WhatsApp message was received from ' + String(value.profileName || value.from || 'a contact').slice(0, 100) + '.',
+    '/main.html#inbox', 'fa-whatsapp');
+
+  watchExternal('mpesaTransactions', 'mpesa-callback', 'M-Pesa: payment callback received',
+    'A new M-Pesa transaction arrived and is awaiting reconciliation.',
+    '/main.html#fin-mpesa', 'fa-mobile-screen-button', 'warning');
+});
+
 /* ═══════════════════════════════════════════════════════════════
    KICK OFF
    ═══════════════════════════════════════════════════════════════ */
