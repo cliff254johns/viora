@@ -18,7 +18,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="VIORA">
   <meta property="og:title" content="VIORA Market — Business Software &amp; Digital Products">
-  <meta property="og:description" content="Instant access to premium software tools in Kenyan Shillings.">
+  <meta property="og:description" content="Instant access to premium software tools with local-currency price estimates for visitors worldwide.">
   <meta property="og:image" content="https://viora.co.ke/viora.png">
   <meta property="og:type" content="website">
 
@@ -527,7 +527,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
     <div class="cart-footer">
       <div class="cart-total">
         <span class="ct-label">Total</span>
-        <span class="ct-value" id="cartTotal">KSh 0</span>
+        <span class="ct-value" id="cartTotal">—</span>
       </div>
       <button class="cart-checkout-btn" id="cartCheckoutBtn" disabled onclick="App.openCheckout()">
         <i class="fa-solid fa-lock"></i> Checkout Securely
@@ -554,7 +554,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
         </h1>
 
         <p class="hero-sub" id="heroSub">
-          Instant access to premium software tools — all prices in <strong>Kenyan Shillings</strong>, delivered instantly.
+          Instant access to premium software tools, with prices displayed in your local currency.
         </p>
 
         <div class="hero-buttons">
@@ -676,10 +676,10 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
         </select>
         <select class="toolbar-select" id="priceFilter" onchange="App.onPriceFilter(this.value)" aria-label="Filter by price">
           <option value="all">All Prices</option>
-          <option value="under-2k">Under KSh 2,000</option>
-          <option value="2k-5k">KSh 2,000 – 5,000</option>
-          <option value="5k-10k">KSh 5,000 – 10,000</option>
-          <option value="over-10k">Over KSh 10,000</option>
+          <option value="under-2k">Under 2,000</option>
+          <option value="2k-5k">2,000 – 5,000</option>
+          <option value="5k-10k">5,000 – 10,000</option>
+          <option value="over-10k">Over 10,000</option>
         </select>
       </div>
 
@@ -761,7 +761,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
     <div class="container">
       <div class="newsletter">
         <h3 id="newsletterHeading">Stay in the loop</h3>
-        <p id="newsletterDesc">Get notified about new products and exclusive KSh discounts.</p>
+        <p id="newsletterDesc">Get notified about new products and local-currency offers.</p>
         <form class="newsletter-form" onsubmit="App.subscribeNewsletter(event)">
           <input type="email" id="newsletterEmail" placeholder="you@example.com" required aria-label="Email address" />
           <button type="submit"><i class="fa-solid fa-paper-plane"></i> Subscribe</button>
@@ -779,7 +779,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
           <img src="https://viora.co.ke/viora.png" alt="Viora" height="32" />
           <span id="footerBrand">VIORA Marketplace</span>
         </div>
-        <p id="footerText">Buy premium software licenses instantly in Kenyan Shillings.</p>
+        <p id="footerText">Buy premium software licenses with local-currency price estimates.</p>
       </div>
       <div class="footer-col">
         <h4>Shop</h4>
@@ -803,7 +803,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
       </div>
     </div>
     <div class="footer-bottom">
-      &copy; <span id="currentYear"></span> <span class="accent">VIORA</span> · All Rights Reserved · Prices in KSh (KES)
+      &copy; <span id="currentYear"></span> <span class="accent">VIORA</span> · All Rights Reserved · Local currency display · order records in KES
     </div>
   </footer>
 
@@ -890,14 +890,14 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
           </select>
         </div>
         <div class="modal-field">
-          <label>Budget Range (KSh) *</label>
+          <label>Budget Range (local currency estimate) *</label>
           <select id="quoteBudget" required>
             <option value="">Select budget…</option>
-            <option value="under-20k">Under KSh 20,000</option>
-            <option value="20k-50k">KSh 20,000 – 50,000</option>
-            <option value="50k-150k">KSh 50,000 – 150,000</option>
-            <option value="150k-500k">KSh 150,000 – 500,000</option>
-            <option value="over-500k">Over KSh 500,000</option>
+            <option value="under-20k">Under 20,000</option>
+            <option value="20k-50k">20,000 – 50,000</option>
+            <option value="50k-150k">50,000 – 150,000</option>
+            <option value="150k-500k">150,000 – 500,000</option>
+            <option value="over-500k">Over 500,000</option>
           </select>
         </div>
         <div class="modal-field">
@@ -985,7 +985,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
       <div class="thanks-order-box">
         <div class="thanks-order-label">Order Reference</div>
         <div class="thanks-order-id" id="thanksOrderId">ORD-XXXXX</div>
-        <div class="thanks-order-summary" id="thanksSummary">— item(s) · KSh 0</div>
+        <div class="thanks-order-summary" id="thanksSummary">— item(s) · —</div>
       </div>
       <button class="btn-primary btn-full" onclick="App.closeModal('thankYouModal'); App.resetPurchaseForm();">
         <i class="fa-solid fa-check"></i> Got It, Thanks
