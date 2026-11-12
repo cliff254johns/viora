@@ -18,7 +18,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: {node-version: "22"}
-      - run: npm install --package-lock-only --ignore-scripts
+      - name: Install project dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund --legacy-peer-deps
       - run: npm audit --audit-level=high
       - run: npm test
       - run: npm run test:integration
@@ -57,8 +58,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Ensure workflow permissions are explicit and read-only by default
+        shell: bash
         run: |
+          set -euo pipefail
           test -f .github/workflows/security-quality.yml
           grep -q 'contents: read' .github/workflows/security-quality.yml
-          pattern='permissions:.*write-' 'all'
-          ! grep -R -E "$pattern" .github/workflows
+          pattern='permissions:.*write-'
+          pattern="${pattern}all"
+          if grep -R -E "$pattern" .github/workflows; then
+            echo "Broad write-all permissions are not allowed." >&2
+            exit 1
+          fi
