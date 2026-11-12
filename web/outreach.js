@@ -142,14 +142,15 @@ async function geocodeCity(location,cache){
 function ensureWorldMap(){
  if(worldMap||!window.L||!$('worldLeadMap'))return;
  worldMap=L.map('worldLeadMap',{worldCopyJump:true,scrollWheelZoom:true,preferCanvas:true,maxZoom:19}).setView([20,5],2);
- const streets=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'});
+ const streets=L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd',attribution:'&copy; OpenStreetMap contributors &copy; CARTO'});
+ const osmStreets=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'});
  const terrain=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles &copy; Esri — World Topographic Map'});
  const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles &copy; Esri'});
  const boundaries=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,opacity:.95,attribution:'Country boundaries & place labels © Esri'});
- // Start with a detailed topographic street view: green land cover, arid/desert regions,
- // roads and political borders. Keep the boundary/label overlay available on every base map.
- terrain.addTo(worldMap);boundaries.addTo(worldMap);
- L.control.layers({'Street map':streets,'Terrain · vegetation & deserts':terrain,'Satellite imagery':satellite},{'Country borders & place labels':boundaries},{collapsed:false}).addTo(worldMap);
+ // Voyager is the default street basemap with land colours and borders; topo adds
+ // shaded relief, green land cover and arid/desert geography. Borders stay over all views.
+ streets.addTo(worldMap);boundaries.addTo(worldMap);
+ L.control.layers({'Street · terrain colours & borders':streets,'OpenStreetMap streets':osmStreets,'Terrain · vegetation & deserts':terrain,'Satellite imagery':satellite},{'Country borders & place labels':boundaries},{collapsed:false}).addTo(worldMap);
  worldMarkers=L.layerGroup().addTo(worldMap);
 }
 async function renderWorldLeadMap(force=false){
