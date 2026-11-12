@@ -10,12 +10,14 @@ function _ensureMainLeadMap(){
  const el=document.getElementById('mainLeadMap');if(!el||!window.L)return;
  if(_mainLeadGeoMap){setTimeout(()=>_mainLeadGeoMap&&_mainLeadGeoMap.invalidateSize(true),100);return}
  if(el.clientWidth<80)return;
- // Remove the static loading placeholder before Leaflet creates its map panes.
  el.replaceChildren();
  _mainLeadGeoMap=L.map(el,{worldCopyJump:true,scrollWheelZoom:true,preferCanvas:true,maxZoom:19}).setView([18,5],2);
  const streets=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'});
+ const terrain=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles © Esri — World Topographic Map'});
  const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles © Esri'});
- streets.addTo(_mainLeadGeoMap);L.control.layers({'Street map':streets,'Satellite imagery':satellite},null,{collapsed:true}).addTo(_mainLeadGeoMap);
+ const boundaries=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,opacity:.95,attribution:'Country boundaries & place labels © Esri'});
+ terrain.addTo(_mainLeadGeoMap);boundaries.addTo(_mainLeadGeoMap);
+ L.control.layers({'Street map':streets,'Terrain · vegetation & deserts':terrain,'Satellite imagery':satellite},{'Country borders & place labels':boundaries},{collapsed:false}).addTo(_mainLeadGeoMap);
  _mainLeadGeoLayer=L.layerGroup().addTo(_mainLeadGeoMap);
  if(!_mainLeadMapResizeBound){window.addEventListener('resize',()=>{if(_mainLeadGeoMap)setTimeout(()=>_mainLeadGeoMap&&_mainLeadGeoMap.invalidateSize(true),120)});_mainLeadMapResizeBound=true}
  requestAnimationFrame(()=>requestAnimationFrame(()=>_mainLeadGeoMap&&_mainLeadGeoMap.invalidateSize(true)));
