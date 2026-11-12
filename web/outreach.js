@@ -80,7 +80,7 @@ async function geocodeCity(location,cache){
 function ensureWorldMap(){
  if(worldMap||!window.L||!$('worldLeadMap'))return;
  worldMap=L.map('worldLeadMap',{worldCopyJump:true,scrollWheelZoom:false,preferCanvas:true}).setView([20,5],2);
- L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'&copy; OpenStreetMap contributors'}).addTo(worldMap);
+ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,attribution:'&copy; OpenStreetMap contributors &copy; CARTO'}).addTo(worldMap);
  worldMarkers=L.layerGroup().addTo(worldMap);
 }
 async function renderWorldLeadMap(force=false){
@@ -106,12 +106,12 @@ async function renderWorldLeadMap(force=false){
  worldMarkers.clearLayers();if(worldHeat){worldMap.removeLayer(worldHeat);worldHeat=null;}
  const heat=[];
  points.forEach(p=>{
-  const count=p.records.length,marker=L.circleMarker([p.lat,p.lng],{radius:Math.min(17,7+Math.sqrt(count)*2),color:'#f8fafc',weight:2,fillColor:'#16a6d9',fillOpacity:.88});
+  const count=p.records.length,marker=L.circleMarker([p.lat,p.lng],{radius:Math.min(17,7+Math.sqrt(count)*2),color:'#e0f2fe',weight:2,fillColor:'#38bdf8',fillOpacity:.96});
   const items=p.records.slice(0,18).map(l=>'<div class="map-popup-lead"><b>'+esc(l.company||l.fullName||'Unnamed lead')+'</b><span>'+esc(l.category||'Lead')+' · '+esc(l.source||'VIORA CRM')+'</span></div>').join('');
   marker.bindPopup('<div class="map-popup"><strong>'+esc(p.location)+'</strong><span class="map-popup-count">'+count+' lead'+(count===1?'':'s')+'</span>'+items+(p.records.length>18?'<small>+'+(p.records.length-18)+' more leads</small>':'')+'</div>');
   marker.addTo(worldMarkers);heat.push([p.lat,p.lng,Math.min(1,.35+count*.12)]);
  });
- if(window.L.heatLayer&&heat.length)worldHeat=L.heatLayer(heat,{radius:34,blur:24,maxZoom:6,gradient:{0.2:'#60a5fa',0.45:'#22d3ee',0.7:'#34d399',1:'#fb923c'}}).addTo(worldMap);
+ if(window.L.heatLayer&&heat.length)worldHeat=L.heatLayer(heat,{radius:42,blur:30,maxZoom:6,minOpacity:.32,gradient:{0.12:'#2563eb',0.34:'#06b6d4',0.58:'#22c55e',0.8:'#f59e0b',1:'#ef4444'}}).addTo(worldMap);
  $('mapCityCount').textContent=points.length;
  if(points.length){const bounds=L.latLngBounds(points.map(p=>[p.lat,p.lng]));worldMap.fitBounds(bounds.pad(.16),{maxZoom:5});}
  else worldMap.setView([20,5],2);
