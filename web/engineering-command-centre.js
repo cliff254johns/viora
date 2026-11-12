@@ -104,7 +104,7 @@ function renderStatic() {
       <header class="ecc-hero">
         <div>
           <div class="ecc-eyebrow">VIORA PLATFORM OPERATIONS</div>
-          <h1>Engineering Command Centre</h1>
+          <h1 id="engineeringCommandHeading">Engineering Command Centre</h1>
           <p>Engineering health, operational readiness and data-protection governance in one workspace.</p>
         </div>
         <div class="ecc-hero-actions">
