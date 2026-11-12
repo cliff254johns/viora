@@ -20,6 +20,6 @@ jobs:
       - name: Run browser, accessibility and mobile layout checks
         run: npm run test:e2e
         env:
-          VIORA_BASE_URL: https://viora.co.ke
+          VIORA_BASE_URL: https://engineering-command-centre-deep-audit-20261112-viora-static-git.cliff254johns.workers.dev
           VIORA_TEST_EMAIL: ${{ secrets.VIORA_TEST_EMAIL }}
           VIORA_TEST_PASSWORD: ${{ secrets.VIORA_TEST_PASSWORD }}
