@@ -46,6 +46,8 @@ jobs:
           node --input-type=module --check < scripts/retain-r2-backups.mjs
           node --input-type=module --check < scripts/generate-engineering-docs.mjs
           node --input-type=module --check < scripts/review-changes.mjs
+          node --input-type=module --check < playwright.config.mjs
+          node --input-type=module --check < tests/e2e/critical-journeys.spec.mjs
       - name: Run business calculation unit tests
         run: npm run test:unit
       - name: Validate manifests, routing, Durable Object and governance contracts
