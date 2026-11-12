@@ -525,7 +525,7 @@ const App = {
     setTxt('footerBrand', c.brandName ? c.brandName + ' Marketplace' : DEFAULTS.brandName + ' Marketplace');
     setTxt('footerText', val('footerText', DEFAULTS.footerText));
 
-    const waNumber = c.whatsApp || DEFAULTS.whatsApp;
+    const waNumber = '254713428774';
     if (waNumber) {
       const wa = document.getElementById('whatsappFloat');
       const fwa = document.getElementById('footerWhatsApp');
@@ -1286,7 +1286,7 @@ const heroVisual = (p.image && String(p.image).trim())
 
   openWhatsAppQuote(productId) {
     const p = this.products.find(x => x.id === productId);
-    const wa = (this.content && this.content.whatsApp) || DEFAULTS.whatsApp;
+    const wa = '254713428774';
     const msg = p ? `Hi Viora, I'm interested in "${p.name}". Can we discuss a custom build for my business?` : `Hi Viora, I'd like to discuss a custom build.`;
     window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
   },
@@ -2578,7 +2578,7 @@ const DEFAULTS = {
   brandName: 'VIORA',
   brandAccent: '#00e0ff',
   footerText: 'Buy premium software licenses instantly in Kenyan Shillings.',
-  whatsApp: '254758229135 or 254713428774',
+  whatsApp: '254713428774',
   footerEmail: 'support@viora.co.ke',
   productsSubtitle: 'Our Catalog',
   productsHeading: 'Product Collection',
@@ -4530,7 +4530,7 @@ const heroVisual = (p.image && String(p.image).trim())
       if (thanksSummary) thanksSummary.textContent = `${orderLines.length} item${orderLines.length > 1 ? 's' : ''} · ${fmtKShFromKes(totalKES)}`;
 
       if (thanksWa) {
-        const supportNumber = (this.content && this.content.whatsApp) || DEFAULTS.whatsApp || '254713428774';
+        const supportNumber = '254713428774';
         const waMessage = encodeURIComponent(`Hi Viora, I just placed order ${orderId} (${fmtKShFromKes(totalKES)}). Please help me complete the payment.`);
         thanksWa.href = `https://wa.me/${supportNumber}?text=${waMessage}`;
       }
@@ -5020,6 +5020,17 @@ const heroVisual = (p.image && String(p.image).trim())
 };
 
 window.App = App;
+function applyVisitorCurrency(){
+  const fx=window.VioraCurrency;if(!fx)return;
+  const live=fx.convert(1,'USD','KES');if(Number.isFinite(live)&&live>0)FX_RATE=live;
+  try{App.renderFeatured();App.renderProducts();App.renderCarousel();App.renderCart();App.renderWishlistBadge();}catch(e){console.warn('[VIORA currency] Marketplace refresh skipped:',e);}
+  const state=fx.getState(),note=document.getElementById('currencyNote');
+  if(note)note.textContent='Prices shown in '+state.currency+' using daily reference rates. Final order records and settlement remain in KES.';
+  const select=document.getElementById('priceFilter');
+  if(select){const ranges=[['all','All prices'],['under-2k','Under '+fx.format(2000,'KES')],['2k-5k',fx.format(2000,'KES')+' – '+fx.format(5000,'KES')],['5k-10k',fx.format(5000,'KES')+' – '+fx.format(10000,'KES')],['over-10k','Over '+fx.format(10000,'KES')]];ranges.forEach(([value,label])=>{const option=select.querySelector('option[value="'+value+'"]');if(option)option.textContent=label;});}
+}
+window.addEventListener('viora:currency-ready',applyVisitorCurrency);
+if(window.VioraCurrency?.getState().ready)applyVisitorCurrency();
 
 let _appInitialized = false;
 function bootMarket() {
