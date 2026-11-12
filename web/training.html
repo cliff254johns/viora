@@ -203,15 +203,6 @@
 }
 [data-theme="dark"] .instructor-card{background:#141414;border-color:rgba(255,255,255,.08)}
 .instructor-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
-.instructor-card .ic-photo{
-  aspect-ratio:1/1;background-size:cover;background-position:center;position:relative;
-}
-.instructor-card .ic-photo::after{
-  content:"";position:absolute;inset:0;
-  background:linear-gradient(to top,rgba(10,25,47,.4),transparent 50%);
-  opacity:0;transition:opacity .3s;
-}
-.instructor-card:hover .ic-photo::after{opacity:1}
 .instructor-card .ic-body{padding:20px}
 .instructor-card .ic-body h4{
   font-size:16px;margin:0 0 4px;font-family:'Manrope';font-weight:700;
@@ -684,7 +675,6 @@
 
     <div class="instructors-grid">
       <article class="instructor-card reveal">
-        <div class="ic-photo" style="background-image:url('https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=600&q=80')"></div>
         <div class="ic-body">
           <h4>Kevin Mwangi</h4>
           <div class="role">Lead Instructor · ERP</div>
@@ -696,7 +686,6 @@
       </article>
 
       <article class="instructor-card reveal">
-        <div class="ic-photo" style="background-image:url('https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=600&q=80')"></div>
         <div class="ic-body">
           <h4>Amina Ochieng</h4>
           <div class="role">Instructor · Retail & POS</div>
@@ -708,7 +697,6 @@
       </article>
 
       <article class="instructor-card reveal">
-        <div class="ic-photo" style="background-image:url('https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&q=80')"></div>
         <div class="ic-body">
           <h4>Daniel Kiprop</h4>
           <div class="role">Instructor · HR & Payroll</div>
@@ -720,7 +708,6 @@
       </article>
 
       <article class="instructor-card reveal">
-        <div class="ic-photo" style="background-image:url('https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=600&q=80')"></div>
         <div class="ic-body">
           <h4>Grace Wairimu</h4>
           <div class="role">Instructor · CRM & Sales</div>
