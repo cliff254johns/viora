@@ -23,6 +23,6 @@ const s3=new S3Client({region:'auto',endpoint:'https://'+process.env.R2_ACCOUNT_
 await s3.send(new PutObjectCommand({Bucket:process.env.R2_BUCKET,Key:objectKey,Body:envelope,ContentType:'application/octet-stream',Metadata:{sha256,encrypted:'aes-256-gcm',source:'firebase-realtime-database'}}));
 if(now.getUTCDate()===1){
   const monthlyKey='rtdb/monthly/'+now.toISOString().slice(0,7)+'.viora.enc';
-  await s3.send(new PutObjectCommand({Bucket:process.env.R2_BUCKET,Key:monthlyKey,Body:envelope,ContentType:'application/octet-stream',Metadata:{sha256,encrypted:'aes-256-gcm',source:'firebase-realtime-database'}});
+  await s3.send(new PutObjectCommand({Bucket:process.env.R2_BUCKET,Key:monthlyKey,Body:envelope,ContentType:'application/octet-stream',Metadata:{sha256,encrypted:'aes-256-gcm',source:'firebase-realtime-database'}}));
 }
 console.log(JSON.stringify({event:'backup_succeeded',objectKey,bytes:envelope.length,sha256,createdAt:now.toISOString()}));
