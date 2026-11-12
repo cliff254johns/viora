@@ -1,7 +1,7 @@
 // Shared idempotent publisher for VIORA portal events.
 // Call only after the business record has been successfully written.
 export async function publishVioraEvent({
-  db, ref, set, eventId, source, category, title, body, url,
+  db, ref, set, get, eventId, source, category, title, body, url,
   level = "info", icon = "fa-bell", actorUid = ""
 }) {
   if (!db || typeof ref !== "function" || typeof set !== "function" || !eventId) {
@@ -27,8 +27,20 @@ export async function publishVioraEvent({
     by: actorUid || null
   };
   try {
-    await set(ref(db, "viora_data/orgs/viora/notifications/" + id), payload);
-    return { ok: true, id };
+    const notificationRef = ref(db, "viora_data/orgs/viora/notifications/" + id);
+    let isNew = true;
+    if (typeof get === "function") {
+      const existingSnap = await get(notificationRef);
+      if (existingSnap && existingSnap.exists()) {
+        isNew = false;
+        const existing = existingSnap.val() || {};
+        payload.read = existing.read === true;
+        if (existing.readAt) payload.readAt = existing.readAt;
+        if (existing.createdAt) payload.createdAt = existing.createdAt;
+      }
+    }
+    await set(notificationRef, payload);
+    return { ok: true, id, isNew };
   } catch (error) {
     console.warn("[viora-notifications] publish failed", sourceKey, eventKey, error?.code || error?.message || error);
     return { ok: false, reason: error?.code || "write-failed" };
