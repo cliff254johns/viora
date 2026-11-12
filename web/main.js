@@ -1543,7 +1543,8 @@ async function _flushCounterNotifications() {
         icon: meta.icon,
         level: q.danger ? 'warning' : 'info',
         url: '/main.html#' + (meta.tab || 'dashboard'),
-        source: 'sidebar-counter:' + q.key
+        source: 'sidebar-counter:' + q.key,
+        eventId: q.key + '-' + q.value
       });
     } catch (e) { console.warn('[counter-notify] single failed', e); }
     return;
@@ -1564,7 +1565,8 @@ async function _flushCounterNotifications() {
       icon: 'fa-bell',
       level: anyDanger ? 'warning' : 'info',
       url: '/main.html#dashboard',
-      source: 'sidebar-counters-batch'
+      source: 'sidebar-counters-batch',
+      eventId: queue.map(q => q.key + ':' + q.value).sort().join('|')
     });
   } catch (e) { console.warn('[counter-notify] batch failed', e); }
 }
