@@ -159,7 +159,7 @@ function renderStatic() {
             ['Subprocessor register','Draft inventory','Verify legal entities, regions, contracts, retention and transfer mechanisms.'],
             ['Incident response','Runbook drafted','Assign owners and complete a tabletop exercise.'],
             ['SLA','Draft only','Do not make uptime/support commitments before measurement and approval.'],
-            ['DPIA / sensitive data','Owner review','Assess health, biometric, children's and other high-risk processing before deployment.']
+            ['DPIA / sensitive data','Owner review','Assess health, biometric, child-related and other high-risk processing before deployment.']
           ].map(([name,status,detail])=>'<div class="ecc-register-row"><div><strong>'+esc(name)+'</strong><small>'+esc(detail)+'</small></div>'+statusPill(status==='Drafts present'||status==='Policy drafted'||status==='Draft inventory'||status==='Runbook drafted'||status==='Draft only'?'warn':'bad',status)+'</div>').join('')}
         </div>
         <div class="ecc-actions-row">
