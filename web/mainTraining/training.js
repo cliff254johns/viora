@@ -176,7 +176,7 @@ async function requestCourseAccess(courseId, source = "upgrade-modal") {
 
   try {
     await set(ref(db, `${SCHOLAR}/unlockRequests/${requestId}`), payload);
-    await publishVioraEvent({ db, ref, set, eventId: requestId, source: "scholar-unlock", category: "scholar", title: "Scholar: course access requested", body: `${payload.userName} requested access to ${payload.courseTitle}.`, url: "/scholar-admin.html", level: "warning", icon: "fa-unlock-keyhole", actorUid: S.user.uid });
+    await publishVioraEvent({ db, ref, set, get, eventId: requestId, source: "scholar-unlock", category: "scholar", title: "Scholar: course access requested", body: `${payload.userName} requested access to ${payload.courseTitle}.`, url: "/scholar-admin.html", level: "warning", icon: "fa-unlock-keyhole", actorUid: S.user.uid });
     toast("Request sent — admin has been notified.", "success");
   } catch (e) {
     console.error("[training] unlock request failed:", e);
@@ -368,7 +368,7 @@ async function doRegister() {
       requestedAt,
       source: "training-portal"
     });
-    await publishVioraEvent({ db, ref, set, eventId: uid, source: "scholar-learner", category: "scholar", title: "Scholar: learner access application", body: `${name} submitted a learner access application.`, url: "/scholar-admin.html", level: "warning", icon: "fa-user-graduate", actorUid: uid });
+    await publishVioraEvent({ db, ref, set, get, eventId: uid, source: "scholar-learner", category: "scholar", title: "Scholar: learner access application", body: `${name} submitted a learner access application.`, url: "/scholar-admin.html", level: "warning", icon: "fa-user-graduate", actorUid: uid });
 
     try {
       const snap = await get(ref(db, `${USERS}/${uid}`));
@@ -872,7 +872,7 @@ function enrollAndOpen(courseId) {
   set(ref(db, `${SCHOLAR}/enrollments/${S.user.uid}/${courseId}`), payload)
     .then(async () => {
       S.enrollments[courseId] = payload;
-      await publishVioraEvent({ db, ref, set, eventId: `${S.user.uid}-${courseId}`, source: "scholar-enrollment", category: "scholar", title: "Scholar: new course enrolment", body: `${payload.enrolledByName} enrolled in ${course.title || courseId}.`, url: "/scholar-admin.html", icon: "fa-book-open", actorUid: S.user.uid });
+      await publishVioraEvent({ db, ref, set, get, eventId: `${S.user.uid}-${courseId}`, source: "scholar-enrollment", category: "scholar", title: "Scholar: new course enrolment", body: `${payload.enrolledByName} enrolled in ${course.title || courseId}.`, url: "/scholar-admin.html", icon: "fa-book-open", actorUid: S.user.uid });
       toast("Enrolled. Let's get started!", "success");
       const mod = firstIncompleteModule(course);
       if (mod) openLesson(courseId, mod.id);
@@ -932,7 +932,7 @@ async function onLessonCompleteClick() {
   btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
   try {
     await set(ref(db, `${SCHOLAR}/progress/${S.user.uid}/${courseId}/${moduleId}`), { moduleId, completedAt: nowIso() });
-    await publishVioraEvent({ db, ref, set, eventId: `${S.user.uid}-${courseId}-${moduleId}`, source: "scholar-module-complete", category: "scholar", title: "Scholar: module completed", body: `${S.access?.name || "A learner"} completed a module in ${course.title || courseId}.`, url: "/scholar-admin.html", icon: "fa-circle-check", actorUid: S.user.uid });
+    await publishVioraEvent({ db, ref, set, get, eventId: `${S.user.uid}-${courseId}-${moduleId}`, source: "scholar-module-complete", category: "scholar", title: "Scholar: module completed", body: `${S.access?.name || "A learner"} completed a module in ${course.title || courseId}.`, url: "/scholar-admin.html", icon: "fa-circle-check", actorUid: S.user.uid });
     S.progress[courseId] = S.progress[courseId] || {};
     S.progress[courseId][moduleId] = { moduleId, completedAt: nowIso() };
     if (courseDone(course)) {
@@ -984,7 +984,7 @@ async function submitQuiz() {
     await set(ref(db, `${SCHOLAR}/quizSubmissions/${S.user.uid}/${courseId}`), submission);
     await set(ref(db, `${SCHOLAR}/progress/${S.user.uid}/${courseId}/${mod.id}`), { moduleId: mod.id, completedAt: nowIso(), score: autoScore });
     await update(ref(db, `${SCHOLAR}/enrollments/${S.user.uid}/${courseId}`), { completedAt: nowIso(), progress: 100 });
-    await publishVioraEvent({ db, ref, set, eventId: `${S.user.uid}-${courseId}`, source: "scholar-quiz-submitted", category: "scholar", title: "Scholar: final quiz submitted", body: `${submission.userName} submitted the final quiz for ${submission.courseTitle} (${autoScore}%).`, url: "/scholar-admin.html", level: "warning", icon: "fa-file-circle-question", actorUid: S.user.uid });
+    await publishVioraEvent({ db, ref, set, get, eventId: `${S.user.uid}-${courseId}`, source: "scholar-quiz-submitted", category: "scholar", title: "Scholar: final quiz submitted", body: `${submission.userName} submitted the final quiz for ${submission.courseTitle} (${autoScore}%).`, url: "/scholar-admin.html", level: "warning", icon: "fa-file-circle-question", actorUid: S.user.uid });
     S.quizSubmissions[courseId] = submission;
     S.progress[courseId] = S.progress[courseId] || {};
     S.progress[courseId][mod.id] = { moduleId: mod.id, completedAt: nowIso(), score: autoScore };
