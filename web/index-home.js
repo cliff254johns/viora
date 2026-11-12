@@ -2064,6 +2064,79 @@ function initGlobe() {
   globeGroup.add(earthMesh);
 
   /* ═══════════════════════════════════════════════════════════
+     VISIBLE ORBITAL SATELLITES — separate from the rotating Earth
+     Two inclined orbital tracks and three high-contrast spacecraft.
+     These are illustrative orbital visuals, not live satellite positions.
+     ═══════════════════════════════════════════════════════════ */
+  const satelliteOrbits = [];
+  const satelliteOrbitSpecs = [
+    { radius: 128, tube: 0.28, color: 0x63d8ff, tilt: [0.92, 0.12, 0.18], speed: 0.035, phase: 0.2 },
+    { radius: 143, tube: 0.22, color: 0xffc56e, tilt: [1.22, -0.32, 0.58], speed: -0.024, phase: 2.1 },
+  ];
+
+  function makeSatellite(color) {
+    const craft = new THREE.Group();
+    const bodyMat = new THREE.MeshStandardMaterial({
+      color: 0xf3f7ff, metalness: 0.72, roughness: 0.28,
+      emissive: color, emissiveIntensity: 0.22,
+    });
+    const panelMat = new THREE.MeshBasicMaterial({ color: 0x287fd8 });
+    const panelLineMat = new THREE.MeshBasicMaterial({ color: 0x9bdcff });
+    const body = new THREE.Mesh(new THREE.BoxGeometry(4.8, 3.4, 4.2), bodyMat);
+    craft.add(body);
+
+    [-1, 1].forEach(side => {
+      const wing = new THREE.Mesh(new THREE.BoxGeometry(9.5, 0.42, 5.8), panelMat);
+      wing.position.x = side * 7.1;
+      craft.add(wing);
+      const grid = new THREE.Mesh(new THREE.BoxGeometry(9.7, 0.12, 0.18), panelLineMat);
+      grid.position.set(side * 7.1, 0.27, 0);
+      craft.add(grid);
+    });
+
+    const antenna = new THREE.Mesh(
+      new THREE.ConeGeometry(1.35, 3.6, 10),
+      new THREE.MeshBasicMaterial({ color: 0xffffff })
+    );
+    antenna.position.set(0, 2.9, 0);
+    craft.add(antenna);
+
+    const beacon = new THREE.Mesh(
+      new THREE.SphereGeometry(1.15, 8, 8),
+      new THREE.MeshBasicMaterial({ color, emissive: color })
+    );
+    beacon.position.set(0, 0, 2.6);
+    craft.add(beacon);
+    craft.scale.setScalar(0.82);
+    return craft;
+  }
+
+  satelliteOrbitSpecs.forEach((spec, index) => {
+    const orbit = new THREE.Group();
+    orbit.rotation.set(spec.tilt[0], spec.tilt[1], spec.tilt[2]);
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(spec.radius, spec.tube, 5, 144),
+      new THREE.MeshBasicMaterial({
+        color: spec.color, transparent: true, opacity: 0.34,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      })
+    );
+    orbit.add(ring);
+
+    const satelliteCount = index === 0 ? 2 : 1;
+    for (let i = 0; i < satelliteCount; i += 1) {
+      const craft = makeSatellite(spec.color);
+      const angle = spec.phase + (Math.PI * 2 * i / satelliteCount);
+      craft.position.set(Math.cos(angle) * spec.radius, Math.sin(angle) * spec.radius, 0);
+      craft.rotation.z = angle + Math.PI / 2;
+      orbit.add(craft);
+    }
+    scene.add(orbit);
+    satelliteOrbits.push({ group: orbit, speed: spec.speed });
+  });
+
+
+  /* ═══════════════════════════════════════════════════════════
      ATMOSPHERE — soft blue halo
      ═══════════════════════════════════════════════════════════ */
   const atmMat = new THREE.MeshBasicMaterial({
@@ -2390,7 +2463,11 @@ function initGlobe() {
   container.addEventListener('pointerdown', (e) => {
     isDragging = true;
     prevPointer = { x: e.clientX, y: e.clientY };
-    try { container.setPointerCapture(e.pointerId); } catch (_) {}
+    // Do not capture touch pointers: the browser must retain vertical page
+    // scrolling. Horizontal touch drags can still rotate the globe.
+    if (e.pointerType !== 'touch') {
+      try { container.setPointerCapture(e.pointerId); } catch (_) {}
+    }
   });
   container.addEventListener('pointermove', (e) => {
     if (!isDragging) return;
@@ -2431,11 +2508,20 @@ function initGlobe() {
      ═══════════════════════════════════════════════════════════ */
   const clock = new THREE.Clock();
   let rafId = 0;
-  const autoRotate = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isMobileViewport = window.matchMedia('(max-width: 960px)').matches;
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Keep the globe still on touch layouts so page scrolling never feels like
+  // the globe is pulling the user's attention or fighting the scroll gesture.
+  const autoRotate = !isMobileViewport && !prefersReducedMotion;
+  let globeInView = true;
 
   function animate() {
     rafId = requestAnimationFrame(animate);
     const t = clock.getElapsedTime();
+
+    satelliteOrbits.forEach(orbit => {
+      orbit.group.rotation.y += orbit.speed * 0.016;
+    });
 
     if (autoRotate && !isDragging) targetRotY += 0.0009;
     currentRotX += (targetRotX - currentRotX) * 0.08;
@@ -2505,9 +2591,22 @@ function initGlobe() {
   }
   animate();
 
-  /* Pause when tab hidden */
+  /* Pause rendering when the globe is off-screen or the tab is hidden. */
+  if ('IntersectionObserver' in window) {
+    const globeObserver = new IntersectionObserver(entries => {
+      const entry = entries[0];
+      globeInView = !!(entry && entry.isIntersecting);
+      if (!globeInView || document.hidden) {
+        if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+      } else if (!rafId) {
+        animate();
+      }
+    }, { threshold: 0.04 });
+    globeObserver.observe(container);
+  }
+
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
+    if (document.hidden || !globeInView) {
       if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
     } else if (!rafId) {
       animate();
