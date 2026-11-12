@@ -7,7 +7,7 @@ const app=getApps().length?getApps()[0]:initializeApp(firebaseConfig),auth=getAu
 // Match the main dashboard's durable, same-origin Firebase sign-in session.
 const authReady=setPersistence(auth,browserLocalPersistence);
 const ORG='viora_data/orgs/viora',ROOT=ORG+'/outreach',API='https://viora-api.cliff254johns.workers.dev';
-let currentUser=null,currentRole='',leads={},emails={},editingId=null,stopLeads=null,stopEmails=null,charts={};
+let currentUser=null,currentRole='',leads={},emails={},editingId=null,stopLeads=null,stopEmails=null,charts={},worldMap=null,worldMarkers=null,worldHeat=null,mapRenderToken=0;
 const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const stamp=()=>new Date().toISOString(),today=()=>new Date().toISOString().slice(0,10);
 const values=o=>Object.values(o||{}),leadList=()=>values(leads),emailList=()=>values(emails);
@@ -19,10 +19,10 @@ function closeModal(id){$(id)?.classList.add('hidden');if(!document.querySelecto
 function showConfirm(title,message,confirmLabel='Confirm send'){return new Promise(resolve=>{const wrap=document.createElement('div');wrap.className='modal-backdrop';wrap.innerHTML='<section class="modal" role="dialog" aria-modal="true"><header class="modal-head"><div><div class="eyebrow">FINAL REVIEW</div><h2>'+esc(title)+'</h2><p>'+esc(message)+'</p></div><button class="icon-btn" data-no aria-label="Close"><i class="fa-solid fa-xmark"></i></button></header><div class="modal-actions"><button class="btn" data-no>Cancel</button><button class="btn primary" data-yes>'+esc(confirmLabel)+'</button></div></section>';document.body.append(wrap);const done=v=>{wrap.remove();resolve(v)};wrap.querySelectorAll('[data-no]').forEach(b=>b.onclick=()=>done(false));wrap.querySelector('[data-yes]').onclick=()=>done(true);wrap.addEventListener('click',e=>{if(e.target===wrap)done(false)});});}
 async function resolveRole(uid){const rs=await Promise.all([get(ref(db,'viora_data/users/'+uid+'/role')),get(ref(db,'viora_data/orgs/viora/users/'+uid+'/role'))]);return rs[1].val()||rs[0].val()||'';}
 async function api(path,body){const token=await currentUser.getIdToken();const res=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body||{})});const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||data.message||('Request failed ('+res.status+')'));return data;}
-function showView(name){const valid=['overview','leads','investors','businesses','industries','followups','email','ai','analytics','audit'];if(!valid.includes(name))name='overview';document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+name));document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.view===name));const active=document.querySelector('.nav-item[data-view="'+name+'"]');$('crumbTitle').textContent=active?.querySelector('span')?.textContent||'Overview';if(name==='analytics')renderAnalytics();if(name==='ai')renderAiSelect();}
+function showView(name){const valid=['overview','leads','investors','businesses','industries','followups','email','ai','analytics','audit'];if(!valid.includes(name))name='overview';document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+name));document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.view===name));const active=document.querySelector('.nav-item[data-view="'+name+'"]');$('crumbTitle').textContent=active?.querySelector('span')?.textContent||'Overview';if(name==='analytics')renderAnalytics();if(name==='ai')renderAiSelect();if(name==='businesses'||name==='investors')setTimeout(()=>worldMap?.invalidateSize(),120);}
 function bindNavigation(){document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));document.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.nav)));document.querySelectorAll('[data-open-lead]').forEach(b=>b.addEventListener('click',()=>{resetLeadForm();const cat=b.dataset.category;if(cat)$('category').value=cat;openModal('leadModal');}));document.querySelectorAll('[data-open-email]').forEach(b=>b.addEventListener('click',()=>openEmailModal()));document.querySelectorAll('[data-close-modal]').forEach(b=>b.addEventListener('click',()=>{closeModal('leadModal');closeModal('emailModal')}));document.querySelectorAll('.modal-backdrop').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModal(m.id)}));document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('leadModal');closeModal('emailModal')}});}
 function resetLeadForm(){editingId=null;$('leadForm').reset();$('leadStatus').value='New';$('category').value='Business';$('leadModalTitle').textContent='Add a new lead';$('saveLeadBtn').textContent='Save prospect';status('leadStatusMsg','');}
-function formData(){return {company:$('company').value.trim(),contact:$('contact').value.trim(),email:$('email').value.trim(),phone:$('phone').value.trim(),category:$('category').value,status:$('leadStatus').value,followUp:$('followUp').value,country:$('country').value.trim(),website:$('website').value.trim(),notes:$('notes').value.trim()};}
+function formData(){return {company:$('company').value.trim(),contact:$('contact').value.trim(),email:$('email').value.trim(),phone:$('phone').value.trim(),category:$('category').value,status:$('leadStatus').value,followUp:$('followUp').value,city:$('city').value.trim(),country:$('country').value.trim(),website:$('website').value.trim(),notes:$('notes').value.trim()};}
 async function saveLead(e){e?.preventDefault();const d=formData();if(!d.company||!d.email||!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(d.email)){status('leadStatusMsg','Enter an organisation and valid email address.',true);return;}try{busy('saveLeadBtn',true,'Saving…');let id=editingId,old=leads[id]||{};if(!id){const snap=await get(ref(db,ORG+'/leads'));const existing=snap.val()||{};const match=Object.values(existing).find(x=>String(x.email||'').trim().toLowerCase()===d.email.trim().toLowerCase());if(match){id=match.id;old=match;}}if(!id)id=push(ref(db,ORG+'/leads')).key;const record={...old,...d,id,fullName:d.contact||d.company,source:old.source||'Outreach Centre',campaignName:old.campaignName||('Outreach · '+d.category),_fromOutreach:true,createdAt:old.createdAt||stamp(),updatedAt:stamp(),createdBy:old.createdBy||currentUser.uid,updatedBy:currentUser.uid};await set(ref(db,ORG+'/leads/'+id),record);await set(ref(db,ROOT+'/leads/'+id),{...record,linkedMainLeadId:id});closeModal('leadModal');toast('Saved to the shared VIORA CRM. This prospect now appears in the main Leads section.');resetLeadForm();}catch(err){status('leadStatusMsg',err.message,true);}finally{busy('saveLeadBtn',false);}}
 function editLead(id){const l=leads[id];if(!l)return;editingId=id;for(const [k,v] of Object.entries({company:l.company,contact:l.contact,email:l.email,phone:l.phone,category:l.category,leadStatus:l.status,followUp:l.followUp,country:l.country,website:l.website,notes:l.notes}))if($(k))$(k).value=v||'';$('leadModalTitle').textContent='Edit prospect';$('saveLeadBtn').textContent='Save changes';status('leadStatusMsg','');openModal('leadModal');}
 function stageClass(s){if(['Won','Replied','Meeting'].includes(s))return 'good';if(['Lost','Do not contact'].includes(s))return 'bad';if(['Qualified','Negotiation','Contacted'].includes(s))return 'warn';return '';}
@@ -60,9 +60,65 @@ async function studioDraft(){const lead=leads[$('aiLeadSelect').value];if(!lead)
 async function sendEmail(e){e?.preventDefault();const to=$('mailTo').value.trim(),subject=$('mailSubject').value.trim(),textBody=$('mailBody').value.trim(),lead=selectedMailLead();if(!to||!subject||!textBody){status('mailStatus','Recipient, subject and message are required.',true);return;}if(lead?.status==='Do not contact'){status('mailStatus','This prospect is marked Do not contact.',true);return;}const ok=await showConfirm('Confirm email send','Send “'+subject+'” to '+to+'? The message will be recorded in both the Outreach ledger and the main VIORA Communications log.','Confirm & send');if(!ok)return;const id=push(ref(db,ROOT+'/emails')).key,commLogId=push(ref(db,ORG+'/commLog')).key,now=stamp(),audit={id,to,subject,text:textBody,company:lead?.company||'',leadId:lead?.id||null,commLogId,direction:'outbound',status:'queued',providerId:null,timestamp:now,sentBy:currentUser.uid,sentByEmail:currentUser.email,approvedAt:now,source:'Outreach Centre'};const comm={id:commLogId,channel:'em',recipientId:lead?.id||to,recipientName:lead?.company||lead?.fullName||to,recipientContact:to,subject,message:textBody,sentBy:currentUser.email||currentUser.uid,status:'queued',timestamp:now,leadId:lead?.id||null,outreachEmailId:id,source:'Outreach Centre'};try{busy('sendBtn',true,'Sending…');await set(ref(db,ROOT+'/emails/'+id),audit);await set(ref(db,ORG+'/commLog/'+commLogId),comm);await update(ref(db,ROOT+'/emails/'+id),{status:'sending',attemptedAt:stamp()});await update(ref(db,ORG+'/commLog/'+commLogId),{status:'sending',attemptedAt:stamp()});const result=await api('/sendEmail',{to,subject,text:textBody,replyTo:'support@viora.co.ke'});const sentAt=stamp();await update(ref(db,ROOT+'/emails/'+id),{status:'sent',providerId:result.id||null,sentAt});await update(ref(db,ORG+'/commLog/'+commLogId),{status:'sent',providerId:result.id||null,sentAt});if(lead?.id)await update(ref(db,ORG+'/leads/'+lead.id),{status:lead.status==='New'?'Contacted':lead.status,lastContactedAt:sentAt,updatedAt:sentAt});$('mailBody').value='';closeModal('emailModal');toast('Email accepted by the configured provider and recorded in the main VIORA Communications log. Delivery confirmation depends on webhook tracking.');}catch(err){const failedAt=stamp();await update(ref(db,ROOT+'/emails/'+id),{status:'failed',error:err.message,failedAt}).catch(()=>{});await update(ref(db,ORG+'/commLog/'+commLogId),{status:'failed',error:err.message,failedAt}).catch(()=>{});status('mailStatus','Send failed or could not be confirmed: '+err.message,true);}finally{busy('sendBtn',false);renderEmails();renderAnalytics();}}
 function csvEscape(v){return '"'+String(v??'').replace(/"/g,'""')+'"';}
 function downloadCsv(name,rows){const csv=rows.map(r=>r.map(csvEscape).join(',')).join('\r\n'),blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);}
-function exportLeads(){downloadCsv('viora-outreach-leads.csv',[['Organisation','Contact','Email','Phone','Category','Country','Status','Follow-up','Website','Notes'],...leadList().map(l=>[l.company,l.contact,l.email,l.phone,l.category,l.country,l.status,l.followUp,l.website,l.notes])]);}
+function exportLeads(){downloadCsv('viora-outreach-leads.csv',[['Organisation','Contact','Email','Phone','Category','City','Country','Status','Follow-up','Website','Notes'],...leadList().map(l=>[l.company,l.contact,l.email,l.phone,l.category,l.city,l.country,l.status,l.followUp,l.website,l.notes])]);}
 function exportEmails(){downloadCsv('viora-outreach-communication-ledger.csv',[['Timestamp','Direction','Recipient','Subject','Status','Provider ID','Recorded By','Message'],...emailList().map(e=>[e.timestamp,e.direction,e.to,e.subject,e.status,e.providerId,e.sentByEmail,e.text])]);}
-function bindData(){stopLeads?.();stopEmails?.();stopLeads=onValue(ref(db,ORG+'/leads'),s=>{leads=s.val()||{};renderLeadTables();renderFollowups();renderOverview();renderAiSelect();renderAnalytics();});stopEmails=onValue(ref(db,ROOT+'/emails'),s=>{emails=s.val()||{};renderEmails();renderAudit();renderOverview();renderAnalytics();});}
+
+const CITY_CACHE_KEY='viora-city-geocode-cache';
+function readCityCache(){try{return JSON.parse(localStorage.getItem(CITY_CACHE_KEY)||'{}')}catch{return {}}}
+function writeCityCache(cache){try{localStorage.setItem(CITY_CACHE_KEY,JSON.stringify(cache))}catch{}}
+const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+function cityKey(l){return [String(l.city||'').trim(),String(l.country||'').trim()].filter(Boolean).join(', ');}
+async function geocodeCity(location,cache){
+ if(cache[location])return cache[location];
+ const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q='+encodeURIComponent(location);
+ const response=await fetch(url,{headers:{'Accept':'application/json'}});
+ if(!response.ok)throw new Error('Geocoder returned '+response.status);
+ const results=await response.json();
+ const point=results?.[0]?{lat:Number(results[0].lat),lng:Number(results[0].lon)}:null;
+ cache[location]=point;writeCityCache(cache);return point;
+}
+function ensureWorldMap(){
+ if(worldMap||!window.L||!$('worldLeadMap'))return;
+ worldMap=L.map('worldLeadMap',{worldCopyJump:true,scrollWheelZoom:false,preferCanvas:true}).setView([20,5],2);
+ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'&copy; OpenStreetMap contributors'}).addTo(worldMap);
+ worldMarkers=L.layerGroup().addTo(worldMap);
+}
+async function renderWorldLeadMap(force=false){
+ const token=++mapRenderToken,all=leadList(),located=all.filter(l=>String(l.city||'').trim()&&String(l.country||'').trim()),missing=all.length-located.length;
+ $('mapLeadCount').textContent=all.length;$('mapUnmappedCount').textContent=missing;
+ if(!window.L){$('worldLeadMap').innerHTML='<div class="map-loading">Map library unavailable. Check the network and refresh.</div>';return;}
+ ensureWorldMap();if(!worldMap)return;
+ if(!all.length){$('mapCityCount').textContent='0';worldMarkers.clearLayers();if(worldHeat)worldMap.removeLayer(worldHeat);$('worldLeadMap').classList.add('map-empty');return;}
+ $('worldLeadMap').classList.remove('map-empty');
+ const grouped=new Map();located.forEach(l=>{const key=cityKey(l);if(!grouped.has(key))grouped.set(key,[]);grouped.get(key).push(l)});
+ const cache=readCityCache(),points=[];
+ let completed=0;
+ for(const [location,records] of grouped){
+  if(token!==mapRenderToken)return;
+  try{
+   const p=await geocodeCity(location,cache);
+   if(p&&Number.isFinite(p.lat)&&Number.isFinite(p.lng))points.push({location,records,...p});
+  }catch(err){console.warn('[VIORA map] Could not resolve city:',location,err);}
+  completed++;
+  if(completed<grouped.size)await wait(1100);
+ }
+ if(token!==mapRenderToken)return;
+ worldMarkers.clearLayers();if(worldHeat){worldMap.removeLayer(worldHeat);worldHeat=null;}
+ const heat=[];
+ points.forEach(p=>{
+  const count=p.records.length,marker=L.circleMarker([p.lat,p.lng],{radius:Math.min(17,7+Math.sqrt(count)*2),color:'#f8fafc',weight:2,fillColor:'#16a6d9',fillOpacity:.88});
+  const items=p.records.slice(0,18).map(l=>'<div class="map-popup-lead"><b>'+esc(l.company||l.fullName||'Unnamed lead')+'</b><span>'+esc(l.category||'Lead')+' · '+esc(l.source||'VIORA CRM')+'</span></div>').join('');
+  marker.bindPopup('<div class="map-popup"><strong>'+esc(p.location)+'</strong><span class="map-popup-count">'+count+' lead'+(count===1?'':'s')+'</span>'+items+(p.records.length>18?'<small>+'+(p.records.length-18)+' more leads</small>':'')+'</div>');
+  marker.addTo(worldMarkers);heat.push([p.lat,p.lng,Math.min(1,.35+count*.12)]);
+ });
+ if(window.L.heatLayer&&heat.length)worldHeat=L.heatLayer(heat,{radius:34,blur:24,maxZoom:6,gradient:{0.2:'#60a5fa',0.45:'#22d3ee',0.7:'#34d399',1:'#fb923c'}}).addTo(worldMap);
+ $('mapCityCount').textContent=points.length;
+ if(points.length){const bounds=L.latLngBounds(points.map(p=>[p.lat,p.lng]));worldMap.fitBounds(bounds.pad(.16),{maxZoom:5});}
+ else worldMap.setView([20,5],2);
+ if(!points.length&&located.length)$('worldLeadMap').insertAdjacentHTML('beforeend','<div class="map-geocode-note">City names could not be resolved. Check spelling and country values.</div>');
+}
+
+function bindData(){stopLeads?.();stopEmails?.();stopLeads=onValue(ref(db,ORG+'/leads'),s=>{leads=s.val()||{};renderLeadTables();renderFollowups();renderOverview();renderAiSelect();renderAnalytics();renderWorldLeadMap();});stopEmails=onValue(ref(db,ROOT+'/emails'),s=>{emails=s.val()||{};renderEmails();renderAudit();renderOverview();renderAnalytics();});}
 async function startSession(user){currentUser=user;currentRole=String(await resolveRole(user.uid)).toLowerCase();if(!['admin','exec'].includes(currentRole)){await signOut(auth);$('loginView').classList.remove('hidden');$('appView').classList.add('hidden');status('loginStatus','Access denied. This workspace is restricted to VIORA admin and exec roles.',true);return;}$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');bindData();}
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();try{busy('loginBtn',true,'Signing in…');status('loginStatus','');await authReady;await signInWithEmailAndPassword(auth,$('loginEmail').value.trim(),$('loginPassword').value);}catch(err){status('loginStatus',err.message,true);}finally{busy('loginBtn',false);}});
 authReady.then(()=>onAuthStateChanged(auth,user=>{if(user)startSession(user).catch(e=>status('loginStatus',e.message,true));else{stopLeads?.();stopEmails?.();currentUser=null;$('loginView').classList.remove('hidden');$('appView').classList.add('hidden');}})).catch(err=>status('loginStatus','Firebase session could not be restored: '+err.message,true));
@@ -76,7 +132,7 @@ $('leadRows').addEventListener('click',e=>{const b=e.target.closest('[data-edit]
 ['emailRows','auditRows'].forEach(id=>$(id).addEventListener('click',e=>{const b=e.target.closest('[data-view-email]');if(b)showEmailDetail(b.dataset.viewEmail);}));
 $('leadSearch').addEventListener('input',renderLeadTables);$('leadFilter').addEventListener('change',renderLeadTables);$('emailSearch').addEventListener('input',renderEmails);$('emailStatusFilter').addEventListener('change',renderEmails);$('auditSearch').addEventListener('input',renderAudit);
 document.querySelectorAll('[data-category-search]').forEach(el=>el.addEventListener('input',renderLeadTables));
-$('leadExport').onclick=exportLeads;$('auditExport').onclick=exportEmails;$('analyticsRefresh').onclick=renderAnalytics;$('analyticsRange').onchange=renderAnalytics;
+$('leadExport').onclick=exportLeads;$('auditExport').onclick=exportEmails;$('worldMapRefresh')?.addEventListener('click',()=>{try{localStorage.removeItem('viora-city-geocode-cache');}catch(_){}renderWorldLeadMap(true);});$('analyticsRefresh').onclick=renderAnalytics;$('analyticsRange').onchange=renderAnalytics;
 $('refreshBtn').onclick=()=>{renderLeadTables();renderFollowups();renderEmails();renderAudit();renderAnalytics();toast('Views refreshed from the latest subscribed records.');};
 $('logoutBtn').onclick=()=>signOut(auth);
 $('themeBtn').onclick=()=>{const t=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=t;localStorage.setItem('viora-outreach-theme',t);renderAnalytics();renderOverview();};
