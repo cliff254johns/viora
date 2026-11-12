@@ -31,7 +31,7 @@ test('Firebase Realtime Database emulator isolates tenant-scoped paths',{skip:!e
 });
 
 test('Firebase authorization rules deny a non-privileged principal on a protected probe path',{skip:!(enabled&&process.env.FIREBASE_AUTHZ_PROBE_PATH&&process.env.FIREBASE_ADMIN_ID_TOKEN&&process.env.FIREBASE_NONADMIN_ID_TOKEN)&&'Configure an emulator protected path and separate admin/non-admin test identities'},async()=>{
- const path=process.env.FIREBASE_AUTHZ_PROBE_PATH.replace(/^\\/+|\\/+$/g,'');
+ const path=process.env.FIREBASE_AUTHZ_PROBE_PATH.split('/').filter(Boolean).join('/');
  const base='http://'+dbHost+'/'+path+'/ci-authz-'+Date.now()+'.json';
  const adminWrite=await fetch(base+'?auth='+encodeURIComponent(process.env.FIREBASE_ADMIN_ID_TOKEN),{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({probe:true})});
  assert.ok(adminWrite.ok,'Privileged identity should be authorized on the configured test path');
