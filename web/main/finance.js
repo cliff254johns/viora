@@ -467,7 +467,8 @@ export async function handleSubscriptionInvoicePaid(invoice) {
           icon: 'fa-rotate',
           level: 'success',
           url: '/main.html?tab=subscriptions',
-          source: 'subscription-renewal'
+          source: 'subscription-renewal',
+          eventId: 'invoice-' + invoice.id
         });
       }
     } catch (e) {}
@@ -489,7 +490,8 @@ function _notifySubscriptionActivated(sub, licId) {
         icon: 'fa-key',
         level: 'success',
         url: '/main.html?tab=subscriptions',
-        source: 'subscription-activation'
+        source: 'subscription-activation',
+        eventId: 'license-' + licId
       }).catch(() => {});
     }
   } catch (e) {}
