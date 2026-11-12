@@ -6378,3 +6378,15 @@ canvas { border-radius: var(--r-sm); }
   }
   #mobileBottomNav { z-index: 220 !important; pointer-events: auto !important; }
 }
+
+/* Distinct, explicit sidebar group-icon colours (one colour per group). */
+.sb-group-wrap[data-group="overview"]>.sb-group-toggle .sb-group-icon{color:#22d3ee!important;}
+.sb-group-wrap[data-group="outreach"]>.sb-group-toggle .sb-group-icon{color:#fb923c!important;}
+.sb-group-wrap[data-group="clients"]>.sb-group-toggle .sb-group-icon{color:#60a5fa!important;}
+.sb-group-wrap[data-group="revenue"]>.sb-group-toggle .sb-group-icon{color:#34d399!important;}
+.sb-group-wrap[data-group="marketplace"]>.sb-group-toggle .sb-group-icon{color:#a78bfa!important;}
+.sb-group-wrap[data-group="operations"]>.sb-group-toggle .sb-group-icon{color:#fbbf24!important;}
+.sb-group-wrap[data-group="growth"]>.sb-group-toggle .sb-group-icon{color:#f472b6!important;}
+.sb-group-wrap[data-group="training"]>.sb-group-toggle .sb-group-icon{color:#2dd4bf!important;}
+.sb-group-wrap[data-group="system"]>.sb-group-toggle .sb-group-icon{color:#94a3b8!important;}
+.sb-group-wrap[data-group="myspace"]>.sb-group-toggle .sb-group-icon{color:#fb7185!important;}
