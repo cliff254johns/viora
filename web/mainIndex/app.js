@@ -602,7 +602,7 @@
             { ico: '📱', h: 'Installable PWA', p: 'Add to home screen on any Android or iPhone. Native-feel, no app store needed.' },
             { ico: '💚', h: 'M-Pesa Daraja integration', p: 'Configurable integration; live collections require provider credentials, verified callbacks and end-to-end reconciliation tests.' },
             { ico: '🧾', h: 'Tax & e-invoicing integrations', p: 'Tax rules and fiscalisation depend on jurisdiction; authority integrations must be configured and verified before compliance claims.' },
-            { ico: '💰', h: 'Finance portal', p: 'Real-time P&L, cash-flow forecasting, multi-currency ledgers, tax compliance.' },
+            { ico: '💰', h: 'Finance portal', p: 'Financial dashboards, invoicing and reporting; currency and tax behavior depends on verified country and tenant configuration.' },
             { ico: '🤖', h: 'Groq AI engine', p: 'Recommendations on pricing, stock, collections and staffing — on your live data.' },
             { ico: '🔐', h: 'Roles & audit logs', p: 'Granular permissions, 2FA, encrypted at rest, and a full who-did-what trail.' },
             { ico: '🔔', h: 'SMS + WhatsApp alerts', p: 'Payment reminders, approvals, low stock, renewals — pushed where people look.' },
@@ -663,7 +663,7 @@
             ['Leads auto-convert', 'Any enquiry → Client + Deal + Task in one step, with full audit trail.'],
             ['Live dashboards', 'Owner view on any phone: cash, pipeline, margin — right now, from live data.'],
             ['Single client view', 'Every department sees the same 360° client profile: deals, invoices, comms, docs.'],
-            ['Compliance on autopilot', 'eTIMS-ready invoicing and Kenya payroll calculated automatically.'],
+            ['Market-specific compliance', 'Tax, e-invoicing and statutory payroll are configured and validated for each market before being treated as compliant.'],
             ['Scales without re-tooling', 'New branch, product, or service = a few clicks — never a new subscription.']
         ];
 
@@ -1041,39 +1041,10 @@
 
     /* ═══ IMPACT TICKER ═══ */
     function initImpactTicker() {
-        var el1 = document.getElementById('impTx');
-        var el2 = document.getElementById('impMpesa');
-        var el3 = document.getElementById('impEtims');
-        var el4 = document.getElementById('impFin');
-        if (!el1 && !el2 && !el3 && !el4) return;
-
-        var v = { tx: 912, mpesa: 348, etims: 127, fin: 89 };
-
-        if (prefersReducedMotion) {
-            if (el1) el1.textContent = v.tx.toLocaleString();
-            if (el2) el2.textContent = v.mpesa.toLocaleString();
-            if (el3) el3.textContent = v.etims.toLocaleString();
-            if (el4) el4.textContent = v.fin.toLocaleString();
-            return;
-        }
-
-        function bump(val, max) {
-            var inc = Math.random() < 0.7 ? 1 : 2;
-            var nv = val + inc;
-            if (nv > max) nv = Math.floor(max * 0.6);
-            return nv;
-        }
-
-        setInterval(function () {
-            v.tx = bump(v.tx, 990);
-            v.mpesa = bump(v.mpesa, 420);
-            v.etims = bump(v.etims, 180);
-            v.fin = bump(v.fin, 140);
-            if (el1) el1.textContent = v.tx.toLocaleString();
-            if (el2) el2.textContent = v.mpesa.toLocaleString();
-            if (el3) el3.textContent = v.etims.toLocaleString();
-            if (el4) el4.textContent = v.fin.toLocaleString();
-        }, 1100);
+        ['impTx', 'impMpesa', 'impEtims', 'impFin'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = 'Demo';
+        });
     }
 
     /* ═══ FIREBASE ═══ */
