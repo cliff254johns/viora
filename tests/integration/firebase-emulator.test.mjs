@@ -26,4 +26,15 @@ test('Firebase Realtime Database emulator isolates tenant-scoped paths',{skip:!e
  assert.ok(write.ok,'tenant A fixture write failed');
  const readB=await fetch(base+'/viora_data/tenants/'+tenantA+'/isolation-probe.json?auth='+encodeURIComponent(process.env.FIREBASE_TENANT_B_ID_TOKEN||'invalid'));
  assert.ok([401,403].includes(readB.status),'Tenant B must not read Tenant A data');
+ const writeB=await fetch(base+'/viora_data/tenants/'+tenantA+'/isolation-probe.json?auth='+encodeURIComponent(process.env.FIREBASE_TENANT_B_ID_TOKEN||'invalid'),{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({owner:tenantB,probe:true})});
+ assert.ok([401,403].includes(writeB.status),'Tenant B must not write Tenant A data');
+});
+
+test('Firebase authorization rules deny a non-privileged principal on a protected probe path',{skip:!(enabled&&process.env.FIREBASE_AUTHZ_PROBE_PATH&&process.env.FIREBASE_ADMIN_ID_TOKEN&&process.env.FIREBASE_NONADMIN_ID_TOKEN)&&'Configure an emulator protected path and separate admin/non-admin test identities'},async()=>{
+ const path=process.env.FIREBASE_AUTHZ_PROBE_PATH.replace(/^\\/+|\\/+$/g,'');
+ const base='http://'+dbHost+'/'+path+'/ci-authz-'+Date.now()+'.json';
+ const adminWrite=await fetch(base+'?auth='+encodeURIComponent(process.env.FIREBASE_ADMIN_ID_TOKEN),{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({probe:true})});
+ assert.ok(adminWrite.ok,'Privileged identity should be authorized on the configured test path');
+ const denied=await fetch(base+'?auth='+encodeURIComponent(process.env.FIREBASE_NONADMIN_ID_TOKEN),{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({probe:'escalation'})});
+ assert.ok([401,403].includes(denied.status),'Non-privileged identity must not write to protected path');
 });
