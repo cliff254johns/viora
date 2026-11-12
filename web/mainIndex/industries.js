@@ -3007,7 +3007,7 @@
         { id: "presentation", title: "Presentation Portal", subtext: "Demo • Showcase • Impress", icon: "fa-solid fa-chalkboard-user", color: "#ec4899",
           features: ["Interactive demos", "Live product tours", "Client presentations", "Sales enablement"] },
         { id: "finance", title: "Finance Portal", subtext: "Track • Forecast • Prosper", icon: "fa-solid fa-chart-line", color: "#14b8a6",
-          features: ["Real-time P&L", "Cash-flow forecasting", "Multi-currency ledgers", "Tax & compliance reports"] }
+          features: ["Real-time P&L", "Cash-flow forecasting", "Currency-aware finance workflows (where configured)", "Tax & compliance reports"] }
     ];
 
     window.VIORA_VIDEOS = {
