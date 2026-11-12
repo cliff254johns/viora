@@ -30,8 +30,8 @@ jobs:
         run: node --input-type=module --check < web/outreach.js
       - name: Verify separate frontend assets
         run: |
-          grep -q 'href="/outreach.css"' web/outreach.html
-          grep -q 'src="/outreach.js"' web/outreach.html
+          grep -Eq 'href="/outreach\\.css([?][^"]*)?"' web/outreach.html
+          grep -Eq 'src="/outreach\\.js([?][^"]*)?"' web/outreach.html
           test -s web/outreach.css
           test -s web/outreach.js
           # Inline style attributes are allowed for component-level layout; shared rules stay in the external stylesheet.
