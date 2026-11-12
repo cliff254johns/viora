@@ -9,7 +9,7 @@
   const CACHE_KEY='viora.orbital.tle.v1';
   const CACHE_TTL=6*60*60*1000;
   const MAX_VISUAL=18;
-  let objects=[], canvas,ctx,container,raf=0,lastDraw=0,active=null,resizeObserver;
+  let objects=[], canvas,ctx,container,raf=0,lastDraw=0,active=null,resizeObserver,lastPositions=[];
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   function parse3LE(text){
     const lines=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean),out=[];
@@ -117,7 +117,7 @@
       const others=rows.filter(x=>!iss.includes(x)).slice(0,MAX_VISUAL);
       objects=[...iss,...others].map(x=>({...x,satrec:window.satellite.twoline2satrec(x.l1,x.l2)}));
       if(!objects.length)throw new Error('No current orbital elements returned');
-      const detail=document.createElement('div');detail.id='viora-orbit-detail';detail.className='viora-orbit-detail';
+      container.addEventListener('click',e=>{const rect=container.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;let nearest=null,best=18;for(const p of lastPositions){const d=Math.hypot(p.x-x,p.y-y);if(d<best){best=d;nearest=p;}}if(nearest){active=nearest.obj.name;const panel=document.getElementById('viora-orbit-detail');if(panel)panel.textContent=(active.toUpperCase().includes('ISS')?'NASA INTERNATIONAL SPACE STATION':'ORBITAL SATELLITE')+' · '+active+' · '+nearest.geo.lat.toFixed(2)+'°, '+nearest.geo.lon.toFixed(2)+'° · '+Math.round(nearest.geo.alt)+' km altitude';}});\n      const detail=document.createElement('div');detail.id='viora-orbit-detail';detail.className='viora-orbit-detail';
       detail.setAttribute('aria-live','polite');detail.textContent='Live orbital data loaded · '+objects.length+' tracked objects';
       const visual=container.closest('.hero-visual');if(visual)visual.appendChild(detail);
       if(!iss.length){detail.textContent='Live satellite positions loaded · ISS data is temporarily unavailable';}
