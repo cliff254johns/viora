@@ -5377,10 +5377,19 @@ window.vioraNotify = async function (opts) {
     read: false
   };
     try {
-    await set(ref(db, 'viora_data/orgs/viora/notifications/' + id), payload);
-    /* Force the local dashboard to paint immediately (don't wait for the
-       Firebase echo — this makes the notification appear within ~50ms). */
-    try { surfaceVioraNotification(payload, true); } catch (_) {}
+    const notificationRef = ref(db, 'viora_data/orgs/viora/notifications/' + id);
+    const existingSnap = await get(notificationRef);
+    const isNew = !(existingSnap && existingSnap.exists());
+    if (!isNew) {
+      const existing = existingSnap.val() || {};
+      payload.read = existing.read === true;
+      if (existing.readAt) payload.readAt = existing.readAt;
+      if (existing.createdAt) payload.createdAt = existing.createdAt;
+    }
+    await set(notificationRef, payload);
+    /* Only a genuinely new event creates a toast/sound. Retries update the
+       same record without re-alerting or resetting its read state. */
+    if (isNew) { try { surfaceVioraNotification(payload, true); } catch (_) {} }
     try {
       if (typeof window.renderDashboardNotifications === 'function') {
         window.renderDashboardNotifications();
