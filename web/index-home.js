@@ -1139,9 +1139,10 @@ function renderDashboard() {
   const dp = S.homeContent?.dashboard || {};
   const rev = Number(dp.revenue) || 4280000;
   const sales = Number(dp.sales) || 1284;
-  const revEl = $('#dash-revenue');
   const salesEl = $('#dash-sales');
-  if (revEl) revEl.textContent = fmtKShKes(rev);
+  if ($('#dash-revenue')) $('#dash-revenue').textContent = fmtKShKes(rev);
+  if ($('#dash-expenses')) $('#dash-expenses').textContent = fmtKShKes(Number(dp.expenses) || 1800000);
+  [24500,8200,63000,12750].forEach((amount,i)=>{const el=$('#dash-txn-'+(i+1));if(el)el.textContent=fmtKShKes(amount);});
   if (salesEl) salesEl.textContent = sales.toLocaleString('en-KE');
 }
 
