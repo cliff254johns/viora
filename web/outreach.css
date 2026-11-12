@@ -17,3 +17,5 @@
 
 /* Semantic icon colours — avoid a monochrome icon treatment */
 .fa-landmark,.fa-coins,.fa-money-bill-wave{color:#a78bfa}.fa-building,.fa-building-columns,.fa-address-book,.fa-user-plus{color:#60a5fa}.fa-industry,.fa-handshake,.fa-briefcase{color:#fb923c}.fa-users,.fa-user-check,.fa-circle-check,.fa-check{color:#34d399}.fa-calendar,.fa-calendar-check,.fa-clock,.fa-bell{color:#22d3ee}.fa-envelope,.fa-envelope-open,.fa-paper-plane,.fa-comments{color:#f472b6}.fa-wand-magic-sparkles,.fa-sparkles,.fa-brain{color:#c084fc}.fa-chart-line,.fa-chart-column,.fa-chart-pie,.fa-filter-circle-dollar{color:#38bdf8}.fa-shield-halved,.fa-lock,.fa-fingerprint{color:#2dd4bf}.fa-earth-africa,.fa-earth-americas,.fa-globe,.fa-location-dot{color:#22d3ee}.fa-triangle-exclamation,.fa-circle-exclamation{color:#fbbf24}.fa-xmark,.fa-trash,.fa-ban{color:#fb7185}.fa-magnifying-glass,.fa-rotate,.fa-download{color:#93c5fd}
+
+.table-action.danger{color:#fb7185;border-color:rgba(251,113,133,.28)}.table-action.danger:hover{background:rgba(251,113,133,.12);border-color:#fb7185}
