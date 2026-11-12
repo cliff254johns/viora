@@ -7,7 +7,7 @@ const source = await readFile(new URL('../../web/currency-display.js', import.me
 
 function makeRates() {
   const rates = { USD: 1, KES: 130, EUR: 0.92, GBP: 0.78, NGN: 1500, ZAR: 18, INR: 83.5, AUD: 1.5 };
-  for (let i = 1; i <= 20; i++) rates['X' + String(i).padStart(2, '0') + 'X'] = 1 + i / 100;
+  for (const code of ['CAD','CHF','CNY','HKD','NZD','SGD','AED','SAR','BRL','MXN','TRY','PLN','SEK','NOK','DKK','THB','PHP','IDR','MYR','VND']) rates[code] = 1.1;
   return Object.entries(rates).map(([quote, rate]) => ({ quote, rate, date: '2026-11-12' }));
 }
 
