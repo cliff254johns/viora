@@ -1,6 +1,6 @@
 # Generated module and API map
 
-Generated: 2026-11-12T22:25:13.768Z
+Generated: 2026-11-12T22:28:01.007Z
 
 Modules: 111
 
@@ -682,7 +682,7 @@ Modules: 111
 
 ### web/shared-pwa.js
 
-- Size: 4305 bytes
+- Size: 4643 bytes
 - Imports: none detected
 - Exports: none detected
 - Worker routes: none detected
@@ -780,7 +780,7 @@ Modules: 111
 
 ### scripts/viora-engineering-checks.mjs
 
-- Size: 5185 bytes
+- Size: 5747 bytes
 - Imports: node:fs, node:assert/strict
 - Exports: TranslationRateLimiter, EMBEDDED_ASSETS_GZIP_BASE64
 - Worker routes: none detected

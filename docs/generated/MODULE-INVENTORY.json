@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-12T22:25:13.767Z",
+  "generatedAt": "2026-11-12T22:28:01.007Z",
   "moduleCount": 111,
   "modules": [
     {
@@ -1492,7 +1492,7 @@
     },
     {
       "file": "web/shared-pwa.js",
-      "bytes": 4305,
+      "bytes": 4643,
       "imports": [],
       "exports": [],
       "workerRoutes": []
@@ -1643,7 +1643,7 @@
     },
     {
       "file": "scripts/viora-engineering-checks.mjs",
-      "bytes": 5185,
+      "bytes": 5747,
       "imports": [
         "node:fs",
         "node:assert/strict"
