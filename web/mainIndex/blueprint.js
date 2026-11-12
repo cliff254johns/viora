@@ -143,7 +143,9 @@
         });
     }
 
-    var marketplaceProductsPromise=null;\nvar INDUSTRY_MARKET_FX_RATE=129;\nfunction safeMarketplaceAssetUrl(value){try{var u=new URL(String(value||''),window.location.origin);return /^https?:$/.test(u.protocol)?u.href:'';}catch(_){return '';}}
+    var marketplaceProductsPromise=null;
+var INDUSTRY_MARKET_FX_RATE=129;
+function safeMarketplaceAssetUrl(value){try{var u=new URL(String(value||''),window.location.origin);return /^https?:$/.test(u.protocol)?u.href:'';}catch(_){return '';}}
 function loadIndustryMarketplaceProducts(){
  if(marketplaceProductsPromise)return marketplaceProductsPromise;
  marketplaceProductsPromise=(async function(){try{var appMod=await import('https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js');var dbMod=await import('https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js');var config={apiKey:"AIzaSyC9gCBt-xR8t9n6rTGNvDZ5usUGiW-Dqxc",authDomain:"cliffclient-35ec5.firebaseapp.com",databaseURL:"https://cliffclient-35ec5-default-rtdb.europe-west1.firebasedatabase.app",projectId:"cliffclient-35ec5",storageBucket:"cliffclient-35ec5.firebasestorage.app",messagingSenderId:"519782791696",appId:"1:519782791696:web:6e1a654ddeed14b72b2895"};var app;try{app=appMod.getApp()}catch(_){app=appMod.initializeApp(config)}var snap=await dbMod.get(dbMod.ref(dbMod.getDatabase(app),'viora_data/orgs/viora/products'));var raw=snap.exists()?snap.val():{};return Object.keys(raw||{}).map(function(id){return Object.assign({id:id},raw[id]||{})}).filter(function(p){return p.status!=='archived'&&p.status!=='draft'});}catch(e){console.warn('[VIORA industry marketplace] Catalogue unavailable:',e);return [];}})();return marketplaceProductsPromise;
