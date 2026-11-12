@@ -41,3 +41,5 @@ head_sampling_rate = 1.0
 [observability.traces]
 enabled = true
 head_sampling_rate = 0.1
+
+# Preview builds use the same explicit config path as production builds.
