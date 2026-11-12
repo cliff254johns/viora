@@ -38,7 +38,8 @@ const PRODUCT_CACHE_MAX_AGE = 86400000;
 const FX_RATE = 129; // Safe fallback until the daily reference rate table loads.
 const CURRENCY = { code: 'KES', symbol: 'KSh', get rate() { return Number(window.VioraCurrency?.convert(1, 'USD', 'KES')) || FX_RATE; } };
 const usdToKes = (usd) => Math.round(Number(window.VioraCurrency?.convert(Number(usd) || 0, 'USD', 'KES')) || (Number(usd) || 0) * FX_RATE);
-const fmtKSh = (usd) => window.VioraCurrency?.formatUSD(Number(usd) || 0) || '
+const fmtKSh = (usd) => window.VioraCurrency?.formatUSD(Number(usd) || 0) || 'KSh ' + Math.round((Number(usd) || 0) * FX_RATE).toLocaleString('en-KE');
+const fmtKShFromKes = (kes) => window.VioraCurrency?.formatKES(Number(kes) || 0) || 'KSh ' + Math.round(Number(kes) || 0).toLocaleString('en-KE');
 
 const DEFAULTS = {
   heroBadge: 'Powered by Viora Intercollective',
@@ -2539,8 +2540,6 @@ if (document.readyState === 'loading') {
 } else {
   bootMarket();
 }
- + (Number(usd) || 0).toFixed(2);
-const fmtKShFromKes = (kes) => window.VioraCurrency?.formatKES(Number(kes) || 0) || 'KSh ' + Math.round(Number(kes) || 0).toLocaleString('en-KE');
 
 const DEFAULTS = {
   heroBadge: 'Powered by Viora Intercollective',
