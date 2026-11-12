@@ -1,64 +1,93 @@
-/* App-like mobile navigation and contextual Font Awesome icons for VIORA industry pages. */
+/* VIORA shared industry-page branding, full-colour icons and mobile navigation. */
 (() => {
   'use strict';
   const body=document.body;
   if(!body.classList.contains('viora-industry-page'))return;
+
+  // Use the same VIORA logo artwork and wordmark treatment on every industry route.
+  const brand=document.querySelector('.top .brand');
+  if(brand){
+    brand.classList.add('viora-industry-brand');
+    brand.setAttribute('aria-label','VIORA Ecosystems home');
+    brand.innerHTML='<img src="/viora.png" alt="VIORA Ecosystems" width="52" height="52" fetchpriority="high"><span class="viora-industry-wordmark"><strong>VIORA</strong><small>ECOSYSTEMS</small></span>';
+  }
+  const footer=document.querySelector('.foot');
+  if(footer&&!footer.querySelector('.viora-footer-brand')){
+    const old=footer.querySelector(':scope > strong');
+    const mark=document.createElement('a');
+    mark.className='viora-footer-brand';
+    mark.href='/';
+    mark.innerHTML='<img src="/viora.png" alt="" width="40" height="40" loading="lazy"><span>VIORA <small>ECOSYSTEMS</small></span>';
+    if(old)old.replaceWith(mark);else footer.prepend(mark);
+  }
+
+  // Keep the same six destinations and order as VIORA's primary mobile navigation.
   const items=[
-    {href:'/',label:'Home',icon:'fa-house'},
-    {href:'/industries',label:'Industries',icon:'fa-layer-group'},
-    {href:'/market',label:'Market',icon:'fa-store'},
-    {href:'/contact_us',label:'Contact',icon:'fa-comments'}
+    {href:'/',label:'Home',icon:'fa-house',tone:'blue'},
+    {href:'/market',label:'Market',icon:'fa-store',tone:'orange'},
+    {href:'/training',label:'Academy',icon:'fa-graduation-cap',tone:'green'},
+    {href:'/client',label:'Client Portal',icon:'fa-user-group',tone:'purple'},
+    {href:'/industries',label:'Industries',icon:'fa-city',tone:'amber'},
+    {href:'/contact_us',label:'Contact',icon:'fa-envelope',tone:'teal'}
   ];
   const nav=document.createElement('nav');
   nav.className='industry-mobile-nav';
-  nav.setAttribute('aria-label','Quick navigation');
+  nav.setAttribute('aria-label','VIORA mobile navigation');
   nav.innerHTML=items.map(item=>{
-    const current=location.pathname===item.href||location.pathname===item.href+'/';
-    return '<a href="'+item.href+'"'+(current?' aria-current="page"':'')+'><i class="fa-solid '+item.icon+'" aria-hidden="true"></i><span>'+item.label+'</span></a>';
+    const current=location.pathname.replace(/\\/+$/,'')===item.href.replace(/\\/+$/,'') || (item.href==='/'&&location.pathname==='/');
+    return '<a href="'+item.href+'" class="mnav-item tone-'+item.tone+'"'+(current?' aria-current="page"':'')+'><i class="fa-solid '+item.icon+'" aria-hidden="true"></i><span>'+item.label+'</span></a>';
   }).join('');
   body.appendChild(nav);
 
   const iconMap={
-    retail:'fa-store',healthcare:'fa-heart-pulse',education:'fa-graduation-cap',
-    hospitality:'fa-hotel',logistics:'fa-truck-fast',agriculture:'fa-seedling',
-    'professional-services':'fa-briefcase',directory:'fa-city'
+    retail:['fa-store','orange'],healthcare:['fa-heart-pulse','red'],education:['fa-graduation-cap','green'],
+    hospitality:['fa-hotel','violet'],logistics:['fa-truck-fast','blue'],agriculture:['fa-seedling','lime'],
+    'professional-services':['fa-briefcase','amber'],directory:['fa-city','cyan']
   };
   const key=body.dataset.industry||'';
+  const heroIcon=iconMap[key];
   const eyebrow=document.querySelector('main .hero .eyebrow');
-  if(eyebrow&&iconMap[key]){
+  if(eyebrow&&heroIcon){
     const icon=document.createElement('i');
-    icon.className='fa-solid '+iconMap[key];
+    icon.className='fa-solid '+heroIcon[0]+' industry-icon tone-'+heroIcon[1];
     icon.setAttribute('aria-hidden','true');
     eyebrow.prepend(icon);
   }
 
+  const patterns=[
+    [/patient|medical|appointment|clinic|health/,'fa-heart-pulse','red'],
+    [/learner|course|trainer|class|assessment|certificate/,'fa-graduation-cap','green'],
+    [/stock|inventory|purchas|supplier|warehouse/,'fa-boxes-stacked','orange'],
+    [/payment|billing|finance|receipt/,'fa-credit-card','purple'],
+    [/sales|point of sale|cashier|order/,'fa-cash-register','blue'],
+    [/fleet|dispatch|transport|consignment/,'fa-truck-fast','cyan'],
+    [/farm|crop|production|harvest/,'fa-seedling','lime'],
+    [/guest|reservation|hospitality|service/,'fa-bell-concierge','violet'],
+    [/client|project|team|document|consult/,'fa-briefcase','amber']
+  ];
   document.querySelectorAll('main .list li').forEach(item=>{
+    if(item.querySelector('.industry-list-icon'))return;
     const words=item.textContent.toLowerCase();
-    let icon='fa-circle-check';
-    if(/patient|medical|appointment|clinic|health/.test(words))icon='fa-heart-pulse';
-    else if(/learner|course|trainer|class|assessment|certificate/.test(words))icon='fa-graduation-cap';
-    else if(/stock|inventory|purchas|supplier|warehouse/.test(words))icon='fa-boxes-stacked';
-    else if(/payment|billing|finance|receipt/.test(words))icon='fa-credit-card';
-    else if(/sales|point of sale|cashier|order/.test(words))icon='fa-cash-register';
-    else if(/fleet|dispatch|transport|consignment/.test(words))icon='fa-truck-fast';
-    else if(/farm|crop|production|harvest/.test(words))icon='fa-seedling';
-    else if(/guest|reservation|hospitality|service/.test(words))icon='fa-bell-concierge';
-    const node=document.createElement('i');
-    node.className='fa-solid '+icon;
-    node.setAttribute('aria-hidden','true');
-    item.prepend(node);
+    const match=patterns.find(([pattern])=>pattern.test(words));
+    const icon=document.createElement('i');
+    icon.className='fa-solid '+(match?match[1]:'fa-circle-check')+' industry-list-icon tone-'+(match?match[2]:'teal');
+    icon.setAttribute('aria-hidden','true');
+    item.prepend(icon);
   });
 
   if(key==='directory'){
-    const map=[['retail','fa-store'],['healthcare','fa-heart-pulse'],['education','fa-graduation-cap'],['hospitality','fa-hotel'],['logistics','fa-truck-fast'],['agriculture','fa-seedling'],['professional-services','fa-briefcase']];
+    const map=[
+      ['retail','fa-store','orange'],['healthcare','fa-heart-pulse','red'],['education','fa-graduation-cap','green'],
+      ['hospitality','fa-hotel','violet'],['logistics','fa-truck-fast','blue'],['agriculture','fa-seedling','lime'],
+      ['professional-services','fa-briefcase','amber']
+    ];
     document.querySelectorAll('main .grid .card').forEach(card=>{
       const href=card.querySelector('a[href]')?.getAttribute('href')||'';
       const match=map.find(([part])=>href.includes(part));
-      if(!match)return;
+      if(!match||card.querySelector('.industry-card-icon'))return;
       const icon=document.createElement('i');
-      icon.className='fa-solid '+match[1];
+      icon.className='fa-solid '+match[1]+' industry-card-icon tone-'+match[2];
       icon.setAttribute('aria-hidden','true');
-      icon.style.cssText='display:inline-grid;place-items:center;width:38px;height:38px;margin-bottom:10px;border-radius:12px;background:rgba(70,145,231,.14);color:#8fc2ff;font-size:17px';
       card.insertBefore(icon,card.firstChild);
     });
   }
