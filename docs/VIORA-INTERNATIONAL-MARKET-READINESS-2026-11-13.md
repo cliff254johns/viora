@@ -24,6 +24,8 @@ The deployed `viora-api` Worker has Daraja STK, C2B and callback handlers. Clien
 
 **Decision:** M-Pesa is partly implemented, not production-configured or verified. Do not enable live collections until secrets, callback security, independent status verification, amount/currency/invoice validation, idempotency, reconciliation and sandbox tests are complete.
 
+The same deployed Worker also exposes a pre-authentication `/debugEnv` route that reports environment-variable names and configuration-presence flags. It does not return the secret values in the inspected code, but it unnecessarily exposes operational metadata; restrict or remove this route before production hardening.
+
 ### Tax
 Finance VAT reserve defaults to 16%; deployed payroll code hardcodes Kenya NSSF, SHIF, Housing Levy and PAYE. No general jurisdiction-aware tax engine or verified statutory e-invoice adapter was found in inspected paths. eTIMS appears in marketing copy, but successful live KRA submissions were not evidenced. Uganda EFRIS, Rwanda EBM/EIS and India IRP integrations were not evidenced. Do not call ordinary PDFs statutory e-invoices where fiscalisation is required.
 
@@ -41,6 +43,8 @@ The public product copy and the alternate product overview were corrected to avo
 - Industry blueprints now carry a notice that tax, payment, payroll and statutory functions are illustrative until market-specific integrations are configured and verified.
 
 These are copy-accuracy changes, not proof that the underlying integrations have been completed.
+
+The public asset updates were deployed to Cloudflare Worker `viora-static-git` using deployment `1e16a3f3-3e22-4b31-b2ee-a4fcf3995e81`, version `2cb4a17a-fecc-4d60-97ce-04f118dfedf1`, with 100% traffic assigned. JavaScript syntax parsing passed for the modified browser scripts (the ES module was checked after normalizing export syntax). A live browser/HTTP smoke test of the deployed pages was not completed in this environment; deployment acceptance is therefore confirmed, but end-user rendering is not.
 
 ## Country-by-country launch matrix
 
