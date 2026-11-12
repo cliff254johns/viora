@@ -4026,7 +4026,10 @@
         if (important) {
           const notificationId = 'finance-' + entryRef.key;
           const level = /failed|overdue|rejected/i.test(String(action || '')) ? 'warning' : 'info';
-          await set(ref(db, P('notifications/' + notificationId)), {
+          const notificationRef = ref(db, P('notifications/' + notificationId));
+          const existingNotificationSnap = await get(notificationRef);
+          const existingNotification = existingNotificationSnap.exists() ? existingNotificationSnap.val() : {};
+          await set(notificationRef, {
             id: notificationId,
             sourceEventId: entryRef.key,
             source: 'finance',
@@ -4039,7 +4042,8 @@
             byName: actorName,
             ts: timestamp,
             url: '/finance.html',
-            read: false
+            read: existingNotification.read === true,
+            ...(existingNotification.readAt ? { readAt: existingNotification.readAt } : {})
           });
         }
       } catch (e) {
