@@ -154,6 +154,7 @@
   }
   const api = {
     get state() { return Object.assign({}, state); },
+    getState() { return Object.assign({}, state); },
     formatUSD,
     formatKES,
     convert,
