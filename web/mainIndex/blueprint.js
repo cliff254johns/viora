@@ -143,7 +143,19 @@
         });
     }
 
-    window.openBlueprintPreview = function () {
+    var marketplaceProductsPromise=null;
+function loadIndustryMarketplaceProducts(){
+ if(marketplaceProductsPromise)return marketplaceProductsPromise;
+ marketplaceProductsPromise=(async function(){try{var appMod=await import('https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js');var dbMod=await import('https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js');var config={apiKey:"AIzaSyC9gCBt-xR8t9n6rTGNvDZ5usUGiW-Dqxc",authDomain:"cliffclient-35ec5.firebaseapp.com",databaseURL:"https://cliffclient-35ec5-default-rtdb.europe-west1.firebasedatabase.app",projectId:"cliffclient-35ec5",storageBucket:"cliffclient-35ec5.firebasestorage.app",messagingSenderId:"519782791696",appId:"1:519782791696:web:6e1a654ddeed14b72b2895"};var app;try{app=appMod.getApp()}catch(_){app=appMod.initializeApp(config)}var snap=await dbMod.get(dbMod.ref(dbMod.getDatabase(app),'viora_data/orgs/viora/products'));var raw=snap.exists()?snap.val():{};return Object.keys(raw||{}).map(function(id){return Object.assign({id:id},raw[id]||{})}).filter(function(p){return p.status!=='archived'&&p.status!=='draft'});}catch(e){console.warn('[VIORA industry marketplace] Catalogue unavailable:',e);return [];}})();return marketplaceProductsPromise;
+}
+function renderIndustryMarketplace(ind,cat){
+ var host=document.getElementById('bpMarketplaceProducts');if(!host)return;var categoryText=String(cat&&cat.name||'').toLowerCase(),industryText=String(ind&&ind.name||'').toLowerCase(),key=String(ind&&ind.cat||'').toLowerCase();
+ var aliases={'retail_trade':['retail','trade','commerce','pos','inventory','wholesale'],'food_bev':['food','beverage','restaurant','hospitality'],'health_wellness':['health','medical','clinic','wellness'],'beauty_personal':['beauty','salon','personal care'],'prof_services':['professional','legal','accounting','consulting'],'creative_media':['creative','media','design'],'construction':['construction','building'],'transport_logi':['transport','logistics','fleet'],'agri_farming':['agriculture','farming','agri'],'education':['education','training','school'],'finance_ins':['finance','insurance'],'real_estate':['real estate','property'],'hospitality':['hospitality','hotel','tourism'],'manufacturing':['manufacturing','industry'],'tech_digital':['technology','digital','software'],'community_faith':['community','faith'],'informal_msme':['msme','small business']};
+ var terms=[categoryText,industryText].concat(aliases[key]||[]).filter(Boolean);
+ loadIndustryMarketplaceProducts().then(function(products){if(!document.getElementById('bpMarketplaceProducts'))return;var match=products.filter(function(p){var hay=[p.category,p.name,p.description].concat(Array.isArray(p.tags)?p.tags:[typeof p.tags==='string'?p.tags:''],Array.isArray(p.features)?p.features:[]).join(' ').toLowerCase();return terms.some(function(t){return t.length>2&&hay.includes(t);});}).slice(0,6);if(!match.length){host.innerHTML='<div class="bp-marketplace-empty"><i class="fa-solid fa-box-open"></i><span>No live Marketplace products are currently tagged for '+escHtml(ind.name)+'.</span><a href="/market">Browse the full Marketplace</a></div>';return;}host.innerHTML=match.map(function(p){var price=Number(p.price)>0?'KSh '+Math.round(Number(p.price)*129).toLocaleString('en-KE')+(p.period?' / '+escHtml(p.period):''):(p.pricing==='quote'?'Request a quote':'View product');var image=p.image?'<img src="'+escHtml(p.image)+'" alt="" loading="lazy">':'<span class="bp-product-icon"><i class="'+escHtml(p.icon||'fa-solid fa-cube')+'"></i></span>';return '<article class="bp-market-product">'+image+'<div class="bp-product-info"><b>'+escHtml(p.name||'VIORA product')+'</b><p>'+escHtml(p.description||'Explore this product in the VIORA Marketplace.')+'</p><strong>'+price+'</strong><a href="/market">View in Marketplace <i class="fa-solid fa-arrow-right"></i></a></div></article>';}).join('');});
+}
+
+window.openBlueprintPreview = function () {
         if (!activeIndustryKey || !INDUSTRIES[activeIndustryKey]) {
             alert("Please pick an industry first.");
             return;
@@ -188,6 +200,8 @@
             }).join("");
         }
 
+        renderIndustryMarketplace(ind,cat);
+        var marketLink=document.getElementById("bpMarketplaceLink");if(marketLink)marketLink.href="/market";
         window.openModal("vioraBlueprintModal");
     };
 
