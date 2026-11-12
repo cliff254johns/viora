@@ -126,3 +126,30 @@ body.viora-industry-page .tone-cyan{color:#53d4e8!important}
  body.viora-industry-page .industry-mobile-nav .tone-teal i{color:#39d2c4}
  body.viora-industry-page{padding-bottom:100px}
 }
+
+/* Live category-matched Marketplace products on standalone industry pages. */
+body.viora-industry-page .industry-marketplace-section{padding:44px 0 56px}
+body.viora-industry-page .industry-marketplace-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:22px;flex-wrap:wrap}
+body.viora-industry-page .industry-marketplace-heading h2{font-size:clamp(25px,4vw,36px);line-height:1.12;letter-spacing:-.035em;margin:8px 0}
+body.viora-industry-page .industry-marketplace-heading p{color:var(--muted);max-width:650px;margin:0}
+body.viora-industry-page .industry-marketplace-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;min-height:90px}
+body.viora-industry-page .industry-marketplace-grid[aria-busy=true]{opacity:.72}
+body.viora-industry-page .industry-product-card{overflow:hidden;display:flex;flex-direction:column;min-width:0;border:1px solid rgba(141,177,218,.19);border-radius:18px;background:linear-gradient(160deg,rgba(17,37,62,.96),rgba(8,20,35,.96));box-shadow:0 12px 34px rgba(0,0,0,.18);transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+body.viora-industry-page .industry-product-card:hover{transform:translateY(-3px);border-color:rgba(77,156,255,.5);box-shadow:0 18px 40px rgba(0,0,0,.28)}
+body.viora-industry-page .industry-product-image,body.viora-industry-page .industry-product-placeholder{width:100%;height:170px;object-fit:cover;background:linear-gradient(135deg,rgba(45,112,196,.25),rgba(17,37,62,.8))}
+body.viora-industry-page .industry-product-placeholder{display:flex;align-items:center;justify-content:center;color:#7fbaff;font-size:36px}
+body.viora-industry-page .industry-product-copy{display:flex;flex:1;flex-direction:column;padding:18px}
+body.viora-industry-page .industry-product-kicker{font-size:9px;font-weight:900;letter-spacing:.16em;color:#80baff}
+body.viora-industry-page .industry-product-copy h3{font-size:17px;line-height:1.25;margin:8px 0}
+body.viora-industry-page .industry-product-copy p{font-size:13px;line-height:1.55;color:var(--muted);margin:0 0 18px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+body.viora-industry-page .industry-product-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:12px;border-top:1px solid var(--line)}
+body.viora-industry-page .industry-product-bottom strong{font-size:13px;color:#f4f8ff}
+body.viora-industry-page .industry-product-bottom a{margin:0;color:#8fc0ff;font-size:12px;font-weight:850;text-decoration:none;white-space:nowrap}
+body.viora-industry-page .industry-product-bottom a:hover{text-decoration:underline}
+body.viora-industry-page .industry-marketplace-empty{display:flex;align-items:center;gap:18px;padding:22px;border:1px dashed rgba(141,177,218,.3);border-radius:18px;background:rgba(13,27,45,.62);grid-column:1/-1}
+body.viora-industry-page .industry-marketplace-empty .industry-product-placeholder{flex:0 0 66px;width:66px;height:66px;border-radius:16px;font-size:24px}
+body.viora-industry-page .industry-marketplace-empty p{margin:5px 0 12px;color:var(--muted);font-size:13px}
+body.viora-industry-page .industry-marketplace-empty .btn{font-size:12px;padding:10px 14px}
+body.viora-industry-page .industry-marketplace-state{color:var(--muted);padding:18px;border:1px solid var(--line);border-radius:14px}
+@media(max-width:760px){body.viora-industry-page .industry-marketplace-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}body.viora-industry-page .industry-product-image,body.viora-industry-page .industry-product-placeholder{height:132px}body.viora-industry-page .industry-product-copy{padding:13px}body.viora-industry-page .industry-product-copy h3{font-size:15px}body.viora-industry-page .industry-product-copy p{font-size:12px}body.viora-industry-page .industry-product-bottom{align-items:flex-start;flex-direction:column;gap:6px}body.viora-industry-page .industry-marketplace-empty{align-items:flex-start;padding:15px}}
+@media(max-width:380px){body.viora-industry-page .industry-marketplace-grid{grid-template-columns:1fr}}
