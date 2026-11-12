@@ -17,10 +17,16 @@
   ],
   "icons": [
     {
-      "src": "/viora.png",
-      "sizes": "1024x1024",
-      "type": "image/png",
+      "src": "/viora-icon-192.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any"
+    },
+    {
+      "src": "/viora-icon-512.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
 }
