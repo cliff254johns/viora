@@ -16,9 +16,9 @@ function _ensureMainLeadMap(){
  if(el.clientWidth<80)return;
  el.replaceChildren();
  _mainLeadGeoMap=L.map(el,{worldCopyJump:true,scrollWheelZoom:true,preferCanvas:true,maxZoom:19}).setView([18,5],1);
- const streets=L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd',attribution:'© OpenStreetMap contributors © CARTO'});
- const osmStreets=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'});
- const terrain=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles © Esri — World Topographic Map'});
+ const streets=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'});
+ const osmStreets=L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd',attribution:'© OpenStreetMap contributors © CARTO'});
+ const terrain=L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd',attribution:'© OpenStreetMap contributors © CARTO'});
  const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles © Esri'});
  const boundaries=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,opacity:.95,attribution:'Country boundaries & place labels © Esri'});
  terrain.addTo(_mainLeadGeoMap);boundaries.addTo(_mainLeadGeoMap);_addMainVioraMapLayerControl(_mainLeadGeoMap,{vegetation:terrain,streets:streets,satellite:satellite,osm:osmStreets});_mainLeadGeoMap.fitBounds([[-82,-180],[82,180]],{padding:[8,8],maxZoom:2,animate:false});_mainLeadGeoMap._vioraWorldFitted=true;_mainLeadGeoMap._vioraUserZoomed=false;_mainLeadGeoMap.on('zoomend',()=>{if(_mainLeadGeoMap.getZoom()>2)_mainLeadGeoMap._vioraUserZoomed=true;});_mainLeadGeoMap.on('resize',()=>{_mainLeadGeoMap.invalidateSize(true);if(!_mainLeadGeoMap._vioraUserZoomed)_mainLeadGeoMap.fitBounds([[-82,-180],[82,180]],{padding:[8,8],maxZoom:2,animate:false});});
