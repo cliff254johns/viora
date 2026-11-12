@@ -1470,7 +1470,10 @@ export function attachVioraNotificationListener() {
     if (n.by && state?.operator?.uid && n.by === state.operator.uid) return;
 
     const isFresh = !!tsMs && (Date.now() - tsMs) < 5000;
-    surfaceVioraNotification({ ...n, id: eventKey }, isFresh);
+    // Only genuinely new events create a toast/sound; historical unread items
+    // are loaded quietly into the notification centre.
+    if (isFresh) surfaceVioraNotification({ ...n, id: eventKey }, true);
+    else if (eventKey) _vioraNotifSeen.add(eventKey);
 
     /* Keep unread state until the user opens the notification. */
     try { renderDashboardNotifications(); } catch (_) {}
