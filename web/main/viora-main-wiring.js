@@ -1216,6 +1216,9 @@ export function attachForms() {
     source: $('leadSource')?.value,
     status: $('leadStatus')?.value,
     campaignId: $('leadCampaign')?.value,
+    address: $('leadAddress')?.value?.trim(),
+    city: $('leadCity')?.value?.trim(),
+    country: $('leadCountry')?.value?.trim(),
     notes: $('leadNotes')?.value?.trim()
   })));
 
