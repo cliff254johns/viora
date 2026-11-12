@@ -30,6 +30,18 @@ Finance VAT reserve defaults to 16%; deployed payroll code hardcodes Kenya NSSF,
 ### Legal/privacy
 Privacy, terms, DPA and cookie pages identify VIORA as Kenya-registered; terms choose Kenyan law. Privacy/DPA mention Kenya DPA and GDPR/UK GDPR concepts, but no local counsel approval, regulator registration or full country-specific transfer evidence was established.
 
+## Public-claim corrections made during this assessment
+
+The public product copy and the alternate product overview were corrected to avoid presenting unconfigured or unverified integrations as live global capabilities:
+- M-Pesa is described as configurable, not as a currently verified live payment/reconciliation service.
+- eTIMS, statutory payroll and tax compliance are described as jurisdiction-specific integrations requiring configuration and validation.
+- Finance copy no longer promises universal multi-currency ledgers or automatic bank/M-Pesa reconciliation.
+- Security copy no longer promises automatic key rotation, universal MFA enforcement or verified daily restore drills without deployment evidence.
+- Unsupported numerical marketing KPIs and fabricated pilot testimonials/metrics were removed from the alternate product overview. The section now contains clearly labelled illustrative workflow examples; demo counters are labelled as demo placeholders.
+- Industry blueprints now carry a notice that tax, payment, payroll and statutory functions are illustrative until market-specific integrations are configured and verified.
+
+These are copy-accuracy changes, not proof that the underlying integrations have been completed.
+
 ## Country-by-country launch matrix
 
 | Market | Currency | Payment route to assess | Tax/invoicing work | Privacy/legal work | Current VIORA status |
