@@ -1,5 +1,6 @@
 const VERSION='bodabiz-shell-v5';
 const SHELL=[
+ '/viora.png',
  './ride.html','./riders.html','./admin.html',
  './manifest-public.json','./manifest-rider.json','./manifest-admin.json',
  './icons/icon.svg',
