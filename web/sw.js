@@ -69,7 +69,7 @@ const PRECACHE_URLS = [
   '/es/',
   '/global-brand.css',
   '/global-brand.js',
-  '/currency-display.js?v=20261112-global-fx',
+  '/currency-display.js?v=20261112-global-fx-2',
   '/mainIndex/site-assistant-loader.js',
   '/mainIndex/site-language.js',
   '/mainIndex/chatbot.js',
