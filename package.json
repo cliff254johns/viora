@@ -8,7 +8,8 @@
     "test:contracts": "node scripts/viora-engineering-checks.mjs",
     "test": "npm run test:contracts && npm run test:unit",
     "docs:generate": "node scripts/generate-engineering-docs.mjs",
-    "review:changes": "node scripts/review-changes.mjs"
+    "review:changes": "node scripts/review-changes.mjs",
+    "test:e2e": "playwright test"
   },
   "engines": {
     "node": ">=22"
@@ -16,5 +17,9 @@
   "dependencies": {
     "firebase-admin": "^13.5.0",
     "@aws-sdk/client-s3": "^3.900.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "@axe-core/playwright": "^4.10.2"
   }
 }
