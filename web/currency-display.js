@@ -1,7 +1,6 @@
-/* VIORA global display currency.
-   Detects the visitor's country from IP metadata (no device-location permission).
-   Uses daily reference FX rates for public catalogue estimates only.
-   Stored product prices and accounting/payment settlement currencies are not rewritten. */
+/* VIORA public storefront currency display.
+   Country is estimated from the visitor's IP metadata; no precise device location is requested.
+   FX rates are daily reference estimates. Original stored prices and settlement currency stay unchanged. */
 (function () {
   'use strict';
   if (window.VioraCurrency) return;
@@ -9,20 +8,13 @@
   const FRANKFURTER_URL = 'https://api.frankfurter.dev/v2/rates?base=USD';
   const FALLBACK_FX_URL = 'https://open.er-api.com/v6/latest/USD';
   const GEO_URLS = ['https://ipapi.co/json/', 'https://ipwho.is/'];
-  const FX_CACHE_KEY = 'viora_fx_usd_v3';
+  const FX_CACHE_KEY = 'viora_fx_usd_v4';
   const GEO_CACHE_KEY = 'viora_geo_currency_v1';
   const DAY = 86400000;
-  const FX_CACHE_TTL = 6 * 60 * 60 * 1000;
+  const CACHE_TTL = 6 * 60 * 60 * 1000;
   const state = {
-    countryCode: '',
-    currency: 'USD',
-    rates: { USD: 1 },
-    rateDates: { USD: '' },
-    lastUpdated: '',
-    nextUpdate: 0,
-    ready: false,
-    source: 'USD fallback',
-    primaryLoaded: false
+    countryCode: '', currency: 'USD', rates: { USD: 1 }, rateDates: { USD: '' },
+    lastUpdated: '', nextUpdate: 0, ready: false, source: 'USD fallback'
   };
 
   function readCache(key) {
@@ -57,7 +49,6 @@
     if (cached && cached.savedAt && Date.now() - cached.savedAt < 7 * DAY && cached.currency) {
       state.countryCode = cached.countryCode || '';
       state.currency = cached.currency;
-      state.source = 'IP country estimate';
       return;
     }
     for (const url of GEO_URLS) {
@@ -67,7 +58,6 @@
         if (geo && /^[A-Z]{3}$/.test(geo.currency)) {
           state.countryCode = geo.countryCode;
           state.currency = geo.currency;
-          state.source = 'IP country estimate';
           writeCache(GEO_CACHE_KEY, Object.assign({ savedAt: Date.now() }, geo));
           return;
         }
@@ -76,22 +66,18 @@
       }
     }
   }
-  function saveRateCache() {
-    state.nextUpdate = Date.now() + FX_CACHE_TTL;
+  function saveRates() {
+    state.nextUpdate = Date.now() + CACHE_TTL;
     writeCache(FX_CACHE_KEY, {
-      rates: state.rates,
-      rateDates: state.rateDates,
-      lastUpdated: state.lastUpdated,
-      nextUpdate: state.nextUpdate,
-      source: state.source,
-      savedAt: Date.now()
+      rates: state.rates, rateDates: state.rateDates,
+      lastUpdated: state.lastUpdated, nextUpdate: state.nextUpdate,
+      source: state.source, savedAt: Date.now()
     });
   }
   async function loadFrankfurter() {
     const rows = await fetchJson(FRANKFURTER_URL, 12000);
     if (!Array.isArray(rows) || !rows.length) throw new Error('Unexpected Frankfurter response');
-    const rates = { USD: 1 };
-    const dates = { USD: '' };
+    const rates = { USD: 1 }, dates = { USD: '' };
     rows.forEach(row => {
       const code = String(row && row.quote || '').toUpperCase();
       const rate = Number(row && row.rate);
@@ -104,92 +90,42 @@
     state.rates = rates;
     state.rateDates = dates;
     state.source = 'Frankfurter daily reference rates';
-    state.primaryLoaded = true;
     state.lastUpdated = dates[state.currency] || '';
-    saveRateCache();
+    saveRates();
   }
   async function loadFallbackRates() {
     const data = await fetchJson(FALLBACK_FX_URL, 9000);
     if (!data || data.result !== 'success' || !data.rates || Number(data.rates.USD) !== 1) {
-      throw new Error('Fallback FX provider returned no usable rates');
+      throw new Error('Secondary FX provider returned no usable rates');
     }
-    const merged = state.primaryLoaded ? Object.assign({}, data.rates, state.rates) : Object.assign({}, state.rates, data.rates);
+    const merged = Object.assign({}, data.rates, state.rates);
     merged.USD = 1;
     state.rates = merged;
-    state.rateDates = Object.assign({}, state.rateDates);
     const fallbackDate = data.time_last_update_utc ? new Date(data.time_last_update_utc).toISOString().slice(0, 10) : '';
     Object.keys(data.rates).forEach(code => {
       if (!state.rateDates[code]) state.rateDates[code] = fallbackDate;
     });
-    state.source = state.primaryLoaded
+    state.source = state.source.indexOf('Frankfurter') >= 0
       ? 'Frankfurter with ExchangeRate-API coverage fallback'
       : 'ExchangeRate-API daily fallback';
     state.lastUpdated = state.rateDates[state.currency] || fallbackDate;
-    saveRateCache();
+    saveRates();
   }
   async function loadRates() {
     const cached = readCache(FX_CACHE_KEY);
     if (cached && cached.rates && cached.rates.USD === 1) {
       state.rates = cached.rates;
+      state.rateDates = cached.rateDates || {};
       state.lastUpdated = cached.lastUpdated || '';
       state.nextUpdate = Number(cached.nextUpdate) || 0;
-      if (state.nextUpdate > Date.now() && Number(state.rates[state.currency]) > 0) return;
+      state.source = cached.source || 'Cached daily rates';
+      if (state.nextUpdate > Date.now()) return;
     }
-
-    let primaryLoaded = false;
-    try {
-      const data = await fetchJson(FX_URL, 9000);
-      if (data && data.result === 'success' && data.base_code === 'USD' && data.rates && Number(data.rates.USD) === 1) {
-        state.rates = data.rates;
-        state.lastUpdated = data.time_last_update_utc || '';
-        state.nextUpdate = Number(data.time_next_update_unix || 0) * 1000 || Date.now() + DAY;
-        state.source = 'Open Exchange Rate reference';
-        primaryLoaded = true;
-      }
-    } catch (error) {
-      console.warn('[VIORA currency] Primary FX refresh unavailable; trying the backup daily rate feeds.', error);
-    }
-
-    // The primary feed covers most traded currencies. The independent daily
-    // feed fills gaps for additional national currencies and is mirrored on
-    // Cloudflare Pages in case jsDelivr is unavailable.
-    if (!Number(state.rates[state.currency]) || !primaryLoaded) {
-      for (const url of FX_BACKUP_URLS) {
-        try {
-          const data = await fetchJson(url, 8000);
-          const usdRates = data && (data.usd || data.USD);
-          if (!usdRates || typeof usdRates !== 'object') continue;
-          const normalized = { USD: 1 };
-          Object.keys(usdRates).forEach(code => {
-            const rate = Number(usdRates[code]);
-            if (/^[a-z]{3}$/i.test(code) && Number.isFinite(rate) && rate > 0) normalized[code.toUpperCase()] = rate;
-          });
-          if (Object.keys(normalized).length < 20) continue;
-          // Prefer the primary source where it has a quote; fill currencies
-          // absent from it with the second independent daily dataset.
-          Object.keys(normalized).forEach(code => {
-            if (!(Number(state.rates[code]) > 0)) state.rates[code] = normalized[code];
-          });
-          if (!Number(state.rates[state.currency]) && Number(normalized[state.currency]) > 0) {
-            state.rates[state.currency] = normalized[state.currency];
-          }
-          state.lastUpdated = state.lastUpdated || data.date || '';
-          state.nextUpdate = Math.max(state.nextUpdate || 0, Date.now() + DAY);
-          if (!primaryLoaded) state.source = 'Daily FX reference feed (backup)';
-          break;
-        } catch (error) {
-          console.debug('[VIORA currency] Backup FX feed unavailable:', error && error.message);
-        }
-      }
-    }
-
-    if (Number(state.rates[state.currency]) > 0 || primaryLoaded) {
-      writeCache(FX_CACHE_KEY, {
-        rates: state.rates,
-        lastUpdated: state.lastUpdated,
-        nextUpdate: state.nextUpdate || Date.now() + DAY,
-        savedAt: Date.now()
-      });
+    try { await loadFrankfurter(); }
+    catch (error) {
+      console.warn('[VIORA currency] Frankfurter unavailable; using secondary FX feed if possible.', error);
+      try { await loadFallbackRates(); }
+      catch (fallbackError) { console.warn('[VIORA currency] Secondary FX feed unavailable; retaining cached rates.', fallbackError); }
     }
   }
   function formatterLocale() {
@@ -198,21 +134,13 @@
   function formatAmount(amount, currency) {
     const value = Number(amount);
     if (!Number.isFinite(value)) return '—';
-    try {
-      return new Intl.NumberFormat(formatterLocale(), {
-        style: 'currency',
-        currency: currency,
-        currencyDisplay: 'symbol'
-      }).format(value);
-    } catch (_) {
-      return currency + ' ' + value.toLocaleString();
-    }
+    try { return new Intl.NumberFormat(formatterLocale(), { style: 'currency', currency, currencyDisplay: 'symbol' }).format(value); }
+    catch (_) { return currency + ' ' + value.toLocaleString(); }
   }
   function convert(amount, from, to) {
     const n = Number(amount);
     if (!Number.isFinite(n)) return 0;
-    const fromRate = Number(state.rates[from]);
-    const toRate = Number(state.rates[to]);
+    const fromRate = Number(state.rates[from]), toRate = Number(state.rates[to]);
     if (!(fromRate > 0) || !(toRate > 0)) return null;
     return (n / fromRate) * toRate;
   }
@@ -232,12 +160,9 @@
     state.lastUpdated = state.rateDates[state.currency] || state.lastUpdated || '';
     state.ready = true;
     const detail = {
-      countryCode: state.countryCode,
-      currency: state.currency,
-      lastUpdated: state.lastUpdated,
-      nextUpdate: state.nextUpdate,
-      source: state.source,
-      rateAvailable: Number(state.rates[state.currency]) > 0
+      countryCode: state.countryCode, currency: state.currency,
+      lastUpdated: state.lastUpdated, nextUpdate: state.nextUpdate,
+      source: state.source, rateAvailable: Number(state.rates[state.currency]) > 0
     };
     window.dispatchEvent(new CustomEvent('viora:currency-ready', { detail }));
     const badge = document.getElementById('vioraCurrencyBadge');
@@ -266,9 +191,7 @@
   const api = {
     get state() { return Object.assign({}, state); },
     getState() { return Object.assign({}, state); },
-    formatUSD,
-    formatKES,
-    convert,
+    formatUSD, formatKES, convert,
     format(amount, fromCurrency) {
       const result = convert(amount, String(fromCurrency || 'USD').toUpperCase(), state.currency);
       return result == null ? formatAmount(amount, String(fromCurrency || 'USD').toUpperCase()) : formatAmount(result, state.currency);
@@ -279,7 +202,8 @@
     installBadge();
     await Promise.allSettled([loadGeo(), loadRates()]);
     if (!(Number(state.rates[state.currency]) > 0)) {
-      try { await loadFallbackRates(); } catch (error) { console.warn('[VIORA currency] No additional currency coverage available.', error); }
+      try { await loadFallbackRates(); }
+      catch (error) { console.warn('[VIORA currency] No additional currency coverage available.', error); }
     }
     announce();
   }
