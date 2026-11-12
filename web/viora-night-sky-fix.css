@@ -1,0 +1,22 @@
+/* VIORA night-sky visibility fix — loaded last after all legacy app styles. */
+#viora-city #vioraHeroBanner{
+  position:relative!important;
+  isolation:isolate!important;
+  overflow:hidden!important;
+  background:#071321!important;
+}
+#viora-city #vioraHeroBanner>#vioraHeroTerminatorCanvas{z-index:0!important}
+#viora-city #vioraHeroBanner>#vioraHeroWeatherCanvas{z-index:1!important}
+#viora-city #vioraHeroBanner>#vioraHeroSkyCanvas{z-index:2!important}
+#viora-city #vioraHeroBanner>#vioraHeroCanvas{z-index:3!important}
+#viora-city #vioraHeroBanner>#vioraHeroArcSvg{z-index:4!important}
+#viora-city #vioraHeroBanner>.viora-hero-scrim{z-index:5!important;pointer-events:none!important}
+#viora-city #vioraHeroBanner>#vioraHeroOrb{z-index:9!important;pointer-events:none!important}
+#viora-city #vioraHeroBanner .city-hud{z-index:12!important;position:absolute!important}
+#viora-city #vioraHeroBanner>#vioraHeroSkyCanvas,
+#viora-city #vioraHeroBanner>#vioraHeroTerminatorCanvas,
+#viora-city #vioraHeroBanner>#vioraHeroCanvas{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  max-width:none!important;max-height:none!important;pointer-events:none!important;
+  visibility:visible!important;opacity:1!important;mix-blend-mode:normal!important;
+}
