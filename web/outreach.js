@@ -143,8 +143,13 @@ function ensureWorldMap(){
  if(worldMap||!window.L||!$('worldLeadMap'))return;
  worldMap=L.map('worldLeadMap',{worldCopyJump:true,scrollWheelZoom:true,preferCanvas:true,maxZoom:19}).setView([20,5],2);
  const streets=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'});
+ const terrain=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles &copy; Esri — World Topographic Map'});
  const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles &copy; Esri'});
- streets.addTo(worldMap);L.control.layers({'Street map':streets,'Satellite imagery':satellite},null,{collapsed:true}).addTo(worldMap);
+ const boundaries=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,opacity:.95,attribution:'Country boundaries & place labels © Esri'});
+ // Start with a detailed topographic street view: green land cover, arid/desert regions,
+ // roads and political borders. Keep the boundary/label overlay available on every base map.
+ terrain.addTo(worldMap);boundaries.addTo(worldMap);
+ L.control.layers({'Street map':streets,'Terrain · vegetation & deserts':terrain,'Satellite imagery':satellite},{'Country borders & place labels':boundaries},{collapsed:false}).addTo(worldMap);
  worldMarkers=L.layerGroup().addTo(worldMap);
 }
 async function renderWorldLeadMap(force=false){
