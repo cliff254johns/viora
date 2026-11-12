@@ -1,0 +1,37 @@
+name: VIORA Engineering checks
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "web/**"
+      - "docs/**"
+      - ".github/workflows/viora-engineering-checks.yml"
+  push:
+    branches:
+      - main
+      - "engineering/**"
+    paths:
+      - "web/**"
+      - "docs/**"
+      - ".github/workflows/viora-engineering-checks.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  static-and-contract-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Parse JavaScript modules
+        run: |
+          node --input-type=module --check < web/main.js
+          node --input-type=module --check < web/worker.js
+          node --input-type=module --check < web/engineering-command-centre.js
+          node --input-type=module --check < web/mainIndex/chatbot.js
+      - name: Validate manifests, routing, Durable Object and governance contracts
+        run: node scripts/viora-engineering-checks.mjs
