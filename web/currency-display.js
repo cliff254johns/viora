@@ -138,9 +138,15 @@
             const rate = Number(sourceRates[code]);
             if (/^[A-Z]{3}$/.test(code) && Number.isFinite(rate) && rate > 0) fallback[code] = rate;
           });
-          Object.keys(fallback).forEach(code => {
-            if (!(Number(state.rates[code]) > 0)) state.rates[code] = fallback[code];
-          });
+          if (!primaryLoaded) {
+            // Refresh expired cached rates from the secondary provider when the primary feed is down.
+            state.rates = fallback;
+          } else {
+            // Keep the broader primary table and fill only currencies it does not publish.
+            Object.keys(fallback).forEach(code => {
+              if (!(Number(state.rates[code]) > 0)) state.rates[code] = fallback[code];
+            });
+          }
           if (!primaryLoaded) {
             state.lastUpdated = data.time_last_update_utc || state.lastUpdated;
             state.source = 'Open Exchange Rate fallback';
@@ -207,7 +213,7 @@
         catch (_) { return state.currency; }
       })();
       badge.innerHTML = '<span class="viora-currency-dot"></span><span>Prices in ' + state.currency + '</span><small>Indicative daily rates · <a href="https://frankfurter.dev/" target="_blank" rel="noopener noreferrer">Frankfurter</a> · <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer">backup rates</a></small>';
-      badge.title = 'Estimated country: ' + (state.countryCode || 'not detected') + '. Currency: ' + name + '. Rate date: ' + (state.lastUpdated || 'not available') + '. Display estimates only; payment providers may apply different rates and fees.';
+      badge.title = 'Estimated country: ' + (state.countryCode || 'not detected') + '. Currency: ' + name + '. Latest source update: ' + (state.lastUpdated || 'not available') + '. Display estimates only; payment providers may apply different rates and fees.';
       badge.hidden = false;
     }
   }
