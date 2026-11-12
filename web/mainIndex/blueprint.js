@@ -324,6 +324,12 @@ window.openBlueprintPreview = function () {
         renderOptions(staffEl, WIZARD_DATA.staff, "staff", false);
         renderOptions(branchesEl, WIZARD_DATA.branches, "branches", false);
         renderOptions(toolsEl, window.COST_TOOLS.map(function (t) { return { id: t.id, label: t.name + " — " + (window.VioraCurrency ? window.VioraCurrency.formatKES(t.price) : "KES " + t.price.toLocaleString()) }; }), "tool", true);
+        window.addEventListener('viora:currency-ready', function () {
+            var selectedTools = answers.tools.slice();
+            renderOptions(toolsEl, window.COST_TOOLS.map(function (t) { return { id: t.id, label: t.name + ' — ' + (window.VioraCurrency ? window.VioraCurrency.formatKES(t.price) : 'KES ' + t.price.toLocaleString()) }; }), 'tool', true);
+            toolsEl.querySelectorAll('button').forEach(function (button) { if (selectedTools.indexOf(button.dataset.id) !== -1) button.classList.add('selected'); });
+            answers.tools = selectedTools;
+        });
 
         function showStep(n) {
             currentStep = n;
