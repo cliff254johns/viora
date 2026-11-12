@@ -1,0 +1,24 @@
+import { initializeApp, cert } from 'firebase-admin/app';
+import { getDatabase } from 'firebase-admin/database';
+import { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectsCommand } from '@aws-sdk/client-s3';
+import { createCipheriv, createHash, randomBytes } from 'node:crypto';
+
+const required=['FIREBASE_SERVICE_ACCOUNT_JSON','FIREBASE_DATABASE_URL','R2_ACCOUNT_ID','R2_ACCESS_KEY_ID','R2_SECRET_ACCESS_KEY','R2_BUCKET','BACKUP_ENCRYPTION_KEY'];
+for(const key of required) if(!process.env[key]) throw new Error('Missing required secret/config: '+key);
+const serviceAccount=JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+const key=Buffer.from(process.env.BACKUP_ENCRYPTION_KEY,'base64');
+if(key.length!==32) throw new Error('BACKUP_ENCRYPTION_KEY must be 32 bytes encoded as base64');
+const app=initializeApp({credential:cert(serviceAccount),databaseURL:process.env.FIREBASE_DATABASE_URL});
+const snapshot=await getDatabase(app).ref('/').get();
+if(!snapshot.exists()) throw new Error('Refusing to upload empty database export');
+const payload=Buffer.from(JSON.stringify({createdAt:new Date().toISOString(),format:'firebase-rtdb-json-v1',data:snapshot.val()}));
+const iv=randomBytes(12),cipher=createCipheriv('aes-256-gcm',key,iv);
+const encrypted=Buffer.concat([cipher.update(payload),cipher.final()]);
+const tag=cipher.getAuthTag();
+const envelope=Buffer.concat([Buffer.from('VIORA-BACKUP-V1\0'),iv,tag,encrypted]);
+const sha256=createHash('sha256').update(envelope).digest('hex');
+const now=new Date(),stamp=now.toISOString().replace(/[:.]/g,'-');
+const objectKey='rtdb/daily/'+stamp+'.viora.enc';
+const s3=new S3Client({region:'auto',endpoint:'https://'+process.env.R2_ACCOUNT_ID+'.r2.cloudflarestorage.com',credentials:{accessKeyId:process.env.R2_ACCESS_KEY_ID,secretAccessKey:process.env.R2_SECRET_ACCESS_KEY}});
+await s3.send(new PutObjectCommand({Bucket:process.env.R2_BUCKET,Key:objectKey,Body:envelope,ContentType:'application/octet-stream',Metadata:{sha256,encrypted:'aes-256-gcm',source:'firebase-realtime-database'}}));
+console.log(JSON.stringify({event:'backup_succeeded',objectKey,bytes:envelope.length,sha256,createdAt:now.toISOString()}));
