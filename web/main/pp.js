@@ -136,12 +136,12 @@ export const PP_DEFAULTS = {
       { title: "Leads auto-convert", body: "Any enquiry → Client + Deal + Task in one step, with full audit trail." },
       { title: "Live dashboards", body: "Owner view on any phone: cash, pipeline, margin — right now, from live data." },
       { title: "Single client view", body: "Every department sees the same 360° client profile: deals, invoices, comms, docs." },
-      { title: "Compliance on autopilot", body: "eTIMS-ready invoicing and Kenya payroll (PAYE, NSSF, SHIF, Housing) calculated automatically." },
+      { title: "Market-specific compliance", body: "Tax, e-invoicing and statutory payroll rules are configured per market; compliance claims require local validation and active authority integrations." },
       { title: "Scales without re-tooling", body: "New branch, product, or service = a few clicks — never a new subscription." }
     ]},
     kpis: [
-      { val: "−6 hrs", lbl: "Weekly admin time saved" },
-      { val: "+18%", lbl: "Typical margin uplift" },
+      { val: "Illustrative", lbl: "Potential admin-time improvement" },
+      { val: "Illustrative", lbl: "Potential margin improvement" },
       { val: "0", lbl: "Double entries needed" },
       { val: "1", lbl: "System to train on" }
     ]
@@ -149,7 +149,7 @@ export const PP_DEFAULTS = {
   steps: { eyebrow: "How it goes", title: "From conversation to living system", items: [
     { title: "Discover", body: "A 30-minute call. We map what you actually do today — tools, leaks, workarounds." },
     { title: "Blueprint", body: "You get a written plan: which portals first, what changes, what it costs, what it saves." },
-    { title: "Build", body: "We configure your portals, migrate your data and integrate M-Pesa, SMS and eTIMS." },
+    { title: "Build", body: "We configure your portals, migrate your data and scope provider integrations; live payment and e-invoicing connections require customer credentials and market-specific testing." },
     { title: "Launch & train", body: "Your team is trained on their own data. We stay on for support and tuning." }
   ]},
   cta: { title: "Ready to see your blueprint?", body: "Send us your details and we'll come back on WhatsApp with a plan built around your industry — usually within a few hours.", actions: [
@@ -160,11 +160,11 @@ export const PP_DEFAULTS = {
   faq: { eyebrow: "Questions", title: "The things people actually ask", items: [
     { q: "Do I have to buy all seven portals?", a: "No. Start with the one that hurts most — usually Business UI. Every portal shares one data core, so adding Public, Partner, Product, YouTube, Client Portal or Training later takes days, not months." },
     { q: "Will it work on my phone?", a: "Yes. Every portal is mobile-first and installable as a PWA on Android and iPhone. Your team can check in, log work, invoice and approve from the field — no laptop required." },
-    { q: "What about M-Pesa and KRA?", a: "M-Pesa Daraja integration handles STK push, paybill and till collections, then auto-reconciles each payment against the right invoice. Invoicing is eTIMS-ready, and payroll handles PAYE, NSSF, SHIF and the Housing Levy." },
+    { q: "What about M-Pesa and KRA?", a: "We can scope M-Pesa Daraja and KRA eTIMS integrations. Live collections require provider credentials, verified callbacks and reconciliation tests; statutory invoicing and payroll must be configured and validated for the customer's business and market." },
     { q: "Is my data safe?", a: "Encrypted in transit and at rest, role-based access, two-factor authentication, daily backups and a complete audit trail. Your data is yours — export it any time in CSV or PDF." },
     { q: "How long does setup take?", a: "Business UI typically goes live in 2–4 weeks depending on how much data we migrate. Each additional portal is usually 1–2 weeks after that." },
     { q: "Do you train my team?", a: "Always. Training happens on your own live data, in your own language and workflow — not on a demo account nobody recognises. And with the Training UI, every certificate and completion is tracked automatically." },
-    { q: "What if I'm not in Kenya?", a: "The core system is country-agnostic. We already localise tax, payroll and payment rails per country — tell us where you operate and we'll confirm the fit on the call." }
+    { q: "What if I'm not in Kenya?", a: "The core software can be configured for international operations. Tax, payroll, payment methods and statutory reporting must be scoped and validated for each country before launch." }
   ]},
   footer: { motto: "VIORA: MORE THAN A PLATFORM", sub: "It's a complete ecosystem.", left: "Visit us: www.viora.co.ke", right: "Together We Build A Smarter Tomorrow", services: [
     { icon: "fa-solid fa-code", label: "Web Development" },
