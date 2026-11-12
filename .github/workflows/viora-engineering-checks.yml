@@ -52,3 +52,16 @@ jobs:
         run: npm run test:unit
       - name: Validate manifests, routing, Durable Object and governance contracts
         run: node scripts/viora-engineering-checks.mjs
+
+  durable-object-concurrency:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - name: Install Cloudflare Workers test dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Verify SQLite Durable Object under concurrent requests
+        run: npm run test:cloudflare
