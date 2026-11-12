@@ -32,7 +32,11 @@ async function renderMainLeadGeoMap(force=false){
  if(!window.L){el.innerHTML='<div class="viora-map-loading">Map library unavailable. Reconnect and refresh this view.</div>';return}
  _ensureMainLeadMap();
  if(!_mainLeadGeoMap){
-   el.innerHTML='<div class="viora-map-loading">Open the Leads tab to load the world map…</div>';
+   el.innerHTML='<div class="viora-map-loading"><i class="fa-solid fa-globe fa-spin"></i> Preparing the world map…</div>';
+   const pane=document.getElementById('tab-marketing-leads');
+   if(pane&&pane.classList.contains('active')&&el.clientWidth<80){
+     setTimeout(()=>{if(!_mainLeadGeoMap&&document.getElementById('tab-marketing-leads')?.classList.contains('active'))renderMainLeadGeoMap(force)},220);
+   }
    return;
  }
  requestAnimationFrame(()=>requestAnimationFrame(()=>_mainLeadGeoMap&&_mainLeadGeoMap.invalidateSize(true)));
