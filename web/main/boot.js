@@ -487,9 +487,9 @@ function wireCoreAndDeferredListeners() {
 
       // Leads can be edited by Outreach without changing collection size.
       // Fingerprint their actual record fields so same-count edits are not skipped.
-      const fp = col === 'leads'
-        ? col + ':' + arr.map(x => [x.id,x.updatedAt,x._updatedAt,x.email,x.status,x.fullName,x.company,x.city,x.country,x.notes].join('~')).join('|')
-        : col + ':' + arr.length;
+      // The shared lead node can change without changing its record count.
+      // Fingerprint the complete snapshot so every field edit/deletion is observed.
+      const fp = col === 'leads' ? col + ':' + JSON.stringify(arr) : col + ':' + arr.length;
       if (fp === _lastFingerprint) return;
       _lastFingerprint = fp;
 
@@ -500,9 +500,11 @@ function wireCoreAndDeferredListeners() {
          counter (which reads the state proxy fresh each call) showed
          the correct count. */
       if (col === 'leads') {
-        // This node is the shared source of truth for Main CRM and Outreach.
-        // Replace the snapshot so remote deletions and edits are reflected too.
-        state.data.leads = arr;
+        // Keep the shared array reference stable while replacing it with the
+        // authoritative snapshot, including remote edits and deletions.
+        const existing = Array.isArray(state.data.leads) ? state.data.leads : [];
+        existing.splice(0, existing.length, ...arr);
+        state.data.leads = existing;
       } else if (col === 'tasks') {
         const existing = new Map((state.data.tasks || []).map(t => [t.id, t]));
         arr.forEach(t => existing.set(t.id, t));
