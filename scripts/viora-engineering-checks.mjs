@@ -11,6 +11,7 @@ const chatbot = read('web/mainIndex/chatbot.js');
 const dpa = read('web/dpa.html');
 const staticWorker = read('workers/viora-static-next/worker.js');
 const staticConfig = read('workers/viora-static-next/wrangler.toml');
+const embeddedAssets = read('workers/viora-static-next/assets.generated.js');
 
 for (const path of ['web/manifest.webmanifest','web/main.webmanifest','web/manifest.json','web/campaigns.webmanifest']) {
   const manifest = JSON.parse(read(path));
@@ -49,6 +50,7 @@ assert.ok(chatbot.includes('await progressiveSpeech.finish(full)'), 'progressive
 assert.ok(dpa.includes('forty-eight (48) hours'), 'Kenya processor 48-hour notice not present');
 assert.ok(staticWorker.includes('env.ASSETS.fetch(request)'), 'new static Worker does not serve repository assets');
 assert.ok(staticWorker.includes('env.LEGACY.fetch(request)'), 'new static Worker does not preserve legacy fallback');
+assert.ok(embeddedAssets.startsWith('export const EMBEDDED_ASSETS_GZIP_BASE64'), 'missing embedded static asset bundle');
 assert.ok(staticConfig.includes('../../web'), 'static Worker is not configured to deploy the complete web directory');
 assert.ok(fs.existsSync('docs/VIORA-CLOUDFLARE-DEPLOYMENT.md'), 'missing Cloudflare deployment runbook');
 for (const p of [
