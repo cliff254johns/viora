@@ -31,6 +31,7 @@ test('mobile main system has no document-level horizontal overflow',async({page}
 });
 
 test('homepage globe keeps satellite visuals, caption spacing and mobile page scrolling',async({page})=>{
+ test.skip(test.info().project.name!=='mobile-chromium','Mobile interaction is validated in the mobile Chromium project.');
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
  const globe=page.locator('#globe-container');
