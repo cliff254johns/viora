@@ -50,6 +50,8 @@ if(/^\s*(select|change)\s+location\s*$/i.test(label))el.remove();
 });
 }
 removeLegacyLocationControls();
+// Load the real J2000 star catalogue immediately; do not wait for IP lookup or weather.
+loadStarCatalogue();
 const api=window.VioraHero;if(api?.on)api.on('cityChange',onCityChange);
 let loc=null;try{loc=await ipLocation()}catch(e){console.warn('[VIORA homepage] IP city lookup failed',e)}
 if(!loc)loc=await deviceLocation();
@@ -60,7 +62,7 @@ stage.dataset.homeSkyBoot='rendering';
 try{if(typeof window.renderVioraHero==='function'){await window.renderVioraHero(true);stage.dataset.homeSkyBoot='rendered'}else stage.dataset.homeSkyBoot='fallback'}
 catch(e){stage.dataset.homeSkyBoot='error';console.error('[VIORA homepage] full hero render failed',e)}
 try{window.VioraSky?.init?.({location:loc});window.VioraSky?.renderNow?.();window.VioraTerminator?.init?.({location:loc});window.VioraTerminator?.renderNow?.();window.VioraOrb?.init?.({location:loc,sky:api?.getSky?.()});window.VioraOrb?.setSkyState?.(api?.getSky?.())}catch(e){console.warn('[VIORA homepage] sky layer init',e)}
-updateClock();window.VioraTime?.on?.('synced',updateClock);window.VioraTime?.on?.('tzChange',updateClock);setInterval(updateClock,1000);await refreshWeather(true);loadStarCatalogue();
+updateClock();window.VioraTime?.on?.('synced',updateClock);window.VioraTime?.on?.('tzChange',updateClock);setInterval(updateClock,1000);await refreshWeather(true);
 window.addEventListener('resize',()=>{try{window.renderVioraHero?.(true)}catch(_){}window.VioraSky?.renderNow?.();window.VioraTerminator?.renderNow?.()},{passive:true})
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
