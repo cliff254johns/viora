@@ -7,7 +7,7 @@ permissions:
   contents: read
 jobs:
   chromium:
-    if: ${{ secrets.VIORA_TEST_EMAIL != '' && secrets.VIORA_TEST_PASSWORD != '' }}
+    if: ${{ vars.VIORA_E2E_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
