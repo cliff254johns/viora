@@ -636,10 +636,10 @@ const FALLBACK_KB = {
   facts:[
     'VIORA is an integrated enterprise operating system and business ecosystem builder.',
     'Nine portals share one real-time data core: Business, Public, Partner, Training, Client, Product, YouTube, Presentation, and Finance.',
-    'M-Pesa Daraja integration with STK push, C2B, B2C and automatic reconciliation.',
-    'KRA eTIMS-ready invoicing, PAYE/NSSF/SHIF/Housing Levy computation.',
+    'M-Pesa Daraja can be configured; live collections require active provider credentials, verified callbacks and end-to-end reconciliation tests.',
+    'KRA eTIMS and statutory payroll features must be configured and validated for the customer and jurisdiction before they are treated as production-compliant.',
     'Offline-first PWA — keeps working through blackouts.',
-    'Finance portal: real-time P&L, cash-flow forecasting, multi-currency ledgers, tax compliance.',
+    'Finance portal: financial dashboards, invoicing and reporting; available currencies, tax rules and statutory integrations depend on verified tenant and country configuration.',
     'Groq AI engine for pricing, stock and collection recommendations.',
     'Role-based access, 2FA, encrypted at rest, full audit trail.',
     'Setup typically 2-4 weeks for Business UI, +1-2 weeks per additional portal.'
