@@ -14,7 +14,7 @@
         var r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
         return 'rgba(' + r + ',' + g + ',' + b + ',' + (alpha == null ? 1 : alpha) + ')';
     }
-    function fmtKes(n) { return "KES " + Math.round(n).toLocaleString(); }
+    function fmtKes(n) { return window.VioraCurrency ? window.VioraCurrency.formatKES(Number(n) || 0) : "KES " + Math.round(n).toLocaleString(); }
 
     var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
@@ -1016,6 +1016,14 @@
         }
 
         wrap.addEventListener('change', update);
+        window.addEventListener('viora:currency-ready', function () {
+            wrap.querySelectorAll('.calc-tool').forEach(function (label) {
+                var input = label.querySelector('input[data-price]');
+                var price = label.querySelector('.tool-price');
+                if (input && price) price.textContent = fmtKes(Number(input.dataset.price) || 0) + ' one-time';
+            });
+            if (wrap.querySelector('input:checked')) wrap.dispatchEvent(new Event('change', { bubbles: true }));
+        });
 
         requestAnimationFrame(function () {
             update();
