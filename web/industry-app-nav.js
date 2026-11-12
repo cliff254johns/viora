@@ -34,7 +34,9 @@
   nav.className='industry-mobile-nav';
   nav.setAttribute('aria-label','VIORA mobile navigation');
   nav.innerHTML=items.map(item=>{
-    const current=location.pathname.replace(/\\/+$/,'')===item.href.replace(/\\/+$/,'') || (item.href==='/'&&location.pathname==='/');
+    const currentPath=location.pathname!=='/'&&location.pathname.endsWith('/')?location.pathname.slice(0,-1):location.pathname;
+    const targetPath=item.href!=='/'&&item.href.endsWith('/')?item.href.slice(0,-1):item.href;
+    const current=currentPath===targetPath;
     return '<a href="'+item.href+'" class="mnav-item tone-'+item.tone+'"'+(current?' aria-current="page"':'')+'><i class="fa-solid '+item.icon+'" aria-hidden="true"></i><span>'+item.label+'</span></a>';
   }).join('');
   body.appendChild(nav);
