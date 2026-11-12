@@ -315,7 +315,7 @@ async function revokeCourseForLearner(uidKey, courseId) {
       individualCourses: list,
       updatedAt: nowIso()
     });
-    await publishVioraEvent({ db, ref, set, eventId: uidKey + "-" + courseId, source: "scholar-access-revoked", category: "scholar", title: "Scholar: course access revoked", body: "Course access was revoked for " + (learnerName || "a learner") + ".", url: "/scholar-admin.html", level: "warning", icon: "fa-lock", actorUid: state.operator?.uid || "" });
+    await publishVioraEvent({ db, ref, set, eventId: uidKey + "-" + courseId, source: "scholar-access-revoked", category: "scholar", title: "Scholar: course access revoked", body: "Course access was revoked for " + (existing.name || "a learner") + ".", url: "/scholar-admin.html", level: "warning", icon: "fa-lock", actorUid: state.operator?.uid || "" });
     toast("Access revoked.", "info");
     renderFinancePane();
   } catch (e) { toast("Revoke failed: " + e.message, "error"); }
