@@ -2,8 +2,6 @@ name = "viora-durable-object-tests"
 main = "./worker.js"
 compatibility_date = "2026-11-12"
 
-[ai]
-binding = "AI"
 
 [[durable_objects.bindings]]
 name = "TRANSLATION_RATE_LIMITER"
