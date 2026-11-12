@@ -3700,6 +3700,7 @@ try {
 } catch (e) { console.warn('[dashboard] weather refresh', e); }
             break;
           case 'profile':                 renderProfile(); break;
+          case 'engineering-command':     window.renderEngineeringCommandCentre?.(); break;
           case 'global-market':           try { setupGlobalMarket?.(); loadGlobalDashboard?.(); } catch (e) { console.warn('[tab render] global-market', e); } break;
 
           // ── Client ──
@@ -4155,6 +4156,7 @@ case 'training-progress':
       const ROUTES = {
         'dashboard':               'renderDashboard',
         'profile':                 'renderProfile',
+        'engineering-command':     'renderEngineeringCommandCentre',
         'sales-clients':           'renderClients',
         'client360':               'renderClient360Page',
         'sales-deals':             'renderDeals',
