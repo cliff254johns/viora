@@ -264,6 +264,7 @@ async function sendReminder(sub, threshold, hoursToEnd) {
         icon: "fa-key",
         level: t.level,
         source: "renewal-cron",
+        eventId: String(sub.id || sub.subscriptionId || sub.clientId || "subscription") + "-" + t.key + "-" + new Date().toISOString().slice(0, 10),
         url: "/main.html?tab=subscriptions"
       });
     }
