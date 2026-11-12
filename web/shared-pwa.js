@@ -48,7 +48,7 @@
   }
 
   // The install invitation is intentionally reserved for the main VIORA workspace.
-  var isMainApp = /\\/main(?:\\.html)?\\/?$/.test(location.pathname);
+  var isMainApp = location.pathname === '/main' || location.pathname === '/main.html';
   if (installed || !isMainApp) return;
 
   var deferredPrompt = null;
