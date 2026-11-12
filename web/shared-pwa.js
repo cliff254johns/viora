@@ -8,11 +8,9 @@
     var head = document.head || document.getElementsByTagName('head')[0];
     if (!head) return;
     var specs = [
-      ['icon', 'image/png', '/viora-icon-192.png', '192x192'],
-      ['icon', 'image/svg+xml', '/viora-app-icon.svg', 'any'],
-      ['shortcut icon', 'image/png', '/viora-icon-192.png', ''],
-      ['apple-touch-icon', 'image/png', '/viora-icon-192.png', '180x180'],
-      ['mask-icon', '', '/viora-app-icon.svg', '']
+      ['icon', 'image/png', '/viora.png', ''],
+      ['shortcut icon', 'image/png', '/viora.png', ''],
+      ['apple-touch-icon', 'image/png', '/viora.png', '']
     ];
     specs.forEach(function (spec) {
       var selector = 'link[rel="' + spec[0] + '"]';
@@ -21,7 +19,7 @@
       if (spec[1]) link.type = spec[1];
       link.href = spec[2];
       if (spec[3]) link.sizes = spec[3];
-      if (spec[0] === 'mask-icon') link.setAttribute('color', '#78c8ff');
+      else link.removeAttribute('sizes');
     });
     var touchTitle = head.querySelector('meta[name="apple-mobile-web-app-title"]');
     if (!touchTitle) { touchTitle = document.createElement('meta'); touchTitle.name = 'apple-mobile-web-app-title'; head.appendChild(touchTitle); }
