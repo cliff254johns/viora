@@ -587,6 +587,70 @@ export function buildVioraHandlers(d) {
     _openModal('productModal');
   };
 
+  Viora.migrateMarketplaceCategories = async function () {
+    const products = Array.isArray(state?.data?.products) ? state.data.products : [];
+    if (!products.length) {
+      _toast('Marketplace products are not loaded yet. Open Products & Pricing and try again.', 'warning');
+      return { updated: 0, failed: 0 };
+    }
+    if (typeof upsertDoc !== 'function' || typeof vioraConfirm !== 'function') {
+      _toast('The secure product write/confirmation service is unavailable.', 'error');
+      return { updated: 0, failed: products.length };
+    }
+
+    const taxonomy = window.VIORATaxonomy;
+    const changes = products.map(original => ({
+      original,
+      normalized: taxonomy.normalizeProduct(original)
+    })).filter(({ original, normalized }) =>
+      original.category !== normalized.category ||
+      original.solutionCategory !== normalized.solutionCategory ||
+      original.vioraCategoryId !== normalized.vioraCategoryId
+    );
+    if (!changes.length) {
+      _toast('All marketplace products already use the six VIORA solution categories.', 'success');
+      return { updated: 0, failed: 0 };
+    }
+
+    const counts = Object.fromEntries(taxonomy.categories.map(category => [category.name, 0]));
+    changes.forEach(({ normalized }) => { counts[normalized.solutionCategory] = (counts[normalized.solutionCategory] || 0) + 1; });
+    const summary = taxonomy.categories
+      .filter(category => counts[category.name])
+      .map(category => category.name + ': ' + counts[category.name])
+      .join('\n');
+    const approved = await vioraConfirm(
+      'Standardize the category fields on ' + changes.length + ' existing marketplace products?\n\n' +
+      summary + '\n\nOnly category fields and updatedAt will change. Product names, descriptions, prices, stock, sales, subscriptions and delivery settings will be preserved.',
+      { title: 'Standardize VIORA solution categories', confirmLabel: 'Update categories', cancelLabel: 'Cancel', icon: 'fa-layer-group' }
+    );
+    if (!approved) return { updated: 0, failed: 0, cancelled: true };
+
+    let updated = 0;
+    const failed = [];
+    for (const { original, normalized } of changes) {
+      const payload = { ...normalized, updatedAt: new Date().toISOString() };
+      delete payload._rev;
+      try {
+        await upsertDoc('products', payload, original._rev);
+        Object.assign(original, payload);
+        updated += 1;
+        try { EventBus?.emit?.('products.upsert', payload, payload.id, { collection: 'products' }); } catch (_) {}
+      } catch (error) {
+        failed.push({ id: original.id || '', message: error?.message || 'Write failed' });
+      }
+    }
+
+    try { if (typeof renderMarketplaceProducts === 'function') renderMarketplaceProducts(); } catch (_) {}
+    await _logAct('edit', 'Marketplace categories standardized', updated + ' of ' + changes.length + ' products updated');
+    _toast(
+      failed.length
+        ? 'Updated ' + updated + ' products; ' + failed.length + ' failed. You can safely retry.'
+        : 'Successfully standardized ' + updated + ' marketplace products.',
+      failed.length ? 'warning' : 'success'
+    );
+    return { updated, failed: failed.length, failedIds: failed.map(item => item.id) };
+  };
+
   Viora.saveProduct = async function (f) {
     const isEdit = !!$('editProductId').value;
     const originalId = $('editProductId').value;
