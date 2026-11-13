@@ -575,6 +575,7 @@ async function handleSocialFanout(body, env, user) {
       await runScheduledReminders(env);
       await autoPrepareSocialQueue(env);
       await publishDueScheduledPosts(env);
+      await runScheduledOutreachInboxSync(env);
       await runOutreachCampaignScheduler(env);
     })());
   },
@@ -6384,6 +6385,36 @@ async function outreachReserveDailySlot(env) {
   }
   throw new Error('Daily campaign limit is busy; retry on the next scheduler tick');
 }
+
+async function runScheduledOutreachInboxSync(env) {
+  try {
+    const connection = await readGmailConnection(env);
+    if (!connection || String(connection.email || '').toLowerCase() !== GMAIL_OWNER_EMAIL) return;
+    const accessToken = await gmailAccessToken(connection, env);
+    const [listed, crm] = await Promise.all([
+      gmailApiFetch('messages?labelIds=INBOX&maxResults=50', accessToken),
+      outreachDbRead(env, 'leads').catch(() => ({}))
+    ]);
+    const leadsByEmail = new Map(Object.values(crm || {}).filter(Boolean).map(lead => [gmailAddress(lead.email), lead]).filter(([email]) => !!email));
+    let processed = 0;
+    for (const item of (listed.messages || []).slice(0, 10)) {
+      if (processed >= 10) break;
+      const prior = await outreachDbRead(env, 'outreach/autoReplies/' + item.id).catch(() => null);
+      if (prior && ['sent','escalated','suppressed','send_uncertain'].includes(prior.status)) continue;
+      const meta = await gmailApiFetch('messages/' + encodeURIComponent(item.id) + '?format=metadata&metadataHeaders=From&metadataHeaders=Date', accessToken);
+      const sender = gmailAddress(gmailHeaderMap(meta).from);
+      if (!sender || sender === GMAIL_OWNER_EMAIL) continue;
+      const lead = leadsByEmail.get(sender);
+      if (!lead || !lead.id) continue;
+      const response = await handleOutreachAutoReply({ threadId: meta.threadId, messageId: meta.id, leadId: lead.id }, env, { email: GMAIL_OWNER_EMAIL, role: 'admin' });
+      const result = await response.json().catch(() => ({}));
+      if (result && ['sent','escalated','suppressed'].includes(result.status)) processed++;
+    }
+  } catch (error) {
+    console.error('Scheduled Outreach inbox sync error', error && error.stack || error);
+  }
+}
+
 async function runOutreachCampaignScheduler(env) {
   try {
     const settings = await outreachDbRead(env, 'outreach/campaignSettings').catch(() => null);
