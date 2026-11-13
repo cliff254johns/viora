@@ -20,6 +20,8 @@ const embeddedAssets = read('workers/viora-static-next/assets.generated.js');
 const taxonomy = read('web/viora-taxonomy.js');
 const publicMarket = read('web/market.html');
 const publicMarketJs = read('web/mainMarket/market.js');
+const publicIndustryDirectory = read('web/industries.html');
+const homeScript = read('web/script.js');
 const adminMarket = read('web/main/render-marketplace.js');
 const homepage = read('web/index-home.js');
 const blueprintAdmin = read('web/main/pp.js');
@@ -40,6 +42,10 @@ assert.ok(homepage.includes("import './viora-taxonomy.js'"), 'homepage must load
 assert.ok(homepage.includes('taxonomy.categories.map'), 'homepage tour must use official solution categories');
 assert.ok(blueprintAdmin.includes('classifyIndustry'), 'admin industry blueprints must normalize legacy categories');
 assert.ok(industryDirectory.includes('VIORA Property & Infrastructure Solutions'), 'industry directory must expose official solution groups');
+assert.ok(publicIndustryDirectory.includes('VIORA Enterprise Solutions') && publicIndustryDirectory.includes('VIORA Business & Lifestyle Solutions'), 'public industry directory must use official VIORA category names');
+assert.ok((homeScript.match(/name: 'VIORA (?:Enterprise|Institutional|Hospitality|Property & Infrastructure|Industry & Operations|Business & Lifestyle) Solutions'/g) || []).length === 6, 'homepage industry carousel must contain exactly six VIORA solution families');
+assert.ok((homeScript.match(/label: 'VIORA (?:Enterprise|Institutional|Hospitality|Property & Infrastructure|Industry & Operations|Business & Lifestyle) Solutions'/g) || []).length === 6, 'homepage solution wizard must offer exactly six VIORA solution families');
+assert.ok(publicMarket.includes('type="image/png" href="/viora.png"'), 'Marketplace favicon must declare the canonical PNG correctly');
 
 const taxonomyWindow = {};
 vm.runInNewContext(taxonomy, { window: taxonomyWindow });
