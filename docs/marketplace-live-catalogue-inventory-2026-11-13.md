@@ -19,12 +19,12 @@ Draft and archived products are excluded by the Marketplace's public catalogue f
 | 3D Websites | 3 |
 | AI & Automation | 5 |
 | Android Applications | 3 |
-| Bussiness Management Systems | 8 |
+| Business Management Systems | 8 |
 | Cleaning Operations Systems | 1 |
 | Clinic Systems | 1 |
 | Clubs & Entertainment Systems | 2 |
 | Construction Project Systems | 1 |
-| Ecormmerce Website | 7 |
+| E-commerce Websites | 7 |
 | Entertainment Websites | 1 |
 | Farm Systems | 2 |
 | Fashion & Apparel Systems | 3 |
@@ -41,29 +41,29 @@ Draft and archived products are excluded by the Marketplace's public catalogue f
 | Real Estate Agency Systems | 1 |
 | Restaurant & Catering Systems | 2 |
 | Retail & Wholesale Systems | 3 |
-| Retal Property Systems | 2 |
+| Rental Property Systems | 2 |
 | Salon, Spa & Beauty Systems | 4 |
 | School Systems | 1 |
 | Security Company Systems | 2 |
 
 ## Categories currently showing zero active products
 
-- a.i assistant
-- video advertisements
-- digital commerce systems
-- graphics design
-- veterinary practice systems
-- printing & graphics production systems
-- hardware systems
-- travel agency & tour systems
-- funeral home systems
-- photography studio systems
-- event planning systems
-- recuitment agency systems
-- garage & automotive service systems
-- transport & fleet systems
-- gym & fitness center systems
-- membership & ngo operations systems
+- AI Assistants
+- Video Advertisements
+- Digital Commerce Systems
+- Graphics Design
+- Veterinary Practice Systems
+- Printing & Graphics Production Systems
+- Hardware Systems
+- Travel Agency & Tour Systems
+- Funeral Home Systems
+- Photography Studio Systems
+- Event Planning Systems
+- Recruitment Agency Systems
+- Garage & Automotive Service Systems
+- Transport & Fleet Systems
+- Gym & Fitness Center Systems
+- Membership & NGO Operations Systems
 
 ## Active product records
 
