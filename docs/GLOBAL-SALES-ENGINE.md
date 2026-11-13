@@ -96,7 +96,10 @@ The Worker reads the CRM record and compliance registers itself; client-supplied
 
 - Connect and verify `cliff254johns@gmail.com` in Gmail OAuth.
 - Verify the sender identity and Google OAuth app status / production publishing requirements.
-- Have jurisdiction-specific contact rules and VIORA's global sender disclosures reviewed and populate the policy register.
+- Have jurisdiction-specific contact rules and VIORA's global sender disclosures reviewed by a qualified legal professional and populate the policy register with real reviewer identity, date and official sources.
+- Confirm that the sender postal address meets the US CAN-SPAM definition of a valid physical postal address; do not assume a non-US PO Box qualifies.
+- Verify the actual privacy notice has been published and is accurate before setting the global policy to approved.
+- Review each prospect's exact message and recipient before using the explicit Approve & queue action.
 - Populate each CRM record with verified email, country code, eligibility basis, evidence URL, review timestamp and matching policy version.
 - Prepare and queue individually personalised messages.
 - Enable outbound campaigns once, using the Outreach campaign controls.
@@ -110,4 +113,6 @@ The Worker reads the CRM record and compliance registers itself; client-supplied
 - The Worker does not bypass Google sending limits. Provider throttling, mailbox restrictions or deliverability warnings must pause sending.
 - The current implementation does not include a verified-email discovery provider or universal legal determination. Email verification and policy approval are explicit CRM/configuration requirements.
 - Campaign analytics are based on provider-accepted sends and observed replies, not assumed opens or guaranteed delivery.
-- No production campaign was sent as part of this implementation. Outbound is OFF by default.
+- No production campaign was sent as part of this implementation. Outbound must remain OFF until legal review, verified sender address, Gmail OAuth and recipient-level human approval are complete.
+- The current legal changes are implementation controls and a proposed privacy-notice revision, not legal advice or evidence that any jurisdiction policy has passed independent legal review.
+- The initial live volume should be ramped gradually from a very small number and monitored; 200/day remains a hard ceiling, not a launch target.
