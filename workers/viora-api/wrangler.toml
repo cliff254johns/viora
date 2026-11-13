@@ -1,0 +1,15 @@
+name = "viora-api"
+main = "index.js"
+compatibility_date = "2026-09-13"
+workers_dev = true
+
+[ai]
+binding = "AI"
+
+[vars]
+MPESA_CALLBACK_URL = "https://viora-api.cliff254johns.workers.dev/mpesa/stk/callback"
+RESEND_FROM = "Viora <viora@elma.co.ke>"
+WORKER_BASE_URL = "https://viora-api.cliff254johns.workers.dev"
+
+[observability]
+enabled = true
