@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-11-12T22:33:44.907Z",
-  "moduleCount": 111,
+  "generatedAt": "2026-11-13T00:00:46.360Z",
+  "moduleCount": 112,
   "modules": [
     {
       "file": "web/analytics-config.js",
@@ -1567,6 +1567,13 @@
         "/api/translation-health",
         "/api/health"
       ]
+    },
+    {
+      "file": "workers/viora-api/index.js",
+      "bytes": 240191,
+      "imports": [],
+      "exports": [],
+      "workerRoutes": []
     },
     {
       "file": "workers/viora-static-next/assets.generated.js",

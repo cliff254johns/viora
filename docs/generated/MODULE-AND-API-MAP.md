@@ -1,8 +1,8 @@
 # Generated module and API map
 
-Generated: 2026-11-12T22:33:44.908Z
+Generated: 2026-11-13T00:00:46.361Z
 
-Modules: 111
+Modules: 112
 
 ## Modules
 ### web/analytics-config.js
@@ -728,6 +728,13 @@ Modules: 111
 - Imports: cloudflare:workers
 - Exports: TranslationRateLimiter
 - Worker routes: /api/translate, /api/translation-health, /api/health
+
+### workers/viora-api/index.js
+
+- Size: 240191 bytes
+- Imports: none detected
+- Exports: none detected
+- Worker routes: none detected
 
 ### workers/viora-static-next/assets.generated.js
 
