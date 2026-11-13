@@ -328,7 +328,7 @@ function renderBucketsFamiliesPanel() {
           title: 'No buckets yet',
           text: 'Buckets are the first thing visitors see in the tour. Start with something like "Run my business".',
           action: { label: 'Add your first bucket', id: 'hc-add-bucket-empty' }
-        }) : bucketList.map(b => renderBucketCard(b, families)).join('')}
+        }) : bucketList.map(b => renderBucketCard(b, normalizedFamilies)).join('')}
       </div>
     </div>
   `;
