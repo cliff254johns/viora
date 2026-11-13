@@ -355,10 +355,10 @@ function renderBucketCard(bucket, allFamilies) {
           <p style="margin:0;font-size:.82rem;color:var(--text-muted);line-height:1.5;">${escHtml(bucket.desc || '')}</p>
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0;">
-          <button type="button" class="btn btn-outline btn-xs" data-edit-bucket="${escAttr(bucket.key)}" title="Edit bucket" style="padding:8px 10px;">
+          <button type="button" class="btn btn-outline btn-xs" data-edit-bucket="${escAttr(bucket.key)}" title="Edit bucket" style="padding:8px 10px;display:none;">
             <i class="fa-solid fa-pen"></i>
           </button>
-          <button type="button" class="btn btn-danger btn-xs" data-delete-bucket="${escAttr(bucket.key)}" title="Delete bucket" style="padding:8px 10px;">
+          <button type="button" class="btn btn-danger btn-xs" data-delete-bucket="${escAttr(bucket.key)}" title="Delete bucket" style="padding:8px 10px;display:none;">
             <i class="fa-solid fa-trash"></i>
           </button>
         </div>
@@ -833,7 +833,7 @@ function openIndustryEditor(key, isRestore = false) {
                 <i class="fa-solid fa-sitemap" style="color:var(--accent-blue);font-size:.85rem;"></i>
                 <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Placement in tour</h4>
               </div>
-              ${formSelect('hc-ind-bucket', 'Bucket *', buckets.map(b => ({ value: b.key, label: b.name || b.key })), existing.bucket, '— Select bucket —')}
+              ${formSelect('hc-ind-bucket', 'Bucket *', buckets.map(b => ({ value: b.key, label: b.name || b.key })), window.VIORATaxonomy.classifyIndustry(existing, existing.bucket), '— Select bucket —')}
               ${formSelect('hc-ind-family', 'Family *', families.map(f => ({ value: f.key, label: f.name || f.key, bucket: f.bucket })), existing.family, '— Select family —')}
               ${formField('hc-ind-order', 'Sort order', String(existing.order || 99))}
               <label style="display:flex;align-items:center;gap:8px;font-size:.88rem;padding:6px 0;cursor:pointer;">
