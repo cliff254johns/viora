@@ -102,6 +102,19 @@ function trimGlobalCache() {
 /* ============================================================
    ROUTER
    ============================================================ */
+export function buildScheduledJobs(env, handlers) {
+  const jobs = [
+    ['reminders', handlers.reminders],
+    ['social_queue_prepare', handlers.social_queue_prepare],
+    ['social_publish', handlers.social_publish],
+  ];
+  if (String(env.ENABLE_OUTREACH_EMAIL_AUTOMATION || '').toLowerCase() === 'true') {
+    jobs.push(['outreach_inbox_sync', handlers.outreach_inbox_sync]);
+    jobs.push(['outreach_campaign_scheduler', handlers.outreach_campaign_scheduler]);
+  }
+  return jobs;
+}
+
 export default {
   async fetch(request, env, ctx) {
     if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
@@ -572,16 +585,14 @@ async function handleSocialFanout(body, env, user) {
 
    async scheduled(event, env, ctx) {
     ctx.waitUntil((async () => {
-      const jobs = [
-        ['reminders', () => runScheduledReminders(env)],
-        ['social_queue_prepare', () => autoPrepareSocialQueue(env)],
-        ['social_publish', () => publishDueScheduledPosts(env)],
-      ];
       // Email automation is a separate opt-in. An unset flag keeps it disabled.
-      if (String(env.ENABLE_OUTREACH_EMAIL_AUTOMATION || '').toLowerCase() === 'true') {
-        jobs.push(['outreach_inbox_sync', () => runScheduledOutreachInboxSync(env)]);
-        jobs.push(['outreach_campaign_scheduler', () => runOutreachCampaignScheduler(env)]);
-      }
+      const jobs = buildScheduledJobs(env, {
+        reminders: () => runScheduledReminders(env),
+        social_queue_prepare: () => autoPrepareSocialQueue(env),
+        social_publish: () => publishDueScheduledPosts(env),
+        outreach_inbox_sync: () => runScheduledOutreachInboxSync(env),
+        outreach_campaign_scheduler: () => runOutreachCampaignScheduler(env),
+      });
       await Promise.all(jobs.map(async ([job, run]) => {
         try {
           await run();
