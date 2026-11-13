@@ -8,6 +8,8 @@ const mainJs = read('web/main.js');
 const worker = read('web/worker.js');
 const wrangler = read('web/wrangler.toml');
 const command = read('web/engineering-command-centre.js');
+const investorRoom = read('web/investor-data-room.js');
+const sw = read('web/sw.js');
 const chatbot = read('web/mainIndex/chatbot.js');
 const dpa = read('web/dpa.html');
 const staticWorker = read('workers/viora-static-next/worker.js');
@@ -33,6 +35,15 @@ assert.ok(mainJs.includes("tab: 'engineering-command'"), 'mobile executive navig
 assert.ok(command.includes('exportCustomerBundle'), 'customer export helper missing');
 assert.ok(command.includes('completeness'), 'customer export completeness disclosure missing');
 assert.ok(command.includes('not a substitute for Cloudflare-wide telemetry'), 'monitoring scope disclosure missing');
+assert.ok(main.includes('20261113-investor-room-1'), 'main page asset cache version not refreshed');
+assert.ok(command.includes('window.__vioraInvestorRoomMode'), 'Engineering Command router does not support Investor Data Room');
+assert.ok(investorRoom.includes('data-investor-room-link'), 'Investor Data Room sidebar link injection missing');
+assert.ok(investorRoom.includes('state.operator?.role'), 'Investor Data Room does not use the main app operator role');
+assert.ok(investorRoom.includes('firebase/storage'), 'Investor Data Room Firebase Storage integration missing');
+assert.ok(investorRoom.includes('investorDataRoom'), 'Investor Data Room persistence path missing');
+assert.ok(investorRoom.includes('navigator.share'), 'Investor Data Room native sharing support missing');
+assert.ok(investorRoom.includes('Private by default'), 'Investor Data Room privacy warning missing');
+assert.ok(sw.includes('/investor-data-room.js'), 'Investor Data Room module missing from app shell cache');
 
 assert.ok(worker.includes('export class TranslationRateLimiter'), 'Durable Object class missing');
 assert.ok(worker.includes('TRANSLATION_RATE_LIMITER.getByName'), 'Durable Object binding not used');
