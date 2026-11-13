@@ -6311,6 +6311,7 @@ async function handleOutreachCampaignQueue(body, env, user) {
       if (!leadId || leadId.length > 180 || !/^[A-Za-z0-9_-]+$/.test(leadId)) throw new Error('Missing or invalid CRM lead ID');
       const lead = await outreachDbRead(env, 'leads/' + leadId);
       if (!lead) throw new Error('CRM lead not found');
+      if (!['Business','Partner'].includes(String(lead.category || 'Business'))) throw new Error('Only business and partner prospects can enter the sales campaign');
       const email = String(lead.email || '').trim().toLowerCase();
       if (!validOutreachEmail(email) || lead.emailVerified !== true) throw new Error('A verified business email address is required');
       if (alreadyQueued.has(email)) throw new Error('This recipient already has an active or completed campaign record');
@@ -6318,6 +6319,7 @@ async function handleOutreachCampaignQueue(body, env, user) {
       if (eligibility.status !== 'eligible' || !eligibility.basis || !eligibility.sourceUrl || !eligibility.reviewedAt || !/^https:\/\//i.test(String(eligibility.sourceUrl))) {
         throw new Error('Documented contact eligibility, basis, source URL and review timestamp are required');
       }
+      if (!['consent','existing_relationship','legitimate_interest','public_business_contact'].includes(String(eligibility.basis))) throw new Error('Contact basis must use a supported, documented category');
       const countryCode = String(lead.countryCode || eligibility.countryCode || '').toUpperCase();
       if (!/^[A-Z]{2}$/.test(countryCode)) throw new Error('A two-letter recipient country code is required');
       const policy = await outreachDbRead(env, 'outreach/compliance/jurisdictions/' + countryCode).catch(() => null);
