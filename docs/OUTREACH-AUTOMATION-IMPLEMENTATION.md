@@ -65,4 +65,4 @@ The main app's shared notification publisher is `web/shared/notification-bus.js`
 
 ## Deployment status
 
-This branch is proposed in PR #65. It has not been merged or deployed. Do not report production activation until PR checks pass, the reviewed code is merged, Cloudflare Worker is deployed, existing routes are smoke-tested, and the Gmail end-to-end checks pass.
+This implementation map describes the pre-existing Outreach reply automation; its historical PR/deployment statement is not evidence that the global sales engine in PR #67 is deployed. The global sales engine remains a separate proposal and must not be enabled until its server-side checks are deployed and verified.
