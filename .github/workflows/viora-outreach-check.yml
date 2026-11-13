@@ -2,7 +2,7 @@ name: VIORA Outreach checks
 on:
   pull_request:
     branches: [main]
-    paths: ["web/main.html","web/main.css","web/outreach.html","web/outreach.css","web/outreach.js","workers/viora-api/index.js","workers/viora-api/wrangler.toml",".github/workflows/viora-outreach-check.yml"]
+    paths: ["web/main.html","web/main.css","web/outreach.html","web/outreach.css","web/outreach.js","workers/viora-api/index.js","workers/viora-api/wrangler.toml","docs/GLOBAL-SALES-ENGINE.md","docs/OUTREACH-AUTOMATION-IMPLEMENTATION.md",".github/workflows/viora-outreach-check.yml"]
   push:
     branches: [feature/viora-outreach-enterprise-ui, feature/global-outreach-autonomy, feature/global-sales-engine]
     paths: ["web/main.html","web/main.css","web/outreach.html","web/outreach.css","web/outreach.js","workers/viora-api/index.js","workers/viora-api/wrangler.toml",".github/workflows/viora-outreach-check.yml"]
