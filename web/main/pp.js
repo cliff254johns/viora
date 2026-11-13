@@ -4,6 +4,8 @@
    Steps · CTA · FAQ · Footer · Categories · Industries · Order
    ═══════════════════════════════════════════════════════════════ */
 
+import '../viora-taxonomy.js';
+
 let D = {
   db: null, ref: null, set: null, onValue: null, get: null,
   P: null,
@@ -189,38 +191,9 @@ export const PP_DEFAULTS = {
 };
 
 export function ppSeedCategoriesAndIndustriesFromV0() {
-  return [
-    { key: "retail_trade", em: "🛒", name: "Retail & Trade" },
-    { key: "food_bev", em: "🍽️", name: "Food & Beverage" },
-    { key: "health_wellness", em: "🏥", name: "Health & Wellness" },
-    { key: "beauty_personal", em: "💇", name: "Beauty & Personal Care" },
-    { key: "prof_services", em: "💼", name: "Professional Services" },
-    { key: "creative_media", em: "🎬", name: "Creative & Media" },
-    { key: "construction", em: "🏗️", name: "Construction & Trades" },
-    { key: "transport_logi", em: "🚚", name: "Transport & Logistics" },
-    { key: "agri_farming", em: "🌾", name: "Agriculture & Farming" },
-    { key: "education", em: "🎓", name: "Education & Training" },
-    { key: "finance_ins", em: "🏦", name: "Finance & Insurance" },
-    { key: "real_estate", em: "🏘️", name: "Real Estate & Property" },
-    { key: "hospitality", em: "🏨", name: "Hospitality & Tourism" },
-    { key: "manufacturing", em: "🏭", name: "Manufacturing & Industry" },
-    { key: "tech_digital", em: "💻", name: "Tech & Digital" },
-    { key: "community_faith", em: "🤝", name: "Community & Faith" },
-    { key: "informal_msme", em: "🛵", name: "Informal & MSME" },
-    { key: "energy_env", em: "⚡", name: "Energy & Environment" },
-    { key: "mining_extract", em: "⛏️", name: "Mining & Extractives" },
-    { key: "events_ent", em: "🎉", name: "Events & Entertainment" },
-    { key: "gov_ngo", em: "🏛️", name: "Government & NGO" },
-    { key: "automotive", em: "🚗", name: "Automotive & Repair" },
-    { key: "sports_rec", em: "⚽", name: "Sports & Recreation" },
-    { key: "security_safety", em: "🛡️", name: "Security & Safety" },
-    { key: "legal_compliance", em: "⚖️", name: "Legal & Compliance" },
-    { key: "warehouse", em: "📦", name: "Warehousing & Fulfilment" },
-    { key: "fashion_apparel", em: "👗", name: "Fashion & Apparel" },
-    { key: "cleaning_facility", em: "🧹", name: "Cleaning & Facility" },
-    { key: "rental_leasing", em: "🔑", name: "Rental & Leasing" },
-    { key: "misc_other", em: "🌟", name: "Other Industries" }
-  ];
+  return window.VIORATaxonomy.categories.map(c => ({
+    key: c.id, em: c.emoji, name: c.name, description: c.description
+  }));
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -268,6 +241,16 @@ export const PP = {
       }
     };
     walk(out, saved);
+
+    // The six VIORA solution families are the only canonical top-level categories.
+    out.categories = ppSeedCategoriesAndIndustriesFromV0();
+    if (!out.industries || typeof out.industries !== 'object') out.industries = {};
+    for (const [key, industry] of Object.entries(out.industries)) {
+      if (!industry || typeof industry !== 'object') continue;
+      const categoryId = window.VIORATaxonomy.classifyIndustry(industry, industry.cat);
+      industry.cat = categoryId;
+      industry.marketCategory = window.VIORATaxonomy.title(categoryId);
+    }
 
     if (Array.isArray(saved.sectionOrder)) {
       const savedById = new Map(saved.sectionOrder.map(s => [s.id, s]));
@@ -387,6 +370,12 @@ export const PP = {
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…'; }
     try {
       const payload = clone(PP.draft);
+      payload.categories = ppSeedCategoriesAndIndustriesFromV0();
+      for (const [key, industry] of Object.entries(payload.industries || {})) {
+        if (!industry || typeof industry !== 'object') continue;
+        industry.cat = window.VIORATaxonomy.classifyIndustry(industry, industry.cat);
+        industry.marketCategory = window.VIORATaxonomy.title(industry.cat);
+      }
       payload._meta = {
         updatedAt: nowIso(),
         updatedBy: D.state?.operator?.name || D.state?.operator?.email || 'admin'
@@ -828,33 +817,17 @@ export const PP = {
     if (!PP.draft) return;
     const host = PP.$('ppCatList');
     if (!host) return;
-    const list = PP.draft.categories || [];
+    const list = ppSeedCategoriesAndIndustriesFromV0();
+    PP.draft.categories = list;
     if (PP.$('ppCatCount')) PP.$('ppCatCount').textContent = list.length;
-    if (!list.length) { setHtmlIfChanged(host, `<div class="pp-empty">No categories yet.</div>`); return; }
-
-    let sig = list.length + ':';
-    for (const c of list) sig += (c.key||'') + '|' + (c.em||'') + '|' + (c.name||'') + ';';
-    sig = hashString(sig);
-
+    const add = PP.$('ppAddCatBtn');
+    if (add) add.hidden = true;
     const html = list.map((c, i) => `
-      <div class="pp-item" data-pp-cat="${i}">
-        <div class="pp-item-head">
-          <strong>Category ${i + 1}</strong>
-          <div class="pp-reorder">
-            <button type="button" onclick="PP.moveItem('categories', ${i}, -1)" ${i === 0 ? 'disabled' : ''}><i class="fa-solid fa-arrow-up"></i></button>
-            <button type="button" onclick="PP.moveItem('categories', ${i}, 1)" ${i === list.length - 1 ? 'disabled' : ''}><i class="fa-solid fa-arrow-down"></i></button>
-          </div>
-          <button type="button" class="pp-delete" onclick="PP.deleteItem('categories', ${i})"><i class="fa-solid fa-trash"></i></button>
-        </div>
-        <div class="pp-grid">
-          <div class="pp-field"><label>Key *</label><input value="${esc(c.key || '')}" oninput="PP.setField('categories', ${i}, 'key', this.value)" /></div>
-          <div class="pp-field"><label>Emoji</label><input value="${esc(c.em || '')}" maxlength="4" oninput="PP.setField('categories', ${i}, 'em', this.value)" /></div>
-          <div class="pp-field full"><label>Name</label><input value="${esc(c.name || '')}" oninput="PP.setField('categories', ${i}, 'name', this.value)" /></div>
-        </div>
-      </div>
-    `).join('');
-
-    setHtmlIfSigChanged(host, sig, html);
+      <div class="pp-item">
+        <div class="pp-item-head"><strong>${i + 1}. ${esc(c.name)}</strong><span class="pp-count">${esc(c.em)}</span></div>
+        <p style="margin:6px 0 0;color:var(--text-secondary);font-size:.78rem;">${esc(c.description)}</p>
+      </div>`).join('');
+    setHtmlIfChanged(host, html);
   },
 
   renderIndustries() {

@@ -1679,42 +1679,12 @@ document.addEventListener('keydown', (e) => {
    INDUSTRIES CAROUSEL
    ============================================================ */
 const INDUSTRIES = [
-  { name: 'Retail & Wholesale', img: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Healthcare & Medical', img: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Hospitality & Restaurants', img: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Manufacturing', img: 'https://images.unsplash.com/photo-1565043666747-69f6646db940?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Agriculture', img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Fashion & Apparel', img: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Transport & Logistics', img: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Professional Services', img: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Education & Training', img: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Construction & Real Estate', img: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Beauty & Wellness', img: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Creative & Media', img: 'https://images.unsplash.com/photo-1522542550221-31fd19575a2d?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Law Firms', img: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Jua Kali & Artisans', img: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Banking & Finance', img: 'https://images.unsplash.com/photo-1541354329998-f4d9a9f9297f?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Telecommunications', img: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Energy & Utilities', img: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Media & Entertainment', img: 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Fitness & Sports', img: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Travel & Tourism', img: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Pharmaceutical', img: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Fisheries & Aquaculture', img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Automotive', img: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Mining & Quarrying', img: 'https://images.unsplash.com/photo-1523848309072-c199db53f137?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Textiles & Apparel', img: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Food & Beverage', img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=70&auto=format&fit=crop' },
-  { name: 'NGOs & Non-profit', img: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Security Services', img: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=600&q=70&auto=format&fit=crop' },
-  { name: 'E-Learning & EdTech', img: 'https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Government & Public Sector', img: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Insurance', img: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Architecture & Design', img: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Sports & Recreation', img: 'https://images.unsplash.com/photo-1461896836934-bd45ba3d3a5c?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Veterinary Services', img: 'https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Waste Management', img: 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=600&q=70&auto=format&fit=crop' },
-  { name: 'Aviation & Aerospace', img: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=600&q=70&auto=format&fit=crop' }
+  { name: 'VIORA Enterprise Solutions', img: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&q=70&auto=format&fit=crop' },
+  { name: 'VIORA Institutional Solutions', img: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=600&q=70&auto=format&fit=crop' },
+  { name: 'VIORA Hospitality Solutions', img: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=70&auto=format&fit=crop' },
+  { name: 'VIORA Property & Infrastructure Solutions', img: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=600&q=70&auto=format&fit=crop' },
+  { name: 'VIORA Industry & Operations Solutions', img: 'https://images.unsplash.com/photo-1565043666747-69f6646db940?w=600&q=70&auto=format&fit=crop' },
+  { name: 'VIORA Business & Lifestyle Solutions', img: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=600&q=70&auto=format&fit=crop' }
 ];
 
 const PRODUCTS_CAROUSEL = [
@@ -2647,16 +2617,12 @@ const MODULE_BASE_PRICE = {
   if (!overlay || !industryEl || !needsEl) return;
 
   const INDUSTRY_OPTIONS = [
-    { emoji: '🛒', label: 'Retail' },
-    { emoji: '🏥', label: 'Healthcare' },
-    { emoji: '🍽️', label: 'Hospitality' },
-    { emoji: '🚚', label: 'Logistics' },
-    { emoji: '🌾', label: 'Agriculture' },
-    { emoji: '💼', label: 'Professional Services' },
-    { emoji: '🏭', label: 'Manufacturing' },
-    { emoji: '🎓', label: 'Education' },
-    { emoji: '🔧', label: 'Jua Kali' },
-    { emoji: '⚙️', label: 'Other' }
+    { emoji: '🏢', label: 'VIORA Enterprise Solutions' },
+    { emoji: '🏛️', label: 'VIORA Institutional Solutions' },
+    { emoji: '🏨', label: 'VIORA Hospitality Solutions' },
+    { emoji: '🏗️', label: 'VIORA Property & Infrastructure Solutions' },
+    { emoji: '⚙️', label: 'VIORA Industry & Operations Solutions' },
+    { emoji: '✨', label: 'VIORA Business & Lifestyle Solutions' }
   ];
 
   const NEED_OPTIONS = [

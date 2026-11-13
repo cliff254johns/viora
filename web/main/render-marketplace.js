@@ -1,3 +1,4 @@
+import '../viora-taxonomy.js';
 // main/render-marketplace.js
 // ═══════════════════════════════════════════════════════════════
 // VIORA — MARKETPLACE RENDERING  (v7.2 — bug-free)
@@ -270,6 +271,7 @@ export function renderMarketplaceProducts() {
 
     let allProducts = getProductsList();
     if (!Array.isArray(allProducts)) allProducts = [];
+    allProducts = allProducts.map(p => window.VIORATaxonomy.normalizeProduct(p));
 
     /* Single-pass split + KPI aggregation. */
     const products = [];
@@ -279,7 +281,7 @@ export function renderMarketplaceProducts() {
       const p = allProducts[i];
       if (!p) continue;
       if ((p._kind || 'product') !== 'publicUI') products.push(p);
-      if (p.category) categorySet.add(p.category);
+      if (p.category) categorySet.add(window.VIORATaxonomy.classifyProduct(p));
       if ((p.status || 'active') === 'active') activeCount++;
     }
 
@@ -294,17 +296,16 @@ export function renderMarketplaceProducts() {
     for (const k in salesMetrics) totalSold += salesMetrics[k].qty;
     el('mpTotalSold', totalSold);
 
-    /* Category filter options — signature-gated. */
+    /* Canonical six-family category filter — never expose legacy labels. */
     const catFilter = $('productFilterCategory');
     if (catFilter) {
-      const cats = [...categorySet].sort();
-      const catSig = hashString('cat|' + cats.join('|'));
+      const catSig = 'viora-taxonomy-' + window.VIORATaxonomy.version;
       if (catFilter.dataset.vioraSig !== catSig) {
         catFilter.dataset.vioraSig = catSig;
         const prev = catFilter.value || 'all';
-        catFilter.innerHTML = '<option value="all">All Categories</option>' +
-          cats.map(c => `<option value="${_esc(c)}">${_esc(c)}</option>`).join('');
-        catFilter.value = cats.includes(prev) ? prev : 'all';
+        catFilter.innerHTML = '<option value="all">All VIORA Solutions</option>' +
+          window.VIORATaxonomy.categories.map(c => '<option value="' + _esc(c.id) + '">' + _esc(c.name) + '</option>').join('');
+        catFilter.value = window.VIORATaxonomy.categories.some(c => c.id === prev) ? prev : 'all';
       }
     }
 
@@ -320,7 +321,7 @@ export function renderMarketplaceProducts() {
         (p.id || '').toLowerCase().includes(search)
       );
     }
-    if (filterCat !== 'all')    list = list.filter(p => p.category === filterCat);
+    if (filterCat !== 'all')    list = list.filter(p => window.VIORATaxonomy.classifyProduct(p) === filterCat);
     if (filterStatus !== 'all') list = list.filter(p => (p.status || 'active') === filterStatus);
 
     /* ── Grid ── */

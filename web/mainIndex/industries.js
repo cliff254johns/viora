@@ -3,36 +3,12 @@
     "use strict";
 
     window.CATEGORIES = [
-        { key: "retail_trade", em: "🛒", name: "Retail & Trade" },
-        { key: "food_bev", em: "🍽️", name: "Food & Beverage" },
-        { key: "health_wellness", em: "🏥", name: "Health & Wellness" },
-        { key: "beauty_personal", em: "💇", name: "Beauty & Personal Care" },
-        { key: "prof_services", em: "💼", name: "Professional Services" },
-        { key: "creative_media", em: "🎬", name: "Creative & Media" },
-        { key: "construction", em: "🏗️", name: "Construction & Trades" },
-        { key: "transport_logi", em: "🚚", name: "Transport & Logistics" },
-        { key: "agri_farming", em: "🌾", name: "Agriculture & Farming" },
-        { key: "education", em: "🎓", name: "Education & Training" },
-        { key: "finance_ins", em: "🏦", name: "Finance & Insurance" },
-        { key: "real_estate", em: "🏘️", name: "Real Estate & Property" },
-        { key: "hospitality", em: "🏨", name: "Hospitality & Tourism" },
-        { key: "manufacturing", em: "🏭", name: "Manufacturing & Industry" },
-        { key: "tech_digital", em: "💻", name: "Tech & Digital" },
-        { key: "community_faith", em: "🤝", name: "Community & Faith" },
-        { key: "informal_msme", em: "🛵", name: "Informal & MSME" },
-        { key: "energy_env", em: "⚡", name: "Energy & Environment" },
-        { key: "mining_extract", em: "⛏️", name: "Mining & Extractives" },
-        { key: "events_ent", em: "🎉", name: "Events & Entertainment" },
-        { key: "gov_ngo", em: "🏛️", name: "Government & NGO" },
-        { key: "automotive", em: "🚗", name: "Automotive & Repair" },
-        { key: "sports_rec", em: "⚽", name: "Sports & Recreation" },
-        { key: "security_safety", em: "🛡️", name: "Security & Safety" },
-        { key: "legal_compliance", em: "⚖️", name: "Legal & Compliance" },
-        { key: "warehouse", em: "📦", name: "Warehousing & Fulfilment" },
-        { key: "fashion_apparel", em: "👗", name: "Fashion & Apparel" },
-        { key: "cleaning_facility", em: "🧹", name: "Cleaning & Facility" },
-        { key: "rental_leasing", em: "🔑", name: "Rental & Leasing" },
-        { key: "misc_other", em: "🌟", name: "Other Industries" }
+        { key: "enterprise", em: "🏢", name: "VIORA Enterprise Solutions" },
+        { key: "institutional", em: "🏛️", name: "VIORA Institutional Solutions" },
+        { key: "hospitality", em: "🏨", name: "VIORA Hospitality Solutions" },
+        { key: "property", em: "🏗️", name: "VIORA Property & Infrastructure Solutions" },
+        { key: "industry", em: "⚙️", name: "VIORA Industry & Operations Solutions" },
+        { key: "business", em: "✨", name: "VIORA Business & Lifestyle Solutions" }
     ];
 
     window.INDUSTRIES = {
@@ -2976,6 +2952,17 @@
             ]
         }
     };
+    // Reclassify every legacy sub-industry into the six official VIORA solution families.
+    Object.keys(window.INDUSTRIES).forEach(function (key) {
+        var item = window.INDUSTRIES[key];
+        var group = window.VIORATaxonomy
+            ? window.VIORATaxonomy.classifyIndustry(item, item.cat)
+            : (item.cat || "enterprise");
+        item.cat = group;
+        item.marketCategory = window.VIORATaxonomy
+            ? window.VIORATaxonomy.title(group)
+            : group;
+    });
 
     window.MODULE_DEFS = {
         business: { em: "🏪", name: "Business Portal" },

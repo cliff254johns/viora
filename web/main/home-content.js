@@ -13,6 +13,8 @@
      • Removed unused confirmModal usage in industry delete path
    ═══════════════════════════════════════════════════════════════ */
 
+import '../viora-taxonomy.js';
+
 let D = null;
 
 /* ── Constants ── */
@@ -283,8 +285,8 @@ function renderBucketsFamiliesPanel() {
   const families = flattenNode(D.state?.data?.homeContent?.tour?.families);
   const meta     = D.state?.data?.homeContent?.tour?.meta || {};
 
-  const bucketList = Object.values(buckets)
-    .sort((a, b) => (Number(a.order) || 999) - (Number(b.order) || 999));
+  const bucketList = window.VIORATaxonomy.categories.map((c,i) => ({ key:c.id, name:c.name, desc:c.description, icon:c.icon, color:c.color, order:i+1 }));
+  const normalizedFamilies = Object.values(families).map(f => ({ ...f, bucket:window.VIORATaxonomy.classifyIndustry({ name:f.name, cat:f.bucket }) }));
 
   return `
     <div style="padding:24px;background:var(--bg-elev-1);border-radius:14px;border:1px solid var(--border-color);margin-bottom:16px;">
@@ -312,11 +314,11 @@ function renderBucketsFamiliesPanel() {
             <i class="fa-solid fa-sitemap"></i>
           </div>
           <div>
-            <h3 style="margin:0;font-size:16px;">Buckets (${bucketList.length})</h3>
+            <h3 style="margin:0;font-size:16px;">VIORA solution categories (${bucketList.length})</h3>
             <p style="margin:2px 0 0;font-size:.75rem;color:var(--text-muted);">Top-level tour questions ("What are you trying to do?").</p>
           </div>
         </div>
-        <button type="button" class="btn btn-primary btn-sm" id="hc-add-bucket" style="padding:10px 16px;">
+        <button type="button" class="btn btn-primary btn-sm" id="hc-add-bucket" hidden style="padding:10px 16px;">
           <i class="fa-solid fa-plus"></i> Add bucket
         </button>
       </div>
@@ -326,7 +328,7 @@ function renderBucketsFamiliesPanel() {
           title: 'No buckets yet',
           text: 'Buckets are the first thing visitors see in the tour. Start with something like "Run my business".',
           action: { label: 'Add your first bucket', id: 'hc-add-bucket-empty' }
-        }) : bucketList.map(b => renderBucketCard(b, families)).join('')}
+        }) : bucketList.map(b => renderBucketCard(b, normalizedFamilies)).join('')}
       </div>
     </div>
   `;
@@ -353,10 +355,10 @@ function renderBucketCard(bucket, allFamilies) {
           <p style="margin:0;font-size:.82rem;color:var(--text-muted);line-height:1.5;">${escHtml(bucket.desc || '')}</p>
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0;">
-          <button type="button" class="btn btn-outline btn-xs" data-edit-bucket="${escAttr(bucket.key)}" title="Edit bucket" style="padding:8px 10px;">
+          <button type="button" class="btn btn-outline btn-xs" data-edit-bucket="${escAttr(bucket.key)}" title="Edit bucket" style="padding:8px 10px;display:none;">
             <i class="fa-solid fa-pen"></i>
           </button>
-          <button type="button" class="btn btn-danger btn-xs" data-delete-bucket="${escAttr(bucket.key)}" title="Delete bucket" style="padding:8px 10px;">
+          <button type="button" class="btn btn-danger btn-xs" data-delete-bucket="${escAttr(bucket.key)}" title="Delete bucket" style="padding:8px 10px;display:none;">
             <i class="fa-solid fa-trash"></i>
           </button>
         </div>
@@ -503,15 +505,14 @@ function openFamilyEditor(key, presetBucketKey) {
   const existing = key
     ? flattenNode(D.state?.data?.homeContent?.tour?.families)[key] || {}
     : {};
-  const buckets = Object.values(flattenNode(D.state?.data?.homeContent?.tour?.buckets))
-    .sort((a, b) => (Number(a.order) || 999) - (Number(b.order) || 999));
+  const buckets = window.VIORATaxonomy.categories.map((c,i) => ({ key:c.id, name:c.name, desc:c.description, icon:c.icon, color:c.color, order:i+1 }));
 
   if (!buckets.length) {
     toast('Create a bucket first.', 'warning');
     return;
   }
 
-  const currentBucket = existing.bucket || presetBucketKey || buckets[0].key;
+  const currentBucket = window.VIORATaxonomy.classifyIndustry({ name:existing.name, cat:existing.bucket || presetBucketKey }) || buckets[0].key;
   const isNew = !key;
 
   openModal({
@@ -591,6 +592,7 @@ async function deleteFamily(key) {
 function renderIndustriesPanel() {
   const industries = flattenNode(D.state?.data?.industries);
   const list = Object.values(industries)
+    .map(ind => { const id = window.VIORATaxonomy.classifyIndustry(ind, ind.bucket); return { ...ind, bucket:id, marketCategory:window.VIORATaxonomy.title(id) }; })
     .sort((a, b) => (Number(a.order) || 999) - (Number(b.order) || 999));
 
   return `
@@ -617,11 +619,11 @@ function renderIndustriesPanel() {
         action: { label: 'Add your first industry', id: 'hc-add-industry-empty' }
       }) : `
         <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
-          <input type="text" id="hc-ind-search" placeholder="🔍 Search industries…"
+          <input type="text" id="hc-ind-search" placeholder="Search products, services and industries…"
                  style="flex:1;min-width:200px;padding:10px 14px;border-radius:10px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.85rem;font-family:inherit;"/>
           <select id="hc-ind-filter-bucket" style="padding:10px 14px;border-radius:10px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.85rem;font-family:inherit;">
-            <option value="">All buckets</option>
-            ${Object.values(flattenNode(D.state?.data?.homeContent?.tour?.buckets)).map(b => `<option value="${escAttr(b.key)}">${escHtml(b.name || b.key)}</option>`).join('')}
+            <option value="">All VIORA solution categories</option>
+            ${window.VIORATaxonomy.categories.map(b => `<option value="${escAttr(b.id)}">${escHtml(b.name)}</option>`).join('')}
           </select>
           <select id="hc-ind-filter-family" style="padding:10px 14px;border-radius:10px;background:var(--bg-card-solid);border:1px solid var(--border-color);color:var(--text-primary);font-size:.85rem;font-family:inherit;">
             <option value="">All families</option>
@@ -755,9 +757,9 @@ function openIndustryEditor(key, isRestore = false) {
 
   const isNew = !key;
   const imageData = existing.image || existing.imageUrl || '';
-  const buckets = Object.values(flattenNode(D.state?.data?.homeContent?.tour?.buckets))
-    .sort((a, b) => (Number(a.order) || 999) - (Number(b.order) || 999));
+  const buckets = window.VIORATaxonomy.categories.map((c,i) => ({ key:c.id, name:c.name, desc:c.description, icon:c.icon, color:c.color, order:i+1 }));
   const families = Object.values(flattenNode(D.state?.data?.homeContent?.tour?.families))
+    .map(f => ({ ...f, bucket:window.VIORATaxonomy.classifyIndustry({ name:f.name, cat:f.bucket }) }))
     .sort((a, b) => (Number(a.order) || 999) - (Number(b.order) || 999));
 
   host.innerHTML = `
@@ -808,7 +810,7 @@ function openIndustryEditor(key, isRestore = false) {
               </div>
               ${formField('hc-ind-key', 'Key *', existing.key || '', 'lowercase, no spaces', !isNew)}
               ${formField('hc-ind-name', 'Name *', existing.name || '', 'e.g. Retail & Wholesale')}
-              ${formField('hc-ind-marketCategory', 'Market Category *', existing.marketCategory || '', 'Must match product.category exactly')}
+              ${formSelect('hc-ind-marketCategory', 'VIORA Solution Category *', window.VIORATaxonomy.categories.map(cat => ({ value:cat.id, label:cat.name })), window.VIORATaxonomy.classifyIndustry(existing, existing.bucket))}
               <div style="display:grid;grid-template-columns:80px 1fr;gap:12px;">
                 ${formField('hc-ind-emoji', 'Emoji', existing.emoji || '📦')}
                 ${iconPickerField('hc-ind-icon', 'Icon', existing.icon || 'fa-cube')}
@@ -831,7 +833,7 @@ function openIndustryEditor(key, isRestore = false) {
                 <i class="fa-solid fa-sitemap" style="color:var(--accent-blue);font-size:.85rem;"></i>
                 <h4 style="margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Placement in tour</h4>
               </div>
-              ${formSelect('hc-ind-bucket', 'Bucket *', buckets.map(b => ({ value: b.key, label: b.name || b.key })), existing.bucket, '— Select bucket —')}
+              ${formSelect('hc-ind-bucket', 'Bucket *', buckets.map(b => ({ value: b.key, label: b.name || b.key })), window.VIORATaxonomy.classifyIndustry(existing, existing.bucket), '— Select bucket —')}
               ${formSelect('hc-ind-family', 'Family *', families.map(f => ({ value: f.key, label: f.name || f.key, bucket: f.bucket })), existing.family, '— Select family —')}
               ${formField('hc-ind-order', 'Sort order', String(existing.order || 99))}
               <label style="display:flex;align-items:center;gap:8px;font-size:.88rem;padding:6px 0;cursor:pointer;">
@@ -1090,11 +1092,12 @@ function openIndustryEditor(key, isRestore = false) {
     if (!/^[a-z0-9-]+$/.test(keyVal)) { toast('Key must be lowercase letters, numbers, hyphens.', 'error'); return; }
 
     const name = val('hc-ind-name');
-    const marketCategory = val('hc-ind-marketCategory');
+    const categoryId = window.VIORATaxonomy.canonicalId(val('hc-ind-marketCategory')) || window.VIORATaxonomy.classifyIndustry({ name, cat:val('hc-ind-bucket') });
+    const marketCategory = window.VIORATaxonomy.title(categoryId);
     if (!name) { toast('Name is required.', 'error'); return; }
     if (!marketCategory) { toast('Market Category is required.', 'error'); return; }
 
-    const bucket = val('hc-ind-bucket');
+    const bucket = categoryId;
     const family = val('hc-ind-family');
     if (!bucket) { toast('Bucket is required.', 'error'); return; }
     if (!family) { toast('Family is required.', 'error'); return; }

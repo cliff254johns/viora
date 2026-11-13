@@ -607,7 +607,7 @@
       <span class="eyebrow">Our Catalog</span>
       <h2>The systems we build.</h2>
       <p class="section-sub">
-        Every product is live and ready to preview. Click any category below to filter.
+        Explore products across VIORA’s six official solution families. Select a family to filter the live catalogue.
       </p>
     </div>
 
@@ -774,6 +774,7 @@
 
 <!-- ============ LIVE PRODUCTS + CAROUSEL FROM FIREBASE ============ -->
 <script type="module">
+import "./viora-taxonomy.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 
@@ -827,11 +828,14 @@ const flattenNode = (node) => {
   return node;
 };
 
+// Show the canonical six solution filters immediately, even before Firebase responds.
+renderFilters();
+
 /* ── Subscribe to Firebase ── */
 onValue(ref(db, `${ROOT}/products`), (snap) => {
   const raw = snap.exists() ? snap.val() : {};
   state.products = Object.entries(raw)
-    .map(([id, p]) => ({ ...(p || {}), id: (p && p.id) || id }))
+    .map(([id, p]) => window.VIORATaxonomy.normalizeProduct({ ...(p || {}), id: (p && p.id) || id }))
     .filter(p => p.status !== 'archived' && p.status !== 'draft');
   renderAll();
 });
@@ -857,26 +861,14 @@ function renderFilters() {
   const host = document.getElementById('supportFilters');
   if (!host) return;
 
-  const categories = [...new Set(state.products.map(p => String(p.category || '').trim()).filter(Boolean))].sort();
-
-  const industries = Object.values(flattenNode(state.industries));
-  const industryByCat = {};
-  industries.forEach(ind => {
-    const cat = String(ind.marketCategory || '').trim();
-    if (cat) industryByCat[cat] = ind;
-  });
-
+  const categories = window.VIORATaxonomy.categories;
   let html = `<button class="live-cat-btn ${state.activeFilter === 'all' ? 'active' : ''}" data-cat-filter="all">
-    <i class="fa-solid fa-layer-group"></i> All Products
+    <i class="fa-solid fa-layer-group"></i> All VIORA Solutions
   </button>`;
-
   categories.forEach(cat => {
-    const ind = industryByCat[cat];
-    const icon = ind ? normalizeIcon(ind.icon) : 'fa-solid fa-tag';
-    const color = ind ? (ind.color || '#2267EE') : null;
-    const active = state.activeFilter === cat ? 'active' : '';
-    html += `<button class="live-cat-btn ${active}" data-cat-filter="${escHtml(cat)}">
-      <i class="${icon}"${color ? ` style="color:${color}"` : ''}></i> ${escHtml(cat)}
+    const active = state.activeFilter === cat.id ? 'active' : '';
+    html += `<button class="live-cat-btn ${active}" data-cat-filter="${escHtml(cat.id)}">
+      <i class="${escHtml(cat.icon)}" style="color:${escHtml(cat.color)}"></i> ${escHtml(cat.name)}
     </button>`;
   });
 
@@ -901,7 +893,7 @@ function renderProducts() {
 
   let list = state.products;
   if (state.activeFilter !== 'all') {
-    list = list.filter(p => String(p.category || '').trim() === state.activeFilter);
+    list = list.filter(p => window.VIORATaxonomy.classifyProduct(p) === state.activeFilter);
   }
 
   list = list.slice().sort((a, b) => (Number(b.totalSold) || 0) - (Number(a.totalSold) || 0));

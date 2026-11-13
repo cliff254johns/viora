@@ -36,6 +36,17 @@ jobs:
       - name: Parse JavaScript modules
         run: |
           node --input-type=module --check < web/main.js
+          node --input-type=module --check < web/index-home.js
+          node --input-type=module --check < web/mainMarket/market.js
+          node --input-type=module --check < web/main/pp.js
+          node --input-type=module --check < web/main/home-content.js
+          node --input-type=module --check < web/main/render-marketplace.js
+          node --input-type=module --check < web/main/viora-main-handlers.js
+          node --input-type=module --check < web/industry-marketplace.js
+          node --check web/viora-taxonomy.js
+          node --check web/mainIndex/industries.js
+          node --check web/mainIndex/blueprint.js
+          node --check web/script.js
           node --input-type=module --check < web/main/render-dashboard.js
           node --check web/sw.js
           node --input-type=module --check < web/worker.js

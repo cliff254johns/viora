@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
+import vm from 'node:vm';
 
 const read = (p) => fs.readFileSync(p, 'utf8');
 const main = read('web/main.html');
@@ -15,6 +16,158 @@ const dpa = read('web/dpa.html');
 const staticWorker = read('workers/viora-static-next/worker.js');
 const staticConfig = read('workers/viora-static-next/wrangler.toml');
 const embeddedAssets = read('workers/viora-static-next/assets.generated.js');
+
+const taxonomy = read('web/viora-taxonomy.js');
+const publicMarket = read('web/market.html');
+const publicHome = read('web/index.html');
+const publicMarketJs = read('web/mainMarket/market.js');
+const publicIndustryDirectory = read('web/industries.html');
+const homeScript = read('web/script.js');
+const adminMarket = read('web/main/render-marketplace.js');
+const homepage = read('web/index-home.js');
+const blueprintAdmin = read('web/main/pp.js');
+const industryDirectory = read('web/mainIndex/industries.js');
+const adminHandlers = read('web/main/viora-main-handlers.js');
+const homeAdmin = read('web/main/home-content.js');
+const industryMatcher = read('web/industry-marketplace.js');
+const blueprintPage = read('web/mainIndex/blueprint.js');
+const industryPage = read('web/inde.html');
+const supportPage = read('web/support.html');
+assert.equal((taxonomy.match(/id:'(?:enterprise|institutional|hospitality|property|industry|business)'/g) || []).length, 6, 'shared taxonomy must define exactly six official VIORA categories');
+for (const label of ['VIORA Enterprise Solutions','VIORA Institutional Solutions','VIORA Hospitality Solutions','VIORA Property & Infrastructure Solutions','VIORA Industry & Operations Solutions','VIORA Business & Lifestyle Solutions']) {
+  assert.ok(taxonomy.includes(label), 'shared taxonomy missing '+label);
+}
+assert.ok(publicMarket.includes('id="mainCategoryFilter"'), 'public Marketplace must expose the six-category dropdown');
+assert.ok(publicMarket.includes('id="categoryBar"'), 'public Marketplace must retain its horizontal category scroller');
+assert.ok(!publicMarket.includes('id="priceFilter"') && !publicMarket.includes('id="catSearchInput"'), 'public Marketplace must not show legacy secondary category/price filters');
+assert.ok(publicMarketJs.includes("import '../viora-taxonomy.js'"), 'public Marketplace must load shared taxonomy');
+assert.ok(publicMarketJs.includes('classifyProduct(p)'), 'public Marketplace must classify products through shared taxonomy');
+assert.ok(publicMarketJs.includes('this.renderCategoryBar();'), 'public Marketplace must render category controls before Firebase/cache data arrives');
+assert.ok(publicMarketJs.includes('new URLSearchParams(window.location.search).get(\'category\')'), 'public Marketplace must accept direct links to a solution family');
+assert.ok((publicHome.match(/href="\/market\?category=(?:enterprise|institutional|hospitality|property|industry|business)"/g) || []).length === 6, 'homepage solution family cards must deep-link to all six Marketplace filters');
+assert.ok(adminMarket.includes('classifyProduct(p)'), 'admin Marketplace must classify products through shared taxonomy');
+assert.ok(adminHandlers.includes('vioraCategoryId: categoryId'), 'admin product saves must persist canonical category ID');
+assert.ok(adminHandlers.includes('Viora.migrateMarketplaceCategories') && adminHandlers.includes('Only category fields and updatedAt will change'), 'admin must provide a confirmed idempotent migration for existing product records');
+assert.ok(read('web/main.html').includes('onclick="Viora.migrateMarketplaceCategories()"'), 'admin Products & Pricing must expose the controlled category migration action');
+assert.ok(read('web/main.html').includes('<option value="all">All VIORA Solutions</option>'), 'admin Marketplace must use the official VIORA category label');
+assert.ok(homepage.includes("import './viora-taxonomy.js'"), 'homepage must load shared taxonomy');
+assert.ok(homepage.includes('taxonomy.categories.map'), 'homepage tour must use official solution categories');
+assert.ok(blueprintAdmin.includes('classifyIndustry'), 'admin industry blueprints must normalize legacy categories');
+assert.ok(homeAdmin.includes('normalizedFamilies') && homeAdmin.includes('renderBucketCard(b, normalizedFamilies)'), 'home content editor must display legacy families under canonical categories');
+assert.ok(homeAdmin.includes('classifyIndustry(ind, ind.bucket)'), 'home content industry editor must normalize legacy categories');
+assert.ok(industryMatcher.includes('classifyProduct(product)') && industryMatcher.includes('classifyIndustry'), 'standalone industry product matching must use the shared taxonomy');
+assert.ok(industryMatcher.includes('heroEyebrow.textContent=solutionCategoryName'), 'standalone industry pages must visibly identify their VIORA solution family');
+assert.ok(blueprintPage.includes('classifyProduct(p)'), 'industry blueprint product matching must use the shared taxonomy');
+assert.ok(industryPage.includes('/viora-taxonomy.js'), 'industry blueprint page must load taxonomy before its industry data');
+assert.ok(supportPage.includes('classifyProduct(p)') && supportPage.includes('categories = window.VIORATaxonomy.categories'), 'support product catalogue must use the six official categories');
+const supportModuleMatch = supportPage.match(/<script type="module">([\s\S]*?)<\/script>/);
+assert.ok(supportModuleMatch, 'support page must retain its module script');
+const supportModuleSource = supportModuleMatch[1].replace(/^\s*import\s+(?:[\s\S]*?\s+from\s+)?['"][^'"]+['"]\s*;?\s*$/gm, '');
+new vm.Script(supportModuleSource, { filename:'support-inline-module.js' });
+assert.ok(supportPage.indexOf('Show the canonical six solution filters immediately') < supportPage.indexOf('onValue(ref(db, `${ROOT}/products`)'), 'support filters must render before Firebase responds');
+assert.ok(industryDirectory.includes('VIORA Property & Infrastructure Solutions'), 'industry directory must expose official solution groups');
+assert.ok(publicIndustryDirectory.includes('VIORA Enterprise Solutions') && publicIndustryDirectory.includes('VIORA Business & Lifestyle Solutions'), 'public industry directory must use official VIORA category names');
+assert.ok((homeScript.match(/name: 'VIORA (?:Enterprise|Institutional|Hospitality|Property & Infrastructure|Industry & Operations|Business & Lifestyle) Solutions'/g) || []).length === 6, 'homepage industry carousel must contain exactly six VIORA solution families');
+assert.ok((homeScript.match(/label: 'VIORA (?:Enterprise|Institutional|Hospitality|Property & Infrastructure|Industry & Operations|Business & Lifestyle) Solutions'/g) || []).length === 6, 'homepage solution wizard must offer exactly six VIORA solution families');
+assert.ok(publicMarket.includes('type="image/png" href="/viora.png"'), 'Marketplace favicon must declare the canonical PNG correctly');
+
+const taxonomyWindow = {};
+vm.runInNewContext(taxonomy, { window: taxonomyWindow });
+for (const category of taxonomyWindow.VIORATaxonomy.categories) {
+  assert.ok(publicHome.includes(category.name.replace(/&/g, '&amp;')), 'homepage missing solution family '+category.name);
+}
+const classify = taxonomyWindow.VIORATaxonomy.classifyProduct;
+const expectedLegacyProducts = [
+  ['Retail & Wholesale Systems','enterprise'],
+  ['Hardware Systems','enterprise'],
+  ['Clinic Systems','institutional'],
+  ['Hospital Systems','institutional'],
+  ['School Systems','institutional'],
+  ['Hotel & Guest House Systems','hospitality'],
+  ['Restaurant & Catering Systems','hospitality'],
+  ['Clubs & Entertainment Systems','hospitality'],
+  ['Construction Project Systems','property'],
+  ['Real Estate Agency Systems','property'],
+  ['Security Company Systems','property'],
+  ['Farm Systems','industry'],
+  ['Greenhouse Systems','industry'],
+  ['Cleaning Operations Systems','industry'],
+  ['Laundry & Dry Cleaning Systems','industry'],
+  ['Garage & Automotive Service Systems','industry'],
+  ['Transport & Fleet Systems','industry'],
+  ['Printing & Graphics Production Systems','industry'],
+  ['Salon, Spa & Beauty Systems','business'],
+  ['Fashion & Apparel Systems','business'],
+  ['Recruitment Agency Systems','business'],
+  ['Funeral Home Systems','business'],
+  ['Legal Practice Systems','business'],
+  ['3D Websites','business'],
+  ['General Websites','business'],
+  ['AI & Automation','enterprise'],
+  ['Industry Specific Production Systems','industry'],
+  ['Food & Beverage','hospitality'],
+  ['Health & Wellness','institutional'],
+  ['Beauty & Personal Care','business'],
+  ['Professional Services','business'],
+  ['Creative & Media','business'],
+  ['Construction & Trades','property'],
+  ['Transport & Logistics','industry'],
+  ['Agriculture & Farming','industry'],
+  ['Education & Training','institutional'],
+  ['Finance & Insurance','enterprise'],
+  ['Real Estate & Property','property'],
+  ['Community & Faith','institutional'],
+  ['Informal & MSME','business'],
+  ['Energy & Environment','industry'],
+  ['Mining & Extractives','industry'],
+  ['Events & Entertainment','hospitality'],
+  ['Government & NGO','institutional'],
+  ['Automotive & Repair','industry'],
+  ['Sports & Recreation','business'],
+  ['Security & Safety','property'],
+  ['Legal & Compliance','business'],
+  ['Warehousing & Fulfilment','industry'],
+  ['Cleaning & Facility','industry'],
+  ['Rental & Leasing','property']
+];
+for (const [label, expected] of expectedLegacyProducts) {
+  assert.equal(classify({ category: label }), expected, 'legacy product category '+label);
+}
+assert.equal(taxonomyWindow.VIORATaxonomy.categories.length, 6, 'taxonomy must expose exactly six categories');
+for (const [legacyKey, expected] of Object.entries(taxonomyWindow.VIORATaxonomy.legacy)) {
+  assert.equal(taxonomyWindow.VIORATaxonomy.classifyIndustry({ name:legacyKey.replace(/_/g, ' '), cat:legacyKey }), expected, 'legacy industry key '+legacyKey);
+}
+
+const handlerContext = {
+  window: { VIORATaxonomy: taxonomyWindow.VIORATaxonomy },
+  console,
+  Date,
+  setTimeout,
+  clearTimeout
+};
+const handlerSource = read('web/main/viora-main-handlers.js').replace('export function buildVioraHandlers', 'function buildVioraHandlers');
+new vm.Script(handlerSource + '\nthis.__buildVioraHandlers = buildVioraHandlers;').runInNewContext(handlerContext);
+const migrationProducts = [
+  { id:'legacy-retail', name:'Retail POS', category:'Retail & Wholesale Systems', price:49, stock:20, description:'Sales and inventory' },
+  { id:'legacy-hotel', name:'Hotel Manager', category:'Hotel & Guest House Systems', price:99, deliveryUrl:'/downloads/hotel', image:'/hotel.png' }
+];
+const migrationWrites = [];
+const migrationApi = handlerContext.__buildVioraHandlers({
+  state: { data: { products:migrationProducts } },
+  upsertDoc: async (collection, payload, revision) => migrationWrites.push({ collection, payload, revision }),
+  vioraConfirm: async () => true,
+  EventBus: { emit() {} },
+  toast() {},
+  logActivity: async () => {}
+});
+const migrationResult = await migrationApi.migrateMarketplaceCategories();
+assert.equal(migrationResult.updated, 2, 'category migration must update both legacy products');
+assert.equal(migrationResult.failed, 0, 'category migration must not fail for valid products');
+assert.equal(migrationWrites[0].payload.vioraCategoryId, 'enterprise', 'retail product must migrate to enterprise');
+assert.equal(migrationWrites[1].payload.vioraCategoryId, 'hospitality', 'hotel product must migrate to hospitality');
+assert.equal(migrationWrites[0].payload.price, 49, 'category migration must preserve prices');
+assert.equal(migrationWrites[0].payload.stock, 20, 'category migration must preserve stock');
+assert.equal(migrationWrites[1].payload.deliveryUrl, '/downloads/hotel', 'category migration must preserve delivery settings');
 
 for (const path of ['web/manifest.webmanifest','web/main.webmanifest','web/manifest.json','web/campaigns.webmanifest','web/assets/r/manifest-public.json','web/assets/r/manifest-rider.json','web/assets/r/manifest-admin.json','web/assets/mamamboga/manifest.json']) {
   const manifest = JSON.parse(read(path));

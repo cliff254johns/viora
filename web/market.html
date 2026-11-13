@@ -449,7 +449,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 }
 </style>
 
-<link rel="icon" type="image/svg+xml" href="/viora-app-icon.svg">
+<link rel="icon" type="image/png" href="/viora.png">
 </head>
 <body>
 
@@ -651,7 +651,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
         <span class="subtitle" id="productsSubtitle">Our Catalog</span>
         <h2 id="productsHeading">Product <span class="highlight">Collection</span></h2>
         <div class="divider"></div>
-        <p id="productsDesc">Browse by category or search. Add items to cart, then choose an available payment method at checkout.</p>
+        <p id="productsDesc">Browse VIORA’s six solution families or search the complete catalogue. Add items to cart, then choose an available payment method at checkout.</p>
         <div class="section-pills">
           <span class="fx-note" id="currencyNote"><i class="fa-solid fa-coins"></i> Detecting your local currency…</span>
           <span class="live-pill"><span class="dot"></span> Live from Viora system</span>
@@ -667,6 +667,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
           </button>
           <div class="search-suggestions" id="searchSuggestions" style="display:none;"></div>
         </div>
+        <select class="toolbar-select" id="mainCategoryFilter" aria-label="Filter by VIORA solution category"><option value="all">All VIORA Solutions</option></select>
         <select class="toolbar-select" id="sortSelect" onchange="App.onSort(this.value)" aria-label="Sort products">
          <option value="popular">Recommended for you</option>
           <option value="price-asc">Price: Low → High</option>
@@ -674,21 +675,10 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
           <option value="name-asc">Name: A → Z</option>
           <option value="name-desc">Name: Z → A</option>
         </select>
-        <select class="toolbar-select" id="priceFilter" onchange="App.onPriceFilter(this.value)" aria-label="Filter by price">
-          <option value="all">All Prices</option>
-          <option value="under-2k">Under 2,000</option>
-          <option value="2k-5k">2,000 – 5,000</option>
-          <option value="5k-10k">5,000 – 10,000</option>
-          <option value="over-10k">Over 10,000</option>
-        </select>
       </div>
 
             <div class="category-bar-wrap">
-  <div class="cat-search-wrap">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <input id="catSearchInput" placeholder="Find a category…" autocomplete="off" />
-  </div>
-        <button class="cat-scroll-btn prev" id="catPrev" aria-label="Scroll categories left">
+  <button class="cat-scroll-btn prev" id="catPrev" aria-label="Scroll categories left">
           <i class="fa-solid fa-chevron-left"></i>
         </button>
         <div class="category-bar" id="categoryBar" role="tablist" aria-label="Product categories"></div>
@@ -1079,7 +1069,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
     </div>
   </div>
 
-  <script type="module" src="/mainMarket/market.js?v=20261112-local-currency-final-3"></script>
+  <script type="module" src="/mainMarket/market.js?v=20261113-global-six-taxonomy"></script>
 <!-- ═══ NOTIFICATION BRIDGE ═══ -->
   <script>
     window.vioraNotify = window.vioraNotify || async function(opts) {

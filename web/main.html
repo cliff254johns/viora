@@ -1164,7 +1164,7 @@
     <div id="publicUiProductsGrid" class="card-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:16px;"></div>
       <div class="page-header">
         <div><h1><span class="pillar-icon" style="background:linear-gradient(135deg,#a855f7,#00d4ff);"><i class="fa-solid fa-store"></i></span> <span class="highlight">Products &amp; Pricing</span></h1><p class="page-desc">Manage the marketplace catalog. Changes appear instantly on the public site.</p></div>
-        <div class="actions"><button class="btn btn-outline btn-sm" id="exportProductsCsv"><i class="fa-solid fa-file-export"></i> CSV</button><button class="btn btn-primary" id="addProductBtn"><i class="fa-solid fa-plus"></i> New Product</button></div>
+        <div class="actions"><button class="btn btn-outline btn-sm" id="exportProductsCsv"><i class="fa-solid fa-file-export"></i> CSV</button><button class="btn btn-outline btn-sm" onclick="Viora.migrateMarketplaceCategories()" title="Safely standardize existing product category fields"><i class="fa-solid fa-layer-group"></i> Standardize Categories</button><button class="btn btn-primary" id="addProductBtn"><i class="fa-solid fa-plus"></i> New Product</button></div>
       </div>
       <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));">
         <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-cube"></i></div><div class="label">Total Products</div><div class="number" id="mpTotalProducts">0</div></div>
@@ -1174,7 +1174,7 @@
       </div>
       <div class="toolbar">
         <div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input id="productSearch" placeholder="Search products..."></div>
-        <select id="productFilterCategory"><option value="all">All Categories</option></select>
+        <select id="productFilterCategory"><option value="all">All VIORA Solutions</option></select>
         <select id="productFilterStatus"><option value="all">All Statuses</option><option value="active">Active</option><option value="draft">Draft</option><option value="archived">Archived</option></select>
         <button class="btn btn-outline btn-sm" id="clearProductSearch">Clear</button>
       </div>
@@ -2725,52 +2725,12 @@
     <div>
       <label>Category *</label>
       <select id="prodCategory">
-      <option>Industry Specific Production Systems</option>
-      <option>Bussiness Management Systems</option>
-      <option>Professional Practice Systems</option>
-        <option>Retail & Wholesale Systems</option>
-        <option>3D Websites</option>
-        <option>Hardware Systems</option>
-         <option>Digital Commerce Systems</option>
-         <option>Games</option>
-         <option>Clubs & Entertainment Systems</option>
-        <option>Membership & NGO Operations Systems</option>
-         <option>Fashion & Apparel Systems</option>
-         <option>Salon, Spa & Beauty Systems</option>
-          <option>Clinic Systems</option>
-          <option>Security Company Systems</option>
-          <option>Travel Agency & Tour Systems</option>
-          <option>Funeral Home Systems</option>
-          <option>Pharmacy Systems</option>
-          <option>Hospital Systems</option>
-          <option>Farm Systems</option>
-          <option>Entertainment Websites</option>
-          <option>Cleaning Operations Systems</option>
-          <option>Greenhouse Systems</option>
-          <option>Hotel & Guest House Systems</option>
-          <option>Restaurant & Catering  Systems</option>
-          <option>Photography Studio Systems</option>
-          <option>Event Planning Systems</option>
-          <option>School Systems</option>
-          <option>Recuitment Agency Systems</option>
-          <option>Real Estate Agency Systems</option>
-          <option>Retal Property Systems</option>
-          <option>Construction Project Systems</option>
-          <option>Garage & Automotive Service Systems</option>
-          <option>Transport & Fleet Systems</option>
-          <option>Gym & Fitness Center Systems</option>
-          <option>Laundry & Dry Cleaning Systems</option>
-          <option>Veterinary Practice Systems</option>
-          <option>Printing & Graphics Production Systems</option>
-        <option>Android Applications</option>
-        <option>A.I Assistant</option>
-        <option>Personal Profile</option>
-        <option>Video Advertisements</option>
-        <option>Graphics Design</option>
-        <option>AI &amp; Automation</option>
-        <option>General Websites</option>
-        <option>Ecormmerce Website</option>
-       
+        <option value="enterprise">VIORA Enterprise Solutions</option>
+        <option value="institutional">VIORA Institutional Solutions</option>
+        <option value="hospitality">VIORA Hospitality Solutions</option>
+        <option value="property">VIORA Property & Infrastructure Solutions</option>
+        <option value="industry">VIORA Industry & Operations Solutions</option>
+        <option value="business">VIORA Business & Lifestyle Solutions</option>
       </select>
     </div>
     <div><label>Icon (FontAwesome)</label><input id="prodIcon" placeholder="fa-solid fa-cube" /></div>
@@ -3409,7 +3369,7 @@
   }
 }
 </script>
-<script type="module" src="main.js?v=20261112-central-event-bus-2"></script>
+<script type="module" src="main.js?v=20261113-global-six-taxonomy"></script>
 <script type="module" src="/engineering-command-centre.js?v=20261113-investor-room-2"></script>
 <script defer src="main-clientsite-editor.js"></script>
 

@@ -1,12 +1,13 @@
 /* VIORA Industry Marketplace — live category-matched products for standalone industry pages. */
+import './viora-taxonomy.js';
 const VIORA_INDUSTRY_MARKET={
-  retail:{label:"Retail & Wholesale",categories:["retail & wholesale systems","fashion & apparel systems"],nameTerms:["retail","wholesale","shop management","pos system","boutique","hardware management","butchery","fashion house"]},
-  healthcare:{label:"Healthcare",categories:["clinic systems","hospital systems","pharmacy systems"],nameTerms:["clinic","hospital","pharmacy","diagnostic","healthcare"]},
-  hospitality:{label:"Hospitality",categories:["hotel & guest house systems","restaurant & catering systems","laundry & dry cleaning systems","clubs & entertainment systems"],nameTerms:["hotel","guest house","restaurant","catering","laundry","club management"]},
-  education:{label:"Education",categories:["school systems"],nameTerms:["school management","campus connect","student management","academy"]},
-  logistics:{label:"Transport & Logistics",categories:[],nameTerms:["boda riders","salama movers","fleet management","transport management","logistics management","delivery management"]},
-  "professional-services":{label:"Professional Services",categories:["professional practice systems"],nameTerms:["law firm management","professional services automation","legal practice","professional advisory"]},
-  agriculture:{label:"Agriculture",categories:["farm systems","greenhouse systems"],nameTerms:["farm integrated","farm management","greenhouse","soko ai"]}
+  retail:{label:"VIORA Enterprise Solutions",categories:["enterprise"],nameTerms:["retail","wholesale","shop management","pos system","boutique","hardware management","butchery","fashion house"]},
+  healthcare:{label:"VIORA Institutional Solutions",categories:["institutional"],nameTerms:["clinic","hospital","pharmacy","diagnostic","healthcare"]},
+  hospitality:{label:"VIORA Hospitality Solutions",categories:["hospitality"],nameTerms:["hotel","guest house","restaurant","catering","laundry","club management"]},
+  education:{label:"VIORA Institutional Solutions",categories:["institutional"],nameTerms:["school management","campus connect","student management","academy"]},
+  logistics:{label:"VIORA Industry & Operations Solutions",categories:["industry"],nameTerms:["boda riders","salama movers","fleet management","transport management","logistics management","delivery management"]},
+  "professional-services":{label:"VIORA Business & Lifestyle Solutions",categories:["business"],nameTerms:["law firm management","professional services automation","legal practice","professional advisory"]},
+  agriculture:{label:"VIORA Industry & Operations Solutions",categories:["industry"],nameTerms:["farm integrated","farm management","greenhouse","soko ai"]}
 };
 const viPlain=value=>{let text=String(value??"");for(let i=0;i<2;i++){const box=document.createElement("div");box.innerHTML=text;const next=box.textContent||"";if(next===text)break;text=next;}return text;};
 const viNorm=value=>viPlain(value).toLowerCase().replace(/\s+/g," ").trim();
@@ -37,13 +38,16 @@ async function viInitIndustryMarketplace(){
  if(!host)return;
  const config=VIORA_INDUSTRY_MARKET[document.body.dataset.industry];
  if(!config){host.innerHTML='<p class="industry-marketplace-state">Browse the full VIORA Marketplace for available products.</p>';return;}
+ const solutionCategory=window.VIORATaxonomy.classifyIndustry({name:config.label,cat:document.body.dataset.industry});
+ const solutionCategoryName=window.VIORATaxonomy.title(solutionCategory);
+ const heroEyebrow=document.querySelector('.hero .eyebrow');
+ if(heroEyebrow)heroEyebrow.textContent=solutionCategoryName+' · Industry ecosystem blueprint';
  host.setAttribute("aria-busy","true");
  try{
   const products=await viLoadProducts();
   const matches=products.map(product=>{
-   const category=viNorm(product.category||product.categoryName||product.categoryId||"");
+   const categoryMatch=window.VIORATaxonomy.classifyProduct(product)===solutionCategory;
    const name=viNorm(product.name||"");
-   const categoryMatch=config.categories.includes(category);
    const nameMatch=config.nameTerms.some(term=>name.includes(term));
    return {product,rank:categoryMatch?0:nameMatch?1:9};
   }).filter(item=>item.rank<9).sort((a,b)=>a.rank-b.rank).map(item=>item.product).slice(0,6);
