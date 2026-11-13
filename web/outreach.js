@@ -352,65 +352,40 @@ async function sendEmail(e){
  e?.preventDefault();
  const subject=$('mailSubject').value.trim(),textBody=$('mailBody').value.trim(),chosen=selectedMailLeads(),manual=parseManualMailRecipients();
  if(!subject||!textBody){status('mailStatus','Subject and message are required.',true);return;}
+ if(manual.length){status('mailStatus','For compliance, manual email addresses cannot be sent from this campaign composer. Add and verify each organisation in the CRM first.',true);return;}
+ if(!chosen.length){status('mailStatus','Select at least one saved CRM prospect.',true);return;}
  const blocked=chosen.filter(l=>String(l.status||'').toLowerCase()==='do not contact');
- if(blocked.length){status('mailStatus','Remove Do not contact prospects before sending: '+blocked.map(l=>l.company||l.fullName||l.email).join(', '),true);return;}
- const recipients=[],seen=new Set();
- for(const lead of chosen){const to=String(lead.email||'').trim(),key=to.toLowerCase();if(!to||seen.has(key))continue;seen.add(key);recipients.push({to,lead});}
- for(const to of manual){if(seen.has(to))continue;seen.add(to);recipients.push({to,lead:leadList().find(l=>(l.email||'').trim().toLowerCase()===to)||null});}
- if(!recipients.length){status('mailStatus','Select at least one saved lead or enter one or more email addresses.',true);return;}
- const blockedManual=recipients.filter(x=>x.lead&&String(x.lead.status||'').toLowerCase()==='do not contact');
- if(blockedManual.length){status('mailStatus','These recipients are marked Do not contact: '+blockedManual.map(x=>x.to).join(', '),true);return;}
- const invalid=recipients.filter(x=>!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x.to));
- if(invalid.length){status('mailStatus','Check these email addresses: '+invalid.map(x=>x.to).join(', '),true);return;}
- const ok=await showConfirm('Confirm multi-recipient send','Send “'+subject+'” as '+recipients.length+' separate email'+(recipients.length===1?'':'s')+'? Each recipient will receive only their own message, and every send will be logged in Outreach and the main VIORA Communications log.','Send '+recipients.length+' email'+(recipients.length===1?'':'s'));
+ if(blocked.length){status('mailStatus','Remove Do not contact prospects: '+blocked.map(l=>l.company||l.fullName||l.email).join(', '),true);return;}
+ const invalid=chosen.filter(l=>!l.id||!l.email||!l.emailVerified||!l.countryCode);
+ if(invalid.length){status('mailStatus','Every recipient needs a saved CRM record, verified business email and country code. No email was sent.',true);return;}
+ const ok=await showConfirm('Approve and queue campaign','Approve this exact message for '+chosen.length+' selected prospect'+(chosen.length===1?'':'s')+'? This does not send immediately. The server will re-check each recipient against the approved country policy, consent/evidence, suppression and human-approval rules before delivery.','Approve & queue');
  if(!ok)return;
- let sent=0,failed=0;const failures=[],successAddresses=[];
  try{
-  busy('sendBtn',true,'Sending 0/'+recipients.length+'…');
-  for(let i=0;i<recipients.length;i++){
-   let {to,lead}=recipients[i];
-   if(!lead){
-    const existing=leadList().find(item=>String(item.email||'').trim().toLowerCase()===to.toLowerCase());
-    if(existing)lead=existing;
-    else{
-     const leadId=push(ref(db,ORG+'/leads')).key,createdAt=stamp(),domain=to.split('@')[1]||'';
-     lead={id:leadId,company:domain,contact:'',fullName:domain,email:to,phone:'',category:'Lead',status:'New',country:'',city:'',website:domain?'https://'+domain:'',notes:'Automatically added from a manually entered Outreach recipient. Verify organisation and contact details.',source:'Outreach Centre - manual recipient',_fromOutreach:true,createdAt,updatedAt:createdAt,createdBy:currentUser.uid,updatedBy:currentUser.uid};
-     await update(ref(db),{[ORG+'/leads/'+leadId]:lead,[ROOT+'/leads/'+leadId]:{...lead,linkedMainLeadId:leadId}});
-     leads[leadId]=lead;recipients[i].lead=lead;
-    }
-   }
+  busy('sendBtn',true,'Checking eligibility…');
+  const result=await api('/outreach/campaign/queue',{items:chosen.map(lead=>({leadId:lead.id,subject,text:textBody,followups:[],humanApproval:true}))});
+  const queued=result.items||[];
+  const queuedEmails=new Set(queued.map(item=>String(item.recipient||'').toLowerCase()));
+  for(const item of queued){
+   const lead=chosen.find(x=>String(x.email||'').trim().toLowerCase()===String(item.recipient||'').toLowerCase());
+   if(!lead)continue;
    const id=push(ref(db,ROOT+'/emails')).key,commLogId=push(ref(db,ORG+'/commLog')).key,now=stamp();
-   const audit={id,to,subject,text:textBody,company:lead?.company||lead?.fullName||'',leadId:lead?.id||null,commLogId,direction:'outbound',status:'queued',providerId:null,timestamp:now,sentBy:currentUser.uid,sentByEmail:currentUser.email,approvedAt:now,source:'Outreach Centre',batchSize:recipients.length};
-   const comm={id:commLogId,channel:'em',recipientId:lead?.id||to,recipientName:lead?.company||lead?.fullName||to,recipientContact:to,subject,message:textBody,sentBy:currentUser.email||currentUser.uid,status:'queued',timestamp:now,leadId:lead?.id||null,outreachEmailId:id,source:'Outreach Centre',batchSize:recipients.length};
-   try{
-    await set(ref(db,ROOT+'/emails/'+id),audit);
-    await set(ref(db,ORG+'/commLog/'+commLogId),comm);
-    await update(ref(db,ROOT+'/emails/'+id),{status:'sending',attemptedAt:stamp()});
-    await update(ref(db,ORG+'/commLog/'+commLogId),{status:'sending',attemptedAt:stamp()});
-    const result=await api('/sendEmail',{to,subject,text:textBody,replyTo:'cliff254johns@gmail.com'});
-    const sentAt=stamp();
-    await update(ref(db,ROOT+'/emails/'+id),{status:'sent',providerId:result.id||null,threadId:result.threadId||null,transport:result.transport||'resend',sentAt});
-    await update(ref(db,ORG+'/commLog/'+commLogId),{status:'sent',providerId:result.id||null,sentAt});
-    if(lead?.id)await update(ref(db,ORG+'/leads/'+lead.id),{status:lead.status==='New'?'Contacted':lead.status,lastContactedAt:sentAt,updatedAt:sentAt});
-    sent++;successAddresses.push(to.toLowerCase());
-   }catch(err){
-    failed++;failures.push(to);
-    const failedAt=stamp();
-    await update(ref(db,ROOT+'/emails/'+id),{status:'failed',error:err.message,failedAt}).catch(()=>{});
-    await update(ref(db,ORG+'/commLog/'+commLogId),{status:'failed',error:err.message,failedAt}).catch(()=>{});
-   }
-   busy('sendBtn',true,'Sending '+(i+1)+'/'+recipients.length+'…');
-   status('mailStatus','Processed '+(i+1)+' of '+recipients.length+' · '+sent+' accepted · '+failed+' failed'+(failures.length?' · '+failures.join(', '):''));
+   await set(ref(db,ROOT+'/emails/'+id),{id,to:item.recipient,subject,text:textBody,company:item.organisation,leadId:lead.id,commLogId,direction:'outbound',status:'queued',queueId:item.id,timestamp:now,sentBy:currentUser.uid,sentByEmail:currentUser.email,approvedAt:now,approvedBy:currentUser.email||currentUser.uid,source:'Outreach Centre',transport:'campaign-scheduler'});
+   await set(ref(db,ORG+'/commLog/'+commLogId),{id:commLogId,channel:'em',recipientId:lead.id,recipientName:item.organisation,recipientContact:item.recipient,subject,message:textBody,sentBy:currentUser.email||currentUser.uid,status:'queued',timestamp:now,leadId:lead.id,outreachEmailId:id,queueId:item.id,source:'Outreach Centre'});
   }
-  if(successAddresses.length){
-   const sentSet=new Set(successAddresses);
-   $('mailLeadList').querySelectorAll('input[name="mailLeadChoice"]').forEach(box=>{const lead=leads[box.value];if(lead&&sentSet.has(String(lead.email||'').trim().toLowerCase()))box.checked=false;});
-   $('mailTo').value=parseManualMailRecipients().filter(address=>!sentSet.has(address)).join(', ');
+  const rejected=result.rejected||[];
+  if(queued.length){
+   const ids=new Set(chosen.filter(l=>queuedEmails.has(String(l.email||'').trim().toLowerCase())).map(l=>l.id));
+   $('mailLeadList').querySelectorAll('input[name="mailLeadChoice"]').forEach(box=>{if(ids.has(box.value))box.checked=false;});
    updateMailRecipientSummary();
   }
-  if(!failed){$('mailBody').value='';closeModal('emailModal');toast(sent+' separate email'+(sent===1?'':'s')+' accepted by the configured provider and recorded. Delivery confirmation depends on webhook tracking.');}
-  else{status('mailStatus',sent+' accepted; '+failed+' failed. Only failed recipients remain selected so you can retry safely.',true);}
- }finally{busy('sendBtn',false);renderEmails();renderAnalytics();renderOverview();}
+  if(!rejected.length&&queued.length===chosen.length){$('mailBody').value='';closeModal('emailModal');toast(queued.length+' message'+(queued.length===1?'':'s')+' approved and queued. Delivery remains blocked until all regional legal controls are approved.');}
+  else{
+   const detail=rejected.map(x=>(x.leadId||'Unknown lead')+': '+x.reason).join(' · ');
+   status('mailStatus',queued.length+' approved and queued; '+rejected.length+' rejected. '+detail,rejected.length>0);
+  }
+  await refreshCampaignStatus();
+ }catch(err){status('mailStatus','No campaign messages were queued: '+err.message,true);}
+ finally{busy('sendBtn',false);renderEmails();renderAnalytics();renderOverview();}
 }
 function csvEscape(v){return '"'+String(v??'').replace(/"/g,'""')+'"';}
 function downloadCsv(name,rows){const csv=rows.map(r=>r.map(csvEscape).join(',')).join('\r\n'),blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);}
