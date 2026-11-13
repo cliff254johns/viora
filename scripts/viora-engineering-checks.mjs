@@ -16,6 +16,30 @@ const staticWorker = read('workers/viora-static-next/worker.js');
 const staticConfig = read('workers/viora-static-next/wrangler.toml');
 const embeddedAssets = read('workers/viora-static-next/assets.generated.js');
 
+const taxonomy = read('web/viora-taxonomy.js');
+const publicMarket = read('web/market.html');
+const publicMarketJs = read('web/mainMarket/market.js');
+const adminMarket = read('web/main/render-marketplace.js');
+const homepage = read('web/index-home.js');
+const blueprintAdmin = read('web/main/pp.js');
+const industryDirectory = read('web/mainIndex/industries.js');
+const adminHandlers = read('web/main/viora-main-handlers.js');
+assert.equal((taxonomy.match(/id:'(?:enterprise|institutional|hospitality|property|industry|business)'/g) || []).length, 6, 'shared taxonomy must define exactly six official VIORA categories');
+for (const label of ['VIORA Enterprise Solutions','VIORA Institutional Solutions','VIORA Hospitality Solutions','VIORA Property & Infrastructure Solutions','VIORA Industry & Operations Solutions','VIORA Business & Lifestyle Solutions']) {
+  assert.ok(taxonomy.includes(label), 'shared taxonomy missing '+label);
+}
+assert.ok(publicMarket.includes('id="mainCategoryFilter"'), 'public Marketplace must expose the six-category dropdown');
+assert.ok(publicMarket.includes('id="categoryBar"'), 'public Marketplace must retain its horizontal category scroller');
+assert.ok(!publicMarket.includes('id="priceFilter"') && !publicMarket.includes('id="catSearchInput"'), 'public Marketplace must not show legacy secondary category/price filters');
+assert.ok(publicMarketJs.includes("import '../viora-taxonomy.js'"), 'public Marketplace must load shared taxonomy');
+assert.ok(publicMarketJs.includes('classifyProduct(p)'), 'public Marketplace must classify products through shared taxonomy');
+assert.ok(adminMarket.includes('classifyProduct(p)'), 'admin Marketplace must classify products through shared taxonomy');
+assert.ok(adminHandlers.includes('vioraCategoryId: categoryId'), 'admin product saves must persist canonical category ID');
+assert.ok(homepage.includes("import './viora-taxonomy.js'"), 'homepage must load shared taxonomy');
+assert.ok(homepage.includes('taxonomy.categories.map'), 'homepage tour must use official solution categories');
+assert.ok(blueprintAdmin.includes('classifyIndustry'), 'admin industry blueprints must normalize legacy categories');
+assert.ok(industryDirectory.includes('VIORA Property & Infrastructure Solutions'), 'industry directory must expose official solution groups');
+
 for (const path of ['web/manifest.webmanifest','web/main.webmanifest','web/manifest.json','web/campaigns.webmanifest','web/assets/r/manifest-public.json','web/assets/r/manifest-rider.json','web/assets/r/manifest-admin.json','web/assets/mamamboga/manifest.json']) {
   const manifest = JSON.parse(read(path));
   assert.ok(manifest.icons.some(i => i.src === '/viora.png' && i.type === 'image/png'), path+' missing canonical /viora.png app icon');
