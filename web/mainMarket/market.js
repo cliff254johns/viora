@@ -100,6 +100,22 @@ const DEFAULTS = {
 
 let INDUSTRY_MAP = {};
 
+const normalizeMarketCategory = value =>
+  String(value || 'Marketplace').trim().replace(/\\s+/g, ' ').toLocaleLowerCase();
+
+const MARKET_CATEGORY_LABELS = Object.freeze({
+  'bussiness management systems': 'Business Management Systems',
+  'ecormmerce website': 'E-commerce Websites',
+  'retal property systems': 'Rental Property Systems',
+  'recuitment agency systems': 'Recruitment Agency Systems',
+  'a.i assistant': 'AI Assistants'
+});
+
+const displayMarketCategory = value => {
+  const clean = String(value || 'Marketplace').trim().replace(/\\s+/g, ' ');
+  return MARKET_CATEGORY_LABELS[normalizeMarketCategory(clean)] || clean;
+};
+
 let PROMO_CACHE = null;
 let REVIEW_CACHE = {};
 let EXTRAS_CACHE = {};
@@ -801,23 +817,29 @@ const App = {
     if (!bar) return;
 
     const industryEntries = Object.values(INDUSTRY_MAP).slice().sort((a, b) => a.order - b.order);
+    const categoryLabels = new Map();
     const names = [];
-    industryEntries.forEach(ind => { if (ind.marketCategory && !names.includes(ind.marketCategory)) names.push(ind.marketCategory); });
-    this.products.forEach(product => {
-      const category = String(product.category || 'Marketplace').trim();
-      if (category && !names.includes(category)) names.push(category);
-    });
+    const addCategory = raw => {
+      const key = normalizeMarketCategory(raw);
+      if (!key || key === 'marketplace' && !raw) return;
+      if (!categoryLabels.has(key)) categoryLabels.set(key, displayMarketCategory(raw));
+      if (!names.includes(key)) names.push(key);
+    };
+
+    industryEntries.forEach(ind => addCategory(ind.marketCategory));
+    this.products.forEach(product => addCategory(product.category || 'Marketplace'));
+
     const allCats = ['all', ...names];
     const counts = new Map();
     this.products.forEach(product => {
-      const category = String(product.category || 'Marketplace').trim();
-      counts.set(category, (counts.get(category) || 0) + 1);
+      const key = normalizeMarketCategory(product.category || 'Marketplace');
+      counts.set(key, (counts.get(key) || 0) + 1);
     });
 
-    const visualFor = category => {
-      const ind = INDUSTRY_MAP[category];
+    const visualFor = categoryKey => {
+      const ind = industryEntries.find(item => normalizeMarketCategory(item.marketCategory) === categoryKey);
       if (ind) return { icon: ind.icon || 'fa-solid fa-tag', color: ind.color || '#60a5fa' };
-      const value = String(category).toLowerCase();
+      const value = categoryKey;
       const rules = [
         [/software|saas|app|system|erp|crm/, 'fa-solid fa-laptop-code', '#60a5fa'],
         [/design|creative|media|photo|video/, 'fa-solid fa-wand-magic-sparkles', '#c084fc'],
@@ -833,10 +855,10 @@ const App = {
     };
 
     const q = String(this._catSearch || '').toLowerCase().trim();
-    const filtered = allCats.filter(category => category === 'all' || category.toLowerCase().includes(q));
+    const filtered = allCats.filter(category => category === 'all' || (categoryLabels.get(category) || category).toLowerCase().includes(q));
     const allCount = this.products.length;
     if (totalCount) totalCount.textContent = allCount.toLocaleString() + (allCount === 1 ? ' product' : ' products') + ' across ' + names.length + ' categories';
-    if (activeLabel) activeLabel.textContent = this.activeCategory === 'all' ? 'All products' : this.activeCategory;
+    if (activeLabel) activeLabel.textContent = this.activeCategory === 'all' ? 'All products' : (categoryLabels.get(this.activeCategory) || displayMarketCategory(this.activeCategory));
     if (trigger) trigger.setAttribute('aria-expanded', String(document.getElementById('categoryExplorerPanel')?.hidden === false));
 
     bar.innerHTML = filtered.map(category => {
@@ -844,7 +866,7 @@ const App = {
       const visual = all ? { icon: 'fa-solid fa-globe', color: '#60a5fa' } : visualFor(category);
       const count = all ? allCount : (counts.get(category) || 0);
       const active = this.activeCategory === category;
-      const label = all ? 'All products' : category;
+      const label = all ? 'All products' : (categoryLabels.get(category) || displayMarketCategory(category));
       return `<button class="category-option ${active ? 'active' : ''}" type="button" role="option" aria-selected="${active}" data-cat="${this.escape(category)}">
         <span class="category-option-icon" style="--category-accent:${this.escape(visual.color)}"><i class="${this.escape(visual.icon)}"></i></span>
         <span class="category-option-copy"><strong>${this.escape(label)}</strong><small>${all ? 'Explore the complete collection' : 'Browse ' + this.escape(label) + ' solutions'}</small></span>
@@ -960,13 +982,13 @@ const App = {
     }
 
     let list = this.products;
-    if (this.activeCategory !== 'all') list = list.filter(p => p.category === this.activeCategory);
+    if (this.activeCategory !== 'all') list = list.filter(p => normalizeMarketCategory(p.category) === this.activeCategory);
 
     if (this.activeCategory !== 'all') {
       const stillExists = Object.values(INDUSTRY_MAP).some(
-        ind => ind.marketCategory === this.activeCategory
+        ind => normalizeMarketCategory(ind.marketCategory) === this.activeCategory
       );
-      if (!stillExists && !this.products.some(p => p.category === this.activeCategory)) {
+      if (!stillExists && !this.products.some(p => normalizeMarketCategory(p.category) === this.activeCategory)) {
         this.activeCategory = 'all';
         this.renderCategoryBar();
       }
