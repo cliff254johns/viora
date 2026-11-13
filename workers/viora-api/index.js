@@ -5885,6 +5885,12 @@ const GMAIL_SCOPES = [
   'https://www.googleapis.com/auth/gmail.readonly',
 ];
 
+function gmailBase64(bytes) {
+  const data = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  let binary = '';
+  for (const byte of data) binary += String.fromCharCode(byte);
+  return btoa(binary);
+}
 function gmailBase64Url(bytes) {
   const data = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   let binary = '';
@@ -6017,6 +6023,12 @@ async function handleGmailOAuthCallback(url, env) {
     return json({ ok: false, error: 'The connected Google account must be the verified VIORA mailbox', expected: GMAIL_OWNER_EMAIL }, 403);
   }
 
+  const grantedScopes = String(tokenData.scope || '').split(' ').filter(Boolean);
+  const requiredScopes = ['https://www.googleapis.com/auth/gmail.send', 'https://www.googleapis.com/auth/gmail.readonly'];
+  if (!requiredScopes.every(scope => grantedScopes.includes(scope))) {
+    return json({ ok: false, error: 'Google did not grant all requested Gmail permissions. Reconnect and approve sending and inbox access.' }, 403);
+  }
+
   const previous = await readGmailConnection(env).catch(() => null);
   const refreshToken = tokenData.refresh_token || (previous && previous.refreshToken);
   if (!refreshToken) return json({ ok: false, error: 'Google did not return a refresh token. Revoke the existing VIORA grant in Google Account permissions and reconnect with consent.' }, 400);
@@ -6024,13 +6036,13 @@ async function handleGmailOAuthCallback(url, env) {
   await writeGmailConnection({
     email: profile.email,
     refreshToken,
-    scopes: String(tokenData.scope || '').split(' ').filter(Boolean),
+    scopes: grantedScopes,
     connectedAt: new Date().toISOString(),
   }, env);
   try {
     await gmailDbWrite(env, 'connectionStatus', { connected: true, email: profile.email, connectedAt: new Date().toISOString() });
   } catch (e) {}
-  return json({ ok: true, connected: true, email: profile.email, message: 'VIORA Gmail mailbox connected. You may close this tab and return to Outreach.' });
+  return Response.redirect(env.GMAIL_SUCCESS_REDIRECT || 'https://www.viora.co.ke/outreach.html?gmail=connected', 302);
 }
 async function gmailAccessToken(connection, env) {
   if (!connection || !connection.refreshToken) throw new Error('Gmail mailbox is not connected');
@@ -6075,8 +6087,10 @@ async function sendViaGmail(message, env, user, existingConnection) {
     const accessToken = await gmailAccessToken(connection, env);
     const recipients = (Array.isArray(message.to) ? message.to : [message.to]).map(v => String(v).trim()).filter(Boolean);
     if (!recipients.length || recipients.length > 50) return json({ ok: false, error: 'Provide between 1 and 50 recipients' }, 400);
+    if (recipients.some(address => !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(address))) return json({ ok: false, error: 'One or more recipient email addresses are invalid' }, 400);
+    if (String(message.html || '').length > 150000 || String(message.text || '').length > 150000) return json({ ok: false, error: 'Email content exceeds the 150 KB limit' }, 413);
     const cleanHeader = value => String(value || '').replace(/[\r\n]+/g, ' ').trim();
-    const encodedSubject = '=?UTF-8?B?' + btoa(unescape(encodeURIComponent(cleanHeader(message.subject || '(no subject)')))) + '?=';
+    const encodedSubject = '=?UTF-8?B?' + gmailBase64(new TextEncoder().encode(cleanHeader(message.subject || '(no subject)'))) + '?=';
     const headers = [
       'From: ' + GMAIL_OWNER_EMAIL,
       'To: ' + recipients.join(', '),
@@ -6094,12 +6108,12 @@ async function sendViaGmail(message, env, user, existingConnection) {
         'Content-Type: text/plain; charset=UTF-8',
         'Content-Transfer-Encoding: base64',
         '',
-        btoa(unescape(encodeURIComponent(String(message.text)))),
+        gmailBase64(new TextEncoder().encode(String(message.text))),
         '--' + boundary,
         'Content-Type: text/html; charset=UTF-8',
         'Content-Transfer-Encoding: base64',
         '',
-        btoa(unescape(encodeURIComponent(String(message.html)))),
+        gmailBase64(new TextEncoder().encode(String(message.html))),
         '--' + boundary + '--',
       ]).join('\r\n');
     } else {
@@ -6109,7 +6123,7 @@ async function sendViaGmail(message, env, user, existingConnection) {
         'Content-Type: ' + (isHtml ? 'text/html' : 'text/plain') + '; charset=UTF-8',
         'Content-Transfer-Encoding: base64',
         '',
-        btoa(unescape(encodeURIComponent(body))),
+        gmailBase64(new TextEncoder().encode(body)),
       ]).join('\r\n');
     }
     const raw = gmailBase64Url(new TextEncoder().encode(mime));
