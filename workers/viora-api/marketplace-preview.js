@@ -246,7 +246,21 @@ export async function handleMarketplacePreview(request, env, user, route) {
     if (route === 'admin-requests' && method === 'GET') {
       if (String(user.role || '').toLowerCase() !== 'admin') return response({ ok: false, error: 'Admin only' }, 403);
       const { value } = await readRecord(env, ROOT + '/requests');
-      return response({ ok: true, requests: value || {} });
+      const requests = value || {};
+      for (const [targetUid, products] of Object.entries(requests)) {
+        for (const [productId, requestRecord] of Object.entries(products || {})) {
+          if (!requestRecord) continue;
+          try {
+            const product = await getProduct(env, cleanId(productId, 'productId'));
+            requestRecord.gatewayReady = productAllowsPreview(product);
+            requestRecord.previewProfile = product.previewProfile || '';
+          } catch (_) {
+            requestRecord.gatewayReady = false;
+            requestRecord.previewProfile = '';
+          }
+        }
+      }
+      return response({ ok: true, requests });
     }
 
     if (route === 'admin-grant' && method === 'POST') {
