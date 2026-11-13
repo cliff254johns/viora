@@ -109,3 +109,11 @@
 .table-action[data-lead-intel]{border-color:rgba(34,211,238,.34);background:rgba(14,165,233,.09);color:var(--cyan);font-weight:750}
 .table-action[data-lead-intel]:hover{background:rgba(14,165,233,.17);border-color:rgba(34,211,238,.58);transform:translateY(-1px)}
 .table-action[data-lead-intel] i{margin-right:4px}
+
+
+/* Autonomous reply controls */
+.automation-control-panel .automation-toggle{display:flex;align-items:flex-start;gap:12px;flex:1;min-width:260px;padding:14px 16px;border:1px solid var(--border);border-radius:14px;background:var(--panel-soft,rgba(148,163,184,.06));cursor:pointer}
+.automation-control-panel .automation-toggle input{width:18px;height:18px;margin-top:2px;accent-color:var(--accent)}
+.automation-control-panel .automation-toggle span{display:grid;gap:4px}
+.automation-control-panel .automation-toggle small{color:var(--muted);line-height:1.5}
+.automation-control-panel .toolbar{align-items:center;flex-wrap:wrap;gap:12px}

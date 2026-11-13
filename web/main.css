@@ -6380,6 +6380,8 @@ canvas { border-radius: var(--r-sm); }
 }
 
 /* Distinct, explicit sidebar group-icon colours (one colour per group). */
+.sb-group-wrap[data-group="engineering-command"]>.sb-group-toggle .sb-group-icon{color:#38bdf8!important;}
+.sb-group-wrap[data-group="engineering-visuals"]>.sb-group-toggle .sb-group-icon{color:#818cf8!important;}
 .sb-group-wrap[data-group="overview"]>.sb-group-toggle .sb-group-icon{color:#22d3ee!important;}
 .sb-group-wrap[data-group="outreach"]>.sb-group-toggle .sb-group-icon{color:#fb923c!important;}
 .sb-group-wrap[data-group="clients"]>.sb-group-toggle .sb-group-icon{color:#60a5fa!important;}

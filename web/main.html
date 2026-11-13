@@ -492,12 +492,31 @@
         </div>
       </div>
 
-      <a class="sb-engineering-link" data-tab="engineering-command" data-roles="admin,exec" title="Engineering Command Centre">
-        <i class="fa-solid fa-microchip"></i><span>Engineering Command Centre</span>
-      </a>
-      <a class="sb-engineering-link sb-engineering-sub-link" data-tab="engineering-visuals" data-roles="admin,exec" title="Engineering Visuals">
-        <i class="fa-solid fa-chart-area"></i><span>Engineering Visuals</span>
-      </a>
+      <!-- ENGINEERING · CONSISTENT SIDEBAR GROUPS -->
+      <div class="sb-group-wrap" data-group="engineering-command">
+        <button class="sb-group-toggle" data-toggle="engineering-command" aria-expanded="false" style="--group-color:#38bdf8;">
+          <i class="fa-solid fa-microchip sb-group-icon"></i>
+          <span class="sb-group-label">Engineering Command</span>
+          <i class="fa-solid fa-chevron-down sb-group-chevron"></i>
+        </button>
+        <div class="sb-group-items" data-group-items="engineering-command">
+          <a data-tab="engineering-command" data-roles="admin,exec" style="--icon-color:#38bdf8;">
+            <i class="fa-solid fa-microchip"></i> Engineering Command Centre
+          </a>
+        </div>
+      </div>
+      <div class="sb-group-wrap" data-group="engineering-visuals">
+        <button class="sb-group-toggle" data-toggle="engineering-visuals" aria-expanded="false" style="--group-color:#818cf8;">
+          <i class="fa-solid fa-chart-area sb-group-icon"></i>
+          <span class="sb-group-label">Engineering Visuals</span>
+          <i class="fa-solid fa-chevron-down sb-group-chevron"></i>
+        </button>
+        <div class="sb-group-items" data-group-items="engineering-visuals">
+          <a data-tab="engineering-visuals" data-roles="admin,exec" style="--icon-color:#818cf8;">
+            <i class="fa-solid fa-chart-area"></i> Engineering Visuals
+          </a>
+        </div>
+      </div>
 
       <!-- ═══════════════════════════════════════════════════════════
            GROUP 1 · OVERVIEW
