@@ -27,7 +27,10 @@
 let _ctx = null;
 let _accountsCache = null;
 let _accountsCacheTs = 0;
+let _apiStatusCache = null;
+let _apiStatusCacheTs = 0;
 const CACHE_TTL_MS = 60 * 1000;
+const API_STATUS_TTL_MS = 30 * 1000;
 
 export function initCampaignAccounts(deps) {
   _ctx = deps || {};
@@ -36,6 +39,22 @@ export function initCampaignAccounts(deps) {
 }
 
 function ctx() { return _ctx || {}; }
+
+async function loadApiStatus(force = false) {
+  if (!force && _apiStatusCache && Date.now() - _apiStatusCacheTs < API_STATUS_TTL_MS) {
+    return _apiStatusCache;
+  }
+  if (typeof SAFE.callFn !== 'function') return null;
+  try {
+    const result = await SAFE.callFn('social/config/status', {});
+    _apiStatusCache = result && result.integrations ? result.integrations : null;
+    _apiStatusCacheTs = Date.now();
+    return _apiStatusCache;
+  } catch (error) {
+    console.warn('[accounts] API connection status unavailable:', error.message);
+    return null;
+  }
+}
 
 const $ = (id) => (typeof document !== 'undefined' ? document.getElementById(id) : null);
 const esc = (s) => String(s == null ? '' : s)
@@ -260,7 +279,7 @@ export async function renderAccountsPanel() {
   const host = $('campaignSocialAccounts');
   if (!host) return;
 
-  const list = await loadAccounts();
+  const [list, apiStatus] = await Promise.all([loadAccounts(), loadApiStatus()]);
   const byPlatform = {};
   for (const a of list) byPlatform[a.platform] = a;
 
@@ -272,7 +291,7 @@ export async function renderAccountsPanel() {
       </div>
 
       <div class="accounts-grid">
-        ${PLATFORMS.map(p => renderAccountCard(p, byPlatform[p.key])).join('')}
+        ${PLATFORMS.map(p => renderAccountCard(p, byPlatform[p.key], apiStatus && apiStatus[p.key])).join('')}
       </div>
 
       <div class="notice" style="margin-top:14px;margin-bottom:0">
@@ -314,14 +333,19 @@ export async function renderAccountsPanel() {
       _accountsCache = null;
       _accountsCacheTs = 0;
       renderAccountsPanel();
-      SAFE.toast('Refreshed.', 'info');
+      _apiStatusCache = null;
+      _apiStatusCacheTs = 0;
+      SAFE.toast('Refreshed account and API connection status.', 'info');
     });
   }
 }
 
-function renderAccountCard(platform, account) {
+function renderAccountCard(platform, account, serviceStatus = null) {
   const isRegistered = !!account;
-  const connected = account && account.connectedVia === 'api';
+  const connected = !!serviceStatus?.verified;
+  const serviceLabel = serviceStatus?.verified
+    ? (platform.key === 'youtube' ? 'YouTube API verified' : 'Account API verified')
+    : serviceStatus?.configured ? 'API configured · not verified' : 'API credentials missing';
 
   /* Followers can live in followers, stats.followers, or followersCache */
   const followerCount =
@@ -354,12 +378,12 @@ function renderAccountCard(platform, account) {
 
       ${isRegistered ? `
         <div class="account-meta">
-          <span>${connected ? '<i class="fa-solid fa-bolt" style="color:var(--good)"></i> API posting' : '<i class="fa-solid fa-link" style="color:var(--muted)"></i> Compose-link'}</span>
+          <span>${connected ? '<i class="fa-solid fa-circle-check" style="color:var(--good)"></i> ' + esc(serviceLabel) : '<i class="fa-solid fa-triangle-exclamation" style="color:var(--warn)"></i> ' + esc(serviceLabel)}</span>
           ${followersText ? `<span>${followersText} followers</span>` : '<span>—</span>'}
         </div>
       ` : `
         <div class="account-meta">
-          <span style="color:var(--muted)">Connect this channel to post and track stats.</span>
+          <span style="color:var(--muted)">${esc(serviceLabel)}</span>
         </div>
       `}
 
@@ -530,46 +554,77 @@ async function verifyAccount(id) {
     const snap = await get(ref(db, P(`socialAccounts/${id}`)));
     if (!snap.exists()) { SAFE.toast('Account not found.', 'error'); return; }
     const account = snap.val();
+    SAFE.toast('Checking Cloudflare API connection for ' + account.handle + '…', 'info');
 
-    SAFE.toast('Checking ' + account.handle + '…', 'info');
+    const statusResult = await callFn('social/config/status', {});
+    const service = statusResult?.integrations?.[account.platform];
+    if (!service?.verified) {
+      SAFE.toast(service?.message || 'The Worker could not verify this platform API.', 'warning');
+      _apiStatusCache = statusResult?.integrations || null;
+      _apiStatusCacheTs = Date.now();
+      renderAccountsPanel();
+      return;
+    }
 
-    const res = await callFn('socialStats', {
-      platform: account.platform,
-      url: account.profileUrl,
-      videoId: null,
-    });
+    let stats = null;
+    if (['youtube', 'tiktok'].includes(account.platform)) {
+      stats = await callFn('socialStats', {
+        platform: account.platform,
+        url: account.profileUrl,
+        videoId: null,
+      });
+      if (!stats || stats.ok === false || stats.followers == null) {
+        SAFE.toast(stats?.error || 'API key/token works, but this registered profile could not be verified.', 'warning');
+        return;
+      }
+    } else if (account.platform === 'facebook' || account.platform === 'instagram') {
+      const verifiedId = account.platform === 'facebook' ? service.pageId : service.accountId;
+      if (account.platformId && verifiedId && String(account.platformId) !== String(verifiedId)) {
+        SAFE.toast('The verified API account ID does not match the ID saved for this Campaigns account.', 'error');
+        return;
+      }
+    }
 
-    if (res && res.ok !== false && res.followers != null) {
-      const updated = {
-        ...account,
-        followers: res.followers,
+    const updated = {
+      ...account,
+      connectedVia: 'api',
+      verified: true,
+      apiConnectionStatus: 'verified',
+      apiVerifiedAt: new Date().toISOString(),
+      apiVerificationMessage: service.message || 'Provider API verification passed.',
+      ...(stats ? {
+        followers: Number(stats.followers) || 0,
         followersUpdatedAt: new Date().toISOString(),
-        verified: true,
-      };
-      await set(ref(db, P(`socialAccounts/${id}`)), updated);
-            /* ── Append follower snapshot to account history ── */
+      } : {}),
+      ...(account.platform === 'facebook' && service.pageId && !account.platformId ? { platformId: service.pageId } : {}),
+      ...(account.platform === 'instagram' && service.accountId && !account.platformId ? { platformId: service.accountId } : {}),
+      ...(account.platform === 'tiktok' && service.openId && !account.platformId ? { platformId: service.openId } : {}),
+    };
+    await set(ref(db, P(`socialAccounts/${id}`)), updated);
+
+    if (stats?.followers != null) {
       try {
         const historyPath = P(`socialAccounts/${id}/followersHistory`);
         const historySnap = await get(ref(db, historyPath));
         const history = historySnap.exists() ? (historySnap.val() || []) : [];
         history.push({
           ts: new Date().toISOString(),
-          followers: Number(res.followers) || 0,
-          source: res.source || 'verify',
+          followers: Number(stats.followers) || 0,
+          source: stats.source || 'verified-api',
         });
-        /* Keep last 90 snapshots (~4.5 hours at 3-min cadence, or a few weeks if manual) */
         if (history.length > 90) history.splice(0, history.length - 90);
         await set(ref(db, historyPath), history);
-      } catch (histErr) {
-        console.warn('[verify] followers history append failed:', histErr.message);
+      } catch (historyError) {
+        console.warn('[verify] follower history append failed:', historyError.message);
       }
-      SAFE.toast(`Verified — ${Number(res.followers).toLocaleString()} followers.`, 'success');
-      renderAccountsPanel();
-    } else {
-      SAFE.toast(res?.error || 'Verification returned no follower data.', 'warning');
     }
-  } catch (e) {
-    SAFE.toast('Verify failed: ' + (e.message || 'unknown'), 'error');
+
+    _apiStatusCache = statusResult.integrations;
+    _apiStatusCacheTs = Date.now();
+    SAFE.toast('API connection verified and saved to this Campaigns account.', 'success');
+    renderAccountsPanel();
+  } catch (error) {
+    SAFE.toast('API verification failed: ' + (error.message || 'unknown'), 'error');
   }
 }
 
