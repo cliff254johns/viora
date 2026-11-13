@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-13T00:18:16.233Z",
+  "generatedAt": "2026-11-13T00:19:01.486Z",
   "moduleCount": 112,
   "modules": [
     {
@@ -1438,7 +1438,7 @@
     },
     {
       "file": "web/outreach.js",
-      "bytes": 81273,
+      "bytes": 81619,
       "imports": [
         "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js",
         "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js",
