@@ -6087,7 +6087,7 @@ async function sendViaGmail(message, env, user, existingConnection) {
     const accessToken = await gmailAccessToken(connection, env);
     const recipients = (Array.isArray(message.to) ? message.to : [message.to]).map(v => String(v).trim()).filter(Boolean);
     if (!recipients.length || recipients.length > 50) return json({ ok: false, error: 'Provide between 1 and 50 recipients' }, 400);
-    if (recipients.some(address => !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(address))) return json({ ok: false, error: 'One or more recipient email addresses are invalid' }, 400);
+    if (recipients.some(address => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address))) return json({ ok: false, error: 'One or more recipient email addresses are invalid' }, 400);
     if (String(message.html || '').length > 150000 || String(message.text || '').length > 150000) return json({ ok: false, error: 'Email content exceeds the 150 KB limit' }, 413);
     const cleanHeader = value => String(value || '').replace(/[\r\n]+/g, ' ').trim();
     const encodedSubject = '=?UTF-8?B?' + gmailBase64(new TextEncoder().encode(cleanHeader(message.subject || '(no subject)'))) + '?=';
