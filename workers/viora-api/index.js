@@ -954,7 +954,7 @@ async function handleTrendsRss(request, env) {
   while ((m = itemRe.exec(xml)) !== null) {
     const block = m[1];
     const pick = (tag) => {
-      const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, 'i');
+      const re = new RegExp(`<${tag}[^>]*>([\s\\S]*?)</${tag}>`, 'i');
       const t = block.match(re);
       if (!t) return '';
       return t[1]
@@ -6285,17 +6285,17 @@ async function publishOutreachEscalation(env, eventId, title, body, level = 'hig
 async function sendGmailThreadReply(thread, sourceMessage, replyText, env, user, accessToken) {
   const sourceHeaders = gmailHeaderMap(sourceMessage);
   const from = gmailAddress(sourceHeaders.from);
-  const messageId = String(sourceHeaders['message-id'] || '').replace(/[\\r\\n]+/g, '').trim();
-  const references = String(sourceHeaders.references || '').replace(/[\\r\\n]+/g, '').trim();
+  const messageId = String(sourceHeaders['message-id'] || '').replace(/[\\r\n]+/g, '').trim();
+  const references = String(sourceHeaders.references || '').replace(/[\\r\n]+/g, '').trim();
   if (!from || !messageId) throw new Error('The inbound message is missing a safe reply address or Message-ID header');
-  const subject = String(sourceHeaders.subject || '').replace(/[\\r\\n]+/g, ' ').trim();
+  const subject = String(sourceHeaders.subject || '').replace(/[\\r\n]+/g, ' ').trim();
   const encodedSubject = '=?UTF-8?B?' + gmailBase64(new TextEncoder().encode(/^re:/i.test(subject) ? subject : 'Re: ' + subject)) + '?=';
   const mime = [
     'From: ' + GMAIL_OWNER_EMAIL, 'To: ' + from, 'Subject: ' + encodedSubject,
     'In-Reply-To: ' + messageId, 'References: ' + [references, messageId].filter(Boolean).join(' '),
     'MIME-Version: 1.0', 'Content-Type: text/plain; charset=UTF-8',
     'Content-Transfer-Encoding: base64', '', gmailBase64(new TextEncoder().encode(replyText))
-  ].join('\\r\\n');
+  ].join('\\r\n');
   const raw = gmailBase64Url(new TextEncoder().encode(mime));
   const result = await gmailApiFetch('messages/send', accessToken, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -6339,26 +6339,26 @@ async function handleOutreachAutoReply(body, env, user) {
     const prior = await outreachDbRead(env, 'outreach/autoReplies/' + messageId).catch(() => null);
     if (prior && ['sent', 'escalated', 'suppressed'].includes(prior.status)) return json({ ok: true, status: prior.status, duplicate: true });
     const lower = messageText.toLowerCase();
-    const optedOut = /\\b(unsubscribe|remove me|stop emailing|do not contact|don't contact|opt me out)\\b/.test(lower);
+    const optedOut = /\b(unsubscribe|remove me|stop emailing|do not contact|don't contact|opt me out)\b/.test(lower);
     if (optedOut) {
       const record = { status: 'suppressed', sender, leadId, threadId, messageId, reason: 'recipient_opt_out', processedAt: new Date().toISOString() };
       await outreachDbWrite(env, 'outreach/autoReplies/' + messageId, record);
-      await outreachDbWrite(env, 'outreach/suppressions/' + encodeURIComponent(sender).replace(/\\./g, '%2E'), { email: sender, reason: 'recipient_opt_out', sourceMessageId: messageId, createdAt: new Date().toISOString() });
+      await outreachDbWrite(env, 'outreach/suppressions/' + encodeURIComponent(sender).replace(/\./g, '%2E'), { email: sender, reason: 'recipient_opt_out', sourceMessageId: messageId, createdAt: new Date().toISOString() });
       await outreachDbWrite(env, 'leads/' + leadId + '/status', 'Do not contact');
       return json({ ok: true, status: 'suppressed', reason: 'recipient_opt_out' });
     }
-    const urgent = /\\b(urgent|asap|immediately|legal notice|lawyer|attorney|complaint|data breach|security incident|refund|cancel|fraud|scam|angry|dispute)\\b/.test(lower);
-    const classificationPrompt = 'Classify this inbound business email. Return JSON only: {"intent":"general_info|positive_interest|meeting_interest|pricing|complaint|legal|urgent|not_interested|unsubscribe|unknown","confidence":0}. Do not write a reply.\\nSubject: ' + String(headers.subject || '').slice(0, 300) + '\\nMessage: ' + messageText;
+    const urgent = /\b(urgent|asap|immediately|legal notice|lawyer|attorney|complaint|data breach|security incident|refund|cancel|fraud|scam|angry|dispute)\b/.test(lower);
+    const classificationPrompt = 'Classify this inbound business email. Return JSON only: {"intent":"general_info|positive_interest|meeting_interest|pricing|complaint|legal|urgent|not_interested|unsubscribe|unknown","confidence":0}. Do not write a reply.\nSubject: ' + String(headers.subject || '').slice(0, 300) + '\nMessage: ' + messageText;
     let intent = urgent ? 'urgent' : 'unknown', confidence = urgent ? 100 : 0;
     try {
       const classified = await llmChat(env, { model: MODEL_STRONG, system: 'You are a conservative email-intent classifier. Never infer urgency from politeness. Return only valid JSON.', user: classificationPrompt, temperature: 0, max_tokens: 120, purpose: 'outreachReplyClassify' });
-      const parsed = JSON.parse(String(classified.text || '').replace(/^\\s*```(?:json)?/i, '').replace(/```\\s*$/, '').trim());
+      const parsed = JSON.parse(String(classified.text || '').replace(/^\s*```(?:json)?/i, '').replace(/```\s*$/, '').trim());
       if (['general_info','positive_interest','meeting_interest','pricing','complaint','legal','urgent','not_interested','unsubscribe','unknown'].includes(parsed.intent)) intent = parsed.intent;
       confidence = Math.max(0, Math.min(100, Number(parsed.confidence) || 0));
     } catch (_) {}
     if (['not_interested','unsubscribe'].includes(intent)) {
       await outreachDbWrite(env, 'outreach/autoReplies/' + messageId, { status: 'suppressed', sender, leadId, threadId, messageId, reason: intent, processedAt: new Date().toISOString() });
-      await outreachDbWrite(env, 'outreach/suppressions/' + encodeURIComponent(sender).replace(/\\./g, '%2E'), { email: sender, reason: intent, sourceMessageId: messageId, createdAt: new Date().toISOString() });
+      await outreachDbWrite(env, 'outreach/suppressions/' + encodeURIComponent(sender).replace(/\./g, '%2E'), { email: sender, reason: intent, sourceMessageId: messageId, createdAt: new Date().toISOString() });
       await outreachDbWrite(env, 'leads/' + leadId + '/status', 'Do not contact');
       return json({ ok: true, status: 'suppressed', reason: intent });
     }
