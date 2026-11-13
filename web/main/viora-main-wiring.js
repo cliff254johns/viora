@@ -102,7 +102,34 @@ async function loadMarketplacePreviewRequests() {
   }
 }
 
+async function loadMarketplacePreviewGatewayInventory() {
+  const tbody = $('marketplacePreviewGatewaysBody');
+  const summary = $('marketplacePreviewGatewaySummary');
+  const button = $('refreshPreviewGatewaysBtn');
+  const auth = (C().VioraAuth || window.VioraAuth);
+  if (!tbody) return;
+  if (!auth?.currentUser) { tbody.innerHTML = '<tr><td colspan="6">Administrator sign-in required.</td></tr>'; return; }
+  if (button) button.disabled = true;
+  try {
+    const token = await auth.currentUser.getIdToken();
+    const res = await fetch('https://viora-api.cliff254johns.workers.dev/marketplace/preview/gateways', { method: 'GET', headers: { Authorization: 'Bearer ' + token } });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(data.error || 'Gateway inventory unavailable');
+    const esc = value => String(value == null ? '' : value).replace(/[&<>\"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '\"':'&quot;', "'":'&#39;' }[ch]));
+    const products = Array.isArray(data.products) ? data.products : [];
+    if (summary) summary.textContent = 'Catalogue audit: ' + (data.summary?.total || 0) + ' products · ' + (data.summary?.gatewayReady || 0) + ' configured · ' + (data.summary?.blocked || 0) + ' blocked. This is not a substitute for per-product acceptance tests.';
+    if (!products.length) { tbody.innerHTML = '<tr><td colspan="6">No Marketplace products found.</td></tr>'; return; }
+    tbody.innerHTML = products.sort((a,b) => String(a.name).localeCompare(String(b.name))).map(p =>
+      '<tr><td><strong>' + esc(p.name) + '</strong><br><small>' + esc(p.productId) + '</small></td><td>' + esc(p.category || '—') + '</td><td>' + esc(p.status) + '</td><td>' + esc(p.previewProfile || 'Not assigned') + '</td><td>' + (p.gatewayReady ? '<span class="badge badge-active">Configured</span>' : '<span class="badge badge-warning">Blocked</span>') + '</td><td>' + esc((p.blockedReasons || []).join(', ') || 'Acceptance evidence still required') + '</td></tr>'
+    ).join('');
+  } catch (error) {
+    tbody.innerHTML = '<tr><td colspan="6">Unable to audit gateways: ' + String(error.message || 'unknown error').replace(/[&<>\"]/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '\"':'&quot;' }[ch])) + '</td></tr>';
+    toast('Marketplace gateway inventory could not be loaded.', 'error');
+  } finally { if (button) button.disabled = false; }
+}
 function bindMarketplacePreviewAdmin() {
+  const gatewayRefresh = $('refreshPreviewGatewaysBtn');
+  on(gatewayRefresh, 'click', loadMarketplacePreviewGatewayInventory);
   const refresh = $('refreshPreviewRequestsBtn');
   const tbody = $('marketplacePreviewRequestsBody');
   on(refresh, 'click', loadMarketplacePreviewRequests);
