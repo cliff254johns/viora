@@ -145,7 +145,7 @@ const handlerContext = {
   clearTimeout
 };
 const handlerSource = read('web/main/viora-main-handlers.js').replace('export function buildVioraHandlers', 'function buildVioraHandlers');
-new vm.Script(handlerSource + '\\nthis.__buildVioraHandlers = buildVioraHandlers;').runInNewContext(handlerContext);
+new vm.Script(handlerSource + '\nthis.__buildVioraHandlers = buildVioraHandlers;').runInNewContext(handlerContext);
 const migrationProducts = [
   { id:'legacy-retail', name:'Retail POS', category:'Retail & Wholesale Systems', price:49, stock:20, description:'Sales and inventory' },
   { id:'legacy-hotel', name:'Hotel Manager', category:'Hotel & Guest House Systems', price:99, deliveryUrl:'/downloads/hotel', image:'/hotel.png' }
