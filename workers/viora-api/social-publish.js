@@ -23,7 +23,7 @@ export async function claimScheduledCampaignPost(campaignUrl, postId, now, stale
     if (!post) return { claimed: false, reason: 'missing' };
 
     if (post.status === 'publishing') {
-      const attempted = Date.parse(post.publishAttemptedAt || post.publishClaimedAt || '');
+      const attempted = Date.parse(post.publishAttemptedAt || post.publishClaimedAt || post.claimedAt || post.updatedAt || '');
       if (Number.isFinite(attempted) && now - attempted > staleTimeoutMs) {
         post.status = 'publish_uncertain';
         post.publishOutcome = 'unknown';
