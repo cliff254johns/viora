@@ -73,9 +73,28 @@ function json(data, status = 200) {
     headers: { "Content-Type": "application/json", ...CORS },
   });
 }
-function rtdb(env) { return env.FIREBASE_DATABASE_URL || RTDB_URL_DEFAULT; }
-function fbKey(env) { return env.FIREBASE_API_KEY || FIREBASE_API_KEY_DEFAULT; }
-function fbProjectId(env) { return env.FIREBASE_PROJECT_ID || FIREBASE_PROJECT_ID_DEFAULT; }
+function rtdb(env) {
+  if (env.VIORA_STAGING_READ_ONLY === 'true') {
+    const base = String(env.FIREBASE_DATABASE_URL || '').replace(/\/$/, '');
+    if (!base || base === RTDB_URL_DEFAULT) {
+      throw Object.assign(new Error('Staging must use its own Firebase database URL'), { status: 503 });
+    }
+    return base;
+  }
+  return env.FIREBASE_DATABASE_URL || RTDB_URL_DEFAULT;
+}
+function fbKey(env) {
+  if (env.VIORA_STAGING_READ_ONLY === 'true' && !env.FIREBASE_API_KEY) {
+    throw Object.assign(new Error('Staging Firebase API key is required'), { status: 503 });
+  }
+  return env.FIREBASE_API_KEY || FIREBASE_API_KEY_DEFAULT;
+}
+function fbProjectId(env) {
+  if (env.VIORA_STAGING_READ_ONLY === 'true' && !env.FIREBASE_PROJECT_ID) {
+    throw Object.assign(new Error('Staging Firebase project ID is required'), { status: 503 });
+  }
+  return env.FIREBASE_PROJECT_ID || FIREBASE_PROJECT_ID_DEFAULT;
+}
 
 /* ═══════════════════════════════════════════════════════════
    IN-MEMORY CACHES (bounded, trimmed inline)
