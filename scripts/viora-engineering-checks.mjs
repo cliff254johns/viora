@@ -38,7 +38,7 @@ assert.ok(command.includes('not a substitute for Cloudflare-wide telemetry'), 'm
 assert.ok(main.includes('20261113-investor-room-1'), 'main page asset cache version not refreshed');
 assert.ok(command.includes('window.__vioraInvestorRoomMode'), 'Engineering Command router does not support Investor Data Room');
 assert.ok(investorRoom.includes('data-investor-room-link'), 'Investor Data Room sidebar link injection missing');
-assert.ok(investorRoom.includes('state.operator?.role'), 'Investor Data Room does not use the main app operator role');
+assert.ok(investorRoom.includes('s.operator?.role'), 'Investor Data Room does not use the main app operator role');
 assert.ok(investorRoom.includes('firebase/storage'), 'Investor Data Room Firebase Storage integration missing');
 assert.ok(investorRoom.includes('investorDataRoom'), 'Investor Data Room persistence path missing');
 assert.ok(investorRoom.includes('navigator.share'), 'Investor Data Room native sharing support missing');
