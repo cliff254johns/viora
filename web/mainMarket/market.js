@@ -973,11 +973,8 @@ const App = {
       const isCustom = this.isCustomProduct(p);
       const agg = this.getReviewAggregate(p.id);
 
-      const previewUrl = (
-        (p.previewUrl && String(p.previewUrl).trim()) ||
-        (p.link && String(p.link).trim()) ||
-        null
-      );
+      const previewAvailable = p.previewEnabled === true && p.previewGatewayVerified === true &&
+        ['isolated-software', 'digital-sample'].includes(p.previewProfile);
 
       const previewBtn = (p.previewEnabled === true && p.previewGatewayVerified === true && ['isolated-software', 'digital-sample'].includes(p.previewProfile))
         ? `<button type="button" class="preview-btn" onclick="event.stopPropagation(); App.requestPreview('${p.id}')" title="Request a controlled preview"><i class="fa-solid fa-eye"></i> Preview</button>`
@@ -1095,7 +1092,7 @@ const heroVisual = (p.image && String(p.image).trim())
            <button class="btn-outline" onclick="App.closeModal('productDetailModal'); App.openWhatsAppQuote('${p.id}')"><i class="fa-brands fa-whatsapp"></i> Chat on WhatsApp</button>
          </div>`
       : `<div class="pdm-cta-row">
-           ${previewUrl ? `<a href="${this.escape(previewUrl)}" class="btn-secondary" target="_blank" rel="noopener" onclick="event.stopPropagation();"><i class="fa-solid fa-eye"></i> See Live Demo</a>` : ''}
+           ${previewAvailable ? `<button type="button" class="btn-secondary" onclick="event.stopPropagation(); App.requestPreview('${p.id}')"><i class="fa-solid fa-eye"></i> Request Preview</button>` : ''}
            <a href="/client.html" class="btn-outline"><i class="fa-solid fa-key"></i> Subscribe</a>
            <button class="btn-outline" onclick="App.closeModal('productDetailModal'); App.addToCart('${p.id}')"><i class="fa-solid fa-cart-plus"></i> Add to Cart</button>
            <button class="btn-primary" onclick="App.closeModal('productDetailModal'); App.openPurchaseModal('${p.id}')"><i class="fa-solid fa-bolt"></i> Buy Now</button>
@@ -1477,13 +1474,10 @@ const heroVisual = (p.image && String(p.image).trim())
       const soldOut = stock.loaded && stock.qty <= 0;
       const isCustom = this.isCustomProduct(p);
 
-      const previewUrl = (
-        (p.previewUrl && String(p.previewUrl).trim()) ||
-        (p.link && String(p.link).trim()) ||
-        null
-      );
-      const previewBtn = previewUrl
-        ? `<a href="${this.escape(previewUrl)}" class="carousel-preview-btn" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" title="See Demo"><i class="fa-solid fa-eye"></i></a>`
+      const previewAvailable = p.previewEnabled === true && p.previewGatewayVerified === true &&
+        ['isolated-software', 'digital-sample'].includes(p.previewProfile);
+      const previewBtn = previewAvailable
+        ? `<button type="button" class="carousel-preview-btn" onclick="event.stopPropagation(); App.requestPreview('${p.id}')" title="Request controlled preview"><i class="fa-solid fa-eye"></i></button>`
         : '';
 
       const visualHtml = (p.image && String(p.image).trim())
