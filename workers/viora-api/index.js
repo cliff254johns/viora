@@ -6158,7 +6158,7 @@ async function handleGmailReplies(env, user) {
     const connection = await readGmailConnection(env);
     if (!connection) return json({ ok: false, error: 'Connect Gmail before checking replies' }, 409);
     const accessToken = await gmailAccessToken(connection, env);
-    const listed = await gmailApiFetch('messages?q=' + encodeURIComponent('in:inbox newer_than:30d') + '&maxResults=50', accessToken);
+    const listed = await gmailApiFetch('messages?labelIds=INBOX&maxResults=50', accessToken);
     const ids = (listed.messages || []).slice(0, 50);
     const replies = await Promise.all(ids.map(async item => {
       const msg = await gmailApiFetch('messages/' + encodeURIComponent(item.id) + '?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Subject&metadataHeaders=Date&metadataHeaders=In-Reply-To&metadataHeaders=References', accessToken);
