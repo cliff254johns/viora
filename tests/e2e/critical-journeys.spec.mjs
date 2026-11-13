@@ -88,12 +88,12 @@ test('Marketplace category explorer shows live counts, search, selection and mob
  await trigger.click();
  const panel=page.locator('#categoryExplorerPanel');
  await expect(panel).toBeVisible();
- await expect(page.locator('.category-option[data-cat="Software"] .category-option-count')).toHaveText('2');
- await expect(page.locator('.category-option[data-cat="Digital Products"] .category-option-count')).toHaveText('1');
+ await expect(page.locator('.category-option[data-cat="software"] .category-option-count')).toHaveText('2');
+ await expect(page.locator('.category-option[data-cat="digital products"] .category-option-count')).toHaveText('1');
  await page.locator('#catSearchInput').fill('Digital');
- await expect(page.locator('.category-option[data-cat="Digital Products"]')).toBeVisible();
- await expect(page.locator('.category-option[data-cat="Software"]')).toHaveCount(0);
- await page.locator('.category-option[data-cat="Digital Products"]').click();
+ await expect(page.locator('.category-option[data-cat="digital products"]')).toBeVisible();
+ await expect(page.locator('.category-option[data-cat="software"]')).toHaveCount(0);
+ await page.locator('.category-option[data-cat="digital products"]').click();
  await expect(panel).toBeHidden();
  await expect(page.locator('#activeCategoryLabel')).toHaveText('Digital Products');
  await expect(trigger).toHaveAttribute('aria-expanded','false');
