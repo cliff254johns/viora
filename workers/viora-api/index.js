@@ -6290,7 +6290,7 @@ async function handleOutreachCampaignSettings(body, env, user) {
     }
     await gmailAccessToken(connection, env);
     const compliance = await outreachDbRead(env, 'outreach/compliance/globalSendingPolicy').catch(() => null);
-    if (!compliance || compliance.status !== 'approved' || !compliance.version || !compliance.reviewedAt || !compliance.senderPostalAddress || !compliance.privacyNoticeUrl) {
+    if (!compliance || compliance.status !== 'approved' || !compliance.version || !compliance.reviewedAt || !compliance.senderPostalAddress || !/^https:\/\//i.test(String(compliance.privacyNoticeUrl || ''))) {
       return json({ ok: false, error: 'Outbound activation requires an approved, versioned global policy, a recorded review date, VIORA postal address and privacy notice URL.' }, 409);
     }
   }
@@ -6308,14 +6308,14 @@ async function handleOutreachCampaignQueue(body, env, user) {
   for (const item of items) {
     try {
       const leadId = String(item.leadId || '').trim();
-      if (!leadId || leadId.length > 180) throw new Error('Missing or invalid CRM lead ID');
+      if (!leadId || leadId.length > 180 || !/^[A-Za-z0-9_-]+$/.test(leadId)) throw new Error('Missing or invalid CRM lead ID');
       const lead = await outreachDbRead(env, 'leads/' + leadId);
       if (!lead) throw new Error('CRM lead not found');
       const email = String(lead.email || '').trim().toLowerCase();
       if (!validOutreachEmail(email) || lead.emailVerified !== true) throw new Error('A verified business email address is required');
       if (alreadyQueued.has(email)) throw new Error('This recipient already has an active or completed campaign record');
       const eligibility = lead.contactEligibility || {};
-      if (eligibility.status !== 'eligible' || !eligibility.basis || !eligibility.sourceUrl || !eligibility.reviewedAt) {
+      if (eligibility.status !== 'eligible' || !eligibility.basis || !eligibility.sourceUrl || !eligibility.reviewedAt || !/^https:\/\//i.test(String(eligibility.sourceUrl))) {
         throw new Error('Documented contact eligibility, basis, source URL and review timestamp are required');
       }
       const countryCode = String(lead.countryCode || eligibility.countryCode || '').toUpperCase();
@@ -6366,6 +6366,12 @@ async function handleOutreachUnsubscribe(request, url, env) {
   const key = outreachEmailKey(record.email);
   await outreachDbWrite(env, 'outreach/suppressions/' + key, { email: record.email, reason: 'one_click_unsubscribe', source: 'email_header_or_page', createdAt: new Date().toISOString(), leadId: record.leadId });
   await outreachDbWrite(env, 'outreach/unsubscribeTokens/' + token, { ...record, status: 'used', usedAt: new Date().toISOString() });
+  if (record.leadId) await outreachDbWrite(env, 'leads/' + record.leadId + '/status', 'Do not contact').catch(() => null);
+  const queue = await outreachDbRead(env, 'outreach/campaignQueue').catch(() => ({})) || {};
+  for (const item of Object.values(queue).filter(x => x && String(x.recipient || '').toLowerCase() === record.email.toLowerCase() && x.status === 'queued')) {
+    await outreachDbWrite(env, 'outreach/campaignQueue/' + item.id + '/status', 'suppressed');
+    await outreachDbWrite(env, 'outreach/campaignQueue/' + item.id + '/suppressedAt', new Date().toISOString());
+  }
   return json({ ok: true, message: 'You have been unsubscribed from VIORA business outreach.' });
 }
 async function outreachReserveDailySlot(env) {
@@ -6440,7 +6446,7 @@ async function runOutreachCampaignScheduler(env) {
         return;
       }
       const globalPolicy = await outreachDbRead(env, 'outreach/compliance/globalSendingPolicy').catch(() => null);
-    if (!globalPolicy || globalPolicy.status !== 'approved' || !globalPolicy.version || !globalPolicy.senderPostalAddress || !globalPolicy.privacyNoticeUrl) {
+    if (!globalPolicy || globalPolicy.status !== 'approved' || !globalPolicy.version || !globalPolicy.senderPostalAddress || !/^https:\/\//i.test(String(globalPolicy.privacyNoticeUrl || ''))) {
       await outreachDbWrite(env, path + '/status', 'blocked');
       await outreachDbWrite(env, path + '/blockReason', 'Global sending policy or sender disclosure configuration is missing');
       return;
@@ -6474,7 +6480,7 @@ async function runOutreachCampaignScheduler(env) {
         return;
       }
       const token = candidate.unsubscribeToken;
-      const unsubscribeUrl = 'https://www.viora.co.ke/outreach/unsubscribe?token=' + encodeURIComponent(token);
+      const unsubscribeUrl = 'https://viora-api.cliff254johns.workers.dev/outreach/unsubscribe?token=' + encodeURIComponent(token);
       const footer = '\n\n---\nVIORA Ecosystems\n' + globalPolicy.senderPostalAddress + '\nPrivacy: ' + globalPolicy.privacyNoticeUrl + '\nYou are receiving this business email under a documented contact basis.\nUnsubscribe: ' + unsubscribeUrl;
       const response = await sendViaGmail({
         to: candidate.recipient, subject: candidate.subject,
