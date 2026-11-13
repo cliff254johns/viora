@@ -151,7 +151,15 @@ const App = {
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.ok) throw new Error(data.error || 'Preview request failed');
-      this.toast(data.existing ? 'Your preview request is already awaiting review.' : 'Preview request submitted. VIORA will review it.', 'success');
+      if (data.request?.status === 'approved') {
+        this.toast('Your preview request is approved. Secure delivery will be available when the product gateway is ready.', 'success');
+      } else if (data.existing) {
+        this.toast('Your preview request is already awaiting review.', 'info');
+      } else {
+        this.toast(data.request?.gatewayReady === true
+          ? 'Preview request submitted. VIORA will review it.'
+          : 'Request submitted. The product gateway must pass verification before access can be granted.', 'success');
+      }
     } catch (error) {
       this.toast(error.message || 'Preview request failed.', 'error');
     }
