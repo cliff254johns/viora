@@ -56,6 +56,7 @@ assert.ok(blueprintAdmin.includes('classifyIndustry'), 'admin industry blueprint
 assert.ok(homeAdmin.includes('normalizedFamilies') && homeAdmin.includes('renderBucketCard(b, normalizedFamilies)'), 'home content editor must display legacy families under canonical categories');
 assert.ok(homeAdmin.includes('classifyIndustry(ind, ind.bucket)'), 'home content industry editor must normalize legacy categories');
 assert.ok(industryMatcher.includes('classifyProduct(product)') && industryMatcher.includes('classifyIndustry'), 'standalone industry product matching must use the shared taxonomy');
+assert.ok(industryMatcher.includes('heroEyebrow.textContent=solutionCategoryName'), 'standalone industry pages must visibly identify their VIORA solution family');
 assert.ok(blueprintPage.includes('classifyProduct(p)'), 'industry blueprint product matching must use the shared taxonomy');
 assert.ok(industryPage.includes('/viora-taxonomy.js'), 'industry blueprint page must load taxonomy before its industry data');
 assert.ok(supportPage.includes('classifyProduct(p)') && supportPage.includes('categories = window.VIORATaxonomy.categories'), 'support product catalogue must use the six official categories');
