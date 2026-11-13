@@ -41,7 +41,7 @@ jobs:
       - name: Verify shared CRM and Communications integration
         run: |
           grep -Fq "onValue(ref(db,ORG+'/leads')" web/outreach.js
-          grep -Fq "ORG+'/leads/'+id]:record" web/outreach.js
+          grep -Fq "ORG+'/leads/'+leadId]:lead" web/outreach.js
           grep -Fq "set(ref(db,ORG+'/commLog/'+commLogId),comm)" web/outreach.js
           grep -Fq "channel:'em'" web/outreach.js
           grep -Fq "source:'Outreach Centre'" web/outreach.js
