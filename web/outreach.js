@@ -249,7 +249,7 @@ async function syncGmailReplies(){
    const sender=String(msg.from||'').match(/<([^>]+)>/)?.[1]||String(msg.from||'').trim();
    const email=sender.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0]||sender;
    const lead=leadList().find(l=>String(l.email||'').toLowerCase()===email.toLowerCase());
-   const previouslyContacted=emailList().some(e=>e.direction!=='inbound'&&String(e.to||'').toLowerCase()===email.toLowerCase()&&e.status==='sent');
+   const previouslyContacted=emailList().some(e=>e.direction!=='inbound'&&e.transport==='gmail'&&String(e.to||'').toLowerCase()===email.toLowerCase()&&e.status==='sent');
    if(!lead||!previouslyContacted){skipped++;continue;}
    const recordId='gmail-'+String(msg.id||'').replace(/[^A-Za-z0-9_-]/g,'');
    const existing=await get(ref(db,ROOT+'/emails/'+recordId));
@@ -297,7 +297,7 @@ async function sendEmail(e){
     await update(ref(db,ORG+'/commLog/'+commLogId),{status:'sending',attemptedAt:stamp()});
     const result=await api('/sendEmail',{to,subject,text:textBody,replyTo:'support@viora.co.ke'});
     const sentAt=stamp();
-    await update(ref(db,ROOT+'/emails/'+id),{status:'sent',providerId:result.id||null,sentAt});
+    await update(ref(db,ROOT+'/emails/'+id),{status:'sent',providerId:result.id||null,transport:result.transport||'resend',sentAt});
     await update(ref(db,ORG+'/commLog/'+commLogId),{status:'sent',providerId:result.id||null,sentAt});
     if(lead?.id)await update(ref(db,ORG+'/leads/'+lead.id),{status:lead.status==='New'?'Contacted':lead.status,lastContactedAt:sentAt,updatedAt:sentAt});
     sent++;successAddresses.push(to.toLowerCase());
