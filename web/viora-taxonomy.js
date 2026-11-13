@@ -12,12 +12,12 @@
   ];
   const byId = Object.fromEntries(categories.map(c => [c.id,c]));
   const aliases = {
-    enterprise:['erp','enterprise resource','hr','human resource','payroll','finance','accounting','crm','customer relationship','inventory','stock control','procurement','purchasing','retail','wholesale','point of sale','pos','business management','business operations','commerce','sales management','hardware shop','hardware store','shop management','sacco','microfinance','bookkeeping','ledger','invoicing'],
+    enterprise:['erp','enterprise resource','hr','human resource','payroll','finance','accounting','crm','customer relationship','inventory','stock control','procurement','purchasing','retail','wholesale','point of sale','pos','business management','business operations','commerce','sales management','hardware','hardware shop','hardware store','shop management','sacco','microfinance','bookkeeping','ledger','invoicing','automation','ai assistant','artificial intelligence'],
     institutional:['school','college','university','hospital','clinic','healthcare','health care','medical','pharmacy','diagnostic','church','ministry','faith institution','training centre','training center','academy','education','campus','student management','learner management','patient management','institution','membership','ngo','nonprofit','non profit','association','veterinary','vet practice'],
     hospitality:['hotel','restaurant','guest house','guesthouse','resort','club','clubs','club management','entertainment','nightclub','lounge','events','event management','bar','tourism','tour operator','travel agency','catering','bar management','hospitality','accommodation','booking management'],
     property:['property','real estate','rental','rentals','leasing','landlord','tenant management','construction','building project','facility management','facilities','maintenance management','estate management','property management','housing','security','security company','security services'],
     industry:['farm','farming','agriculture','agricultural','greenhouse','cleaning','janitorial','laundry','dry cleaning','manufacturing','factory','production management','fleet','logistics','transport','warehouse','warehousing','distribution','delivery','supply chain','dispatch','vehicle operations','industrial','automotive','garage','auto repair','mechanic','printing','print shop','graphics production','printing production'],
-    business:['salon','beauty','spa','gym','fitness','fashion','apparel','recruitment','recruiting','staffing agency','legal','law firm','law practice','funeral','mortuary','undertaker','barber','wellness','creative studio','photography','design studio','event planning','professional practice','personal services','lifestyle','marketing agency','website','websites','web design','website builder','graphic design','graphics design','video advertisement','video advertisements','advertising','android application','android applications','mobile application','mobile applications','ai assistant','artificial intelligence','automation','3d website','games','gaming','personal profile','ecommerce','e commerce','digital commerce']
+    business:['salon','beauty','spa','gym','fitness','fashion','apparel','recruitment','recruiting','staffing agency','legal','law firm','law practice','funeral','mortuary','undertaker','barber','wellness','creative studio','photography','design studio','event planning','professional practice','personal services','lifestyle','marketing agency','website','websites','web design','website builder','graphic design','graphics design','video advertisement','video advertisements','advertising','android application','android applications','mobile application','mobile applications','3d website','games','gaming','personal profile','ecommerce','e commerce','digital commerce']
   };
   const legacy = {
     retail_trade:'enterprise', food_bev:'hospitality', health_wellness:'institutional',
@@ -54,7 +54,7 @@
     const p = product && typeof product === 'object' ? product : { category:product };
     const explicit = canonicalId(p.vioraCategoryId || p.solutionCategory || p.solutionCategoryId || p.categoryGroup);
     if (explicit) return explicit;
-    const text = [p.category,p.categoryName,p.categoryId,p.name,p.title,p.description,p.id,
+    const text = [p.category,p.categoryName,p.categoryId,p.solutionCategory,p.productType,p.industry,p.name,p.title,p.description,p.id,
       ...(Array.isArray(p.tags)?p.tags:[typeof p.tags==='string'?p.tags:'']),
       ...(Array.isArray(p.features)?p.features:[])].join(' ');
     return classifyText(text,null) || canonicalId(p.category || p.categoryId) || 'enterprise';
@@ -63,7 +63,7 @@
     const i = industry && typeof industry === 'object' ? industry : { name:industry, cat:legacyKey };
     const explicit = canonicalId(i.vioraCategoryId || i.solutionCategory || i.categoryGroup);
     if (explicit) return explicit;
-    const text = [i.name,i.key,i.problem,i.marketCategory].join(' ');
+    const text = [i.name,i.key,i.problem,i.marketCategory,i.category,i.cat].join(' ');
     const specific = classifyText(text,null);
     if (specific) return specific;
     return legacy[norm(i.cat || legacyKey)] || canonicalId(i.cat || legacyKey) || 'enterprise';
