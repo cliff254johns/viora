@@ -2,6 +2,7 @@
    VIORA MARKETPLACE — v3.2 (carousel fixed + seamless loop)
    ============================================================ */
 import '../currency-display.js?v=20261112-global-fx-9';
+import '../viora-taxonomy.js';
 import { initOrderModal, openOrderModal } from '../order-modal.js';
 
 const firebaseConfig = {
@@ -260,7 +261,7 @@ const App = {
         features: Array.isArray(p.features) ? p.features : []
       })).filter(p => p.status !== 'archived' && p.status !== 'draft');
 
-      this.products = all.slice();
+      this.products = all.map(p => window.VIORATaxonomy.normalizeProduct(p));
       // Cache the public catalogue so repeat visits paint while Firebase refreshes.
       try {
         localStorage.setItem(PRODUCT_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), products: this.products }));
@@ -712,84 +713,51 @@ const App = {
      ═══════════════════════════════════════════════════════════ */
     renderCategoryBar() {
     const bar = document.getElementById('categoryBar');
+    const select = document.getElementById('mainCategoryFilter');
+    const taxonomy = window.VIORATaxonomy;
+    if (!taxonomy) return;
+    const categories = taxonomy.categories;
+    if (select) {
+      const previous = select.value || this.activeCategory || 'all';
+      select.innerHTML = '<option value="all">All VIORA Solutions</option>' +
+        categories.map(c => '<option value="' + this.escape(c.id) + '">' + this.escape(c.name) + '</option>').join('');
+      select.value = categories.some(c => c.id === previous) ? previous : 'all';
+      if (select.value !== this.activeCategory) select.value = this.activeCategory;
+      if (!select._vioraTaxonomyBound) {
+        select._vioraTaxonomyBound = true;
+        select.addEventListener('change', () => {
+          this.activeCategory = select.value || 'all';
+          this.renderCategoryBar();
+          this.renderProducts();
+        });
+      }
+    }
     if (!bar) return;
-
-    /* Build category list.
-       Primary source: INDUSTRY_MAP (populated from Firebase `industries`).
-       Fallback: compute from products if `industries` node is empty. */
-    const industryEntries = Object.values(INDUSTRY_MAP);
-    let allCats;
-
-    if (industryEntries.length > 0) {
-      /* Use market categories from industries, sorted by industry.order */
-      const sorted = industryEntries
-        .slice()
-        .sort((a, b) => a.order - b.order);
-      allCats = ['all', ...sorted.map(i => i.marketCategory)];
-    } else {
-      /* Fallback — categories directly from products */
-      allCats = ['all', ...new Set(this.products.map(p => p.category).filter(Boolean))];
-    }
-
-    const q = (this._catSearch || '').toLowerCase().trim();
-    const cats = q
-      ? allCats.filter(c => c === 'all' || c.toLowerCase().includes(q))
-      : allCats;
-
-    const isMobile = window.matchMedia('(max-width: 900px)').matches;
-    const collapsed = isMobile && !q && !this._catExpanded;
-    const visible = collapsed ? cats.slice(0, 6) : cats;
-
-    bar.innerHTML = visible.map(c => {
-      const ind = INDUSTRY_MAP[c];
-      const icon = c === 'all'
-        ? 'fa-solid fa-layer-group'
-        : (ind ? ind.icon : 'fa-solid fa-tag');
-      const color = c === 'all' ? null : (ind ? ind.color : null);
-      const label = c === 'all' ? 'All Products' : c;
-      const active = this.activeCategory === c ? 'active' : '';
-
-      return `<button class="cat-btn ${active}" data-cat="${this.escape(c)}" role="tab">
-        <i class="${icon}"${color ? ` style="color:${color}"` : ''}></i> ${this.escape(label)}
-      </button>`;
+    bar.innerHTML = categories.map(c => {
+      const active = this.activeCategory === c.id ? 'active' : '';
+      return '<button class="cat-btn ' + active + '" data-cat="' + this.escape(c.id) + '" role="tab" aria-selected="' + (active ? 'true' : 'false') + '">' +
+        '<i class="' + this.escape(c.icon) + '" style="color:' + this.escape(c.color) + '"></i> ' + this.escape(c.name) + '</button>';
     }).join('');
-
-    if (isMobile && !q && allCats.length > 6) {
-      const more = document.createElement('button');
-      more.className = 'cat-btn cat-btn-more';
-      more.innerHTML = this._catExpanded
-        ? `<i class="fa-solid fa-chevron-up"></i> Show less`
-        : `<i class="fa-solid fa-chevron-down"></i> All ${allCats.length} categories`;
-      more.addEventListener('click', () => {
-        this._catExpanded = !this._catExpanded;
-        this.renderCategoryBar();
-      });
-      bar.appendChild(more);
-    }
-
     bar.querySelectorAll('.cat-btn[data-cat]').forEach(btn => {
       btn.addEventListener('click', () => {
         this.activeCategory = btn.dataset.cat;
+        if (select) select.value = this.activeCategory;
         this.renderCategoryBar();
         this.renderProducts();
-        if (isMobile) {
+        if (window.matchMedia('(max-width: 900px)').matches) {
           document.getElementById('products')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       });
     });
-
     const prev = document.getElementById('catPrev');
     const next = document.getElementById('catNext');
     if (prev && !prev._vBound) {
       prev._vBound = true;
-      next._vBound = true;
+      if (next) next._vBound = true;
       prev.addEventListener('click', () => bar.scrollBy({ left: -260, behavior: 'smooth' }));
-      next.addEventListener('click', () => bar.scrollBy({ left:  260, behavior: 'smooth' }));
+      next?.addEventListener('click', () => bar.scrollBy({ left: 260, behavior: 'smooth' }));
     }
-
-    bar.querySelector('.cat-btn.active')?.scrollIntoView({
-      behavior: 'smooth', inline: 'center', block: 'nearest'
-    });
+    bar.querySelector('.cat-btn.active')?.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
   },
 
    /* ── Seeded shuffle — stable per visitor, different between visitors ── */
@@ -856,17 +824,8 @@ const App = {
     }
 
     let list = this.products;
-    if (this.activeCategory !== 'all') list = list.filter(p => p.category === this.activeCategory);
+    if (this.activeCategory !== 'all') list = list.filter(p => window.VIORATaxonomy.classifyProduct(p) === this.activeCategory);
 
-    if (this.activeCategory !== 'all') {
-      const stillExists = Object.values(INDUSTRY_MAP).some(
-        ind => ind.marketCategory === this.activeCategory
-      );
-      if (!stillExists && !this.products.some(p => p.category === this.activeCategory)) {
-        this.activeCategory = 'all';
-        this.renderCategoryBar();
-      }
-    }
      
     if (this.searchTerm) {
       const q = this.searchTerm;
@@ -877,7 +836,6 @@ const App = {
         (p.tags || []).some(t => String(t).toLowerCase().includes(q))
       );
     }
-    list = this.applyPriceFilter(list);
     list = this.applySort(list);
 
     if (!list.length) {
@@ -2453,18 +2411,7 @@ const heroVisual = (p.image && String(p.image).trim())
     document.getElementById('quoteForm')?.addEventListener('submit', e => this.submitQuote(e));
        document.getElementById('purchasePlan')?.addEventListener('change', () => this.updateSummaryPricing());
 
-    const catInput = document.getElementById('catSearchInput');
-    if (catInput) {
-      let catT;
-      catInput.addEventListener('input', (e) => {
-        clearTimeout(catT);
-        catT = setTimeout(() => {
-          this._catSearch = e.target.value;
-          this._catExpanded = false;
-          this.renderCategoryBar();
-        }, 180);
-      });
-    }
+
 
     document.querySelectorAll('.modal-overlay').forEach(m => {
       m.addEventListener('click', e => { if (e.target === m) this.closeModal(m.id); });
