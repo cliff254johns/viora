@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-13T11:13:16.037Z",
+  "generatedAt": "2026-11-13T19:51:20.738Z",
   "moduleCount": 113,
   "modules": [
     {
@@ -53,7 +53,7 @@
     },
     {
       "file": "web/assets/r/sw.js",
-      "bytes": 1579,
+      "bytes": 1502,
       "imports": [],
       "exports": [],
       "workerRoutes": []
@@ -1535,7 +1535,7 @@
     },
     {
       "file": "web/sw.js",
-      "bytes": 23385,
+      "bytes": 23367,
       "imports": [],
       "exports": [],
       "workerRoutes": []
@@ -1665,7 +1665,7 @@
     },
     {
       "file": "scripts/viora-engineering-checks.mjs",
-      "bytes": 6199,
+      "bytes": 8107,
       "imports": [
         "node:fs",
         "node:assert/strict"
