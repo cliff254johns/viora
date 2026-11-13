@@ -48,7 +48,7 @@
     for (const id of ['institutional','hospitality','property','industry','business','enterprise']) {
       if (aliases[id].some(term => contains(n,term))) return id;
     }
-    return canonicalId(fallback) || 'enterprise';
+    return canonicalId(fallback) || null;
   }
   function classifyProduct(product) {
     const p = product && typeof product === 'object' ? product : { category:product };
@@ -57,7 +57,7 @@
     const text = [p.category,p.categoryName,p.categoryId,p.name,p.title,p.description,p.id,
       ...(Array.isArray(p.tags)?p.tags:[typeof p.tags==='string'?p.tags:'']),
       ...(Array.isArray(p.features)?p.features:[])].join(' ');
-    return classifyText(text,p.category || p.categoryId);
+    return classifyText(text,null) || canonicalId(p.category || p.categoryId) || 'enterprise';
   }
   function classifyIndustry(industry, legacyKey) {
     const i = industry && typeof industry === 'object' ? industry : { name:industry, cat:legacyKey };
