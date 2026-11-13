@@ -5843,46 +5843,17 @@ async function handleSendEmail(body, env, user) {
 
   if (!to || (!html && !text)) return json({ error: 'to and html/text required' }, 400);
 
-  // Gmail is preferred when the VIORA mailbox is connected. Resend remains
-  // the fallback only when Gmail has not been connected; never retry a failed
-  // Gmail send through another provider (that could create duplicate emails).
+  // VIORA outbound email uses the authenticated Gmail mailbox as its sender.
+  // Do not use Resend as a fallback: a Gmail consumer address is not a verified
+  // Resend sending domain, and provider fallback can misrepresent sender identity.
   const gmailConnection = await readGmailConnection(env);
-  if (gmailConnection && body.transport !== 'resend') {
-    return await sendViaGmail({ to, subject, html, text, replyTo }, env, user, gmailConnection);
+  if (!gmailConnection) {
+    return json({ error: 'Connect and verify cliff254johns@gmail.com in VIORA Gmail settings before sending email.' }, 503);
   }
-
-  if (!env.RESEND_API_KEY) return json({ error: 'No connected Gmail mailbox and RESEND_API_KEY not set' }, 500);
-  if (!env.RESEND_FROM) return json({ error: 'RESEND_FROM not set' }, 500);
-
-  const r = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { Authorization: 'Bearer ' + env.RESEND_API_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      from: env.RESEND_FROM,
-      to: Array.isArray(to) ? to : [to],
-      subject: subject || '(no subject)',
-      html: html || undefined,
-      text: text || undefined,
-      reply_to: replyTo || undefined,
-    }),
-  });
-  const data = await r.json().catch(() => ({}));
-
-  try {
-    const qs = '?auth=' + (env.FIREBASE_DATABASE_SECRET || user.idToken || '');
-    await fetch(`${rtdb(env)}/viora_data/orgs/viora/commLog.json${qs}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        channel: 'email', transport: 'resend', to, subject,
-        sentBy: user.email, providerId: data.id || null,
-        status: r.ok ? 'sent' : 'failed', error: r.ok ? null : data,
-        timestamp: new Date().toISOString(),
-      }),
-    });
-  } catch (e) {}
-
-  if (!r.ok) return json({ error: 'Email send failed', detail: data }, 502);
-  return json({ ok: true, id: data.id, transport: 'resend' });
+  if (body.transport === 'resend') {
+    return json({ error: 'Resend transport is disabled for VIORA outbound email. Use the connected Gmail mailbox.' }, 400);
+  }
+  return await sendViaGmail({ to, subject, html, text, replyTo }, env, user, gmailConnection);
 }
 
 /* ============================================================
