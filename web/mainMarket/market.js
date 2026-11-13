@@ -2387,6 +2387,12 @@ const heroVisual = (p.image && String(p.image).trim())
     this.loadWishlist();
     this.loadRecentSearches();
 
+    // Homepage solution-family links open the Marketplace with the matching family selected.
+    const requestedCategory = new URLSearchParams(window.location.search).get('category');
+    if (window.VIORATaxonomy.categories.some(category => category.id === requestedCategory)) {
+      this.activeCategory = requestedCategory;
+    }
+
     // Render the canonical category controls immediately; they must not depend on Firebase/cache.
     this.renderCategoryBar();
 
