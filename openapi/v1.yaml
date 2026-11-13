@@ -1,0 +1,191 @@
+openapi: 3.1.0
+info:
+  title: VIORA Platform API
+  version: 1.0.0
+  description: |
+    Versioned target contract for the VIORA platform API.
+    This is an initial contract baseline, not a declaration that all legacy
+    routes have already migrated to this response format. See
+    docs/PLATFORM-FOUNDATION-IMPLEMENTATION-PLAN.md for migration gates.
+servers:
+  - url: https://viora-api.cliff254johns.workers.dev
+    description: Current API hostname; confirm deployment binding before use.
+tags:
+  - name: Platform
+    description: Health and platform operations.
+  - name: Client Portal
+    description: Authenticated client self-service.
+  - name: Payments
+    description: Payment initiation and provider callbacks.
+security:
+  - FirebaseBearer: []
+paths:
+  /health:
+    get:
+      tags: [Platform]
+      operationId: getHealth
+      summary: API health probe
+      security: []
+      x-viora-owner: platform
+      x-viora-contract-status: legacy-response-migration-required
+      responses:
+        '200':
+          description: API process is responding. Does not imply all dependencies are healthy.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  service: { type: string }
+                  v: { type: string }
+                  build: { type: string }
+                  ts: { type: integer }
+                required: [ok, service]
+  /portal/myData:
+    get:
+      tags: [Client Portal]
+      operationId: getPortalMyData
+      summary: Retrieve the authenticated client's own portal data
+      x-viora-owner: client-platform
+      x-viora-tenant-scope: server-resolved-client-membership
+      x-viora-contract-status: legacy-route-needs-method-and-schema-confirmation
+      responses:
+        '200':
+          description: Client-scoped data response; legacy response shape pending normalization.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LegacyResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /portal/stkpush:
+    post:
+      tags: [Payments, Client Portal]
+      operationId: createClientStkPush
+      summary: Request an M-Pesa STK push for an authorized client invoice
+      x-viora-owner: finance-platform
+      x-viora-tenant-scope: server-resolved-client-membership
+      x-viora-contract-status: legacy-route-needs-schema-and-payment-hardening
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                invoiceId: { type: string, minLength: 1, maxLength: 128 }
+                phoneNumber: { type: string, description: E.164 or accepted Kenyan MSISDN format }
+              required: [invoiceId, phoneNumber]
+      responses:
+        '202':
+          description: Payment request accepted for processing; not proof of payment.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LegacyResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /mpesa/stk/callback:
+    post:
+      tags: [Payments]
+      operationId: receiveMpesaStkCallback
+      summary: Receive an M-Pesa STK callback
+      description: |
+        Provider callback endpoint. The current legacy handler must not be
+        treated as a trusted payment-verification boundary. Before production
+        use, implement callback authenticity controls where supported,
+        independent transaction-status verification, strict merchant/invoice/
+        amount/currency validation, idempotency and retry-safe persistence.
+        A callback acknowledgement must not itself mark an invoice as paid.
+      security: []
+      x-viora-owner: finance-platform
+      x-viora-tenant-scope: derived-from-verified-payment-to-invoice-mapping
+      x-viora-contract-status: unsafe-legacy-handler-hardening-required
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Provider-defined callback payload; validate against current Daraja specification.
+              additionalProperties: true
+      responses:
+        '200':
+          description: Callback received; only acknowledge after durable, idempotent event handling.
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '503':
+          description: Temporary persistence or verification failure; provider retry may be required.
+  /mpesa/c2b/confirm:
+    post:
+      tags: [Payments]
+      operationId: receiveMpesaC2BConfirmation
+      summary: Receive an M-Pesa C2B confirmation
+      description: |
+        Public provider callback. Validate provider configuration and transaction
+        details, prevent replay, reconcile to a known invoice/account, and persist
+        the event durably before acknowledging.
+      security: []
+      x-viora-owner: finance-platform
+      x-viora-tenant-scope: derived-from-verified-payment-to-invoice-mapping
+      x-viora-contract-status: unsafe-legacy-handler-hardening-required
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200': { description: Confirmation durably accepted for processing. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '503': { description: Temporary processing failure; retry may be required. }
+components:
+  securitySchemes:
+    FirebaseBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: Firebase ID token
+      description: Firebase ID token verified server-side; roles and tenant membership must be resolved from trusted server-side data.
+  schemas:
+    Error:
+      type: object
+      additionalProperties: false
+      properties:
+        code: { type: string }
+        message: { type: string }
+        requestId: { type: string }
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              issue: { type: string }
+      required: [code, message, requestId]
+    LegacyResponse:
+      type: object
+      description: Temporary permissive schema for legacy routes during migration.
+      additionalProperties: true
+  responses:
+    BadRequest:
+      description: Invalid request or payload.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unauthorized:
+      description: Missing, invalid or expired authentication.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Forbidden:
+      description: Authenticated identity lacks the required role or tenant membership.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Conflict:
+      description: Conflicting idempotency key, payment state or resource version.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
