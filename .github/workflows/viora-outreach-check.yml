@@ -84,6 +84,7 @@ jobs:
         run: |
           grep -Fq "body.purpose === 'marketing'" workers/viora-api/index.js
           grep -Fq "body.source === 'Outreach Centre'" workers/viora-api/index.js
+          grep -Fq "['service', 'transactional']" workers/viora-api/index.js
           grep -Fq "purpose:'marketing',source:'Outreach Centre'" web/outreach.js
           grep -Fq 'blockedSend=httpStatus===423||httpStatus===409' web/outreach.js
       - name: Verify durable Facebook publish claims and API connection checks
