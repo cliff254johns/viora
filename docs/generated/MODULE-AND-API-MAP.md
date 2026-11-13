@@ -1,6 +1,6 @@
 # Generated module and API map
 
-Generated: 2026-11-13T10:51:37.779Z
+Generated: 2026-11-13T10:52:09.058Z
 
 Modules: 113
 
@@ -182,7 +182,7 @@ Modules: 113
 
 ### web/investor-data-room.js
 
-- Size: 19680 bytes
+- Size: 19679 bytes
 - Imports: firebase/database, firebase/app, firebase/storage
 - Exports: renderInvestorDataRoom
 - Worker routes: none detected

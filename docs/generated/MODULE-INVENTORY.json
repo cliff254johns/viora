@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-13T10:51:37.779Z",
+  "generatedAt": "2026-11-13T10:52:09.058Z",
   "moduleCount": 113,
   "modules": [
     {
@@ -228,7 +228,7 @@
     },
     {
       "file": "web/investor-data-room.js",
-      "bytes": 19680,
+      "bytes": 19679,
       "imports": [
         "firebase/database",
         "firebase/app",
