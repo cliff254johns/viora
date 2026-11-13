@@ -2,10 +2,10 @@ name: VIORA Outreach checks
 on:
   pull_request:
     branches: [main]
-    paths: ["web/main.html","web/main.css","web/outreach.html","web/outreach.css","web/outreach.js","web/main/campaign-accounts.js","workers/viora-api/index.js","workers/viora-api/wrangler.toml","docs/GLOBAL-SALES-ENGINE.md","docs/OUTREACH-AUTOMATION-IMPLEMENTATION.md",".github/workflows/viora-outreach-check.yml"]
+    paths: ["web/main.html","web/main.css","web/outreach.html","web/outreach.css","web/outreach.js","web/main/campaign-accounts.js","workers/viora-api/index.js","workers/viora-api/social-publish.js","workers/viora-api/wrangler.toml","docs/GLOBAL-SALES-ENGINE.md","docs/OUTREACH-AUTOMATION-IMPLEMENTATION.md",".github/workflows/viora-outreach-check.yml"]
   push:
     branches: [feature/viora-outreach-enterprise-ui, feature/global-outreach-autonomy, feature/global-sales-engine, release/outreach-controlled-rollout]
-    paths: ["web/main.html","web/main.css","web/outreach.html","web/outreach.css","web/outreach.js","web/main/campaign-accounts.js","workers/viora-api/index.js","workers/viora-api/wrangler.toml",".github/workflows/viora-outreach-check.yml"]
+    paths: ["web/main.html","web/main.css","web/outreach.html","web/outreach.css","web/outreach.js","web/main/campaign-accounts.js","workers/viora-api/index.js","workers/viora-api/social-publish.js","workers/viora-api/wrangler.toml",".github/workflows/viora-outreach-check.yml"]
 jobs:
   static-checks:
     runs-on: ubuntu-latest
@@ -82,11 +82,11 @@ jobs:
           grep -Fq 'head_sampling_rate = 0.01' workers/viora-api/wrangler.toml
       - name: Verify durable Facebook publish claims and API connection checks
         run: |
-          grep -Fq 'async function claimScheduledCampaignPost' workers/viora-api/index.js
-          grep -Fq 'X-Firebase-ETag' workers/viora-api/index.js
-          grep -Fq "'If-Match': etag" workers/viora-api/index.js
-          grep -Fq "post.status = 'publish_uncertain'" workers/viora-api/index.js
-          grep -Fq 'reconciliationRequired = true' workers/viora-api/index.js
+          grep -Fq 'export async function claimScheduledCampaignPost' workers/viora-api/social-publish.js
+          grep -Fq 'X-Firebase-ETag' workers/viora-api/social-publish.js
+          grep -Fq "'If-Match': etag" workers/viora-api/social-publish.js
+          grep -Fq "post.status = 'publish_uncertain'" workers/viora-api/social-publish.js
+          grep -Fq 'reconciliationRequired = true' workers/viora-api/social-publish.js
           grep -Fq 'async function handleSocialConfigStatus' workers/viora-api/index.js
           grep -Fq "path === '/social/config/status'" workers/viora-api/index.js
           grep -Fq 'loadApiStatus' web/main/campaign-accounts.js
