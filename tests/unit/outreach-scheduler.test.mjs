@@ -122,3 +122,18 @@ test('every Gmail outbound route and scheduler path fails closed while email sen
   const directSend = source.slice(source.indexOf('async function handleSendEmail('), source.indexOf('/* ============================================================\n   ' , source.indexOf('async function handleSendEmail(') + 20));
   assert.match(directSend, /outboundEmailSendingEnabled\(env\)|ENABLE_OUTREACH_EMAIL_SENDING/);
 });
+
+test('prospect marketing cannot bypass the compliance campaign queue through direct send', async () => {
+  const [worker, outreach] = await Promise.all([
+    readFile(new URL('../../workers/viora-api/index.js', import.meta.url), 'utf8'),
+    readFile(new URL('../../web/outreach.js', import.meta.url), 'utf8'),
+  ]);
+  const handlerStart = worker.indexOf('async function handleSendEmail(');
+  const handlerEnd = worker.indexOf('\n}', handlerStart);
+  const handler = worker.slice(handlerStart, handlerEnd);
+  assert.match(handler, /body\.purpose === 'marketing'/);
+  assert.match(handler, /body\.source === 'Outreach Centre'/);
+  assert.match(handler, /compliance-checked Outreach campaign queue/);
+  assert.match(outreach, /purpose:'marketing',source:'Outreach Centre'/);
+  assert.match(outreach, /blockedSend=httpStatus===423\|\|httpStatus===409/);
+});
