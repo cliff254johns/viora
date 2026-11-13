@@ -18,7 +18,7 @@ The Git source now includes:
 - Admin/exec-authenticated `POST /gmail/label-thread` to label only reply threads that Outreach has matched to a saved, previously contacted lead.
 - Admin/exec-only `GET /gmail/status`.
 - Outreach UI controls to connect Gmail, check connection status, and import recent incoming messages into the Outreach email timeline.
-- Gmail is preferred by `POST /sendEmail` once connected. Resend remains the fallback only when no Gmail mailbox has been connected. A failed Gmail send is not silently retried via Resend, preventing accidental duplicate sends.
+- `POST /sendEmail` now sends only through the authenticated `cliff254johns@gmail.com` Gmail mailbox. If Gmail is not connected, sending stops with a clear error; it does not fall back to Resend. This is intentional because a consumer Gmail address is not a verified Resend sending domain. The configured sender identity is `VIORA <cliff254johns@gmail.com>`. A failed Gmail send is never retried through another provider, preventing duplicate sends.
 
 The OAuth flow requests `gmail.send`, `gmail.metadata`, and `gmail.modify`. Reply sync reads sender/recipient/subject/date/thread headers only; it does not download or store message bodies. `gmail.modify` is required to apply the dedicated `VIORA Outreach` label to sent conversations and matched replies. It grants broader mailbox modification capability than metadata-only access, so keep it limited to this dedicated VIORA mailbox and disclose it clearly in the OAuth consent screen. Google classifies Gmail scopes as sensitive/restricted; restricted-scope server use may require OAuth verification and an independent security assessment before general production use. See [Gmail API scopes](https://developers.google.com/workspace/gmail/api/auth/scopes) and [restricted-scope verification](https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification). Testing-mode users must be configured in the Google consent screen.
 
@@ -73,5 +73,5 @@ The Wrangler configuration declares the existing AI binding and the Worker’s p
 - Preserve all existing Worker bindings and routes when publishing a new version.
 - Review the complete diff and CI results before deployment.
 - Deploy a candidate, verify health and existing critical routes, then test Gmail end-to-end.
-- Keep Resend secrets and fallback code until Gmail is proven stable.
+- Keep Resend secrets available for any separate, domain-authenticated transactional service, but do not use Resend as an Outreach fallback for the Gmail sender identity.
 - Do not send prospect campaigns without explicit human review and approval.
