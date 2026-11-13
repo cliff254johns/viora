@@ -152,22 +152,25 @@ async function issueSession(env, uid, productId, actor, source = 'self') {
         nextEligibleAt: Number(record.nextEligibleAt)
       });
     }
+    const approvedGrant = record.grant && record.grant.status === 'approved' ? record.grant : null;
+    const sessionSource = approvedGrant ? 'admin' : 'self';
     const session = {
       id: crypto.randomUUID(),
       uid,
       productId,
       status: 'active',
-      source,
+      source: sessionSource,
       startedAt: now,
       expiresAt: now + POLICY.durationMs,
       policyVersion: POLICY.version,
-      grantedBy: actor || null
+      grantedBy: approvedGrant ? approvedGrant.grantedBy : null
     };
     return await appendEvent(env, uid, productId, {
       ...record,
       session,
+      ...(approvedGrant ? { grant: { ...approvedGrant, status: 'consumed', consumedAt: now, sessionId: session.id } } : {}),
       nextEligibleAt: now + POLICY.cooldownMs
-    }, { type: source === 'admin' ? 'admin_grant' : 'preview_started', sessionId: session.id, actor });
+    }, { type: sessionSource === 'admin' ? 'admin_preview_started' : 'preview_started', sessionId: session.id, actor: session.grantedBy || uid });
   });
 
   return {
@@ -202,6 +205,7 @@ export async function handleMarketplacePreview(request, env, user, route) {
         productId,
         enabled: productAllowsPreview(product),
         activeSession: record.session && record.session.status === 'active' && Number(record.session.expiresAt) > now ? record.session : null,
+        approvedGrant: record.grant && record.grant.status === 'approved' ? { grantedAt: record.grant.grantedAt, grantedBy: record.grant.grantedBy } : null,
         eligibleAt: Number(record.nextEligibleAt) || null,
         eligible: !(Number(record.nextEligibleAt) > now),
         policy: { durationMs: POLICY.durationMs, cooldownMs: POLICY.cooldownMs, version: POLICY.version }
@@ -252,13 +256,28 @@ export async function handleMarketplacePreview(request, env, user, route) {
       const reqPath = paths(targetUid, productId).request;
       const req = await readRecord(env, reqPath, true);
       if (!req.value || req.value.status !== 'pending') return response({ ok: false, error: 'No pending request for this user and product' }, 404);
-      const result = await issueSession(env, targetUid, productId, uid, 'admin');
-      if (result.paidAccess) return response({ ok: false, error: 'User already has paid access; no preview grant needed' }, 409);
-      const updatedRequest = { ...req.value, status: 'approved', reviewedAt: new Date().toISOString(), reviewedBy: uid, sessionId: result.session.id };
-      if (!(await writeRecord(env, reqPath, updatedRequest, req.etag))) {
-        return response({ ok: false, error: 'Request changed concurrently; session remains available to the approved account' }, 409);
+      const client = await getClientContext(env, targetUid);
+      if (!client) return response({ ok: false, error: 'Target account is not an active VIORA portal user' }, 403);
+      if (await getPaidAccess(env, client.clientId, productId, Date.now())) {
+        return response({ ok: false, error: 'User already has paid access; no preview grant needed' }, 409);
       }
-      return response({ ok: true, ...result });
+      const product = await getProduct(env, productId);
+      if (!productAllowsPreview(product)) return response({ ok: false, error: 'Product gateway is not verified for previews' }, 403);
+      const grant = await mutateEligibility(env, targetUid, productId, async record => {
+        if (record.session && record.session.status === 'active' && Number(record.session.expiresAt) > Date.now()) {
+          throw Object.assign(new Error('User already has an active preview'), { status: 409 });
+        }
+        if (Number(record.nextEligibleAt) > Date.now()) {
+          throw Object.assign(new Error('User is still within the seven-day cooldown'), { status: 429, nextEligibleAt: Number(record.nextEligibleAt) });
+        }
+        const approved = { id: crypto.randomUUID(), status: 'approved', grantedAt: Date.now(), grantedBy: uid, productId };
+        return await appendEvent(env, targetUid, productId, { ...record, grant: approved }, { type: 'preview_granted', grantId: approved.id, actor: uid });
+      });
+      const updatedRequest = { ...req.value, status: 'approved', reviewedAt: new Date().toISOString(), reviewedBy: uid, grantId: grant.grant.id };
+      if (!(await writeRecord(env, reqPath, updatedRequest, req.etag))) {
+        return response({ ok: false, error: 'Request changed concurrently; approved grant is recorded and can be used by the account' }, 409);
+      }
+      return response({ ok: true, grant: grant.grant, policy: { durationMs: POLICY.durationMs, cooldownMs: POLICY.cooldownMs, version: POLICY.version } });
     }
 
     if (route === 'admin-revoke' && method === 'POST') {
@@ -267,9 +286,19 @@ export async function handleMarketplacePreview(request, env, user, route) {
       const targetUid = cleanId(body.uid, 'uid');
       const productId = cleanId(body.productId, 'productId');
       const result = await mutateEligibility(env, targetUid, productId, async record => {
-        if (!record.session || record.session.status !== 'active') return null;
-        const session = { ...record.session, status: 'revoked', revokedAt: Date.now(), revokedBy: uid };
-        return await appendEvent(env, targetUid, productId, { ...record, session }, { type: 'preview_revoked', sessionId: session.id, actor: uid });
+        const now = Date.now();
+        let changed = false;
+        const next = { ...record };
+        if (next.session && next.session.status === 'active') {
+          next.session = { ...next.session, status: 'revoked', revokedAt: now, revokedBy: uid };
+          changed = true;
+        }
+        if (next.grant && next.grant.status === 'approved') {
+          next.grant = { ...next.grant, status: 'revoked', revokedAt: now, revokedBy: uid };
+          changed = true;
+        }
+        if (!changed) return null;
+        return await appendEvent(env, targetUid, productId, next, { type: 'preview_access_revoked', actor: uid });
       });
       return response({ ok: true, session: result.session || null });
     }
