@@ -154,7 +154,10 @@ async function issueSession(env, uid, productId, actor, source = 'self') {
       });
     }
     const approvedGrant = record.grant && record.grant.status === 'approved' ? record.grant : null;
-    const sessionSource = approvedGrant ? 'admin' : 'self';
+    if (!approvedGrant) {
+      throw Object.assign(new Error('Administrator approval is required before a preview can start'), { status: 403 });
+    }
+    const sessionSource = 'admin';
     const session = {
       id: crypto.randomUUID(),
       uid,
