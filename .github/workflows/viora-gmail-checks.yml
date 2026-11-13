@@ -7,6 +7,8 @@ on:
       - "workers/viora-api/index.js"
       - "web/outreach.html"
       - "web/outreach.js"
+      - "web/main/inbox.js"
+      - "web/main/viora-main-wiring.js"
       - ".github/workflows/viora-gmail-checks.yml"
   pull_request:
     branches: [main]
