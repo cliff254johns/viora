@@ -134,6 +134,28 @@ test('server time expires the preview regardless of a client-supplied clock', as
   assert.equal(result.allowed, false);
 });
 
+test('missing Firebase ETag support fails closed instead of using a non-atomic write', async () => {
+  const original = globalThis.fetch;
+  globalThis.fetch = async (input, init = {}) => {
+    const url = new URL(input);
+    if ((init.headers || {})['X-Firebase-ETag'] === 'true') {
+      const key = pathKey(url);
+      return new Response(JSON.stringify(records.has(key) ? records.get(key) : null), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    return original(input, init);
+  };
+  try {
+    const response = await call('start');
+    assert.equal(response.status, 503);
+    assert.equal(records.has('viora_data/orgs/viora/marketplacePreview/eligibility/user-1/demo-app'), false);
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
 test('paid subscriptions take precedence over preview sessions', async () => {
   records.set('viora_data/orgs/viora/subscriptions', {
     sub1: {
