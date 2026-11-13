@@ -295,7 +295,7 @@ async function sendEmail(e){
     await set(ref(db,ORG+'/commLog/'+commLogId),comm);
     await update(ref(db,ROOT+'/emails/'+id),{status:'sending',attemptedAt:stamp()});
     await update(ref(db,ORG+'/commLog/'+commLogId),{status:'sending',attemptedAt:stamp()});
-    const result=await api('/sendEmail',{to,subject,text:textBody,replyTo:'support@viora.co.ke'});
+    const result=await api('/sendEmail',{to,subject,text:textBody,replyTo:'cliff254johns@gmail.com'});
     const sentAt=stamp();
     await update(ref(db,ROOT+'/emails/'+id),{status:'sent',providerId:result.id||null,threadId:result.threadId||null,transport:result.transport||'resend',sentAt});
     await update(ref(db,ORG+'/commLog/'+commLogId),{status:'sent',providerId:result.id||null,sentAt});
