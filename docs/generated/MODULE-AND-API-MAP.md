@@ -1,8 +1,8 @@
 # Generated module and API map
 
-Generated: 2026-11-13T01:54:12.124Z
+Generated: 2026-11-13T10:47:57.449Z
 
-Modules: 112
+Modules: 113
 
 ## Modules
 ### web/analytics-config.js
@@ -70,8 +70,8 @@ Modules: 112
 
 ### web/engineering-command-centre.js
 
-- Size: 20446 bytes
-- Imports: none detected
+- Size: 20821 bytes
+- Imports: ./investor-data-room.js
 - Exports: none detected
 - Worker routes: none detected
 
@@ -178,6 +178,13 @@ Modules: 112
 - Size: 5946 bytes
 - Imports: none detected
 - Exports: none detected
+- Worker routes: none detected
+
+### web/investor-data-room.js
+
+- Size: 19128 bytes
+- Imports: firebase/database, firebase/app, firebase/storage
+- Exports: renderInvestorDataRoom
 - Worker routes: none detected
 
 ### web/main/agent-runner.js

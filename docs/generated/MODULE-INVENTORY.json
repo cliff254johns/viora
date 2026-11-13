@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-11-13T01:54:12.123Z",
-  "moduleCount": 112,
+  "generatedAt": "2026-11-13T10:47:57.448Z",
+  "moduleCount": 113,
   "modules": [
     {
       "file": "web/analytics-config.js",
@@ -111,8 +111,10 @@
     },
     {
       "file": "web/engineering-command-centre.js",
-      "bytes": 20446,
-      "imports": [],
+      "bytes": 20821,
+      "imports": [
+        "./investor-data-room.js"
+      ],
       "exports": [],
       "workerRoutes": []
     },
@@ -222,6 +224,19 @@
       "bytes": 5946,
       "imports": [],
       "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/investor-data-room.js",
+      "bytes": 19128,
+      "imports": [
+        "firebase/database",
+        "firebase/app",
+        "firebase/storage"
+      ],
+      "exports": [
+        "renderInvestorDataRoom"
+      ],
       "workerRoutes": []
     },
     {
