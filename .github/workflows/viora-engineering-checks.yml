@@ -40,6 +40,7 @@ jobs:
           node --check web/sw.js
           node --input-type=module --check < web/worker.js
           node --input-type=module --check < web/engineering-command-centre.js
+          node --input-type=module --check < web/investor-data-room.js
           node --input-type=module --check < workers/viora-static-next/worker.js
           node --input-type=module --check < workers/viora-static-next/assets.generated.js
           node --input-type=module --check < web/mainIndex/chatbot.js
