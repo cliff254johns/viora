@@ -364,7 +364,7 @@ async function sendEmail(e){
  if(invalid.length){status('mailStatus','Check these email addresses: '+invalid.map(x=>x.to).join(', '),true);return;}
  const ok=await showConfirm('Confirm multi-recipient send','Send “'+subject+'” as '+recipients.length+' separate email'+(recipients.length===1?'':'s')+'? Each recipient will receive only their own message, and every send will be logged in Outreach and the main VIORA Communications log.','Send '+recipients.length+' email'+(recipients.length===1?'':'s'));
  if(!ok)return;
- let sent=0,failed=0;const failures=[],successAddresses=[];const campaignId=crypto.randomUUID();
+ let sent=0,failed=0,uncertain=0;const failures=[],successAddresses=[],uncertainAddresses=[];const campaignId=crypto.randomUUID();
  try{
   busy('sendBtn',true,'Sending 0/'+recipients.length+'…');
   for(let i=0;i<recipients.length;i++){
@@ -383,6 +383,7 @@ async function sendEmail(e){
    const activity={id,campaignId,leadId:lead?.id||null,recipient:to,organisation:lead?.company||lead?.fullName||'',contact:lead?.contact||'',category:lead?.category||'Lead',country:lead?.country||'',countryCode:lead?.countryCode||'',website:lead?.website||'',source:lead?.source||'Outreach Centre',subject,channel:'email',sender:currentUser.email||currentUser.uid,queuedAt:now,status:'queued',commLogId};
    const audit={id,to,subject,text:textBody,company:activity.organisation,leadId:activity.leadId,commLogId,campaignId,leadSnapshot:{contact:activity.contact,category:activity.category,country:activity.country,countryCode:activity.countryCode,website:activity.website,source:activity.source},direction:'outbound',status:'queued',providerId:null,timestamp:now,sentBy:currentUser.uid,sentByEmail:currentUser.email,approvedAt:now,source:'Outreach Centre',batchSize:recipients.length};
    const comm={id:commLogId,channel:'em',direction:'outbound',recipientId:activity.leadId||to,recipientName:activity.organisation||to,recipientContact:to,subject,message:textBody,sentBy:currentUser.email||currentUser.uid,status:'queued',timestamp:now,leadId:activity.leadId,outreachEmailId:id,campaignId,source:'Outreach Centre',batchSize:recipients.length};
+   let sendAttempted=false;
    try{
     await set(ref(db,ROOT+'/emails/'+id),audit);
     await set(ref(db,ORG+'/commLog/'+commLogId),comm);
@@ -391,6 +392,7 @@ async function sendEmail(e){
     await update(ref(db,ROOT+'/emails/'+id),{status:'sending',attemptedAt:sendingAt});
     await update(ref(db,ORG+'/commLog/'+commLogId),{status:'sending',attemptedAt:sendingAt});
     await update(ref(db,ORG+'/leads/'+lead.id),{lastOutreach:{...activity,status:'sending',attemptedAt:sendingAt},lastOutreachStatus:'sending',['outreachHistory/'+id+'/status']:'sending',['outreachHistory/'+id+'/attemptedAt']:sendingAt});
+    sendAttempted=true;
     const result=await api('/sendEmail',{to,subject,text:textBody,replyTo:'cliff254johns@gmail.com'});
     const sentAt=stamp();
     await update(ref(db,ROOT+'/emails/'+id),{status:'sent',providerId:result.id||null,threadId:result.threadId||null,transport:result.transport||'resend',sentAt});
@@ -398,23 +400,23 @@ async function sendEmail(e){
     if(lead?.id){const sentActivity={...activity,status:'sent',sentAt,providerId:result.id||null,threadId:result.threadId||null};await update(ref(db,ORG+'/leads/'+lead.id),{status:lead.status==='New'?'Contacted':lead.status,lastContactedAt:sentAt,lastOutreach:sentActivity,lastOutreachAt:sentAt,lastOutreachStatus:'sent',lastOutreachSubject:subject,lastOutreachEmailId:id,lastOutreachProviderId:result.id||null,updatedAt:sentAt,['outreachHistory/'+id]:sentActivity});}
     sent++;successAddresses.push(to.toLowerCase());
    }catch(err){
-    failed++;failures.push(to);
-    const failedAt=stamp();
-    await update(ref(db,ROOT+'/emails/'+id),{status:'failed',error:err.message,failedAt}).catch(()=>{});
-    await update(ref(db,ORG+'/commLog/'+commLogId),{status:'failed',error:err.message,failedAt}).catch(()=>{});
-    if(lead?.id){const failedActivity={...activity,status:'failed',failedAt,error:String(err.message||err).slice(0,300)};await update(ref(db,ORG+'/leads/'+lead.id),{lastOutreach:failedActivity,lastOutreachAt:failedAt,lastOutreachStatus:'failed',['outreachHistory/'+id]:failedActivity}).catch(()=>{});}
+    const failedAt=stamp(),outcome=sendAttempted?'send_uncertain':'failed',safeError=String(err.message||err).slice(0,300);
+    if(sendAttempted){uncertain++;uncertainAddresses.push(to);}else{failed++;failures.push(to);}
+    await update(ref(db,ROOT+'/emails/'+id),{status:outcome,error:safeError,[sendAttempted?'uncertainAt':'failedAt']:failedAt}).catch(()=>{});
+    await update(ref(db,ORG+'/commLog/'+commLogId),{status:outcome,error:safeError,[sendAttempted?'uncertainAt':'failedAt']:failedAt}).catch(()=>{});
+    if(lead?.id){const failedActivity={...activity,status:outcome,[sendAttempted?'uncertainAt':'failedAt']:failedAt,error:safeError};await update(ref(db,ORG+'/leads/'+lead.id),{lastOutreach:failedActivity,lastOutreachAt:failedAt,lastOutreachStatus:outcome,['outreachHistory/'+id]:failedActivity}).catch(()=>{});}
    }
    busy('sendBtn',true,'Sending '+(i+1)+'/'+recipients.length+'…');
    status('mailStatus','Processed '+(i+1)+' of '+recipients.length+' · '+sent+' accepted · '+failed+' failed'+(failures.length?' · '+failures.join(', '):''));
   }
   if(successAddresses.length){
-   const sentSet=new Set(successAddresses);
-   $('mailLeadList').querySelectorAll('input[name="mailLeadChoice"]').forEach(box=>{const lead=leads[box.value];if(lead&&sentSet.has(String(lead.email||'').trim().toLowerCase()))box.checked=false;});
-   $('mailTo').value=parseManualMailRecipients().filter(address=>!sentSet.has(address)).join(', ');
+   const doNotRetry=new Set([...successAddresses,...uncertainAddresses]);
+   $('mailLeadList').querySelectorAll('input[name="mailLeadChoice"]').forEach(box=>{const lead=leads[box.value];if(lead&&doNotRetry.has(String(lead.email||'').trim().toLowerCase()))box.checked=false;});
+   $('mailTo').value=parseManualMailRecipients().filter(address=>!doNotRetry.has(address)).join(', ');
    updateMailRecipientSummary();
   }
-  if(!failed){$('mailBody').value='';closeModal('emailModal');toast(sent+' separate email'+(sent===1?'':'s')+' accepted by the configured provider and recorded. Delivery confirmation depends on webhook tracking.');}
-  else{status('mailStatus',sent+' accepted; '+failed+' failed. Only failed recipients remain selected so you can retry safely.',true);}
+  if(!failed&&!uncertain){$('mailBody').value='';closeModal('emailModal');toast(sent+' separate email'+(sent===1?'':'s')+' accepted by the configured provider and recorded. Delivery confirmation depends on webhook tracking.');}
+  else{status('mailStatus',sent+' accepted; '+failed+' failed before send; '+uncertain+' uncertain. Only pre-send failures remain selected for retry. Do not resend uncertain recipients until you verify the provider ledger.',true);}
  }finally{busy('sendBtn',false);renderEmails();renderAnalytics();renderOverview();}
 }
 function csvEscape(v){return '"'+String(v??'').replace(/"/g,'""')+'"';}
