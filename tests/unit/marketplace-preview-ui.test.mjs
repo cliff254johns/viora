@@ -26,6 +26,10 @@ test('actual admin product form and preview request queue are wired', async () =
   assert.match(html, /id="prodPreviewEnabled"/);
   assert.match(html, /id="prodPreviewProfile"/);
   assert.match(html, /id="marketplacePreviewRequestsBody"/);
+  assert.match(html, /id="refreshPreviewGatewaysBtn"/);
+  assert.match(html, /id="marketplacePreviewGatewaysBody"/);
+  assert.match(wiring, /marketplace\/preview\/gateways/);
+  assert.match(wiring, /loadMarketplacePreviewGatewayInventory/);
   assert.match(wiring, /marketplace\/preview\/\' \+ endpoint/);
   assert.match(wiring, /action === \'grant\' \? \'grant\' : \'revoke\'/);
   assert.match(router, /handleMarketplacePreview\(request, env, user, previewRoutes\[path\], body\)/);
