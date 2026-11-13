@@ -290,7 +290,7 @@ async function refreshGmailStatus(){
  try{
   const data=await apiGet('/gmail/status');
   $('gmailConnectionState').textContent=data.connected?'Connected':'Not connected';
-  $('gmailConnectionDetail').textContent=data.connected?'Connected as '+data.email:'Gmail is not connected. New messages will continue using the configured fallback transport.';
+  $('gmailConnectionDetail').textContent=data.connected?'Connected as '+data.email:'Gmail is not connected. Outbound Outreach sending is paused until the approved Gmail mailbox is connected.';
   $('gmailConnectionState').className='review-tag'+(data.connected?' good':'');
   return data;
  }catch(e){
