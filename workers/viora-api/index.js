@@ -315,6 +315,10 @@ if (path === '/social/stats/batch' && request.method === 'POST') {
         requireRole(String(user.role || '').toLowerCase(), ['admin', 'exec']);
         return await handleGmailReplies(env, user);
       }
+      if (path === '/outreach/automation-settings' && (request.method === 'GET' || request.method === 'POST')) {
+        requireRole(String(user.role || '').toLowerCase(), ['admin', 'exec']);
+        return await handleOutreachAutomationSettings(request, body, env, user);
+      }
       if (path === '/outreach/auto-reply' && request.method === 'POST') {
         requireRole(String(user.role || '').toLowerCase(), ['admin', 'exec']);
         return await handleOutreachAutoReply(body, env, user);
@@ -6220,6 +6224,32 @@ async function handleGmailReplies(env, user) {
     return json({ ok: true, count: replies.length, messages: replies });
   } catch (e) {
     return json({ ok: false, error: 'Unable to retrieve Gmail replies', detail: e.message }, 502);
+  }
+}
+
+
+async function handleOutreachAutomationSettings(request, body, env, user) {
+  try {
+    if (request.method === 'GET') {
+      const [enabled, connection] = await Promise.all([
+        outreachDbRead(env, 'outreach/settings/autoReplyEnabled').catch(() => false),
+        readGmailConnection(env).catch(() => null)
+      ]);
+      return json({ ok: true, autoReplyEnabled: enabled === true, gmailConnected: !!connection, mailbox: connection && connection.email || null, dailyProspectTarget: 200, outboundAutopilotEnabled: false });
+    }
+    if (typeof body.autoReplyEnabled !== 'boolean') return json({ ok: false, error: 'autoReplyEnabled must be a boolean' }, 400);
+    if (body.autoReplyEnabled) {
+      const connection = await readGmailConnection(env);
+      if (!connection) return json({ ok: false, error: 'Connect and verify the VIORA Gmail mailbox before enabling autonomous replies' }, 409);
+      await gmailAccessToken(connection, env);
+      if (String(connection.email || '').toLowerCase() !== GMAIL_OWNER_EMAIL) return json({ ok: false, error: 'The connected mailbox does not match the approved VIORA sender identity' }, 403);
+    }
+    await outreachDbWrite(env, 'outreach/settings/autoReplyEnabled', body.autoReplyEnabled);
+    await outreachDbWrite(env, 'outreach/settings/autoReplyUpdatedAt', new Date().toISOString());
+    await outreachDbWrite(env, 'outreach/settings/autoReplyUpdatedBy', user.email || user.localId || 'admin');
+    return json({ ok: true, autoReplyEnabled: body.autoReplyEnabled, message: body.autoReplyEnabled ? 'Autonomous replies enabled for safe, high-confidence responses in verified VIORA Outreach threads.' : 'Autonomous replies disabled.' });
+  } catch (error) {
+    return json({ ok: false, error: 'Unable to update Outreach automation settings', detail: error.message }, 502);
   }
 }
 
