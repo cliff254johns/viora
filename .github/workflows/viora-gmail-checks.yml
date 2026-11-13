@@ -38,6 +38,9 @@ jobs:
           grep -Fq "AES-GCM" workers/viora-api/index.js
           grep -Fq "gmailApiFetch('messages/send'" workers/viora-api/index.js
           grep -Fq "GOOGLE_TOKEN_ENCRYPTION_KEY" workers/viora-api/index.js
+          grep -Fq "gmail.metadata" workers/viora-api/index.js
+          ! grep -Fq "gmail.readonly" workers/viora-api/index.js
+          grep -Fq "messages?labelIds=INBOX&maxResults=50" workers/viora-api/index.js
       - name: Verify Outreach Gmail controls
         run: |
           grep -Fq 'id="gmailConnect"' web/outreach.html
