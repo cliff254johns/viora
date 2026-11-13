@@ -28,10 +28,18 @@ const pwaBrandFiles = [
   'web/assets/bops.html','web/assets/rtex.html','web/assets/boutique.html',
   'web/assets/guesthouse.html','web/assets/butchery.html','web/assets/construction.html'
 ];
+assert.ok(fs.existsSync('web/viora.png'), 'canonical /viora.png asset is missing');
 for (const path of pwaBrandFiles) {
   const source = read(path);
-  assert.ok(source.includes("'/viora.png'") || source.includes('"/viora.png"'), path+' missing /viora.png PWA artwork');
-  assert.ok(source.includes('rel="apple-touch-icon"') || source.includes("rel='apple-touch-icon'"), path+' missing canonical Apple touch icon');
+  assert.ok(source.includes('rel="apple-touch-icon"'), path+' missing canonical Apple touch icon');
+  if (path === 'web/assets/construction.html') {
+    assert.match(source, /icons:\s*\[\{\s*src:\s*'\/viora\.png'/, path+' generated manifest must use /viora.png');
+  } else {
+    const match = source.match(/<link rel="manifest" href='data:application\/manifest\+json,([^']*)'>/);
+    assert.ok(match, path+' embedded PWA manifest missing');
+    const manifest = JSON.parse(match[1].replace(/%23/g, '#'));
+    assert.ok(manifest.icons?.length === 1 && manifest.icons[0].src === '/viora.png', path+' embedded manifest must use only /viora.png');
+  }
 }
 const primaryManifest = JSON.parse(read('web/manifest.json'));
 for (const shortcut of primaryManifest.shortcuts || []) {
