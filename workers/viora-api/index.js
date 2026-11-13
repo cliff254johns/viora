@@ -5827,7 +5827,7 @@ async function handleSendEmail(body, env, user) {
   const subject = body && body.subject;
   const html = body && body.html;
   const text = body && body.text;
-  const replyTo = body && body.replyTo;
+  const replyTo = 'cliff254johns@gmail.com';
 
   if (!to || (!html && !text)) return json({ error: 'to and html/text required' }, 400);
 
