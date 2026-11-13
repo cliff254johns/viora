@@ -29,7 +29,7 @@ The main app's shared notification publisher is `web/shared/notification-bus.js`
 - The connected sender identity is restricted in code to `cliff254johns@gmail.com`.
 - Existing scopes include `gmail.send`, `gmail.metadata` and `gmail.modify`. Google OAuth verification / production publishing requirements still apply.
 - `GET /gmail/replies` retrieves recent inbox message metadata.
-- `POST /sendEmail` sends through Gmail when connected and otherwise may use the configured Resend fallback. A failed Gmail send is not silently retried through Resend.
+- `POST /sendEmail` sends only through the authenticated `cliff254johns@gmail.com` Gmail mailbox. It does not fall back to Resend.
 - `POST /outreach/draft` uses the existing AI provider orchestration to create factual drafts.
 - Existing global prospect discovery searches public web sources, normalises results and constrains AI enrichment to the returned source evidence. It does not prove a contact's lawful eligibility for marketing.
 
