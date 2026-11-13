@@ -113,7 +113,8 @@ test('repeated start during an active preview returns the same session without e
 });
 
 test('concurrent start requests cannot create parallel sessions or bypass cooldown', async () => {
-  const [a, b] = await Promise.all([startApprovedPreview(), call('start')]);
+  await startApprovedPreview();
+  const [a, b] = await Promise.all([call('start'), call('start')]);
   const first = await a.json();
   const second = await b.json();
   assert.equal(a.status, 200);
@@ -145,6 +146,9 @@ test('server time expires the preview regardless of a client-supplied clock', as
 });
 
 test('missing Firebase ETag support fails closed instead of using a non-atomic write', async () => {
+  records.set('viora_data/orgs/viora/marketplacePreview/eligibility/user-1/demo-app', {
+    grant: { id: 'grant-1', status: 'approved', grantedBy: ADMIN.localId }
+  });
   const original = globalThis.fetch;
   globalThis.fetch = async (input, init = {}) => {
     const url = new URL(input);
@@ -159,7 +163,7 @@ test('missing Firebase ETag support fails closed instead of using a non-atomic w
   };
   try {
     const response = await call('start');
-    assert.equal(response.status, 403, 'unapproved request fails before attempting session storage');
+    assert.equal(response.status, 503);
     assert.equal(records.has('viora_data/orgs/viora/marketplacePreview/eligibility/user-1/demo-app'), false);
   } finally {
     globalThis.fetch = original;
