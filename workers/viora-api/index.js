@@ -6620,9 +6620,6 @@ async function writeOutreachCampaignActivity(env, candidate, status, details = {
     outreachEmailId: activityId, campaignId: activity.campaignId,
     source: 'Outreach campaign', ...details
   };
-
-  // A single RTDB multi-location PATCH keeps the ledger, communication log,
-  // lead history and last-outreach pointers in one atomic write.
   const updates = {
     ['outreach/emails/' + activityId]: ledger,
     ['commLog/' + commLogId]: comm,
@@ -6631,16 +6628,15 @@ async function writeOutreachCampaignActivity(env, candidate, status, details = {
     ['leads/' + candidate.leadId + '/lastOutreachAt']: details.sentAt || details.attemptedAt || activity.queuedAt,
     ['leads/' + candidate.leadId + '/lastOutreachStatus']: status,
     ['leads/' + candidate.leadId + '/lastOutreachEmailId']: activityId,
-    ['leads/' + candidate.leadId + '/lastOutreachSubject']: activity.subject,
+    ['leads/' + candidate.leadId + '/lastOutreachSubject']: activity.subject
   };
   if (details.providerId) updates['leads/' + candidate.leadId + '/lastOutreachProviderId'] = details.providerId;
-  await outreachDbMultiWrite(env, updates);
-
   if (status === 'sent') {
     const lead = await outreachDbRead(env, 'leads/' + candidate.leadId).catch(() => null);
-    if (lead && lead.status === 'New') await outreachDbWrite(env, 'leads/' + candidate.leadId + '/status', 'Contacted');
-    await outreachDbWrite(env, 'leads/' + candidate.leadId + '/lastContactedAt', details.sentAt || now);
+    if (lead && lead.status === 'New') updates['leads/' + candidate.leadId + '/status'] = 'Contacted';
+    updates['leads/' + candidate.leadId + '/lastContactedAt'] = details.sentAt || now;
   }
+  await outreachDbMultiWrite(env, updates);
   return { activityId, commLogId };
 }
 
@@ -6865,6 +6861,13 @@ async function outreachDbWrite(env, path, value, method = 'PUT') {
   const url = `${rtdb(env)}/viora_data/orgs/viora/${path}.json?auth=${encodeURIComponent(env.FIREBASE_DATABASE_SECRET)}`;
   const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(value) });
   if (!response.ok) throw new Error('Unable to write Outreach state');
+  return response.json().catch(() => null);
+}
+async function outreachDbMultiWrite(env, updates) {
+  if (!env.FIREBASE_DATABASE_SECRET) throw new Error('Firebase database service secret is not configured');
+  const url = `${rtdb(env)}/viora_data/orgs/viora.json?auth=${encodeURIComponent(env.FIREBASE_DATABASE_SECRET)}`;
+  const response = await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) });
+  if (!response.ok) throw new Error('Unable to atomically write Outreach activity');
   return response.json().catch(() => null);
 }
 async function publishOutreachEscalation(env, eventId, title, body, level = 'high', threadId = '') {
