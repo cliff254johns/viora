@@ -74,6 +74,7 @@ test('Marketplace category explorer shows live counts, search, selection and mob
  };
  await page.addInitScript((products)=>{
   localStorage.setItem('viora_market_products_v1',JSON.stringify({savedAt:Date.now(),products:Object.values(products)}));
+  localStorage.setItem('viora_cookie_consent_v1',JSON.stringify({essential:true,analytics:false,functional:false,ts:Date.now()}));
  },catalogue);
  await page.route('**/viora_data/orgs/viora/products.json*',route=>route.fulfill({
   status:200,contentType:'application/json',body:JSON.stringify(catalogue)
