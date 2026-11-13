@@ -6392,11 +6392,16 @@ async function runOutreachCampaignScheduler(env) {
     if (!connection || String(connection.email || '').toLowerCase() !== GMAIL_OWNER_EMAIL) return;
     const queue = await outreachDbRead(env, 'outreach/campaignQueue').catch(() => ({})) || {};
     const now = Date.now();
+    for (const stale of Object.values(queue).filter(x => x && x.status === 'sending' && (!x.claimedAt || now - Date.parse(x.claimedAt) > 15 * 60 * 1000))) {
+      await outreachDbWrite(env, 'outreach/campaignQueue/' + stale.id, { ...stale, status: 'send_uncertain', uncertainAt: new Date().toISOString(), lastError: 'Worker stopped after claiming this message; verify Gmail before any manual retry.' });
+      await publishOutreachEscalation(env, stale.id + '-stale-claim', 'Campaign send needs reconciliation', 'A campaign item for ' + stale.recipient + ' was left in a sending state. Verify Gmail before any manual resend.', 'critical');
+    }
     const due = Object.values(queue).filter(x => x && x.status === 'queued' && Number.isFinite(Date.parse(x.scheduledAt)) && Date.parse(x.scheduledAt) <= now)
       .sort((a, b) => Date.parse(a.scheduledAt) - Date.parse(b.scheduledAt));
     for (const candidate of due.slice(0, 20)) {
       const path = 'outreach/campaignQueue/' + candidate.id;
       if (!await outreachDbCompareAndSet(env, path + '/status', 'queued', 'sending')) continue;
+      await outreachDbWrite(env, path, { ...candidate, status: 'sending', claimedAt: new Date().toISOString() });
       const suppression = await outreachDbRead(env, 'outreach/suppressions/' + outreachEmailKey(candidate.recipient)).catch(() => null);
       if (suppression) {
         await outreachDbWrite(env, path + '/status', 'suppressed');
@@ -6434,7 +6439,7 @@ async function runOutreachCampaignScheduler(env) {
       }
       const reserved = await outreachReserveDailySlot(env);
       if (!reserved.allowed) {
-        await outreachDbWrite(env, path + '/status', 'queued');
+        await outreachDbWrite(env, path, { ...candidate, status: 'queued', claimedAt: null });
         return;
       }
       const token = candidate.unsubscribeToken;
