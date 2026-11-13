@@ -19,6 +19,13 @@ test('exec/admin signs in and opens Engineering Command Centre and Visuals',asyn
  await expect(engineering).toBeVisible({timeout:20000});await engineering.click();
  await expect(page.getByRole('heading',{name:'Engineering Command Centre'})).toBeVisible();
  await page.locator('#eccRefresh').click();
+ const investorRoom=page.locator('#sidebarNav [data-investor-room-link]');
+ await expect(investorRoom).toBeVisible({timeout:10000});
+ await investorRoom.click();
+ await expect(page.getByRole('heading',{name:'Investor Data Room'})).toBeVisible({timeout:15000});
+ await expect(page.locator('.idr-grid .idr-category')).toHaveCount(10);
+ await engineering.click();
+ await expect(page.getByRole('heading',{name:'Engineering Command Centre'})).toBeVisible();
  await page.locator('#sidebarNav [data-tab="engineering-visuals"]').click();
  await expect(page.getByRole('heading',{name:'Engineering Visuals'})).toBeVisible();
  const axe=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']).analyze();
