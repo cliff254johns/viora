@@ -45,9 +45,6 @@ assert.ok(publicMarketJs.includes('classifyProduct(p)'), 'public Marketplace mus
 assert.ok(publicMarketJs.includes('this.renderCategoryBar();'), 'public Marketplace must render category controls before Firebase/cache data arrives');
 assert.ok(publicMarketJs.includes('new URLSearchParams(window.location.search).get(\'category\')'), 'public Marketplace must accept direct links to a solution family');
 assert.ok((publicHome.match(/href="\/market\?category=(?:enterprise|institutional|hospitality|property|industry|business)"/g) || []).length === 6, 'homepage solution family cards must deep-link to all six Marketplace filters');
-for (const category of taxonomyWindow.VIORATaxonomy.categories) {
-  assert.ok(publicHome.includes(category.name.replace(/&/g, '&amp;')), 'homepage missing solution family '+category.name);
-}
 assert.ok(adminMarket.includes('classifyProduct(p)'), 'admin Marketplace must classify products through shared taxonomy');
 assert.ok(adminHandlers.includes('vioraCategoryId: categoryId'), 'admin product saves must persist canonical category ID');
 assert.ok(adminHandlers.includes('Viora.migrateMarketplaceCategories') && adminHandlers.includes('Only category fields and updatedAt will change'), 'admin must provide a confirmed idempotent migration for existing product records');
@@ -75,6 +72,9 @@ assert.ok(publicMarket.includes('type="image/png" href="/viora.png"'), 'Marketpl
 
 const taxonomyWindow = {};
 vm.runInNewContext(taxonomy, { window: taxonomyWindow });
+for (const category of taxonomyWindow.VIORATaxonomy.categories) {
+  assert.ok(publicHome.includes(category.name.replace(/&/g, '&amp;')), 'homepage missing solution family '+category.name);
+}
 const classify = taxonomyWindow.VIORATaxonomy.classifyProduct;
 const expectedLegacyProducts = [
   ['Retail & Wholesale Systems','enterprise'],
