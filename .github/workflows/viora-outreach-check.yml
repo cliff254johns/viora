@@ -80,6 +80,12 @@ jobs:
           grep -Fq 'invocation_logs = true' workers/viora-api/wrangler.toml
           grep -Fq '[observability.traces]' workers/viora-api/wrangler.toml
           grep -Fq 'head_sampling_rate = 0.01' workers/viora-api/wrangler.toml
+      - name: Verify direct send cannot bypass marketing compliance
+        run: |
+          grep -Fq "body.purpose === 'marketing'" workers/viora-api/index.js
+          grep -Fq "body.source === 'Outreach Centre'" workers/viora-api/index.js
+          grep -Fq "purpose:'marketing',source:'Outreach Centre'" web/outreach.js
+          grep -Fq 'blockedSend=httpStatus===423||httpStatus===409' web/outreach.js
       - name: Verify durable Facebook publish claims and API connection checks
         run: |
           grep -Fq 'export async function claimScheduledCampaignPost' workers/viora-api/social-publish.js
