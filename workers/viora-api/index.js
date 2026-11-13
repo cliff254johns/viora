@@ -151,6 +151,9 @@ export default {
           ts: Date.now(),
         });
       }
+      if (path === '/outreach/unsubscribe' && (request.method === 'GET' || request.method === 'POST')) {
+        return await handleOutreachUnsubscribe(request, url, env);
+      }
       if (path === '/health') return json({
   ok: true,
   service: 'viora-api',
@@ -314,6 +317,18 @@ if (path === '/social/stats/batch' && request.method === 'POST') {
       if (path === '/gmail/replies' && request.method === 'GET') {
         requireRole(String(user.role || '').toLowerCase(), ['admin', 'exec']);
         return await handleGmailReplies(env, user);
+      }
+      if (path === '/outreach/campaign/status' && request.method === 'GET') {
+        requireRole(String(user.role || '').toLowerCase(), ['admin', 'exec']);
+        return await handleOutreachCampaignStatus(env);
+      }
+      if (path === '/outreach/campaign/settings' && request.method === 'POST') {
+        requireRole(String(user.role || '').toLowerCase(), ['admin', 'exec']);
+        return await handleOutreachCampaignSettings(body, env, user);
+      }
+      if (path === '/outreach/campaign/queue' && request.method === 'POST') {
+        requireRole(String(user.role || '').toLowerCase(), ['admin', 'exec']);
+        return await handleOutreachCampaignQueue(body, env, user);
       }
       if (path === '/outreach/automation-settings' && (request.method === 'GET' || request.method === 'POST')) {
         requireRole(String(user.role || '').toLowerCase(), ['admin', 'exec']);
@@ -560,6 +575,7 @@ async function handleSocialFanout(body, env, user) {
       await runScheduledReminders(env);
       await autoPrepareSocialQueue(env);
       await publishDueScheduledPosts(env);
+      await runOutreachCampaignScheduler(env);
     })());
   },
 };
@@ -6082,6 +6098,13 @@ async function sendViaGmail(message, env, user, existingConnection) {
       'MIME-Version: 1.0',
     ];
     if (message.replyTo) headers.push('Reply-To: ' + cleanHeader(message.replyTo));
+    for (const h of (Array.isArray(message.extraHeaders) ? message.extraHeaders : [])) {
+      const name = String(h && h.name || '').toLowerCase();
+      const value = cleanHeader(h && h.value || '');
+      if (['list-unsubscribe', 'list-unsubscribe-post'].includes(name) && value) {
+        headers.push((name === 'list-unsubscribe' ? 'List-Unsubscribe' : 'List-Unsubscribe-Post') + ': ' + value);
+      }
+    }
     let mime;
     if (message.html && message.text) {
       const boundary = 'viora_' + gmailBase64Url(crypto.getRandomValues(new Uint8Array(12)));
@@ -6198,6 +6221,239 @@ async function handleGmailReplies(env, user) {
   }
 }
 
+
+
+/* ============================================================
+   GLOBAL OUTREACH CAMPAIGN ENGINE
+   One-time activation, evidence-gated contacts, per-recipient sends,
+   atomic daily cap reservations, one-click unsubscribe and safe follow-ups.
+   ============================================================ */
+async function outreachDbCompareAndSet(env, path, expected, next) {
+  const url = `${rtdb(env)}/viora_data/orgs/viora/${path}.json?auth=${encodeURIComponent(env.FIREBASE_DATABASE_SECRET || '')}`;
+  if (!env.FIREBASE_DATABASE_SECRET) throw new Error('Firebase database service secret is not configured');
+  const getResponse = await fetch(url, { headers: { 'X-Firebase-ETag': 'true' } });
+  if (!getResponse.ok) throw new Error('Unable to read campaign state');
+  const etag = getResponse.headers.get('ETag');
+  const current = await getResponse.json();
+  if (JSON.stringify(current ?? null) !== JSON.stringify(expected ?? null)) return false;
+  const putResponse = await fetch(url, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', 'If-Match': etag },
+    body: JSON.stringify(next)
+  });
+  if (putResponse.status === 412) return false;
+  if (!putResponse.ok) throw new Error('Unable to update campaign state');
+  return true;
+}
+async function outreachDbIncrement(env, path) {
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const url = `${rtdb(env)}/viora_data/orgs/viora/${path}.json?auth=${encodeURIComponent(env.FIREBASE_DATABASE_SECRET || '')}`;
+    const res = await fetch(url, { headers: { 'X-Firebase-ETag': 'true' } });
+    if (!res.ok) throw new Error('Unable to read campaign counter');
+    const etag = res.headers.get('ETag'), current = Number(await res.json()) || 0, next = current + 1;
+    const put = await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'If-Match': etag }, body: String(next) });
+    if (put.status === 412) continue;
+    if (!put.ok) throw new Error('Unable to reserve campaign send slot');
+    return next;
+  }
+  throw new Error('Campaign counter is busy; retry on the next scheduler tick');
+}
+function outreachEmailKey(email) { return encodeURIComponent(String(email || '').trim().toLowerCase()).replace(/\./g, '%2E'); }
+function validOutreachEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim()); }
+async function handleOutreachCampaignStatus(env) {
+  const [settings, queue, connection] = await Promise.all([
+    outreachDbRead(env, 'outreach/campaignSettings').catch(() => ({})),
+    outreachDbRead(env, 'outreach/campaignQueue').catch(() => ({})),
+    readGmailConnection(env).catch(() => null)
+  ]);
+  const records = Object.values(queue || {});
+  const day = new Date().toISOString().slice(0, 10);
+  const sentToday = Number(await outreachDbRead(env, 'outreach/campaignMetrics/daily/' + day + '/reserved').catch(() => 0)) || 0;
+  return json({
+    ok: true, outboundEnabled: settings && settings.outboundEnabled === true,
+    dailyLimit: 200, sentOrReservedToday: sentToday, remainingToday: Math.max(0, 200 - sentToday),
+    queued: records.filter(x => x && x.status === 'queued').length,
+    sent: records.filter(x => x && x.status === 'sent').length,
+    replied: records.filter(x => x && x.status === 'replied').length,
+    suppressed: records.filter(x => x && x.status === 'suppressed').length,
+    needsReview: records.filter(x => x && ['blocked', 'send_uncertain', 'failed'].includes(x.status)).length,
+    gmailConnected: !!connection, mailbox: connection && connection.email || null,
+    scheduler: 'one recipient per five-minute tick; maximum 200 reservations per UTC day'
+  });
+}
+async function handleOutreachCampaignSettings(body, env, user) {
+  if (typeof body.outboundEnabled !== 'boolean') return json({ ok: false, error: 'outboundEnabled must be a boolean' }, 400);
+  if (body.outboundEnabled) {
+    const connection = await readGmailConnection(env);
+    if (!connection || String(connection.email || '').toLowerCase() !== GMAIL_OWNER_EMAIL) {
+      return json({ ok: false, error: 'Connect and verify the approved VIORA Gmail mailbox first' }, 409);
+    }
+    await gmailAccessToken(connection, env);
+    const compliance = await outreachDbRead(env, 'outreach/compliance/globalSendingPolicy').catch(() => null);
+    if (!compliance || compliance.status !== 'approved' || !compliance.version || !compliance.reviewedAt) {
+      return json({ ok: false, error: 'Outbound activation is blocked until the global jurisdiction policy register is approved and versioned by the responsible VIORA administrator.' }, 409);
+    }
+  }
+  const current = await outreachDbRead(env, 'outreach/campaignSettings').catch(() => ({})) || {};
+  const next = { ...current, outboundEnabled: body.outboundEnabled, dailyLimit: 200, updatedAt: new Date().toISOString(), updatedBy: user.email || user.localId || 'admin' };
+  await outreachDbWrite(env, 'outreach/campaignSettings', next);
+  return json({ ok: true, outboundEnabled: next.outboundEnabled, dailyLimit: 200, message: body.outboundEnabled ? 'Outbound campaign scheduler enabled. It will send only evidence-qualified, country-policy-approved recipients.' : 'Outbound campaign scheduler paused.' });
+}
+async function handleOutreachCampaignQueue(body, env, user) {
+  const items = Array.isArray(body.items) ? body.items : [];
+  if (!items.length || items.length > 50) return json({ ok: false, error: 'Provide between 1 and 50 prepared prospect messages' }, 400);
+  const created = [], rejected = [];
+  for (const item of items) {
+    try {
+      const leadId = String(item.leadId || '').trim();
+      if (!leadId || leadId.length > 180) throw new Error('Missing or invalid CRM lead ID');
+      const lead = await outreachDbRead(env, 'leads/' + leadId);
+      if (!lead) throw new Error('CRM lead not found');
+      const email = String(lead.email || '').trim().toLowerCase();
+      if (!validOutreachEmail(email) || lead.emailVerified !== true) throw new Error('A verified business email address is required');
+      const eligibility = lead.contactEligibility || {};
+      if (eligibility.status !== 'eligible' || !eligibility.basis || !eligibility.sourceUrl || !eligibility.reviewedAt) {
+        throw new Error('Documented contact eligibility, basis, source URL and review timestamp are required');
+      }
+      const countryCode = String(lead.countryCode || eligibility.countryCode || '').toUpperCase();
+      if (!/^[A-Z]{2}$/.test(countryCode)) throw new Error('A two-letter recipient country code is required');
+      const policy = await outreachDbRead(env, 'outreach/compliance/jurisdictions/' + countryCode).catch(() => null);
+      if (!policy || policy.status !== 'approved' || !policy.version || policy.version !== eligibility.policyVersion) {
+        throw new Error('No matching approved country policy version for ' + countryCode);
+      }
+      const suppressionKey = outreachEmailKey(email);
+      const suppression = await outreachDbRead(env, 'outreach/suppressions/' + suppressionKey).catch(() => null);
+      if (suppression || String(lead.status || '').toLowerCase() === 'do not contact') throw new Error('Recipient is suppressed / do not contact');
+      const subject = String(item.subject || '').replace(/[\r\n]+/g, ' ').trim().slice(0, 180);
+      const textBody = String(item.text || '').trim().slice(0, 12000);
+      if (!subject || textBody.length < 100 || textBody.length > 12000) throw new Error('A personalised subject and message (100–12,000 characters) are required');
+      const company = String(lead.company || lead.fullName || '').trim();
+      if (!company || !textBody.toLowerCase().includes(company.toLowerCase())) throw new Error('The message must reference the actual CRM organisation');
+      const followups = Array.isArray(item.followups) ? item.followups.slice(0, 2) : [];
+      for (const follow of followups) {
+        if (!String(follow.subject || '').trim() || String(follow.text || '').trim().length < 80 || !String(follow.text).toLowerCase().includes(company.toLowerCase())) {
+          throw new Error('Each follow-up needs a personalised subject and message');
+        }
+      }
+      const queueId = crypto.randomUUID();
+      const unsubscribeToken = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
+      await outreachDbWrite(env, 'outreach/unsubscribeTokens/' + unsubscribeToken, { email, leadId, createdAt: new Date().toISOString(), status: 'active' });
+      const record = {
+        id: queueId, status: 'queued', sequence: 0, leadId, recipient: email,
+        organisation: company, countryCode, policyVersion: policy.version,
+        eligibilitySnapshot: { basis: eligibility.basis, sourceUrl: eligibility.sourceUrl, reviewedAt: eligibility.reviewedAt },
+        subject, text: textBody, followups, unsubscribeToken,
+        scheduledAt: item.scheduledAt || new Date().toISOString(),
+        createdAt: new Date().toISOString(), createdBy: user.email || user.localId || 'admin',
+        attempts: 0
+      };
+      await outreachDbWrite(env, 'outreach/campaignQueue/' + queueId, record);
+      created.push({ id: queueId, recipient: email, organisation: company });
+    } catch (error) { rejected.push({ leadId: item && item.leadId || null, reason: error.message }); }
+  }
+  return json({ ok: true, queued: created.length, rejected, items: created });
+}
+async function handleOutreachUnsubscribe(request, url, env) {
+  const token = String(url.searchParams.get('token') || '');
+  if (!/^[a-f0-9]{64}$/.test(token)) return json({ ok: false, error: 'Invalid unsubscribe token' }, 400);
+  const record = await outreachDbRead(env, 'outreach/unsubscribeTokens/' + token).catch(() => null);
+  if (!record || record.status !== 'active' || !validOutreachEmail(record.email)) return json({ ok: false, error: 'This unsubscribe link is invalid or already used' }, 404);
+  if (request.method === 'GET') return new Response('<!doctype html><html><meta name="viewport" content="width=device-width"><title>Unsubscribe from VIORA</title><body style="font:16px system-ui;max-width:600px;margin:60px auto;padding:20px"><h1>Unsubscribe from VIORA emails</h1><p>Confirm that you no longer want to receive business outreach emails from VIORA.</p><form method="post"><button style="padding:12px 18px">Unsubscribe</button></form></body></html>', { headers: { 'Content-Type': 'text/html; charset=utf-8', ...CORS } });
+  const key = outreachEmailKey(record.email);
+  await outreachDbWrite(env, 'outreach/suppressions/' + key, { email: record.email, reason: 'one_click_unsubscribe', source: 'email_header_or_page', createdAt: new Date().toISOString(), leadId: record.leadId });
+  await outreachDbWrite(env, 'outreach/unsubscribeTokens/' + token, { ...record, status: 'used', usedAt: new Date().toISOString() });
+  return json({ ok: true, message: 'You have been unsubscribed from VIORA business outreach.' });
+}
+async function outreachReserveDailySlot(env) {
+  const day = new Date().toISOString().slice(0, 10);
+  const count = await outreachDbIncrement(env, 'outreach/campaignMetrics/daily/' + day + '/reserved');
+  return { day, count, allowed: count <= 200 };
+}
+async function runOutreachCampaignScheduler(env) {
+  try {
+    const settings = await outreachDbRead(env, 'outreach/campaignSettings').catch(() => null);
+    if (!settings || settings.outboundEnabled !== true) return;
+    const connection = await readGmailConnection(env);
+    if (!connection || String(connection.email || '').toLowerCase() !== GMAIL_OWNER_EMAIL) return;
+    const queue = await outreachDbRead(env, 'outreach/campaignQueue').catch(() => ({})) || {};
+    const now = Date.now();
+    const due = Object.values(queue).filter(x => x && x.status === 'queued' && Number.isFinite(Date.parse(x.scheduledAt)) && Date.parse(x.scheduledAt) <= now)
+      .sort((a, b) => Date.parse(a.scheduledAt) - Date.parse(b.scheduledAt));
+    for (const candidate of due.slice(0, 20)) {
+      const path = 'outreach/campaignQueue/' + candidate.id;
+      if (!await outreachDbCompareAndSet(env, path + '/status', 'queued', 'sending')) continue;
+      const reserved = await outreachReserveDailySlot(env);
+      if (!reserved.allowed) {
+        await outreachDbWrite(env, path + '/status', 'queued');
+        return;
+      }
+      const suppression = await outreachDbRead(env, 'outreach/suppressions/' + outreachEmailKey(candidate.recipient)).catch(() => null);
+      if (suppression) {
+        await outreachDbWrite(env, path + '/status', 'suppressed');
+        await outreachDbWrite(env, path + '/suppressedAt', new Date().toISOString());
+        return;
+      }
+      const currentPolicy = await outreachDbRead(env, 'outreach/compliance/jurisdictions/' + candidate.countryCode).catch(() => null);
+      if (!currentPolicy || currentPolicy.status !== 'approved' || currentPolicy.version !== candidate.policyVersion) {
+        await outreachDbWrite(env, path + '/status', 'blocked');
+        await outreachDbWrite(env, path + '/blockReason', 'Country sending policy changed or is no longer approved');
+        return;
+      }
+      if (candidate.sequence > 0) {
+        try {
+          const accessToken = await gmailAccessToken(connection, env);
+          const thread = await gmailApiFetch('threads/' + encodeURIComponent(candidate.threadId) + '?format=metadata', accessToken);
+          const last = (thread.messages || []).slice(-1)[0];
+          const lastFrom = gmailAddress(gmailHeaderMap(last).from);
+          if (lastFrom !== GMAIL_OWNER_EMAIL) {
+            await outreachDbWrite(env, path + '/status', 'replied');
+            await outreachDbWrite(env, path + '/repliedAt', new Date().toISOString());
+            return;
+          }
+        } catch (e) {
+          await outreachDbWrite(env, path + '/status', 'blocked');
+          await outreachDbWrite(env, path + '/blockReason', 'Unable to verify the latest Gmail thread before follow-up');
+          return;
+        }
+      }
+      const token = candidate.unsubscribeToken;
+      const unsubscribeUrl = 'https://www.viora.co.ke/outreach/unsubscribe?token=' + encodeURIComponent(token);
+      const footer = '\n\n---\nVIORA Ecosystems | You are receiving this message because our records indicate a relevant business contact basis.\nUnsubscribe: ' + unsubscribeUrl;
+      const response = await sendViaGmail({
+        to: candidate.recipient, subject: candidate.subject,
+        text: String(candidate.text || '') + footer,
+        replyTo: GMAIL_OWNER_EMAIL,
+        extraHeaders: [
+          { name: 'List-Unsubscribe', value: '<' + unsubscribeUrl + '>' },
+          { name: 'List-Unsubscribe-Post', value: 'List-Unsubscribe=One-Click' }
+        ]
+      }, env, { email: GMAIL_OWNER_EMAIL, role: 'admin' }, connection);
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.ok) {
+        await outreachDbWrite(env, path, { ...candidate, status: 'send_uncertain', attempts: Number(candidate.attempts || 0) + 1, lastError: String(result.error || 'Gmail send failed').slice(0, 300), processedAt: new Date().toISOString() });
+        await publishOutreachEscalation(env, candidate.id + '-campaign-send', 'Campaign email needs delivery verification', 'Gmail did not confirm delivery for ' + candidate.recipient + '. Check the thread before retrying.', 'critical');
+        return;
+      }
+      await outreachDbWrite(env, path, { ...candidate, status: 'sent', attempts: Number(candidate.attempts || 0) + 1, sentAt: new Date().toISOString(), gmailMessageId: result.id || null, threadId: result.threadId || null });
+      await outreachDbWrite(env, 'leads/' + candidate.leadId + '/lastOutreachAt', new Date().toISOString());
+      await outreachDbWrite(env, 'leads/' + candidate.leadId + '/outreachStatus', 'contacted');
+      await outreachDbWrite(env, 'outreach/campaignMetrics/daily/' + reserved.day + '/sent', Number(await outreachDbRead(env, 'outreach/campaignMetrics/daily/' + reserved.day + '/sent').catch(() => 0)) + 1);
+      for (let index = 0; index < (candidate.followups || []).length; index++) {
+        const follow = candidate.followups[index];
+        const delayDays = Math.max(3, Math.min(14, Number(follow.delayDays) || (index === 0 ? 5 : 8)));
+        const followId = crypto.randomUUID();
+        await outreachDbWrite(env, 'outreach/campaignQueue/' + followId, {
+          ...candidate, id: followId, sequence: index + 1, status: 'queued',
+          subject: String(follow.subject), text: String(follow.text),
+          scheduledAt: new Date(Date.now() + delayDays * 86400000).toISOString(),
+          parentQueueId: candidate.id, threadId: result.threadId || null, createdAt: new Date().toISOString()
+        });
+      }
+      return; // At most one email per five-minute scheduler invocation.
+    }
+  } catch (error) {
+    console.error('Outreach campaign scheduler error', error && error.stack || error);
+  }
+}
 
 async function handleOutreachAutomationSettings(request, body, env, user) {
   try {
