@@ -22,11 +22,13 @@ test('actual admin product form and preview request queue are wired', async () =
   const html = await read('../../web/main.html');
   const wiring = await read('../../web/main/viora-main-wiring.js');
   const handlers = await read('../../web/main/viora-main-handlers.js');
+  const router = await read('../../workers/viora-api/index.js');
   assert.match(html, /id="prodPreviewEnabled"/);
   assert.match(html, /id="prodPreviewProfile"/);
   assert.match(html, /id="marketplacePreviewRequestsBody"/);
   assert.match(wiring, /marketplace\/preview\/\' \+ endpoint/);
   assert.match(wiring, /action === \'grant\' \? \'grant\' : \'revoke\'/);
+  assert.match(router, /handleMarketplacePreview\(request, env, user, previewRoutes\[path\], body\)/);
   assert.match(handlers, /previewEnabled/);
   assert.equal(handlers.includes('previewGatewayVerified'), false, 'the product editor must not self-certify a delivery gateway');
   assert.equal(handlers.includes('previewUrl'), false);
