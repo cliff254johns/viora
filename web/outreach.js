@@ -400,7 +400,7 @@ async function sendEmail(e){
     if(lead?.id){const sentActivity={...activity,status:'sent',sentAt,providerId:result.id||null,threadId:result.threadId||null};await update(ref(db,ORG+'/leads/'+lead.id),{status:lead.status==='New'?'Contacted':lead.status,lastContactedAt:sentAt,lastOutreach:sentActivity,lastOutreachAt:sentAt,lastOutreachStatus:'sent',lastOutreachSubject:subject,lastOutreachEmailId:id,lastOutreachProviderId:result.id||null,updatedAt:sentAt,['outreachHistory/'+id]:sentActivity});}
     sent++;successAddresses.push(to.toLowerCase());
    }catch(err){
-    const failedAt=stamp(),httpStatus=Number(err?.status||0),blockedSend=httpStatus===423,knownRejected=httpStatus>=400&&httpStatus<500,uncertainSend=sendAttempted&&!knownRejected,outcome=blockedSend?'blocked':uncertainSend?'send_uncertain':'failed',timeField=blockedSend?'blockedAt':uncertainSend?'uncertainAt':'failedAt',safeError=String(err.message||err).slice(0,300);
+    const failedAt=stamp(),httpStatus=Number(err?.status||0),blockedSend=httpStatus===423||httpStatus===409,knownRejected=httpStatus>=400&&httpStatus<500,uncertainSend=sendAttempted&&!knownRejected,outcome=blockedSend?'blocked':uncertainSend?'send_uncertain':'failed',timeField=blockedSend?'blockedAt':uncertainSend?'uncertainAt':'failedAt',safeError=String(err.message||err).slice(0,300);
     if(blockedSend){blockedCount++;failures.push(to);}else if(uncertainSend){uncertain++;uncertainAddresses.push(to);}else{failed++;failures.push(to);}
     await update(ref(db,ROOT+'/emails/'+id),{status:outcome,error:safeError,[timeField]:failedAt,httpStatus:httpStatus||null}).catch(()=>{});
     await update(ref(db,ORG+'/commLog/'+commLogId),{status:outcome,error:safeError,[timeField]:failedAt,httpStatus:httpStatus||null}).catch(()=>{});
