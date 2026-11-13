@@ -86,6 +86,7 @@ test('Marketplace category explorer shows live counts, search, selection and mob
  const trigger=page.locator('#categoryExplorerTrigger');
  await expect(trigger).toBeVisible();
  await expect(page.locator('#categoryTotalCount')).toContainText('3 products across 2 categories');
+ await page.waitForFunction(()=>document.getElementById('catSearchInput')?._vBound===true);
  await trigger.click();
  const panel=page.locator('#categoryExplorerPanel');
  await expect(panel).toBeVisible();
