@@ -1,6 +1,6 @@
 # Generated module and API map
 
-Generated: 2026-11-13T10:52:09.058Z
+Generated: 2026-11-13T11:13:16.038Z
 
 Modules: 113
 
@@ -182,7 +182,7 @@ Modules: 113
 
 ### web/investor-data-room.js
 
-- Size: 19679 bytes
+- Size: 19617 bytes
 - Imports: firebase/database, firebase/app, firebase/storage
 - Exports: renderInvestorDataRoom
 - Worker routes: none detected
@@ -794,7 +794,7 @@ Modules: 113
 
 ### scripts/viora-engineering-checks.mjs
 
-- Size: 6155 bytes
+- Size: 6199 bytes
 - Imports: node:fs, node:assert/strict
 - Exports: TranslationRateLimiter, EMBEDDED_ASSETS_GZIP_BASE64
 - Worker routes: none detected

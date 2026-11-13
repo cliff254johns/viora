@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-13T10:52:09.058Z",
+  "generatedAt": "2026-11-13T11:13:16.037Z",
   "moduleCount": 113,
   "modules": [
     {
@@ -228,7 +228,7 @@
     },
     {
       "file": "web/investor-data-room.js",
-      "bytes": 19679,
+      "bytes": 19617,
       "imports": [
         "firebase/database",
         "firebase/app",
@@ -1665,7 +1665,7 @@
     },
     {
       "file": "scripts/viora-engineering-checks.mjs",
-      "bytes": 6155,
+      "bytes": 6199,
       "imports": [
         "node:fs",
         "node:assert/strict"
