@@ -1,4 +1,5 @@
 /* VIORA Industry Marketplace — live category-matched products for standalone industry pages. */
+import './viora-taxonomy.js';
 const VIORA_INDUSTRY_MARKET={
   retail:{label:"Retail & Wholesale",categories:["retail & wholesale systems","fashion & apparel systems"],nameTerms:["retail","wholesale","shop management","pos system","boutique","hardware management","butchery","fashion house"]},
   healthcare:{label:"Healthcare",categories:["clinic systems","hospital systems","pharmacy systems"],nameTerms:["clinic","hospital","pharmacy","diagnostic","healthcare"]},
@@ -40,10 +41,10 @@ async function viInitIndustryMarketplace(){
  host.setAttribute("aria-busy","true");
  try{
   const products=await viLoadProducts();
+  const solutionCategory=window.VIORATaxonomy.classifyIndustry({name:config.label,cat:document.body.dataset.industry});
   const matches=products.map(product=>{
-   const category=viNorm(product.category||product.categoryName||product.categoryId||"");
+   const categoryMatch=window.VIORATaxonomy.classifyProduct(product)===solutionCategory;
    const name=viNorm(product.name||"");
-   const categoryMatch=config.categories.includes(category);
    const nameMatch=config.nameTerms.some(term=>name.includes(term));
    return {product,rank:categoryMatch?0:nameMatch?1:9};
   }).filter(item=>item.rank<9).sort((a,b)=>a.rank-b.rank).map(item=>item.product).slice(0,6);
