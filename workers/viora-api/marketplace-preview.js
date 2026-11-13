@@ -32,7 +32,13 @@ function databaseUrl(env, path) {
   if (!env.FIREBASE_DATABASE_SECRET) {
     throw Object.assign(new Error('Preview service is not configured'), { status: 503 });
   }
-  const base = String(env.FIREBASE_DATABASE_URL || 'https://cliffclient-35ec5-default-rtdb.europe-west1.firebasedatabase.app').replace(/\/$/, '');
+  const productionDefault = 'https://cliffclient-35ec5-default-rtdb.europe-west1.firebasedatabase.app';
+  const configuredBase = String(env.FIREBASE_DATABASE_URL || '').replace(/\/$/, '');
+  if (env.VIORA_STAGING_READ_ONLY === 'true' &&
+      (!configuredBase || configuredBase === productionDefault)) {
+    throw Object.assign(new Error('Staging must use its own Firebase database URL'), { status: 503 });
+  }
+  const base = configuredBase || productionDefault;
   const url = new URL(base + '/' + path.replace(/^\/+/, '') + '.json');
   url.searchParams.set('auth', env.FIREBASE_DATABASE_SECRET);
   return url;
