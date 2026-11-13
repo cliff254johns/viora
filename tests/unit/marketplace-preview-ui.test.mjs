@@ -56,6 +56,9 @@ test('Marketplace category explorer is a searchable international dropdown with 
   assert.match(html, /id="categoryBar"/);
   assert.match(source, /this\.products\.forEach\(product => \{/);
   assert.match(source, /counts\.set\(key/);
+  assert.ok(source.includes('const normalizeMarketCategory = value =>'));
+  assert.ok(source.includes("'bussiness management systems': 'Business Management Systems'"));
+  assert.ok(source.includes("normalizeMarketCategory(p.category) === this.activeCategory"));
   assert.match(source, /category-option-count/);
   assert.match(source, /categoryExplorerPanel/);
   assert.match(css, /\.category-explorer-panel/);
