@@ -11,6 +11,7 @@
      • Exposed App.openOrderModal and App.openCategoryModal globally
    ═══════════════════════════════════════════════════════════════ */
 
+import './viora-taxonomy.js';
 import { initOrderModal, openOrderModal } from './order-modal.js';
 import { initCategoryModal, openCategoryModal } from './category-modal.js';
 
@@ -128,7 +129,7 @@ async function boot() {
     fb.onValue(fb.ref(fb.db, `${ROOT}/products`), snap => {
       const raw = snap.exists() ? snap.val() : {};
       S.products = Object.entries(raw)
-        .map(([id, p]) => ({ ...(p || {}), id: (p && p.id) || id }))
+        .map(([id, p]) => window.VIORATaxonomy.normalizeProduct({ ...(p || {}), id: (p && p.id) || id }))
         .filter(p => p.status !== 'archived' && p.status !== 'draft');
       renderAll();
     });
@@ -285,9 +286,26 @@ function renderChatTour() {
   if (headingEl) headingEl.textContent = meta.heading || '45+ solutions. One core.';
   if (subEl)     subEl.textContent     = meta.sub     || 'Every product in this tour is designed, built and supported by VIORA.';
 
-  const buckets    = Object.values(flattenNode(S.homeContent?.tour?.buckets));
-  const families   = Object.values(flattenNode(S.homeContent?.tour?.families));
-  const industries = Object.values(flattenNode(S.industries)).filter(i => i.active !== false);
+  const rawBuckets = Object.values(flattenNode(S.homeContent?.tour?.buckets));
+  const rawFamilies = Object.values(flattenNode(S.homeContent?.tour?.families));
+  const rawIndustries = Object.values(flattenNode(S.industries)).filter(i => i.active !== false);
+  const taxonomy = window.VIORATaxonomy;
+  const buckets = taxonomy.categories.map(c => ({
+    key:c.id, name:c.name, desc:c.description, icon:c.icon, color:c.color, em:c.emoji
+  }));
+  const rawBucketByKey = new Map(rawBuckets.map(b => [b.key,b]));
+  const familyByKey = new Map(rawFamilies.map(f => [f.key,f]));
+  const familyCategory = new Map(rawFamilies.map(f => {
+    const bucket = rawBucketByKey.get(f.bucket);
+    return [f.key, taxonomy.classifyIndustry({ name:f.name, cat:bucket?.key || bucket?.name || f.bucket })];
+  }));
+  const families = rawFamilies.map(f => ({ ...f, bucket:familyCategory.get(f.key) || 'enterprise' }));
+  const industries = rawIndustries.map(i => {
+    const family = familyByKey.get(i.family);
+    const bucket = rawBucketByKey.get(family?.bucket || i.bucket);
+    const category = taxonomy.classifyIndustry(i, i.cat || i.category || bucket?.key || bucket?.name);
+    return { ...i, bucket:category, cat:category, marketCategory:taxonomy.title(category) };
+  });
 
   if (buckets.length === 0) {
     const section = $('#tour');
@@ -583,10 +601,10 @@ function renderTourStepDetail(host, buckets, families, industries) {
         </div>
 
         ${(() => {
-          const marketCat = String(ind.marketCategory || '').trim().toLowerCase();
+          const solutionCategory = window.VIORATaxonomy.classifyIndustry(ind, ind.cat);
           const products = (S.products || []).filter(p => {
             if (p.status === 'archived' || p.status === 'draft') return false;
-            return String(p.category || '').trim().toLowerCase() === marketCat;
+            return window.VIORATaxonomy.classifyProduct(p) === solutionCategory;
           });
 
           if (products.length === 0) return `
