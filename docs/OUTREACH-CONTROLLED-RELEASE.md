@@ -12,7 +12,7 @@ Each send attempt receives a unique email activity ID and batch/campaign ID. The
 
 ## Release safety
 - Keep `keep_vars = true` in Wrangler configuration so a code upload does not overwrite dashboard-managed production variables; secrets are preserved by Cloudflare deployments when omitted from the upload.
-- Keep `ENABLE_OUTREACH_EMAIL_AUTOMATION` unset/false in production during the controlled API release.
+- Keep `ENABLE_OUTREACH_EMAIL_AUTOMATION` unset/false and `ENABLE_OUTREACH_EMAIL_SENDING` unset/false in production during the controlled API release. The first flag gates scheduled email jobs; the second separately gates the authenticated direct Gmail send route.
 - Do not change the existing cron schedule.
 - Verify the social queue preparation and social publishing jobs independently.
 - Run authenticated health, social queue, and publishing checks using a non-customer test post/account where supported.
