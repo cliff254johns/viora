@@ -1,6 +1,6 @@
 # Generated module and API map
 
-Generated: 2026-11-13T00:11:42.959Z
+Generated: 2026-11-13T00:12:01.281Z
 
 Modules: 112
 
@@ -640,7 +640,7 @@ Modules: 112
 
 ### web/outreach.js
 
-- Size: 81015 bytes
+- Size: 81014 bytes
 - Imports: https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js, https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js, https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js, +sources.length+
 - Exports: none detected
 - Worker routes: none detected
