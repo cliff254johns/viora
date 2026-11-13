@@ -247,3 +247,32 @@ test('shared product-gateway authorizer accepts only active, unexpired sessions 
   const inactive = await authorizeMarketplacePreview(ENV, USER.localId, 'demo-app', started.session.id, clock);
   assert.equal(inactive.allowed, false);
 });
+
+
+test('gateway inventory is admin-only and reports every catalogue product without exposing delivery URLs', async () => {
+  records.set('viora_data/orgs/viora/products', {
+    'demo-app': {
+      id: 'demo-app', name: 'Demo App', category: 'Software', status: 'active',
+      previewEnabled: true, previewGatewayVerified: true, previewProfile: 'isolated-software',
+      liveUrl: 'https://private.example.test/app', previewUrl: 'https://private.example.test/preview'
+    },
+    'digital-pack': {
+      id: 'digital-pack', name: 'Digital Pack', category: 'Digital', status: 'active',
+      previewEnabled: true, previewGatewayVerified: false, previewProfile: 'digital-sample',
+      downloadUrl: 'https://private.example.test/original.zip'
+    },
+    'public-ui': { id: 'public-ui', _kind: 'publicUI', name: 'Public UI' }
+  });
+  const denied = await call('admin-gateways', USER, 'GET');
+  assert.equal(denied.status, 403);
+
+  const response = await call('admin-gateways', ADMIN, 'GET');
+  const data = await response.json();
+  assert.equal(response.status, 200);
+  assert.deepEqual(data.summary, { total: 2, gatewayReady: 1, blocked: 1 });
+  assert.equal(data.products.find(p => p.productId === 'demo-app').gatewayReady, true);
+  const blocked = data.products.find(p => p.productId === 'digital-pack');
+  assert.equal(blocked.gatewayReady, false);
+  assert.deepEqual(blocked.blockedReasons, ['gateway-not-verified']);
+  assert.equal(JSON.stringify(data).includes('private.example.test'), false);
+});
