@@ -571,30 +571,2748 @@ async function handleSocialFanout(body, env, user) {
   },
 
    async scheduled(event, env, ctx) {
-     ctx.waitUntil((async () => {
-       const jobs = [
-         ['reminders', () => runScheduledReminders(env)],
-         ['social_queue_prepare', () => autoPrepareSocialQueue(env)],
-         ['social_publish', () => publishDueScheduledPosts(env)],
-       ];
-       // Email automation is a separate opt-in. An unset flag keeps it disabled.
-       if (String(env.ENABLE_OUTREACH_EMAIL_AUTOMATION || '').toLowerCase() === 'true') {
-         jobs.push(['outreach_inbox_sync', () => runScheduledOutreachInboxSync(env)]);
-         jobs.push(['outreach_campaign_scheduler', () => runOutreachCampaignScheduler(env)]);
-       }
-       await Promise.all(jobs.map(async ([job, run]) => {
-         try {
-           await run();
-         } catch (error) {
-           console.error(JSON.stringify({
-             event: 'scheduled_job_failed',
-             job,
-             error: String(error && error.message || error).slice(0, 300),
-           }));
-         }
-       }));
-     })());
-   },
+    ctx.waitUntil((async () => {
+      const jobs = [
+        ['reminders', () => runScheduledReminders(env)],
+        ['social_queue_prepare', () => autoPrepareSocialQueue(env)],
+        ['social_publish', () => publishDueScheduledPosts(env)],
+      ];
+      // Email automation is a separate opt-in. An unset flag keeps it disabled.
+      if (String(env.ENABLE_OUTREACH_EMAIL_AUTOMATION || '').toLowerCase() === 'true') {
+        jobs.push(['outreach_inbox_sync', () => runScheduledOutreachInboxSync(env)]);
+        jobs.push(['outreach_campaign_scheduler', () => runOutreachCampaignScheduler(env)]);
+      }
+      await Promise.all(jobs.map(async ([job, run]) => {
+        try {
+          await run();
+        } catch (error) {
+          console.error(JSON.stringify({
+            event: 'scheduled_job_failed',
+            job,
+            error: String(error && error.message || error).slice(0, 300),
+          }));
+        }
+      }));
+    })());
+  },
+};
+
+/* ============================================================
+   DIAGNOSTICS
+   ============================================================ */
+function debugEnv(env) {
+  return json({
+       version: '5.0.0',
+    firebase: {
+      hasProjectId: !!env.FIREBASE_PROJECT_ID,
+      hasDatabaseUrl: !!env.FIREBASE_DATABASE_URL,
+      hasDatabaseSecret: !!env.FIREBASE_DATABASE_SECRET,
+      hasApiKey: !!env.FIREBASE_API_KEY,
+      hasServiceAccount: !!env.FIREBASE_SERVICE_ACCOUNT_JSON,
+    },
+    llmProviders: {
+      groq:       !!env.GROQ_API_KEY,
+      cerebras:   !!env.CEREBRAS_API_KEY,
+      openrouter: !!env.OPENROUTER_API_KEY,
+      together:   !!env.TOGETHER_API_KEY,
+      deepseek:   !!env.DEEPSEEK_API_KEY,
+      mistral:    !!env.MISTRAL_API_KEY,
+      gemini:     !!env.GEMINI_API_KEY,
+      cloudflare: !!env.AI,
+    },
+    llmChain: {
+      available: [
+        env.GROQ_API_KEY       && 'groq',
+        env.CEREBRAS_API_KEY   && 'cerebras',
+        env.OPENROUTER_API_KEY && 'openrouter',
+        env.TOGETHER_API_KEY   && 'together',
+        env.DEEPSEEK_API_KEY   && 'deepseek',
+        env.MISTRAL_API_KEY    && 'mistral',
+        env.GEMINI_API_KEY     && 'gemini',
+        env.AI                 && 'cloudflare-workers-ai',
+      ].filter(Boolean),
+      totalProviders: [
+        env.GROQ_API_KEY, env.CEREBRAS_API_KEY, env.OPENROUTER_API_KEY,
+        env.TOGETHER_API_KEY, env.DEEPSEEK_API_KEY, env.MISTRAL_API_KEY,
+        env.GEMINI_API_KEY, env.AI,
+      ].filter(Boolean).length,
+      cacheEnabled: !!env.AI_CACHE,
+      retryPolicy: '3 attempts per provider, exponential backoff',
+      deterministicFallback: true,
+    },
+    data: {
+      hasFred: !!env.FRED_API_KEY,
+      hasAlphaVantage: !!env.ALPHA_VANTAGE_KEY,
+      hasComtrade: !!env.COMTRADE_KEY,
+    },
+    search: {
+      duckduckgo: true,
+      tavily: !!env.TAVILY_API_KEY,
+      brave: !!env.BRAVE_API_KEY,
+    },
+    whatsapp: {
+      hasToken: !!env.WA_TOKEN,
+      hasPhoneId: !!env.WA_PHONE_ID,
+      hasVerifyToken: !!env.WA_VERIFY_TOKEN,
+      hasAppSecret: !!env.WA_APP_SECRET,
+      hasWabaId: !!env.WA_WABA_ID,
+    },
+    mpesa: {
+      env: env.MPESA_ENV || 'not set',
+      hasConsumerKey: !!env.MPESA_CONSUMER_KEY,
+      hasConsumerSecret: !!env.MPESA_CONSUMER_SECRET,
+      hasShortcode: !!env.MPESA_SHORTCODE,
+      hasPasskey: !!env.MPESA_PASSKEY,
+      callbackUrl: env.MPESA_CALLBACK_URL || null,
+    },
+    email: {
+      hasResendKey: !!env.RESEND_API_KEY,
+      from: env.RESEND_FROM || null,
+    },
+    push: {
+      hasServiceAccount: !!(env.FIREBASE_SERVICE_ACCOUNT_JSON || env.FCM_SERVICE_ACCOUNT_JSON),
+      hasProjectId: !!(env.FCM_PROJECT_ID || env.FIREBASE_PROJECT_ID),
+      projectId: env.FCM_PROJECT_ID || env.FIREBASE_PROJECT_ID || null,
+      broadcastSecretSet: !!env.BROADCAST_SECRET,
+      vapiPublicKey: env.VAPID_PUBLIC_KEY ? '(set)' : '(missing)',
+    },
+    avatarChat: {
+      hasOpenAIKey: !!env.OPENAI_API_KEY,
+      hasCloudflareAI: !!env.AI,
+      defaultVoice: AVATAR_TTS_DEFAULT_VOICE,
+      voiceCount: AVATAR_TTS_VOICES.length,
+      streamSupported: true,
+      maxTTSChars: AVATAR_TTS_MAX_CHARS,
+      maxSTTBytes: AVATAR_STT_MAX_BYTES,
+    },
+    socialStats: {
+      hasYouTubeKey: !!env.YOUTUBE_API_KEY,
+      hasTikTokClientKey: !!env.TIKTOK_CLIENT_KEY,
+      hasTikTokClientSecret: !!env.TIKTOK_CLIENT_SECRET,
+      tiktokRedirectUri: env.TIKTOK_REDIRECT_URI || null,
+      hasSocialCache: !!env.SOCIAL_CACHE,
+    },
+    socialPosting: {
+      hasFbPageToken: !!env.FB_PAGE_TOKEN,
+      hasFbPageId: !!env.FB_PAGE_ID,
+      hasIgUserId: !!env.IG_USER_ID,
+      hasIgAccessToken: !!env.IG_ACCESS_TOKEN,
+      hasTikTokClientKey: !!env.TIKTOK_CLIENT_KEY,
+    },
+     imageGeneration: {
+      hasCloudflareAI: !!env.AI,
+      cloudflareModel: '@cf/bytedance/stable-diffusion-xl-lightning',
+      defaultSteps: 20,
+      defaultGuidance: 7.5,
+      maxWidth: 2048,
+      maxHeight: 2048,
+    },
+      trends: {
+      provider: 'google-trends-rss',
+      supportedGeos: TRENDS_SUPPORTED_GEOS,
+      cacheTtlSeconds: 900,
+      hasKvCache: !!env.AI_CACHE,
+    },
+    weather: {
+      provider: 'open-meteo',
+      requiresKey: false,
+      defaultLocation: 'Meru, Kenya (-0.04626, 37.65587)',
+      cacheTtlSeconds: 600,
+    },
+    allKeys: Object.keys(env).filter(k => !k.startsWith('__')),
+  });
+}
+
+/* ============================================================
+   AUTH
+   ============================================================ */
+async function verifyIdToken(idToken, env) {
+  const res = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${fbKey(env)}`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken }) }
+  );
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data.users && data.users[0] ? data.users[0] : null;
+}
+
+async function getUserRole(uid, env) {
+  const url = `${rtdb(env)}/viora_data/users/${uid}/role.json${env.FIREBASE_DATABASE_SECRET ? '?auth=' + env.FIREBASE_DATABASE_SECRET : ''}`;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const role = await res.json();
+  return role || null;
+}
+
+async function getPortalUser(uid, env) {
+  const url = `${rtdb(env)}/viora_data/orgs/viora/portalUsers/${uid}.json${env.FIREBASE_DATABASE_SECRET ? '?auth=' + env.FIREBASE_DATABASE_SECRET : ''}`;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  return await res.json();
+}
+
+function requireRole(role, allowed) {
+  if (!allowed.includes(role)) throw new Error('Forbidden for role: ' + role);
+}
+
+async function enforceGovernance(user, purpose, env) {
+  if (!user.idToken) return { skipped: true };
+  try {
+    const hourKey = new Date().toISOString().slice(0, 13);
+    const dayKey  = new Date().toISOString().slice(0, 10);
+    const qs = '?auth=' + (env.FIREBASE_DATABASE_SECRET || user.idToken);
+
+    const rateUrl = `${rtdb(env)}/viora_data/_governance/rate/${user.localId || user.uid}/${hourKey}.json${qs}`;
+    const rateRes = await fetch(rateUrl);
+    const rateCount = rateRes.ok ? Number(await rateRes.json() || 0) : 0;
+    if (rateCount >= RATE_LIMIT_PER_HOUR) throw new Error(`Rate limit: ${RATE_LIMIT_PER_HOUR}/hour exceeded.`);
+    await fetch(rateUrl, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(rateCount + 1) });
+
+    const costUrl = `${rtdb(env)}/viora_data/_governance/cost/${user.localId || user.uid}/${dayKey}.json${qs}`;
+    const costRes = await fetch(costUrl);
+    const spent = costRes.ok ? Number(await costRes.json() || 0) : 0;
+    if (spent >= DAILY_AI_BUDGET_CENTS) throw new Error(`Daily AI budget reached.`);
+    return { rateCount: rateCount + 1, spent };
+  } catch (e) {
+    if (String(e.message || '').includes('Rate limit') || String(e.message || '').includes('budget')) throw e;
+    console.warn('[governance] skipped:', e.message);
+    return { skipped: true };
+  }
+}
+
+async function auditAi(user, purpose, model, usage, extra = {}, env = {}) {
+  try {
+    const uid = user.localId || user.uid;
+    const qs = '?auth=' + (env.FIREBASE_DATABASE_SECRET || user.idToken || '');
+    const url = `${rtdb(env)}/viora_data/aiAudit.json${qs}`;
+    await fetch(url, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        uid, email: user.email, role: user.role,
+        purpose, model: model || null, usage: usage || null, ...extra,
+        timestamp: new Date().toISOString(),
+      }),
+    });
+  } catch (e) {}
+}
+
+async function chargeCost(user, cents, env = {}) {
+  try {
+    const uid = user.localId || user.uid;
+    const dayKey = new Date().toISOString().slice(0, 10);
+    const qs = '?auth=' + (env.FIREBASE_DATABASE_SECRET || user.idToken || '');
+    const url = `${rtdb(env)}/viora_data/_governance/cost/${uid}/${dayKey}.json${qs}`;
+    const cur = await (await fetch(url)).json().catch(() => 0) || 0;
+    await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Number(cur) + cents) });
+  } catch (e) {}
+}
+
+/* ============================================================
+   FIREBASE ADMIN — Service Account JWT
+   ============================================================ */
+let _saTokenCache = { token: null, exp: 0 };
+
+function b64urlEncode(buf) {
+  const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+  let str = '';
+  for (const b of bytes) str += String.fromCharCode(b);
+  return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function b64urlEncodeStr(s) {
+  return b64urlEncode(new TextEncoder().encode(s));
+}
+
+async function getServiceAccountToken(env) {
+  const now = Math.floor(Date.now() / 1000);
+  if (_saTokenCache.token && _saTokenCache.exp - 60 > now) return _saTokenCache.token;
+
+  const saJson = env.FIREBASE_SERVICE_ACCOUNT_JSON || env.FCM_SERVICE_ACCOUNT_JSON;
+  if (!saJson) throw new Error('FIREBASE_SERVICE_ACCOUNT_JSON not set');
+  const sa = JSON.parse(saJson);
+
+  const header  = b64urlEncodeStr(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const payload = b64urlEncodeStr(JSON.stringify({
+    iss: sa.client_email,
+    scope: [
+      'https://www.googleapis.com/auth/identitytoolkit',
+      'https://www.googleapis.com/auth/userinfo.email',
+      'https://www.googleapis.com/auth/firebase.database',
+      'https://www.googleapis.com/auth/firebase.messaging',
+      'https://www.googleapis.com/auth/cloud-platform',
+    ].join(' '),
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now,
+    exp: now + 3600,
+  }));
+  const signingInput = `${header}.${payload}`;
+
+  const pem = sa.private_key.replace(/-----[^-]+-----/g, '').replace(/\s+/g, '');
+  const der = Uint8Array.from(atob(pem), c => c.charCodeAt(0));
+  const key = await crypto.subtle.importKey(
+    'pkcs8', der,
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false, ['sign']
+  );
+  const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(signingInput));
+  const jwt = `${signingInput}.${b64urlEncode(sig)}`;
+
+  const r = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: jwt,
+    }),
+  });
+  if (!r.ok) throw new Error('Service account token failed: ' + await r.text());
+  const data = await r.json();
+  _saTokenCache = { token: data.access_token, exp: now + (data.expires_in || 3600) };
+  return data.access_token;
+}
+
+async function createFirebaseUser(env, { email, password, displayName }) {
+  const token = await getServiceAccountToken(env);
+  const projectId = fbProjectId(env);
+  const r = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/projects/${projectId}/accounts`,
+    {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, displayName, emailVerified: false }),
+    }
+  );
+  if (!r.ok) throw new Error('createUser failed: ' + await r.text());
+  return await r.json();
+}
+
+async function lookupFirebaseUser(env, email) {
+  const token = await getServiceAccountToken(env);
+  const projectId = fbProjectId(env);
+  const r = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/projects/${projectId}/accounts:lookup`,
+    {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: [email] }),
+    }
+  );
+  if (!r.ok) throw new Error('lookupUser failed: ' + await r.text());
+  const data = await r.json();
+  return data.users && data.users[0] ? data.users[0] : null;
+}
+
+async function deleteFirebaseUser(env, uid) {
+  const token = await getServiceAccountToken(env);
+  const projectId = fbProjectId(env);
+  const r = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/projects/${projectId}/accounts:delete`,
+    {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ localId: uid }),
+    }
+  );
+  if (!r.ok) {
+    const text = await r.text();
+    if (text.includes('USER_NOT_FOUND')) return { ok: true, alreadyDeleted: true };
+    throw new Error('deleteUser failed: ' + text);
+  }
+  return { ok: true };
+}
+
+/* ============================================================
+   GOOGLE TRENDS
+   ============================================================ */
+const _trendsCache = new Map();
+const TRENDS_CACHE_TTL_MS = 15 * 60 * 1000;
+
+async function handleTrendsRss(request, env) {
+  const url = new URL(request.url);
+  let geo = (url.searchParams.get('geo') || 'KE').toUpperCase().slice(0, 2);
+
+  if (!TRENDS_SUPPORTED_GEOS.includes(geo)) {
+    return json({
+      ok: false,
+      geo,
+      items: [],
+      error: `Geo '${geo}' not supported. Choose from: ${TRENDS_SUPPORTED_GEOS.join(', ')}`,
+      supportedGeos: TRENDS_SUPPORTED_GEOS,
+    }, 200);
+  }
+
+  const now = Date.now();
+  const cached = _trendsCache.get(geo);
+  if (cached && (now - cached.ts) < TRENDS_CACHE_TTL_MS) {
+    return json(cached.value);
+  }
+
+  if (env.AI_CACHE) {
+    try {
+      const hit = await env.AI_CACHE.get(`trends:${geo}`, 'json');
+      if (hit && hit.items) {
+        _trendsCache.set(geo, { ts: now, value: hit });
+        return json(hit);
+      }
+    } catch (e) {}
+  }
+
+  const rssUrl = `https://trends.google.com/trending/rss?geo=${geo}`;
+
+  let xml = '';
+  try {
+    const r = await fetch(rssUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; VioraBot/1.0)',
+        'Accept': 'application/rss+xml,application/xml,text/xml,*/*',
+      },
+      cf: { cacheTtl: 600, cacheEverything: true },
+    });
+    if (!r.ok) {
+      return json({
+        ok: false,
+        geo,
+        items: [],
+        error: `Google Trends returned HTTP ${r.status}`,
+      }, 200);
+    }
+    xml = await r.text();
+  } catch (e) {
+    return json({
+      ok: false,
+      geo,
+      items: [],
+      error: 'Trends fetch failed: ' + (e.message || 'unknown'),
+    }, 200);
+  }
+
+  const items = [];
+  const itemRe = /<item>([\s\S]*?)<\/item>/gi;
+  let m;
+  while ((m = itemRe.exec(xml)) !== null) {
+    const block = m[1];
+    const pick = (tag) => {
+      const re = new RegExp(`<${tag}[^>]*>([\s\\S]*?)</${tag}>`, 'i');
+      const t = block.match(re);
+      if (!t) return '';
+      return t[1]
+        .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
+        .replace(/<[^>]+>/g, '')
+        .trim();
+    };
+    const title = pick('title');
+    if (!title) continue;
+    items.push({
+      title,
+      traffic: pick('ht:approx_traffic') || pick('approx_traffic') || '',
+      link: pick('link'),
+      pubDate: pick('pubDate'),
+    });
+  }
+
+  const value = {
+    ok: true,
+    geo,
+    items: items.slice(0, 20),
+    fetchedAt: new Date().toISOString(),
+  };
+
+  _trendsCache.set(geo, { ts: now, value });
+  if (_trendsCache.size > 50) {
+    const oldest = [..._trendsCache.entries()].sort((a, b) => a[1].ts - b[1].ts)[0];
+    if (oldest) _trendsCache.delete(oldest[0]);
+  }
+
+  if (env.AI_CACHE) {
+    env.AI_CACHE.put(`trends:${geo}`, JSON.stringify(value), { expirationTtl: 900 }).catch(() => {});
+  }
+
+  return json(value);
+}
+
+/* ============================================================
+   CAMPAIGN AI — generatePost / generateImage / suggestHashtags
+   ============================================================ */
+
+async function handleGeneratePost(body, env, user) {
+  requireRole(user.role, ALLOWED_ROLES_FOR_AI);
+  await enforceGovernance(user, 'generatePost', env).catch(e => {
+    if (String(e.message).includes('Rate limit') || String(e.message).includes('budget')) throw e;
+  });
+
+   const {
+    brief = '',
+    platform = 'tiktok',
+    platforms: rawPlatforms = null,     // ← new: array of platforms to tailor
+    pillar = 'educational',
+    tone = 'conversational',
+    audience = 'Kenyan SMEs',
+    cta = 'Try it free',
+    count = 1,
+    useTrends = true,
+    trendGeo = 'KE',
+  } = body || {};
+
+  /* Normalise to a deduplicated platform list. If the caller sent
+     `platforms: [...]`, honour every entry. Otherwise fall back to
+     a single platform string. */
+  const KNOWN_PLATFORMS = [
+    'facebook', 'instagram', 'tiktok', 'linkedin',
+    'twitter', 'threads', 'youtube', 'pinterest',
+    'whatsapp', 'gbp',
+  ];
+  const requestedPlatforms = Array.isArray(rawPlatforms) && rawPlatforms.length
+    ? rawPlatforms.map(p => String(p).toLowerCase().trim()).filter(Boolean)
+    : [String(platform).toLowerCase().trim()];
+  const platforms = Array.from(new Set(requestedPlatforms)).filter(p =>
+    KNOWN_PLATFORMS.includes(p)
+  );
+  if (platforms.length === 0) platforms.push('tiktok');
+
+  if (!brief || brief.trim().length < 5) {
+    return json({ ok: false, error: 'brief required (min 5 chars)' }, 400);
+  }
+
+  // ── Trend-aware context ──
+  let trendContext = '';
+  let usedTrends = false;
+  if (useTrends) {
+    try {
+      const trendsReq = new Request(`https://x/trends/rss?geo=${encodeURIComponent(trendGeo)}`, { method: 'GET' });
+      const trendsRes = await handleTrendsRss(trendsReq, env);
+      const trendsData = await trendsRes.json();
+      if (trendsData && trendsData.items && trendsData.items.length) {
+        const top = trendsData.items.slice(0, 5).map(t => `• ${t.title} (${t.traffic || 'trending'})`).join('\n');
+        trendContext = `\n\nCURRENT TRENDS in ${trendGeo} (use these naturally if relevant — do NOT force them):\n${top}`;
+        usedTrends = true;
+      }
+    } catch (e) {
+      console.warn('[genPost] trends fetch failed:', e.message);
+    }
+  }
+
+  const isBulk = Number(count) > 1;
+  const n = Math.min(Math.max(Number(count) || 1, 1), 5);
+
+  const platformList = platforms.join(', ');
+
+  const system = `You are a social media copywriter for Viora Intercollective, a Kenyan business operating systems firm.
+
+Write ${isBulk ? n + ' DIFFERENT' : '1'} social media post${isBulk ? 's' : ''}.
+
+Target platforms: ${platformList}.
+
+For EACH platform listed above, write a tailored variant:
+- tiktok    → punchy hook, 60-140 chars
+- facebook  → conversational story, 120-220 chars
+- instagram → emoji-forward, 100-200 chars
+- linkedin  → professional, 150-260 chars
+- twitter   → under 260 chars total
+- threads   → conversational, under 500 chars
+- youtube   → video description teaser, 100-200 chars
+- pinterest → aspirational, 80-160 chars
+- whatsapp  → message to a contact, 80-180 chars
+- gbp       → local business update, 80-160 chars
+
+Also write a base caption that works across all platforms.
+
+Parameters:
+- Content pillar: ${pillar}
+- Tone: ${tone}
+- Audience: ${audience}
+- Call to action: ${cta}
+${trendContext}
+
+Rules:
+1. Each post is 60-220 characters. TikTok = punchy hook. Facebook = story. Instagram = emoji-forward. LinkedIn = professional. Twitter/X = under 280 chars.
+2. 3-5 relevant hashtags per post. No generic tags (#love, #instagood).
+3. Strong opening hook (question or bold claim).
+4. NO markdown. NO surrounding quotes. Plain text only.
+5. Include the CTA naturally.
+6. If trends are listed above, only reference one if it genuinely fits the brief. Do NOT force a trend.
+
+${isBulk
+  ? `Return STRICT JSON:
+{
+  "variants": [
+    {
+      "text": string,
+      "hashtags": [string],
+      "variants": { ${platforms.map(p => `"${p}": string`).join(', ')} }
+    }
+  ]
+}
+Exactly ${n} items in variants array.`
+  : `Return STRICT JSON:
+{
+  "text": string,
+  "hashtags": [string],
+  "variants": { ${platforms.map(p => `"${p}": string`).join(', ')} }
+}`}
+
+CRITICAL: the "variants" object MUST contain keys for every platform
+in this list: ${platforms.join(', ')}. Do not omit any.
+Return ONLY the JSON. No code fences, no explanation.`;
+
+  let r;
+  try {
+    r = await llmChat(env, {
+      model: MODEL_STRONG,
+      system,
+      user: `Brief: ${brief}\n\nGenerate now.`,
+      temperature: 0.7,
+      max_tokens: isBulk ? 2800 : 900,
+      jsonMode: true,
+      purpose: 'generatePost',
+    });
+  } catch (e) {
+    return json({ ok: false, error: 'AI failed: ' + (e.message || 'unknown') }, 502);
+  }
+
+  let parsed;
+  try { parsed = JSON.parse(String(r.text).replace(/```json/gi, '').replace(/```/g, '').match(/\{[\s\S]*\}/)?.[0] || '{}'); } catch(e) { parsed = { text: String(r.text||'').slice(0, 2200), hashtags: ['#viora'], variants: {} }; }
+
+  if (isBulk && !Array.isArray(parsed.variants)) parsed.variants = [];
+  if (!isBulk && !parsed.text) parsed.text = '';
+
+  if (r._isFallback || parsed._isFallback) {
+  const reason = r.fallbackReason || parsed._fallbackReason || 'unknown';
+  const isNoProviders = reason === 'no-providers';
+  const providerErrors = (r.fallbacksUsed || []).map(e => ({
+    provider: e.provider,
+    status: e.status,
+    error: String(e.error || '').slice(0, 200),
+  }));
+  return json({
+    ok: false,
+    error: isNoProviders
+      ? 'AI is not configured on the server. Ask the admin to set up an LLM provider.'
+      : 'All AI providers are currently unavailable. See "providers" for details.',
+    fallbackReason: reason,
+    providers: providerErrors,
+  }, 503);
+}
+  await auditAi(user, 'generatePost', r.model, r.usage, { provider: r.provider, count: isBulk ? n : 1, usedTrends, trendGeo }, env);
+  await chargeCost(user, 1, env);
+
+  return json({
+    ok: true,
+    ...parsed,
+    model: r.model,
+    provider: r.provider,
+    usedTrends,
+    trendGeo,
+  });
+}
+
+async function handleGenerateImage(body, env, user) {
+  requireRole(user.role, ALLOWED_ROLES_FOR_AI);
+  await enforceGovernance(user, 'generateImage', env).catch(e => {
+    if (String(e.message).includes('Rate limit') || String(e.message).includes('budget')) throw e;
+  });
+
+  const { prompt = '', platform = 'tiktok', pillar = 'educational', quality = 'production' } = body || {};
+  if (!prompt || prompt.trim().length < 10) {
+    return json({ ok: false, error: 'prompt required (min 10 chars)' }, 400);
+  }
+
+   // SDXL requires width and height divisible by 8.
+  // Generate at the nearest safe size, then frontend crops to exact platform ratio.
+  const steps = quality === 'draft' ? 8 : 20;
+  const dimMap = {
+    tiktok:    { w: 1080, h: 1920 },
+    instagram: { w: 1088, h: 1344 },
+    facebook:  { w: 1024, h: 1024 },
+    linkedin:  { w: 1024, h: 1024 },
+    twitter:   { w: 1344, h: 768  },
+    threads:   { w: 1088, h: 1344 },
+  };
+  const dims   = dimMap[platform] || { w: 1024, h: 1024 };
+  const width  = dims.w;
+  const height = dims.h;
+
+  const enhancedPrompt = `${prompt}. Style: ${pillar}, modern, brand-consistent, professional social media graphic. Clean composition, vibrant but balanced colors, sharp focus, high detail. No text overlays, no watermarks.`;
+  const negativePrompt = 'blurry, low quality, distorted, deformed, ugly, bad anatomy, bad proportions, text, watermark, logo, signature, low resolution, jpeg artifacts';
+
+  if (!env.AI) {
+    return json({ ok: false, error: 'Cloudflare Workers AI not configured (env.AI missing)' }, 500);
+  }
+
+  try {
+    const result = await env.AI.run('@cf/bytedance/stable-diffusion-xl-lightning', {
+      prompt: enhancedPrompt,
+      negative_prompt: negativePrompt,
+      width,
+      height,
+      num_steps: steps,
+      guidance: 7.5,
+    });
+
+    let base64;
+    if (result instanceof Response || result instanceof ReadableStream) {
+      const stream = result instanceof Response ? result.body : result;
+      const reader = stream.getReader();
+      const chunks = [];
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+      }
+      const totalLen = chunks.reduce((s, c) => s + c.length, 0);
+      const merged = new Uint8Array(totalLen);
+      let offset = 0;
+      for (const c of chunks) { merged.set(c, offset); offset += c.length; }
+      let binary = '';
+      const chunkSize = 8192;
+      for (let i = 0; i < merged.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, merged.subarray(i, i + chunkSize));
+      }
+      base64 = btoa(binary);
+    } else if (typeof result === 'string') {
+      base64 = result.replace(/^data:[^;]+;base64,/, '');
+    } else if (result && result.image) {
+      if (typeof result.image === 'string') {
+        base64 = result.image.replace(/^data:[^;]+;base64,/, '');
+      } else {
+        const bytes = result.image;
+        let binary = '';
+        for (let i = 0; i < bytes.length; i += 8192) {
+          binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
+        }
+        base64 = btoa(binary);
+      }
+    } else {
+      return json({ ok: false, error: 'Unexpected model output format', detail: typeof result }, 502);
+    }
+
+    await auditAi(user, 'generateImage', 'stable-diffusion-xl-lightning', null, { provider: 'cloudflare', steps, width, height, quality }, env);
+    await chargeCost(user, 2, env);
+
+    return json({
+      ok: true,
+      imageBase64: base64,
+      mime: 'image/png',
+      model: 'stable-diffusion-xl-lightning',
+      width, height, steps, quality,
+      prompt: enhancedPrompt,
+      negativePrompt,
+      // New: tell the frontend to add this text itself
+      overlayText: body.overlayText || null,
+      overlayHint: 'Render this text with Canvas on the frontend. Do NOT rely on the model to draw text.'
+    });
+  } catch (e) {
+    console.error('[genImage] SDXL Lightning failed:', e.message);
+    return json({
+      ok: false,
+      error: 'Image generation failed: ' + (e.message || 'unknown'),
+      hint: 'Check env.AI binding and model name',
+    }, 502);
+  }
+}
+
+async function handleSuggestHashtags(body, env, user) {
+  requireRole(user.role, ALLOWED_ROLES_FOR_AI);
+  await enforceGovernance(user, 'suggestHashtags', env).catch(e => {
+    if (String(e.message).includes('Rate limit') || String(e.message).includes('budget')) throw e;
+  });
+
+  const { topic = '', platform = 'tiktok', pillar = 'educational', audience = 'Kenyan SMEs', trendGeo = 'KE' } = body || {};
+  if (!topic) return json({ ok: false, error: 'topic required' }, 400);
+
+  // Fetch current trends for context
+  let trendContext = '';
+  try {
+       const trendsReq = new Request(`https://x/trends/rss?geo=${encodeURIComponent(trendGeo)}`, { method: 'GET' });
+    const trendsRes = await handleTrendsRss(trendsReq, env);
+    const trendsData = await trendsRes.json();
+    if (trendsData && trendsData.items && trendsData.items.length) {
+      trendContext = 'Trending in Kenya right now:\n' +
+        trendsData.items.slice(0, 10).map(t => '• ' + t.title).join('\n');
+    }
+  } catch (e) {
+    console.warn('[hashtags] trends fetch failed:', e.message);
+  }
+
+  const system = `Suggest 8-10 hashtags for a ${platform} post about: "${topic}".
+
+Content pillar: ${pillar}
+Audience: ${audience}
+
+${trendContext}
+
+Rules:
+1. Mix of broad (#kenyabusiness) and niche (#viorapos) hashtags.
+2. Avoid over-saturated tags (#love, #followforfollow, #instagood).
+3. Include 1-2 location-based tags (Kenya, Nairobi, etc.) where relevant.
+4. NO invented words. Real hashtags only.
+5. Optionally bias toward currently trending topics where they fit naturally.
+
+Return STRICT JSON ONLY:
+{ "hashtags": [ { "tag": "string-without-hash", "reason": "short reason" } ] }`;
+
+  let r;
+  try {
+    r = await llmChat(env, {
+      model: MODEL_FAST,
+      system,
+      user: 'Generate hashtags now.',
+      temperature: 0.5,
+      max_tokens: 500,
+      jsonMode: true,
+      purpose: 'suggestHashtags',
+    });
+  } catch (e) {
+    return json({ ok: false, error: 'AI failed: ' + (e.message || 'unknown'), hashtags: [] }, 502);
+  }
+
+  let parsed;
+  try { parsed = JSON.parse(r.text); }
+  catch (e) {
+    const match = String(r.text || '').match(/\{[\s\S]*\}/);
+    try { parsed = match ? JSON.parse(match[0]) : { hashtags: [] }; }
+    catch (e2) { parsed = { hashtags: [] }; }
+  }
+  if (!Array.isArray(parsed.hashtags)) parsed.hashtags = [];
+
+  if (r._isFallback || parsed._isFallback) {
+    const reason = r.fallbackReason || parsed._fallbackReason || 'unknown';
+    const isNoProviders = reason === 'no-providers';
+    const providerErrors = (r.fallbacksUsed || []).map(e => ({
+      provider: e.provider,
+      status: e.status || null,
+      error: String(e.error || '').slice(0, 240),
+      attempts: e.attempts || null,
+    }));
+    return json({
+      ok: false,
+      error: isNoProviders
+        ? 'AI is not configured on the server. Ask the admin to set up an LLM provider (Groq, Gemini, or Cloudflare AI).'
+        : 'All AI providers are currently unavailable. See "providers" for details.',
+      fallbackReason: reason,
+      providers: providerErrors,
+    }, 503);
+  }
+
+  await auditAi(user, 'suggestHashtags', r.model, r.usage, { provider: r.provider }, env);
+  await chargeCost(user, 1, env);
+
+  return json({
+    ok: true,
+    hashtags: parsed.hashtags,
+    trendContext: trendContext ? trendContext.split('\n').slice(1) : [],
+    model: r.model,
+    provider: r.provider,
+  });
+}
+
+/* ============================================================
+   SOCIAL POSTING — Facebook / TikTok / Instagram
+   ============================================================ */
+
+async function handlePostFacebook(body, env, user) {
+  requireRole(user.role, ALLOWED_ROLES_FOR_AI);
+
+  const { caption = '', hashtags = [], imageBase64 = null, imageMime = 'image/png', utmUrl = '' } = body || {};
+  if (!caption.trim()) return json({ ok: false, error: 'caption required' }, 400);
+
+  if (!env.FB_PAGE_TOKEN || !env.FB_PAGE_ID) {
+    return json({
+      ok: false,
+      platform: 'facebook',
+      mode: 'compose-link',
+      fallback: 'compose-link',
+      fallbackUrl: env.FB_PAGE_ID
+        ? `https://www.facebook.com/${env.FB_PAGE_ID}/posts/?compose=1`
+        : 'https://www.facebook.com/',
+      caption,
+      hashtags,
+      error: 'Facebook Page not configured on worker (set FB_PAGE_TOKEN and FB_PAGE_ID).',
+      message: 'Opening Facebook composer for manual paste.',
+    }, 200);
+  }
+
+  const tagString = (Array.isArray(hashtags) ? hashtags : [])
+    .map(h => String(h || '').trim())
+    .filter(Boolean)
+    .map(h => h.startsWith('#') ? h : '#' + h)
+    .join(' ');
+
+  const messageParts = [caption.trim()];
+  if (tagString) messageParts.push(tagString);
+  if (utmUrl) messageParts.push('🔗 ' + utmUrl);
+  const fullMessage = messageParts.join('\n\n');
+
+  // With image → /photos endpoint
+  if (imageBase64) {
+    try {
+      const clean = String(imageBase64).replace(/^data:[^;]+;base64,/, '');
+      const binary = atob(clean);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const blob = new Blob([bytes], { type: imageMime || 'image/png' });
+
+      const form = new FormData();
+      form.append('source', blob, 'viora-post.png');
+      form.append('message', fullMessage);
+      form.append('access_token', env.FB_PAGE_TOKEN);
+
+      const r = await fetch(
+        `https://graph.facebook.com/v20.0/${env.FB_PAGE_ID}/photos`,
+        { method: 'POST', body: form }
+      );
+      const data = await r.json();
+        if (data.id) {
+        await auditAi(user, 'postFacebook', null, null, { pageId: env.FB_PAGE_ID, photoId: data.id }, env);
+        return json({
+          ok: true,
+          mode: 'auto',
+          platform: 'facebook',
+          postId: data.id,
+          post_id: data.post_id || null,
+          url: `https://www.facebook.com/${data.post_id || data.id}`,
+        });
+      }
+      return json({ ok: false, error: 'Facebook photo upload failed', detail: data }, 502);
+    } catch (e) {
+      return json({ ok: false, error: 'Facebook photo error: ' + (e.message || 'unknown') }, 502);
+    }
+  }
+
+  // Text-only → /feed endpoint
+  try {
+    const r = await fetch(
+      `https://graph.facebook.com/v20.0/${env.FB_PAGE_ID}/feed`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: fullMessage,
+          access_token: env.FB_PAGE_TOKEN,
+        }),
+      }
+    );
+    const data = await r.json();
+      if (data.id) {
+      await auditAi(user, 'postFacebook', null, null, { pageId: env.FB_PAGE_ID, postId: data.id }, env);
+      return json({
+        ok: true,
+        mode: 'auto',
+        platform: 'facebook',
+        postId: data.id,
+        url: `https://www.facebook.com/${data.id}`,
+      });
+    }
+    return json({ ok: false, error: 'Facebook post failed', detail: data }, 502);
+  } catch (e) {
+    return json({ ok: false, error: 'Facebook error: ' + (e.message || 'unknown') }, 502);
+  }
+}
+
+async function handlePostTikTok(body, env, user) {
+  requireRole(user.role, ALLOWED_ROLES_FOR_AI);
+
+  const { caption = '', hashtags = [], utmUrl = '' } = body || {};
+  if (!caption.trim()) return json({ ok: false, error: 'caption required' }, 400);
+
+  const tagString = (Array.isArray(hashtags) ? hashtags : [])
+    .map(h => String(h || '').trim())
+    .filter(Boolean)
+    .map(h => h.startsWith('#') ? h : '#' + h)
+    .join(' ');
+
+  const fullCaption = [caption.trim(), tagString, utmUrl].filter(Boolean).join(' ');
+
+  // TikTok direct video posting requires a public video URL, which we don't have.
+  // Return the compose-link so the frontend opens TikTok Studio with caption prefilled.
+  // NOTE: ok:true here means "the request succeeded" — fallback tells the frontend
+  // to use compose-link flow. ok:false is reserved for actual failures.
+  return json({
+    ok: false,
+    platform: 'tiktok',
+    mode: 'compose-link',
+    fallback: 'compose-link',
+    /* TikTok Studio doesn't accept caption in the query string.
+       The client copies the caption to the clipboard so the user
+       can paste it after the video uploads. */
+    fallbackUrl: 'https://www.tiktok.com/tiktokstudio/upload',
+    caption: fullCaption,
+    hashtags,
+    utmUrl,
+    error: 'TikTok direct posting requires a public video URL. Paste manually.',
+    message: 'Caption copied to clipboard. Upload video in TikTok Studio and paste.',
+  }, 200);
+}
+
+async function handlePostInstagram(body, env, user) {
+  requireRole(user.role, ALLOWED_ROLES_FOR_AI);
+
+  const { caption = '', hashtags = [], utmUrl = '' } = body || {};
+  if (!caption.trim()) return json({ ok: false, error: 'caption required' }, 400);
+
+  if (!env.IG_USER_ID || !env.IG_ACCESS_TOKEN) {
+    return json({
+      ok: false,
+      mode: 'compose-link',
+      error: 'Instagram not configured on worker',
+      detail: 'Set env.IG_USER_ID and env.IG_ACCESS_TOKEN',
+      fallback: 'compose-link',
+      fallbackUrl: 'https://www.instagram.com/create/select/',
+      caption,
+      hashtags,
+    }, 200);
+  }
+
+  const tagString = (Array.isArray(hashtags) ? hashtags : [])
+    .map(h => String(h || '').trim())
+    .filter(Boolean)
+    .map(h => h.startsWith('#') ? h : '#' + h)
+    .join(' ');
+  const fullCaption = [caption.trim(), tagString, utmUrl].filter(Boolean).join('\n\n');
+
+  // Instagram Graph API requires a public image URL — we don't have one.
+  return json({
+    ok: false,
+    platform: 'instagram',
+    mode: 'compose-link',
+    fallback: 'compose-link',
+    fallbackUrl: 'https://www.instagram.com/create/select/',
+    caption: fullCaption,
+    error: 'Instagram requires a public image URL for Graph API. Paste manually.',
+    message: 'Caption copied to clipboard. Upload image in Instagram and paste.',
+  }, 200);
+}
+
+/* ============================================================
+   CONTENT QUEUE (for 4-hour automation)
+   ============================================================ */
+async function handleQueueEnqueue(body, env, user) {
+  requireRole(user.role, ALLOWED_ROLES_FOR_AI);
+  const { caption = '', hashtags = [], imageBase64 = null, platform = 'facebook', pillar = 'educational', scheduledFor = null } = body || {};
+  if (!caption.trim()) return json({ ok: false, error: 'caption required' }, 400);
+
+  const id = 'q-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const record = {
+    id, caption, hashtags, imageBase64,
+    platform, pillar,
+    status: 'pending',
+    scheduledFor: scheduledFor || new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
+    createdAt: new Date().toISOString(),
+    createdBy: user.email || user.localId,
+  };
+
+  const qs = '?auth=' + (env.FIREBASE_DATABASE_SECRET || user.idToken || '');
+  const r = await fetch(`${rtdb(env)}/viora_data/orgs/viora/socialQueue/${id}.json${qs}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(record),
+  });
+  if (!r.ok) return json({ ok: false, error: 'Queue write failed' }, 502);
+  return json({ ok: true, id, scheduledFor: record.scheduledFor });
+}
+
+async function handleQueueList(body, env, user) {
+  requireRole(user.role, ALLOWED_ROLES_FOR_AI);
+  const { status = null, limit = 20 } = body || {};
+  const qs = '?auth=' + (env.FIREBASE_DATABASE_SECRET || user.idToken || '');
+  const r = await fetch(`${rtdb(env)}/viora_data/orgs/viora/socialQueue.json${qs}`);
+  if (!r.ok) return json({ ok: true, items: [] });
+  const all = (await r.json()) || {};
+  let items = Object.values(all);
+  if (status) items = items.filter(i => i.status === status);
+  items.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  return json({ ok: true, items: items.slice(0, limit) });
+}
+
+async function handleQueuePublish(body, env, user) {
+  requireRole(user.role, ALLOWED_ROLES_FOR_AI);
+  const { queueId } = body || {};
+  if (!queueId) return json({ ok: false, error: 'queueId required' }, 400);
+
+  const qs = '?auth=' + (env.FIREBASE_DATABASE_SECRET || user.idToken || '');
+  const itemRes = await fetch(`${rtdb(env)}/viora_data/orgs/viora/socialQueue/${queueId}.json${qs}`);
+  const item = itemRes.ok ? await itemRes.json() : null;
+  if (!item) return json({ ok: false, error: 'Queue item not found' }, 404);
+  if (item.status === 'published') return json({ ok: false, error: 'Already published' }, 400);
+
+  if (item.platform !== 'facebook') {
+    return json({
+      ok: false,
+      error: 'Only Facebook auto-publish is supported. TikTok/Instagram require manual upload via compose link.',
+      queueId,
+    }, 400);
+  }
+
+  const publishRes = await handlePostFacebook(
+    { caption: item.caption, hashtags: item.hashtags, imageBase64: item.imageBase64 },
+    env, user
+  );
+  const data = await publishRes.json();
+  if (!data.ok) return json({ ok: false, error: 'Publish failed', detail: data }, 502);
+
+  await fetch(`${rtdb(env)}/viora_data/orgs/viora/socialQueue/${queueId}/status.json${qs}`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify('published'),
+  });
+  await fetch(`${rtdb(env)}/viora_data/orgs/viora/socialQueue/${queueId}/publishedAt.json${qs}`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(new Date().toISOString()),
+  });
+
+  return json({ ok: true, queueId, published: true, platform: item.platform, postId: data.postId || null, url: data.url || null });
+}
+
+/* ============================================================
+   AUTO-PREPARE QUEUE (runs on every cron tick)
+   ============================================================ */
+async function autoPrepareSocialQueue(env) {
+  const qs = '?auth=' + (env.FIREBASE_DATABASE_SECRET || fbKey(env));
+  try {
+    const listRes = await fetch(`${rtdb(env)}/viora_data/orgs/viora/socialQueue.json${qs}`);
+    const all = listRes.ok ? (await listRes.json()) || {} : {};
+    const now = Date.now();
+    const next3h = now + 3 * 60 * 60 * 1000;
+    const alreadyPending = Object.values(all).some(i =>
+      i.status === 'pending' && i.scheduledFor && Date.parse(i.scheduledFor) < next3h
+    );
+    if (alreadyPending) {
+      console.log('[autoQueue] pending item already exists — skipping generation');
+      return;
+    }
+
+    let trendContext = '';
+    try {
+      const trendsReq = new Request('https://x/trends/rss?geo=KE', { method: 'GET' });
+      const trendsRes = await handleTrendsRss(trendsReq, env);
+      const trendsData = await trendsRes.json();
+      if (trendsData.items && trendsData.items.length) {
+        trendContext = '\nTrends in Kenya: ' + trendsData.items.slice(0, 3).map(t => t.title).join(', ');
+      }
+    } catch (e) {}
+
+    const systemPrompt = `You are a social media manager for Viora Intercollective, a Kenyan business operating systems firm.
+Generate 1 Facebook post for the next 4-hour window. Keep it 60-200 chars, include a CTA, 3-5 hashtags.
+Return STRICT JSON: { "caption": string, "hashtags": [string], "imagePrompt": string, "pillar": string }
+imagePrompt should describe a clean, professional social media graphic (no text in image).${trendContext}`;
+
+    const r = await llmChat(env, {
+      model: MODEL_FAST,
+      system: systemPrompt,
+      user: 'Generate a post for the next 4-hour window. Be relevant to Kenyan SMEs and business operations.',
+      temperature: 0.7, max_tokens: 500, jsonMode: true, purpose: 'autoQueue',
+    });
+
+    let parsed;
+    try { parsed = JSON.parse(r.text); }
+    catch (e) { return; }
+
+    const id = 'q-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const record = {
+      id,
+      caption: parsed.caption || 'Business operations made simple. #viora #kenya',
+      hashtags: Array.isArray(parsed.hashtags) ? parsed.hashtags : ['viora', 'kenya', 'business'],
+      imageBase64: null,
+      imagePrompt: parsed.imagePrompt || '',
+      platform: 'facebook',
+      pillar: parsed.pillar || 'educational',
+      status: 'pending',
+      scheduledFor: new Date(now + 4 * 60 * 60 * 1000).toISOString(),
+      createdAt: new Date().toISOString(),
+      createdBy: 'auto-cron',
+    };
+
+    await fetch(`${rtdb(env)}/viora_data/orgs/viora/socialQueue/${id}.json${qs}`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(record),
+    });
+    console.log('[autoQueue] prepared queue item', id);
+  } catch (e) {
+    console.error('[autoQueue] failed:', e.message);
+  }
+}
+
+
+/* ============================================================
+   SOCIAL STATS — YouTube / TikTok
+   ============================================================ */
+async function handleSocialStatsBatch(body, env, user) {
+  const { posts = [] } = body || {};
+  if (!Array.isArray(posts) || posts.length === 0) {
+    return json({ ok: false, error: 'posts array required' }, 400);
+  }
+  if (posts.length > 40) {
+    return json({ ok: false, error: 'Max 40 posts per batch' }, 400);
+  }
+
+  // Pre-fetch TikTok access token once for all TikTok posts
+  let tiktokToken = null;
+  const needsTikTok = posts.some(p => p && p.platform === 'tiktok');
+  if (needsTikTok) {
+    tiktokToken = await getTikTokTokenForUser(user, env);
+  }
+
+  const results = {};
+  const CONCURRENCY = 5;
+
+  for (let i = 0; i < posts.length; i += CONCURRENCY) {
+    const batch = posts.slice(i, i + CONCURRENCY);
+    const settled = await Promise.allSettled(
+      batch.map(async (p) => {
+        if (!p || !p.platform || !p.url) return { id: p && p.id, ok: false, error: 'platform and url required' };
+        if (p.platform === 'youtube') {
+          return { id: p.id, ...(await youtubeStats(p.url, env)) };
+        }
+        if (p.platform === 'tiktok') {
+          return { id: p.id, ...(await tiktokStats(p.url, tiktokToken, env)) };
+        }
+        return { id: p.id, ok: false, error: 'Unsupported platform: ' + p.platform };
+      })
+    );
+    settled.forEach((s, j) => {
+      const post = batch[j];
+      const id = post && post.id;
+      if (!id) return;
+      results[id] = s.status === 'fulfilled'
+        ? s.value
+        : { id, ok: false, error: s.reason && s.reason.message || 'unknown' };
+    });
+  }
+
+  return json({ ok: true, results, fetchedAt: new Date().toISOString() });
+}
+
+async function handleSocialStats(request, env) {
+  let body;
+  try { body = await request.json(); }
+  catch (e) { return json({ ok: false, error: 'Invalid JSON body' }, 400); }
+
+  const { platform, url, accessToken } = body || {};
+
+  if (platform === 'youtube') {
+    /* 1. Video URL → per-video stats */
+    const videoId = extractYouTubeId(url);
+    if (videoId) {
+      return json(await youtubeStats(url, env));
+    }
+
+    if (!env.YOUTUBE_API_KEY) {
+      return json({ ok: false, error: 'YOUTUBE_API_KEY is not configured on the worker.' }, 200);
+    }
+
+    /* 2. Channel ID URL: youtube.com/channel/UCxxxx */
+    const channelId = extractYouTubeChannelId(url);
+    if (channelId) {
+      try {
+        const r = await fetch(
+          `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${encodeURIComponent(channelId)}&key=${encodeURIComponent(env.YOUTUBE_API_KEY)}`
+        );
+        const data = await r.json();
+        const ch = data.items && data.items[0];
+        if (ch) {
+          return json({
+            ok: true,
+            platform: 'youtube',
+            followers: Number(ch.statistics.subscriberCount) || 0,
+            views: Number(ch.statistics.viewCount) || 0,
+            videoCount: Number(ch.statistics.videoCount) || 0,
+            title: ch.snippet.title,
+            thumbnail: ch.snippet.thumbnails && ch.snippet.thumbnails.default && ch.snippet.thumbnails.default.url,
+            source: 'YouTube Data API v3 (channel)',
+          });
+        }
+      } catch (e) {
+        console.warn('[stats] youtube channel lookup failed:', e.message);
+      }
+    }
+
+    /* 3. Handle URL: youtube.com/@handle or /c/ or /user/ */
+    const handleMatch = String(url).match(
+      /youtube\.com\/(?:@|c\/|user\/)([A-Za-z0-9_.-]+)/i
+    );
+    if (handleMatch && handleMatch[1]) {
+      const handle = handleMatch[1].replace(/^@/, '');
+      try {
+        const r = await fetch(
+          `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forHandle=${encodeURIComponent(handle)}&key=${encodeURIComponent(env.YOUTUBE_API_KEY)}`
+        );
+        const data = await r.json();
+        let ch = data.items && data.items[0];
+
+        /* Legacy fallback */
+        if (!ch) {
+          const r2 = await fetch(
+            `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forUsername=${encodeURIComponent(handle)}&key=${encodeURIComponent(env.YOUTUBE_API_KEY)}`
+          );
+          const data2 = await r2.json();
+          ch = data2.items && data2.items[0];
+        }
+
+        if (ch) {
+          return json({
+            ok: true,
+            platform: 'youtube',
+            followers: Number(ch.statistics.subscriberCount) || 0,
+            views: Number(ch.statistics.viewCount) || 0,
+            videoCount: Number(ch.statistics.videoCount) || 0,
+            title: ch.snippet.title,
+            thumbnail: ch.snippet.thumbnails && ch.snippet.thumbnails.default && ch.snippet.thumbnails.default.url,
+            source: 'YouTube Data API v3 (handle)',
+          });
+        }
+      } catch (e) {
+        console.warn('[stats] youtube handle lookup failed:', e.message);
+      }
+    }
+
+    return json({
+      ok: false,
+      error: 'Could not resolve YouTube channel. Provide a video URL, channel URL (youtube.com/channel/UCxxx), or handle URL (youtube.com/@handle).',
+      url,
+    }, 200);
+  }
+
+  if (platform === 'tiktok') {
+    let token = accessToken || null;
+    const authHeader = request.headers.get('Authorization') || '';
+    const idToken = authHeader.replace(/^Bearer\s+/i, '');
+    if (!token && idToken) {
+      const user = await verifyIdToken(idToken, env);
+      if (user) {
+        const qs = env.FIREBASE_DATABASE_SECRET ? '?auth=' + env.FIREBASE_DATABASE_SECRET : '';
+        const r = await fetch(
+          `${rtdb(env)}/viora_data/orgs/viora/users/${user.localId}/tiktok.json${qs}`
+        );
+        if (r.ok) {
+          const rec = await r.json();
+          if (rec && rec.accessToken) token = rec.accessToken;
+        }
+      }
+    }
+    return json(await tiktokStats(url, token, env));
+  }
+
+  if (platform === 'twitter' || platform === 'x') {
+    return json({
+      ok: false,
+      error: 'Twitter follower fetch not configured. Set TWITTER_BEARER_TOKEN on the worker.',
+    }, 200);
+  }
+
+  if (platform === 'facebook' || platform === 'instagram') {
+    return json({
+      ok: false,
+      error: 'Follower count for ' + platform + ' requires a Business App token.',
+    }, 200);
+  }
+
+  return json({ ok: false, error: 'Unsupported platform: ' + platform }, 400);
+}
+/* ============================================================
+   YOUTUBE CHANNEL SYNC — fetch every video on the channel
+   ============================================================
+   Given a channel URL (channel ID, @handle, /c/, /user/), returns
+   every video the channel has uploaded, with basic stats.
+
+   Used by the frontend to auto-import all videos into the Post
+   Library so posts uploaded outside the system still show up.
+   ============================================================ */
+async function handleSyncChannel(request, env) {
+  let body;
+  try { body = await request.json(); }
+  catch (e) { return json({ ok: false, error: 'Invalid JSON body' }, 400); }
+
+  const { platform, url, maxResults = 50 } = body || {};
+
+  if (platform !== 'youtube') {
+    return json({ ok: false, error: 'Only YouTube is supported for channel sync' }, 400);
+  }
+  if (!url) {
+    return json({ ok: false, error: 'url required' }, 400);
+  }
+  if (!env.YOUTUBE_API_KEY) {
+    return json({ ok: false, error: 'YOUTUBE_API_KEY not configured on the worker.' }, 200);
+  }
+
+  /* ── 1. Resolve channel ID or handle to a channel ID ── */
+  let channelId = null;
+  const idMatch = String(url).match(/youtube\.com\/channel\/(UC[A-Za-z0-9_-]{22})/);
+  if (idMatch) channelId = idMatch[1];
+
+  if (!channelId) {
+    const handleMatch = String(url).match(
+      /youtube\.com\/(?:@|c\/|user\/)([A-Za-z0-9_.-]+)/i
+    );
+    if (handleMatch) {
+      const handle = handleMatch[1].replace(/^@/, '');
+      try {
+        const r = await fetch(
+          `https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&forHandle=${encodeURIComponent(handle)}&key=${encodeURIComponent(env.YOUTUBE_API_KEY)}`
+        );
+        const data = await r.json();
+        let ch = data.items && data.items[0];
+
+        if (!ch) {
+          const r2 = await fetch(
+            `https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&forUsername=${encodeURIComponent(handle)}&key=${encodeURIComponent(env.YOUTUBE_API_KEY)}`
+          );
+          const data2 = await r2.json();
+          ch = data2.items && data2.items[0];
+        }
+
+        if (!ch) {
+          return json({ ok: false, error: `No channel found for handle "${handle}"` }, 200);
+        }
+        channelId = ch.id;
+      } catch (e) {
+        return json({ ok: false, error: 'Handle lookup failed: ' + e.message }, 502);
+      }
+    }
+  }
+
+  if (!channelId) {
+    return json({ ok: false, error: 'Could not resolve channel ID from URL' }, 400);
+  }
+
+  /* ── 2. Get the uploads playlist + channel stats ── */
+  let uploadsPlaylistId = null;
+  let channelMeta = null;
+  try {
+    const r = await fetch(
+      `https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet,statistics&id=${encodeURIComponent(channelId)}&key=${encodeURIComponent(env.YOUTUBE_API_KEY)}`
+    );
+    const data = await r.json();
+    const ch = data.items && data.items[0];
+    if (!ch) {
+      return json({ ok: false, error: 'Channel not found' }, 200);
+    }
+    uploadsPlaylistId = ch.contentDetails?.relatedPlaylists?.uploads;
+    channelMeta = {
+      id: ch.id,
+      title: ch.snippet.title,
+      followers: Number(ch.statistics.subscriberCount) || 0,
+      totalViews: Number(ch.statistics.viewCount) || 0,
+      videoCount: Number(ch.statistics.videoCount) || 0,
+      thumbnail: ch.snippet.thumbnails?.default?.url || null,
+    };
+  } catch (e) {
+    return json({ ok: false, error: 'Channel stats fetch failed: ' + e.message }, 502);
+  }
+
+  if (!uploadsPlaylistId) {
+    return json({ ok: false, error: 'Could not resolve uploads playlist' }, 502);
+  }
+
+  /* ── 3. List every video in the uploads playlist ── */
+  const videos = [];
+  let pageToken = null;
+  const maxPerPage = 50;
+  const hardCap = Math.min(maxResults, 500);
+
+  while (videos.length < hardCap) {
+    const params = new URLSearchParams({
+      part: 'snippet,contentDetails',
+      playlistId: uploadsPlaylistId,
+      maxResults: String(maxPerPage),
+      key: env.YOUTUBE_API_KEY,
+    });
+    if (pageToken) params.set('pageToken', pageToken);
+
+    let r, data;
+    try {
+      r = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?${params}`);
+      data = await r.json();
+    } catch (e) {
+      return json({ ok: false, error: 'Playlist fetch failed: ' + e.message, partial: videos }, 502);
+    }
+
+    if (!r.ok || data.error) {
+      return json({
+        ok: false,
+        error: 'Playlist fetch error: ' + (data.error?.message || 'unknown'),
+        partial: videos,
+      }, 200);
+    }
+
+    for (const item of data.items || []) {
+      const vId = item.contentDetails?.videoId || item.snippet?.resourceId?.videoId;
+      if (!vId) continue;
+      videos.push({
+        videoId: vId,
+        title: item.snippet?.title || '',
+        description: item.snippet?.description || '',
+        publishedAt: item.snippet?.publishedAt || item.contentDetails?.videoPublishedAt || null,
+        thumbnail: item.snippet?.thumbnails?.medium?.url || item.snippet?.thumbnails?.default?.url || null,
+        url: `https://www.youtube.com/watch?v=${vId}`,
+      });
+      if (videos.length >= hardCap) break;
+    }
+
+    pageToken = data.nextPageToken || null;
+    if (!pageToken) break;
+  }
+
+  /* ── 4. Batch-fetch stats for all videos ── */
+  const videoIds = videos.map(v => v.videoId);
+  const statsMap = {};
+
+  for (let i = 0; i < videoIds.length; i += 50) {
+    const chunk = videoIds.slice(i, i + 50);
+    try {
+      const r = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet&id=${chunk.join(',')}&key=${encodeURIComponent(env.YOUTUBE_API_KEY)}`
+      );
+      const data = await r.json();
+      for (const item of data.items || []) {
+        statsMap[item.id] = {
+          views: Number(item.statistics.viewCount) || 0,
+          likes: Number(item.statistics.likeCount) || 0,
+          comments: Number(item.statistics.commentCount) || 0,
+          shares: null,
+          followers: channelMeta.followers,
+          title: item.snippet.title,
+          publishedAt: item.snippet.publishedAt,
+        };
+      }
+    } catch (e) {
+      console.warn('[syncChannel] stats batch failed:', e.message);
+    }
+  }
+
+  /* ── 5. Merge stats into video list ── */
+  const enriched = videos.map(v => ({
+    ...v,
+    stats: statsMap[v.videoId] || null,
+  }));
+
+  return json({
+    ok: true,
+    platform: 'youtube',
+    channel: channelMeta,
+    videos: enriched,
+    total: enriched.length,
+    fetchedAt: new Date().toISOString(),
+    source: 'YouTube Data API v3 (sync)',
+  });
+}
+
+async function youtubeStats(url, env) {
+  if (!env.YOUTUBE_API_KEY) {
+    return { ok: false, error: 'YOUTUBE_API_KEY is not configured on the worker.' };
+  }
+  const videoId = extractYouTubeId(url);
+  if (!videoId) return { ok: false, error: 'Could not parse YouTube video ID from URL.' };
+
+  const api = `https://www.googleapis.com/youtube/v3/videos` +
+              `?part=statistics,snippet&id=${encodeURIComponent(videoId)}` +
+              `&key=${encodeURIComponent(env.YOUTUBE_API_KEY)}`;
+
+  let data;
+  try {
+    const r = await fetch(api);
+    data = await r.json();
+    if (data.error) return { ok: false, error: data.error.message };
+  } catch (e) {
+    return { ok: false, error: 'YouTube fetch failed: ' + e.message };
+  }
+
+  const item = data.items && data.items[0];
+  if (!item) return { ok: false, error: 'Video not found or is private.' };
+
+  let followers = null;
+  try {
+    const chApi = `https://www.googleapis.com/youtube/v3/channels` +
+                  `?part=statistics&id=${encodeURIComponent(item.snippet.channelId)}` +
+                  `&key=${encodeURIComponent(env.YOUTUBE_API_KEY)}`;
+    const chData = await fetch(chApi).then(r => r.json());
+    followers = Number(chData.items && chData.items[0] && chData.items[0].statistics && chData.items[0].statistics.subscriberCount) || null;
+  } catch (e) {}
+
+  return {
+    ok: true,
+    platform: 'youtube',
+    source: 'YouTube Data API v3',
+    views:       Number(item.statistics.viewCount)    || 0,
+    likes:       Number(item.statistics.likeCount)    || 0,
+    comments:    Number(item.statistics.commentCount) || 0,
+    shares:      null,
+    followers,
+    title:       item.snippet.title,
+    thumbnail:   (item.snippet.thumbnails && item.snippet.thumbnails.medium && item.snippet.thumbnails.medium.url) || null,
+    publishedAt: item.snippet.publishedAt,
+  };
+}
+
+function extractYouTubeId(url) {
+  if (!url) return null;
+  const m = String(url).match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/
+  );
+  return m ? m[1] : null;
+}
+
+async function tiktokStats(url, accessToken, env) {
+  if (!accessToken) {
+    return { ok: false, error: 'TikTok not connected. Click "Connect TikTok" in the campaign modal.' };
+  }
+
+  const videoId = extractTikTokVideoId(url);
+
+  const userFields = 'open_id,union_id,avatar_url,display_name,follower_count,likes_count,video_count';
+  const videoFields = 'id,title,view_count,like_count,comment_count,share_count,cover_image_url,create_time';
+
+  let userData;
+  try {
+    const userRes = await fetch(
+      `https://open.tiktokapis.com/v2/user/info/?fields=${encodeURIComponent(userFields)}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    userData = await userRes.json();
+  } catch (e) {
+    return { ok: false, error: 'TikTok user API failed: ' + e.message };
+  }
+
+  if (userData.error && userData.error.code !== 'ok') {
+    return { ok: false, error: 'TikTok: ' + (userData.error.message || userData.error.code) };
+  }
+
+  const user = (userData.data && userData.data.user) || {};
+
+  let video = null;
+  if (videoId) {
+    try {
+      const vRes = await fetch(
+        `https://open.tiktokapis.com/v2/video/query/?fields=${encodeURIComponent(videoFields)}`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ filters: { video_ids: [videoId] } }),
+        }
+      );
+      const vData = await vRes.json();
+      if (!vData.error || vData.error.code === 'ok') {
+        video = (vData.data && vData.data.videos && vData.data.videos[0]) || null;
+      }
+    } catch (e) {
+      console.warn('[tiktok] video query failed:', e.message);
+    }
+  }
+
+  return {
+    ok: true,
+    platform: 'tiktok',
+    source: 'TikTok Display API v2',
+    views:     video ? Number(video.view_count)    || 0 : null,
+    likes:     video ? Number(video.like_count)    || 0 : Number(user.likes_count) || 0,
+    comments:  video ? Number(video.comment_count) || 0 : null,
+    shares:    video ? Number(video.share_count)   || 0 : null,
+    followers: Number(user.follower_count) || 0,
+    title:     (video && video.title) || user.display_name || null,
+    thumbnail: (video && video.cover_image_url) || user.avatar_url || null,
+    publishedAt: video && video.create_time
+      ? new Date(Number(video.create_time) * 1000).toISOString()
+      : null,
+  };
+}
+
+function extractTikTokVideoId(url) {
+  if (!url) return null;
+  const m = String(url).match(/\/video\/(\d{15,25})/) ||
+            String(url).match(/[?&]item_id=(\d{15,25})/);
+  return m ? m[1] : null;
+}
+
+/* ============================================================
+   SOCIAL VERIFY — fetch account stats by profile URL
+   ============================================================ */
+async function handleSocialVerify(body, env, user) {
+  requireRole(user.role, ALLOWED_ROLES_FOR_AI);
+
+  const { platform, url } = body || {};
+  if (!platform || !url) return json({ ok: false, error: 'platform and url required' }, 400);
+
+  if (platform === 'youtube') {
+    /* 1. Video URL (youtube.com/watch?v=X, /shorts/X, youtu.be/X) */
+    const videoId = extractYouTubeId(url);
+    if (videoId) {
+      const stats = await youtubeStats(url, env);
+      return json(stats);
+    }
+
+    if (!env.YOUTUBE_API_KEY) {
+      return json({
+        ok: false,
+        error: 'YOUTUBE_API_KEY not configured on worker.',
+      }, 200);
+    }
+
+    /* 2. Channel ID URL (youtube.com/channel/UCxxxxx) */
+    const channelId = extractYouTubeChannelId(url);
+    if (channelId) {
+      try {
+        const r = await fetch(
+          `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${encodeURIComponent(channelId)}&key=${encodeURIComponent(env.YOUTUBE_API_KEY)}`
+        );
+        const data = await r.json();
+        const ch = data.items && data.items[0];
+        if (ch) {
+          return json({
+            ok: true,
+            platform: 'youtube',
+            followers: Number(ch.statistics.subscriberCount) || 0,
+            views: Number(ch.statistics.viewCount) || 0,
+            videoCount: Number(ch.statistics.videoCount) || 0,
+            title: ch.snippet.title,
+            thumbnail: ch.snippet.thumbnails && ch.snippet.thumbnails.default && ch.snippet.thumbnails.default.url,
+          });
+        }
+      } catch (e) {
+        console.warn('[verify] youtube channel-id lookup failed:', e.message);
+      }
+    }
+
+    /* 3. Handle URL (youtube.com/@handle, /c/handle, /user/handle)
+          Uses the channels?forHandle= query param — works for
+          both legacy /c/ and /user/ and modern /@ URLs. */
+    const handleMatch = String(url).match(
+      /youtube\.com\/(?:@|c\/|user\/)([A-Za-z0-9_.-]+)/i
+    );
+    if (handleMatch && handleMatch[1]) {
+      const handle = handleMatch[1].replace(/^@/, '');
+      try {
+        /* Try modern forHandle first */
+        const r = await fetch(
+          `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forHandle=${encodeURIComponent(handle)}&key=${encodeURIComponent(env.YOUTUBE_API_KEY)}`
+        );
+        const data = await r.json();
+        let ch = data.items && data.items[0];
+
+        /* If forHandle didn't match (rare), fall back to forUsername
+           (older YouTube accounts registered a "username" separate
+           from the @handle). */
+        if (!ch) {
+          const r2 = await fetch(
+            `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forUsername=${encodeURIComponent(handle)}&key=${encodeURIComponent(env.YOUTUBE_API_KEY)}`
+          );
+          const data2 = await r2.json();
+          ch = data2.items && data2.items[0];
+        }
+
+        if (ch) {
+          return json({
+            ok: true,
+            platform: 'youtube',
+            followers: Number(ch.statistics.subscriberCount) || 0,
+            views: Number(ch.statistics.viewCount) || 0,
+            videoCount: Number(ch.statistics.videoCount) || 0,
+            title: ch.snippet.title,
+            thumbnail: ch.snippet.thumbnails && ch.snippet.thumbnails.default && ch.snippet.thumbnails.default.url,
+          });
+        }
+      } catch (e) {
+        console.warn('[verify] youtube handle lookup failed:', e.message);
+      }
+    }
+
+    return json({
+      ok: false,
+      error: 'Could not resolve YouTube channel. Provide a channel URL (youtube.com/channel/UCxxx), a handle URL (youtube.com/@handle), or a video URL.',
+    }, 400);
+  }
+
+  if (platform === 'tiktok') {
+    const token = await getTikTokTokenForUser(user, env);
+    if (!token) return json({ ok: false, error: 'TikTok not connected' }, 400);
+    const stats = await tiktokStats(url, token, env);
+    return json(stats);
+  }
+
+  if (platform === 'facebook' || platform === 'instagram') {
+    return json({
+      ok: false,
+      error: 'Follower count for ' + platform + ' is not publicly fetchable via API without a Business App.',
+    }, 200);
+  }
+
+  return json({ ok: false, error: 'Unsupported platform: ' + platform }, 400);
+}
+
+function extractYouTubeChannelId(url) {
+  if (!url) return null;
+  const m = String(url).match(/youtube\.com\/channel\/(UC[A-Za-z0-9_-]{22})/);
+  return m ? m[1] : null;
+}
+
+async function getTikTokTokenForUser(user, env) {
+  const uid = user.localId || user.uid;
+  const qs = env.FIREBASE_DATABASE_SECRET ? '?auth=' + env.FIREBASE_DATABASE_SECRET : '';
+  try {
+    const r = await fetch(`${rtdb(env)}/viora_data/orgs/viora/users/${uid}/tiktok.json${qs}`);
+    if (!r.ok) return null;
+    const rec = await r.json();
+    return rec && rec.accessToken ? rec.accessToken : null;
+  } catch (e) { return null; }
+}
+
+/* ============================================================
+   COMPETITOR STATS
+   ============================================================ */
+async function handleCompetitorStats(body, env, user) {
+  requireRole(user.role, ALLOWED_ROLES_FOR_AI);
+
+  const { platform, handle } = body || {};
+  if (!platform || !handle) return json({ ok: false, error: 'platform and handle required' }, 400);
+
+  const cleanHandle = String(handle).replace(/^@/, '').trim();
+
+   if (platform === 'youtube') {
+    if (!env.YOUTUBE_API_KEY) {
+      return json({ ok: false, error: 'YOUTUBE_API_KEY not set' }, 200);
+    }
+    try {
+      // Fetch channel with contentDetails so we can find the uploads playlist
+      const r = await fetch(
+        `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&forHandle=${encodeURIComponent('@' + cleanHandle)}&key=${encodeURIComponent(env.YOUTUBE_API_KEY)}`
+      );
+      const data = await r.json();
+      const ch = data.items && data.items[0];
+      if (!ch) {
+        return json({ ok: false, error: 'YouTube channel not found for handle ' + cleanHandle }, 200);
+      }
+
+      /* ── Compute a real engagement rate from the last 10 videos ──
+         A channel's aggregate ER is (likes + comments) / views over
+         a window of recent videos. That's the industry standard and
+         matches what tools like SocialBlade report. */
+      let engagementRate = null;
+      let recentVideos = 0;
+      try {
+        const uploadsPlaylistId = ch.contentDetails?.relatedPlaylists?.uploads;
+        if (uploadsPlaylistId) {
+          const plRes = await fetch(
+            `https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails&maxResults=10&playlistId=${encodeURIComponent(uploadsPlaylistId)}&key=${encodeURIComponent(env.YOUTUBE_API_KEY)}`
+          );
+          const plData = await plRes.json();
+          const videoIds = (plData.items || [])
+            .map(i => i.contentDetails?.videoId)
+            .filter(Boolean);
+
+          if (videoIds.length) {
+            const vidRes = await fetch(
+              `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${videoIds.join(',')}&key=${encodeURIComponent(env.YOUTUBE_API_KEY)}`
+            );
+            const vidData = await vidRes.json();
+
+            let totalViews = 0, totalLikes = 0, totalComments = 0;
+            for (const v of (vidData.items || [])) {
+              totalViews    += Number(v.statistics.viewCount)   || 0;
+              totalLikes    += Number(v.statistics.likeCount)   || 0;
+              totalComments += Number(v.statistics.commentCount) || 0;
+            }
+            if (totalViews > 0) {
+              engagementRate = Math.round(((totalLikes + totalComments) / totalViews) * 10000) / 100;
+            }
+            recentVideos = videoIds.length;
+          }
+        }
+      } catch (erErr) {
+        console.warn('[competitor] ER compute failed:', erErr.message);
+      }
+
+      return json({
+        ok: true,
+        platform: 'youtube',
+        handle: '@' + cleanHandle,
+        followers: Number(ch.statistics.subscriberCount) || 0,
+        views: Number(ch.statistics.viewCount) || 0,
+        videoCount: Number(ch.statistics.videoCount) || 0,
+        engagementRate,
+        engagementSampleSize: recentVideos,
+        engagementWindow: 'last 10 videos',
+        title: ch.snippet.title,
+        thumbnail: ch.snippet.thumbnails && ch.snippet.thumbnails.default && ch.snippet.thumbnails.default.url,
+      });
+    } catch (e) {
+      return json({ ok: false, error: 'YouTube error: ' + (e.message || 'unknown') }, 502);
+    }
+  }
+
+  if (platform === 'tiktok') {
+    return json({
+      ok: false,
+      error: 'TikTok competitor stats require a Business Account + access token. Direct scraping is not supported.',
+      hint: 'Enter the competitor stats manually in the dashboard for now.',
+    }, 200);
+  }
+
+  if (platform === 'facebook' || platform === 'instagram') {
+    return json({
+      ok: false,
+      error: platform + ' competitor stats require a Business App + access token. Public follower count is not available via API.',
+    }, 200);
+  }
+
+  return json({ ok: false, error: 'Unsupported platform: ' + platform }, 400);
+}
+
+/* ============================================================
+   TIKTOK OAUTH
+   ============================================================ */
+async function handleTikTokAuthorize(request, env, user) {
+  const url = new URL(request.url);
+  const uid = user.localId || user.uid;
+
+  if (!env.TIKTOK_CLIENT_KEY) {
+    return json({ ok: false, error: 'TIKTOK_CLIENT_KEY not configured' }, 500);
+  }
+
+  const state = crypto.randomUUID();
+  const redirect = env.TIKTOK_REDIRECT_URI || `${url.origin}/tiktok/callback`;
+
+  if (env.SOCIAL_CACHE) {
+    await env.SOCIAL_CACHE.put(`ttstate:${state}`, uid, { expirationTtl: 600 });
+  }
+
+  const authUrl =
+    `https://www.tiktok.com/v2/auth/authorize/` +
+    `?client_key=${encodeURIComponent(env.TIKTOK_CLIENT_KEY)}` +
+    `&response_type=code` +
+    `&scope=${encodeURIComponent('user.info.basic,user.info.stats,video.list')}` +
+    `&redirect_uri=${encodeURIComponent(redirect)}` +
+    `&state=${encodeURIComponent(state)}`;
+
+  return Response.redirect(authUrl, 302);
+}
+
+async function handleTikTokCallback(request, env) {
+  const url = new URL(request.url);
+  const code  = url.searchParams.get('code');
+  const state = url.searchParams.get('state');
+  const error = url.searchParams.get('error');
+
+  if (error) return htmlReply(`<h2>TikTok authorization failed</h2><p>${escapeHtml(error)}</p>`);
+  if (!code || !state) return htmlReply('<h2>Missing code or state</h2>');
+
+  let uid = null;
+  if (env.SOCIAL_CACHE) {
+    uid = await env.SOCIAL_CACHE.get(`ttstate:${state}`);
+    if (uid) await env.SOCIAL_CACHE.delete(`ttstate:${state}`);
+  }
+  if (!uid) return htmlReply('<h2>Invalid or expired session. Please try again.</h2>');
+
+  const redirect = env.TIKTOK_REDIRECT_URI || `${url.origin}/tiktok/callback`;
+
+  let tokenData;
+  try {
+    const r = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_key:    env.TIKTOK_CLIENT_KEY || '',
+        client_secret: env.TIKTOK_CLIENT_SECRET || '',
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: redirect,
+      }),
+    });
+    tokenData = await r.json();
+  } catch (e) {
+    return htmlReply(`<h2>Token exchange failed</h2><pre>${escapeHtml(e.message)}</pre>`);
+  }
+
+  if (!tokenData.access_token) {
+    return htmlReply(
+      `<h2>Token exchange failed</h2><pre>${escapeHtml(JSON.stringify(tokenData, null, 2))}</pre>`
+    );
+  }
+
+  let openId = null, displayName = null, avatar = null;
+  try {
+    const userRes = await fetch(
+      'https://open.tiktokapis.com/v2/user/info/?fields=open_id,display_name,avatar_url,follower_count',
+      { headers: { 'Authorization': `Bearer ${tokenData.access_token}` } }
+    );
+    const userData = await userRes.json();
+    const u = (userData.data && userData.data.user) || {};
+    openId = u.open_id || null;
+    displayName = u.display_name || null;
+    avatar = u.avatar_url || null;
+  } catch (e) {}
+
+  const fbBase = rtdb(env);
+  const fbSecret = env.FIREBASE_DATABASE_SECRET;
+
+  const payload = {
+    accessToken:  tokenData.access_token,
+    refreshToken: tokenData.refresh_token || null,
+    expiresIn:    tokenData.expires_in || null,
+    openId, displayName, avatar,
+    scope:        tokenData.scope || null,
+    savedAt:      new Date().toISOString(),
+    expiresAt:    tokenData.expires_in
+      ? new Date(Date.now() + tokenData.expires_in * 1000).toISOString()
+      : null,
+  };
+
+  const fbUrl = `${fbBase}/viora_data/orgs/viora/users/${uid}/tiktok.json` +
+                (fbSecret ? `?auth=${encodeURIComponent(fbSecret)}` : '');
+
+  const putRes = await fetch(fbUrl, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!putRes.ok) {
+    return htmlReply(`<h2>Saved to TikTok but Firebase write failed</h2><pre>${escapeHtml(await putRes.text())}</pre>`);
+  }
+
+  return htmlReply(`
+    <div style="font-family:system-ui;padding:40px;text-align:center;background:#0a0a0f;color:#f0f4ff;min-height:100vh;">
+      <h1 style="color:#22e6a0;">✅ TikTok Connected</h1>
+      <p>${displayName ? 'Signed in as <strong>' + escapeHtml(displayName) + '</strong>' : 'Authorization complete.'}</p>
+      <p style="color:#94a3b8;font-size:.85rem;">You can close this window.</p>
+      <script>setTimeout(()=>window.close(),1500);</script>
+    </div>
+  `);
+}
+
+function htmlReply(html) {
+  return new Response(`<!DOCTYPE html><html><body>${html}</body></html>`, {
+    headers: { 'Content-Type': 'text/html;charset=utf-8' },
+  });
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/* ============================================================
+   PUSH NOTIFICATIONS
+   ============================================================ */
+function tokenHash(token) {
+  let h = 0;
+  for (let i = 0; i < token.length; i++) {
+    h = ((h << 5) - h) + token.charCodeAt(i);
+    h |= 0;
+  }
+  return 'k' + Math.abs(h).toString(36);
+}
+
+async function handlePushRegister(body, env, user) {
+  const token = (body && body.token) || '';
+  if (!token || token.length < 40) {
+    return json({ error: 'Valid FCM token required' }, 400);
+  }
+
+  const uid = user.localId || user.uid;
+  const hash = tokenHash(token);
+  const path = `/viora_data/orgs/viora/users/${uid}/fcmTokens/${hash}`;
+  const qs = env.FIREBASE_DATABASE_SECRET ? '?auth=' + env.FIREBASE_DATABASE_SECRET : '?auth=' + user.idToken;
+
+  const record = {
+    token,
+    platform: (body && body.platform) || 'web',
+    ua: ((body && body.ua) || '').slice(0, 200) || null,
+    createdAt: new Date().toISOString(),
+    lastSeen: new Date().toISOString(),
+  };
+
+  const r = await fetch(`${rtdb(env)}${path}.json${qs}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(record),
+  });
+
+  if (!r.ok) {
+    return json({ error: 'Failed to persist token', detail: await r.text() }, 502);
+  }
+
+  return json({ ok: true, hash, savedAt: record.createdAt });
+}
+
+async function collectTargetTokens(spec, env) {
+  const out = [];
+  const qs = env.FIREBASE_DATABASE_SECRET ? '?auth=' + env.FIREBASE_DATABASE_SECRET : '';
+  const base = `${rtdb(env)}/viora_data/orgs/viora/users`;
+
+  if (spec.toUid) {
+    const r = await fetch(`${base}/${spec.toUid}/fcmTokens.json${qs}`);
+    if (r.ok) {
+      const obj = await r.json() || {};
+      Object.values(obj).forEach(t => {
+        if (t && t.token) out.push({ uid: spec.toUid, token: t.token, hash: tokenHash(t.token) });
+      });
+    }
+    return out;
+  }
+
+  const r = await fetch(`${base}.json${qs}`);
+  if (!r.ok) return out;
+  const users = (await r.json()) || {};
+
+  for (const [uid, u] of Object.entries(users)) {
+    if (!u) continue;
+    if (spec.toRole && u.role !== spec.toRole) continue;
+    if (spec.toEmail && String(u.email || '').toLowerCase() !== String(spec.toEmail).toLowerCase()) continue;
+    const tokens = u.fcmTokens || {};
+    Object.values(tokens).forEach(t => {
+      if (t && t.token) out.push({ uid, token: t.token, hash: tokenHash(t.token) });
+    });
+  }
+  return out;
+}
+
+async function sendFcmMessage(projectId, accessToken, target, payload) {
+  const endpoint = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
+  const message = {
+    token: target.token,
+    notification: {
+      title: payload.title || 'VIORA',
+      body: payload.body || '',
+    },
+    data: Object.fromEntries(
+      Object.entries(payload.data || {}).map(([k, v]) => [k, String(v)])
+    ),
+    webpush: {
+      headers: {
+        Urgency: payload.urgency || 'high',
+        TTL: String(payload.ttl || 2419200),
+      },
+      notification: {
+        title: payload.title || 'VIORA',
+        body: payload.body || '',
+        icon: payload.icon || 'https://viora.co.ke/viora.png',
+        badge: payload.badge || 'https://viora.co.ke/viora.png',
+        tag: payload.tag || (payload.data && payload.data.notifId) || undefined,
+        renotify: true,
+        requireInteraction: payload.requireInteraction === true,
+        silent: false,
+        vibrate: [200, 100, 200, 100, 200],
+      },
+      fcm_options: {
+        link: payload.url || '/main.html',
+      },
+    },
+    android: {
+      priority: 'high',
+      notification: {
+        channel_id: payload.channelId || 'viora-alerts',
+        sound: payload.sound !== false ? 'default' : undefined,
+        default_vibrate_timings: payload.vibrate !== false,
+      },
+    },
+    apns: {
+      headers: {
+        'apns-priority': '10',
+        'apns-push-type': 'alert',
+      },
+      payload: {
+        aps: {
+          alert: { title: payload.title, body: payload.body },
+          sound: 'default',
+          badge: payload.badgeCount || 1,
+          'mutable-content': 1,
+        },
+      },
+    },
+  };
+
+  const r = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      Authorization: 'Bearer ' + accessToken,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ message }),
+  });
+
+  const result = await r.json().catch(() => ({}));
+  return {
+    ok: r.ok,
+    status: r.status,
+    name: result.name || null,
+    error: r.ok ? null : ((result.error && result.error.message) || 'HTTP ' + r.status),
+    errorStatus: r.ok ? null : (result.error && result.error.status),
+  };
+}
+
+async function pruneToken(env, uid, hash) {
+  let qs = '';
+  if (env.FIREBASE_DATABASE_SECRET) {
+    qs = '?auth=' + env.FIREBASE_DATABASE_SECRET;
+  } else {
+    try {
+      const token = await getServiceAccountToken(env);
+      qs = '?access_token=' + token;
+    } catch (e) {
+      qs = '';
+    }
+  }
+  await fetch(
+    `${rtdb(env)}/viora_data/orgs/viora/users/${uid}/fcmTokens/${hash}.json${qs}`,
+    { method: 'DELETE' }
+  ).catch(() => {});
+}
+
+async function fanoutPush(payload, spec, env) {
+  const projectId = env.FCM_PROJECT_ID || env.FIREBASE_PROJECT_ID || FIREBASE_PROJECT_ID_DEFAULT;
+
+  let accessToken;
+  try {
+    accessToken = await getServiceAccountToken(env);
+  } catch (e) {
+    return { ok: false, error: 'Service account token failed: ' + e.message, sent: 0, total: 0 };
+  }
+
+  const targets = await collectTargetTokens(spec, env);
+  if (targets.length === 0) {
+    return { ok: true, sent: 0, total: 0, pruned: 0, message: 'No devices registered' };
+  }
+
+  const results = [];
+  let sent = 0;
+  let pruned = 0;
+
+  const CONCURRENCY = 10;
+  for (let i = 0; i < targets.length; i += CONCURRENCY) {
+    const batch = targets.slice(i, i + CONCURRENCY);
+    const batchResults = await Promise.all(
+      batch.map(async (t) => {
+        const res = await sendFcmMessage(projectId, accessToken, t, payload);
+        return { target: t, res };
+      })
+    );
+
+    for (const item of batchResults) {
+      const target = item.target;
+      const res = item.res;
+      results.push({
+        uid: target.uid,
+        hash: target.hash,
+        ok: res.ok,
+        name: res.name,
+        error: res.error,
+      });
+      if (res.ok) {
+        sent++;
+      } else if (
+        res.errorStatus === 'NOT_FOUND' ||
+        res.errorStatus === 'INVALID_ARGUMENT' ||
+        String(res.error || '').includes('not-registered') ||
+        String(res.error || '').includes('invalid-registration')
+      ) {
+        await pruneToken(env, target.uid, target.hash);
+        pruned++;
+      }
+    }
+  }
+
+  return { ok: true, sent, total: targets.length, pruned, results };
+}
+
+async function handlePushSend(body, env, user) {
+  const title  = (body && body.title)  || 'VIORA';
+  const msgBody = (body && body.body)  || '';
+  const url    = (body && body.url)    || '/main.html';
+  const icon   = (body && body.icon)   || undefined;
+  const badge  = (body && body.badge)  || undefined;
+  const data   = (body && body.data)   || {};
+  const urgency = (body && body.urgency) || 'high';
+
+  let spec = {};
+  if (body.toUid)   spec.toUid   = body.toUid;
+  if (body.toRole)  spec.toRole  = body.toRole;
+  if (body.toEmail) spec.toEmail = body.toEmail;
+  if (!spec.toUid && !spec.toRole && !spec.toEmail) {
+    spec.toUid = user.localId || user.uid;
+  }
+
+  const isSelfSend   = spec.toUid && spec.toUid === (user.localId || user.uid);
+  const isPrivileged = user.role === 'exec' || user.role === 'admin';
+  const sendingToRole = !!spec.toRole;
+
+  if (!isSelfSend && !isPrivileged) {
+    if (sendingToRole) {
+      return json({ error: 'Forbidden — cannot push to another role' }, 403);
+    }
+    if (spec.toEmail) {
+      return json({ error: 'Forbidden — cannot push to another user' }, 403);
+    }
+  }
+
+  const payload = {
+    title,
+    body: msgBody,
+    url,
+    icon,
+    badge,
+    urgency,
+    data: {
+      ...data,
+      url,
+      notifId: data.notifId || ('push-' + Date.now()),
+      ts: String(Date.now()),
+      level: data.level || 'info',
+      source: data.source || 'api',
+      count: String(data.count || 1),
+    },
+  };
+
+  const result = await fanoutPush(payload, spec, env);
+
+  try {
+    const qs = '?auth=' + (env.FIREBASE_DATABASE_SECRET || user.idToken);
+    await fetch(`${rtdb(env)}/viora_data/orgs/viora/pushLog.json${qs}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: user.localId || user.uid,
+        fromEmail: user.email,
+        spec,
+        title,
+        body: msgBody,
+        sent: result.sent,
+        total: result.total,
+        pruned: result.pruned,
+        ts: new Date().toISOString(),
+      }),
+    });
+  } catch (e) {}
+
+  return json(result, result.ok ? 200 : 502);
+}
+
+async function handlePushTest(body, env, user) {
+  const uid = user.localId || user.uid;
+  const now = new Date().toLocaleTimeString();
+
+  const payload = {
+    title: 'VIORA test notification',
+    body: `Sent at ${now} — if you see this, push works.`,
+    url: '/main.html?test=1',
+    urgency: 'high',
+    data: {
+      url: '/main.html?test=1',
+      level: 'info',
+      source: 'push-test',
+      notifId: 'test-' + Date.now(),
+      ts: String(Date.now()),
+      count: '1',
+    },
+  };
+
+  const result = await fanoutPush(payload, { toUid: uid }, env);
+  return json({
+    ...result,
+    message: result.sent > 0
+      ? `Test push sent to ${result.sent} device(s).`
+      : 'No devices registered yet. Open the app and enable alerts first.',
+  });
+}
+
+async function handleNotificationsEmit(body, env, user) {
+  const targetUid   = body.targetUid   || null;
+  const targetRole  = body.targetRole  || null;
+  const targetEmail = body.targetEmail || null;
+
+  const isSelfTarget = targetUid && targetUid === (user.localId || user.uid);
+  const isPrivileged = user.role === 'exec' || user.role === 'admin';
+
+  if (!isSelfTarget && !isPrivileged) {
+    if (targetRole)  return json({ error: 'Forbidden — cannot target another role' }, 403);
+    if (targetEmail) return json({ error: 'Forbidden — cannot target another user' }, 403);
+    if (targetUid)   return json({ error: 'Forbidden — cannot target another user' }, 403);
+  }
+
+  const id = 'notif-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const notif = {
+    id,
+    title: body.title || 'VIORA',
+    body: body.body || '',
+    icon: body.icon || 'fa-bell',
+    level: body.level || 'info',
+    url: body.url || '/main.html',
+    source: body.source || 'emit',
+    ts: new Date().toISOString(),
+    read: false,
+    origin: body.origin || null,
+  };
+
+  const qs = '?auth=' + (env.FIREBASE_DATABASE_SECRET || user.idToken);
+  await fetch(`${rtdb(env)}/viora_data/orgs/viora/notifications/${id}.json${qs}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(notif),
+  });
+
+  let spec = {};
+  if (targetUid)        spec.toUid   = targetUid;
+  else if (targetRole)  spec.toRole  = targetRole;
+  else if (targetEmail) spec.toEmail = targetEmail;
+  else spec.toUid = user.localId || user.uid;
+
+  const result = await fanoutPush({
+    title: notif.title,
+    body: notif.body,
+    url: notif.url,
+    icon: notif.icon,
+    urgency: body.level === 'urgent' ? 'high' : 'normal',
+    data: {
+      url: notif.url,
+      notifId: id,
+      level: notif.level,
+      source: notif.source,
+      ts: notif.ts,
+      count: '1',
+    },
+  }, spec, env);
+
+  return json({ ok: true, id, ...result });
+}
+
+async function handleNotificationsBroadcast(request, env) {
+  const auth = request.headers.get('Authorization') || '';
+  const secret = auth.replace(/^Bearer\s+/i, '');
+  const expected = env.BROADCAST_SECRET || '';
+
+  if (!expected) {
+    return json({ error: 'BROADCAST_SECRET not configured' }, 500);
+  }
+  if (secret !== expected) {
+    return json({ error: 'Forbidden' }, 403);
+  }
+
+  let body;
+  try { body = await request.json(); }
+  catch (e) { return json({ error: 'Invalid JSON' }, 400); }
+
+  const notifId = body.notifId;
+  if (!notifId) return json({ error: 'notifId required' }, 400);
+
+  const qs = env.FIREBASE_DATABASE_SECRET ? '?auth=' + env.FIREBASE_DATABASE_SECRET : '';
+  const r = await fetch(`${rtdb(env)}/viora_data/orgs/viora/notifications/${notifId}.json${qs}`);
+  if (!r.ok) return json({ error: 'Failed to read notification' }, 502);
+
+  const notif = await r.json();
+  if (!notif) return json({ error: 'Notification not found' }, 404);
+
+  let spec = {};
+  if (notif.targetUid)   spec.toUid   = notif.targetUid;
+  else if (notif.targetRole) spec.toRole = notif.targetRole;
+  else if (notif.targetEmail) spec.toEmail = notif.targetEmail;
+
+  const result = await fanoutPush({
+    title: notif.title,
+    body: notif.body,
+    url: notif.url,
+    icon: notif.icon,
+    urgency: notif.level === 'urgent' ? 'high' : 'normal',
+    data: {
+      url: notif.url,
+      notifId: notif.id,
+      level: notif.level,
+      source: notif.source,
+      ts: notif.ts,
+      count: '1',
+    },
+  }, spec, env);
+
+  return json({ ok: true, notifId, ...result });
+}
+
+/* ============================================================
+   PUBLIC CHATBOT
+   ============================================================ */
+const _publicChatRate = new Map();
+const PUBLIC_CHAT_RATE_LIMIT = 30;
+const PUBLIC_CHAT_RATE_WINDOW = 60 * 60 * 1000;
+const PUBLIC_CHAT_MAX_MESSAGE = 800;
+const PUBLIC_CHAT_MAX_SYSTEM = 12000;
+const PUBLIC_CHAT_MAX_TURNS = 12;
+const PUBLIC_CHAT_RATE_MAX_ENTRIES = 5000;
+
+function checkPublicChatRate(ip) {
+  const now = Date.now();
+  let rec = _publicChatRate.get(ip);
+  if (!rec || rec.resetAt < now) {
+    rec = { count: 0, resetAt: now + PUBLIC_CHAT_RATE_WINDOW };
+    _publicChatRate.set(ip, rec);
+  }
+  rec.count++;
+  if (_publicChatRate.size > PUBLIC_CHAT_RATE_MAX_ENTRIES) {
+    let n = 0;
+    for (const [k, v] of _publicChatRate) {
+      if (v.resetAt < now || n > 1000) _publicChatRate.delete(k);
+      n++;
+    }
+  }
+  return {
+    allowed: rec.count <= PUBLIC_CHAT_RATE_LIMIT,
+    count: rec.count,
+    limit: PUBLIC_CHAT_RATE_LIMIT,
+    resetAt: rec.resetAt,
+  };
+}
+
+async function handlePublicChat(request, env) {
+  const ip =
+    request.headers.get('cf-connecting-ip') ||
+    (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() ||
+    request.headers.get('x-real-ip') ||
+    'unknown';
+
+  const rate = checkPublicChatRate(ip);
+  if (!rate.allowed) {
+    const secsLeft = Math.max(0, Math.ceil((rate.resetAt - Date.now()) / 1000));
+    return json({
+      error: 'Rate limit reached. Try again later.',
+      limit: rate.limit,
+      retryAfterSeconds: secsLeft,
+    }, 429);
+  }
+
+  let body;
+  try { body = await request.json(); }
+  catch (e) { return json({ error: 'Invalid JSON body' }, 400); }
+
+  const messages = Array.isArray(body.messages) ? body.messages : null;
+  const fallbackMessage = typeof body.message === 'string' ? body.message.trim() : '';
+  const fallbackPrompt = typeof body.prompt === 'string' ? body.prompt.trim() : '';
+  const wantStream = body.stream === true;
+  const systemFromBody =
+    (typeof body.system === 'string' && body.system) ||
+    (typeof body.systemPrompt === 'string' && body.systemPrompt) ||
+    '';
+
+  if (!systemFromBody) {
+    return json({ error: 'system prompt required' }, 400);
+  }
+  if (systemFromBody.length > PUBLIC_CHAT_MAX_SYSTEM) {
+    return json({ error: `system prompt too long (max ${PUBLIC_CHAT_MAX_SYSTEM})` }, 400);
+  }
+
+  let chatMessages;
+  if (messages && messages.length) {
+    chatMessages = messages
+      .filter(m => m && typeof m.role === 'string' && typeof m.content === 'string')
+      .slice(-(PUBLIC_CHAT_MAX_TURNS + 1))
+      .map(m => ({
+        role: ['system', 'user', 'assistant'].includes(m.role) ? m.role : 'user',
+        content: String(m.content).slice(0, PUBLIC_CHAT_MAX_MESSAGE),
+      }));
+    if (!chatMessages.length) return json({ error: 'no valid messages' }, 400);
+
+    if (chatMessages[0].role !== 'system') {
+      chatMessages.unshift({ role: 'system', content: systemFromBody });
+    } else {
+      chatMessages[0] = { role: 'system', content: systemFromBody };
+    }
+
+    if (!chatMessages.some(m => m.role === 'user')) {
+      return json({ error: 'no user message' }, 400);
+    }
+  } else if (fallbackMessage || fallbackPrompt) {
+    chatMessages = [
+      { role: 'system', content: systemFromBody },
+      { role: 'user', content: (fallbackMessage || fallbackPrompt).slice(0, PUBLIC_CHAT_MAX_MESSAGE) },
+    ];
+  } else {
+    return json({ error: 'message or messages required' }, 400);
+  }
+
+  const lastUserIdxFromEnd = [...chatMessages].reverse().findIndex(m => m.role === 'user');
+  const userIdx = chatMessages.length - 1 - lastUserIdxFromEnd;
+  const userMessage = chatMessages[userIdx].content;
+
+  const priorTurns = chatMessages
+    .slice(1, userIdx)
+    .map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
+    .join('\n\n');
+
+  const systemPrompt = priorTurns
+    ? `${systemFromBody}\n\n=== PRIOR CONVERSATION ===\n${priorTurns}`
+    : systemFromBody;
+
+  if (wantStream) {
+    return await handlePublicChatStream(env, {
+      systemPrompt,
+      userMessage,
+      ip,
+      userAgent: (request.headers.get('user-agent') || '').slice(0, 180),
+    });
+  }
+
+  try {
+    const result = await llmChat(env, {
+      model: MODEL_FAST,
+      system: systemPrompt,
+      user: userMessage,
+      temperature: 0.4,
+      max_tokens: 700,
+      purpose: 'publicChat',
+    });
+
+    try {
+      const qs = env.FIREBASE_DATABASE_SECRET ? '?auth=' + env.FIREBASE_DATABASE_SECRET : '';
+      await fetch(`${rtdb(env)}/viora_data/publicChatAudit.json${qs}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ip,
+          userAgent: (request.headers.get('user-agent') || '').slice(0, 180),
+          messagePreview: userMessage.slice(0, 120),
+          replyChars: (result.text || '').length,
+          model: result.model,
+          provider: result.provider,
+          usage: result.usage || null,
+          ts: new Date().toISOString(),
+        }),
+      });
+    } catch (e) {}
+
+    return json({
+      ok: true,
+      reply: result.text,
+      response: result.text,
+      message: result.text,
+      text: result.text,
+      model: result.model,
+      provider: result.provider,
+      usage: result.usage || null,
+      generatedAt: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.error('[publicChat] all providers failed:', e.message);
+    return json({
+      error: 'AI temporarily unavailable. Please try again or contact us on WhatsApp.',
+      detail: String(e.message || e).slice(0, 200),
+    }, 502);
+  }
+}
+
+async function handlePublicChatStream(env, params) {
+  const { systemPrompt, userMessage, ip, userAgent } = params;
+
+  const body = {
+    model: MODEL_FAST,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userMessage },
+    ],
+    temperature: 0.4,
+    max_tokens: AVATAR_CHAT_MAX_STREAM_TOKENS,
+    stream: true,
+  };
+
+  let upstream = null;
+  let provider = 'groq';
+
+  if (env.GROQ_API_KEY) {
+    try {
+      upstream = await fetch(GROQ_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + env.GROQ_API_KEY,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+      if (!upstream.ok || !upstream.body) {
+        upstream = null;
+      }
+    } catch (e) {
+      console.warn('[chat-stream] groq stream failed:', e.message);
+      upstream = null;
+    }
+  }
+
+  if (!upstream && env.CEREBRAS_API_KEY) {
+    provider = 'cerebras';
+    try {
+      upstream = await fetch(CEREBRAS_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + env.CEREBRAS_API_KEY,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ...body, model: 'llama-3.3-70b' }),
+      });
+      if (!upstream.ok || !upstream.body) {
+        upstream = null;
+      }
+    } catch (e) {
+      console.warn('[chat-stream] cerebras stream failed:', e.message);
+      upstream = null;
+    }
+  }
+
+  if (!upstream) {
+    return await handlePublicChatStreamFallback(env, {
+      systemPrompt, userMessage, ip, userAgent, provider: 'fallback',
+    });
+  }
+
+  const { readable, writable } = new TransformStream();
+  const writer = writable.getWriter();
+  const encoder = new TextEncoder();
+
+  (async () => {
+    const reader = upstream.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let fullText = '';
+    try {
+      while (true) {
+        const chunk = await reader.read();
+        if (chunk.done) break;
+        buffer += decoder.decode(chunk.value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+        for (const line of lines) {
+          await writer.write(encoder.encode(line + '\n'));
+          if (line.startsWith('data:')) {
+            const payload = line.slice(5).trim();
+            if (payload === '[DONE]') continue;
+            try {
+              const j = JSON.parse(payload);
+              const tok = j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content;
+              if (tok) fullText += tok;
+            } catch (e) {}
+          }
+        }
+        if (buffer.includes('[DONE]')) break;
+      }
+      await writer.write(encoder.encode('data: [DONE]\n\n'));
+    } catch (e) {
+      console.warn('[chat-stream] pipe error:', e.message);
+      try { await writer.write(encoder.encode('data: {"error":"stream interrupted"}\n\n')); } catch (e2) {}
+    } finally {
+      try { await writer.close(); } catch (e) {}
+      try {
+        const qs = env.FIREBASE_DATABASE_SECRET ? '?auth=' + env.FIREBASE_DATABASE_SECRET : '';
+        await fetch(`${rtdb(env)}/viora_data/publicChatAudit.json${qs}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ip, userAgent,
+            messagePreview: userMessage.slice(0, 120),
+            replyChars: fullText.length,
+            model: body.model,
+            provider,
+            streamed: true,
+            usage: null,
+            ts: new Date().toISOString(),
+          }),
+        });
+      } catch (e) {}
+    }
+  })();
+
   return new Response(readable, {
     headers: {
       ...CORS,
