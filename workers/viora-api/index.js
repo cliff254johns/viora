@@ -593,7 +593,8 @@ async function handleSocialFanout(body, env, user) {
         outreach_inbox_sync: () => runScheduledOutreachInboxSync(env),
         outreach_campaign_scheduler: () => runOutreachCampaignScheduler(env),
       });
-      await Promise.all(jobs.map(async ([job, run]) => {
+      // Preserve the established order (prepare before publish) while isolating failures.
+      for (const [job, run] of jobs) {
         try {
           await run();
         } catch (error) {
@@ -603,7 +604,7 @@ async function handleSocialFanout(body, env, user) {
             error: String(error && error.message || error).slice(0, 300),
           }));
         }
-      }));
+      }
     })());
   },
 };
