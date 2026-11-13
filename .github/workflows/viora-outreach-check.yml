@@ -2,9 +2,9 @@ name: VIORA Outreach checks
 on:
   pull_request:
     branches: [main]
-    paths: ["web/main.html","web/main.css","web/outreach.html","web/outreach.css","web/outreach.js","workers/viora-api/index.js","workers/viora-api/wrangler.toml",".github/workflows/viora-outreach-check.yml"]
+    paths: ["web/main.html","web/main.css","web/outreach.html","web/outreach.css","web/outreach.js","workers/viora-api/index.js","workers/viora-api/wrangler.toml","docs/GLOBAL-SALES-ENGINE.md","docs/OUTREACH-AUTOMATION-IMPLEMENTATION.md",".github/workflows/viora-outreach-check.yml"]
   push:
-    branches: [feature/viora-outreach-enterprise-ui, feature/global-outreach-autonomy]
+    branches: [feature/viora-outreach-enterprise-ui, feature/global-outreach-autonomy, feature/global-sales-engine]
     paths: ["web/main.html","web/main.css","web/outreach.html","web/outreach.css","web/outreach.js","workers/viora-api/index.js","workers/viora-api/wrangler.toml",".github/workflows/viora-outreach-check.yml"]
 jobs:
   static-checks:
@@ -33,6 +33,11 @@ jobs:
           grep -q 'data-group="engineering-visuals"' web/main.html
           grep -q '/outreach/auto-reply' workers/viora-api/index.js
           grep -q 'publishOutreachEscalation' workers/viora-api/index.js
+          grep -q '/outreach/campaign/queue' workers/viora-api/index.js
+          grep -q 'runOutreachCampaignScheduler' workers/viora-api/index.js
+          grep -q '/outreach/unsubscribe' workers/viora-api/index.js
+          grep -q 'id="outboundEnabled"' web/outreach.html
+          grep -q 'id="aiQueueCampaign"' web/outreach.html
       - name: Verify shared CRM and Communications integration
         run: |
           grep -Fq "onValue(ref(db,ORG+'/leads')" web/outreach.js
