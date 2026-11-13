@@ -117,3 +117,15 @@
 .automation-control-panel .automation-toggle span{display:grid;gap:4px}
 .automation-control-panel .automation-toggle small{color:var(--muted);line-height:1.5}
 .automation-control-panel .toolbar{align-items:center;flex-wrap:wrap;gap:12px}
+
+
+/* Global autonomous campaign engine */
+.campaign-engine-panel{display:grid;gap:16px}
+.campaign-metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.campaign-metrics>div{display:grid;gap:5px;padding:13px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
+.campaign-metrics small{font-size:11px;color:var(--muted)}
+.campaign-metrics strong{font-size:22px;letter-spacing:-.03em}
+.followup-draft{border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0}
+.followup-draft summary{cursor:pointer;font-weight:700;color:var(--blue)}
+.followup-draft .field{margin-top:12px}
+@media(max-width:850px){.campaign-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.campaign-metrics>div:first-child{grid-column:span 2}}
