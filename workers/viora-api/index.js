@@ -1451,7 +1451,7 @@ async function handlePostFacebook(body, env, user) {
       form.append('access_token', env.FB_PAGE_TOKEN);
 
       const r = await fetch(
-        `https://graph.facebook.com/v20.0/${env.FB_PAGE_ID}/photos`,
+        `https://graph.facebook.com/v27.0/${env.FB_PAGE_ID}/photos`,
         { method: 'POST', body: form }
       );
       const data = await r.json();
@@ -1475,7 +1475,7 @@ async function handlePostFacebook(body, env, user) {
   // Text-only → /feed endpoint
   try {
     const r = await fetch(
-      `https://graph.facebook.com/v20.0/${env.FB_PAGE_ID}/feed`,
+      `https://graph.facebook.com/v27.0/${env.FB_PAGE_ID}/feed`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2232,7 +2232,7 @@ async function handleSocialConfigStatus(env, user) {
 
   if (results.facebook.configured) {
     try {
-      const url = new URL(`https://graph.facebook.com/v20.0/${encodeURIComponent(env.FB_PAGE_ID)}`);
+      const url = new URL(`https://graph.facebook.com/v27.0/${encodeURIComponent(env.FB_PAGE_ID)}`);
       url.searchParams.set('fields', 'id,name');
       url.searchParams.set('access_token', env.FB_PAGE_TOKEN);
       const response = await fetch(url.toString());
@@ -2249,7 +2249,7 @@ async function handleSocialConfigStatus(env, user) {
 
   if (results.instagram.configured) {
     try {
-      const url = new URL(`https://graph.facebook.com/v20.0/${encodeURIComponent(env.IG_USER_ID)}`);
+      const url = new URL(`https://graph.facebook.com/v27.0/${encodeURIComponent(env.IG_USER_ID)}`);
       url.searchParams.set('fields', 'id,username');
       url.searchParams.set('access_token', env.IG_ACCESS_TOKEN);
       const response = await fetch(url.toString());
@@ -4061,7 +4061,7 @@ async function handlePortalTicketReply(body, env, user) {
 
   if (ticket.assignedPhone && env.WA_TOKEN && env.WA_PHONE_ID) {
     try {
-      await fetch(`https://graph.facebook.com/v20.0/${env.WA_PHONE_ID}/messages`, {
+      await fetch(`https://graph.facebook.com/v27.0/${env.WA_PHONE_ID}/messages`, {
         method: 'POST',
         headers: { Authorization: 'Bearer ' + env.WA_TOKEN, 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -5788,7 +5788,7 @@ async function handleSendWhatsApp(body, env, user) {
   const token = env.WA_TOKEN, phoneId = env.WA_PHONE_ID;
   let waMessageId = null, transport = 'wa.me-fallback';
   if (token && phoneId) {
-    const waRes = await fetch(`https://graph.facebook.com/v20.0/${phoneId}/messages`, {
+    const waRes = await fetch(`https://graph.facebook.com/v27.0/${phoneId}/messages`, {
       method: 'POST',
       headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -5924,7 +5924,7 @@ async function processWhatsAppPayload(payload, env) {
 
 async function handleWhatsAppSubscribe(request, env) {
   if (!env.WA_TOKEN || !env.WA_WABA_ID) return json({ error: 'WA_TOKEN and WA_WABA_ID required' }, 400);
-  const r = await fetch(`https://graph.facebook.com/v20.0/${env.WA_WABA_ID}/subscribed_apps`, {
+  const r = await fetch(`https://graph.facebook.com/v27.0/${env.WA_WABA_ID}/subscribed_apps`, {
     method: 'POST', headers: { Authorization: 'Bearer ' + env.WA_TOKEN },
   });
   return json(await r.json(), r.status);
