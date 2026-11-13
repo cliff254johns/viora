@@ -358,7 +358,12 @@ if (path === '/social/stats/batch' && request.method === 'POST') {
       if (path === '/portal/provision')   return await handlePortalProvision(body, env, user);
       if (path === '/portal/deleteUser')  return await handlePortalDeleteUser(body, env, user);
 
-          // ── NEW: Campaign / Social routes (require auth) ──
+          if (path === '/social/config/status' && request.method === 'GET') {
+        requireRole(String(user.role || '').toLowerCase(), ['admin', 'exec']);
+        return await handleSocialConfigStatus(env, user);
+      }
+
+      // ── NEW: Campaign / Social routes (require auth) ──
       if (path === '/ai/generatePost' && request.method === 'POST') {
         return await handleGeneratePost(body, env, user);
       }
@@ -2217,6 +2222,89 @@ function extractTikTokVideoId(url) {
 /* ============================================================
    SOCIAL VERIFY — fetch account stats by profile URL
    ============================================================ */
+async function handleSocialConfigStatus(env, user) {
+  const results = {
+    facebook: { configured: !!(env.FB_PAGE_TOKEN && env.FB_PAGE_ID), verified: false, connected: false, message: 'Meta Page credentials are not configured on this Worker.' },
+    instagram: { configured: !!(env.IG_USER_ID && env.IG_ACCESS_TOKEN), verified: false, connected: false, message: 'Instagram Graph API credentials are not configured on this Worker.' },
+    tiktok: { configured: !!(env.TIKTOK_CLIENT_KEY && env.TIKTOK_CLIENT_SECRET && env.SOCIAL_CACHE), verified: false, connected: false, message: 'TikTok OAuth requires client key, client secret and SOCIAL_CACHE bindings.' },
+    youtube: { configured: !!env.YOUTUBE_API_KEY, verified: false, connected: false, message: 'YouTube Data API key is not configured on this Worker.' },
+  };
+
+  if (results.facebook.configured) {
+    try {
+      const url = new URL(`https://graph.facebook.com/v20.0/${encodeURIComponent(env.FB_PAGE_ID)}`);
+      url.searchParams.set('fields', 'id,name');
+      url.searchParams.set('access_token', env.FB_PAGE_TOKEN);
+      const response = await fetch(url.toString());
+      const data = await response.json();
+      results.facebook.verified = response.ok && !!data.id;
+      results.facebook.connected = results.facebook.verified;
+      results.facebook.message = results.facebook.verified ? 'Meta Page token verified against the Graph API.' : 'Meta Graph API rejected the Page credentials.';
+      results.facebook.pageId = results.facebook.verified ? data.id : null;
+      results.facebook.pageName = results.facebook.verified ? data.name || null : null;
+    } catch (error) {
+      results.facebook.message = 'Meta Graph API verification request failed.';
+    }
+  }
+
+  if (results.instagram.configured) {
+    try {
+      const url = new URL(`https://graph.facebook.com/v20.0/${encodeURIComponent(env.IG_USER_ID)}`);
+      url.searchParams.set('fields', 'id,username');
+      url.searchParams.set('access_token', env.IG_ACCESS_TOKEN);
+      const response = await fetch(url.toString());
+      const data = await response.json();
+      results.instagram.verified = response.ok && !!data.id;
+      results.instagram.connected = results.instagram.verified;
+      results.instagram.message = results.instagram.verified ? 'Instagram Business account token verified against the Graph API.' : 'Instagram Graph API rejected the account credentials.';
+      results.instagram.accountId = results.instagram.verified ? data.id : null;
+      results.instagram.username = results.instagram.verified ? data.username || null : null;
+    } catch (error) {
+      results.instagram.message = 'Instagram Graph API verification request failed.';
+    }
+  }
+
+  if (results.tiktok.configured) {
+    try {
+      const token = await getTikTokTokenForUser(user, env);
+      if (token) {
+        const response = await fetch('https://open.tiktokapis.com/v2/user/info/?fields=open_id,display_name', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        const account = data.data && data.data.user;
+        results.tiktok.verified = response.ok && !!account?.open_id;
+        results.tiktok.connected = results.tiktok.verified;
+        results.tiktok.message = results.tiktok.verified ? 'TikTok OAuth user token verified.' : 'TikTok rejected the saved user token.';
+        results.tiktok.openId = results.tiktok.verified ? account.open_id : null;
+        results.tiktok.displayName = results.tiktok.verified ? account.display_name || null : null;
+      } else {
+        results.tiktok.message = 'TikTok app credentials exist, but this operator has not completed TikTok OAuth.';
+      }
+    } catch (error) {
+      results.tiktok.message = 'TikTok OAuth token verification request failed.';
+    }
+  }
+
+  if (results.youtube.configured) {
+    try {
+      const url = new URL('https://www.googleapis.com/youtube/v3/i18nLanguages');
+      url.searchParams.set('part', 'snippet');
+      url.searchParams.set('maxResults', '1');
+      url.searchParams.set('key', env.YOUTUBE_API_KEY);
+      const response = await fetch(url.toString());
+      const data = await response.json();
+      results.youtube.verified = response.ok && Array.isArray(data.items);
+      results.youtube.connected = results.youtube.verified;
+      results.youtube.message = results.youtube.verified ? 'YouTube Data API key accepted by YouTube.' : 'YouTube Data API rejected the key or quota.';
+    } catch (error) {
+      results.youtube.message = 'YouTube Data API verification request failed.';
+    }
+  }
+
+  return json({ ok: true, checkedAt: new Date().toISOString(), integrations: results });
+}
+
 async function handleSocialVerify(body, env, user) {
   requireRole(user.role, ALLOWED_ROLES_FOR_AI);
 
