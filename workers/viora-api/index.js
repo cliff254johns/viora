@@ -6172,48 +6172,6 @@ async function handleGmailReplies(env, user) {
 }
 
 
-  requireRole(String(user.role || '').toLowerCase(), ['admin', 'exec']);
-  const to = body && body.to;
-  const subject = body && body.subject;
-  const html = body && body.html;
-  const text = body && body.text;
-  const replyTo = body && body.replyTo;
-
-  if (!to || (!html && !text)) return json({ error: 'to and html/text required' }, 400);
-  if (!env.RESEND_API_KEY) return json({ error: 'RESEND_API_KEY not set' }, 500);
-  if (!env.RESEND_FROM) return json({ error: 'RESEND_FROM not set' }, 500);
-
-  const r = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { Authorization: 'Bearer ' + env.RESEND_API_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      from: env.RESEND_FROM,
-      to: Array.isArray(to) ? to : [to],
-      subject: subject || '(no subject)',
-      html: html || undefined,
-      text: text || undefined,
-      reply_to: replyTo || undefined,
-    }),
-  });
-  const data = await r.json();
-
-  try {
-    const qs = '?auth=' + (env.FIREBASE_DATABASE_SECRET || user.idToken || '');
-    await fetch(`${rtdb(env)}/viora_data/orgs/viora/commLog.json${qs}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        channel: 'email', transport: 'resend', to, subject,
-        sentBy: user.email, providerId: data.id || null,
-        status: r.ok ? 'sent' : 'failed', error: r.ok ? null : data,
-        timestamp: new Date().toISOString(),
-      }),
-    });
-  } catch (e) {}
-
-  if (!r.ok) return json({ error: 'Email send failed', detail: data }, 502);
-  return json({ ok: true, id: data.id });
-}
-
 /* ============================================================
    M-PESA
    ============================================================ */
