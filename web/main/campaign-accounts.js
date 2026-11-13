@@ -342,9 +342,12 @@ export async function renderAccountsPanel() {
 function renderAccountCard(platform, account, serviceStatus = null) {
   const isRegistered = !!account;
   const connected = !!serviceStatus?.verified;
-  const serviceLabel = serviceStatus?.verified
-    ? (platform.key === 'youtube' ? 'YouTube Data API verified' : platform.key === 'tiktok' ? 'TikTok OAuth verified · stats' : platform.key === 'facebook' ? 'Facebook Page token verified' : platform.key === 'instagram' ? 'Instagram token verified' : 'API verified')
-    : serviceStatus?.configured ? 'API configured · not verified' : 'API credentials missing';
+  const serviceLabel = !serviceStatus
+    ? 'API status unavailable'
+    : serviceStatus.verified
+      ? (platform.key === 'youtube' ? 'YouTube Data API verified' : platform.key === 'tiktok' ? 'TikTok OAuth verified · stats' : platform.key === 'facebook' ? 'Facebook Page token verified' : platform.key === 'instagram' ? 'Instagram token verified' : 'API verified')
+      : serviceStatus.configured ? 'API configured · not verified' : 'API credentials missing';
+  const serviceDetail = serviceStatus?.message || 'The live API verification endpoint is not available on the current Worker version.';
 
   /* Followers can live in followers, stats.followers, or followersCache */
   const followerCount =
@@ -382,7 +385,7 @@ function renderAccountCard(platform, account, serviceStatus = null) {
         </div>
       ` : `
         <div class="account-meta">
-          <span style="color:var(--muted)">${esc(serviceLabel)}</span>
+          <span style="color:var(--muted)">${esc(serviceLabel)}</span><small class="account-api-detail">${esc(serviceDetail)}</small>
         </div>
       `}
 
