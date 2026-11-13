@@ -27,6 +27,11 @@ const homepage = read('web/index-home.js');
 const blueprintAdmin = read('web/main/pp.js');
 const industryDirectory = read('web/mainIndex/industries.js');
 const adminHandlers = read('web/main/viora-main-handlers.js');
+const homeAdmin = read('web/main/home-content.js');
+const industryMatcher = read('web/industry-marketplace.js');
+const blueprintPage = read('web/mainIndex/blueprint.js');
+const industryPage = read('web/inde.html');
+const supportPage = read('web/support.html');
 assert.equal((taxonomy.match(/id:'(?:enterprise|institutional|hospitality|property|industry|business)'/g) || []).length, 6, 'shared taxonomy must define exactly six official VIORA categories');
 for (const label of ['VIORA Enterprise Solutions','VIORA Institutional Solutions','VIORA Hospitality Solutions','VIORA Property & Infrastructure Solutions','VIORA Industry & Operations Solutions','VIORA Business & Lifestyle Solutions']) {
   assert.ok(taxonomy.includes(label), 'shared taxonomy missing '+label);
@@ -41,6 +46,12 @@ assert.ok(adminHandlers.includes('vioraCategoryId: categoryId'), 'admin product 
 assert.ok(homepage.includes("import './viora-taxonomy.js'"), 'homepage must load shared taxonomy');
 assert.ok(homepage.includes('taxonomy.categories.map'), 'homepage tour must use official solution categories');
 assert.ok(blueprintAdmin.includes('classifyIndustry'), 'admin industry blueprints must normalize legacy categories');
+assert.ok(homeAdmin.includes('normalizedFamilies') && homeAdmin.includes('renderBucketCard(b, normalizedFamilies)'), 'home content editor must display legacy families under canonical categories');
+assert.ok(homeAdmin.includes('classifyIndustry(ind, ind.bucket)'), 'home content industry editor must normalize legacy categories');
+assert.ok(industryMatcher.includes('classifyProduct(product)') && industryMatcher.includes('classifyIndustry'), 'standalone industry product matching must use the shared taxonomy');
+assert.ok(blueprintPage.includes('classifyProduct(p)'), 'industry blueprint product matching must use the shared taxonomy');
+assert.ok(industryPage.includes('/viora-taxonomy.js'), 'industry blueprint page must load taxonomy before its industry data');
+assert.ok(supportPage.includes('classifyProduct(p)') && supportPage.includes('categories = window.VIORATaxonomy.categories'), 'support product catalogue must use the six official categories');
 assert.ok(industryDirectory.includes('VIORA Property & Infrastructure Solutions'), 'industry directory must expose official solution groups');
 assert.ok(publicIndustryDirectory.includes('VIORA Enterprise Solutions') && publicIndustryDirectory.includes('VIORA Business & Lifestyle Solutions'), 'public industry directory must use official VIORA category names');
 assert.ok((homeScript.match(/name: 'VIORA (?:Enterprise|Institutional|Hospitality|Property & Infrastructure|Industry & Operations|Business & Lifestyle) Solutions'/g) || []).length === 6, 'homepage industry carousel must contain exactly six VIORA solution families');
