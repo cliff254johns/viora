@@ -16,11 +16,37 @@ const staticWorker = read('workers/viora-static-next/worker.js');
 const staticConfig = read('workers/viora-static-next/wrangler.toml');
 const embeddedAssets = read('workers/viora-static-next/assets.generated.js');
 
-for (const path of ['web/manifest.webmanifest','web/main.webmanifest','web/manifest.json','web/campaigns.webmanifest','web/assets/r/manifest-public.json','web/assets/r/manifest-rider.json','web/assets/r/manifest-admin.json']) {
+for (const path of ['web/manifest.webmanifest','web/main.webmanifest','web/manifest.json','web/campaigns.webmanifest','web/assets/r/manifest-public.json','web/assets/r/manifest-rider.json','web/assets/r/manifest-admin.json','web/assets/mamamboga/manifest.json']) {
   const manifest = JSON.parse(read(path));
   assert.ok(manifest.icons.some(i => i.src === '/viora.png' && i.type === 'image/png'), path+' missing canonical /viora.png app icon');
   assert.equal(manifest.icons.length, 1, path+' must use only the canonical VIORA logo');
+  assert.equal(manifest.icons[0].src, '/viora.png', path+' icon must be exactly /viora.png');
 }
+
+// Every embedded/constructed product PWA manifest and browser shortcut must use the canonical VIORA logo.
+const pwaBrandFiles = [
+  'web/assets/bops.html','web/assets/rtex.html','web/assets/boutique.html',
+  'web/assets/guesthouse.html','web/assets/butchery.html','web/assets/construction.html'
+];
+for (const path of pwaBrandFiles) {
+  const source = read(path);
+  assert.ok(source.includes("'/viora.png'") || source.includes('"/viora.png"'), path+' missing /viora.png PWA artwork');
+  assert.ok(source.includes('rel="apple-touch-icon"') || source.includes("rel='apple-touch-icon'"), path+' missing canonical Apple touch icon');
+}
+const primaryManifest = JSON.parse(read('web/manifest.json'));
+for (const shortcut of primaryManifest.shortcuts || []) {
+  assert.ok(shortcut.icons?.length && shortcut.icons.every(icon => icon.src === '/viora.png'), 'PWA shortcut '+shortcut.name+' must use /viora.png');
+}
+for (const path of ['web/assets/mamamboga/manifest.json','web/assets/r/manifest-public.json','web/assets/r/manifest-rider.json','web/assets/r/manifest-admin.json']) {
+  const manifest = JSON.parse(read(path));
+  assert.ok(manifest.icons.length === 1 && manifest.icons[0].src === '/viora.png', path+' must use only /viora.png');
+}
+
+assert.ok(sw.includes("n.icon || '/viora.png'"), 'push notification icon must use canonical VIORA logo');
+assert.ok(sw.includes("const badge = '/viora.png'"), 'push notification badge must use canonical VIORA logo');
+const bodaSw = read('web/assets/r/sw.js');
+assert.ok(bodaSw.includes("'/viora.png'"), 'BodaBiz shell must cache canonical VIORA logo');
+assert.ok(!bodaSw.includes('viora-icon-192.png') && !bodaSw.includes('viora-icon-512.png') && !bodaSw.includes('viora-app-icon.svg'), 'BodaBiz shell must not cache alternate app icons');
 
 assert.ok(main.includes('data-tab="engineering-command"'), 'main sidebar link missing');
 assert.ok(main.includes('data-tab="engineering-visuals"'), 'Engineering Visuals sidebar link missing');
