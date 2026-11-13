@@ -40,6 +40,7 @@ function makeRequest(route, method = 'POST', body = {}, query = '') {
 }
 
 async function call(route, user = USER, method = 'POST', body = {}, query = '') {
+  if (['start', 'request'].includes(route) && !body.productId) body = { ...body, productId: 'demo-app' };
   return handleMarketplacePreview(makeRequest(route, method, body, query), ENV, user, route);
 }
 
