@@ -1,6 +1,6 @@
 import test, { beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { handleMarketplacePreview } from '../../workers/viora-api/marketplace-preview.js';
+import { authorizeMarketplacePreview, handleMarketplacePreview } from '../../workers/viora-api/marketplace-preview.js';
 
 const ENV = {
   FIREBASE_DATABASE_URL: 'https://mock-firebase.invalid',
@@ -224,4 +224,26 @@ test('admin revocation invalidates an active session immediately', async () => {
     productId: 'demo-app', sessionId: started.session.id
   });
   assert.equal(validation.status, 403);
+});
+
+test('shared product-gateway authorizer accepts only active, unexpired sessions or paid entitlements', async () => {
+  const started = await (await startApprovedPreview()).json();
+  const active = await authorizeMarketplacePreview(ENV, USER.localId, 'demo-app', started.session.id, clock);
+  assert.deepEqual(active, { allowed: true, access: 'preview', expiresAt: started.session.expiresAt });
+
+  const key = 'viora_data/orgs/viora/marketplacePreview/eligibility/user-1/demo-app';
+  const record = records.get(key);
+  records.set(key, { ...record, session: { ...record.session, status: 'revoked' } });
+  const revoked = await authorizeMarketplacePreview(ENV, USER.localId, 'demo-app', started.session.id, clock);
+  assert.equal(revoked.allowed, false);
+  assert.equal(revoked.access, 'none');
+
+  records.set(key, record);
+  clock = started.session.expiresAt + 1;
+  const expired = await authorizeMarketplacePreview(ENV, USER.localId, 'demo-app', started.session.id, clock);
+  assert.equal(expired.allowed, false);
+
+  records.set('viora_data/orgs/viora/portalUsers/user-1', { active: false, clientId: 'client-1' });
+  const inactive = await authorizeMarketplacePreview(ENV, USER.localId, 'demo-app', started.session.id, clock);
+  assert.equal(inactive.allowed, false);
 });

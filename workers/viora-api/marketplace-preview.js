@@ -187,6 +187,36 @@ async function issueSession(env, uid, productId, actor, source = 'self') {
   };
 }
 
+export async function authorizeMarketplacePreview(env, uid, productId, sessionId, now = Date.now()) {
+  const safeUid = cleanId(uid, 'authenticated user');
+  const safeProductId = cleanId(productId, 'productId');
+  const safeSessionId = cleanId(sessionId, 'sessionId');
+  const client = await getClientContext(env, safeUid);
+  if (!client) return { allowed: false, access: 'none', reason: 'inactive-account' };
+
+  if (await getPaidAccess(env, client.clientId, safeProductId, now)) {
+    return { allowed: true, access: 'paid', expiresAt: null };
+  }
+
+  const product = await getProduct(env, safeProductId);
+  if (!productAllowsPreview(product)) {
+    return { allowed: false, access: 'none', reason: 'gateway-not-verified' };
+  }
+
+  const { value } = await readRecord(env, paths(safeUid, safeProductId).eligibility);
+  const session = value && value.session;
+  const allowed = !!session &&
+    session.id === safeSessionId &&
+    session.status === 'active' &&
+    Number(session.expiresAt) > now;
+
+  return {
+    allowed,
+    access: allowed ? 'preview' : 'none',
+    expiresAt: allowed ? Number(session.expiresAt) : null
+  };
+}
+
 export async function handleMarketplacePreview(request, env, user, route, parsedBody) {
   try {
     const uid = cleanId(user && user.localId, 'authenticated user');
@@ -327,15 +357,8 @@ export async function handleMarketplacePreview(request, env, user, route, parsed
       const body = await readBody();
       const productId = cleanId(body.productId, 'productId');
       const sessionId = cleanId(body.sessionId, 'sessionId');
-      const client = await getClientContext(env, uid);
-      if (!client) return response({ ok: false, allowed: false }, 403);
-      if (await getPaidAccess(env, client.clientId, productId, Date.now())) {
-        return response({ ok: true, allowed: true, access: 'paid' });
-      }
-      const { value } = await readRecord(env, paths(uid, productId).eligibility);
-      const session = value && value.session;
-      const allowed = !!session && session.id === sessionId && session.status === 'active' && Number(session.expiresAt) > Date.now();
-      return response({ ok: true, allowed, access: allowed ? 'preview' : 'none', expiresAt: allowed ? session.expiresAt : null }, allowed ? 200 : 403);
+      const result = await authorizeMarketplacePreview(env, uid, productId, sessionId, Date.now());
+      return response({ ok: true, ...result }, result.allowed ? 200 : 403);
     }
 
     if (route === 'end' && method === 'POST') {
