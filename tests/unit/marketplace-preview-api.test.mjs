@@ -168,10 +168,14 @@ test('admin grants require a pending request and preserve the same session polic
   const grantResponse = await call('admin-grant', ADMIN, 'POST', { uid: 'user-1', productId: 'demo-app' });
   const grant = await grantResponse.json();
   assert.equal(grantResponse.status, 200);
-  assert.equal(grant.session.source, 'admin');
-  assert.equal(grant.session.expiresAt - grant.session.startedAt, 15 * 60 * 1000);
+  assert.equal(grant.grant.status, 'approved');
+  assert.equal(grant.session, undefined, 'grant approval must not start the 15-minute clock');
   const request = records.get('viora_data/orgs/viora/marketplacePreview/requests/user-1/demo-app');
   assert.equal(request.status, 'approved');
+  const started = await (await call('start', USER, 'POST', { productId: 'demo-app' })).json();
+  assert.equal(started.session.source, 'admin');
+  assert.equal(started.session.grantedBy, ADMIN.localId);
+  assert.equal(started.session.expiresAt - started.session.startedAt, 15 * 60 * 1000);
 });
 
 test('admin revocation invalidates an active session immediately', async () => {
