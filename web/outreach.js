@@ -244,28 +244,36 @@ async function syncGmailReplies(){
   busy('gmailSyncReplies',true,'Checking inbox…');
   status('gmailStatus','Checking the connected mailbox for recent incoming messages…');
   const data=await apiGet('/gmail/replies');
-  let added=0,skipped=0;
+  let added=0,skipped=0,escalated=0,autoReplied=0;
   for(const msg of (data.messages||[])){
    const sender=String(msg.from||'').match(/<([^>]+)>/)?.[1]||String(msg.from||'').trim();
-   const email=sender.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0]||sender;
+   const email=sender.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/i)?.[0]||sender;
    const lead=leadList().find(l=>String(l.email||'').toLowerCase()===email.toLowerCase());
    const previouslyContacted=emailList().some(e=>e.direction!=='inbound'&&e.transport==='gmail'&&String(e.to||'').toLowerCase()===email.toLowerCase()&&e.status==='sent');
-   if(!lead||!previouslyContacted){skipped++;continue;}
-   let labelApplied=false;
-   if(msg.threadId){try{const labelResult=await api('/gmail/label-thread',{threadId:msg.threadId});labelApplied=!!labelResult.labeled;}catch(labelError){console.warn('[VIORA Outreach] Gmail thread label could not be applied:',labelError);}}
+   if(!lead||!previouslyContacted||!msg.threadId||!msg.id){skipped++;continue;}
    const recordId='gmail-'+String(msg.id||'').replace(/[^A-Za-z0-9_-]/g,'');
    const existing=await get(ref(db,ROOT+'/emails/'+recordId));
    if(existing.exists())continue;
+   let automation={status:'not_processed',reason:'processor_not_called'};
+   try{
+    automation=await api('/outreach/auto-reply',{threadId:msg.threadId,messageId:msg.id,leadId:lead.id});
+   }catch(processError){
+    automation={status:'processing_failed',reason:processError.message};
+    console.warn('[VIORA Outreach] Auto-reply processing failed safely:',processError);
+   }
    const receivedAt=msg.date&&Number.isFinite(Date.parse(msg.date))?new Date(msg.date).toISOString():stamp();
-   const record={id:recordId,to:email,from:email,subject:msg.subject||'(no subject)',text:'Incoming email received. Open the Gmail conversation to read the full message.',company:lead?.company||lead?.fullName||email,leadId:lead?.id||null,direction:'inbound',status:'received',providerId:msg.id,threadId:msg.threadId||null,timestamp:receivedAt,source:'Gmail reply sync',gmailLabelApplied:labelApplied};
+   const messageText=String(automation.messageText||'').slice(0,10000);
+   const record={id:recordId,to:email,from:email,subject:automation.subject||msg.subject||'(no subject)',text:messageText||'Incoming email received. Message content could not be retrieved.',company:lead?.company||lead?.fullName||email,leadId:lead?.id||null,direction:'inbound',status:'received',providerId:msg.id,threadId:msg.threadId,timestamp:receivedAt,source:'Gmail reply sync',automationStatus:automation.status||'processing_failed',automationIntent:automation.intent||null,automationReason:automation.reason||null,automatedReplyMessageId:automation.replyMessageId||null};
    await set(ref(db,ROOT+'/emails/'+recordId),record);
    const commId=push(ref(db,ORG+'/commLog')).key;
-   await set(ref(db,ORG+'/commLog/'+commId),{id:commId,channel:'email',direction:'inbound',recipientContact:email,recipientName:record.company,subject:record.subject,message:'Incoming email received. Message body remains in Gmail.',status:'received',timestamp:receivedAt,leadId:record.leadId,outreachEmailId:recordId,providerId:msg.id,threadId:msg.threadId||null,source:'Gmail reply sync'});
+   await set(ref(db,ORG+'/commLog/'+commId),{id:commId,channel:'email',direction:'inbound',recipientContact:email,recipientName:record.company,subject:record.subject,message:messageText||'Incoming email received; content unavailable.',status:'received',timestamp:receivedAt,leadId:record.leadId,outreachEmailId:recordId,providerId:msg.id,threadId:msg.threadId,source:'Gmail reply sync',automationStatus:record.automationStatus});
+   if(automation.status==='sent')autoReplied++;
+   if(automation.status==='escalated'||automation.status==='processing_failed')escalated++;
    added++;
   }
   renderEmails();
-  status('gmailStatus','Reply check complete. '+added+' new replies added; '+skipped+' inbox messages did not match a saved lead already contacted through Outreach.');
-  toast('Gmail reply sync complete: '+added+' new replies.');
+  status('gmailStatus','Reply check complete. '+added+' new replies added · '+autoReplied+' automatically answered · '+escalated+' escalated · '+skipped+' unmatched messages skipped.');
+  toast('Gmail sync complete: '+added+' new replies, '+autoReplied+' auto-answered, '+escalated+' escalated.');
  }catch(e){status('gmailStatus','Reply sync failed: '+e.message,true);}
  finally{busy('gmailSyncReplies',false);}
 }
