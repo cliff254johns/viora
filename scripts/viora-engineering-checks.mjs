@@ -42,7 +42,7 @@ for (const path of ['web/assets/mamamboga/manifest.json','web/assets/r/manifest-
   assert.ok(manifest.icons.length === 1 && manifest.icons[0].src === '/viora.png', path+' must use only /viora.png');
 }
 
-assert.ok(sw.includes("n.icon || '/viora.png'"), 'push notification icon must use canonical VIORA logo');
+assert.ok(sw.includes("n.icon  || '/viora.png'"), 'push notification icon must use canonical VIORA logo');
 assert.ok(sw.includes("const badge = '/viora.png'"), 'push notification badge must use canonical VIORA logo');
 const bodaSw = read('web/assets/r/sw.js');
 assert.ok(bodaSw.includes("'/viora.png'"), 'BodaBiz shell must cache canonical VIORA logo');
