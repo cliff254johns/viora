@@ -33,7 +33,7 @@ async function ensureFirebase(){
   storageApi={...storageMod,storage:storageMod.getStorage(app)};
   if(!dbApi.db) throw new Error('The main Firebase database is not exposed in this session.');
 }
-const roomPath=()=>typeof window.P==='function'?window.P('investorDataRoom'):'investorDataRoom';
+const roomPath=()=>'viora_data/investorDataRoom';
 const roomRef=()=>dbApi.ref(dbApi.db,roomPath());
 function statusLabel(v){return STATUS.includes(v)?v:'Draft';}
 function safeFileName(s){return String(s||'file').replace(/[^a-z0-9._-]/gi,'_').slice(0,100);}
@@ -101,7 +101,7 @@ async function saveRoom(){
   for(const c of CATEGORIES){for(const [key] of c.fields)fields[key]=host.querySelector('[data-field="'+key+'"]')?.value?.trim()||'';status[c.id]=host.querySelector('[data-status="'+c.id+'"]')?.value||'Draft';}
   const user=window.VioraAuth.currentUser;
   const profile={fields,status,updatedAt:new Date().toISOString(),updatedBy:user.uid};
-  await dbApi.set(dbApi.ref(dbApi.db,'investorDataRoom/profile'),profile);
+  await dbApi.set(dbApi.ref(dbApi.db,roomPath()+'/profile'),profile);
   roomData=profile;paintRoom();
   const sync=host.querySelector('#idr-sync');if(sync)sync.textContent='Saved securely';
 }
@@ -116,7 +116,7 @@ async function uploadFile(){
   const objectRef=storageApi.ref(storageApi.storage,path);
   await storageApi.uploadBytes(objectRef,file,{contentType:file.type||'application/octet-stream',customMetadata:{uploadedBy:user.uid,category:host.querySelector('#idr-file-category').value}});
   const meta={name:file.name,path,category:host.querySelector('#idr-file-category').value,size:file.size,sizeLabel:(file.size/1024/1024).toFixed(2)+' MB',contentType:file.type||'application/octet-stream',uploadedAt:new Date().toISOString(),uploadedBy:user.uid};
-  await dbApi.set(dbApi.ref(dbApi.db,'investorDataRoom/files/'+id),meta);
+  await dbApi.set(dbApi.ref(dbApi.db,roomPath()+'/files/'+id),meta);
   input.value='';filesData[id]=meta;paintRoom();
 }
 async function downloadFile(id){
@@ -137,7 +137,7 @@ async function deleteFile(id){
   if(!authorized()||!confirm('Permanently delete this uploaded document?'))return;
   await ensureFirebase();const f=filesData[id];if(!f)return;
   await storageApi.deleteObject(storageApi.ref(storageApi.storage,f.path));
-  await dbApi.remove(dbApi.ref(dbApi.db,'investorDataRoom/files/'+id));
+  await dbApi.remove(dbApi.ref(dbApi.db,roomPath()+'/files/'+id));
   delete filesData[id];paintRoom();
 }
 function exportRoom(){
