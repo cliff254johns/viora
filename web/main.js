@@ -1960,6 +1960,7 @@ window.setNavMode = setNavMode;
 const MOBILE_NAV_MAP = {
   exec: { icon: 'fa-crown', label: 'Exec', tabs: [
     { tab: 'engineering-command', icon: 'fa-microchip', label: 'Engineering' },
+    { tab: 'investor-data-room', icon: 'fa-briefcase', label: 'Investor Room' },
     { tab: 'dashboard', icon: 'fa-chart-pie', label: 'Dashboard' },
     { tab: 'profile', icon: 'fa-building', label: 'Profile' },
     { tab: 'global-market', icon: 'fa-earth-africa', label: 'Global' },
@@ -3724,6 +3725,7 @@ try {
             break;
           case 'profile':                 renderProfile(); break;
           case 'engineering-command':     window.renderEngineeringCommandCentre?.(); break;
+          case 'investor-data-room':       import('./investor-data-room.js?v=20261113-investor-room-submenu-1').then(m => m.renderInvestorDataRoom()).catch(e => { const host=document.getElementById('investorDataRoomRoot'); if(host) host.textContent='Investor Data Room could not load: '+(e.message||'Unknown error'); }); break;
           case 'engineering-visuals':      window.renderEngineeringVisuals?.(); break;
           case 'global-market':           try { setupGlobalMarket?.(); loadGlobalDashboard?.(); } catch (e) { console.warn('[tab render] global-market', e); } break;
 
@@ -4181,6 +4183,7 @@ case 'training-progress':
         'dashboard':               'renderDashboard',
         'profile':                 'renderProfile',
         'engineering-command':     'renderEngineeringCommandCentre',
+        'investor-data-room':       'renderInvestorDataRoom',
         'engineering-visuals':      'renderEngineeringVisuals',
         'sales-clients':           'renderClients',
         'client360':               'renderClient360Page',

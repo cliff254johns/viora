@@ -564,11 +564,7 @@ function renderTourStepDetail(host, buckets, families, industries) {
               </div>
             ` : ''}
             <div class="tour-detail-actions">
-              ${ind.previewUrl ? `
-                <a href="${escAttr(ind.previewUrl)}" target="_blank" rel="noopener" class="btn btn-outline">
-                  <i class="fa-solid fa-eye"></i> View sample
-                </a>
-              ` : ''}
+              
               <button type="button" class="btn btn-primary" data-buy>
                 <i class="fa-solid fa-bolt"></i> Buy now
               </button>
@@ -627,11 +623,7 @@ function renderTourStepDetail(host, buckets, families, industries) {
                           <button type="button" class="tour-product-buy" data-tour-buy="${escAttr(p.id)}">
                             <i class="fa-solid fa-bolt"></i> Buy
                           </button>
-                          ${(p.previewUrl || p.link) ? `
-                            <a href="${escAttr(p.previewUrl || p.link)}" class="tour-product-preview" target="_blank" rel="noopener" onclick="event.stopPropagation();" title="Preview">
-                              <i class="fa-solid fa-eye"></i>
-                            </a>
-                          ` : ''}
+                          
                         </div>
                       </div>
                     </article>
@@ -674,11 +666,9 @@ function renderTourStepDetail(host, buckets, families, industries) {
       desc: ind.desc || '',
       longDesc: ind.longDesc || ind.desc || '',
       included: ind.included || [],
-      demoUrl: ind.previewUrl || '',
       gallery: [],
       products: [],
       faqs: ind.faqs || [],
-      viewSampleUrl: ind.previewUrl || '',
     });
   });
 
@@ -751,7 +741,6 @@ function renderProductCarousel() {
     const kes = Math.round((Number(p.price) || 0) * KES_RATE);
     const extras = (S.homeContent?.productExtras || {})[p.id] || {};
     const isCustom = extras.productType === 'custom' || extras.productType === 'service' || p.pricing === 'quote';
-    const previewUrl = p.previewUrl || p.link || extras.previewUrl || '';
     const image = p.image || '';
 
     return `
@@ -770,11 +759,7 @@ function renderProductCarousel() {
           <p class="strip-card-desc">${escHtml((p.description || '').slice(0, 90))}${(p.description || '').length > 90 ? '…' : ''}</p>
           <div class="strip-card-price">${isCustom ? 'Custom pricing' : fmtKSh(p.price)}</div>
           <div class="strip-card-actions">
-            ${previewUrl ? `
-              <a href="${escAttr(previewUrl)}" target="_blank" rel="noopener" class="strip-btn strip-btn-outline" title="Preview">
-                <i class="fa-solid fa-eye"></i>
-              </a>
-            ` : ''}
+
             <button type="button" class="strip-btn strip-btn-primary" data-buy>
               <i class="fa-solid fa-bolt"></i> ${isCustom ? 'Quote' : 'Buy'}
             </button>
@@ -805,11 +790,9 @@ function renderProductCarousel() {
         desc: product.description || '',
         longDesc: extras.longDesc || product.description || '',
         included: extras.included || [],
-        demoUrl: extras.demoEmbedUrl || product.previewUrl || '',
         gallery: extras.gallery || [],
         products: [],
         faqs: extras.faqs || [],
-        viewSampleUrl: product.previewUrl || product.link || '',
       });
     });
   });

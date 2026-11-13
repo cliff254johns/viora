@@ -65,3 +65,38 @@ test('homepage globe keeps satellite visuals, caption spacing and mobile page sc
  await page.mouse.wheel(0,650);
  await expect.poll(()=>page.evaluate(()=>window.scrollY)).toBeGreaterThan(0);
 });
+
+test('Marketplace category explorer shows live counts, search, selection and mobile-safe dismissal',async({page})=>{
+ const catalogue={
+  'software-one':{id:'software-one',name:'Software One',description:'Demo software',category:'Software',price:10,status:'active'},
+  'software-two':{id:'software-two',name:'Software Two',description:'Demo software',category:'Software',price:15,status:'active'},
+  'digital-one':{id:'digital-one',name:'Digital Sample',description:'Demo digital item',category:'Digital Products',price:5,status:'active'}
+ };
+ await page.addInitScript((products)=>{
+  localStorage.setItem('viora_market_products_v1',JSON.stringify({savedAt:Date.now(),products:Object.values(products)}));
+  localStorage.setItem('viora_cookie_consent_v1',JSON.stringify({essential:true,analytics:false,functional:false,ts:Date.now()}));
+ },catalogue);
+ await page.route('**/viora_data/orgs/viora/products.json*',route=>route.fulfill({
+  status:200,contentType:'application/json',body:JSON.stringify(catalogue)
+ }));
+ await page.route('**/viora_data/orgs/viora/industries.json*',route=>route.fulfill({
+  status:200,contentType:'application/json',body:'{}'
+ }));
+ await page.goto('/market.html');
+ const trigger=page.locator('#categoryExplorerTrigger');
+ await expect(trigger).toBeVisible();
+ await expect(page.locator('#categoryTotalCount')).toContainText('3 products across 2 categories');
+ await page.waitForFunction(()=>document.getElementById('catSearchInput')?._vBound===true);
+ await trigger.click();
+ const panel=page.locator('#categoryExplorerPanel');
+ await expect(panel).toBeVisible();
+ await expect(page.locator('.category-option[data-cat="software"] .category-option-count')).toHaveText('2');
+ await expect(page.locator('.category-option[data-cat="digital products"] .category-option-count')).toHaveText('1');
+ await page.locator('#catSearchInput').fill('Digital');
+ await expect(page.locator('.category-option[data-cat="digital products"]')).toBeVisible();
+ await expect(page.locator('.category-option[data-cat="software"]')).toHaveCount(0);
+ await page.locator('.category-option[data-cat="digital products"]').click();
+ await expect(panel).toBeHidden();
+ await expect(page.locator('#activeCategoryLabel')).toHaveText('Digital Products');
+ await expect(trigger).toHaveAttribute('aria-expanded','false');
+});

@@ -75,3 +75,35 @@ The Wrangler configuration declares the existing AI binding and the Worker’s p
 - Deploy a candidate, verify health and existing critical routes, then test Gmail end-to-end.
 - Keep Resend secrets available for any separate, domain-authenticated transactional service, but do not use Resend as an Outreach fallback for the Gmail sender identity.
 - Do not send prospect campaigns without explicit human review and approval.
+
+
+## Marketplace controlled preview service (draft)
+
+The Worker source now includes a server-side preview policy module at `marketplace-preview.js` and authenticated routes:
+
+- `GET /marketplace/preview/status?productId=...`
+- `POST /marketplace/preview/request`
+- `POST /marketplace/preview/start`
+- `POST /marketplace/preview/validate`
+- `POST /marketplace/preview/end`
+- `GET /marketplace/preview/gateways` (admin-only, safe product readiness inventory)
+- `GET /marketplace/preview/requests` (admin only)
+- `POST /marketplace/preview/grant` (admin only)
+- `POST /marketplace/preview/revoke` (admin only)
+
+Policy:
+- 15 minutes from the user's actual session start, not from the time an administrator approves a request.
+- Seven-day cooldown per Firebase account and product. Ending early or revoking does not reset it.
+- Session and cooldown transitions use Firebase RTDB ETag conditional writes to prevent concurrent start requests from creating multiple sessions.
+- The Worker derives the user ID from the verified Firebase ID token and maps the account to an active VIORA portal client.
+- Active/lifetime paid entitlements and the existing grace window take precedence. Preview logic never writes to subscription or license records.
+- An administrator grant is an approval record; the user starts the timed preview later.
+- A product is eligible only when it is active, has `previewEnabled: true`, uses an approved `previewProfile`, and has `previewGatewayVerified: true`. The verification flag is intentionally not exposed in the ordinary product editor; it must only be set after the product's delivery gateway has passed its own acceptance checks.
+
+Data is kept under `viora_data/orgs/viora/marketplacePreview`, separate from subscription and licence records. The browser cannot choose the authenticated UID, session timestamps, expiry or cooldown values.
+
+### Release gate — not production-ready
+
+This change is still a draft. It adds the session policy/API and Marketplace/admin request UI, and removes the old direct external preview links from the public Marketplace and home showcase. It does **not** yet make arbitrary external product applications secure. Each previewable software product must enforce the session-validation decision at its own protected API/data boundary and serve isolated demo data; digital products must deliver a controlled sample rather than a public unrestricted download. Until that product-specific delivery integration and the full acceptance suite pass, `previewGatewayVerified` must remain false and no product may be activated.
+
+Firebase rules are unchanged. No production Worker deployment or product activation has been performed.

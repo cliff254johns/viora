@@ -1,4 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
+import { handleMarketplacePreview } from './marketplace-preview.js';
+
 // viora-api — Viora Intercollective System
 // v4.9.0 — Campaign Command Center + Trends
 //        • NEW: /trends/rss          (Google Trends proxy)
@@ -71,9 +73,28 @@ function json(data, status = 200) {
     headers: { "Content-Type": "application/json", ...CORS },
   });
 }
-function rtdb(env) { return env.FIREBASE_DATABASE_URL || RTDB_URL_DEFAULT; }
-function fbKey(env) { return env.FIREBASE_API_KEY || FIREBASE_API_KEY_DEFAULT; }
-function fbProjectId(env) { return env.FIREBASE_PROJECT_ID || FIREBASE_PROJECT_ID_DEFAULT; }
+function rtdb(env) {
+  if (env.VIORA_STAGING_READ_ONLY === 'true') {
+    const base = String(env.FIREBASE_DATABASE_URL || '').replace(/\/$/, '');
+    if (!base || base === RTDB_URL_DEFAULT) {
+      throw Object.assign(new Error('Staging must use its own Firebase database URL'), { status: 503 });
+    }
+    return base;
+  }
+  return env.FIREBASE_DATABASE_URL || RTDB_URL_DEFAULT;
+}
+function fbKey(env) {
+  if (env.VIORA_STAGING_READ_ONLY === 'true' && !env.FIREBASE_API_KEY) {
+    throw Object.assign(new Error('Staging Firebase API key is required'), { status: 503 });
+  }
+  return env.FIREBASE_API_KEY || FIREBASE_API_KEY_DEFAULT;
+}
+function fbProjectId(env) {
+  if (env.VIORA_STAGING_READ_ONLY === 'true' && !env.FIREBASE_PROJECT_ID) {
+    throw Object.assign(new Error('Staging Firebase project ID is required'), { status: 503 });
+  }
+  return env.FIREBASE_PROJECT_ID || FIREBASE_PROJECT_ID_DEFAULT;
+}
 
 /* ═══════════════════════════════════════════════════════════
    IN-MEMORY CACHES (bounded, trimmed inline)
@@ -107,6 +128,15 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
     const url = new URL(request.url);
     const path = url.pathname;
+
+    // Controlled version-URL environment: only health and the authenticated,
+    // read-only Marketplace gateway inventory may execute. All mutations and
+    // unrelated production routes are denied before their handlers run.
+    if (env.VIORA_STAGING_READ_ONLY === 'true' &&
+        !(request.method === 'OPTIONS' ||
+          (request.method === 'GET' && (path === '/health' || path === '/marketplace/preview/gateways')))) {
+      return json({ ok: false, error: 'Controlled candidate is read-only; route is not available in this environment.' }, 403);
+    }
 
     try {
       // ── Public routes (no auth) ──
@@ -161,6 +191,18 @@ export default {
   build: '5.0.1-youtube-handle-fix',   // ← new marker
   ts: Date.now(),
 });
+      if (env.VIORA_STAGING_READ_ONLY === 'true') {
+        const missingStagingConfig = [
+          ['FIREBASE_API_KEY', env.FIREBASE_API_KEY],
+          ['FIREBASE_PROJECT_ID', env.FIREBASE_PROJECT_ID],
+          ['FIREBASE_DATABASE_URL', env.FIREBASE_DATABASE_URL],
+          ['FIREBASE_DATABASE_SECRET', env.FIREBASE_DATABASE_SECRET]
+        ].filter(([, value]) => !value).map(([name]) => name);
+        if (env.FIREBASE_DATABASE_URL === RTDB_URL_DEFAULT) missingStagingConfig.push('FIREBASE_DATABASE_URL (must not be production)');
+        if (missingStagingConfig.length) {
+          return json({ ok: false, error: 'Staging Firebase configuration is incomplete', missing: missingStagingConfig }, 503);
+        }
+      }
       if (path === '/debugEnv') return debugEnv(env);
 
       if (path === '/waWebhook' || path === '/whatsapp/webhook') {
@@ -303,6 +345,22 @@ if (path === '/social/stats/batch' && request.method === 'POST') {
         user.email = user.email || portalRecord.email;
       } else {
         user.role = role;
+      }
+
+      // ── VIORA Marketplace controlled preview service ──
+      const previewRoutes = {
+        '/marketplace/preview/status': 'status',
+        '/marketplace/preview/start': 'start',
+        '/marketplace/preview/request': 'request',
+        '/marketplace/preview/requests': 'admin-requests',
+        '/marketplace/preview/gateways': 'admin-gateways',
+        '/marketplace/preview/grant': 'admin-grant',
+        '/marketplace/preview/revoke': 'admin-revoke',
+        '/marketplace/preview/validate': 'validate',
+        '/marketplace/preview/end': 'end'
+      };
+      if (previewRoutes[path]) {
+        return await handleMarketplacePreview(request, env, user, previewRoutes[path], body);
       }
 
       // ── Gmail mailbox management (admin/exec only) ──

@@ -16,10 +16,12 @@ const firebaseConfig = {
 };
 
 let db = null;
+let auth = null;
 let firebaseReady = false;
 try {
   firebase.initializeApp(firebaseConfig);
   db = firebase.database();
+  auth = firebase.auth();
   firebaseReady = true;
   console.log('%c🔥 Firebase connected', 'color:#00e68a;font-weight:700;');
 } catch (e) {
@@ -98,6 +100,22 @@ const DEFAULTS = {
 
 let INDUSTRY_MAP = {};
 
+const normalizeMarketCategory = value =>
+  String(value || 'Marketplace').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+
+const MARKET_CATEGORY_LABELS = Object.freeze({
+  'bussiness management systems': 'Business Management Systems',
+  'ecormmerce website': 'E-commerce Websites',
+  'retal property systems': 'Rental Property Systems',
+  'recuitment agency systems': 'Recruitment Agency Systems',
+  'a.i assistant': 'AI Assistants'
+});
+
+const displayMarketCategory = value => {
+  const clean = String(value || 'Marketplace').trim().replace(/\s+/g, ' ');
+  return MARKET_CATEGORY_LABELS[normalizeMarketCategory(clean)] || clean;
+};
+
 let PROMO_CACHE = null;
 let REVIEW_CACHE = {};
 let EXTRAS_CACHE = {};
@@ -126,6 +144,86 @@ const App = {
   _recentSearches: [],
   _reviewDraft: { productId: null, stars: 0 },
   _activeReviewProductId: null,
+
+  async requestPreview(productId) {
+    const product = this.products.find(item => item.id === productId);
+    if (!product || product.status !== 'active') {
+      this.toast('This product is not currently available for preview requests.', 'warning');
+      return;
+    }
+    if (!auth) {
+      this.toast('Preview sign-in is unavailable. Please try again later.', 'error');
+      return;
+    }
+    let user = auth.currentUser;
+    if (!user) user = await this.promptPreviewSignIn();
+    if (!user) return;
+    try {
+      const token = await user.getIdToken();
+      const response = await fetch('https://viora-api.cliff254johns.workers.dev/marketplace/preview/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ productId })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data.error || 'Preview request failed');
+      if (data.request?.status === 'approved') {
+        this.toast('Your preview request is approved. Secure delivery will be available when the product gateway is ready.', 'success');
+      } else if (data.existing) {
+        this.toast('Your preview request is already awaiting review.', 'info');
+      } else {
+        this.toast(data.request?.gatewayReady === true
+          ? 'Preview request submitted. VIORA will review it.'
+          : 'Request submitted. The product gateway must pass verification before access can be granted.', 'success');
+      }
+    } catch (error) {
+      this.toast(error.message || 'Preview request failed.', 'error');
+    }
+  },
+
+  promptPreviewSignIn() {
+    return new Promise(resolve => {
+      let dialog = document.getElementById('vioraPreviewSignIn');
+      if (!dialog) {
+        dialog = document.createElement('dialog');
+        dialog.id = 'vioraPreviewSignIn';
+        dialog.style.cssText = 'border:1px solid var(--border);border-radius:18px;padding:24px;max-width:420px;width:calc(100% - 32px);background:var(--surface);color:var(--text-primary);box-shadow:0 24px 80px rgba(0,0,0,.35)';
+        dialog.innerHTML = `
+          <form id="vioraPreviewSignInForm" method="dialog" style="display:grid;gap:12px">
+            <h3 style="margin:0">Sign in to request a preview</h3>
+            <p style="margin:0;color:var(--text-secondary);font-size:.85rem">Use your VIORA Client Portal account. New customers can create an account in the Client Portal.</p>
+            <label>Email<input name="email" type="email" autocomplete="username" required style="width:100%;padding:12px;border-radius:10px;margin-top:5px"></label>
+            <label>Password<input name="password" type="password" autocomplete="current-password" required style="width:100%;padding:12px;border-radius:10px;margin-top:5px"></label>
+            <p id="vioraPreviewSignInError" role="alert" style="color:#e5484d;margin:0;font-size:.8rem"></p>
+            <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+              <a href="/client.html" style="align-self:center;font-size:.8rem">Create account</a>
+              <button type="button" id="vioraPreviewSignInCancel">Cancel</button>
+              <button type="submit">Sign in</button>
+            </div>
+          </form>`;
+        document.body.appendChild(dialog);
+      }
+      const form = dialog.querySelector('#vioraPreviewSignInForm');
+      const error = dialog.querySelector('#vioraPreviewSignInError');
+      const finish = value => { try { dialog.close(); } catch (_) {} resolve(value || null); };
+      dialog.querySelector('#vioraPreviewSignInCancel').onclick = () => finish(null);
+      form.onsubmit = async event => {
+        event.preventDefault();
+        const submit = form.querySelector('button[type="submit"]');
+        submit.disabled = true;
+        error.textContent = '';
+        try {
+          const credentials = await auth.signInWithEmailAndPassword(form.email.value.trim(), form.password.value);
+          finish(credentials.user);
+        } catch (e) {
+          error.textContent = e.code === 'auth/invalid-credential' ? 'Email or password is incorrect.' : (e.message || 'Sign-in failed.');
+          submit.disabled = false;
+        }
+      };
+      dialog.onclose = () => resolve(null);
+      dialog.showModal();
+    });
+  },
 
   /* ═══════════════════════════════════════════════════════════
      TOASTS + MODALS
@@ -253,8 +351,9 @@ const App = {
         status: p.status || 'active',
         totalSold: p.totalSold || 0,
         totalRevenue: p.totalRevenue || 0,
-        previewUrl: p.previewUrl || null,
-        link: p.link || null,
+        previewEnabled: p.previewEnabled === true,
+        previewGatewayVerified: p.previewGatewayVerified === true,
+        previewProfile: p.previewProfile || '',
         image: p.image || null,
         _kind: p._kind || 'product',
         features: Array.isArray(p.features) ? p.features : []
@@ -712,84 +811,111 @@ const App = {
      ═══════════════════════════════════════════════════════════ */
     renderCategoryBar() {
     const bar = document.getElementById('categoryBar');
+    const trigger = document.getElementById('categoryExplorerTrigger');
+    const activeLabel = document.getElementById('activeCategoryLabel');
+    const totalCount = document.getElementById('categoryTotalCount');
     if (!bar) return;
 
-    /* Build category list.
-       Primary source: INDUSTRY_MAP (populated from Firebase `industries`).
-       Fallback: compute from products if `industries` node is empty. */
-    const industryEntries = Object.values(INDUSTRY_MAP);
-    let allCats;
+    const industryEntries = Object.values(INDUSTRY_MAP).slice().sort((a, b) => a.order - b.order);
+    const categoryLabels = new Map();
+    const names = [];
+    const addCategory = raw => {
+      const key = normalizeMarketCategory(raw);
+      if (!key || key === 'marketplace' && !raw) return;
+      if (!categoryLabels.has(key)) categoryLabels.set(key, displayMarketCategory(raw));
+      if (!names.includes(key)) names.push(key);
+    };
 
-    if (industryEntries.length > 0) {
-      /* Use market categories from industries, sorted by industry.order */
-      const sorted = industryEntries
-        .slice()
-        .sort((a, b) => a.order - b.order);
-      allCats = ['all', ...sorted.map(i => i.marketCategory)];
-    } else {
-      /* Fallback — categories directly from products */
-      allCats = ['all', ...new Set(this.products.map(p => p.category).filter(Boolean))];
-    }
+    industryEntries.forEach(ind => addCategory(ind.marketCategory));
+    this.products.forEach(product => addCategory(product.category || 'Marketplace'));
 
-    const q = (this._catSearch || '').toLowerCase().trim();
-    const cats = q
-      ? allCats.filter(c => c === 'all' || c.toLowerCase().includes(q))
-      : allCats;
+    const allCats = ['all', ...names];
+    const counts = new Map();
+    this.products.forEach(product => {
+      const key = normalizeMarketCategory(product.category || 'Marketplace');
+      counts.set(key, (counts.get(key) || 0) + 1);
+    });
 
-    const isMobile = window.matchMedia('(max-width: 900px)').matches;
-    const collapsed = isMobile && !q && !this._catExpanded;
-    const visible = collapsed ? cats.slice(0, 6) : cats;
+    const visualFor = categoryKey => {
+      const ind = industryEntries.find(item => normalizeMarketCategory(item.marketCategory) === categoryKey);
+      if (ind) return { icon: ind.icon || 'fa-solid fa-tag', color: ind.color || '#60a5fa' };
+      const value = categoryKey;
+      const rules = [
+        [/software|saas|app|system|erp|crm/, 'fa-solid fa-laptop-code', '#60a5fa'],
+        [/design|creative|media|photo|video/, 'fa-solid fa-wand-magic-sparkles', '#c084fc'],
+        [/business|finance|account|tax|legal/, 'fa-solid fa-briefcase', '#34d399'],
+        [/education|course|training|learn|academy/, 'fa-solid fa-graduation-cap', '#fbbf24'],
+        [/security|privacy|network|cloud|hosting/, 'fa-solid fa-shield-halved', '#38bdf8'],
+        [/marketing|social|seo|advertis/, 'fa-solid fa-bullhorn', '#fb7185'],
+        [/hardware|device|computer|accessor/, 'fa-solid fa-microchip', '#2dd4bf'],
+        [/document|template|ebook|digital/, 'fa-solid fa-file-arrow-down', '#f97316']
+      ];
+      const match = rules.find(([pattern]) => pattern.test(value));
+      return match ? { icon: match[1], color: match[2] } : { icon: 'fa-solid fa-cubes-stacked', color: '#818cf8' };
+    };
 
-    bar.innerHTML = visible.map(c => {
-      const ind = INDUSTRY_MAP[c];
-      const icon = c === 'all'
-        ? 'fa-solid fa-layer-group'
-        : (ind ? ind.icon : 'fa-solid fa-tag');
-      const color = c === 'all' ? null : (ind ? ind.color : null);
-      const label = c === 'all' ? 'All Products' : c;
-      const active = this.activeCategory === c ? 'active' : '';
+    const q = String(this._catSearch || '').toLowerCase().trim();
+    const filtered = allCats.filter(category => category === 'all' || (categoryLabels.get(category) || category).toLowerCase().includes(q));
+    const allCount = this.products.length;
+    if (totalCount) totalCount.textContent = allCount.toLocaleString() + (allCount === 1 ? ' product' : ' products') + ' across ' + names.length + ' categories';
+    if (activeLabel) activeLabel.textContent = this.activeCategory === 'all' ? 'All products' : (categoryLabels.get(this.activeCategory) || displayMarketCategory(this.activeCategory));
+    if (trigger) trigger.setAttribute('aria-expanded', String(document.getElementById('categoryExplorerPanel')?.hidden === false));
 
-      return `<button class="cat-btn ${active}" data-cat="${this.escape(c)}" role="tab">
-        <i class="${icon}"${color ? ` style="color:${color}"` : ''}></i> ${this.escape(label)}
+    bar.innerHTML = filtered.map(category => {
+      const all = category === 'all';
+      const visual = all ? { icon: 'fa-solid fa-globe', color: '#60a5fa' } : visualFor(category);
+      const count = all ? allCount : (counts.get(category) || 0);
+      const active = this.activeCategory === category;
+      const label = all ? 'All products' : (categoryLabels.get(category) || displayMarketCategory(category));
+      return `<button class="category-option ${active ? 'active' : ''}" type="button" role="option" aria-selected="${active}" data-cat="${this.escape(category)}">
+        <span class="category-option-icon" style="--category-accent:${this.escape(visual.color)}"><i class="${this.escape(visual.icon)}"></i></span>
+        <span class="category-option-copy"><strong>${this.escape(label)}</strong><small>${all ? 'Explore the complete collection' : 'Browse ' + this.escape(label) + ' solutions'}</small></span>
+        <span class="category-option-count">${count.toLocaleString()}</span>
       </button>`;
-    }).join('');
+    }).join('') || '<div class="category-empty"><i class="fa-solid fa-magnifying-glass"></i><span>No categories match that search.</span></div>';
 
-    if (isMobile && !q && allCats.length > 6) {
-      const more = document.createElement('button');
-      more.className = 'cat-btn cat-btn-more';
-      more.innerHTML = this._catExpanded
-        ? `<i class="fa-solid fa-chevron-up"></i> Show less`
-        : `<i class="fa-solid fa-chevron-down"></i> All ${allCats.length} categories`;
-      more.addEventListener('click', () => {
-        this._catExpanded = !this._catExpanded;
-        this.renderCategoryBar();
-      });
-      bar.appendChild(more);
-    }
-
-    bar.querySelectorAll('.cat-btn[data-cat]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        this.activeCategory = btn.dataset.cat;
+    bar.querySelectorAll('[data-cat]').forEach(button => {
+      button.addEventListener('click', () => {
+        this.activeCategory = button.dataset.cat;
+        const panel = document.getElementById('categoryExplorerPanel');
+        if (panel) panel.hidden = true;
+        this._catSearch = '';
+        const input = document.getElementById('catSearchInput');
+        if (input) input.value = '';
         this.renderCategoryBar();
         this.renderProducts();
-        if (isMobile) {
+        if (window.matchMedia('(max-width: 900px)').matches) {
           document.getElementById('products')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       });
     });
 
-    const prev = document.getElementById('catPrev');
-    const next = document.getElementById('catNext');
-    if (prev && !prev._vBound) {
-      prev._vBound = true;
-      next._vBound = true;
-      prev.addEventListener('click', () => bar.scrollBy({ left: -260, behavior: 'smooth' }));
-      next.addEventListener('click', () => bar.scrollBy({ left:  260, behavior: 'smooth' }));
+    const panel = document.getElementById('categoryExplorerPanel');
+    if (trigger && !trigger._vBound) {
+      trigger._vBound = true;
+      trigger.addEventListener('click', () => {
+        if (!panel) return;
+        panel.hidden = !panel.hidden;
+        trigger.setAttribute('aria-expanded', String(!panel.hidden));
+        if (!panel.hidden) setTimeout(() => document.getElementById('catSearchInput')?.focus(), 60);
+      });
     }
-
-    bar.querySelector('.cat-btn.active')?.scrollIntoView({
-      behavior: 'smooth', inline: 'center', block: 'nearest'
-    });
+    if (panel && !panel._vBound) {
+      panel._vBound = true;
+      document.addEventListener('click', event => {
+        const explorer = document.getElementById('categoryExplorer');
+        if (explorer && !explorer.contains(event.target)) {
+          panel.hidden = true;
+          document.getElementById('categoryExplorerTrigger')?.setAttribute('aria-expanded', 'false');
+        }
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+          panel.hidden = true;
+          document.getElementById('categoryExplorerTrigger')?.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
   },
 
    /* ── Seeded shuffle — stable per visitor, different between visitors ── */
@@ -856,13 +982,13 @@ const App = {
     }
 
     let list = this.products;
-    if (this.activeCategory !== 'all') list = list.filter(p => p.category === this.activeCategory);
+    if (this.activeCategory !== 'all') list = list.filter(p => normalizeMarketCategory(p.category) === this.activeCategory);
 
     if (this.activeCategory !== 'all') {
       const stillExists = Object.values(INDUSTRY_MAP).some(
-        ind => ind.marketCategory === this.activeCategory
+        ind => normalizeMarketCategory(ind.marketCategory) === this.activeCategory
       );
-      if (!stillExists && !this.products.some(p => p.category === this.activeCategory)) {
+      if (!stillExists && !this.products.some(p => normalizeMarketCategory(p.category) === this.activeCategory)) {
         this.activeCategory = 'all';
         this.renderCategoryBar();
       }
@@ -898,14 +1024,10 @@ const App = {
       const isCustom = this.isCustomProduct(p);
       const agg = this.getReviewAggregate(p.id);
 
-      const previewUrl = (
-        (p.previewUrl && String(p.previewUrl).trim()) ||
-        (p.link && String(p.link).trim()) ||
-        null
-      );
+      const previewAvailable = p.status === 'active';
 
-      const previewBtn = previewUrl
-        ? `<a href="${this.escape(previewUrl)}" class="preview-btn" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" title="See It Live"><i class="fa-solid fa-eye"></i> Demo</a>`
+      const previewBtn = previewAvailable
+        ? `<button type="button" class="preview-btn" onclick="event.stopPropagation(); App.requestPreview('${p.id}')" title="Request a controlled preview"><i class="fa-solid fa-eye"></i> Preview</button>`
         : '';
 
       const stockBadge = !stock.loaded
@@ -990,8 +1112,8 @@ const App = {
 
     const isCustom = this.isCustomProduct(p);
     const extras = this.getProductExtras(productId);
-    const previewUrl = (p.previewUrl && String(p.previewUrl).trim()) || (p.link && String(p.link).trim()) || null;
-    const demoEmbed = extras.demoEmbedUrl || null;
+    const previewAvailable = p.previewEnabled === true && p.previewGatewayVerified === true && ['isolated-software', 'digital-sample'].includes(p.previewProfile);
+    const demoEmbed = null; // External embeds are not trusted as controlled previews.
     const gallery = Array.isArray(extras.gallery) ? extras.gallery.filter(Boolean) : [];
     const productFaqs = Array.isArray(extras.faqs) ? extras.faqs : [];
     const features = (p.features && p.features.length) ? p.features : [];
@@ -1014,13 +1136,13 @@ const heroVisual = (p.image && String(p.image).trim())
 
     const ctaRow = isCustom
       ? `<div class="pdm-cta-row">
-           ${previewUrl ? `<a href="${this.escape(previewUrl)}" class="btn-secondary" target="_blank" rel="noopener" onclick="event.stopPropagation();"><i class="fa-solid fa-eye"></i> See Live Demo</a>` : ''}
+           ${previewAvailable ? `<button class="btn-secondary" onclick="event.stopPropagation(); App.requestPreview('${p.id}')"><i class="fa-solid fa-eye"></i> Request Preview</button>` : ''}
            <a href="/client.html" class="btn-outline"><i class="fa-solid fa-key"></i> Subscribe</a>
            <button class="quote-btn" onclick="App.closeModal('productDetailModal'); App.openQuoteModal('${p.id}')"><i class="fa-solid fa-comments-dollar"></i> Request a Quote</button>
            <button class="btn-outline" onclick="App.closeModal('productDetailModal'); App.openWhatsAppQuote('${p.id}')"><i class="fa-brands fa-whatsapp"></i> Chat on WhatsApp</button>
          </div>`
       : `<div class="pdm-cta-row">
-           ${previewUrl ? `<a href="${this.escape(previewUrl)}" class="btn-secondary" target="_blank" rel="noopener" onclick="event.stopPropagation();"><i class="fa-solid fa-eye"></i> See Live Demo</a>` : ''}
+           ${previewAvailable ? `<button type="button" class="btn-secondary" onclick="event.stopPropagation(); App.requestPreview('${p.id}')"><i class="fa-solid fa-eye"></i> Request Preview</button>` : ''}
            <a href="/client.html" class="btn-outline"><i class="fa-solid fa-key"></i> Subscribe</a>
            <button class="btn-outline" onclick="App.closeModal('productDetailModal'); App.addToCart('${p.id}')"><i class="fa-solid fa-cart-plus"></i> Add to Cart</button>
            <button class="btn-primary" onclick="App.closeModal('productDetailModal'); App.openPurchaseModal('${p.id}')"><i class="fa-solid fa-bolt"></i> Buy Now</button>
@@ -1402,13 +1524,9 @@ const heroVisual = (p.image && String(p.image).trim())
       const soldOut = stock.loaded && stock.qty <= 0;
       const isCustom = this.isCustomProduct(p);
 
-      const previewUrl = (
-        (p.previewUrl && String(p.previewUrl).trim()) ||
-        (p.link && String(p.link).trim()) ||
-        null
-      );
-      const previewBtn = previewUrl
-        ? `<a href="${this.escape(previewUrl)}" class="carousel-preview-btn" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" title="See Demo"><i class="fa-solid fa-eye"></i></a>`
+      const previewAvailable = p.status === 'active';
+      const previewBtn = previewAvailable
+        ? `<button type="button" class="carousel-preview-btn" onclick="event.stopPropagation(); App.requestPreview('${p.id}')" title="Request controlled preview"><i class="fa-solid fa-eye"></i></button>`
         : '';
 
       const visualHtml = (p.image && String(p.image).trim())
@@ -2455,6 +2573,7 @@ const heroVisual = (p.image && String(p.image).trim())
 
     const catInput = document.getElementById('catSearchInput');
     if (catInput) {
+      catInput._vBound = true;
       let catT;
       catInput.addEventListener('input', (e) => {
         clearTimeout(catT);

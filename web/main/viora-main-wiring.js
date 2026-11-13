@@ -50,6 +50,116 @@ function toast(msg, type) {
   if (typeof d.toast === 'function') { try { d.toast(msg, type || 'info'); } catch (_) {} }
 }
 
+async function loadMarketplacePreviewRequests() {
+  const tbody = $('marketplacePreviewRequestsBody');
+  const auth = (C().VioraAuth || window.VioraAuth);
+  if (!tbody) return;
+  if (!auth?.currentUser) {
+    tbody.innerHTML = '<tr><td colspan="6">Sign in with an administrator account to view preview requests.</td></tr>';
+    return;
+  }
+  const button = $('refreshPreviewRequestsBtn');
+  if (button) button.disabled = true;
+  try {
+    const token = await auth.currentUser.getIdToken();
+    const res = await fetch('https://viora-api.cliff254johns.workers.dev/marketplace/preview/requests', {
+      method: 'GET',
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(data.error || 'Could not load requests');
+    const rows = [];
+    for (const [uid, products] of Object.entries(data.requests || {})) {
+      for (const [productId, request] of Object.entries(products || {})) {
+        if (!request) continue;
+        rows.push({ uid, productId, ...request });
+      }
+    }
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="6">No preview requests yet.</td></tr>';
+      return;
+    }
+    const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    tbody.innerHTML = rows.sort((a,b) => String(b.requestedAt || '').localeCompare(String(a.requestedAt || ''))).map(row => {
+      const action = row.status === 'pending'
+        ? (row.gatewayReady === true
+          ? '<button class="btn btn-primary btn-xs" data-preview-action="grant">Approve</button>'
+          : '<button class="btn btn-outline btn-xs" disabled title="The product delivery gateway has not passed verification">Gateway pending</button>')
+        : row.status === 'approved'
+          ? '<button class="btn btn-outline btn-xs" data-preview-action="revoke">Revoke</button>'
+          : '<span>—</span>';
+      return '<tr data-preview-uid="' + esc(row.uid) + '" data-preview-product="' + esc(row.productId) + '">' +
+        '<td>' + esc(row.email || row.uid) + '</td><td>' + esc(row.productName || row.productId) + '</td>' +
+        '<td>' + esc(row.requestedAt ? new Date(row.requestedAt).toLocaleString() : '—') + '</td>' +
+        '<td>' + (row.gatewayReady === true ? '<span class="badge badge-active">Verified</span>' : '<span class="badge badge-warning">Not verified</span>') + '</td>' +
+        '<td>' + esc(row.status || 'unknown') + '</td><td>' + action + '</td></tr>';
+    }).join('');
+  } catch (error) {
+    tbody.innerHTML = '<tr><td colspan="6">Unable to load requests: ' + String(error.message || 'unknown error').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])) + '</td></tr>';
+    toast('Preview requests could not be loaded.', 'error');
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+async function loadMarketplacePreviewGatewayInventory() {
+  const tbody = $('marketplacePreviewGatewaysBody');
+  const summary = $('marketplacePreviewGatewaySummary');
+  const button = $('refreshPreviewGatewaysBtn');
+  const auth = (C().VioraAuth || window.VioraAuth);
+  if (!tbody) return;
+  if (!auth?.currentUser) { tbody.innerHTML = '<tr><td colspan="6">Administrator sign-in required.</td></tr>'; return; }
+  if (button) button.disabled = true;
+  try {
+    const token = await auth.currentUser.getIdToken();
+    const res = await fetch('https://viora-api.cliff254johns.workers.dev/marketplace/preview/gateways', { method: 'GET', headers: { Authorization: 'Bearer ' + token } });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(data.error || 'Gateway inventory unavailable');
+    const esc = value => String(value == null ? '' : value).replace(/[&<>\"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '\"':'&quot;', "'":'&#39;' }[ch]));
+    const products = Array.isArray(data.products) ? data.products : [];
+    if (summary) summary.textContent = 'Catalogue audit: ' + (data.summary?.total || 0) + ' products · ' + (data.summary?.gatewayReady || 0) + ' configured · ' + (data.summary?.blocked || 0) + ' blocked. This is not a substitute for per-product acceptance tests.';
+    if (!products.length) { tbody.innerHTML = '<tr><td colspan="6">No Marketplace products found.</td></tr>'; return; }
+    tbody.innerHTML = products.sort((a,b) => String(a.name).localeCompare(String(b.name))).map(p =>
+      '<tr><td><strong>' + esc(p.name) + '</strong><br><small>' + esc(p.productId) + '</small></td><td>' + esc(p.category || '—') + '</td><td>' + esc(p.status) + '</td><td>' + esc(p.previewProfile || 'Not assigned') + '</td><td>' + (p.gatewayReady ? '<span class="badge badge-active">Configured</span>' : '<span class="badge badge-warning">Blocked</span>') + '</td><td>' + esc((p.blockedReasons || []).join(', ') || 'Acceptance evidence still required') + '</td></tr>'
+    ).join('');
+  } catch (error) {
+    tbody.innerHTML = '<tr><td colspan="6">Unable to audit gateways: ' + String(error.message || 'unknown error').replace(/[&<>\"]/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '\"':'&quot;' }[ch])) + '</td></tr>';
+    toast('Marketplace gateway inventory could not be loaded.', 'error');
+  } finally { if (button) button.disabled = false; }
+}
+function bindMarketplacePreviewAdmin() {
+  const gatewayRefresh = $('refreshPreviewGatewaysBtn');
+  on(gatewayRefresh, 'click', loadMarketplacePreviewGatewayInventory);
+  const refresh = $('refreshPreviewRequestsBtn');
+  const tbody = $('marketplacePreviewRequestsBody');
+  on(refresh, 'click', loadMarketplacePreviewRequests);
+  on(tbody, 'click', async event => {
+    const button = event.target.closest('[data-preview-action]');
+    const row = button?.closest('tr[data-preview-uid]');
+    if (!button || !row) return;
+    const auth = (C().VioraAuth || window.VioraAuth);
+    if (!auth?.currentUser) { toast('Administrator sign-in required.', 'error'); return; }
+    const action = button.dataset.previewAction;
+    button.disabled = true;
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const endpoint = action === 'grant' ? 'grant' : 'revoke';
+      const res = await fetch('https://viora-api.cliff254johns.workers.dev/marketplace/preview/' + endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ uid: row.dataset.previewUid, productId: row.dataset.previewProduct })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Action failed');
+      toast(action === 'grant' ? 'Preview approved. The user can now start their 15-minute session.' : 'Preview access revoked.', 'success');
+      await loadMarketplacePreviewRequests();
+    } catch (error) {
+      toast('Preview action failed: ' + (error.message || 'unknown error'), 'error');
+      button.disabled = false;
+    }
+  });
+}
+
 /* ═══════════════════════════════════════════════════════════════
    attachEvents()
    ═══════════════════════════════════════════════════════════════ */
@@ -60,6 +170,8 @@ export function attachEvents() {
 
   /* Install global delegated listeners once. */
   _installDelegated(d);
+
+  bindMarketplacePreviewAdmin();
 
   /* Sidebar navigation (delegated — cheap, safe to re-bind on idempotent guard). */
   document.querySelectorAll('.sidebar nav a').forEach(a => {
@@ -1197,8 +1309,8 @@ export function attachForms() {
     status: $('prodStatus')?.value,
     _kind: $('prodKind')?.value || 'product',
     liveUrl: $('prodLiveUrl')?.value?.trim() || null,
-    previewUrl: $('prodPreviewUrl')?.value?.trim() || null,
-    link: $('prodLink')?.value?.trim() || null,
+    previewEnabled: $('prodPreviewEnabled')?.checked === true,
+    previewProfile: $('prodPreviewProfile')?.value || '',
     image: $('prodImage')?.value?.trim() || null
   })));
 
