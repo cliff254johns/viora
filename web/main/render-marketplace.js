@@ -446,7 +446,6 @@ export function renderPublicUiProducts() {
       const priceKes = usdToKes(p.price || 0);
       const sold = metrics[p.id]?.qty || 0;
       const imageUrl = safeUrl(p.image || p.previewUrl || '');
-      const link = safeUrl(p.link || p.previewUrl || '');
       const statusCls = p.status === 'draft' ? 'draft' : p.status === 'archived' ? 'gray' : 'active';
       const idSafe = q(p.id);
       return `<div class="card-3d">
@@ -466,7 +465,6 @@ export function renderPublicUiProducts() {
             <div class="stat"><span class="val">${fmtUSD(p.price)}</span><span class="lbl">USD</span></div>
             <div class="stat"><span class="val">${fmtKES(priceKes)}</span><span class="lbl">KES</span></div>
             <div class="stat"><span class="val">${sold}</span><span class="lbl">Sold</span></div>
-            ${link ? `<div class="stat"><a href="${_esc(link)}" target="_blank" rel="noopener noreferrer" style="font-size:.72rem;color:var(--accent-blue);"><i class="fa-solid fa-arrow-up-right-from-square"></i> Preview</a></div>` : ''}
           </div>
         </div>
         <div class="card-actions">
