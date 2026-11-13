@@ -76,7 +76,31 @@ const expectedLegacyProducts = [
   ['Legal Practice Systems','business'],
   ['3D Websites','business'],
   ['General Websites','business'],
-  ['AI & Automation','enterprise']
+  ['AI & Automation','enterprise'],
+  ['Food & Beverage','hospitality'],
+  ['Health & Wellness','institutional'],
+  ['Beauty & Personal Care','business'],
+  ['Professional Services','business'],
+  ['Creative & Media','business'],
+  ['Construction & Trades','property'],
+  ['Transport & Logistics','industry'],
+  ['Agriculture & Farming','industry'],
+  ['Education & Training','institutional'],
+  ['Finance & Insurance','enterprise'],
+  ['Real Estate & Property','property'],
+  ['Community & Faith','institutional'],
+  ['Informal & MSME','business'],
+  ['Energy & Environment','industry'],
+  ['Mining & Extractives','industry'],
+  ['Events & Entertainment','hospitality'],
+  ['Government & NGO','institutional'],
+  ['Automotive & Repair','industry'],
+  ['Sports & Recreation','business'],
+  ['Security & Safety','property'],
+  ['Legal & Compliance','business'],
+  ['Warehousing & Fulfilment','industry'],
+  ['Cleaning & Facility','industry'],
+  ['Rental & Leasing','property']
 ];
 for (const [label, expected] of expectedLegacyProducts) {
   assert.equal(classify({ category: label }), expected, 'legacy product category '+label);
