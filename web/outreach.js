@@ -254,7 +254,7 @@ async function queueAiDraft(){
  const followups=followSubject&&followText?[{subject:followSubject,text:followText,delayDays:5}]:[];
  try{
   busy('aiQueueCampaign',true,'Queuing…');
-  const result=await api('/outreach/campaign/queue',{items:[{leadId,subject,text:textBody,followups}]});
+  const result=await api('/outreach/campaign/queue',{items:[{leadId,subject,text:textBody,followups,humanApproval:true}]});
   if(!result.queued)throw new Error(result.rejected?.[0]?.reason||'The prospect did not meet campaign eligibility requirements.');
   status('aiStatus','Queued for autonomous delivery. Recipient: '+result.items[0].recipient+'. Delivery remains subject to the daily cap and current compliance checks.');
   toast('Prospect queued for the global campaign engine.');
