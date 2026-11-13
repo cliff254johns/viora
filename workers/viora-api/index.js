@@ -6590,12 +6590,12 @@ async function runOutreachCampaignScheduler(env) {
           return;
         }
       }
-      await writeOutreachCampaignActivity(env, candidate, 'sending', { attemptedAt: new Date().toISOString() });
       const reserved = await outreachReserveDailySlot(env);
       if (!reserved.allowed) {
         await outreachDbWrite(env, path, { ...candidate, status: 'queued', claimedAt: null });
         return;
       }
+      await writeOutreachCampaignActivity(env, candidate, 'sending', { attemptedAt: new Date().toISOString() });
       const token = candidate.unsubscribeToken;
       const unsubscribeUrl = 'https://viora-api.cliff254johns.workers.dev/outreach/unsubscribe?token=' + encodeURIComponent(token);
       const footer = '\n\n---\nVIORA Ecosystems\n' + globalPolicy.senderPostalAddress + '\nPrivacy: ' + globalPolicy.privacyNoticeUrl + '\nYou are receiving this business email under a documented contact basis.\nUnsubscribe: ' + unsubscribeUrl;
