@@ -244,11 +244,13 @@ async function syncGmailReplies(){
   busy('gmailSyncReplies',true,'Checking inbox…');
   status('gmailStatus','Checking the connected mailbox for recent incoming messages…');
   const data=await apiGet('/gmail/replies');
-  let added=0;
+  let added=0,skipped=0;
   for(const msg of (data.messages||[])){
    const sender=String(msg.from||'').match(/<([^>]+)>/)?.[1]||String(msg.from||'').trim();
    const email=sender.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0]||sender;
    const lead=leadList().find(l=>String(l.email||'').toLowerCase()===email.toLowerCase());
+   const previouslyContacted=emailList().some(e=>e.direction!=='inbound'&&String(e.to||'').toLowerCase()===email.toLowerCase()&&e.status==='sent');
+   if(!lead||!previouslyContacted){skipped++;continue;}
    const recordId='gmail-'+String(msg.id||'').replace(/[^A-Za-z0-9_-]/g,'');
    const existing=await get(ref(db,ROOT+'/emails/'+recordId));
    if(existing.exists())continue;
@@ -260,8 +262,8 @@ async function syncGmailReplies(){
    added++;
   }
   renderEmails();
-  status('gmailStatus','Inbox check complete. '+added+' new message'+(added===1?'':'s')+' added to the Outreach timeline; '+((data.count||0)-added)+' already recorded or not new.');
-  toast('Gmail inbox sync complete: '+added+' new messages.');
+  status('gmailStatus','Reply check complete. '+added+' new replies added; '+skipped+' inbox messages did not match a saved lead already contacted through Outreach.');
+  toast('Gmail reply sync complete: '+added+' new replies.');
  }catch(e){status('gmailStatus','Reply sync failed: '+e.message,true);}
  finally{busy('gmailSyncReplies',false);}
 }
