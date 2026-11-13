@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
+import vm from 'node:vm';
 
 const read = (p) => fs.readFileSync(p, 'utf8');
 const main = read('web/main.html');
@@ -39,6 +40,42 @@ assert.ok(homepage.includes("import './viora-taxonomy.js'"), 'homepage must load
 assert.ok(homepage.includes('taxonomy.categories.map'), 'homepage tour must use official solution categories');
 assert.ok(blueprintAdmin.includes('classifyIndustry'), 'admin industry blueprints must normalize legacy categories');
 assert.ok(industryDirectory.includes('VIORA Property & Infrastructure Solutions'), 'industry directory must expose official solution groups');
+
+const taxonomyWindow = {};
+vm.runInNewContext(taxonomy, { window: taxonomyWindow });
+const classify = taxonomyWindow.VIORATaxonomy.classifyProduct;
+const expectedLegacyProducts = [
+  ['Retail & Wholesale Systems','enterprise'],
+  ['Hardware Systems','enterprise'],
+  ['Clinic Systems','institutional'],
+  ['Hospital Systems','institutional'],
+  ['School Systems','institutional'],
+  ['Hotel & Guest House Systems','hospitality'],
+  ['Restaurant & Catering Systems','hospitality'],
+  ['Clubs & Entertainment Systems','hospitality'],
+  ['Construction Project Systems','property'],
+  ['Real Estate Agency Systems','property'],
+  ['Security Company Systems','property'],
+  ['Farm Systems','industry'],
+  ['Greenhouse Systems','industry'],
+  ['Cleaning Operations Systems','industry'],
+  ['Laundry & Dry Cleaning Systems','industry'],
+  ['Garage & Automotive Service Systems','industry'],
+  ['Transport & Fleet Systems','industry'],
+  ['Printing & Graphics Production Systems','industry'],
+  ['Salon, Spa & Beauty Systems','business'],
+  ['Fashion & Apparel Systems','business'],
+  ['Recruitment Agency Systems','business'],
+  ['Funeral Home Systems','business'],
+  ['Legal Practice Systems','business'],
+  ['3D Websites','business'],
+  ['General Websites','business'],
+  ['AI & Automation','enterprise']
+];
+for (const [label, expected] of expectedLegacyProducts) {
+  assert.equal(classify({ category: label }), expected, 'legacy product category '+label);
+}
+assert.equal(taxonomyWindow.VIORATaxonomy.categories.length, 6, 'taxonomy must expose exactly six categories');
 
 for (const path of ['web/manifest.webmanifest','web/main.webmanifest','web/manifest.json','web/campaigns.webmanifest','web/assets/r/manifest-public.json','web/assets/r/manifest-rider.json','web/assets/r/manifest-admin.json','web/assets/mamamboga/manifest.json']) {
   const manifest = JSON.parse(read(path));
