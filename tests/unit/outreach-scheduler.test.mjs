@@ -98,3 +98,24 @@ test('Campaigns account verification reads provider status from the authenticate
   assert.match(accounts, /serviceStatus\?\.verified/);
   assert.match(accounts, /API credentials missing/);
 });
+
+test('every Gmail outbound route and scheduler path fails closed while email sending is off', async () => {
+  const source = await readFile(new URL('../../workers/viora-api/index.js', import.meta.url), 'utf8');
+  assert.match(source, /function outboundEmailSendingEnabled\(env\)/);
+  for (const fn of [
+    'sendViaGmail',
+    'sendGmailThreadFollowup',
+    'sendGmailThreadReply',
+    'handleOutreachAutoReply',
+    'runOutreachCampaignScheduler',
+    'runScheduledOutreachInboxSync',
+  ]) {
+    const start = source.indexOf('async function ' + fn + '(');
+    assert.notEqual(start, -1, fn + ' exists');
+    const next = source.indexOf('\nasync function ', start + 1);
+    const body = source.slice(start, next < 0 ? start + 5000 : next);
+    assert.match(body, /outboundEmailSendingEnabled\(env\)/, fn + ' is guarded');
+  }
+  const directSend = source.slice(source.indexOf('async function handleSendEmail('), source.indexOf('/* ============================================================\n   ' , source.indexOf('async function handleSendEmail(') + 20));
+  assert.match(directSend, /outboundEmailSendingEnabled\(env\)|ENABLE_OUTREACH_EMAIL_SENDING/);
+});
