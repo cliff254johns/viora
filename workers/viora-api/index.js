@@ -1,3 +1,5 @@
+import { claimScheduledCampaignPost, persistCampaignPublishOutcome } from './social-publish.js';
+import { buildScheduledJobs, runScheduledJobs } from './scheduled-jobs.js';
 // ═══════════════════════════════════════════════════════════════
 // viora-api — Viora Intercollective System
 // v4.9.0 — Campaign Command Center + Trends
@@ -357,7 +359,12 @@ if (path === '/social/stats/batch' && request.method === 'POST') {
       if (path === '/portal/provision')   return await handlePortalProvision(body, env, user);
       if (path === '/portal/deleteUser')  return await handlePortalDeleteUser(body, env, user);
 
-          // ── NEW: Campaign / Social routes (require auth) ──
+          if (path === '/social/config/status' && (request.method === 'GET' || request.method === 'POST')) {
+        requireRole(String(user.role || '').toLowerCase(), ['admin', 'exec']);
+        return await handleSocialConfigStatus(env, user);
+      }
+
+      // ── NEW: Campaign / Social routes (require auth) ──
       if (path === '/ai/generatePost' && request.method === 'POST') {
         return await handleGeneratePost(body, env, user);
       }
@@ -572,11 +579,16 @@ async function handleSocialFanout(body, env, user) {
 
    async scheduled(event, env, ctx) {
     ctx.waitUntil((async () => {
-      await runScheduledReminders(env);
-      await autoPrepareSocialQueue(env);
-      await publishDueScheduledPosts(env);
-      await runScheduledOutreachInboxSync(env);
-      await runOutreachCampaignScheduler(env);
+      // Email automation is a separate opt-in. An unset flag keeps it disabled.
+      const jobs = buildScheduledJobs(env, {
+        reminders: () => runScheduledReminders(env),
+        social_queue_prepare: () => autoPrepareSocialQueue(env),
+        social_publish: () => publishDueScheduledPosts(env),
+        outreach_inbox_sync: () => runScheduledOutreachInboxSync(env),
+        outreach_campaign_scheduler: () => runOutreachCampaignScheduler(env),
+      });
+      // Preserve the established order (prepare before publish) while isolating failures.
+      await runScheduledJobs(jobs);
     })());
   },
 };
@@ -1440,7 +1452,7 @@ async function handlePostFacebook(body, env, user) {
       form.append('access_token', env.FB_PAGE_TOKEN);
 
       const r = await fetch(
-        `https://graph.facebook.com/v20.0/${env.FB_PAGE_ID}/photos`,
+        `https://graph.facebook.com/v27.0/${env.FB_PAGE_ID}/photos`,
         { method: 'POST', body: form }
       );
       const data = await r.json();
@@ -1455,16 +1467,16 @@ async function handlePostFacebook(body, env, user) {
           url: `https://www.facebook.com/${data.post_id || data.id}`,
         });
       }
-      return json({ ok: false, error: 'Facebook photo upload failed', detail: data }, 502);
+      return json({ ok: false, uncertain: !r.ok && r.status >= 500, error: 'Facebook photo upload failed', detail: data }, 502);
     } catch (e) {
-      return json({ ok: false, error: 'Facebook photo error: ' + (e.message || 'unknown') }, 502);
+      return json({ ok: false, uncertain: true, error: 'Facebook photo request outcome unknown: ' + (e.message || 'unknown') }, 502);
     }
   }
 
   // Text-only → /feed endpoint
   try {
     const r = await fetch(
-      `https://graph.facebook.com/v20.0/${env.FB_PAGE_ID}/feed`,
+      `https://graph.facebook.com/v27.0/${env.FB_PAGE_ID}/feed`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1485,9 +1497,9 @@ async function handlePostFacebook(body, env, user) {
         url: `https://www.facebook.com/${data.id}`,
       });
     }
-    return json({ ok: false, error: 'Facebook post failed', detail: data }, 502);
+    return json({ ok: false, uncertain: !r.ok && r.status >= 500, error: 'Facebook post failed', detail: data }, 502);
   } catch (e) {
-    return json({ ok: false, error: 'Facebook error: ' + (e.message || 'unknown') }, 502);
+    return json({ ok: false, uncertain: true, error: 'Facebook request outcome unknown: ' + (e.message || 'unknown') }, 502);
   }
 }
 
@@ -2211,6 +2223,88 @@ function extractTikTokVideoId(url) {
 /* ============================================================
    SOCIAL VERIFY — fetch account stats by profile URL
    ============================================================ */
+async function handleSocialConfigStatus(env, user) {
+  const results = {
+    facebook: { configured: !!(env.FB_PAGE_TOKEN && env.FB_PAGE_ID), verified: false, connected: false, message: 'Meta Page credentials are not configured on this Worker.' },
+    instagram: { configured: !!(env.IG_USER_ID && env.IG_ACCESS_TOKEN), verified: false, connected: false, message: 'Instagram Graph API credentials are not configured on this Worker.' },
+    tiktok: { configured: !!(env.TIKTOK_CLIENT_KEY && env.TIKTOK_CLIENT_SECRET && env.SOCIAL_CACHE), verified: false, connected: false, message: 'TikTok OAuth requires client key, client secret and SOCIAL_CACHE bindings.' },
+    youtube: { configured: !!env.YOUTUBE_API_KEY, verified: false, connected: false, message: 'YouTube Data API key is not configured on this Worker.' },
+  };
+
+  if (results.facebook.configured) {
+    try {
+      const url = new URL(`https://graph.facebook.com/v27.0/${encodeURIComponent(env.FB_PAGE_ID)}`);
+      url.searchParams.set('fields', 'id,name');
+      url.searchParams.set('access_token', env.FB_PAGE_TOKEN);
+      const response = await fetch(url.toString());
+      const data = await response.json();
+      results.facebook.verified = response.ok && !!data.id;
+      results.facebook.connected = results.facebook.verified;
+      results.facebook.message = results.facebook.verified ? 'Meta Page token verified against the Graph API.' : 'Meta Graph API rejected the Page credentials.';
+      results.facebook.pageId = results.facebook.verified ? data.id : null;
+      results.facebook.pageName = results.facebook.verified ? data.name || null : null;
+    } catch (error) {
+      results.facebook.message = 'Meta Graph API verification request failed.';
+    }
+  }
+
+  if (results.instagram.configured) {
+    try {
+      const url = new URL(`https://graph.facebook.com/v27.0/${encodeURIComponent(env.IG_USER_ID)}`);
+      url.searchParams.set('fields', 'id,username');
+      url.searchParams.set('access_token', env.IG_ACCESS_TOKEN);
+      const response = await fetch(url.toString());
+      const data = await response.json();
+      results.instagram.verified = response.ok && !!data.id;
+      results.instagram.connected = results.instagram.verified;
+      results.instagram.message = results.instagram.verified ? 'Instagram Business account token verified against the Graph API.' : 'Instagram Graph API rejected the account credentials.';
+      results.instagram.accountId = results.instagram.verified ? data.id : null;
+      results.instagram.username = results.instagram.verified ? data.username || null : null;
+    } catch (error) {
+      results.instagram.message = 'Instagram Graph API verification request failed.';
+    }
+  }
+
+  if (results.tiktok.configured) {
+    try {
+      const token = await getTikTokTokenForUser(user, env);
+      if (token) {
+        const response = await fetch('https://open.tiktokapis.com/v2/user/info/?fields=open_id,display_name', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        const account = data.data && data.data.user;
+        results.tiktok.verified = response.ok && !!account?.open_id;
+        results.tiktok.connected = results.tiktok.verified;
+        results.tiktok.message = results.tiktok.verified ? 'TikTok OAuth user token verified.' : 'TikTok rejected the saved user token.';
+        results.tiktok.openId = results.tiktok.verified ? account.open_id : null;
+        results.tiktok.displayName = results.tiktok.verified ? account.display_name || null : null;
+      } else {
+        results.tiktok.message = 'TikTok app credentials exist, but this operator has not completed TikTok OAuth.';
+      }
+    } catch (error) {
+      results.tiktok.message = 'TikTok OAuth token verification request failed.';
+    }
+  }
+
+  if (results.youtube.configured) {
+    try {
+      const url = new URL('https://www.googleapis.com/youtube/v3/i18nLanguages');
+      url.searchParams.set('part', 'snippet');
+      url.searchParams.set('key', env.YOUTUBE_API_KEY);
+      const response = await fetch(url.toString());
+      const data = await response.json();
+      results.youtube.verified = response.ok && Array.isArray(data.items);
+      results.youtube.connected = results.youtube.verified;
+      results.youtube.message = results.youtube.verified ? 'YouTube Data API key accepted by YouTube.' : 'YouTube Data API rejected the key or quota.';
+    } catch (error) {
+      results.youtube.message = 'YouTube Data API verification request failed.';
+    }
+  }
+
+  return json({ ok: true, checkedAt: new Date().toISOString(), integrations: results });
+}
+
 async function handleSocialVerify(body, env, user) {
   requireRole(user.role, ALLOWED_ROLES_FOR_AI);
 
@@ -3967,7 +4061,7 @@ async function handlePortalTicketReply(body, env, user) {
 
   if (ticket.assignedPhone && env.WA_TOKEN && env.WA_PHONE_ID) {
     try {
-      await fetch(`https://graph.facebook.com/v20.0/${env.WA_PHONE_ID}/messages`, {
+      await fetch(`https://graph.facebook.com/v27.0/${env.WA_PHONE_ID}/messages`, {
         method: 'POST',
         headers: { Authorization: 'Bearer ' + env.WA_TOKEN, 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -5694,7 +5788,7 @@ async function handleSendWhatsApp(body, env, user) {
   const token = env.WA_TOKEN, phoneId = env.WA_PHONE_ID;
   let waMessageId = null, transport = 'wa.me-fallback';
   if (token && phoneId) {
-    const waRes = await fetch(`https://graph.facebook.com/v20.0/${phoneId}/messages`, {
+    const waRes = await fetch(`https://graph.facebook.com/v27.0/${phoneId}/messages`, {
       method: 'POST',
       headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -5830,7 +5924,7 @@ async function processWhatsAppPayload(payload, env) {
 
 async function handleWhatsAppSubscribe(request, env) {
   if (!env.WA_TOKEN || !env.WA_WABA_ID) return json({ error: 'WA_TOKEN and WA_WABA_ID required' }, 400);
-  const r = await fetch(`https://graph.facebook.com/v20.0/${env.WA_WABA_ID}/subscribed_apps`, {
+  const r = await fetch(`https://graph.facebook.com/v27.0/${env.WA_WABA_ID}/subscribed_apps`, {
     method: 'POST', headers: { Authorization: 'Bearer ' + env.WA_TOKEN },
   });
   return json(await r.json(), r.status);
@@ -5852,6 +5946,15 @@ async function handleOutreachDraft(body, env, user) {
    ============================================================ */
 async function handleSendEmail(body, env, user) {
   requireRole(String(user.role || '').toLowerCase(), ['admin', 'exec']);
+  if (body && (body.purpose === 'marketing' || body.source === 'Outreach Centre')) {
+    return json({ error: 'Prospect marketing must use the compliance-checked Outreach campaign queue with recipient-level human approval.' }, 409);
+  }
+  if (!body || !['service', 'transactional'].includes(String(body.purpose || '').toLowerCase())) {
+    return json({ error: 'Direct email requires an explicit service or transactional purpose. Prospect marketing must use the approved campaign queue.' }, 409);
+  }
+  if (String(env.ENABLE_OUTREACH_EMAIL_SENDING || '').toLowerCase() !== 'true') {
+    return json({ error: 'Outbound email sending is disabled during controlled release verification.' }, 423);
+  }
   const to = body && body.to;
   const subject = body && body.subject;
   const html = body && body.html;
@@ -6082,7 +6185,16 @@ async function logGmailCommunication(env, record) {
     // The communication log is best-effort; do not expose mailbox content or tokens.
   }
 }
+// Release guard: every Gmail outbound path fails closed unless the explicit send switch is true.
+function outboundEmailSendingEnabled(env) {
+  return String(env && env.ENABLE_OUTREACH_EMAIL_SENDING || '').toLowerCase() === 'true';
+}
+function outboundEmailDisabledResponse() {
+  return json({ ok: false, error: 'Outbound email sending is disabled during controlled release verification.' }, 423);
+}
+
 async function sendViaGmail(message, env, user, existingConnection) {
+  if (!outboundEmailSendingEnabled(env)) return outboundEmailDisabledResponse();
   try {
     const connection = existingConnection || await readGmailConnection(env);
     const accessToken = await gmailAccessToken(connection, env);
@@ -6343,9 +6455,15 @@ async function handleOutreachCampaignQueue(body, env, user) {
       const queueId = crypto.randomUUID();
       const unsubscribeToken = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
       await outreachDbWrite(env, 'outreach/unsubscribeTokens/' + unsubscribeToken, { email, leadId, createdAt: new Date().toISOString(), status: 'active' });
+      const campaignId = String(item.campaignId || crypto.randomUUID());
+      const commLogId = crypto.randomUUID();
       const record = {
-        id: queueId, status: 'queued', sequence: 0, leadId, recipient: email,
-        organisation: company, countryCode, policyVersion: policy.version,
+        id: queueId, emailActivityId: queueId, commLogId, campaignId,
+        status: 'queued', sequence: 0, leadId, recipient: email,
+        organisation: company, contact: lead.contact || '',
+        category: lead.category || 'Business', country: lead.country || '',
+        website: lead.website || '', source: lead.source || 'Outreach campaign',
+        countryCode, policyVersion: policy.version,
         eligibilitySnapshot: { basis: eligibility.basis, sourceUrl: eligibility.sourceUrl, reviewedAt: eligibility.reviewedAt },
         subject, text: textBody, followups, unsubscribeToken,
         scheduledAt: item.scheduledAt || new Date().toISOString(),
@@ -6353,6 +6471,7 @@ async function handleOutreachCampaignQueue(body, env, user) {
         attempts: 0
       };
       await outreachDbWrite(env, 'outreach/campaignQueue/' + queueId, record);
+      await writeOutreachCampaignActivity(env, record, 'queued');
       alreadyQueued.add(email);
       created.push({ id: queueId, recipient: email, organisation: company });
     } catch (error) { rejected.push({ leadId: item && item.leadId || null, reason: error.message }); }
@@ -6395,6 +6514,7 @@ async function outreachReserveDailySlot(env) {
 }
 
 async function runScheduledOutreachInboxSync(env) {
+  if (!outboundEmailSendingEnabled(env)) return;
   try {
     const connection = await readGmailConnection(env);
     if (!connection || String(connection.email || '').toLowerCase() !== GMAIL_OWNER_EMAIL) return;
@@ -6438,6 +6558,7 @@ async function runScheduledOutreachInboxSync(env) {
 }
 
 async function sendGmailThreadFollowup(threadId, recipient, subject, textBody, unsubscribeUrl, env, connection) {
+  if (!outboundEmailSendingEnabled(env)) throw new Error('Outbound email sending is disabled during controlled release verification.');
   const accessToken = await gmailAccessToken(connection, env);
   const thread = await gmailApiFetch('threads/' + encodeURIComponent(threadId) + '?format=metadata', accessToken);
   const last = (thread.messages || []).slice(-1)[0];
@@ -6467,7 +6588,60 @@ async function sendGmailThreadFollowup(threadId, recipient, subject, textBody, u
   return result;
 }
 
+async function writeOutreachCampaignActivity(env, candidate, status, details = {}) {
+  const activityId = String(candidate.emailActivityId || candidate.id);
+  const commLogId = String(candidate.commLogId || ('outreach-' + activityId));
+  const now = new Date().toISOString();
+  const activity = {
+    id: activityId, campaignId: candidate.campaignId || candidate.id,
+    leadId: candidate.leadId, recipient: candidate.recipient,
+    organisation: candidate.organisation || '', contact: candidate.contact || '',
+    category: candidate.category || 'Business', country: candidate.country || '',
+    countryCode: candidate.countryCode || '', website: candidate.website || '',
+    source: candidate.source || 'Outreach campaign', subject: candidate.subject || '',
+    channel: 'email', sender: GMAIL_OWNER_EMAIL, commLogId,
+    status, queuedAt: candidate.createdAt || now, updatedAt: now,
+    ...(details || {})
+  };
+  const ledger = {
+    id: activityId, campaignId: activity.campaignId, to: candidate.recipient,
+    subject: candidate.subject || '', text: candidate.text || '',
+    company: activity.organisation, leadId: candidate.leadId, commLogId,
+    direction: 'outbound', source: 'Outreach campaign', transport: 'gmail',
+    sentByEmail: GMAIL_OWNER_EMAIL, timestamp: activity.queuedAt,
+    status, ...details
+  };
+  const comm = {
+    id: commLogId, channel: 'em', direction: 'outbound',
+    recipientId: candidate.leadId, recipientName: activity.organisation || candidate.recipient,
+    recipientContact: candidate.recipient, subject: candidate.subject || '',
+    message: candidate.text || '', sentBy: GMAIL_OWNER_EMAIL, status,
+    timestamp: activity.queuedAt, leadId: candidate.leadId,
+    outreachEmailId: activityId, campaignId: activity.campaignId,
+    source: 'Outreach campaign', ...details
+  };
+  const updates = {
+    ['outreach/emails/' + activityId]: ledger,
+    ['commLog/' + commLogId]: comm,
+    ['leads/' + candidate.leadId + '/outreachHistory/' + activityId]: activity,
+    ['leads/' + candidate.leadId + '/lastOutreach']: activity,
+    ['leads/' + candidate.leadId + '/lastOutreachAt']: details.sentAt || details.attemptedAt || activity.queuedAt,
+    ['leads/' + candidate.leadId + '/lastOutreachStatus']: status,
+    ['leads/' + candidate.leadId + '/lastOutreachEmailId']: activityId,
+    ['leads/' + candidate.leadId + '/lastOutreachSubject']: activity.subject
+  };
+  if (details.providerId) updates['leads/' + candidate.leadId + '/lastOutreachProviderId'] = details.providerId;
+  if (status === 'sent') {
+    const lead = await outreachDbRead(env, 'leads/' + candidate.leadId).catch(() => null);
+    if (lead && lead.status === 'New') updates['leads/' + candidate.leadId + '/status'] = 'Contacted';
+    updates['leads/' + candidate.leadId + '/lastContactedAt'] = details.sentAt || now;
+  }
+  await outreachDbMultiWrite(env, updates);
+  return { activityId, commLogId };
+}
+
 async function runOutreachCampaignScheduler(env) {
+  if (!outboundEmailSendingEnabled(env)) return;
   try {
     const settings = await outreachDbRead(env, 'outreach/campaignSettings').catch(() => null);
     if (!settings || settings.outboundEnabled !== true) return;
@@ -6476,7 +6650,10 @@ async function runOutreachCampaignScheduler(env) {
     const queue = await outreachDbRead(env, 'outreach/campaignQueue').catch(() => ({})) || {};
     const now = Date.now();
     for (const stale of Object.values(queue).filter(x => x && x.status === 'sending' && (!x.claimedAt || now - Date.parse(x.claimedAt) > 15 * 60 * 1000))) {
-      await outreachDbWrite(env, 'outreach/campaignQueue/' + stale.id, { ...stale, status: 'send_uncertain', uncertainAt: new Date().toISOString(), lastError: 'Worker stopped after claiming this message; verify Gmail before any manual retry.' });
+      const uncertainAt = new Date().toISOString();
+      const staleError = 'Worker stopped after claiming this message; verify Gmail before any manual retry.';
+      await outreachDbWrite(env, 'outreach/campaignQueue/' + stale.id, { ...stale, status: 'send_uncertain', uncertainAt, lastError: staleError });
+      await writeOutreachCampaignActivity(env, stale, 'send_uncertain', { uncertainAt, error: staleError });
       await publishOutreachEscalation(env, stale.id + '-stale-claim', 'Campaign send needs reconciliation', 'A campaign item for ' + stale.recipient + ' was left in a sending state. Verify Gmail before any manual resend.', 'critical');
     }
     const due = Object.values(queue).filter(x => x && x.status === 'queued' && Number.isFinite(Date.parse(x.scheduledAt)) && Date.parse(x.scheduledAt) <= now)
@@ -6488,19 +6665,25 @@ async function runOutreachCampaignScheduler(env) {
       const suppression = await outreachDbRead(env, 'outreach/suppressions/' + outreachEmailKey(candidate.recipient)).catch(() => null);
       if (suppression) {
         await outreachDbWrite(env, path + '/status', 'suppressed');
-        await outreachDbWrite(env, path + '/suppressedAt', new Date().toISOString());
+        const suppressedAt = new Date().toISOString();
+        await outreachDbWrite(env, path + '/suppressedAt', suppressedAt);
+        await writeOutreachCampaignActivity(env, candidate, 'suppressed', { suppressedAt });
         return;
       }
       const globalPolicy = await outreachDbRead(env, 'outreach/compliance/globalSendingPolicy').catch(() => null);
     if (!globalPolicy || globalPolicy.status !== 'approved' || !globalPolicy.version || !globalPolicy.senderPostalAddress || !/^https:\/\//i.test(String(globalPolicy.privacyNoticeUrl || ''))) {
       await outreachDbWrite(env, path + '/status', 'blocked');
+      const blockedAt = new Date().toISOString();
       await outreachDbWrite(env, path + '/blockReason', 'Global sending policy or sender disclosure configuration is missing');
+      await writeOutreachCampaignActivity(env, candidate, 'blocked', { blockedAt, error: 'Global sending policy or sender disclosure configuration is missing' });
       return;
     }
     const currentPolicy = await outreachDbRead(env, 'outreach/compliance/jurisdictions/' + candidate.countryCode).catch(() => null);
       if (!currentPolicy || currentPolicy.status !== 'approved' || currentPolicy.version !== candidate.policyVersion) {
         await outreachDbWrite(env, path + '/status', 'blocked');
+        const blockedAt = new Date().toISOString();
         await outreachDbWrite(env, path + '/blockReason', 'Country sending policy changed or is no longer approved');
+        await writeOutreachCampaignActivity(env, candidate, 'blocked', { blockedAt, error: 'Country sending policy changed or is no longer approved' });
         return;
       }
       if (candidate.sequence > 0) {
@@ -6513,7 +6696,9 @@ async function runOutreachCampaignScheduler(env) {
           const prospectReplied = messages.slice(initialIndex + 1).some(m => gmailAddress(gmailHeaderMap(m).from) !== GMAIL_OWNER_EMAIL);
           if (prospectReplied) {
             await outreachDbWrite(env, path + '/status', 'replied');
-            await outreachDbWrite(env, path + '/repliedAt', new Date().toISOString());
+            const repliedAt = new Date().toISOString();
+            await outreachDbWrite(env, path + '/repliedAt', repliedAt);
+            await writeOutreachCampaignActivity(env, candidate, 'replied', { repliedAt });
             return;
           }
           const last = messages.slice(-1)[0];
@@ -6524,7 +6709,9 @@ async function runOutreachCampaignScheduler(env) {
           }
         } catch (e) {
           await outreachDbWrite(env, path + '/status', 'blocked');
+          const blockedAt = new Date().toISOString();
           await outreachDbWrite(env, path + '/blockReason', 'Unable to verify the latest Gmail thread before follow-up');
+          await writeOutreachCampaignActivity(env, candidate, 'blocked', { blockedAt, error: 'Unable to verify the latest Gmail thread before follow-up' });
           return;
         }
       }
@@ -6533,6 +6720,7 @@ async function runOutreachCampaignScheduler(env) {
         await outreachDbWrite(env, path, { ...candidate, status: 'queued', claimedAt: null });
         return;
       }
+      await writeOutreachCampaignActivity(env, candidate, 'sending', { attemptedAt: new Date().toISOString() });
       const token = candidate.unsubscribeToken;
       const unsubscribeUrl = 'https://viora-api.cliff254johns.workers.dev/outreach/unsubscribe?token=' + encodeURIComponent(token);
       const footer = '\n\n---\nVIORA Ecosystems\n' + globalPolicy.senderPostalAddress + '\nPrivacy: ' + globalPolicy.privacyNoticeUrl + '\nYou are receiving this business email under a documented contact basis.\nUnsubscribe: ' + unsubscribeUrl;
@@ -6560,24 +6748,32 @@ async function runOutreachCampaignScheduler(env) {
         sendFailed = true;
       }
       if (sendFailed || !result.ok) {
-        await outreachDbWrite(env, path, { ...candidate, status: 'send_uncertain', attempts: Number(candidate.attempts || 0) + 1, lastError: String(result.error || 'Gmail send failed').slice(0, 300), processedAt: new Date().toISOString() });
+        const uncertainAt = new Date().toISOString();
+        const failureDetails = { uncertainAt, error: String(result.error || 'Gmail send failed').slice(0, 300) };
+        await outreachDbWrite(env, path, { ...candidate, status: 'send_uncertain', attempts: Number(candidate.attempts || 0) + 1, lastError: failureDetails.error, processedAt: uncertainAt });
+        await writeOutreachCampaignActivity(env, candidate, 'send_uncertain', failureDetails);
         await publishOutreachEscalation(env, candidate.id + '-campaign-send', 'Campaign email needs delivery verification', 'Gmail did not confirm delivery for ' + candidate.recipient + '. Check the thread before retrying.', 'critical');
         return;
       }
-      await outreachDbWrite(env, path, { ...candidate, status: 'sent', attempts: Number(candidate.attempts || 0) + 1, sentAt: new Date().toISOString(), gmailMessageId: result.id || null, threadId: result.threadId || candidate.threadId || null });
-      await outreachDbWrite(env, 'leads/' + candidate.leadId + '/lastOutreachAt', new Date().toISOString());
-      await outreachDbWrite(env, 'leads/' + candidate.leadId + '/outreachStatus', 'contacted');
+      const sentAt = new Date().toISOString();
+      const sentDetails = { sentAt, providerId: result.id || null, threadId: result.threadId || candidate.threadId || null, gmailMessageId: result.id || null };
+      await outreachDbWrite(env, path, { ...candidate, status: 'sent', attempts: Number(candidate.attempts || 0) + 1, ...sentDetails });
+      await writeOutreachCampaignActivity(env, candidate, 'sent', sentDetails);
       await outreachDbWrite(env, 'outreach/campaignMetrics/daily/' + reserved.day + '/sent', Number(await outreachDbRead(env, 'outreach/campaignMetrics/daily/' + reserved.day + '/sent').catch(() => 0)) + 1);
       for (let index = 0; index < (candidate.followups || []).length; index++) {
         const follow = candidate.followups[index];
         const delayDays = Math.max(3, Math.min(14, Number(follow.delayDays) || (index === 0 ? 5 : 8)));
         const followId = crypto.randomUUID();
-        await outreachDbWrite(env, 'outreach/campaignQueue/' + followId, {
-          ...candidate, id: followId, sequence: index + 1, status: 'queued',
+        const followRecord = {
+          ...candidate, id: followId, emailActivityId: followId, commLogId: crypto.randomUUID(),
+          sequence: index + 1, status: 'queued',
           subject: String(follow.subject), text: String(follow.text),
           scheduledAt: new Date(Date.now() + delayDays * 86400000).toISOString(),
-          parentQueueId: candidate.id, threadId: result.threadId || null, initialMessageId: result.id || null, createdAt: new Date().toISOString()
-        });
+          parentQueueId: candidate.id, threadId: result.threadId || null, initialMessageId: result.id || null,
+          createdAt: new Date().toISOString()
+        };
+        await outreachDbWrite(env, 'outreach/campaignQueue/' + followId, followRecord);
+        await writeOutreachCampaignActivity(env, followRecord, 'queued');
       }
       return; // At most one email per five-minute scheduler invocation.
     }
@@ -6648,6 +6844,18 @@ async function outreachDbRead(env, path) {
   if (!response.ok) throw new Error('Unable to read Outreach state');
   return response.json();
 }
+async function outreachDbMultiWrite(env, updates) {
+  if (!env.FIREBASE_DATABASE_SECRET) throw new Error('Firebase database service secret is not configured');
+  const url = `${rtdb(env)}/viora_data/orgs/viora.json?auth=${encodeURIComponent(env.FIREBASE_DATABASE_SECRET)}`;
+  const response = await fetch(url, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updates),
+  });
+  if (!response.ok) throw new Error('Unable to atomically write Outreach activity');
+  return response.json().catch(() => null);
+}
+
 async function outreachDbWrite(env, path, value, method = 'PUT') {
   if (!env.FIREBASE_DATABASE_SECRET) throw new Error('Firebase database service secret is not configured');
   const url = `${rtdb(env)}/viora_data/orgs/viora/${path}.json?auth=${encodeURIComponent(env.FIREBASE_DATABASE_SECRET)}`;
@@ -6671,6 +6879,7 @@ async function publishOutreachEscalation(env, eventId, title, body, level = 'hig
   return { id, duplicate: false };
 }
 async function sendGmailThreadReply(thread, sourceMessage, replyText, env, user, accessToken) {
+  if (!outboundEmailSendingEnabled(env)) throw new Error('Outbound email sending is disabled during controlled release verification.');
   const sourceHeaders = gmailHeaderMap(sourceMessage);
   const from = gmailAddress(sourceHeaders.from);
   const messageId = String(sourceHeaders['message-id'] || '').replace(/[\\r\n]+/g, '').trim();
@@ -6699,6 +6908,7 @@ async function sendGmailThreadReply(thread, sourceMessage, replyText, env, user,
   return result;
 }
 async function handleOutreachAutoReply(body, env, user) {
+  if (!outboundEmailSendingEnabled(env)) return outboundEmailDisabledResponse();
   const threadId = String(body && body.threadId || '').trim();
   const messageId = String(body && body.messageId || '').trim();
   const leadId = String(body && body.leadId || '').trim();
@@ -7006,136 +7216,102 @@ async function runScheduledReminders(env) {
    required — the post itself carries createdBy for audit trail.
    ============================================================ */
 async function publishDueScheduledPosts(env) {
-  const qs = '?auth=' + (env.FIREBASE_DATABASE_SECRET || fbKey(env));
-  const CAMPAIGNS_PATH = `${rtdb(env)}/viora_data/orgs/viora/campaigns.json${qs}`;
+  if (!env.FIREBASE_DATABASE_SECRET) {
+    console.error('[sched] Firebase database credential missing; social publisher stopped safely');
+    return;
+  }
+  const qs = '?auth=' + encodeURIComponent(env.FIREBASE_DATABASE_SECRET);
+  const campaignsUrl = `${rtdb(env)}/viora_data/orgs/viora/campaigns.json${qs}`;
   const now = Date.now();
   const STUCK_TIMEOUT_MS = 5 * 60 * 1000;
 
   let campaigns;
   try {
-    const r = await fetch(CAMPAIGNS_PATH);
-    if (!r.ok) {
-      console.warn('[sched] failed to fetch campaigns:', r.status);
+    const response = await fetch(campaignsUrl);
+    if (!response.ok) {
+      console.warn('[sched] failed to fetch campaigns:', response.status);
       return;
     }
-    campaigns = (await r.json()) || {};
+    campaigns = (await response.json()) || {};
   } catch (e) {
     console.error('[sched] fetch error:', e.message);
     return;
   }
 
-  /* Collect all due posts up-front so we can log a summary.
-     We also collect stuck 'publishing' posts to retry. */
-  const due = [];
-  for (const [campaignId, camp] of Object.entries(campaigns)) {
-    if (!camp || !Array.isArray(camp.posts)) continue;
-    for (const post of camp.posts) {
+  const candidates = [];
+  for (const [campaignId, campaign] of Object.entries(campaigns)) {
+    if (!campaign || !Array.isArray(campaign.posts)) continue;
+    for (const post of campaign.posts) {
       if (!post || !post.id) continue;
-
-      const status = post.status;
-
-      if (status === 'scheduled') {
-        /* Determine due time. Prefer scheduledForUtc (new format).
-           Fall back to scheduledFor for posts created before the
-           frontend started writing Utc fields. */
-        const raw = post.scheduledForUtc || post.scheduledFor;
-        if (!raw) continue;
-        const dueMs = Date.parse(raw);
-        if (!Number.isFinite(dueMs)) continue;
-        if (dueMs > now) continue;
-        due.push({ campaignId, campaign: camp, post });
-      } else if (status === 'publishing') {
-        /* Possible crashed publish — retry if older than timeout */
-        const attempted = Date.parse(post.publishAttemptedAt || '');
-        if (Number.isFinite(attempted) && (now - attempted) > STUCK_TIMEOUT_MS) {
-          console.warn('[sched] retrying stuck post:', post.id);
-          due.push({ campaignId, campaign: camp, post });
+      if (post.status === 'scheduled') {
+        const scheduledAt = Date.parse(post.scheduledForUtc || post.scheduledFor || '');
+        if (Number.isFinite(scheduledAt) && scheduledAt <= now) candidates.push({ campaignId, postId: post.id });
+      } else if (post.status === 'publishing') {
+        const attempted = Date.parse(post.publishAttemptedAt || post.publishClaimedAt || post.claimedAt || post.updatedAt || '');
+        if (Number.isFinite(attempted) && now - attempted > STUCK_TIMEOUT_MS) {
+          candidates.push({ campaignId, postId: post.id, stale: true });
         }
       }
     }
   }
 
-  if (due.length === 0) return;
-  console.log(`[sched] ${due.length} post(s) due for publishing`);
+  if (!candidates.length) return;
+  let confirmed = 0, uncertain = 0, failed = 0, composeOnly = 0, claimed = 0;
 
-  /* Group by campaign so we only PUT each campaign node once. */
-  const touched = new Map();  // campaignId → { campaign, posts: [{post, result}] }
+  for (const candidate of candidates) {
+    const campaignUrl = `${rtdb(env)}/viora_data/orgs/viora/campaigns/${candidate.campaignId}.json${qs}`;
+    let claim;
+    try {
+      claim = await claimScheduledCampaignPost(campaignUrl, candidate.postId, Date.now(), STUCK_TIMEOUT_MS);
+    } catch (e) {
+      console.error('[sched] publish claim failed:', candidate.postId, e.message);
+      continue;
+    }
+    if (!claim.claimed) {
+      if (claim.reason === 'marked_uncertain') uncertain++;
+      continue;
+    }
+    claimed++;
 
-  for (const item of due) {
-    const { campaignId, campaign, post } = item;
-
-    /* ── 1. Optimistic status flip ── */
-    post.status = 'publishing';
-    post.publishAttemptedAt = new Date().toISOString();
-    post.publishAttempts = (Number(post.publishAttempts) || 0) + 1;
-
-    /* ── 2. Try to publish ── */
     let publishResult;
     try {
-      publishResult = await publishScheduledPost(post, env);
+      publishResult = await publishScheduledPost(claim.post, env);
     } catch (e) {
-      publishResult = { ok: false, error: e.message || 'unknown error' };
+      publishResult = { ok: false, uncertain: true, error: e.message || 'Provider call outcome unknown' };
     }
 
-    /* ── 3. Update post fields based on result ── */
-    if (publishResult.ok && publishResult.mode === 'auto') {
-      post.status = 'published';
-      post.publishedAt = new Date().toISOString();
-      post.externalId = publishResult.postId || null;
-      post.composeUrl = null;
-      post.lastError = null;
-    } else if (publishResult.ok && publishResult.mode === 'compose-link') {
-      post.status = 'compose-only';
-      post.composeUrl = publishResult.fallbackUrl || null;
-      post.lastError = null;
-    } else {
-      post.status = 'failed';
-      post.lastError = publishResult.error || 'Unknown publish error';
-      post.failedAt = new Date().toISOString();
-    }
-
-    post.updatedAt = new Date().toISOString();
-
-    if (!touched.has(campaignId)) {
-      touched.set(campaignId, { campaign, posts: [] });
-    }
-    touched.get(campaignId).posts.push({ post, result: publishResult });
-  }
-
-  /* ── 4. Persist each touched campaign once ── */
-  for (const [campaignId, data] of touched) {
     try {
-      await fetch(
-        `${rtdb(env)}/viora_data/orgs/viora/campaigns/${campaignId}.json${qs}`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data.campaign),
-        }
-      );
-      const ok = data.posts.filter(p => p.result.ok).length;
-      const fail = data.posts.length - ok;
-      console.log(`[sched] campaign ${campaignId}: ${ok} published, ${fail} failed`);
+      const saved = await persistCampaignPublishOutcome(campaignUrl, candidate.postId, claim.claimId, publishResult);
+      if (!saved.saved) {
+        console.error('[sched] publish outcome needs reconciliation:', candidate.postId, saved.reason);
+        uncertain++;
+      } else if (saved.status === 'published') confirmed++;
+      else if (saved.status === 'publish_uncertain') uncertain++;
+      else if (saved.status === 'compose-only') composeOnly++;
+      else failed++;
     } catch (e) {
-      console.error(`[sched] failed to save campaign ${campaignId}:`, e.message);
+      console.error('[sched] publish outcome persistence failed; claim remains non-retryable:', candidate.postId, e.message);
+      uncertain++;
     }
   }
 
-  /* ── 5. Write an audit row to activityLog ── */
+  console.log(`[sched] publish summary: ${claimed} claimed, ${confirmed} confirmed, ${composeOnly} compose-only, ${failed} rejected, ${uncertain} uncertain`);
   try {
     await fetch(`${rtdb(env)}/viora_data/orgs/viora/activityLog.json${qs}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         type: 'publish',
-        title: 'Scheduled posts published',
-        description: `${due.length} due → ${due.filter(d => touched.get(d.campaignId)?.posts.find(x => x.post.id === d.post.id && x.result.ok)).length} succeeded`,
+        title: 'Scheduled social publishing run',
+        description: `${claimed} claimed; ${confirmed} confirmed; ${composeOnly} manual; ${failed} rejected; ${uncertain} uncertain`,
         by: 'cron',
         byName: 'Scheduler',
         timestamp: new Date().toISOString(),
       }),
     });
-  } catch (e) { /* non-fatal */ }
+  } catch (e) {
+    console.warn('[sched] activity audit write failed:', e.message);
+  }
 }
 
 /* ── Per-platform publish dispatcher ──
@@ -7181,7 +7357,7 @@ async function publishScheduledPost(post, env) {
       if (data.fallback === 'compose-link') {
         return { ok: true, mode: 'compose-link', fallbackUrl: data.fallbackUrl };
       }
-      return { ok: false, error: data.error || 'Facebook publish failed' };
+      return { ok: false, uncertain: Boolean(data.uncertain), error: data.error || 'Facebook publish failed' };
     }
 
     if (post.platform === 'tiktok') {
@@ -7210,7 +7386,7 @@ async function publishScheduledPost(post, env) {
       note: `Auto-publish not supported for ${post.platform}. Publish manually.`,
     };
   } catch (e) {
-    return { ok: false, error: e.message || 'unknown' };
+    return { ok: false, uncertain: post.platform === 'facebook', error: e.message || 'Provider outcome unknown' };
   }
 }
 

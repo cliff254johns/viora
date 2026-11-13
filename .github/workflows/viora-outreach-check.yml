@@ -2,10 +2,10 @@ name: VIORA Outreach checks
 on:
   pull_request:
     branches: [main]
-    paths: ["web/main.html","web/main.css","web/outreach.html","web/outreach.css","web/outreach.js","workers/viora-api/index.js","workers/viora-api/wrangler.toml","docs/GLOBAL-SALES-ENGINE.md","docs/OUTREACH-AUTOMATION-IMPLEMENTATION.md",".github/workflows/viora-outreach-check.yml"]
+    paths: ["web/main.html","web/main.css","web/outreach.html","web/outreach.css","web/outreach.js","web/main/campaign-accounts.js","workers/viora-api/index.js","workers/viora-api/social-publish.js","workers/viora-api/wrangler.toml","docs/GLOBAL-SALES-ENGINE.md","docs/OUTREACH-AUTOMATION-IMPLEMENTATION.md",".github/workflows/viora-outreach-check.yml"]
   push:
-    branches: [feature/viora-outreach-enterprise-ui, feature/global-outreach-autonomy, feature/global-sales-engine]
-    paths: ["web/main.html","web/main.css","web/outreach.html","web/outreach.css","web/outreach.js","workers/viora-api/index.js","workers/viora-api/wrangler.toml",".github/workflows/viora-outreach-check.yml"]
+    branches: [feature/viora-outreach-enterprise-ui, feature/global-outreach-autonomy, feature/global-sales-engine, release/outreach-controlled-rollout]
+    paths: ["web/main.html","web/main.css","web/outreach.html","web/outreach.css","web/outreach.js","web/main/campaign-accounts.js","workers/viora-api/index.js","workers/viora-api/social-publish.js","workers/viora-api/wrangler.toml",".github/workflows/viora-outreach-check.yml"]
 jobs:
   static-checks:
     runs-on: ubuntu-latest
@@ -41,7 +41,69 @@ jobs:
       - name: Verify shared CRM and Communications integration
         run: |
           grep -Fq "onValue(ref(db,ORG+'/leads')" web/outreach.js
-          grep -Fq "ORG+'/leads/'+id]:record" web/outreach.js
+          grep -Fq "ORG+'/leads/'+leadId]:lead" web/outreach.js
           grep -Fq "set(ref(db,ORG+'/commLog/'+commLogId),comm)" web/outreach.js
           grep -Fq "channel:'em'" web/outreach.js
           grep -Fq "source:'Outreach Centre'" web/outreach.js
+      - name: Verify per-lead email activity capture
+        run: |
+          grep -Fq 'outreachHistory/' web/outreach.js
+          grep -Fq "lastOutreachStatus:'sent'" web/outreach.js
+          grep -Fq 'lastOutreachProviderId' web/outreach.js
+          grep -Fq 'lastOutreachEmailId' web/outreach.js
+          grep -Fq 'sendAttempted=true' web/outreach.js
+          grep -Fq 'uncertainAddresses' web/outreach.js
+          grep -Fq 'Do not resend uncertain recipients' web/outreach.js
+          grep -Fq 'async function writeOutreachCampaignActivity' workers/viora-api/index.js
+          grep -Fq "writeOutreachCampaignActivity(env, record, 'queued')" workers/viora-api/index.js
+          grep -Fq "writeOutreachCampaignActivity(env, candidate, 'sending'" workers/viora-api/index.js
+          grep -Fq "writeOutreachCampaignActivity(env, candidate, 'sent'" workers/viora-api/index.js
+          grep -Fq "writeOutreachCampaignActivity(env, candidate, 'send_uncertain'" workers/viora-api/index.js
+          grep -Fq "writeOutreachCampaignActivity(env, followRecord, 'queued')" workers/viora-api/index.js
+      - name: Verify email automation is opt-in and social jobs remain independent
+        run: |
+          grep -Fq 'ENABLE_OUTREACH_EMAIL_AUTOMATION' workers/viora-api/scheduled-jobs.js
+          grep -Fq 'ENABLE_OUTREACH_EMAIL_SENDING' workers/viora-api/index.js
+          grep -Fq 'outboundEmailSendingEnabled(env)' workers/viora-api/index.js
+          grep -Fq 'async function sendGmailThreadFollowup' workers/viora-api/index.js
+          grep -Fq 'async function sendGmailThreadReply' workers/viora-api/index.js
+          grep -Fq 'ENABLE_OUTREACH_EMAIL_SENDING = "false"' workers/viora-api/wrangler.toml
+          grep -Fq "social_publish: () => publishDueScheduledPosts(env)" workers/viora-api/index.js
+          grep -Fq 'for (const [job, run] of jobs)' workers/viora-api/scheduled-jobs.js
+          grep -Fq 'keep_vars = true' workers/viora-api/wrangler.toml
+          grep -Fq 'ENABLE_OUTREACH_EMAIL_AUTOMATION = "false"' workers/viora-api/wrangler.toml
+          grep -Fq 'ENABLE_OUTREACH_EMAIL_SENDING = "false"' workers/viora-api/wrangler.toml
+          grep -Fq 'error.status=res.status' web/outreach.js
+          grep -Fq 'blockedSend=httpStatus===423' web/outreach.js
+          grep -Fq "outcome=blockedSend?'blocked':uncertainSend?'send_uncertain':'failed'" web/outreach.js
+          grep -Fq '[observability.logs]' workers/viora-api/wrangler.toml
+          grep -Fq 'invocation_logs = true' workers/viora-api/wrangler.toml
+          grep -Fq '[observability.traces]' workers/viora-api/wrangler.toml
+          grep -Fq 'head_sampling_rate = 0.01' workers/viora-api/wrangler.toml
+      - name: Verify direct send cannot bypass marketing compliance
+        run: |
+          grep -Fq "body.purpose === 'marketing'" workers/viora-api/index.js
+          grep -Fq "body.source === 'Outreach Centre'" workers/viora-api/index.js
+          grep -Fq "['service', 'transactional']" workers/viora-api/index.js
+          grep -Fq "purpose:'marketing',source:'Outreach Centre'" web/outreach.js
+          grep -Fq 'blockedSend=httpStatus===423||httpStatus===409' web/outreach.js
+      - name: Verify durable Facebook publish claims and API connection checks
+        run: |
+          grep -Fq 'export async function claimScheduledCampaignPost' workers/viora-api/social-publish.js
+          grep -Fq 'X-Firebase-ETag' workers/viora-api/social-publish.js
+          grep -Fq "'If-Match': etag" workers/viora-api/social-publish.js
+          grep -Fq "post.status = 'publish_uncertain'" workers/viora-api/social-publish.js
+          grep -Fq 'reconciliationRequired = true' workers/viora-api/social-publish.js
+          grep -Fq 'async function handleSocialConfigStatus' workers/viora-api/index.js
+          grep -Fq "path === '/social/config/status'" workers/viora-api/index.js
+          grep -Fq 'loadApiStatus' web/main/campaign-accounts.js
+          grep -Fq 'API credentials missing' web/main/campaign-accounts.js
+      - name: Verify atomic email attribution writes
+        run: |
+          grep -Fq 'async function outreachDbMultiWrite' workers/viora-api/index.js
+          grep -Fq "method: 'PATCH'" workers/viora-api/index.js
+          grep -Fq 'outreachHistory/' workers/viora-api/index.js
+      - name: Run repository contract and unit tests
+        run: npm test
+      - name: Run available integration tests
+        run: npm run test:integration

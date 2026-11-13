@@ -18,7 +18,7 @@ function openModal(id){$(id)?.classList.remove('hidden');document.body.style.ove
 function closeModal(id){$(id)?.classList.add('hidden');if(!document.querySelector('.modal-backdrop:not(.hidden)'))document.body.style.overflow='';}
 function showConfirm(title,message,confirmLabel='Confirm send'){return new Promise(resolve=>{const wrap=document.createElement('div');wrap.className='modal-backdrop';wrap.innerHTML='<section class="modal" role="dialog" aria-modal="true"><header class="modal-head"><div><div class="eyebrow">FINAL REVIEW</div><h2>'+esc(title)+'</h2><p>'+esc(message)+'</p></div><button class="icon-btn" data-no aria-label="Close"><i class="fa-solid fa-xmark"></i></button></header><div class="modal-actions"><button class="btn" data-no>Cancel</button><button class="btn primary" data-yes>'+esc(confirmLabel)+'</button></div></section>';document.body.append(wrap);const done=v=>{wrap.remove();resolve(v)};wrap.querySelectorAll('[data-no]').forEach(b=>b.onclick=()=>done(false));wrap.querySelector('[data-yes]').onclick=()=>done(true);wrap.addEventListener('click',e=>{if(e.target===wrap)done(false)});});}
 async function resolveRole(uid){const rs=await Promise.all([get(ref(db,'viora_data/users/'+uid+'/role')),get(ref(db,'viora_data/orgs/viora/users/'+uid+'/role'))]);return rs[1].val()||rs[0].val()||'';}
-async function api(path,body){const token=await currentUser.getIdToken();const res=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body||{})});const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||data.message||('Request failed ('+res.status+')'));return data;}
+async function api(path,body){const token=await currentUser.getIdToken();const res=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body||{})});const data=await res.json().catch(()=>({}));if(!res.ok){const error=new Error(data.error||data.message||('Request failed ('+res.status+')'));error.status=res.status;error.data=data;throw error;}return data;}
 function showView(name){const valid=['overview','kpis','leads','investors','businesses','industries','followups','email','ai','analytics','audit'];if(!valid.includes(name))name='overview';document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+name));document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.view===name));const active=document.querySelector('.nav-item[data-view="'+name+'"]');$('crumbTitle').textContent=active?.querySelector('span')?.textContent||'Overview';if(name==='analytics')renderAnalytics();if(name==='kpis')renderKpis();if(name==='ai')renderAiSelect();if(name==='businesses'||name==='investors')setTimeout(()=>worldMap?.invalidateSize(),120);}
 function bindNavigation(){document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));document.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.nav)));document.querySelectorAll('[data-open-lead]').forEach(b=>b.addEventListener('click',()=>{resetLeadForm();const cat=b.dataset.category;if(cat)$('category').value=cat;openModal('leadModal');}));document.querySelectorAll('[data-open-email]').forEach(b=>b.addEventListener('click',()=>openEmailModal()));document.querySelectorAll('[data-close-modal]').forEach(b=>b.addEventListener('click',()=>{closeModal('leadModal');closeModal('emailModal')}));document.querySelectorAll('[data-close-prospect]').forEach(b=>b.addEventListener('click',()=>closeModal('prospectDetailModal')));$('prospectDetailModal')?.addEventListener('click',e=>{if(e.target===$('prospectDetailModal'))closeModal('prospectDetailModal');});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('prospectDetailModal')?.classList.contains('hidden'))closeModal('prospectDetailModal');});$('prospectWhatsApp')?.addEventListener('click',openProspectWhatsApp);$('prospectAddCrm')?.addEventListener('click',addActiveProspectToCrm);$('discoveredLeadResults')?.addEventListener('click',e=>{const b=e.target.closest('[data-discover-detail]');if(b)openProspectDetail(Number(b.dataset.discoverDetail));});document.querySelectorAll('.modal-backdrop').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModal(m.id)}));document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('leadModal');closeModal('emailModal');closeModal('prospectDetailModal')}});document.addEventListener('keydown',e=>{const card=e.target.closest('.metric-card[data-nav],.kpi-tile[data-nav]');if(card&&(e.key==='Enter'||e.key===' ')){e.preventDefault();showView(card.dataset.nav);}});}
 function resetLeadForm(){editingId=null;$('leadForm').reset();$('leadStatus').value='New';$('category').value='Business';$('leadModalTitle').textContent='Add a new lead';$('saveLeadBtn').textContent='Save prospect';status('leadStatusMsg','');}
@@ -364,7 +364,7 @@ async function sendEmail(e){
  if(invalid.length){status('mailStatus','Check these email addresses: '+invalid.map(x=>x.to).join(', '),true);return;}
  const ok=await showConfirm('Confirm multi-recipient send','Send “'+subject+'” as '+recipients.length+' separate email'+(recipients.length===1?'':'s')+'? Each recipient will receive only their own message, and every send will be logged in Outreach and the main VIORA Communications log.','Send '+recipients.length+' email'+(recipients.length===1?'':'s'));
  if(!ok)return;
- let sent=0,failed=0;const failures=[],successAddresses=[];
+ let sent=0,failed=0,uncertain=0,blockedCount=0;const failures=[],successAddresses=[],uncertainAddresses=[];const campaignId=crypto.randomUUID();
  try{
   busy('sendBtn',true,'Sending 0/'+recipients.length+'…');
   for(let i=0;i<recipients.length;i++){
@@ -380,36 +380,43 @@ async function sendEmail(e){
     }
    }
    const id=push(ref(db,ROOT+'/emails')).key,commLogId=push(ref(db,ORG+'/commLog')).key,now=stamp();
-   const audit={id,to,subject,text:textBody,company:lead?.company||lead?.fullName||'',leadId:lead?.id||null,commLogId,direction:'outbound',status:'queued',providerId:null,timestamp:now,sentBy:currentUser.uid,sentByEmail:currentUser.email,approvedAt:now,source:'Outreach Centre',batchSize:recipients.length};
-   const comm={id:commLogId,channel:'em',recipientId:lead?.id||to,recipientName:lead?.company||lead?.fullName||to,recipientContact:to,subject,message:textBody,sentBy:currentUser.email||currentUser.uid,status:'queued',timestamp:now,leadId:lead?.id||null,outreachEmailId:id,source:'Outreach Centre',batchSize:recipients.length};
+   const activity={id,campaignId,leadId:lead?.id||null,recipient:to,organisation:lead?.company||lead?.fullName||'',contact:lead?.contact||'',category:lead?.category||'Lead',country:lead?.country||'',countryCode:lead?.countryCode||'',website:lead?.website||'',source:lead?.source||'Outreach Centre',subject,channel:'email',sender:currentUser.email||currentUser.uid,queuedAt:now,status:'queued',commLogId};
+   const audit={id,to,subject,text:textBody,company:activity.organisation,leadId:activity.leadId,commLogId,campaignId,leadSnapshot:{contact:activity.contact,category:activity.category,country:activity.country,countryCode:activity.countryCode,website:activity.website,source:activity.source},direction:'outbound',status:'queued',providerId:null,timestamp:now,sentBy:currentUser.uid,sentByEmail:currentUser.email,approvedAt:now,source:'Outreach Centre',batchSize:recipients.length};
+   const comm={id:commLogId,channel:'em',direction:'outbound',recipientId:activity.leadId||to,recipientName:activity.organisation||to,recipientContact:to,subject,message:textBody,sentBy:currentUser.email||currentUser.uid,status:'queued',timestamp:now,leadId:activity.leadId,outreachEmailId:id,campaignId,source:'Outreach Centre',batchSize:recipients.length};
+   let sendAttempted=false;
    try{
     await set(ref(db,ROOT+'/emails/'+id),audit);
     await set(ref(db,ORG+'/commLog/'+commLogId),comm);
-    await update(ref(db,ROOT+'/emails/'+id),{status:'sending',attemptedAt:stamp()});
-    await update(ref(db,ORG+'/commLog/'+commLogId),{status:'sending',attemptedAt:stamp()});
-    const result=await api('/sendEmail',{to,subject,text:textBody,replyTo:'cliff254johns@gmail.com'});
+    await update(ref(db,ORG+'/leads/'+lead.id),{lastOutreach:activity,lastOutreachAt:now,lastOutreachStatus:'queued',['outreachHistory/'+id]:activity});
+    const sendingAt=stamp();
+    await update(ref(db,ROOT+'/emails/'+id),{status:'sending',attemptedAt:sendingAt});
+    await update(ref(db,ORG+'/commLog/'+commLogId),{status:'sending',attemptedAt:sendingAt});
+    await update(ref(db,ORG+'/leads/'+lead.id),{lastOutreach:{...activity,status:'sending',attemptedAt:sendingAt},lastOutreachStatus:'sending',['outreachHistory/'+id+'/status']:'sending',['outreachHistory/'+id+'/attemptedAt']:sendingAt});
+    sendAttempted=true;
+    const result=await api('/sendEmail',{to,subject,text:textBody,replyTo:'cliff254johns@gmail.com',purpose:'marketing',source:'Outreach Centre'});
     const sentAt=stamp();
     await update(ref(db,ROOT+'/emails/'+id),{status:'sent',providerId:result.id||null,threadId:result.threadId||null,transport:result.transport||'resend',sentAt});
     await update(ref(db,ORG+'/commLog/'+commLogId),{status:'sent',providerId:result.id||null,sentAt});
-    if(lead?.id)await update(ref(db,ORG+'/leads/'+lead.id),{status:lead.status==='New'?'Contacted':lead.status,lastContactedAt:sentAt,updatedAt:sentAt});
+    if(lead?.id){const sentActivity={...activity,status:'sent',sentAt,providerId:result.id||null,threadId:result.threadId||null};await update(ref(db,ORG+'/leads/'+lead.id),{status:lead.status==='New'?'Contacted':lead.status,lastContactedAt:sentAt,lastOutreach:sentActivity,lastOutreachAt:sentAt,lastOutreachStatus:'sent',lastOutreachSubject:subject,lastOutreachEmailId:id,lastOutreachProviderId:result.id||null,updatedAt:sentAt,['outreachHistory/'+id]:sentActivity});}
     sent++;successAddresses.push(to.toLowerCase());
    }catch(err){
-    failed++;failures.push(to);
-    const failedAt=stamp();
-    await update(ref(db,ROOT+'/emails/'+id),{status:'failed',error:err.message,failedAt}).catch(()=>{});
-    await update(ref(db,ORG+'/commLog/'+commLogId),{status:'failed',error:err.message,failedAt}).catch(()=>{});
+    const failedAt=stamp(),httpStatus=Number(err?.status||0),blockedSend=httpStatus===423||httpStatus===409,knownRejected=httpStatus>=400&&httpStatus<500,uncertainSend=sendAttempted&&!knownRejected,outcome=blockedSend?'blocked':uncertainSend?'send_uncertain':'failed',timeField=blockedSend?'blockedAt':uncertainSend?'uncertainAt':'failedAt',safeError=String(err.message||err).slice(0,300);
+    if(blockedSend){blockedCount++;failures.push(to);}else if(uncertainSend){uncertain++;uncertainAddresses.push(to);}else{failed++;failures.push(to);}
+    await update(ref(db,ROOT+'/emails/'+id),{status:outcome,error:safeError,[timeField]:failedAt,httpStatus:httpStatus||null}).catch(()=>{});
+    await update(ref(db,ORG+'/commLog/'+commLogId),{status:outcome,error:safeError,[timeField]:failedAt,httpStatus:httpStatus||null}).catch(()=>{});
+    if(lead?.id){const failedActivity={...activity,status:outcome,[timeField]:failedAt,error:safeError,httpStatus:httpStatus||null};await update(ref(db,ORG+'/leads/'+lead.id),{lastOutreach:failedActivity,lastOutreachAt:failedAt,lastOutreachStatus:outcome,['outreachHistory/'+id]:failedActivity}).catch(()=>{});}
    }
    busy('sendBtn',true,'Sending '+(i+1)+'/'+recipients.length+'…');
-   status('mailStatus','Processed '+(i+1)+' of '+recipients.length+' · '+sent+' accepted · '+failed+' failed'+(failures.length?' · '+failures.join(', '):''));
+   status('mailStatus','Processed '+(i+1)+' of '+recipients.length+' · '+sent+' accepted · '+blockedCount+' blocked · '+failed+' failed · '+uncertain+' uncertain'+(failures.length?' · '+failures.join(', '):''));
   }
   if(successAddresses.length){
-   const sentSet=new Set(successAddresses);
-   $('mailLeadList').querySelectorAll('input[name="mailLeadChoice"]').forEach(box=>{const lead=leads[box.value];if(lead&&sentSet.has(String(lead.email||'').trim().toLowerCase()))box.checked=false;});
-   $('mailTo').value=parseManualMailRecipients().filter(address=>!sentSet.has(address)).join(', ');
+   const doNotRetry=new Set([...successAddresses,...uncertainAddresses]);
+   $('mailLeadList').querySelectorAll('input[name="mailLeadChoice"]').forEach(box=>{const lead=leads[box.value];if(lead&&doNotRetry.has(String(lead.email||'').trim().toLowerCase()))box.checked=false;});
+   $('mailTo').value=parseManualMailRecipients().filter(address=>!doNotRetry.has(address)).join(', ');
    updateMailRecipientSummary();
   }
-  if(!failed){$('mailBody').value='';closeModal('emailModal');toast(sent+' separate email'+(sent===1?'':'s')+' accepted by the configured provider and recorded. Delivery confirmation depends on webhook tracking.');}
-  else{status('mailStatus',sent+' accepted; '+failed+' failed. Only failed recipients remain selected so you can retry safely.',true);}
+  if(!failed&&!uncertain&&!blockedCount){$('mailBody').value='';closeModal('emailModal');toast(sent+' separate email'+(sent===1?'':'s')+' accepted by the configured provider and recorded. Delivery confirmation depends on webhook tracking.');}
+  else{status('mailStatus',sent+' accepted; '+blockedCount+' blocked by the release gate; '+failed+' failed before send; '+uncertain+' uncertain. Blocked/pre-send failures remain selected for a later retry. Do not resend uncertain recipients until you verify the provider ledger.',true);}
  }finally{busy('sendBtn',false);renderEmails();renderAnalytics();renderOverview();}
 }
 function csvEscape(v){return '"'+String(v??'').replace(/"/g,'""')+'"';}

@@ -2,6 +2,7 @@ name = "viora-api"
 main = "index.js"
 compatibility_date = "2026-09-13"
 workers_dev = true
+keep_vars = true
 
 [ai]
 binding = "AI"
@@ -10,6 +11,19 @@ binding = "AI"
 MPESA_CALLBACK_URL = "https://viora-api.cliff254johns.workers.dev/mpesa/stk/callback"
 RESEND_FROM = "VIORA <cliff254johns@gmail.com>"
 WORKER_BASE_URL = "https://viora-api.cliff254johns.workers.dev"
+ENABLE_OUTREACH_EMAIL_AUTOMATION = "false"
+ENABLE_OUTREACH_EMAIL_SENDING = "false"
 
 [observability]
 enabled = true
+
+[observability.logs]
+enabled = true
+invocation_logs = true
+persist = true
+head_sampling_rate = 0.2
+
+[observability.traces]
+enabled = true
+persist = true
+head_sampling_rate = 0.01
