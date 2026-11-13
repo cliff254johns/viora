@@ -302,8 +302,8 @@ function renderChatTour() {
   const families = rawFamilies.map(f => ({ ...f, bucket:familyCategory.get(f.key) || 'enterprise' }));
   const industries = rawIndustries.map(i => {
     const family = familyByKey.get(i.family);
-    const bucket = rawBucketByKey.get(family?.bucket || i.bucket);
-    const category = taxonomy.classifyIndustry(i, i.cat || i.category || bucket?.key || bucket?.name);
+    const bucket = rawBucketByKey.get(family?.bucket) || rawBucketByKey.get(i.bucket);
+    const category = taxonomy.classifyIndustry(i, i.cat || i.category || i.bucket || bucket?.key || bucket?.name);
     return { ...i, bucket:category, cat:category, marketCategory:taxonomy.title(category) };
   });
 
