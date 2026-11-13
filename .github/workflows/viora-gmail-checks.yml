@@ -28,6 +28,8 @@ jobs:
         run: node --check workers/viora-api/index.js
       - name: Check Outreach JavaScript syntax
         run: node --input-type=module --check < web/outreach.js
+      - name: Validate Wrangler deployment configuration without publishing
+        run: npx --yes wrangler deploy --dry-run --config workers/viora-api/wrangler.toml
       - name: Verify Gmail routes and encryption are present
         run: |
           grep -Fq "path === '/gmail/oauth/start'" workers/viora-api/index.js
