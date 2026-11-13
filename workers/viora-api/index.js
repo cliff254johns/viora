@@ -102,6 +102,22 @@ function trimGlobalCache() {
 /* ============================================================
    ROUTER
    ============================================================ */
+export async function runScheduledJobs(jobs, onError = (job, error) => {
+  console.error(JSON.stringify({
+    event: 'scheduled_job_failed',
+    job,
+    error: String(error && error.message || error).slice(0, 300),
+  }));
+}) {
+  for (const [job, run] of jobs) {
+    try {
+      await run();
+    } catch (error) {
+      onError(job, error);
+    }
+  }
+}
+
 export function buildScheduledJobs(env, handlers) {
   const jobs = [
     ['reminders', handlers.reminders],
@@ -594,17 +610,7 @@ async function handleSocialFanout(body, env, user) {
         outreach_campaign_scheduler: () => runOutreachCampaignScheduler(env),
       });
       // Preserve the established order (prepare before publish) while isolating failures.
-      for (const [job, run] of jobs) {
-        try {
-          await run();
-        } catch (error) {
-          console.error(JSON.stringify({
-            event: 'scheduled_job_failed',
-            job,
-            error: String(error && error.message || error).slice(0, 300),
-          }));
-        }
-      }
+      await runScheduledJobs(jobs);
     })());
   },
 };
