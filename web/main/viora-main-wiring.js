@@ -726,7 +726,7 @@ export function attachEvents() {
     try {
       const esc = dd.escapeHtml || String;
       const html = b.split('\n').map(l => `<p>${esc(l)}</p>`).join('');
-      await dd.callFn?.('sendEmail', { to: client.email, subject: s, html });
+      await dd.callFn?.('sendEmail', { to: client.email, subject: s, html, purpose: 'transactional', source: 'Invoice progress' });
     } catch (_) {
       window.location.href = `mailto:${client.email}?subject=${encodeURIComponent(s)}&body=${encodeURIComponent(b)}`;
     }
