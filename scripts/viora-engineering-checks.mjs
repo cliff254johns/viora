@@ -184,10 +184,10 @@ const pwaBrandFiles = [
 assert.ok(fs.existsSync('web/viora.png'), 'canonical /viora.png asset is missing');
 for (const path of pwaBrandFiles) {
   const source = read(path);
-  const appleIcons = source.match(/<link\\b[^>]*\\brel=["']apple-touch-icon["'][^>]*>/gi) || [];
+  const appleIcons = source.match(/<link\b[^>]*\brel=["']apple-touch-icon["'][^>]*>/gi) || [];
   assert.equal(appleIcons.length, 1, path+' must declare exactly one Apple touch icon');
   assert.ok(appleIcons[0].includes('href="/viora.png"'), path+' Apple touch icon must use canonical /viora.png');
-  const favicons = source.match(/<link\\b[^>]*\\brel=["'](?:icon|shortcut icon)["'][^>]*>/gi) || [];
+  const favicons = source.match(/<link\b[^>]*\brel=["'](?:icon|shortcut icon)["'][^>]*>/gi) || [];
   assert.ok(favicons.length > 0 && favicons.every(tag => tag.includes('href="/viora.png"')), path+' favicons must use canonical /viora.png');
   if (path === 'web/assets/construction.html') {
     assert.match(source, /icons:\s*\[\{\s*src:\s*'\/viora\.png'/, path+' generated manifest must use /viora.png');
