@@ -124,7 +124,7 @@ function bindMarketplacePreviewAdmin() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) throw new Error(data.error || 'Action failed');
-      toast(action === 'grant' ? 'Preview granted for 15 minutes.' : 'Preview access revoked.', 'success');
+      toast(action === 'grant' ? 'Preview approved. The user can now start their 15-minute session.' : 'Preview access revoked.', 'success');
       await loadMarketplacePreviewRequests();
     } catch (error) {
       toast('Preview action failed: ' + (error.message || 'unknown error'), 'error');
