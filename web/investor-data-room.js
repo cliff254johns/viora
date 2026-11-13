@@ -80,9 +80,9 @@ function renderFiles(){
   const host=document.getElementById('idr-files');if(!host)return;
   const files=Object.entries(filesData||{});
   host.innerHTML=files.length?files.map(([id,f])=>`<div class="idr-file"><i class="fa-solid fa-file-lines"></i><div><strong>${esc(f.name)}</strong><small>${esc(CATEGORIES.find(c=>c.id===f.category)?.title||'Other')} · ${esc(f.sizeLabel||'')} · ${esc(f.uploadedAt?new Date(f.uploadedAt).toLocaleDateString():'')}</small></div><div class="idr-file-actions"><button data-download="${esc(id)}" title="Download"><i class="fa-solid fa-download"></i></button><button data-share="${esc(id)}" title="Share"><i class="fa-solid fa-share-nodes"></i></button><button data-delete="${esc(id)}" title="Delete"><i class="fa-solid fa-trash"></i></button></div></div>`).join(''):'<p class="idr-muted">No documents uploaded yet.</p>';
-  host.querySelectorAll('[data-download]').forEach(b=>b.addEventListener('click',()=>downloadFile(b.dataset.download)));
-  host.querySelectorAll('[data-share]').forEach(b=>b.addEventListener('click',()=>shareFile(b.dataset.share)));
-  host.querySelectorAll('[data-delete]').forEach(b=>b.addEventListener('click',()=>deleteFile(b.dataset.delete)));
+  host.querySelectorAll('[data-download]').forEach(b=>b.addEventListener('click',()=>downloadFile(b.dataset.download).catch(e=>alert(e.message||'Download failed.'))));
+  host.querySelectorAll('[data-share]').forEach(b=>b.addEventListener('click',()=>shareFile(b.dataset.share).catch(e=>alert(e.message||'Share failed.'))));
+  host.querySelectorAll('[data-delete]').forEach(b=>b.addEventListener('click',()=>deleteFile(b.dataset.delete).catch(e=>alert(e.message||'Delete failed.'))));
 }
 async function loadRoom(){
   await ensureFirebase();
@@ -110,7 +110,7 @@ async function uploadFile(){
   if(!file)throw new Error('Choose a document first.');
   if(file.size>5*1024*1024)throw new Error('Maximum file size is 5 MB.');
   await ensureFirebase();
-  const user=window.VioraAuth.currentUser,id=dbApi.push(dbApi.ref(dbApi.db,'investorDataRoom/files')).key;
+  const user=window.VioraAuth.currentUser,id=dbApi.push(dbApi.ref(dbApi.db,roomPath()+'/files')).key;
   const path='investor-data-room/'+user.uid+'/'+id+'_'+safeFileName(file.name);
   const objectRef=storageApi.ref(storageApi.storage,path);
   await storageApi.uploadBytes(objectRef,file,{contentType:file.type||'application/octet-stream',customMetadata:{uploadedBy:user.uid,category:host.querySelector('#idr-file-category').value}});
