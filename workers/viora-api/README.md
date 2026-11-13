@@ -86,6 +86,7 @@ The Worker source now includes a server-side preview policy module at `marketpla
 - `POST /marketplace/preview/start`
 - `POST /marketplace/preview/validate`
 - `POST /marketplace/preview/end`
+- `GET /marketplace/preview/gateways` (admin-only, safe product readiness inventory)
 - `GET /marketplace/preview/requests` (admin only)
 - `POST /marketplace/preview/grant` (admin only)
 - `POST /marketplace/preview/revoke` (admin only)
