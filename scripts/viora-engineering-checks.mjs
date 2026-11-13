@@ -48,7 +48,7 @@ assert.ok(investorRoom.includes("'viora_data/investorDataRoom'"), 'Investor Data
 assert.ok(investorRoom.includes('navigator.share'), 'Investor Data Room native sharing support missing');
 assert.ok(investorRoom.includes('Private by default'), 'Investor Data Room privacy warning missing');
 assert.ok(sw.includes('/investor-data-room.js?v=20261113-investor-room-submenu-1'), 'Investor Data Room module missing from app shell cache');
-assert.ok(sw.includes('viora-v1.6.30'), 'service worker cache version not refreshed');
+assert.ok(sw.includes('viora-v1.6.31'), 'service worker cache version not refreshed');
 
 assert.ok(worker.includes('export class TranslationRateLimiter'), 'Durable Object class missing');
 assert.ok(worker.includes('TRANSLATION_RATE_LIMITER.getByName'), 'Durable Object binding not used');
