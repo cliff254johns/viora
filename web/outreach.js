@@ -251,11 +251,13 @@ async function syncGmailReplies(){
    const lead=leadList().find(l=>String(l.email||'').toLowerCase()===email.toLowerCase());
    const previouslyContacted=emailList().some(e=>e.direction!=='inbound'&&e.transport==='gmail'&&String(e.to||'').toLowerCase()===email.toLowerCase()&&e.status==='sent');
    if(!lead||!previouslyContacted){skipped++;continue;}
+   let labelApplied=false;
+   if(msg.threadId){try{const labelResult=await api('/gmail/label-thread',{threadId:msg.threadId});labelApplied=!!labelResult.labeled;}catch(labelError){console.warn('[VIORA Outreach] Gmail thread label could not be applied:',labelError);}}
    const recordId='gmail-'+String(msg.id||'').replace(/[^A-Za-z0-9_-]/g,'');
    const existing=await get(ref(db,ROOT+'/emails/'+recordId));
    if(existing.exists())continue;
    const receivedAt=msg.date&&Number.isFinite(Date.parse(msg.date))?new Date(msg.date).toISOString():stamp();
-   const record={id:recordId,to:email,from:email,subject:msg.subject||'(no subject)',text:'Incoming email received. Open the Gmail conversation to read the full message.',company:lead?.company||lead?.fullName||email,leadId:lead?.id||null,direction:'inbound',status:'received',providerId:msg.id,threadId:msg.threadId||null,timestamp:receivedAt,source:'Gmail reply sync'};
+   const record={id:recordId,to:email,from:email,subject:msg.subject||'(no subject)',text:'Incoming email received. Open the Gmail conversation to read the full message.',company:lead?.company||lead?.fullName||email,leadId:lead?.id||null,direction:'inbound',status:'received',providerId:msg.id,threadId:msg.threadId||null,timestamp:receivedAt,source:'Gmail reply sync',gmailLabelApplied:labelApplied};
    await set(ref(db,ROOT+'/emails/'+recordId),record);
    const commId=push(ref(db,ORG+'/commLog')).key;
    await set(ref(db,ORG+'/commLog/'+commId),{id:commId,channel:'email',direction:'inbound',recipientContact:email,recipientName:record.company,subject:record.subject,message:'Incoming email received. Message body remains in Gmail.',status:'received',timestamp:receivedAt,leadId:record.leadId,outreachEmailId:recordId,providerId:msg.id,threadId:msg.threadId||null,source:'Gmail reply sync'});
@@ -287,7 +289,18 @@ async function sendEmail(e){
  try{
   busy('sendBtn',true,'Sending 0/'+recipients.length+'…');
   for(let i=0;i<recipients.length;i++){
-   const {to,lead}=recipients[i],id=push(ref(db,ROOT+'/emails')).key,commLogId=push(ref(db,ORG+'/commLog')).key,now=stamp();
+   let {to,lead}=recipients[i];
+   if(!lead){
+    const existing=leadList().find(item=>String(item.email||'').trim().toLowerCase()===to.toLowerCase());
+    if(existing)lead=existing;
+    else{
+     const leadId=push(ref(db,ORG+'/leads')).key,createdAt=stamp(),domain=to.split('@')[1]||'';
+     lead={id:leadId,company:domain,contact:'',fullName:domain,email:to,phone:'',category:'Lead',status:'New',country:'',city:'',website:domain?'https://'+domain:'',notes:'Automatically added from a manually entered Outreach recipient. Verify organisation and contact details.',source:'Outreach Centre - manual recipient',_fromOutreach:true,createdAt,updatedAt:createdAt,createdBy:currentUser.uid,updatedBy:currentUser.uid};
+     await update(ref(db),{[ORG+'/leads/'+leadId]:lead,[ROOT+'/leads/'+leadId]:{...lead,linkedMainLeadId:leadId}});
+     leads[leadId]=lead;recipients[i].lead=lead;
+    }
+   }
+   const id=push(ref(db,ROOT+'/emails')).key,commLogId=push(ref(db,ORG+'/commLog')).key,now=stamp();
    const audit={id,to,subject,text:textBody,company:lead?.company||lead?.fullName||'',leadId:lead?.id||null,commLogId,direction:'outbound',status:'queued',providerId:null,timestamp:now,sentBy:currentUser.uid,sentByEmail:currentUser.email,approvedAt:now,source:'Outreach Centre',batchSize:recipients.length};
    const comm={id:commLogId,channel:'em',recipientId:lead?.id||to,recipientName:lead?.company||lead?.fullName||to,recipientContact:to,subject,message:textBody,sentBy:currentUser.email||currentUser.uid,status:'queued',timestamp:now,leadId:lead?.id||null,outreachEmailId:id,source:'Outreach Centre',batchSize:recipients.length};
    try{
