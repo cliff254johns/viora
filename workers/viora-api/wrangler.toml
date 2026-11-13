@@ -13,3 +13,14 @@ WORKER_BASE_URL = "https://viora-api.cliff254johns.workers.dev"
 
 [observability]
 enabled = true
+
+[observability.logs]
+enabled = true
+invocation_logs = true
+persist = true
+head_sampling_rate = 0.2
+
+[observability.traces]
+enabled = true
+persist = true
+head_sampling_rate = 0.01
