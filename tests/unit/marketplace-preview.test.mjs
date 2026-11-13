@@ -15,6 +15,7 @@ test('only active, explicitly configured product previews are eligible', () => {
   assert.equal(productAllowsPreview({ status: 'active', previewEnabled: false, previewProfile: 'digital-sample' }), false);
   assert.equal(productAllowsPreview({ status: 'draft', previewEnabled: true, previewGatewayVerified: true, previewProfile: 'digital-sample' }), false);
   assert.equal(productAllowsPreview({ status: 'archived', previewEnabled: true, previewGatewayVerified: true, previewProfile: 'isolated-software' }), false);
+  assert.equal(productAllowsPreview({ status: 'pending', previewEnabled: true, previewGatewayVerified: true, previewProfile: 'isolated-software' }), false);
 });
 
 test('paid entitlement is scoped to matching client and product', () => {
