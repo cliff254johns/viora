@@ -516,8 +516,8 @@ export function buildVioraHandlers(d) {
 
            /* ── Reset URL + image fields so the previous edit doesn't bleed through ── */
     const _lv = $('prodLiveUrl');    if (_lv) _lv.value = '';
-    const _pv = $('prodPreviewUrl'); if (_pv) _pv.value = '';
-    const _lk = $('prodLink');       if (_lk) _lk.value = '';
+    const _pe = $('prodPreviewEnabled'); if (_pe) _pe.checked = false;
+    const _pp = $('prodPreviewProfile'); if (_pp) _pp.value = '';
     const _im = $('prodImage');      if (_im) _im.value = '';
     if (typeof window.__vioraSetProdImage === 'function') {
       window.__vioraSetProdImage(null);
@@ -565,8 +565,8 @@ export function buildVioraHandlers(d) {
 
          /* ── Populate URL + image fields from saved product ── */
     const _lv = $('prodLiveUrl');    if (_lv) _lv.value = p.liveUrl || '';
-    const _pv = $('prodPreviewUrl'); if (_pv) _pv.value = p.previewUrl || '';
-    const _lk = $('prodLink');       if (_lk) _lk.value = p.link || '';
+    const _pe = $('prodPreviewEnabled'); if (_pe) _pe.checked = p.previewEnabled === true;
+    const _pp = $('prodPreviewProfile'); if (_pp) _pp.value = p.previewProfile || '';
     const _im = $('prodImage');      if (_im) _im.value = p.image || '';
     if (typeof window.__vioraSetProdImage === 'function') {
       window.__vioraSetProdImage(p.image || null);
@@ -610,8 +610,8 @@ export function buildVioraHandlers(d) {
       totalRevenue: existing?.totalRevenue || 0,
       activeSubscriptions: existing?.activeSubscriptions || 0,
          liveUrl: f.liveUrl || existing?.liveUrl || null,
-      previewUrl: f.previewUrl || existing?.previewUrl || null,
-      link: f.link || existing?.link || null,
+      previewEnabled: f.previewEnabled === true,
+      previewProfile: ['isolated-software', 'digital-sample'].includes(f.previewProfile) ? f.previewProfile : '',
       image: f.image || existing?.image || null,
       _kind: kind,
       createdAt: existing?.createdAt || new Date().toISOString(),
