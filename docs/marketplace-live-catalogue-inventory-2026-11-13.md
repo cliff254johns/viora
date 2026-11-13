@@ -6,7 +6,7 @@ This is a read-only snapshot of the public Marketplace catalogue rendered from t
 
 - Public catalogue count: **82 active products**
 - Category explorer count before display-name normalization: **46 category entries**
-- Unique product categories after collapsing whitespace-only variants: **29**
+- Unique category labels after collapsing whitespace-only variants: **45** (29 categories currently contain products; 16 currently have zero products)
 - UI total label observed: **82 products across 46 categories**
 - Snapshot URL: https://feature-marketplace-controlled-previews-viora-static-git.cliff254johns.workers.dev/market.html
 
