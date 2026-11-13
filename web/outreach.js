@@ -364,7 +364,7 @@ async function sendEmail(e){
  if(invalid.length){status('mailStatus','Check these email addresses: '+invalid.map(x=>x.to).join(', '),true);return;}
  const ok=await showConfirm('Confirm multi-recipient send','Send “'+subject+'” as '+recipients.length+' separate email'+(recipients.length===1?'':'s')+'? Each recipient will receive only their own message, and every send will be logged in Outreach and the main VIORA Communications log.','Send '+recipients.length+' email'+(recipients.length===1?'':'s'));
  if(!ok)return;
- let sent=0,failed=0,uncertain=0,blocked=0;const failures=[],successAddresses=[],uncertainAddresses=[];const campaignId=crypto.randomUUID();
+ let sent=0,failed=0,uncertain=0,blockedCount=0;const failures=[],successAddresses=[],uncertainAddresses=[];const campaignId=crypto.randomUUID();
  try{
   busy('sendBtn',true,'Sending 0/'+recipients.length+'…');
   for(let i=0;i<recipients.length;i++){
@@ -401,13 +401,13 @@ async function sendEmail(e){
     sent++;successAddresses.push(to.toLowerCase());
    }catch(err){
     const failedAt=stamp(),httpStatus=Number(err?.status||0),blockedSend=httpStatus===423,knownRejected=httpStatus>=400&&httpStatus<500,uncertainSend=sendAttempted&&!knownRejected,outcome=blockedSend?'blocked':uncertainSend?'send_uncertain':'failed',timeField=blockedSend?'blockedAt':uncertainSend?'uncertainAt':'failedAt',safeError=String(err.message||err).slice(0,300);
-    if(blockedSend){blocked++;failures.push(to);}else if(uncertainSend){uncertain++;uncertainAddresses.push(to);}else{failed++;failures.push(to);}
+    if(blockedSend){blockedCount++;failures.push(to);}else if(uncertainSend){uncertain++;uncertainAddresses.push(to);}else{failed++;failures.push(to);}
     await update(ref(db,ROOT+'/emails/'+id),{status:outcome,error:safeError,[timeField]:failedAt,httpStatus:httpStatus||null}).catch(()=>{});
     await update(ref(db,ORG+'/commLog/'+commLogId),{status:outcome,error:safeError,[timeField]:failedAt,httpStatus:httpStatus||null}).catch(()=>{});
     if(lead?.id){const failedActivity={...activity,status:outcome,[timeField]:failedAt,error:safeError,httpStatus:httpStatus||null};await update(ref(db,ORG+'/leads/'+lead.id),{lastOutreach:failedActivity,lastOutreachAt:failedAt,lastOutreachStatus:outcome,['outreachHistory/'+id]:failedActivity}).catch(()=>{});}
    }
    busy('sendBtn',true,'Sending '+(i+1)+'/'+recipients.length+'…');
-   status('mailStatus','Processed '+(i+1)+' of '+recipients.length+' · '+sent+' accepted · '+blocked+' blocked · '+failed+' failed · '+uncertain+' uncertain'+(failures.length?' · '+failures.join(', '):''));
+   status('mailStatus','Processed '+(i+1)+' of '+recipients.length+' · '+sent+' accepted · '+blockedCount+' blocked · '+failed+' failed · '+uncertain+' uncertain'+(failures.length?' · '+failures.join(', '):''));
   }
   if(successAddresses.length){
    const doNotRetry=new Set([...successAddresses,...uncertainAddresses]);
@@ -415,8 +415,8 @@ async function sendEmail(e){
    $('mailTo').value=parseManualMailRecipients().filter(address=>!doNotRetry.has(address)).join(', ');
    updateMailRecipientSummary();
   }
-  if(!failed&&!uncertain&&!blocked){$('mailBody').value='';closeModal('emailModal');toast(sent+' separate email'+(sent===1?'':'s')+' accepted by the configured provider and recorded. Delivery confirmation depends on webhook tracking.');}
-  else{status('mailStatus',sent+' accepted; '+blocked+' blocked by the release gate; '+failed+' failed before send; '+uncertain+' uncertain. Blocked/pre-send failures remain selected for a later retry. Do not resend uncertain recipients until you verify the provider ledger.',true);}
+  if(!failed&&!uncertain&&!blockedCount){$('mailBody').value='';closeModal('emailModal');toast(sent+' separate email'+(sent===1?'':'s')+' accepted by the configured provider and recorded. Delivery confirmation depends on webhook tracking.');}
+  else{status('mailStatus',sent+' accepted; '+blockedCount+' blocked by the release gate; '+failed+' failed before send; '+uncertain+' uncertain. Blocked/pre-send failures remain selected for a later retry. Do not resend uncertain recipients until you verify the provider ledger.',true);}
  }finally{busy('sendBtn',false);renderEmails();renderAnalytics();renderOverview();}
 }
 function csvEscape(v){return '"'+String(v??'').replace(/"/g,'""')+'"';}
