@@ -1,5 +1,6 @@
 import test, { beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
+import worker from '../../workers/viora-api/index.js';
 import { authorizeMarketplacePreview, handleMarketplacePreview } from '../../workers/viora-api/marketplace-preview.js';
 
 const ENV = {
@@ -275,4 +276,19 @@ test('gateway inventory is admin-only and reports every catalogue product withou
   assert.equal(blocked.gatewayReady, false);
   assert.deepEqual(blocked.blockedReasons, ['gateway-not-verified']);
   assert.equal(JSON.stringify(data).includes('private.example.test'), false);
+});
+
+
+test('controlled candidate mode exposes only health and the authenticated read-only gateway inventory route', async () => {
+  const env = { ...ENV, VIORA_STAGING_READ_ONLY: 'true' };
+  const health = await worker.fetch(new Request('https://candidate.example.test/health'), env, {});
+  assert.equal(health.status, 200);
+  const blockedPost = await worker.fetch(new Request('https://candidate.example.test/marketplace/preview/start', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId: 'demo-app' })
+  }), env, {});
+  assert.equal(blockedPost.status, 403);
+  const blockedRead = await worker.fetch(new Request('https://candidate.example.test/debugEnv'), env, {});
+  assert.equal(blockedRead.status, 403);
+  const inventory = await worker.fetch(new Request('https://candidate.example.test/marketplace/preview/gateways'), env, {});
+  assert.notEqual(inventory.status, 403, 'the inventory route must reach the normal authentication gate');
 });
