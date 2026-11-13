@@ -50,6 +50,8 @@ for (const category of taxonomyWindow.VIORATaxonomy.categories) {
 }
 assert.ok(adminMarket.includes('classifyProduct(p)'), 'admin Marketplace must classify products through shared taxonomy');
 assert.ok(adminHandlers.includes('vioraCategoryId: categoryId'), 'admin product saves must persist canonical category ID');
+assert.ok(adminHandlers.includes('Viora.migrateMarketplaceCategories') && adminHandlers.includes('Only category fields and updatedAt will change'), 'admin must provide a confirmed idempotent migration for existing product records');
+assert.ok(read('web/main.html').includes('onclick="Viora.migrateMarketplaceCategories()"'), 'admin Products & Pricing must expose the controlled category migration action');
 assert.ok(read('web/main.html').includes('<option value="all">All VIORA Solutions</option>'), 'admin Marketplace must use the official VIORA category label');
 assert.ok(homepage.includes("import './viora-taxonomy.js'"), 'homepage must load shared taxonomy');
 assert.ok(homepage.includes('taxonomy.categories.map'), 'homepage tour must use official solution categories');
