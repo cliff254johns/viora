@@ -145,7 +145,7 @@ function exportRoom(){
   downloadBlob('VIORA-investor-data-room-'+new Date().toISOString().slice(0,10)+'.json',new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
 }
 export async function renderInvestorDataRoom(){
-  const host=document.getElementById('engineeringCommandRoot');if(!host)return;
+  const host=document.getElementById('investorDataRoomRoot');if(!host)return;
   if(!authorized()){
     host.innerHTML='<div class="idr-denied"><i class="fa-solid fa-lock"></i><h2>Restricted area</h2><p>Only authorised admin or exec accounts can open the Investor Data Room.</p></div>';return;
   }
@@ -153,4 +153,5 @@ export async function renderInvestorDataRoom(){
   try{await loadRoom();}catch(error){const sync=host.querySelector('#idr-sync');if(sync)sync.textContent='Database access blocked';host.insertAdjacentHTML('beforeend','<div class="idr-error"><strong>Could not load the data room.</strong><p>'+esc(error.message||'Firebase access denied')+'</p><small>Realtime Database and Storage rules must explicitly restrict investorDataRoom records and investor-data-room files to verified admin/exec identities. No public read or write rule should be added.</small></div>');}
 }
 // Rendered by the dedicated Engineering Command > Investor Data Room route.
+window.renderInvestorDataRoom = renderInvestorDataRoom;
 
