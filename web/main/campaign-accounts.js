@@ -381,6 +381,7 @@ function renderAccountCard(platform, account, serviceStatus = null) {
       ${isRegistered ? `
         <div class="account-meta">
           <span>${connected ? '<i class="fa-solid fa-circle-check" style="color:var(--good)"></i> ' + esc(serviceLabel) : '<i class="fa-solid fa-triangle-exclamation" style="color:var(--warn)"></i> ' + esc(serviceLabel)}</span>
+          <small class="account-api-detail">${esc(serviceDetail)}</small>
           ${followersText ? `<span>${followersText} followers</span>` : '<span>—</span>'}
         </div>
       ` : `
