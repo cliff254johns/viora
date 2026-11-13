@@ -1,6 +1,6 @@
 # VIORA Outreach automation — implementation map
 
-Status: **partial implementation on `feature/global-outreach-autonomy`; not production-deployed**.
+Status: **partial implementation merged to `main` and deployed to Cloudflare on 13 November 2026; live authenticated Gmail end-to-end verification remains outstanding**.
 
 ## Existing application and data model
 
