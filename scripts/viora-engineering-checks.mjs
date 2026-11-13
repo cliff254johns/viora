@@ -41,6 +41,7 @@ assert.ok(publicMarket.includes('id="categoryBar"'), 'public Marketplace must re
 assert.ok(!publicMarket.includes('id="priceFilter"') && !publicMarket.includes('id="catSearchInput"'), 'public Marketplace must not show legacy secondary category/price filters');
 assert.ok(publicMarketJs.includes("import '../viora-taxonomy.js'"), 'public Marketplace must load shared taxonomy');
 assert.ok(publicMarketJs.includes('classifyProduct(p)'), 'public Marketplace must classify products through shared taxonomy');
+assert.ok(publicMarketJs.includes('this.renderCategoryBar();'), 'public Marketplace must render category controls before Firebase/cache data arrives');
 assert.ok(adminMarket.includes('classifyProduct(p)'), 'admin Marketplace must classify products through shared taxonomy');
 assert.ok(adminHandlers.includes('vioraCategoryId: categoryId'), 'admin product saves must persist canonical category ID');
 assert.ok(homepage.includes("import './viora-taxonomy.js'"), 'homepage must load shared taxonomy');
