@@ -1,0 +1,44 @@
+name: VIORA Gmail integration checks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "workers/viora-api/index.js"
+      - "web/outreach.html"
+      - "web/outreach.js"
+      - ".github/workflows/viora-gmail-checks.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "workers/viora-api/index.js"
+      - "web/outreach.html"
+      - "web/outreach.js"
+      - ".github/workflows/viora-gmail-checks.yml"
+
+jobs:
+  syntax-and-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check Cloudflare Worker JavaScript syntax
+        run: node --check workers/viora-api/index.js
+      - name: Check Outreach JavaScript syntax
+        run: node --input-type=module --check < web/outreach.js
+      - name: Verify Gmail routes and encryption are present
+        run: |
+          grep -Fq "path === '/gmail/oauth/start'" workers/viora-api/index.js
+          grep -Fq "path === '/gmail/oauth/callback'" workers/viora-api/index.js
+          grep -Fq "path === '/gmail/replies'" workers/viora-api/index.js
+          grep -Fq "AES-GCM" workers/viora-api/index.js
+          grep -Fq "gmailApiFetch('messages/send'" workers/viora-api/index.js
+          grep -Fq "GOOGLE_TOKEN_ENCRYPTION_KEY" workers/viora-api/index.js
+      - name: Verify Outreach Gmail controls
+        run: |
+          grep -Fq 'id="gmailConnect"' web/outreach.html
+          grep -Fq 'id="gmailSyncReplies"' web/outreach.html
+          grep -Fq 'async function connectGmail' web/outreach.js
+          grep -Fq 'async function syncGmailReplies' web/outreach.js
