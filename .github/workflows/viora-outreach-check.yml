@@ -4,7 +4,7 @@ on:
     branches: [main]
     paths: ["web/main.html","web/main.css","web/outreach.html","web/outreach.css","web/outreach.js","workers/viora-api/index.js","workers/viora-api/wrangler.toml","docs/GLOBAL-SALES-ENGINE.md","docs/OUTREACH-AUTOMATION-IMPLEMENTATION.md",".github/workflows/viora-outreach-check.yml"]
   push:
-    branches: [feature/viora-outreach-enterprise-ui, feature/global-outreach-autonomy, feature/global-sales-engine]
+    branches: [feature/viora-outreach-enterprise-ui, feature/global-outreach-autonomy, feature/global-sales-engine, release/outreach-controlled-rollout]
     paths: ["web/main.html","web/main.css","web/outreach.html","web/outreach.css","web/outreach.js","workers/viora-api/index.js","workers/viora-api/wrangler.toml",".github/workflows/viora-outreach-check.yml"]
 jobs:
   static-checks:
@@ -45,3 +45,18 @@ jobs:
           grep -Fq "set(ref(db,ORG+'/commLog/'+commLogId),comm)" web/outreach.js
           grep -Fq "channel:'em'" web/outreach.js
           grep -Fq "source:'Outreach Centre'" web/outreach.js
+      - name: Verify per-lead email activity capture
+        run: |
+          grep -Fq 'outreachHistory/' web/outreach.js
+          grep -Fq "lastOutreachStatus:'sent'" web/outreach.js
+          grep -Fq 'lastOutreachProviderId' web/outreach.js
+          grep -Fq 'lastOutreachEmailId' web/outreach.js
+      - name: Verify email automation is opt-in and social jobs remain independent
+        run: |
+          grep -Fq 'ENABLE_OUTREACH_EMAIL_AUTOMATION' workers/viora-api/index.js
+          grep -Fq "['social_publish', () => publishDueScheduledPosts(env)]" workers/viora-api/index.js
+          grep -Fq 'Promise.all(jobs.map' workers/viora-api/index.js
+      - name: Run repository contract and unit tests
+        run: npm test
+      - name: Run available integration tests
+        run: npm run test:integration
