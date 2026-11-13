@@ -44,6 +44,14 @@ async function call(route, user = USER, method = 'POST', body = {}, query = '') 
   return handleMarketplacePreview(makeRequest(route, method, body, query), ENV, user, route, body);
 }
 
+async function startApprovedPreview(user = USER) {
+  const requestResponse = await call('request', user, 'POST', { productId: 'demo-app' });
+  if (![200, 201].includes(requestResponse.status)) return requestResponse;
+  const grantResponse = await call('admin-grant', ADMIN, 'POST', { uid: user.localId, productId: 'demo-app' });
+  if (!grantResponse.ok) return grantResponse;
+  return call('start', user, 'POST', { productId: 'demo-app' });
+}
+
 beforeEach(() => {
   records = new Map();
   versions = new Map();
@@ -83,8 +91,10 @@ afterEach(() => {
   Date.now = originalNow;
 });
 
-test('first eligible request creates exactly a 15-minute server session', async () => {
-  const response = await call('start', USER, 'POST', { productId: 'demo-app', uid: 'attacker-controlled-uid' });
+test('direct start is denied and an administrator-approved request creates exactly a 15-minute session', async () => {
+  const direct = await call('start', USER, 'POST', { productId: 'demo-app', uid: 'attacker-controlled-uid' });
+  assert.equal(direct.status, 403, 'a user cannot bypass the administrator approval queue');
+  const response = await startApprovedPreview(USER);
   const data = await response.json();
   assert.equal(response.status, 200);
   assert.equal(data.session.uid, USER.localId);
@@ -95,7 +105,7 @@ test('first eligible request creates exactly a 15-minute server session', async 
 });
 
 test('repeated start during an active preview returns the same session without extending expiry', async () => {
-  const first = await (await call('start')).json();
+  const first = await (await startApprovedPreview()).json();
   clock += 60_000;
   const second = await (await call('start')).json();
   assert.equal(second.session.id, first.session.id);
@@ -103,7 +113,7 @@ test('repeated start during an active preview returns the same session without e
 });
 
 test('concurrent start requests cannot create parallel sessions or bypass cooldown', async () => {
-  const [a, b] = await Promise.all([call('start'), call('start')]);
+  const [a, b] = await Promise.all([startApprovedPreview(), call('start')]);
   const first = await a.json();
   const second = await b.json();
   assert.equal(a.status, 200);
@@ -113,7 +123,7 @@ test('concurrent start requests cannot create parallel sessions or bypass cooldo
 });
 
 test('cooldown remains in force after early end and blocks a second preview', async () => {
-  const started = await (await call('start')).json();
+  const started = await (await startApprovedPreview()).json();
   const endedResponse = await call('end', USER, 'POST', {
     productId: 'demo-app', sessionId: started.session.id
   });
@@ -149,7 +159,7 @@ test('missing Firebase ETag support fails closed instead of using a non-atomic w
   };
   try {
     const response = await call('start');
-    assert.equal(response.status, 503);
+    assert.equal(response.status, 403, 'unapproved request fails before attempting session storage');
     assert.equal(records.has('viora_data/orgs/viora/marketplacePreview/eligibility/user-1/demo-app'), false);
   } finally {
     globalThis.fetch = original;
@@ -202,7 +212,7 @@ test('admin grants require a pending request and preserve the same session polic
 });
 
 test('admin revocation invalidates an active session immediately', async () => {
-  const started = await (await call('start')).json();
+  const started = await (await startApprovedPreview()).json();
   const revoked = await call('admin-revoke', ADMIN, 'POST', { uid: 'user-1', productId: 'demo-app' });
   assert.equal(revoked.status, 200);
   const validation = await call('validate', USER, 'POST', {
