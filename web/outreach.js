@@ -400,11 +400,11 @@ async function sendEmail(e){
     if(lead?.id){const sentActivity={...activity,status:'sent',sentAt,providerId:result.id||null,threadId:result.threadId||null};await update(ref(db,ORG+'/leads/'+lead.id),{status:lead.status==='New'?'Contacted':lead.status,lastContactedAt:sentAt,lastOutreach:sentActivity,lastOutreachAt:sentAt,lastOutreachStatus:'sent',lastOutreachSubject:subject,lastOutreachEmailId:id,lastOutreachProviderId:result.id||null,updatedAt:sentAt,['outreachHistory/'+id]:sentActivity});}
     sent++;successAddresses.push(to.toLowerCase());
    }catch(err){
-    const failedAt=stamp(),outcome=sendAttempted?'send_uncertain':'failed',safeError=String(err.message||err).slice(0,300);
-    if(sendAttempted){uncertain++;uncertainAddresses.push(to);}else{failed++;failures.push(to);}
-    await update(ref(db,ROOT+'/emails/'+id),{status:outcome,error:safeError,[sendAttempted?'uncertainAt':'failedAt']:failedAt}).catch(()=>{});
-    await update(ref(db,ORG+'/commLog/'+commLogId),{status:outcome,error:safeError,[sendAttempted?'uncertainAt':'failedAt']:failedAt}).catch(()=>{});
-    if(lead?.id){const failedActivity={...activity,status:outcome,[sendAttempted?'uncertainAt':'failedAt']:failedAt,error:safeError};await update(ref(db,ORG+'/leads/'+lead.id),{lastOutreach:failedActivity,lastOutreachAt:failedAt,lastOutreachStatus:outcome,['outreachHistory/'+id]:failedActivity}).catch(()=>{});}
+    const failedAt=stamp(),httpStatus=Number(err?.status||0),blockedSend=httpStatus===423,knownRejected=httpStatus>=400&&httpStatus<500,uncertainSend=sendAttempted&&!knownRejected,outcome=blockedSend?'blocked':uncertainSend?'send_uncertain':'failed',timeField=blockedSend?'blockedAt':uncertainSend?'uncertainAt':'failedAt',safeError=String(err.message||err).slice(0,300);
+    if(blockedSend){blocked++;failures.push(to);}else if(uncertainSend){uncertain++;uncertainAddresses.push(to);}else{failed++;failures.push(to);}
+    await update(ref(db,ROOT+'/emails/'+id),{status:outcome,error:safeError,[timeField]:failedAt,httpStatus:httpStatus||null}).catch(()=>{});
+    await update(ref(db,ORG+'/commLog/'+commLogId),{status:outcome,error:safeError,[timeField]:failedAt,httpStatus:httpStatus||null}).catch(()=>{});
+    if(lead?.id){const failedActivity={...activity,status:outcome,[timeField]:failedAt,error:safeError,httpStatus:httpStatus||null};await update(ref(db,ORG+'/leads/'+lead.id),{lastOutreach:failedActivity,lastOutreachAt:failedAt,lastOutreachStatus:outcome,['outreachHistory/'+id]:failedActivity}).catch(()=>{});}
    }
    busy('sendBtn',true,'Sending '+(i+1)+'/'+recipients.length+'…');
    status('mailStatus','Processed '+(i+1)+' of '+recipients.length+' · '+sent+' accepted · '+blocked+' blocked · '+failed+' failed · '+uncertain+' uncertain'+(failures.length?' · '+failures.join(', '):''));
@@ -415,8 +415,8 @@ async function sendEmail(e){
    $('mailTo').value=parseManualMailRecipients().filter(address=>!doNotRetry.has(address)).join(', ');
    updateMailRecipientSummary();
   }
-  if(!failed&&!uncertain){$('mailBody').value='';closeModal('emailModal');toast(sent+' separate email'+(sent===1?'':'s')+' accepted by the configured provider and recorded. Delivery confirmation depends on webhook tracking.');}
-  else{status('mailStatus',sent+' accepted; '+failed+' failed before send; '+uncertain+' uncertain. Only pre-send failures remain selected for retry. Do not resend uncertain recipients until you verify the provider ledger.',true);}
+  if(!failed&&!uncertain&&!blocked){$('mailBody').value='';closeModal('emailModal');toast(sent+' separate email'+(sent===1?'':'s')+' accepted by the configured provider and recorded. Delivery confirmation depends on webhook tracking.');}
+  else{status('mailStatus',sent+' accepted; '+blocked+' blocked by the release gate; '+failed+' failed before send; '+uncertain+' uncertain. Blocked/pre-send failures remain selected for a later retry. Do not resend uncertain recipients until you verify the provider ledger.',true);}
  }finally{busy('sendBtn',false);renderEmails();renderAnalytics();renderOverview();}
 }
 function csvEscape(v){return '"'+String(v??'').replace(/"/g,'""')+'"';}
