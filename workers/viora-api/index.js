@@ -1461,9 +1461,9 @@ async function handlePostFacebook(body, env, user) {
           url: `https://www.facebook.com/${data.post_id || data.id}`,
         });
       }
-      return json({ ok: false, error: 'Facebook photo upload failed', detail: data }, 502);
+      return json({ ok: false, uncertain: !r.ok && r.status >= 500, error: 'Facebook photo upload failed', detail: data }, 502);
     } catch (e) {
-      return json({ ok: false, error: 'Facebook photo error: ' + (e.message || 'unknown') }, 502);
+      return json({ ok: false, uncertain: true, error: 'Facebook photo request outcome unknown: ' + (e.message || 'unknown') }, 502);
     }
   }
 
@@ -1491,9 +1491,9 @@ async function handlePostFacebook(body, env, user) {
         url: `https://www.facebook.com/${data.id}`,
       });
     }
-    return json({ ok: false, error: 'Facebook post failed', detail: data }, 502);
+    return json({ ok: false, uncertain: !r.ok && r.status >= 500, error: 'Facebook post failed', detail: data }, 502);
   } catch (e) {
-    return json({ ok: false, error: 'Facebook error: ' + (e.message || 'unknown') }, 502);
+    return json({ ok: false, uncertain: true, error: 'Facebook request outcome unknown: ' + (e.message || 'unknown') }, 502);
   }
 }
 
@@ -7092,137 +7092,213 @@ async function runScheduledReminders(env) {
    Server auth: uses FIREBASE_DATABASE_SECRET. No user context
    required — the post itself carries createdBy for audit trail.
    ============================================================ */
+async function readCampaignWithEtag(campaignUrl) {
+  const response = await fetch(campaignUrl, { headers: { 'X-Firebase-ETag': 'true' } });
+  if (!response.ok) throw new Error(`Campaign read failed: ${response.status}`);
+  const etag = response.headers.get('ETag');
+  if (!etag) throw new Error('Firebase did not return an ETag; refusing non-atomic publish claim');
+  return { campaign: (await response.json()) || {}, etag };
+}
+
+async function conditionalWriteCampaign(campaignUrl, campaign, etag) {
+  return fetch(campaignUrl, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'If-Match': etag },
+    body: JSON.stringify(campaign),
+  });
+}
+
+/* Claim one scheduled post using Firebase RTDB conditional PUT.
+   Only one concurrent scheduler can win the ETag compare-and-swap. */
+async function claimScheduledCampaignPost(campaignUrl, postId, now, staleTimeoutMs = 5 * 60 * 1000) {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const { campaign, etag } = await readCampaignWithEtag(campaignUrl);
+    const post = Array.isArray(campaign.posts) ? campaign.posts.find(item => item && item.id === postId) : null;
+    if (!post) return { claimed: false, reason: 'missing' };
+
+    if (post.status === 'publishing') {
+      const attempted = Date.parse(post.publishAttemptedAt || post.publishClaimedAt || '');
+      if (Number.isFinite(attempted) && now - attempted > staleTimeoutMs) {
+        post.status = 'publish_uncertain';
+        post.publishOutcome = 'unknown';
+        post.publishUncertainAt = new Date(now).toISOString();
+        post.reconciliationRequired = true;
+        post.lastError = 'Previous publish claim expired. Provider acceptance cannot be ruled out; automatic retry blocked.';
+        const staleWrite = await conditionalWriteCampaign(campaignUrl, campaign, etag);
+        if (staleWrite.status === 412) continue;
+        if (!staleWrite.ok) throw new Error(`Could not persist stale publish uncertainty: ${staleWrite.status}`);
+        return { claimed: false, reason: 'marked_uncertain' };
+      }
+      return { claimed: false, reason: 'already_claimed' };
+    }
+
+    if (post.status !== 'scheduled') return { claimed: false, reason: post.status || 'not_scheduled' };
+    const scheduledAt = Date.parse(post.scheduledForUtc || post.scheduledFor || '');
+    if (!Number.isFinite(scheduledAt) || scheduledAt > now) return { claimed: false, reason: 'not_due' };
+
+    const claimId = crypto.randomUUID();
+    post.status = 'publishing';
+    post.publishClaimId = claimId;
+    post.publishClaimedAt = new Date(now).toISOString();
+    post.publishAttemptedAt = post.publishClaimedAt;
+    post.publishAttempts = (Number(post.publishAttempts) || 0) + 1;
+    post.publishOutcome = 'in_flight';
+    post.reconciliationRequired = false;
+    post.updatedAt = post.publishClaimedAt;
+
+    const claimWrite = await conditionalWriteCampaign(campaignUrl, campaign, etag);
+    if (claimWrite.status === 412) continue;
+    if (!claimWrite.ok) throw new Error(`Could not persist publish claim: ${claimWrite.status}`);
+    return { claimed: true, claimId, post: { ...post } };
+  }
+  return { claimed: false, reason: 'claim_conflict' };
+}
+
+/* Final state writes also use ETags so they cannot overwrite concurrent campaign edits. */
+async function persistCampaignPublishOutcome(campaignUrl, postId, claimId, result) {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const { campaign, etag } = await readCampaignWithEtag(campaignUrl);
+    const post = Array.isArray(campaign.posts) ? campaign.posts.find(item => item && item.id === postId) : null;
+    if (!post || post.publishClaimId !== claimId) {
+      return { saved: false, reason: 'claim_mismatch' };
+    }
+
+    const completedAt = new Date().toISOString();
+    if (result && result.ok && result.mode === 'auto') {
+      post.status = 'published';
+      post.publishedAt = completedAt;
+      post.externalId = result.postId || null;
+      post.composeUrl = null;
+      post.lastError = null;
+      post.publishOutcome = 'confirmed';
+      post.reconciliationRequired = false;
+    } else if (result && result.ok && result.mode === 'compose-link') {
+      post.status = 'compose-only';
+      post.composeUrl = result.fallbackUrl || null;
+      post.lastError = null;
+      post.publishOutcome = 'manual_action_required';
+      post.reconciliationRequired = false;
+    } else if (result && result.uncertain) {
+      post.status = 'publish_uncertain';
+      post.publishOutcome = 'unknown';
+      post.publishUncertainAt = completedAt;
+      post.lastError = result.error || 'Provider response was ambiguous; automatic retry blocked.';
+      post.reconciliationRequired = true;
+    } else {
+      post.status = 'failed';
+      post.publishOutcome = 'rejected';
+      post.lastError = (result && result.error) || 'Provider rejected the publish request';
+      post.failedAt = completedAt;
+      post.reconciliationRequired = false;
+    }
+    post.publishCompletedAt = completedAt;
+    post.updatedAt = completedAt;
+
+    const write = await conditionalWriteCampaign(campaignUrl, campaign, etag);
+    if (write.status === 412) continue;
+    if (!write.ok) throw new Error(`Could not persist publish outcome: ${write.status}`);
+    return { saved: true, status: post.status };
+  }
+  return { saved: false, reason: 'outcome_write_conflict' };
+}
+
 async function publishDueScheduledPosts(env) {
-  const qs = '?auth=' + (env.FIREBASE_DATABASE_SECRET || fbKey(env));
-  const CAMPAIGNS_PATH = `${rtdb(env)}/viora_data/orgs/viora/campaigns.json${qs}`;
+  if (!env.FIREBASE_DATABASE_SECRET) {
+    console.error('[sched] Firebase database credential missing; social publisher stopped safely');
+    return;
+  }
+  const qs = '?auth=' + encodeURIComponent(env.FIREBASE_DATABASE_SECRET);
+  const campaignsUrl = `${rtdb(env)}/viora_data/orgs/viora/campaigns.json${qs}`;
   const now = Date.now();
   const STUCK_TIMEOUT_MS = 5 * 60 * 1000;
 
   let campaigns;
   try {
-    const r = await fetch(CAMPAIGNS_PATH);
-    if (!r.ok) {
-      console.warn('[sched] failed to fetch campaigns:', r.status);
+    const response = await fetch(campaignsUrl);
+    if (!response.ok) {
+      console.warn('[sched] failed to fetch campaigns:', response.status);
       return;
     }
-    campaigns = (await r.json()) || {};
+    campaigns = (await response.json()) || {};
   } catch (e) {
     console.error('[sched] fetch error:', e.message);
     return;
   }
 
-  /* Collect all due posts up-front so we can log a summary.
-     We also collect stuck 'publishing' posts to retry. */
-  const due = [];
-  for (const [campaignId, camp] of Object.entries(campaigns)) {
-    if (!camp || !Array.isArray(camp.posts)) continue;
-    for (const post of camp.posts) {
+  const candidates = [];
+  for (const [campaignId, campaign] of Object.entries(campaigns)) {
+    if (!campaign || !Array.isArray(campaign.posts)) continue;
+    for (const post of campaign.posts) {
       if (!post || !post.id) continue;
-
-      const status = post.status;
-
-      if (status === 'scheduled') {
-        /* Determine due time. Prefer scheduledForUtc (new format).
-           Fall back to scheduledFor for posts created before the
-           frontend started writing Utc fields. */
-        const raw = post.scheduledForUtc || post.scheduledFor;
-        if (!raw) continue;
-        const dueMs = Date.parse(raw);
-        if (!Number.isFinite(dueMs)) continue;
-        if (dueMs > now) continue;
-        due.push({ campaignId, campaign: camp, post });
-      } else if (status === 'publishing') {
-        /* Possible crashed publish — retry if older than timeout */
-        const attempted = Date.parse(post.publishAttemptedAt || '');
-        if (Number.isFinite(attempted) && (now - attempted) > STUCK_TIMEOUT_MS) {
-          console.warn('[sched] retrying stuck post:', post.id);
-          due.push({ campaignId, campaign: camp, post });
+      if (post.status === 'scheduled') {
+        const scheduledAt = Date.parse(post.scheduledForUtc || post.scheduledFor || '');
+        if (Number.isFinite(scheduledAt) && scheduledAt <= now) candidates.push({ campaignId, postId: post.id });
+      } else if (post.status === 'publishing') {
+        const attempted = Date.parse(post.publishAttemptedAt || post.publishClaimedAt || '');
+        if (Number.isFinite(attempted) && now - attempted > STUCK_TIMEOUT_MS) {
+          candidates.push({ campaignId, postId: post.id, stale: true });
         }
       }
     }
   }
 
-  if (due.length === 0) return;
-  console.log(`[sched] ${due.length} post(s) due for publishing`);
+  if (!candidates.length) return;
+  let confirmed = 0, uncertain = 0, failed = 0, composeOnly = 0, claimed = 0;
 
-  /* Group by campaign so we only PUT each campaign node once. */
-  const touched = new Map();  // campaignId → { campaign, posts: [{post, result}] }
+  for (const candidate of candidates) {
+    const campaignUrl = `${rtdb(env)}/viora_data/orgs/viora/campaigns/${candidate.campaignId}.json${qs}`;
+    let claim;
+    try {
+      claim = await claimScheduledCampaignPost(campaignUrl, candidate.postId, Date.now(), STUCK_TIMEOUT_MS);
+    } catch (e) {
+      console.error('[sched] publish claim failed:', candidate.postId, e.message);
+      continue;
+    }
+    if (!claim.claimed) {
+      if (claim.reason === 'marked_uncertain') uncertain++;
+      continue;
+    }
+    claimed++;
 
-  for (const item of due) {
-    const { campaignId, campaign, post } = item;
-
-    /* ── 1. Optimistic status flip ── */
-    post.status = 'publishing';
-    post.publishAttemptedAt = new Date().toISOString();
-    post.publishAttempts = (Number(post.publishAttempts) || 0) + 1;
-
-    /* ── 2. Try to publish ── */
     let publishResult;
     try {
-      publishResult = await publishScheduledPost(post, env);
+      publishResult = await publishScheduledPost(claim.post, env);
     } catch (e) {
-      publishResult = { ok: false, error: e.message || 'unknown error' };
+      publishResult = { ok: false, uncertain: true, error: e.message || 'Provider call outcome unknown' };
     }
 
-    /* ── 3. Update post fields based on result ── */
-    if (publishResult.ok && publishResult.mode === 'auto') {
-      post.status = 'published';
-      post.publishedAt = new Date().toISOString();
-      post.externalId = publishResult.postId || null;
-      post.composeUrl = null;
-      post.lastError = null;
-    } else if (publishResult.ok && publishResult.mode === 'compose-link') {
-      post.status = 'compose-only';
-      post.composeUrl = publishResult.fallbackUrl || null;
-      post.lastError = null;
-    } else {
-      post.status = 'failed';
-      post.lastError = publishResult.error || 'Unknown publish error';
-      post.failedAt = new Date().toISOString();
-    }
-
-    post.updatedAt = new Date().toISOString();
-
-    if (!touched.has(campaignId)) {
-      touched.set(campaignId, { campaign, posts: [] });
-    }
-    touched.get(campaignId).posts.push({ post, result: publishResult });
-  }
-
-  /* ── 4. Persist each touched campaign once ── */
-  for (const [campaignId, data] of touched) {
     try {
-      await fetch(
-        `${rtdb(env)}/viora_data/orgs/viora/campaigns/${campaignId}.json${qs}`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data.campaign),
-        }
-      );
-      const ok = data.posts.filter(p => p.result.ok).length;
-      const fail = data.posts.length - ok;
-      console.log(`[sched] campaign ${campaignId}: ${ok} published, ${fail} failed`);
+      const saved = await persistCampaignPublishOutcome(campaignUrl, candidate.postId, claim.claimId, publishResult);
+      if (!saved.saved) {
+        console.error('[sched] publish outcome needs reconciliation:', candidate.postId, saved.reason);
+        uncertain++;
+      } else if (saved.status === 'published') confirmed++;
+      else if (saved.status === 'publish_uncertain') uncertain++;
+      else if (saved.status === 'compose-only') composeOnly++;
+      else failed++;
     } catch (e) {
-      console.error(`[sched] failed to save campaign ${campaignId}:`, e.message);
+      console.error('[sched] publish outcome persistence failed; claim remains non-retryable:', candidate.postId, e.message);
+      uncertain++;
     }
   }
 
-  /* ── 5. Write an audit row to activityLog ── */
+  console.log(`[sched] publish summary: ${claimed} claimed, ${confirmed} confirmed, ${composeOnly} compose-only, ${failed} rejected, ${uncertain} uncertain`);
   try {
     await fetch(`${rtdb(env)}/viora_data/orgs/viora/activityLog.json${qs}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         type: 'publish',
-        title: 'Scheduled posts published',
-        description: `${due.length} due → ${due.filter(d => touched.get(d.campaignId)?.posts.find(x => x.post.id === d.post.id && x.result.ok)).length} succeeded`,
+        title: 'Scheduled social publishing run',
+        description: `${claimed} claimed; ${confirmed} confirmed; ${composeOnly} manual; ${failed} rejected; ${uncertain} uncertain`,
         by: 'cron',
         byName: 'Scheduler',
         timestamp: new Date().toISOString(),
       }),
     });
-  } catch (e) { /* non-fatal */ }
+  } catch (e) {
+    console.warn('[sched] activity audit write failed:', e.message);
+  }
 }
 
 /* ── Per-platform publish dispatcher ──
@@ -7268,7 +7344,7 @@ async function publishScheduledPost(post, env) {
       if (data.fallback === 'compose-link') {
         return { ok: true, mode: 'compose-link', fallbackUrl: data.fallbackUrl };
       }
-      return { ok: false, error: data.error || 'Facebook publish failed' };
+      return { ok: false, uncertain: Boolean(data.uncertain), error: data.error || 'Facebook publish failed' };
     }
 
     if (post.platform === 'tiktok') {
@@ -7297,7 +7373,7 @@ async function publishScheduledPost(post, env) {
       note: `Auto-publish not supported for ${post.platform}. Publish manually.`,
     };
   } catch (e) {
-    return { ok: false, error: e.message || 'unknown' };
+    return { ok: false, uncertain: post.platform === 'facebook', error: e.message || 'Provider outcome unknown' };
   }
 }
 
