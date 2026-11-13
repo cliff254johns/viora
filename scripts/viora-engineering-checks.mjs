@@ -44,7 +44,7 @@ assert.ok(publicMarketJs.includes("import '../viora-taxonomy.js'"), 'public Mark
 assert.ok(publicMarketJs.includes('classifyProduct(p)'), 'public Marketplace must classify products through shared taxonomy');
 assert.ok(publicMarketJs.includes('this.renderCategoryBar();'), 'public Marketplace must render category controls before Firebase/cache data arrives');
 assert.ok(publicMarketJs.includes('new URLSearchParams(window.location.search).get(\'category\')'), 'public Marketplace must accept direct links to a solution family');
-assert.ok((publicHome.match(/href="\\/market\\?category=(?:enterprise|institutional|hospitality|property|industry|business)"/g) || []).length === 6, 'homepage solution family cards must deep-link to all six Marketplace filters');
+assert.ok((publicHome.match(/href="\/market\?category=(?:enterprise|institutional|hospitality|property|industry|business)"/g) || []).length === 6, 'homepage solution family cards must deep-link to all six Marketplace filters');
 assert.ok(adminMarket.includes('classifyProduct(p)'), 'admin Marketplace must classify products through shared taxonomy');
 assert.ok(adminHandlers.includes('vioraCategoryId: categoryId'), 'admin product saves must persist canonical category ID');
 assert.ok(read('web/main.html').includes('<option value="all">All VIORA Solutions</option>'), 'admin Marketplace must use the official VIORA category label');
