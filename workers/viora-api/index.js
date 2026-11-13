@@ -110,6 +110,15 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
+    // Controlled version-URL environment: only health and the authenticated,
+    // read-only Marketplace gateway inventory may execute. All mutations and
+    // unrelated production routes are denied before their handlers run.
+    if (env.VIORA_STAGING_READ_ONLY === 'true' &&
+        !(request.method === 'OPTIONS' ||
+          (request.method === 'GET' && (path === '/health' || path === '/marketplace/preview/gateways')))) {
+      return json({ ok: false, error: 'Controlled candidate is read-only; route is not available in this environment.' }, 403);
+    }
+
     try {
       // ── Public routes (no auth) ──
       if (path === '/' || path === '') {
