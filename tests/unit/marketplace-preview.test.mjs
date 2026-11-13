@@ -8,12 +8,13 @@ test('preview policy is fixed at 15 minutes with a seven-day cooldown', () => {
 });
 
 test('only active, explicitly configured product previews are eligible', () => {
-  assert.equal(productAllowsPreview({ status: 'active', previewEnabled: true, previewProfile: 'isolated-software' }), true);
-  assert.equal(productAllowsPreview({ status: 'active', previewEnabled: true, previewProfile: 'digital-sample' }), true);
-  assert.equal(productAllowsPreview({ status: 'active', previewEnabled: true, previewProfile: 'external-url' }), false);
+  assert.equal(productAllowsPreview({ status: 'active', previewEnabled: true, previewGatewayVerified: true, previewProfile: 'isolated-software' }), true);
+  assert.equal(productAllowsPreview({ status: 'active', previewEnabled: true, previewGatewayVerified: true, previewProfile: 'digital-sample' }), true);
+  assert.equal(productAllowsPreview({ status: 'active', previewEnabled: true, previewGatewayVerified: true, previewProfile: 'external-url' }), false);
+  assert.equal(productAllowsPreview({ status: 'active', previewEnabled: true, previewProfile: 'isolated-software' }), false, 'gateway verification is mandatory');
   assert.equal(productAllowsPreview({ status: 'active', previewEnabled: false, previewProfile: 'digital-sample' }), false);
-  assert.equal(productAllowsPreview({ status: 'draft', previewEnabled: true, previewProfile: 'digital-sample' }), false);
-  assert.equal(productAllowsPreview({ status: 'archived', previewEnabled: true, previewProfile: 'isolated-software' }), false);
+  assert.equal(productAllowsPreview({ status: 'draft', previewEnabled: true, previewGatewayVerified: true, previewProfile: 'digital-sample' }), false);
+  assert.equal(productAllowsPreview({ status: 'archived', previewEnabled: true, previewGatewayVerified: true, previewProfile: 'isolated-software' }), false);
 });
 
 test('paid entitlement is scoped to matching client and product', () => {
