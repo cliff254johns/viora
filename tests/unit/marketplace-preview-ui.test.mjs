@@ -27,7 +27,8 @@ test('actual admin product form and preview request queue are wired', async () =
   assert.match(html, /id="marketplacePreviewRequestsBody"/);
   assert.match(wiring, /marketplace\/preview\/grant/);
   assert.match(wiring, /marketplace\/preview\/revoke/);
-  assert.match(handlers, /previewGatewayVerified/ === false ? /$^/ : /previewEnabled/);
+  assert.match(handlers, /previewEnabled/);
+  assert.equal(handlers.includes('previewGatewayVerified'), false, 'the product editor must not self-certify a delivery gateway');
   assert.equal(handlers.includes('previewUrl'), false);
 });
 
