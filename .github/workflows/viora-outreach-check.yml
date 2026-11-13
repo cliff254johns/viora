@@ -51,6 +51,12 @@ jobs:
           grep -Fq "lastOutreachStatus:'sent'" web/outreach.js
           grep -Fq 'lastOutreachProviderId' web/outreach.js
           grep -Fq 'lastOutreachEmailId' web/outreach.js
+          grep -Fq 'async function writeOutreachCampaignActivity' workers/viora-api/index.js
+          grep -Fq "writeOutreachCampaignActivity(env, record, 'queued')" workers/viora-api/index.js
+          grep -Fq "writeOutreachCampaignActivity(env, candidate, 'sending'" workers/viora-api/index.js
+          grep -Fq "writeOutreachCampaignActivity(env, candidate, 'sent'" workers/viora-api/index.js
+          grep -Fq "writeOutreachCampaignActivity(env, candidate, 'send_uncertain'" workers/viora-api/index.js
+          grep -Fq "writeOutreachCampaignActivity(env, followRecord, 'queued')" workers/viora-api/index.js
       - name: Verify email automation is opt-in and social jobs remain independent
         run: |
           grep -Fq 'ENABLE_OUTREACH_EMAIL_AUTOMATION' workers/viora-api/scheduled-jobs.js
