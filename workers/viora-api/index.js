@@ -6403,18 +6403,32 @@ async function runScheduledOutreachInboxSync(env) {
       gmailApiFetch('messages?labelIds=INBOX&maxResults=50', accessToken),
       outreachDbRead(env, 'leads').catch(() => ({}))
     ]);
-    const leadsByEmail = new Map(Object.values(crm || {}).filter(Boolean).map(lead => [gmailAddress(lead.email), lead]).filter(([email]) => !!email));
+    const leadsByEmail = new Map(Object.entries(crm || {}).filter(([, lead]) => lead && lead.email).map(([id, lead]) => [gmailAddress(lead.email), { ...lead, id }]).filter(([email]) => !!email));
+    const labelId = await gmailEnsureOutreachLabel(accessToken);
     let processed = 0;
     for (const item of (listed.messages || []).slice(0, 10)) {
       if (processed >= 10) break;
       const prior = await outreachDbRead(env, 'outreach/autoReplies/' + item.id).catch(() => null);
       if (prior && ['sent','escalated','suppressed','send_uncertain'].includes(prior.status)) continue;
-      const meta = await gmailApiFetch('messages/' + encodeURIComponent(item.id) + '?format=metadata&metadataHeaders=From&metadataHeaders=Date', accessToken);
-      const sender = gmailAddress(gmailHeaderMap(meta).from);
+      const thread = await gmailApiFetch('threads/' + encodeURIComponent(item.threadId) + '?format=full', accessToken);
+      const messages = Array.isArray(thread.messages) ? thread.messages : [];
+      const sourceMessage = messages.find(message => message.id === item.id);
+      if (!sourceMessage || messages[messages.length - 1]?.id !== item.id) continue;
+      const headers = gmailHeaderMap(sourceMessage);
+      const sender = gmailAddress(headers.from);
       if (!sender || sender === GMAIL_OWNER_EMAIL) continue;
       const lead = leadsByEmail.get(sender);
-      if (!lead || !lead.id) continue;
-      const response = await handleOutreachAutoReply({ threadId: meta.threadId, messageId: meta.id, leadId: lead.id }, env, { email: GMAIL_OWNER_EMAIL, role: 'admin' });
+      if (!lead) continue;
+      const priorOutbound = messages.slice(0, -1).some(message => {
+        const h = gmailHeaderMap(message);
+        return gmailAddress(h.from) === GMAIL_OWNER_EMAIL && String(h.to || '').toLowerCase().includes(sender);
+      });
+      if (!priorOutbound) continue;
+      await gmailApiFetch('threads/' + encodeURIComponent(item.threadId) + '/modify', accessToken, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ addLabelIds: [labelId] })
+      });
+      const response = await handleOutreachAutoReply({ threadId: item.threadId, messageId: item.id, leadId: lead.id }, env, { email: GMAIL_OWNER_EMAIL, role: 'admin' });
       const result = await response.json().catch(() => ({}));
       if (result && ['sent','escalated','suppressed'].includes(result.status)) processed++;
     }
@@ -6422,7 +6436,6 @@ async function runScheduledOutreachInboxSync(env) {
     console.error('Scheduled Outreach inbox sync error', error && error.stack || error);
   }
 }
-
 
 async function sendGmailThreadFollowup(threadId, recipient, subject, textBody, unsubscribeUrl, env, connection) {
   const accessToken = await gmailAccessToken(connection, env);
