@@ -25,7 +25,9 @@ test('exec/admin signs in and opens Engineering Command Centre and Visuals',asyn
  expect(axe.violations.filter(v=>['critical','serious'].includes(v.impact)).map(v=>v.id)).toEqual([]);
 });
 test('mobile main system has no document-level horizontal overflow',async({page})=>{
- await page.goto('/main.html');
+ await page.goto('/main.html',{waitUntil:'domcontentloaded'});
+ await page.waitForLoadState('load');
+ await expect(page.locator('body')).toBeVisible();
  const dimensions=await page.evaluate(()=>({scrollWidth:document.documentElement.scrollWidth,clientWidth:document.documentElement.clientWidth}));
  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth+2);
 });
