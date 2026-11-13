@@ -50,6 +50,86 @@ function toast(msg, type) {
   if (typeof d.toast === 'function') { try { d.toast(msg, type || 'info'); } catch (_) {} }
 }
 
+async function loadMarketplacePreviewRequests() {
+  const tbody = $('marketplacePreviewRequestsBody');
+  const auth = (C().VioraAuth || window.VioraAuth);
+  if (!tbody) return;
+  if (!auth?.currentUser) {
+    tbody.innerHTML = '<tr><td colspan="5">Sign in with an administrator account to view preview requests.</td></tr>';
+    return;
+  }
+  const button = $('refreshPreviewRequestsBtn');
+  if (button) button.disabled = true;
+  try {
+    const token = await auth.currentUser.getIdToken();
+    const res = await fetch('https://viora-api.cliff254johns.workers.dev/marketplace/preview/requests', {
+      method: 'GET',
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(data.error || 'Could not load requests');
+    const rows = [];
+    for (const [uid, products] of Object.entries(data.requests || {})) {
+      for (const [productId, request] of Object.entries(products || {})) {
+        if (!request) continue;
+        rows.push({ uid, productId, ...request });
+      }
+    }
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="5">No preview requests yet.</td></tr>';
+      return;
+    }
+    const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    tbody.innerHTML = rows.sort((a,b) => String(b.requestedAt || '').localeCompare(String(a.requestedAt || ''))).map(row => {
+      const action = row.status === 'pending'
+        ? '<button class="btn btn-primary btn-xs" data-preview-action="grant">Grant 15 min</button>'
+        : row.status === 'approved'
+          ? '<button class="btn btn-outline btn-xs" data-preview-action="revoke">Revoke</button>'
+          : '<span>—</span>';
+      return '<tr data-preview-uid="' + esc(row.uid) + '" data-preview-product="' + esc(row.productId) + '">' +
+        '<td>' + esc(row.email || row.uid) + '</td><td>' + esc(row.productName || row.productId) + '</td>' +
+        '<td>' + esc(row.requestedAt ? new Date(row.requestedAt).toLocaleString() : '—') + '</td>' +
+        '<td>' + esc(row.status || 'unknown') + '</td><td>' + action + '</td></tr>';
+    }).join('');
+  } catch (error) {
+    tbody.innerHTML = '<tr><td colspan="5">Unable to load requests: ' + String(error.message || 'unknown error').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])) + '</td></tr>';
+    toast('Preview requests could not be loaded.', 'error');
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+function bindMarketplacePreviewAdmin() {
+  const refresh = $('refreshPreviewRequestsBtn');
+  const tbody = $('marketplacePreviewRequestsBody');
+  on(refresh, 'click', loadMarketplacePreviewRequests);
+  on(tbody, 'click', async event => {
+    const button = event.target.closest('[data-preview-action]');
+    const row = button?.closest('tr[data-preview-uid]');
+    if (!button || !row) return;
+    const auth = (C().VioraAuth || window.VioraAuth);
+    if (!auth?.currentUser) { toast('Administrator sign-in required.', 'error'); return; }
+    const action = button.dataset.previewAction;
+    button.disabled = true;
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const endpoint = action === 'grant' ? 'grant' : 'revoke';
+      const res = await fetch('https://viora-api.cliff254johns.workers.dev/marketplace/preview/' + endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ uid: row.dataset.previewUid, productId: row.dataset.previewProduct })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Action failed');
+      toast(action === 'grant' ? 'Preview granted for 15 minutes.' : 'Preview access revoked.', 'success');
+      await loadMarketplacePreviewRequests();
+    } catch (error) {
+      toast('Preview action failed: ' + (error.message || 'unknown error'), 'error');
+      button.disabled = false;
+    }
+  });
+}
+
 /* ═══════════════════════════════════════════════════════════════
    attachEvents()
    ═══════════════════════════════════════════════════════════════ */
@@ -60,6 +140,8 @@ export function attachEvents() {
 
   /* Install global delegated listeners once. */
   _installDelegated(d);
+
+  bindMarketplacePreviewAdmin();
 
   /* Sidebar navigation (delegated — cheap, safe to re-bind on idempotent guard). */
   document.querySelectorAll('.sidebar nav a').forEach(a => {
