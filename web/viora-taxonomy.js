@@ -40,7 +40,7 @@
     if (byId[n]) return n;
     const found = categories.find(c => norm(c.name) === n || norm(c.short) === n || norm(c.key) === n);
     if (found) return found.id;
-    return legacy[n] || legacy[n.replace(/\\s+/g,'_')] || null;
+    return legacy[n] || legacy[n.replace(/\s+/g,'_')] || null;
   }
   function classifyText(text, fallback) {
     const n = norm(text);
