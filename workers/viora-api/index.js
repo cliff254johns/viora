@@ -6371,7 +6371,7 @@ async function handleOutreachAutoReply(body, env, user) {
     if (!priorOutbound) return json({ ok: false, error: 'Conversation does not contain a prior VIORA outbound message to this sender' }, 403);
     const lead = await outreachDbRead(env, 'leads/' + leadId);
     if (!lead || gmailAddress(lead.email) !== sender) return json({ ok: false, error: 'The sender does not match the linked CRM lead' }, 403);
-    const suppressionKey = encodeURIComponent(sender).replace(/\\./g, '%2E');
+    const suppressionKey = encodeURIComponent(sender).replace(/\./g, '%2E');
     const existingSuppression = await outreachDbRead(env, 'outreach/suppressions/' + suppressionKey).catch(() => null);
     if (existingSuppression) return json({ ok: true, status: 'suppressed', reason: 'existing_suppression' });
     const messageText = gmailExtractText(sourceMessage.payload).trim().slice(0, 10000);
