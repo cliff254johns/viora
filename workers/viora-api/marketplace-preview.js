@@ -223,18 +223,19 @@ export async function handleMarketplacePreview(request, env, user, route) {
       const body = await request.json().catch(() => ({}));
       const productId = cleanId(body.productId, 'productId');
       const product = await getProduct(env, productId);
-      if (!productAllowsPreview(product)) return response({ ok: false, error: 'This product is not accepting preview requests' }, 403);
+      if (!product || product.status === 'archived' || product.status === 'draft') return response({ ok: false, error: 'This product is not currently available' }, 403);
       const client = await getClientContext(env, uid);
       if (!client) return response({ ok: false, error: 'Active VIORA account required' }, 403);
       const path = paths(uid, productId).request;
       const { value, etag } = await readRecord(env, path, true);
-      if (value && value.status === 'pending') return response({ ok: true, request: value, existing: true });
+      if (value && ['pending', 'approved'].includes(value.status)) return response({ ok: true, request: value, existing: true });
       const record = {
         uid,
         email: user.email || null,
         clientId: client.clientId,
         productId,
         productName: product.name || productId,
+        gatewayReady: productAllowsPreview(product),
         status: 'pending',
         requestedAt: new Date().toISOString()
       };
