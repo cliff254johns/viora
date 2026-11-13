@@ -11,6 +11,7 @@ This release branch is based directly on `main` and deliberately excludes the di
 Each send attempt receives a unique email activity ID and batch/campaign ID. The lead stores a compact `lastOutreach` snapshot and an `outreachHistory/{emailActivityId}` record containing the recipient, organisation, contact, category, country, website, lead source, subject, sender, communication-log reference, and status timestamps. Successful sends also store provider message and thread identifiers, update `lastContactedAt`, and move a New lead to Contacted. Failed sends remain visible as failed activity and do not mark the lead as contacted. The full message body remains in the email ledger and Communications log, not duplicated into the lead record.
 
 ## Release safety
+- Keep `keep_vars = true` in Wrangler configuration so a code upload does not overwrite dashboard-managed production variables; secrets are preserved by Cloudflare deployments when omitted from the upload.
 - Keep `ENABLE_OUTREACH_EMAIL_AUTOMATION` unset/false in production during the controlled API release.
 - Do not change the existing cron schedule.
 - Verify the social queue preparation and social publishing jobs independently.
