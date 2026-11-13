@@ -1180,6 +1180,13 @@
       </div>
       <div class="card-3d-grid" id="marketplaceProductsGrid"></div>
       <div class="table-wrapper"><table><thead><tr><th>ID</th><th>Name</th><th>Category</th><th>Price (USD)</th><th>Price (KES)</th><th>Sold</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead><tbody id="marketplaceProductsBody"></tbody></table></div>
+      <div class="card-3d" style="margin-top:20px;padding:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div><h3 style="margin:0;">Controlled Preview Requests</h3><p style="margin:5px 0 0;color:var(--text-secondary);font-size:.8rem;">Review user requests, grant 15-minute sessions, or revoke active access. Grants retain the seven-day cooldown.</p></div>
+          <button class="btn btn-outline btn-sm" id="refreshPreviewRequestsBtn"><i class="fa-solid fa-rotate"></i> Refresh requests</button>
+        </div>
+        <div class="table-wrapper" style="margin-top:12px;"><table><thead><tr><th>User</th><th>Product</th><th>Requested</th><th>Status</th><th>Action</th></tr></thead><tbody id="marketplacePreviewRequestsBody"><tr><td colspan="5">Refresh to load requests.</td></tr></tbody></table></div>
+      </div>
     </section>
 
     <!-- PARTNER TASKS -->
@@ -2809,11 +2816,23 @@
     clients will see a "Coming Soon" badge instead of a broken "Open App" button.
   </div>
 
-  <label>Preview URL (opens the "Preview" button in the public marketplace)</label>
-  <input type="url" id="prodPreviewUrl" placeholder="https://example.com/preview" />
-
-  <label>Purchase / Landing Link (fallback if no Preview URL)</label>
-  <input type="url" id="prodLink" placeholder="https://example.com/buy" />
+  <div class="form-section" style="margin-top:16px;">
+    <h4><i class="fa-solid fa-shield-halved"></i> Controlled Preview Access</h4>
+    <label style="display:flex;align-items:center;gap:10px;">
+      <input type="checkbox" id="prodPreviewEnabled" style="width:18px;height:18px;" />
+      Enable controlled preview eligibility
+    </label>
+    <label for="prodPreviewProfile">Preview delivery profile</label>
+    <select id="prodPreviewProfile">
+      <option value="">Not configured</option>
+      <option value="isolated-software">Isolated software demo</option>
+      <option value="digital-sample">Digital product sample</option>
+    </select>
+    <p style="font-size:.75rem;color:var(--text-secondary);margin:8px 0 0;">
+      Enable only after the product's own delivery gateway validates VIORA preview sessions.
+      External Preview URLs are no longer opened directly. A selected profile alone does not secure a product.
+    </p>
+  </div>
 
   <label>Product Image</label>
   <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;">
