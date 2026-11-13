@@ -108,7 +108,7 @@ async function uploadFile(){
   if(!authorized())throw new Error('Admin or exec access is required.');
   const host=document.getElementById('engineeringCommandRoot'),input=host?.querySelector('#idr-file'),file=input?.files?.[0];
   if(!file)throw new Error('Choose a document first.');
-  if(file.size>20*1024*1024)throw new Error('Maximum file size is 20 MB.');
+  if(file.size>5*1024*1024)throw new Error('Maximum file size is 5 MB.');
   await ensureFirebase();
   const user=window.VioraAuth.currentUser,id=dbApi.push(dbApi.ref(dbApi.db,'investorDataRoom/files')).key;
   const path='investor-data-room/'+user.uid+'/'+id+'_'+safeFileName(file.name);
@@ -148,7 +148,7 @@ function installSidebar(){
   if(!group||group.querySelector('[data-investor-room-link]'))return;
   const link=document.createElement('a');link.href='#investor-data-room';link.className='sb-engineering-sub-link';link.dataset.investorRoomLink='1';link.setAttribute('role','button');link.innerHTML='<i class="fa-solid fa-briefcase" style="color:#34d399"></i> Investor Data Room';
   group.appendChild(link);
-  link.addEventListener('click',e=>{e.preventDefault();window.__vioraInvestorRoomMode=true;document.querySelector('#sidebarNav [data-tab="engineering-command"]')?.click();});
+  link.addEventListener('click',e=>{e.preventDefault();window.__vioraInvestorRoomMode=true;window.__vioraInvestorRoomNavInProgress=true;document.querySelector('#sidebarNav [data-tab="engineering-command"]')?.click();window.__vioraInvestorRoomNavInProgress=false;window.renderEngineeringCommandCentre?.();});
 }
 export async function renderInvestorDataRoom(){
   const host=document.getElementById('engineeringCommandRoot');if(!host)return;
@@ -162,7 +162,7 @@ function boot(){
   installSidebar();
   document.addEventListener('click',e=>{
     const link=e.target.closest('#sidebarNav [data-tab="engineering-command"]');
-    if(link && !e.target.closest('[data-investor-room-link]'))window.__vioraInvestorRoomMode=false;
+    if(link && !window.__vioraInvestorRoomNavInProgress && !e.target.closest('[data-investor-room-link]'))window.__vioraInvestorRoomMode=false;
   },true);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
