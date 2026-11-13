@@ -135,7 +135,7 @@ test('cooldown remains in force after early end and blocks a second preview', as
 });
 
 test('server time expires the preview regardless of a client-supplied clock', async () => {
-  const started = await (await call('start')).json();
+  const started = await (await startApprovedPreview()).json();
   clock += 16 * 60 * 1000;
   const validation = await call('validate', USER, 'POST', {
     productId: 'demo-app', sessionId: started.session.id, now: started.session.startedAt
@@ -164,7 +164,8 @@ test('missing Firebase ETag support fails closed instead of using a non-atomic w
   try {
     const response = await call('start');
     assert.equal(response.status, 503);
-    assert.equal(records.has('viora_data/orgs/viora/marketplacePreview/eligibility/user-1/demo-app'), false);
+    assert.equal(records.get('viora_data/orgs/viora/marketplacePreview/eligibility/user-1/demo-app').grant.status, 'approved');
+    assert.equal(records.get('viora_data/orgs/viora/marketplacePreview/eligibility/user-1/demo-app').session, undefined);
   } finally {
     globalThis.fetch = original;
   }
