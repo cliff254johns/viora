@@ -6397,11 +6397,6 @@ async function runOutreachCampaignScheduler(env) {
     for (const candidate of due.slice(0, 20)) {
       const path = 'outreach/campaignQueue/' + candidate.id;
       if (!await outreachDbCompareAndSet(env, path + '/status', 'queued', 'sending')) continue;
-      const reserved = await outreachReserveDailySlot(env);
-      if (!reserved.allowed) {
-        await outreachDbWrite(env, path + '/status', 'queued');
-        return;
-      }
       const suppression = await outreachDbRead(env, 'outreach/suppressions/' + outreachEmailKey(candidate.recipient)).catch(() => null);
       if (suppression) {
         await outreachDbWrite(env, path + '/status', 'suppressed');
@@ -6436,6 +6431,11 @@ async function runOutreachCampaignScheduler(env) {
           await outreachDbWrite(env, path + '/blockReason', 'Unable to verify the latest Gmail thread before follow-up');
           return;
         }
+      }
+      const reserved = await outreachReserveDailySlot(env);
+      if (!reserved.allowed) {
+        await outreachDbWrite(env, path + '/status', 'queued');
+        return;
       }
       const token = candidate.unsubscribeToken;
       const unsubscribeUrl = 'https://www.viora.co.ke/outreach/unsubscribe?token=' + encodeURIComponent(token);
