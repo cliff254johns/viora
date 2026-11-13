@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-13T01:01:08.056Z",
+  "generatedAt": "2026-11-13T01:04:50.973Z",
   "moduleCount": 112,
   "modules": [
     {
@@ -1570,7 +1570,7 @@
     },
     {
       "file": "workers/viora-api/index.js",
-      "bytes": 257085,
+      "bytes": 259810,
       "imports": [],
       "exports": [],
       "workerRoutes": []
