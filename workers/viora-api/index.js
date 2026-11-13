@@ -191,6 +191,18 @@ export default {
   build: '5.0.1-youtube-handle-fix',   // ← new marker
   ts: Date.now(),
 });
+      if (env.VIORA_STAGING_READ_ONLY === 'true') {
+        const missingStagingConfig = [
+          ['FIREBASE_API_KEY', env.FIREBASE_API_KEY],
+          ['FIREBASE_PROJECT_ID', env.FIREBASE_PROJECT_ID],
+          ['FIREBASE_DATABASE_URL', env.FIREBASE_DATABASE_URL],
+          ['FIREBASE_DATABASE_SECRET', env.FIREBASE_DATABASE_SECRET]
+        ].filter(([, value]) => !value).map(([name]) => name);
+        if (env.FIREBASE_DATABASE_URL === RTDB_URL_DEFAULT) missingStagingConfig.push('FIREBASE_DATABASE_URL (must not be production)');
+        if (missingStagingConfig.length) {
+          return json({ ok: false, error: 'Staging Firebase configuration is incomplete', missing: missingStagingConfig }, 503);
+        }
+      }
       if (path === '/debugEnv') return debugEnv(env);
 
       if (path === '/waWebhook' || path === '/whatsapp/webhook') {
