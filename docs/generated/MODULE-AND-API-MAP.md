@@ -1,6 +1,6 @@
 # Generated module and API map
 
-Generated: 2026-11-13T01:33:09.905Z
+Generated: 2026-11-13T01:54:12.124Z
 
 Modules: 112
 
@@ -640,7 +640,7 @@ Modules: 112
 
 ### web/outreach.js
 
-- Size: 85125 bytes
+- Size: 91602 bytes
 - Imports: https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js, https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js, https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js, +sources.length+
 - Exports: none detected
 - Worker routes: none detected
@@ -731,7 +731,7 @@ Modules: 112
 
 ### workers/viora-api/index.js
 
-- Size: 276412 bytes
+- Size: 304299 bytes
 - Imports: none detected
 - Exports: none detected
 - Worker routes: none detected
