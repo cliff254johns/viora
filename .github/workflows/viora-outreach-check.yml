@@ -51,6 +51,9 @@ jobs:
           grep -Fq "lastOutreachStatus:'sent'" web/outreach.js
           grep -Fq 'lastOutreachProviderId' web/outreach.js
           grep -Fq 'lastOutreachEmailId' web/outreach.js
+          grep -Fq 'sendAttempted=true' web/outreach.js
+          grep -Fq 'uncertainAddresses' web/outreach.js
+          grep -Fq 'Do not resend uncertain recipients' web/outreach.js
           grep -Fq 'async function writeOutreachCampaignActivity' workers/viora-api/index.js
           grep -Fq "writeOutreachCampaignActivity(env, record, 'queued')" workers/viora-api/index.js
           grep -Fq "writeOutreachCampaignActivity(env, candidate, 'sending'" workers/viora-api/index.js
