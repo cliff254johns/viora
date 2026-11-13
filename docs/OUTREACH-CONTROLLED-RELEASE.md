@@ -29,3 +29,12 @@ Each send attempt receives a unique email activity ID and batch/campaign ID. The
 6. Promote only after the checks are recorded; retain the previous Worker version for rollback.
 
 A passing static or emulator test is not proof of live provider delivery. Production social publishing must be explicitly tested against a controlled test destination.
+
+## Social publishing idempotency and connection verification
+- Scheduled campaign posts are claimed at the individual campaign node using Firebase Realtime Database ETags (X-Firebase-ETag + conditional If-Match PUT). Concurrent scheduler invocations cannot both claim the same scheduled post.
+- A claim is durably written before any provider call and includes a unique claim ID, attempt count, and timestamp. Final status writes are also conditional and verify the same claim ID.
+- An expired publishing claim is changed to publish_uncertain; it is never automatically retried. Network/ambiguous provider results also become publish_uncertain and require human reconciliation. Confirmed provider acceptance becomes published; explicit rejection becomes failed.
+- The authenticated POST /social/config/status endpoint tests configured provider credentials without returning secret values. Campaigns account cards now display live Worker API verification, not a manually checked API-connected flag. Editing an account resets its API verification until rechecked.
+- Meta Graph API requests use v27.0. As of 13 November 2026, Meta's developer documentation identifies v27.0 as the latest Graph API version. The Worker currently supports Facebook Page auto-publishing only; Instagram and TikTok are not direct publishers in this implementation. TikTok OAuth is currently used for account/statistics access only.
+- Current Cloudflare binding inventory: YouTube Data API key is present; a generic TIKTOK_API_KEY is present but the Worker requires TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET for TikTok OAuth; Facebook Page token/ID and Instagram Business user ID/access token bindings are absent. A configured secret binding is not proof that a provider accepts it; the new endpoint performs runtime verification after it is deployed.
+- No provider publish test is run as part of CI. A real test must use an isolated, non-customer test Page and a pre-approved test message after the candidate version is deployed and credentials pass the status endpoint.
