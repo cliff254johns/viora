@@ -6323,8 +6323,10 @@ async function handleOutreachAutoReply(body, env, user) {
     const accessToken = await gmailAccessToken(connection, env);
     const thread = await gmailApiFetch('threads/' + encodeURIComponent(threadId) + '?format=full', accessToken);
     const messages = Array.isArray(thread.messages) ? thread.messages : [];
-    const sourceMessage = messages.find(m => m.id === messageId);
+    const sourceIndex = messages.findIndex(m => m.id === messageId);
+    const sourceMessage = sourceIndex >= 0 ? messages[sourceIndex] : null;
     if (!sourceMessage) return json({ ok: false, error: 'Message is not part of the supplied Gmail thread' }, 404);
+    if (sourceIndex !== messages.length - 1) return json({ ok: false, error: 'Only the latest message in a conversation can trigger processing' }, 409);
     const labelId = await gmailEnsureOutreachLabel(accessToken);
     if (!messages.some(m => Array.isArray(m.labelIds) && m.labelIds.includes(labelId))) {
       return json({ ok: false, error: 'Only conversations already labelled VIORA Outreach can be processed' }, 403);
@@ -6332,6 +6334,11 @@ async function handleOutreachAutoReply(body, env, user) {
     const headers = gmailHeaderMap(sourceMessage);
     const sender = gmailAddress(headers.from);
     if (!sender || sender === GMAIL_OWNER_EMAIL) return json({ ok: false, error: 'Inbound sender could not be verified' }, 400);
+    const priorOutbound = messages.slice(0, sourceIndex).some(m => {
+      const h = gmailHeaderMap(m);
+      return gmailAddress(h.from) === GMAIL_OWNER_EMAIL && String(h.to || '').toLowerCase().includes(sender);
+    });
+    if (!priorOutbound) return json({ ok: false, error: 'Conversation does not contain a prior VIORA outbound message to this sender' }, 403);
     const lead = await outreachDbRead(env, 'leads/' + leadId);
     if (!lead || gmailAddress(lead.email) !== sender) return json({ ok: false, error: 'The sender does not match the linked CRM lead' }, 403);
     const messageText = gmailExtractText(sourceMessage.payload).trim().slice(0, 10000);
@@ -6345,7 +6352,7 @@ async function handleOutreachAutoReply(body, env, user) {
       await outreachDbWrite(env, 'outreach/autoReplies/' + messageId, record);
       await outreachDbWrite(env, 'outreach/suppressions/' + encodeURIComponent(sender).replace(/\./g, '%2E'), { email: sender, reason: 'recipient_opt_out', sourceMessageId: messageId, createdAt: new Date().toISOString() });
       await outreachDbWrite(env, 'leads/' + leadId + '/status', 'Do not contact');
-      return json({ ok: true, status: 'suppressed', reason: 'recipient_opt_out' });
+      return json({ ok: true, status: 'suppressed', reason: 'recipient_opt_out', messageText, subject: headers.subject || '' });
     }
     const urgent = /\b(urgent|asap|immediately|legal notice|lawyer|attorney|complaint|data breach|security incident|refund|cancel|fraud|scam|angry|dispute)\b/.test(lower);
     const classificationPrompt = 'Classify this inbound business email. Return JSON only: {"intent":"general_info|positive_interest|meeting_interest|pricing|complaint|legal|urgent|not_interested|unsubscribe|unknown","confidence":0}. Do not write a reply.\nSubject: ' + String(headers.subject || '').slice(0, 300) + '\nMessage: ' + messageText;
@@ -6360,7 +6367,7 @@ async function handleOutreachAutoReply(body, env, user) {
       await outreachDbWrite(env, 'outreach/autoReplies/' + messageId, { status: 'suppressed', sender, leadId, threadId, messageId, reason: intent, processedAt: new Date().toISOString() });
       await outreachDbWrite(env, 'outreach/suppressions/' + encodeURIComponent(sender).replace(/\./g, '%2E'), { email: sender, reason: intent, sourceMessageId: messageId, createdAt: new Date().toISOString() });
       await outreachDbWrite(env, 'leads/' + leadId + '/status', 'Do not contact');
-      return json({ ok: true, status: 'suppressed', reason: intent });
+      return json({ ok: true, status: 'suppressed', reason: intent, messageText, subject: headers.subject || '' });
     }
     const autoEnabled = await outreachDbRead(env, 'outreach/settings/autoReplyEnabled').catch(() => false);
     const safeIntent = ['general_info','positive_interest','meeting_interest','pricing'].includes(intent) && confidence >= 85 && !urgent;
@@ -6368,7 +6375,7 @@ async function handleOutreachAutoReply(body, env, user) {
       const level = urgent || ['complaint','legal'].includes(intent) ? 'critical' : 'high';
       await outreachDbWrite(env, 'outreach/autoReplies/' + messageId, { status: 'escalated', sender, leadId, threadId, messageId, intent, confidence, processedAt: new Date().toISOString() });
       await publishOutreachEscalation(env, messageId, urgent ? 'Urgent Outreach response required' : 'Outreach conversation needs human attention', 'From ' + sender + ' · ' + (headers.subject || 'No subject') + ' · Intent: ' + intent + ' · Confidence: ' + confidence + '%. Open Outreach to review the complete conversation.', level, threadId);
-      return json({ ok: true, status: 'escalated', intent, confidence, reason: autoEnabled === true ? 'intent_requires_review' : 'autonomous_replies_not_enabled' });
+      return json({ ok: true, status: 'escalated', intent, confidence, reason: autoEnabled === true ? 'intent_requires_review' : 'autonomous_replies_not_enabled', messageText, subject: headers.subject || '' });
     }
     let replyText = '';
     if (intent === 'meeting_interest') {
@@ -6381,7 +6388,7 @@ async function handleOutreachAutoReply(body, env, user) {
     await outreachDbWrite(env, 'outreach/autoReplies/' + messageId, { status: 'sending', sender, leadId, threadId, messageId, intent, confidence, createdAt: new Date().toISOString() });
     const sent = await sendGmailThreadReply(thread, sourceMessage, replyText, env, user, accessToken);
     await outreachDbWrite(env, 'outreach/autoReplies/' + messageId, { status: 'sent', sender, leadId, threadId, messageId, intent, confidence, replyMessageId: sent.id || null, processedAt: new Date().toISOString(), replyText });
-    return json({ ok: true, status: 'sent', intent, confidence, replyMessageId: sent.id || null });
+    return json({ ok: true, status: 'sent', intent, confidence, replyMessageId: sent.id || null, messageText, subject: headers.subject || '', replyText });
   } catch (error) {
     return json({ ok: false, error: 'Autonomous reply processing failed safely', detail: error.message }, 502);
   }
