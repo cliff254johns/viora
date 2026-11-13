@@ -8,7 +8,7 @@ binding = "AI"
 
 [vars]
 MPESA_CALLBACK_URL = "https://viora-api.cliff254johns.workers.dev/mpesa/stk/callback"
-RESEND_FROM = "Viora <viora@elma.co.ke>"
+RESEND_FROM = "VIORA <cliff254johns@gmail.com>"
 WORKER_BASE_URL = "https://viora-api.cliff254johns.workers.dev"
 
 [observability]
