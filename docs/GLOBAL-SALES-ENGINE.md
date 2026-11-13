@@ -118,7 +118,7 @@ The Worker reads the CRM record and compliance registers itself; client-supplied
 - Verify the actual privacy notice has been published and is accurate before setting the global policy to approved.
 - Review each prospect's exact message and recipient before using the explicit Approve & queue action.
 - Populate each CRM record with verified email, country code, eligibility basis, evidence URL, review timestamp and matching policy version.
-- Prepare and queue individually personalised messages.
+- Prepare individually personalised messages. The manual Outreach composer and AI campaign composer both use the server-side compliance queue; neither is permitted to send around the recipient checks.
 - Enable outbound campaigns once, using the Outreach campaign controls.
 - Monitor delivery, bounces, complaints, replies and suppression; pause immediately if provider health or compliance is uncertain.
 
