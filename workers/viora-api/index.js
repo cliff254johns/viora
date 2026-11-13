@@ -6349,9 +6349,15 @@ async function handleOutreachCampaignQueue(body, env, user) {
       const queueId = crypto.randomUUID();
       const unsubscribeToken = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
       await outreachDbWrite(env, 'outreach/unsubscribeTokens/' + unsubscribeToken, { email, leadId, createdAt: new Date().toISOString(), status: 'active' });
+      const campaignId = String(item.campaignId || crypto.randomUUID());
+      const commLogId = crypto.randomUUID();
       const record = {
-        id: queueId, status: 'queued', sequence: 0, leadId, recipient: email,
-        organisation: company, countryCode, policyVersion: policy.version,
+        id: queueId, emailActivityId: queueId, commLogId, campaignId,
+        status: 'queued', sequence: 0, leadId, recipient: email,
+        organisation: company, contact: lead.contact || '',
+        category: lead.category || 'Business', country: lead.country || '',
+        website: lead.website || '', source: lead.source || 'Outreach campaign',
+        countryCode, policyVersion: policy.version,
         eligibilitySnapshot: { basis: eligibility.basis, sourceUrl: eligibility.sourceUrl, reviewedAt: eligibility.reviewedAt },
         subject, text: textBody, followups, unsubscribeToken,
         scheduledAt: item.scheduledAt || new Date().toISOString(),
@@ -6359,6 +6365,7 @@ async function handleOutreachCampaignQueue(body, env, user) {
         attempts: 0
       };
       await outreachDbWrite(env, 'outreach/campaignQueue/' + queueId, record);
+      await writeOutreachCampaignActivity(env, record, 'queued');
       alreadyQueued.add(email);
       created.push({ id: queueId, recipient: email, organisation: company });
     } catch (error) { rejected.push({ leadId: item && item.leadId || null, reason: error.message }); }
@@ -6473,6 +6480,55 @@ async function sendGmailThreadFollowup(threadId, recipient, subject, textBody, u
   return result;
 }
 
+async function writeOutreachCampaignActivity(env, candidate, status, details = {}) {
+  const activityId = String(candidate.emailActivityId || candidate.id);
+  const commLogId = String(candidate.commLogId || ('outreach-' + activityId));
+  const now = new Date().toISOString();
+  const activity = {
+    id: activityId, campaignId: candidate.campaignId || candidate.id,
+    leadId: candidate.leadId, recipient: candidate.recipient,
+    organisation: candidate.organisation || '', contact: candidate.contact || '',
+    category: candidate.category || 'Business', country: candidate.country || '',
+    countryCode: candidate.countryCode || '', website: candidate.website || '',
+    source: candidate.source || 'Outreach campaign', subject: candidate.subject || '',
+    channel: 'email', sender: GMAIL_OWNER_EMAIL, commLogId,
+    status, queuedAt: candidate.createdAt || now, updatedAt: now,
+    ...(details || {})
+  };
+  const ledger = {
+    id: activityId, campaignId: activity.campaignId, to: candidate.recipient,
+    subject: candidate.subject || '', text: candidate.text || '',
+    company: activity.organisation, leadId: candidate.leadId, commLogId,
+    direction: 'outbound', source: 'Outreach campaign', transport: 'gmail',
+    sentByEmail: GMAIL_OWNER_EMAIL, timestamp: activity.queuedAt,
+    status, ...details
+  };
+  const comm = {
+    id: commLogId, channel: 'em', direction: 'outbound',
+    recipientId: candidate.leadId, recipientName: activity.organisation || candidate.recipient,
+    recipientContact: candidate.recipient, subject: candidate.subject || '',
+    message: candidate.text || '', sentBy: GMAIL_OWNER_EMAIL, status,
+    timestamp: activity.queuedAt, leadId: candidate.leadId,
+    outreachEmailId: activityId, campaignId: activity.campaignId,
+    source: 'Outreach campaign', ...details
+  };
+  await outreachDbWrite(env, 'outreach/emails/' + activityId, ledger);
+  await outreachDbWrite(env, 'commLog/' + commLogId, comm);
+  await outreachDbWrite(env, 'leads/' + candidate.leadId + '/outreachHistory/' + activityId, activity);
+  await outreachDbWrite(env, 'leads/' + candidate.leadId + '/lastOutreach', activity);
+  await outreachDbWrite(env, 'leads/' + candidate.leadId + '/lastOutreachAt', details.sentAt || details.attemptedAt || activity.queuedAt);
+  await outreachDbWrite(env, 'leads/' + candidate.leadId + '/lastOutreachStatus', status);
+  await outreachDbWrite(env, 'leads/' + candidate.leadId + '/lastOutreachEmailId', activityId);
+  await outreachDbWrite(env, 'leads/' + candidate.leadId + '/lastOutreachSubject', activity.subject);
+  if (details.providerId) await outreachDbWrite(env, 'leads/' + candidate.leadId + '/lastOutreachProviderId', details.providerId);
+  if (status === 'sent') {
+    const lead = await outreachDbRead(env, 'leads/' + candidate.leadId).catch(() => null);
+    if (lead && lead.status === 'New') await outreachDbWrite(env, 'leads/' + candidate.leadId + '/status', 'Contacted');
+    await outreachDbWrite(env, 'leads/' + candidate.leadId + '/lastContactedAt', details.sentAt || now);
+  }
+  return { activityId, commLogId };
+}
+
 async function runOutreachCampaignScheduler(env) {
   try {
     const settings = await outreachDbRead(env, 'outreach/campaignSettings').catch(() => null);
@@ -6534,6 +6590,7 @@ async function runOutreachCampaignScheduler(env) {
           return;
         }
       }
+      await writeOutreachCampaignActivity(env, candidate, 'sending', { attemptedAt: new Date().toISOString() });
       const reserved = await outreachReserveDailySlot(env);
       if (!reserved.allowed) {
         await outreachDbWrite(env, path, { ...candidate, status: 'queued', claimedAt: null });
@@ -6566,24 +6623,32 @@ async function runOutreachCampaignScheduler(env) {
         sendFailed = true;
       }
       if (sendFailed || !result.ok) {
-        await outreachDbWrite(env, path, { ...candidate, status: 'send_uncertain', attempts: Number(candidate.attempts || 0) + 1, lastError: String(result.error || 'Gmail send failed').slice(0, 300), processedAt: new Date().toISOString() });
+        const uncertainAt = new Date().toISOString();
+        const failureDetails = { uncertainAt, error: String(result.error || 'Gmail send failed').slice(0, 300) };
+        await outreachDbWrite(env, path, { ...candidate, status: 'send_uncertain', attempts: Number(candidate.attempts || 0) + 1, lastError: failureDetails.error, processedAt: uncertainAt });
+        await writeOutreachCampaignActivity(env, candidate, 'send_uncertain', failureDetails);
         await publishOutreachEscalation(env, candidate.id + '-campaign-send', 'Campaign email needs delivery verification', 'Gmail did not confirm delivery for ' + candidate.recipient + '. Check the thread before retrying.', 'critical');
         return;
       }
-      await outreachDbWrite(env, path, { ...candidate, status: 'sent', attempts: Number(candidate.attempts || 0) + 1, sentAt: new Date().toISOString(), gmailMessageId: result.id || null, threadId: result.threadId || candidate.threadId || null });
-      await outreachDbWrite(env, 'leads/' + candidate.leadId + '/lastOutreachAt', new Date().toISOString());
-      await outreachDbWrite(env, 'leads/' + candidate.leadId + '/outreachStatus', 'contacted');
+      const sentAt = new Date().toISOString();
+      const sentDetails = { sentAt, providerId: result.id || null, threadId: result.threadId || candidate.threadId || null, gmailMessageId: result.id || null };
+      await outreachDbWrite(env, path, { ...candidate, status: 'sent', attempts: Number(candidate.attempts || 0) + 1, ...sentDetails });
+      await writeOutreachCampaignActivity(env, candidate, 'sent', sentDetails);
       await outreachDbWrite(env, 'outreach/campaignMetrics/daily/' + reserved.day + '/sent', Number(await outreachDbRead(env, 'outreach/campaignMetrics/daily/' + reserved.day + '/sent').catch(() => 0)) + 1);
       for (let index = 0; index < (candidate.followups || []).length; index++) {
         const follow = candidate.followups[index];
         const delayDays = Math.max(3, Math.min(14, Number(follow.delayDays) || (index === 0 ? 5 : 8)));
         const followId = crypto.randomUUID();
-        await outreachDbWrite(env, 'outreach/campaignQueue/' + followId, {
-          ...candidate, id: followId, sequence: index + 1, status: 'queued',
+        const followRecord = {
+          ...candidate, id: followId, emailActivityId: followId, commLogId: crypto.randomUUID(),
+          sequence: index + 1, status: 'queued',
           subject: String(follow.subject), text: String(follow.text),
           scheduledAt: new Date(Date.now() + delayDays * 86400000).toISOString(),
-          parentQueueId: candidate.id, threadId: result.threadId || null, initialMessageId: result.id || null, createdAt: new Date().toISOString()
-        });
+          parentQueueId: candidate.id, threadId: result.threadId || null, initialMessageId: result.id || null,
+          createdAt: new Date().toISOString()
+        };
+        await outreachDbWrite(env, 'outreach/campaignQueue/' + followId, followRecord);
+        await writeOutreachCampaignActivity(env, followRecord, 'queued');
       }
       return; // At most one email per five-minute scheduler invocation.
     }
