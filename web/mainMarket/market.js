@@ -101,7 +101,7 @@ const DEFAULTS = {
 let INDUSTRY_MAP = {};
 
 const normalizeMarketCategory = value =>
-  String(value || 'Marketplace').trim().replace(/\\s+/g, ' ').toLocaleLowerCase();
+  String(value || 'Marketplace').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
 
 const MARKET_CATEGORY_LABELS = Object.freeze({
   'bussiness management systems': 'Business Management Systems',
@@ -112,7 +112,7 @@ const MARKET_CATEGORY_LABELS = Object.freeze({
 });
 
 const displayMarketCategory = value => {
-  const clean = String(value || 'Marketplace').trim().replace(/\\s+/g, ' ');
+  const clean = String(value || 'Marketplace').trim().replace(/\s+/g, ' ');
   return MARKET_CATEGORY_LABELS[normalizeMarketCategory(clean)] || clean;
 };
 
