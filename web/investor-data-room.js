@@ -62,7 +62,7 @@ function renderShell(host){
   host.querySelector('#idr-print').addEventListener('click',()=>window.print());
 }
 function paintRoom(){
-  const host=document.getElementById('engineeringCommandRoot');if(!host)return;
+  const host=document.getElementById('investorDataRoomRoot');if(!host)return;
   for(const c of CATEGORIES){
     for(const [key] of c.fields){const el=host.querySelector('[data-field="'+key+'"]');if(el)el.value=roomData.fields?.[key]||'';}
     const status=host.querySelector('[data-status="'+c.id+'"]');if(status)status.value=statusLabel(roomData.status?.[c.id]);
@@ -144,13 +144,6 @@ function exportRoom(){
   const data={title:'VIORA Investor Data Room',exportedAt:new Date().toISOString(),warning:'Internal working pack. Review every item, remove confidential information and verify evidence before sharing with investors.',profile:roomData,documents:Object.values(filesData).map(f=>({...f,downloadUrl:undefined}))};
   downloadBlob('VIORA-investor-data-room-'+new Date().toISOString().slice(0,10)+'.json',new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
 }
-function installSidebar(){
-  const group=document.querySelector('.sb-group-items[data-group-items="engineering-command"]');
-  if(!group||group.querySelector('[data-investor-room-link]'))return;
-  const link=document.createElement('a');link.href='#investor-data-room';link.className='sb-engineering-sub-link';link.dataset.investorRoomLink='1';link.setAttribute('role','button');link.innerHTML='<i class="fa-solid fa-briefcase" style="color:#34d399"></i> Investor Data Room';
-  group.appendChild(link);
-  link.addEventListener('click',e=>{e.preventDefault();window.__vioraInvestorRoomMode=true;window.__vioraInvestorRoomNavInProgress=true;document.querySelector('#sidebarNav [data-tab="engineering-command"]')?.click();window.__vioraInvestorRoomNavInProgress=false;window.renderEngineeringCommandCentre?.();});
-}
 export async function renderInvestorDataRoom(){
   const host=document.getElementById('engineeringCommandRoot');if(!host)return;
   if(!authorized()){
@@ -159,11 +152,5 @@ export async function renderInvestorDataRoom(){
   renderShell(host);
   try{await loadRoom();}catch(error){const sync=host.querySelector('#idr-sync');if(sync)sync.textContent='Database access blocked';host.insertAdjacentHTML('beforeend','<div class="idr-error"><strong>Could not load the data room.</strong><p>'+esc(error.message||'Firebase access denied')+'</p><small>Realtime Database and Storage rules must explicitly restrict investorDataRoom records and investor-data-room files to verified admin/exec identities. No public read or write rule should be added.</small></div>');}
 }
-function boot(){
-  installSidebar();
-  document.addEventListener('click',e=>{
-    const link=e.target.closest('#sidebarNav [data-tab="engineering-command"]');
-    if(link && !window.__vioraInvestorRoomNavInProgress && !e.target.closest('[data-investor-room-link]'))window.__vioraInvestorRoomMode=false;
-  },true);
-}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+// Rendered by the dedicated Engineering Command > Investor Data Room route.
+
