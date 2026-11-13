@@ -33,7 +33,8 @@ async function ensureFirebase(){
   storageApi={...storageMod,storage:storageMod.getStorage(app)};
   if(!dbApi.db) throw new Error('The main Firebase database is not exposed in this session.');
 }
-const roomPath=()=>typeof window.P==='function'?window.P('investorDataRoom'):'investorDataRoom';\nconst roomRef=()=>dbApi.ref(dbApi.db,roomPath());
+const roomPath=()=>typeof window.P==='function'?window.P('investorDataRoom'):'investorDataRoom';
+const roomRef=()=>dbApi.ref(dbApi.db,roomPath());
 function statusLabel(v){return STATUS.includes(v)?v:'Draft';}
 function safeFileName(s){return String(s||'file').replace(/[^a-z0-9._-]/gi,'_').slice(0,100);}
 function downloadBlob(name,blob){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);}
