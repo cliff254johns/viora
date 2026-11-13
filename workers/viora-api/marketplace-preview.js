@@ -42,12 +42,14 @@ async function readRecord(env, path, withEtag = false) {
   const headers = withEtag ? { 'X-Firebase-ETag': 'true' } : {};
   const res = await fetch(databaseUrl(env, path), { headers });
   if (!res.ok) throw Object.assign(new Error('Preview data unavailable'), { status: 502 });
-  return { value: await res.json(), etag: res.headers.get('ETag') };
+  const etag = res.headers.get('ETag');
+  if (withEtag && !etag) throw Object.assign(new Error('Atomic preview storage is unavailable'), { status: 503 });
+  return { value: await res.json(), etag };
 }
 
 async function writeRecord(env, path, value, etag) {
-  const headers = { 'Content-Type': 'application/json' };
-  if (etag) headers['If-Match'] = etag;
+  if (!etag) throw Object.assign(new Error('Atomic preview storage is unavailable'), { status: 503 });
+  const headers = { 'Content-Type': 'application/json', 'If-Match': etag };
   const res = await fetch(databaseUrl(env, path), {
     method: 'PUT',
     headers,
