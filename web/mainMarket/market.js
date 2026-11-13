@@ -16,10 +16,12 @@ const firebaseConfig = {
 };
 
 let db = null;
+let auth = null;
 let firebaseReady = false;
 try {
   firebase.initializeApp(firebaseConfig);
   db = firebase.database();
+  auth = firebase.auth();
   firebaseReady = true;
   console.log('%c🔥 Firebase connected', 'color:#00e68a;font-weight:700;');
 } catch (e) {
@@ -126,6 +128,78 @@ const App = {
   _recentSearches: [],
   _reviewDraft: { productId: null, stars: 0 },
   _activeReviewProductId: null,
+
+  async requestPreview(productId) {
+    const product = this.products.find(item => item.id === productId);
+    if (!product || product.previewEnabled !== true || product.previewGatewayVerified !== true) {
+      this.toast('A secure preview is not yet available for this product.', 'warning');
+      return;
+    }
+    if (!auth) {
+      this.toast('Preview sign-in is unavailable. Please try again later.', 'error');
+      return;
+    }
+    let user = auth.currentUser;
+    if (!user) user = await this.promptPreviewSignIn();
+    if (!user) return;
+    try {
+      const token = await user.getIdToken();
+      const response = await fetch('https://viora-api.cliff254johns.workers.dev/marketplace/preview/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ productId })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data.error || 'Preview request failed');
+      this.toast(data.existing ? 'Your preview request is already awaiting review.' : 'Preview request submitted. VIORA will review it.', 'success');
+    } catch (error) {
+      this.toast(error.message || 'Preview request failed.', 'error');
+    }
+  },
+
+  promptPreviewSignIn() {
+    return new Promise(resolve => {
+      let dialog = document.getElementById('vioraPreviewSignIn');
+      if (!dialog) {
+        dialog = document.createElement('dialog');
+        dialog.id = 'vioraPreviewSignIn';
+        dialog.style.cssText = 'border:1px solid var(--border);border-radius:18px;padding:24px;max-width:420px;width:calc(100% - 32px);background:var(--surface);color:var(--text-primary);box-shadow:0 24px 80px rgba(0,0,0,.35)';
+        dialog.innerHTML = `
+          <form id="vioraPreviewSignInForm" method="dialog" style="display:grid;gap:12px">
+            <h3 style="margin:0">Sign in to request a preview</h3>
+            <p style="margin:0;color:var(--text-secondary);font-size:.85rem">Use your VIORA Client Portal account. New customers can create an account in the Client Portal.</p>
+            <label>Email<input name="email" type="email" autocomplete="username" required style="width:100%;padding:12px;border-radius:10px;margin-top:5px"></label>
+            <label>Password<input name="password" type="password" autocomplete="current-password" required style="width:100%;padding:12px;border-radius:10px;margin-top:5px"></label>
+            <p id="vioraPreviewSignInError" role="alert" style="color:#e5484d;margin:0;font-size:.8rem"></p>
+            <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+              <a href="/client.html" style="align-self:center;font-size:.8rem">Create account</a>
+              <button type="button" id="vioraPreviewSignInCancel">Cancel</button>
+              <button type="submit">Sign in</button>
+            </div>
+          </form>`;
+        document.body.appendChild(dialog);
+      }
+      const form = dialog.querySelector('#vioraPreviewSignInForm');
+      const error = dialog.querySelector('#vioraPreviewSignInError');
+      const finish = value => { try { dialog.close(); } catch (_) {} resolve(value || null); };
+      dialog.querySelector('#vioraPreviewSignInCancel').onclick = () => finish(null);
+      form.onsubmit = async event => {
+        event.preventDefault();
+        const submit = form.querySelector('button[type="submit"]');
+        submit.disabled = true;
+        error.textContent = '';
+        try {
+          const credentials = await auth.signInWithEmailAndPassword(form.email.value.trim(), form.password.value);
+          finish(credentials.user);
+        } catch (e) {
+          error.textContent = e.code === 'auth/invalid-credential' ? 'Email or password is incorrect.' : (e.message || 'Sign-in failed.');
+          submit.disabled = false;
+        }
+      };
+      dialog.onclose = () => resolve(null);
+      dialog.showModal();
+    });
+  },
 
   /* ═══════════════════════════════════════════════════════════
      TOASTS + MODALS
@@ -253,8 +327,9 @@ const App = {
         status: p.status || 'active',
         totalSold: p.totalSold || 0,
         totalRevenue: p.totalRevenue || 0,
-        previewUrl: p.previewUrl || null,
-        link: p.link || null,
+        previewEnabled: p.previewEnabled === true,
+        previewGatewayVerified: p.previewGatewayVerified === true,
+        previewProfile: p.previewProfile || '',
         image: p.image || null,
         _kind: p._kind || 'product',
         features: Array.isArray(p.features) ? p.features : []
@@ -904,8 +979,8 @@ const App = {
         null
       );
 
-      const previewBtn = previewUrl
-        ? `<a href="${this.escape(previewUrl)}" class="preview-btn" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" title="See It Live"><i class="fa-solid fa-eye"></i> Demo</a>`
+      const previewBtn = (p.previewEnabled === true && p.previewGatewayVerified === true && ['isolated-software', 'digital-sample'].includes(p.previewProfile))
+        ? `<button type="button" class="preview-btn" onclick="event.stopPropagation(); App.requestPreview('${p.id}')" title="Request a controlled preview"><i class="fa-solid fa-eye"></i> Preview</button>`
         : '';
 
       const stockBadge = !stock.loaded
@@ -990,8 +1065,8 @@ const App = {
 
     const isCustom = this.isCustomProduct(p);
     const extras = this.getProductExtras(productId);
-    const previewUrl = (p.previewUrl && String(p.previewUrl).trim()) || (p.link && String(p.link).trim()) || null;
-    const demoEmbed = extras.demoEmbedUrl || null;
+    const previewAvailable = p.previewEnabled === true && p.previewGatewayVerified === true && ['isolated-software', 'digital-sample'].includes(p.previewProfile);
+    const demoEmbed = null; // External embeds are not trusted as controlled previews.
     const gallery = Array.isArray(extras.gallery) ? extras.gallery.filter(Boolean) : [];
     const productFaqs = Array.isArray(extras.faqs) ? extras.faqs : [];
     const features = (p.features && p.features.length) ? p.features : [];
@@ -1014,7 +1089,7 @@ const heroVisual = (p.image && String(p.image).trim())
 
     const ctaRow = isCustom
       ? `<div class="pdm-cta-row">
-           ${previewUrl ? `<a href="${this.escape(previewUrl)}" class="btn-secondary" target="_blank" rel="noopener" onclick="event.stopPropagation();"><i class="fa-solid fa-eye"></i> See Live Demo</a>` : ''}
+           ${previewAvailable ? `<button class="btn-secondary" onclick="event.stopPropagation(); App.requestPreview('${p.id}')"><i class="fa-solid fa-eye"></i> Request Preview</button>` : ''}
            <a href="/client.html" class="btn-outline"><i class="fa-solid fa-key"></i> Subscribe</a>
            <button class="quote-btn" onclick="App.closeModal('productDetailModal'); App.openQuoteModal('${p.id}')"><i class="fa-solid fa-comments-dollar"></i> Request a Quote</button>
            <button class="btn-outline" onclick="App.closeModal('productDetailModal'); App.openWhatsAppQuote('${p.id}')"><i class="fa-brands fa-whatsapp"></i> Chat on WhatsApp</button>
