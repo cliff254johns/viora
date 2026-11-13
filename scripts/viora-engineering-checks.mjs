@@ -78,7 +78,8 @@ for (const p of [
   'docs/compliance/VIORA-RETENTION-AND-DELETION-POLICY.md',
   'docs/compliance/VIORA-SECURITY-INCIDENT-RESPONSE.md',
   'docs/compliance/VIORA-SUBPROCESSOR-REGISTER.md',
-  'docs/compliance/VIORA-SLA-DRAFT.md'
+  'docs/compliance/VIORA-SLA-DRAFT.md',
+  'docs/VIORA-INVESTOR-DATA-ROOM-SECURITY.md'
 ]) assert.ok(fs.existsSync(p), 'missing governance document '+p);
 
 console.log('VIORA engineering static checks passed.');
