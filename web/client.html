@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>VIORA Client Portal | Secure Client Access</title>
+<title>VIORA Client Portal | Your Business, Projects &amp; Services</title>
 
 <!-- Favicon + touch icons -->
 <link rel="icon" type="image/png" href="https://viora.co.ke/viora.png">
@@ -17,7 +17,7 @@
 <meta name="msapplication-TileColor" content="#070a13">
 <meta name="application-name" content="VIORA">
 
-<meta name="description" content="Secure access to your VIORA client workspace for project information, invoices, subscriptions, training and support.">
+<meta name="description" content="One secure workspace for your VIORA projects, billing, documents, support requests, subscriptions and assigned services.">
 <link rel="canonical" href="https://viora.co.ke/client">
 <meta property="og:title" content="VIORA Client Portal | Secure Client Access">
 <meta property="og:description" content="Secure access to your VIORA client workspace for project information, invoices, subscriptions, training and support.">
@@ -262,6 +262,31 @@ try {
   background:#0A0A0A !important;
   border-top:1px solid rgba(255,255,255,.06);
 }
+/* International client portal landing-page refinement */
+.portal-hero{padding:clamp(108px,12vw,156px) 0 88px}
+.portal-grid{gap:clamp(34px,5vw,72px)}
+.portal-hero h1{max-width:680px;font-size:clamp(38px,5.2vw,64px);letter-spacing:-.045em}
+.portal-hero p{font-size:clamp(16px,1.35vw,18px);max-width:590px}
+.portal-ctas .btn{min-height:52px}
+.portal-preview{box-shadow:0 34px 90px -28px rgba(0,0,0,.55);border-radius:26px}
+.pp-body{padding:clamp(16px,2vw,24px)}
+.pp-welcome .pw-left span{max-width:360px;display:block;line-height:1.5}
+.pp-kpi .val{font-size:clamp(16px,1.6vw,21px)}
+.features-section{padding:clamp(72px,9vw,112px) 0}
+.features-grid{gap:18px;margin-top:38px}
+.feat-card{padding:clamp(22px,2.5vw,32px);border-radius:22px;min-height:220px}
+.feat-card p{font-size:14px;line-height:1.75}
+.portal-access-note{margin:28px auto 0;max-width:900px;padding:20px 22px;border:1px solid var(--line);border-radius:18px;background:var(--white);color:var(--muted);font-size:14px;line-height:1.75}
+[data-theme="dark"] .portal-access-note{background:#0b0b0d;border-color:rgba(255,255,255,.1)}
+.portal-access-note strong{color:var(--heading)}
+.portal-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:34px}
+.portal-step{padding:22px;border:1px solid var(--line);border-radius:18px;background:var(--white)}
+[data-theme="dark"] .portal-step{background:#0a0a0a;border-color:rgba(255,255,255,.09)}
+.portal-step .step-no{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:800}
+.portal-step h3{font-size:17px;margin:10px 0 8px}
+.portal-step p{font-size:13px;line-height:1.7;color:var(--muted);margin:0}
+.portal-boundary{margin:20px auto 0;max-width:900px;color:var(--muted);font-size:12px;line-height:1.7;text-align:center}
+@media(max-width:760px){.portal-steps{grid-template-columns:1fr}.portal-hero{padding-top:112px}.portal-preview{max-width:600px;margin:auto}.feat-card{min-height:0}}
 </style>
 <link rel="manifest" href="/manifest.webmanifest">
 
@@ -327,11 +352,11 @@ try {
     <div class="portal-grid">
       <div>
         <span class="eyebrow reveal">Client Portal</span>
-        <h1 class="reveal">Everything we're building for you,<br><span style="background:linear-gradient(135deg,var(--accent),var(--accent-3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">in one place.</span></h1>
-        <p class="reveal">Track projects in real time. Download invoices and receipts. Pay via M-Pesa. Chat with your project lead. Access training. All from one dashboard.</p>
+        <h1 class="reveal">A clearer view of your work.<br><span style="background:linear-gradient(135deg,var(--accent),var(--accent-3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">One client workspace.</span></h1>
+        <p class="reveal">Your VIORA relationship, organised in one place. Follow projects and requests assigned to your account, review invoices and payment records, access shared documents, manage eligible subscriptions and reach the team without searching through scattered messages.</p>
         <div class="portal-ctas reveal">
-          <a href="/clientportal" class="btn btn-primary btn-lg">Sign in to your portal →</a>
-          <a href="/contact_us" class="btn btn-ghost btn-lg">Not a client yet?</a>
+          <a href="/clientportal?mode=register" class="btn btn-primary btn-lg">Create your client account →</a>
+          <a href="/contact_us" class="btn btn-ghost btn-lg">Talk to VIORA first</a>
         </div>
         <div class="portal-trust reveal">
           <div class="pt-item">
@@ -358,23 +383,23 @@ try {
         <div class="pp-body">
           <div class="pp-welcome">
             <div class="pw-left">
-              <strong>Welcome back, Amina</strong>
-              <span>Client ID · VIO-2024-0472</span>
+              <strong>Your VIORA workspace</strong>
+              <span>Illustrative interface · your account data appears after access is configured</span>
             </div>
             <span class="pw-badge">Live</span>
           </div>
           <div class="pp-kpis">
             <div class="pp-kpi">
               <div class="lbl">Active Projects</div>
-              <div class="val cyan">3</div>
+              <div class="val cyan">Projects</div>
             </div>
             <div class="pp-kpi">
               <div class="lbl">Balance Due</div>
-              <div class="val green">KSh 0</div>
+              <div class="val green">Billing</div>
             </div>
           </div>
           <div class="pp-chart">
-            <div class="lbl">Revenue · last 6 months</div>
+            <div class="lbl">Workspace overview · illustrative</div>
             <div class="pp-chart-bars">
               <div class="cb" style="height:40%"></div>
               <div class="cb" style="height:55%"></div>
@@ -385,9 +410,9 @@ try {
             </div>
           </div>
           <div class="pp-timeline">
-            <div class="tl"><span class="dot green"></span>Invoice #1042 paid · KSh 45,000</div>
-            <div class="tl"><span class="dot cyan"></span>Project "Retail ERP" · 68% complete</div>
-            <div class="tl"><span class="dot purple"></span>Meeting scheduled · Tomorrow 10am</div>
+            <div class="tl"><span class="dot green"></span>Invoices, payments and receipts</div>
+            <div class="tl"><span class="dot cyan"></span>Project updates and shared deliverables</div>
+            <div class="tl"><span class="dot purple"></span>Support, subscriptions and training</div>
           </div>
         </div>
       </div>
@@ -400,52 +425,59 @@ try {
   <div class="wrap">
     <div class="text-center reveal">
       <span class="eyebrow" style="justify-content:center">What's inside</span>
-      <h2 class="section-h">Six tools. One login.</h2>
-      <p class="section-sub" style="margin-left:auto;margin-right:auto">No more hunting through email for invoices or waiting for status updates. Everything lives in your portal.</p>
+      <h2 class="section-h">What your client account gives you</h2>
+      <p class="section-sub" style="margin-left:auto;margin-right:auto">A single place to follow the services VIORA has set up for your organisation. Your available sections depend on your engagement, assigned permissions and active subscriptions.</p>
     </div>
 
+    <div class="portal-steps" aria-label="How client portal access works">
+      <article class="portal-step"><span class="step-no">01 · Create</span><h3>Register your account</h3><p>Use your work email and submit the details requested. Registration starts an access request; it does not automatically attach you to an existing organisation or project.</p></article>
+      <article class="portal-step"><span class="step-no">02 · Connect</span><h3>VIORA verifies your access</h3><p>Your account is linked to the correct client organisation and the relevant team permissions. Some services or sections may require an active agreement, subscription or administrator approval.</p></article>
+      <article class="portal-step"><span class="step-no">03 · Manage</span><h3>Use your workspace</h3><p>Sign in to view the projects, invoices, documents, support requests, subscriptions and training resources that have been made available to your account.</p></article>
+    </div>
+    <div class="portal-access-note"><strong>What is included?</strong> Your client account provides a secure entry point and a consolidated view of VIORA services assigned to you. It does not itself purchase software, activate a paid subscription, guarantee project milestones, or grant access to another organisation’s information. Paid products, optional services, training enrolments and project deliverables are provided according to your agreement and account permissions.</div>
+    <p class="portal-boundary">The dashboard illustration above uses sample interface elements, not a real client account or live customer figures. Your portal displays information associated with your own verified account.</p>
     <div class="features-grid">
       <div class="feat-card reveal">
         <div class="v-icon blue">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-4 4 4 6-6"/></svg>
         </div>
         <h3>Real-time project tracking</h3>
-        <p>See progress on every active project — milestones, deadlines, and what's next. Updated live as your team works.</p>
+        <p>Follow projects and milestones shared with your account, review current status and see the latest updates your VIORA team has published.</p>
       </div>
       <div class="feat-card reveal">
         <div class="v-icon green">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
         </div>
         <h3>Invoices &amp; M-Pesa payments</h3>
-        <p>View every invoice, download PDFs, and pay instantly via M-Pesa STK push. Receipts appear automatically.</p>
+        <p>Review invoices, balances and recorded payments. Download available billing documents and use the payment options enabled for your account, including M-Pesa where configured.</p>
       </div>
       <div class="feat-card reveal">
         <div class="v-icon violet">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         </div>
         <h3>Documents &amp; presentations</h3>
-        <p>All contracts, deliverables, decks and reports in one secure folder. Upload your own KYC and signed docs.</p>
+        <p>Access documents, presentations and deliverables shared with your account. Uploads are available where the relevant client workflow has been enabled.</p>
       </div>
       <div class="feat-card reveal">
         <div class="v-icon cyan">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         </div>
         <h3>Direct support tickets</h3>
-        <p>Message your project lead directly. Every conversation is on record — no lost WhatsApp threads.</p>
+        <p>Raise and follow support requests, share the details the team needs and keep the conversation linked to your client workspace.</p>
       </div>
       <div class="feat-card reveal">
         <div class="v-icon amber">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
         </div>
         <h3>Training &amp; onboarding</h3>
-        <p>Structured courses, checklists and certificates to get your team productive fast — connected to your training portal.</p>
+        <p>Open training and onboarding resources assigned or made available to your organisation. Course access and certificates depend on enrolment and completion requirements.</p>
       </div>
       <div class="feat-card reveal">
         <div class="v-icon pink">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v1a3 3 0 0 0-3 3v1a3 3 0 0 0 0 6v1a3 3 0 0 0 3 3v1a3 3 0 0 0 6 0v-1a3 3 0 0 0 3-3v-1a3 3 0 0 0 0-6V9a3 3 0 0 0-3-3V5a3 3 0 0 0-3-3z"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/></svg>
         </div>
-        <h3>AI assistant</h3>
-        <p>Ask questions about your projects, invoices or subscriptions in plain English. It already knows your account.</p>
+        <h3>Subscriptions &amp; service access</h3>
+        <p>See the subscriptions and services associated with your account, check their status and follow renewal or access requests. Product access depends on an active entitlement.</p>
       </div>
     </div>
   </div>
@@ -485,8 +517,8 @@ try {
 <!-- ============ CTA ============ -->
 <section style="background:var(--navy);color:#fff;text-align:center;padding:100px 0">
   <div class="wrap">
-    <h2 style="color:#fff;font-size:clamp(28px,3.6vw,42px);margin-bottom:16px" class="reveal">Not a VIORA client yet?</h2>
-    <p style="color:rgba(255,255,255,.75);max-width:600px;margin:0 auto 32px;font-size:17px;line-height:1.7" class="reveal">Book a free consultation. We'll show you what your portal would look like with your own data.</p>
+    <h2 style="color:#fff;font-size:clamp(28px,3.6vw,42px);margin-bottom:16px" class="reveal">Not working with VIORA yet?</h2>
+    <p style="color:rgba(255,255,255,.75);max-width:600px;margin:0 auto 32px;font-size:17px;line-height:1.7" class="reveal">Tell us what your organisation needs. We’ll scope the right solution, agree the services and configure your workspace around the engagement.</p>
     <div class="reveal" style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
       <a href="/contact_us" class="btn btn-primary btn-lg">Book a demo →</a>
       <a href="/support" class="btn btn-ghost btn-lg" style="color:#fff;border-color:rgba(255,255,255,.3)">Explore solutions</a>
