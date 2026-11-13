@@ -22,7 +22,7 @@ The OAuth flow requests `gmail.send` and `gmail.readonly`. The latter is a restr
 
 ## Current deployment status
 
-**The Gmail implementation is committed to Git but is not yet deployed to the production Worker.** The new GitHub Actions syntax/contract workflow passed for the implementation commit. The active Cloudflare Worker remains on the previously deployed version until a deliberate, reviewed deployment is made.
+**The Gmail implementation is committed to Git but is not yet deployed to the production Worker.** The new GitHub Actions syntax/contract workflow passed for the implementation commit. The active Cloudflare Worker remains on the previously deployed version until a deliberate, reviewed deployment is made. A manual GitHub Actions deployment workflow and Wrangler configuration are now included; they do not deploy automatically on every commit.
 
 Do not describe Gmail as connected or operational until all of the following have passed against the deployed Worker:
 
@@ -54,6 +54,17 @@ The following Worker secrets were confirmed present in Cloudflare settings at th
 - `FIREBASE_DATABASE_SECRET`
 
 Secret values are not readable through settings and must never be committed to Git or pasted into chat.
+
+## Publishing the reviewed Worker
+
+The repository includes `.github/workflows/deploy-viora-api.yml` and `workers/viora-api/wrangler.toml`. The deployment workflow is manual and requires the exact confirmation word `DEPLOY`.
+
+Before running it, add these GitHub repository Actions secrets under Settings → Secrets and variables → Actions:
+
+- `CLOUDFLARE_API_TOKEN`: a Cloudflare API token with Account → Workers Scripts → Edit permission for the VIORA account.
+- `CLOUDFLARE_ACCOUNT_ID`: the VIORA Cloudflare account ID.
+
+The Wrangler configuration declares the existing AI binding and the Worker’s plain-text variables. Existing Cloudflare secret values are not stored in Git. After deployment, verify that all expected secrets remain bound before testing the routes.
 
 ## Deployment discipline
 
