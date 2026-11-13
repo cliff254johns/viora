@@ -2573,6 +2573,7 @@ const heroVisual = (p.image && String(p.image).trim())
 
     const catInput = document.getElementById('catSearchInput');
     if (catInput) {
+      catInput._vBound = true;
       let catT;
       catInput.addEventListener('input', (e) => {
         clearTimeout(catT);
