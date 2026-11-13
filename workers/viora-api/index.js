@@ -6538,7 +6538,10 @@ async function runOutreachCampaignScheduler(env) {
     const queue = await outreachDbRead(env, 'outreach/campaignQueue').catch(() => ({})) || {};
     const now = Date.now();
     for (const stale of Object.values(queue).filter(x => x && x.status === 'sending' && (!x.claimedAt || now - Date.parse(x.claimedAt) > 15 * 60 * 1000))) {
-      await outreachDbWrite(env, 'outreach/campaignQueue/' + stale.id, { ...stale, status: 'send_uncertain', uncertainAt: new Date().toISOString(), lastError: 'Worker stopped after claiming this message; verify Gmail before any manual retry.' });
+      const uncertainAt = new Date().toISOString();
+      const staleError = 'Worker stopped after claiming this message; verify Gmail before any manual retry.';
+      await outreachDbWrite(env, 'outreach/campaignQueue/' + stale.id, { ...stale, status: 'send_uncertain', uncertainAt, lastError: staleError });
+      await writeOutreachCampaignActivity(env, stale, 'send_uncertain', { uncertainAt, error: staleError });
       await publishOutreachEscalation(env, stale.id + '-stale-claim', 'Campaign send needs reconciliation', 'A campaign item for ' + stale.recipient + ' was left in a sending state. Verify Gmail before any manual resend.', 'critical');
     }
     const due = Object.values(queue).filter(x => x && x.status === 'queued' && Number.isFinite(Date.parse(x.scheduledAt)) && Date.parse(x.scheduledAt) <= now)
@@ -6550,19 +6553,25 @@ async function runOutreachCampaignScheduler(env) {
       const suppression = await outreachDbRead(env, 'outreach/suppressions/' + outreachEmailKey(candidate.recipient)).catch(() => null);
       if (suppression) {
         await outreachDbWrite(env, path + '/status', 'suppressed');
-        await outreachDbWrite(env, path + '/suppressedAt', new Date().toISOString());
+        const suppressedAt = new Date().toISOString();
+        await outreachDbWrite(env, path + '/suppressedAt', suppressedAt);
+        await writeOutreachCampaignActivity(env, candidate, 'suppressed', { suppressedAt });
         return;
       }
       const globalPolicy = await outreachDbRead(env, 'outreach/compliance/globalSendingPolicy').catch(() => null);
     if (!globalPolicy || globalPolicy.status !== 'approved' || !globalPolicy.version || !globalPolicy.senderPostalAddress || !/^https:\/\//i.test(String(globalPolicy.privacyNoticeUrl || ''))) {
       await outreachDbWrite(env, path + '/status', 'blocked');
+      const blockedAt = new Date().toISOString();
       await outreachDbWrite(env, path + '/blockReason', 'Global sending policy or sender disclosure configuration is missing');
+      await writeOutreachCampaignActivity(env, candidate, 'blocked', { blockedAt, error: 'Global sending policy or sender disclosure configuration is missing' });
       return;
     }
     const currentPolicy = await outreachDbRead(env, 'outreach/compliance/jurisdictions/' + candidate.countryCode).catch(() => null);
       if (!currentPolicy || currentPolicy.status !== 'approved' || currentPolicy.version !== candidate.policyVersion) {
         await outreachDbWrite(env, path + '/status', 'blocked');
+        const blockedAt = new Date().toISOString();
         await outreachDbWrite(env, path + '/blockReason', 'Country sending policy changed or is no longer approved');
+        await writeOutreachCampaignActivity(env, candidate, 'blocked', { blockedAt, error: 'Country sending policy changed or is no longer approved' });
         return;
       }
       if (candidate.sequence > 0) {
@@ -6575,7 +6584,9 @@ async function runOutreachCampaignScheduler(env) {
           const prospectReplied = messages.slice(initialIndex + 1).some(m => gmailAddress(gmailHeaderMap(m).from) !== GMAIL_OWNER_EMAIL);
           if (prospectReplied) {
             await outreachDbWrite(env, path + '/status', 'replied');
-            await outreachDbWrite(env, path + '/repliedAt', new Date().toISOString());
+            const repliedAt = new Date().toISOString();
+            await outreachDbWrite(env, path + '/repliedAt', repliedAt);
+            await writeOutreachCampaignActivity(env, candidate, 'replied', { repliedAt });
             return;
           }
           const last = messages.slice(-1)[0];
@@ -6586,7 +6597,9 @@ async function runOutreachCampaignScheduler(env) {
           }
         } catch (e) {
           await outreachDbWrite(env, path + '/status', 'blocked');
+          const blockedAt = new Date().toISOString();
           await outreachDbWrite(env, path + '/blockReason', 'Unable to verify the latest Gmail thread before follow-up');
+          await writeOutreachCampaignActivity(env, candidate, 'blocked', { blockedAt, error: 'Unable to verify the latest Gmail thread before follow-up' });
           return;
         }
       }
