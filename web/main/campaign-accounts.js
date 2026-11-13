@@ -91,7 +91,7 @@ const PLATFORMS = [
   { key: 'tiktok', label: 'TikTok', icon: 'fa-brands fa-tiktok', color: '#ff0050',
     handlePlaceholder: '@viora', urlPlaceholder: 'https://tiktok.com/@viora',
     idLabel: 'Open ID (from TikTok Developer Portal)', idPlaceholder: 'open-id-abc123',
-    canPost: true },
+    canPost: false },
   { key: 'x', label: 'X / Twitter', icon: 'fa-brands fa-x-twitter', color: '#000000',
     handlePlaceholder: '@viora', urlPlaceholder: 'https://x.com/viora',
     idLabel: 'Twitter User ID', idPlaceholder: '',
@@ -297,8 +297,7 @@ export async function renderAccountsPanel() {
       <div class="notice" style="margin-top:14px;margin-bottom:0">
         <b>Why register here?</b>
         The composer uses these handles to prefill captions with @mentions.
-        Facebook and TikTok post directly through the VIORA Cloudflare worker —
-        the other platforms open a compose window with everything prefilled.
+        Facebook is the only automatic publisher currently. Instagram and TikTok require manual media upload; YouTube is used for channel analytics.
       </div>
     </div>
   `;
@@ -344,7 +343,7 @@ function renderAccountCard(platform, account, serviceStatus = null) {
   const isRegistered = !!account;
   const connected = !!serviceStatus?.verified;
   const serviceLabel = serviceStatus?.verified
-    ? (platform.key === 'youtube' ? 'YouTube API verified' : 'Account API verified')
+    ? (platform.key === 'youtube' ? 'YouTube Data API verified' : platform.key === 'tiktok' ? 'TikTok OAuth verified · stats' : platform.key === 'facebook' ? 'Facebook Page token verified' : platform.key === 'instagram' ? 'Instagram token verified' : 'API verified')
     : serviceStatus?.configured ? 'API configured · not verified' : 'API credentials missing';
 
   /* Followers can live in followers, stats.followers, or followersCache */
