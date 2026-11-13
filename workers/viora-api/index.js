@@ -6378,6 +6378,10 @@ async function handleOutreachAutoReply(body, env, user) {
     if (!messageText) return json({ ok: false, error: 'The message has no readable text content' }, 422);
     const prior = await outreachDbRead(env, 'outreach/autoReplies/' + messageId).catch(() => null);
     if (prior && ['sent', 'escalated', 'suppressed'].includes(prior.status)) return json({ ok: true, status: prior.status, duplicate: true });
+    if (prior && ['sending', 'send_uncertain'].includes(prior.status)) {
+      await publishOutreachEscalation(env, messageId + '-reconcile', 'Outreach reply needs send reconciliation', 'A prior automated reply attempt has an uncertain delivery outcome. Check the Gmail thread before any manual resend.', 'critical', threadId);
+      return json({ ok: true, status: 'escalated', reason: 'send_outcome_uncertain' });
+    }
     const lower = messageText.toLowerCase();
     const optedOut = /\b(unsubscribe|remove me|stop emailing|do not contact|don't contact|opt me out)\b/.test(lower);
     if (optedOut) {
@@ -6419,7 +6423,14 @@ async function handleOutreachAutoReply(body, env, user) {
       replyText = 'Thank you for getting back to us. VIORA designs, builds and powers bespoke digital ecosystems for businesses worldwide, using a shared foundation of reusable technology. The blueprint is shaped around each organisation’s actual workflows; connected capabilities may include ERP, POS, CRM, finance, HR and inventory where relevant. If you share the main workflows or systems you would like to improve, we can suggest a useful next step.';
     }
     await outreachDbWrite(env, 'outreach/autoReplies/' + messageId, { status: 'sending', sender, leadId, threadId, messageId, intent, confidence, createdAt: new Date().toISOString() });
-    const sent = await sendGmailThreadReply(thread, sourceMessage, replyText, env, user, accessToken);
+    let sent;
+    try {
+      sent = await sendGmailThreadReply(thread, sourceMessage, replyText, env, user, accessToken);
+    } catch (sendError) {
+      await outreachDbWrite(env, 'outreach/autoReplies/' + messageId, { status: 'send_uncertain', sender, leadId, threadId, messageId, intent, confidence, error: String(sendError.message || sendError).slice(0, 300), processedAt: new Date().toISOString() });
+      await publishOutreachEscalation(env, messageId + '-send-uncertain', 'Outreach reply delivery needs verification', 'Gmail returned an uncertain send result for ' + sender + '. Check the thread before retrying.', 'critical', threadId);
+      return json({ ok: true, status: 'escalated', reason: 'send_outcome_uncertain', intent, confidence, messageText, subject: headers.subject || '' });
+    }
     await outreachDbWrite(env, 'outreach/autoReplies/' + messageId, { status: 'sent', sender, leadId, threadId, messageId, intent, confidence, replyMessageId: sent.id || null, processedAt: new Date().toISOString(), replyText });
     return json({ ok: true, status: 'sent', intent, confidence, replyMessageId: sent.id || null, messageText, subject: headers.subject || '', replyText });
   } catch (error) {
