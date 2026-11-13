@@ -1,8 +1,8 @@
 # Generated module and API map
 
-Generated: 2026-11-13T11:13:16.038Z
+Generated: 2026-11-13T13:17:42.347Z
 
-Modules: 113
+Modules: 114
 
 ## Modules
 ### web/analytics-config.js
@@ -741,6 +741,13 @@ Modules: 113
 - Size: 304299 bytes
 - Imports: none detected
 - Exports: none detected
+- Worker routes: none detected
+
+### workers/viora-api/marketplace-preview.js
+
+- Size: 17684 bytes
+- Imports: none detected
+- Exports: hasPaidEntitlement, productAllowsPreview, authorizeMarketplacePreview, handleMarketplacePreview, previewPolicy
 - Worker routes: none detected
 
 ### workers/viora-static-next/assets.generated.js

@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-11-13T11:13:16.037Z",
-  "moduleCount": 113,
+  "generatedAt": "2026-11-13T13:17:42.346Z",
+  "moduleCount": 114,
   "modules": [
     {
       "file": "web/analytics-config.js",
@@ -1588,6 +1588,19 @@
       "bytes": 304299,
       "imports": [],
       "exports": [],
+      "workerRoutes": []
+    },
+    {
+      "file": "workers/viora-api/marketplace-preview.js",
+      "bytes": 17684,
+      "imports": [],
+      "exports": [
+        "hasPaidEntitlement",
+        "productAllowsPreview",
+        "authorizeMarketplacePreview",
+        "handleMarketplacePreview",
+        "previewPolicy"
+      ],
       "workerRoutes": []
     },
     {
