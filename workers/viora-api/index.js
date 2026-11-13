@@ -303,7 +303,7 @@ if (path === '/social/stats/batch' && request.method === 'POST') {
       }
 
       // ── Gmail mailbox management (admin/exec only) ──
-      if (path === '/gmail/oauth/start' && request.method === 'GET') {
+      if (path === '/gmail/oauth/start' && request.method === 'POST') {
         requireRole(String(user.role || '').toLowerCase(), ['admin', 'exec']);
         return await handleGmailOAuthStart(request, env, user);
       }
@@ -5970,7 +5970,7 @@ async function handleGmailOAuthStart(request, env, user) {
     state,
     login_hint: GMAIL_OWNER_EMAIL,
   });
-  return Response.redirect('https://accounts.google.com/o/oauth2/v2/auth?' + params.toString(), 302);
+  return json({ ok: true, url: 'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString() });
 }
 async function handleGmailOAuthCallback(url, env) {
   const error = url.searchParams.get('error');
