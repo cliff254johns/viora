@@ -2,53 +2,63 @@
 
 ## Source baseline
 
-`index.js` is a source snapshot retrieved from the active Cloudflare Worker `viora-api` on 2026-11-13. It was committed to Git so production Worker code is no longer represented only by an editable Cloudflare dashboard deployment.
+`index.js` is the recovered active Cloudflare Worker source, maintained in Git at `workers/viora-api/index.js`. The snapshot was initially retrieved from the live `viora-api` Worker and committed so production code is not represented only by an editable Cloudflare dashboard deployment.
 
-This snapshot is **not a new deployment**. The active Worker remains the existing Cloudflare deployment until a reviewed, tested release is deliberately published.
+## Gmail integration implementation
 
-## Current email transport
+The Git source now includes:
 
-The deployed `POST /sendEmail` route uses Resend and requires `RESEND_API_KEY` and `RESEND_FROM`. Keep this transport available as a fallback until Gmail OAuth sending and reply retrieval have passed end-to-end tests.
+- Admin/exec-authenticated `POST /gmail/oauth/start` with cryptographically random, ten-minute, one-use OAuth state.
+- Public `GET /gmail/oauth/callback` with Firebase ETag-guarded state consumption.
+- Exact mailbox identity restriction to `cliff254johns@gmail.com`.
+- AES-256-GCM encrypted refresh-token persistence in Firebase Realtime Database using the Worker secret `GOOGLE_TOKEN_ENCRYPTION_KEY`.
+- Gmail API token refresh and send support.
+- Gmail inbox metadata retrieval through `GET /gmail/replies`.
+- Admin/exec-only `GET /gmail/status`.
+- Outreach UI controls to connect Gmail, check connection status, and import recent incoming messages into the Outreach email timeline.
+- Gmail is preferred by `POST /sendEmail` once connected. Resend remains the fallback only when no Gmail mailbox has been connected. A failed Gmail send is not silently retried via Resend, preventing accidental duplicate sends.
 
-## Gmail integration status
+The OAuth flow requests `gmail.send` and `gmail.readonly`. The latter is a restricted Gmail scope. Google may require OAuth app verification and additional review before production use. Testing-mode users must be configured in the Google consent screen.
 
-Google OAuth credentials are configured as Cloudflare Worker secrets according to the current account settings:
+## Current deployment status
 
-- `GOOGLE_CLIENT_ID`
-- `GOOGLE_CLIENT_SECRET`
+**The Gmail implementation is committed to Git but is not yet deployed to the production Worker.** The new GitHub Actions syntax/contract workflow passed for the implementation commit. The active Cloudflare Worker remains on the previously deployed version until a deliberate, reviewed deployment is made.
 
-The current deployed Worker snapshot does not implement Gmail OAuth start/callback routes, Gmail API send, Gmail inbox/thread retrieval, or encrypted Google refresh-token storage. The missing `GOOGLE_TOKEN_ENCRYPTION_KEY` must be provisioned before encrypted token persistence is enabled.
+Do not describe Gmail as connected or operational until all of the following have passed against the deployed Worker:
 
-Expected Google OAuth redirect URI:
+1. The OAuth start route returns a Google authorization URL to an authenticated admin/exec user.
+2. The Google callback validates the one-time state, exact redirect URI, and verified mailbox identity.
+3. The refresh token is persisted only as AES-256-GCM ciphertext.
+4. `GET /gmail/status` reports the expected mailbox.
+5. A user-approved test email to the owner's own address is accepted by Gmail.
+6. A reply to that test email is retrieved and appears in the Outreach timeline.
+7. Existing critical Worker routes and Resend fallback remain healthy.
+
+## Google Cloud Console configuration
+
+Expected OAuth redirect URI:
 
 `https://viora-api.cliff254johns.workers.dev/gmail/oauth/callback`
 
-The redirect URI must match exactly in Google Cloud Console and in the Worker.
+The redirect URI must match exactly in the Google Cloud OAuth Web application and the Worker.
 
-## Required implementation before enabling Gmail
+Configure the OAuth consent screen with the correct app name, support email, authorised domains, privacy policy, terms URL, publishing/testing status and test-user list. Verify current Google verification requirements for restricted Gmail read access before production rollout.
 
-1. Add an authenticated, admin/exec-only OAuth start route.
-2. Generate and validate a cryptographically random, one-time OAuth `state` value; reject missing, expired, replayed, or mismatched state.
-3. Add a public callback route that exchanges the authorization code server-side.
-4. Verify the returned Google identity is `cliff254johns@gmail.com` before accepting mailbox tokens.
-5. Request offline access and persist the refresh token encrypted with AES-GCM using a dedicated 256-bit Cloudflare secret named `GOOGLE_TOKEN_ENCRYPTION_KEY`.
-6. Never log authorization codes, access tokens, refresh tokens, or full message bodies.
-7. Add token refresh and Gmail API send using the minimum `gmail.send` scope.
-8. Add incoming reply/thread retrieval only if the required additional Gmail read scope has been approved and verified. Do not request broad mailbox access by default.
-9. Record message IDs, thread IDs, timestamps, recipients, transport, and delivery outcome in the existing VIORA communication log without copying sensitive message content.
-10. Keep Resend fallback until a test message to the owner's mailbox and a reply/thread retrieval test both pass.
-11. Test authorization denial, expired state, replayed state, wrong Google account, token refresh failure, Gmail send failure, and role restrictions before production rollout.
+## Cloudflare secrets
 
-## Google Cloud Console actions
+The following Worker secrets were confirmed present in Cloudflare settings at the time of implementation:
 
-- Configure the exact redirect URI above for the OAuth Web application client.
-- Configure the OAuth consent screen with the correct app name, support email, authorised domains, privacy policy, and terms URL.
-- Confirm the app's publishing/testing status and the current test-user list. Google OAuth testing-mode refresh tokens can expire; verify the current Google policy and consent-screen status before relying on a long-lived connection.
-- Start with `gmail.send`. Add a read scope only after confirming the reply-monitoring requirement and the scope's current verification requirements.
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_TOKEN_ENCRYPTION_KEY`
+- `FIREBASE_DATABASE_SECRET`
+
+Secret values are not readable through settings and must never be committed to Git or pasted into chat.
 
 ## Deployment discipline
 
-- Do not deploy this snapshot solely because it has been committed.
-- Preserve the full Worker source and all current bindings when uploading a new version.
-- Review the diff, run syntax and route tests, deploy a candidate, verify health and existing critical routes, then test Gmail end-to-end.
-- Do not remove Resend secrets or fallback code until Gmail is stable.
+- Preserve all existing Worker bindings and routes when publishing a new version.
+- Review the complete diff and CI results before deployment.
+- Deploy a candidate, verify health and existing critical routes, then test Gmail end-to-end.
+- Keep Resend secrets and fallback code until Gmail is proven stable.
+- Do not send prospect campaigns without explicit human review and approval.
