@@ -1,6 +1,6 @@
 # Generated module and API map
 
-Generated: 2026-11-13T01:27:48.184Z
+Generated: 2026-11-13T01:32:50.393Z
 
 Modules: 112
 
@@ -731,7 +731,7 @@ Modules: 112
 
 ### workers/viora-api/index.js
 
-- Size: 277487 bytes
+- Size: 276412 bytes
 - Imports: none detected
 - Exports: none detected
 - Worker routes: none detected
