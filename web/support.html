@@ -828,6 +828,9 @@ const flattenNode = (node) => {
   return node;
 };
 
+// Show the canonical six solution filters immediately, even before Firebase responds.
+renderFilters();
+
 /* ── Subscribe to Firebase ── */
 onValue(ref(db, `${ROOT}/products`), (snap) => {
   const raw = snap.exists() ? snap.val() : {};
