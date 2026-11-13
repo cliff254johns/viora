@@ -1,0 +1,21 @@
+name: VIORA OpenAPI contract validation
+on:
+  pull_request:
+    branches: [main]
+    paths: ["openapi/**", "docs/PLATFORM-FOUNDATION-IMPLEMENTATION-PLAN.md", ".github/workflows/openapi-contract.yml"]
+  push:
+    branches: ["platform-foundation/**"]
+    paths: ["openapi/**", ".github/workflows/openapi-contract.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  openapi-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate OpenAPI 3.1 contract
+        run: npx --yes @redocly/cli@1.34.5 lint openapi/v1.yaml
