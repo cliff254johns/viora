@@ -38,10 +38,13 @@ async function viInitIndustryMarketplace(){
  if(!host)return;
  const config=VIORA_INDUSTRY_MARKET[document.body.dataset.industry];
  if(!config){host.innerHTML='<p class="industry-marketplace-state">Browse the full VIORA Marketplace for available products.</p>';return;}
+ const solutionCategory=window.VIORATaxonomy.classifyIndustry({name:config.label,cat:document.body.dataset.industry});
+ const solutionCategoryName=window.VIORATaxonomy.title(solutionCategory);
+ const heroEyebrow=document.querySelector('.hero .eyebrow');
+ if(heroEyebrow)heroEyebrow.textContent=solutionCategoryName+' · Industry ecosystem blueprint';
  host.setAttribute("aria-busy","true");
  try{
   const products=await viLoadProducts();
-  const solutionCategory=window.VIORATaxonomy.classifyIndustry({name:config.label,cat:document.body.dataset.industry});
   const matches=products.map(product=>{
    const categoryMatch=window.VIORATaxonomy.classifyProduct(product)===solutionCategory;
    const name=viNorm(product.name||"");
