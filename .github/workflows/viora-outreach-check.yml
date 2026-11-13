@@ -85,34 +85,10 @@ jobs:
           grep -q 'outreach/suppressions' workers/viora-api/index.js
       - name: Verify observability configuration
         run: |
-          grep -q '^\[observability\]      - name: Verify shared CRM and Communications integration
-        run: |
-          grep -Fq "onValue(ref(db,ORG+'/leads')" web/outreach.js
-          grep -Fq "ORG+'/leads/'+id]:record" web/outreach.js
-          grep -Fq "channel:'em'" web/outreach.js
-          grep -Fq "source:'Outreach Centre'" web/outreach.js
- workers/viora-api/wrangler.toml
-          grep -q '^\[observability.logs\]      - name: Verify shared CRM and Communications integration
-        run: |
-          grep -Fq "onValue(ref(db,ORG+'/leads')" web/outreach.js
-          grep -Fq "ORG+'/leads/'+id]:record" web/outreach.js
-          grep -Fq "channel:'em'" web/outreach.js
-          grep -Fq "source:'Outreach Centre'" web/outreach.js
- workers/viora-api/wrangler.toml
-          grep -q '^\[observability.traces\]      - name: Verify shared CRM and Communications integration
-        run: |
-          grep -Fq "onValue(ref(db,ORG+'/leads')" web/outreach.js
-          grep -Fq "ORG+'/leads/'+id]:record" web/outreach.js
-          grep -Fq "channel:'em'" web/outreach.js
-          grep -Fq "source:'Outreach Centre'" web/outreach.js
- workers/viora-api/wrangler.toml
-          grep -q '^enabled = true      - name: Verify shared CRM and Communications integration
-        run: |
-          grep -Fq "onValue(ref(db,ORG+'/leads')" web/outreach.js
-          grep -Fq "ORG+'/leads/'+id]:record" web/outreach.js
-          grep -Fq "channel:'em'" web/outreach.js
-          grep -Fq "source:'Outreach Centre'" web/outreach.js
- workers/viora-api/wrangler.toml
+          grep -q '^\[observability\]$' workers/viora-api/wrangler.toml
+          grep -q '^\[observability.logs\]$' workers/viora-api/wrangler.toml
+          grep -q '^\[observability.traces\]$' workers/viora-api/wrangler.toml
+          grep -q '^enabled = true$' workers/viora-api/wrangler.toml
       - name: Verify scheduled social and email automation isolation
         run: |
           grep -q 'autoPrepareSocialQueue' workers/viora-api/index.js
