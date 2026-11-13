@@ -5,9 +5,9 @@
 This is a read-only snapshot of the public Marketplace catalogue rendered from the feature-branch Pages preview. The browser-rendered page loaded the live public product feed; it did not use hard-coded or locally guessed product totals.
 
 - Public catalogue count: **82 active products**
-- Category explorer count before display-name normalization: **46 category entries**
+- Category explorer options: **46 total** (the “All products” option plus 45 distinct category labels)
 - Unique category labels after collapsing whitespace-only variants: **45** (29 categories currently contain products; 16 currently have zero products)
-- UI total label observed: **82 products across 46 categories**
+- UI total label observed after normalization: **82 products across 45 categories**
 - Snapshot URL: https://feature-marketplace-controlled-previews-viora-static-git.cliff254johns.workers.dev/market.html
 
 Draft and archived products are excluded by the Marketplace's public catalogue filter. Category entries with zero products remain visible in the category explorer.
