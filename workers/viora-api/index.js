@@ -319,7 +319,7 @@ if (path === '/social/stats/batch' && request.method === 'POST') {
         '/marketplace/preview/end': 'end'
       };
       if (previewRoutes[path]) {
-        return await handleMarketplacePreview(request, env, user, previewRoutes[path]);
+        return await handleMarketplacePreview(request, env, user, previewRoutes[path], body);
       }
 
       // ── Gmail mailbox management (admin/exec only) ──
