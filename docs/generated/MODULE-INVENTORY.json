@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-13T20:42:15.259Z",
+  "generatedAt": "2026-11-13T20:49:05.894Z",
   "moduleCount": 114,
   "modules": [
     {
@@ -1672,7 +1672,7 @@
     },
     {
       "file": "scripts/viora-engineering-checks.mjs",
-      "bytes": 19926,
+      "bytes": 20365,
       "imports": [
         "node:fs",
         "node:assert/strict",

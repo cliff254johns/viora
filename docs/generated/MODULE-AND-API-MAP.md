@@ -1,6 +1,6 @@
 # Generated module and API map
 
-Generated: 2026-11-13T20:42:15.259Z
+Generated: 2026-11-13T20:49:05.894Z
 
 Modules: 114
 
@@ -801,7 +801,7 @@ Modules: 114
 
 ### scripts/viora-engineering-checks.mjs
 
-- Size: 19926 bytes
+- Size: 20365 bytes
 - Imports: node:fs, node:assert/strict, node:vm
 - Exports: buildVioraHandlers, TranslationRateLimiter, EMBEDDED_ASSETS_GZIP_BASE64
 - Worker routes: none detected
