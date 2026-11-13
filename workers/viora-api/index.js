@@ -5950,6 +5950,9 @@ async function handleSendEmail(body, env, user) {
   if (body && (body.purpose === 'marketing' || body.source === 'Outreach Centre')) {
     return json({ error: 'Prospect marketing must use the compliance-checked Outreach campaign queue with recipient-level human approval.' }, 409);
   }
+  if (!body || !['service', 'transactional'].includes(String(body.purpose || '').toLowerCase())) {
+    return json({ error: 'Direct email requires an explicit service or transactional purpose. Prospect marketing must use the approved campaign queue.' }, 409);
+  }
   if (String(env.ENABLE_OUTREACH_EMAIL_SENDING || '').toLowerCase() !== 'true') {
     return json({ error: 'Outbound email sending is disabled during controlled release verification.' }, 423);
   }
