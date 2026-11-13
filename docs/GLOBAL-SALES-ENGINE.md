@@ -104,7 +104,8 @@ The Worker reads the CRM record and compliance registers itself; client-supplied
 
 ## Limits and non-goals
 
-- The 200/day figure is a hard maximum reservation target, not a guarantee or a reason to send to unsuitable contacts.
+- The 200/day figure is a hard maximum reservation target, not a guarantee or a reason to send to unsuitable contacts. Google currently documents a 500-message/day threshold for personal Gmail accounts; Gmail API sends share the account's standard daily sending limits across clients. A 200/day app cap is below that published threshold, but does not guarantee Gmail acceptance or inbox placement. See https://support.google.com/mail/answer/22839 and https://developers.google.com/workspace/gmail/api/guides/handle-errors.
+- Google recommends increasing sending volume gradually, sending consistently, and monitoring bounces, deferrals and spam feedback. See https://support.google.com/mail/answer/81126. The scheduler spreads delivery at one message per five-minute tick, but operators should still monitor account health.
 - One message per five-minute tick spreads delivery and stays below the target cap; the system may send fewer due to queue volume, provider errors or eligibility.
 - The Worker does not bypass Google sending limits. Provider throttling, mailbox restrictions or deliverability warnings must pause sending.
 - The current implementation does not include a verified-email discovery provider or universal legal determination. Email verification and policy approval are explicit CRM/configuration requirements.
