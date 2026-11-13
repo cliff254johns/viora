@@ -278,6 +278,44 @@ export async function handleMarketplacePreview(request, env, user, route, parsed
       return response({ ok: true, request: record }, 201);
     }
 
+    if (route === 'admin-gateways' && method === 'GET') {
+      if (String(user.role || '').toLowerCase() !== 'admin') return response({ ok: false, error: 'Admin only' }, 403);
+      const { value } = await readRecord(env, 'viora_data/orgs/viora/products');
+      const catalogue = value && typeof value === 'object' ? value : {};
+      const products = Object.entries(catalogue)
+        .filter(([id, product]) => product && typeof product === 'object' && product._kind !== 'publicUI')
+        .map(([id, product]) => {
+          const profile = String(product.previewProfile || '');
+          const active = String(product.status || 'active') === 'active';
+          const supportedProfile = ['isolated-software', 'digital-sample'].includes(profile);
+          const enabled = product.previewEnabled === true;
+          const verified = product.previewGatewayVerified === true;
+          const blockedReasons = [];
+          if (!active) blockedReasons.push('product-not-active');
+          if (!enabled) blockedReasons.push('preview-not-enabled');
+          if (!supportedProfile) blockedReasons.push('unsupported-or-missing-profile');
+          if (!verified) blockedReasons.push('gateway-not-verified');
+          return {
+            productId: String(product.id || id),
+            name: String(product.name || id),
+            category: String(product.category || ''),
+            status: String(product.status || 'active'),
+            previewProfile: profile,
+            previewEnabled: enabled,
+            previewGatewayVerified: verified,
+            gatewayReady: productAllowsPreview(product),
+            blockedReasons
+          };
+        });
+      const ready = products.filter(product => product.gatewayReady).length;
+      return response({
+        ok: true,
+        generatedAt: new Date().toISOString(),
+        summary: { total: products.length, gatewayReady: ready, blocked: products.length - ready },
+        products
+      });
+    }
+
     if (route === 'admin-requests' && method === 'GET') {
       if (String(user.role || '').toLowerCase() !== 'admin') return response({ ok: false, error: 'Admin only' }, 403);
       const { value } = await readRecord(env, ROOT + '/requests');
