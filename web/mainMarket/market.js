@@ -983,7 +983,7 @@ const App = {
 
       const previewAvailable = p.status === 'active';
 
-      const previewBtn = (p.previewEnabled === true && p.previewGatewayVerified === true && ['isolated-software', 'digital-sample'].includes(p.previewProfile))
+      const previewBtn = previewAvailable
         ? `<button type="button" class="preview-btn" onclick="event.stopPropagation(); App.requestPreview('${p.id}')" title="Request a controlled preview"><i class="fa-solid fa-eye"></i> Preview</button>`
         : '';
 
