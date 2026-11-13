@@ -1,3 +1,4 @@
+import '../viora-taxonomy.js';
 // main/render-marketplace.js
 // ═══════════════════════════════════════════════════════════════
 // VIORA — MARKETPLACE RENDERING  (v7.2 — bug-free)
