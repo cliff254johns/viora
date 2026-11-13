@@ -54,7 +54,7 @@ jobs:
       - name: Verify email automation is opt-in and social jobs remain independent
         run: |
           grep -Fq 'ENABLE_OUTREACH_EMAIL_AUTOMATION' workers/viora-api/index.js
-          grep -Fq "['social_publish', () => publishDueScheduledPosts(env)]" workers/viora-api/index.js
+          grep -Fq "social_publish: () => publishDueScheduledPosts(env)" workers/viora-api/index.js
           grep -Fq 'Promise.all(jobs.map' workers/viora-api/index.js
       - name: Run repository contract and unit tests
         run: npm test
