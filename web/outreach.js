@@ -216,6 +216,31 @@ async function apiGet(path){
  if(!res.ok)throw new Error(data.error||data.message||('Request failed ('+res.status+')'));
  return data;
 }
+async function refreshAutomationSettings(){
+ try{
+  const data=await apiGet('/outreach/automation-settings');
+  $('autoReplyEnabled').checked=data.autoReplyEnabled===true;
+  $('autoReplyEnabled').disabled=!data.gmailConnected;
+  $('automationGmailState').textContent=data.gmailConnected?'Gmail connected':'Gmail not connected';
+  $('automationGmailState').className='review-tag'+(data.gmailConnected?' good':'');
+  status('automationSettingsStatus',data.gmailConnected?'Connected mailbox: '+(data.mailbox||'verified VIORA mailbox')+'. Routine replies can be enabled. Daily outbound prospect target: '+data.dailyProspectTarget+'.':'Connect and verify the VIORA Gmail mailbox before enabling autonomous replies.',!data.gmailConnected);
+ }catch(e){
+  $('autoReplyEnabled').disabled=true;
+  $('automationGmailState').textContent='Status unavailable';
+  status('automationSettingsStatus','Could not load automation settings: '+e.message,true);
+ }
+}
+async function saveAutomationSettings(){
+ const enabled=$('autoReplyEnabled').checked;
+ try{
+  busy('saveAutomationSettings',true,'Saving…');
+  const result=await api('/outreach/automation-settings',{autoReplyEnabled:enabled});
+  status('automationSettingsStatus',result.message||'Automation settings saved.');
+  toast(enabled?'Autonomous replies enabled.':'Autonomous replies disabled.');
+  await refreshAutomationSettings();
+ }catch(e){status('automationSettingsStatus','Could not save automation settings: '+e.message,true);await refreshAutomationSettings();}
+ finally{busy('saveAutomationSettings',false);}
+}
 async function refreshGmailStatus(){
  try{
   const data=await apiGet('/gmail/status');
@@ -411,11 +436,11 @@ async function renderWorldLeadMap(force=false){
 }
 
 function bindData(){stopLeads?.();stopEmails?.();stopSuggestions?.();stopLeads=onValue(ref(db,ORG+'/leads'),s=>{leads=s.val()||{};renderLeadTables();renderFollowups();renderOverview();renderAiSelect();renderAnalytics();renderWorldLeadMap();});stopEmails=onValue(ref(db,ROOT+'/emails'),s=>{emails=s.val()||{};renderEmails();renderAudit();renderOverview();renderAnalytics();});stopSuggestions=onValue(ref(db,ROOT+'/aiSuggestions'),s=>{aiSuggestions=s.val()||{};renderAiAlerts();});}
-async function startSession(user){currentUser=user;currentRole=String(await resolveRole(user.uid)).toLowerCase();if(!['admin','exec'].includes(currentRole)){await signOut(auth);$('loginView').classList.remove('hidden');$('appView').classList.add('hidden');status('loginStatus','Access denied. This workspace is restricted to VIORA admin and exec roles.',true);return;}$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');bindData();refreshGmailStatus().catch(()=>{});}
+async function startSession(user){currentUser=user;currentRole=String(await resolveRole(user.uid)).toLowerCase();if(!['admin','exec'].includes(currentRole)){await signOut(auth);$('loginView').classList.remove('hidden');$('appView').classList.add('hidden');status('loginStatus','Access denied. This workspace is restricted to VIORA admin and exec roles.',true);return;}$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');bindData();refreshGmailStatus().catch(()=>{});refreshAutomationSettings().catch(()=>{});}
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();try{busy('loginBtn',true,'Signing in…');status('loginStatus','');await authReady;await signInWithEmailAndPassword(auth,$('loginEmail').value.trim(),$('loginPassword').value);}catch(err){status('loginStatus',err.message,true);}finally{busy('loginBtn',false);}});
 authReady.then(()=>onAuthStateChanged(auth,user=>{if(user)startSession(user).catch(e=>status('loginStatus',e.message,true));else{stopLeads?.();stopEmails?.();currentUser=null;$('loginView').classList.remove('hidden');$('appView').classList.add('hidden');}})).catch(err=>status('loginStatus','Firebase session could not be restored: '+err.message,true));
 bindNavigation();
-$('gmailConnect').addEventListener('click',connectGmail);$('gmailRefreshStatus').addEventListener('click',()=>refreshGmailStatus().catch(()=>{}));$('gmailSyncReplies').addEventListener('click',syncGmailReplies);$('leadForm').addEventListener('submit',saveLead);$('emailForm').addEventListener('submit',sendEmail);$('discoverLeadsBtn').addEventListener('click',discoverGlobalLeads);$('discoveredLeadResults').addEventListener('click',e=>{const s=e.target.closest('[data-discover-save]'),d=e.target.closest('[data-discover-draft]');if(s)saveDiscovered(Number(s.dataset.discoverSave)).catch(x=>status('discoverStatus',x.message,true));if(d)draftDiscovered(Number(d.dataset.discoverDraft));});$('aiAlerts').addEventListener('click',e=>{const b=e.target.closest('[data-review-suggestion]');if(b)reviewAiSuggestion(b.dataset.reviewSuggestion);});
+$('gmailConnect').addEventListener('click',connectGmail);$('saveAutomationSettings').addEventListener('click',saveAutomationSettings);$('gmailRefreshStatus').addEventListener('click',()=>refreshGmailStatus().catch(()=>{}));$('gmailSyncReplies').addEventListener('click',syncGmailReplies);$('leadForm').addEventListener('submit',saveLead);$('emailForm').addEventListener('submit',sendEmail);$('discoverLeadsBtn').addEventListener('click',discoverGlobalLeads);$('discoveredLeadResults').addEventListener('click',e=>{const s=e.target.closest('[data-discover-save]'),d=e.target.closest('[data-discover-draft]');if(s)saveDiscovered(Number(s.dataset.discoverSave)).catch(x=>status('discoverStatus',x.message,true));if(d)draftDiscovered(Number(d.dataset.discoverDraft));});$('aiAlerts').addEventListener('click',e=>{const b=e.target.closest('[data-review-suggestion]');if(b)reviewAiSuggestion(b.dataset.reviewSuggestion);});
 $('mailLeadList').addEventListener('change',updateMailRecipientSummary);
 $('mailRecipientSearch').addEventListener('input',()=>{const q=$('mailRecipientSearch').value.trim().toLowerCase();$('mailLeadList').querySelectorAll('.recipient-option').forEach(row=>{row.hidden=!!q&&!row.dataset.search.includes(q);});});
 $('mailTo').addEventListener('input',updateMailRecipientSummary);
