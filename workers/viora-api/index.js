@@ -6421,6 +6421,37 @@ async function runScheduledOutreachInboxSync(env) {
   }
 }
 
+
+async function sendGmailThreadFollowup(threadId, recipient, subject, textBody, unsubscribeUrl, env, connection) {
+  const accessToken = await gmailAccessToken(connection, env);
+  const thread = await gmailApiFetch('threads/' + encodeURIComponent(threadId) + '?format=metadata', accessToken);
+  const last = (thread.messages || []).slice(-1)[0];
+  const lastHeaders = gmailHeaderMap(last);
+  const messageId = String(lastHeaders['message-id'] || '').replace(/[\r\n]+/g, '').trim();
+  const references = String(lastHeaders.references || '').replace(/[\r\n]+/g, '').trim();
+  if (!messageId || gmailAddress(lastHeaders.from) !== GMAIL_OWNER_EMAIL) throw new Error('Latest thread message is not a verified VIORA message');
+  const clean = value => String(value || '').replace(/[\r\n]+/g, ' ').trim();
+  const encodedSubject = '=?UTF-8?B?' + gmailBase64(new TextEncoder().encode(clean(subject))) + '?=';
+  const mime = [
+    'From: ' + GMAIL_OWNER_EMAIL, 'To: ' + recipient, 'Subject: ' + encodedSubject,
+    'In-Reply-To: ' + messageId, 'References: ' + [references, messageId].filter(Boolean).join(' '),
+    'List-Unsubscribe: <' + unsubscribeUrl + '>', 'List-Unsubscribe-Post: List-Unsubscribe=One-Click',
+    'MIME-Version: 1.0', 'Content-Type: text/plain; charset=UTF-8',
+    'Content-Transfer-Encoding: base64', '', gmailBase64(new TextEncoder().encode(textBody))
+  ].join('\r\n');
+  const result = await gmailApiFetch('messages/send', accessToken, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ raw: gmailBase64Url(new TextEncoder().encode(mime)), threadId })
+  });
+  await logGmailCommunication(env, {
+    channel: 'email', transport: 'gmail', direction: 'outbound', to: recipient,
+    subject: clean(subject), status: 'sent', providerId: result.id || null,
+    threadId: result.threadId || threadId, source: 'VIORA Global Sales automated follow-up',
+    sentBy: GMAIL_OWNER_EMAIL, timestamp: new Date().toISOString()
+  });
+  return result;
+}
+
 async function runOutreachCampaignScheduler(env) {
   try {
     const settings = await outreachDbRead(env, 'outreach/campaignSettings').catch(() => null);
@@ -6482,17 +6513,30 @@ async function runOutreachCampaignScheduler(env) {
       const token = candidate.unsubscribeToken;
       const unsubscribeUrl = 'https://viora-api.cliff254johns.workers.dev/outreach/unsubscribe?token=' + encodeURIComponent(token);
       const footer = '\n\n---\nVIORA Ecosystems\n' + globalPolicy.senderPostalAddress + '\nPrivacy: ' + globalPolicy.privacyNoticeUrl + '\nYou are receiving this business email under a documented contact basis.\nUnsubscribe: ' + unsubscribeUrl;
-      const response = await sendViaGmail({
-        to: candidate.recipient, subject: candidate.subject,
-        text: String(candidate.text || '') + footer,
-        replyTo: GMAIL_OWNER_EMAIL,
-        extraHeaders: [
-          { name: 'List-Unsubscribe', value: '<' + unsubscribeUrl + '>' },
-          { name: 'List-Unsubscribe-Post', value: 'List-Unsubscribe=One-Click' }
-        ]
-      }, env, { email: GMAIL_OWNER_EMAIL, role: 'admin' }, connection);
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok || !result.ok) {
+      let result = {};
+      let sendFailed = false;
+      try {
+        if (candidate.sequence > 0) {
+          result = await sendGmailThreadFollowup(candidate.threadId, candidate.recipient, candidate.subject, String(candidate.text || '') + footer, unsubscribeUrl, env, connection);
+          result = { ...result, ok: !!result.id, transport: 'gmail' };
+        } else {
+          const response = await sendViaGmail({
+            to: candidate.recipient, subject: candidate.subject,
+            text: String(candidate.text || '') + footer,
+            replyTo: GMAIL_OWNER_EMAIL,
+            extraHeaders: [
+              { name: 'List-Unsubscribe', value: '<' + unsubscribeUrl + '>' },
+              { name: 'List-Unsubscribe-Post', value: 'List-Unsubscribe=One-Click' }
+            ]
+          }, env, { email: GMAIL_OWNER_EMAIL, role: 'admin' }, connection);
+          result = await response.json().catch(() => ({}));
+          sendFailed = !response.ok;
+        }
+      } catch (sendError) {
+        result = { ok: false, error: String(sendError.message || sendError).slice(0, 300) };
+        sendFailed = true;
+      }
+      if (sendFailed || !result.ok) {
         await outreachDbWrite(env, path, { ...candidate, status: 'send_uncertain', attempts: Number(candidate.attempts || 0) + 1, lastError: String(result.error || 'Gmail send failed').slice(0, 300), processedAt: new Date().toISOString() });
         await publishOutreachEscalation(env, candidate.id + '-campaign-send', 'Campaign email needs delivery verification', 'Gmail did not confirm delivery for ' + candidate.recipient + '. Check the thread before retrying.', 'critical');
         return;
