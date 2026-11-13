@@ -74,17 +74,20 @@ test('scheduled task failures are logged without rejecting the whole run', async
 import { readFile } from 'node:fs/promises';
 
 test('Facebook publishing claims use Firebase ETags and do not auto-retry ambiguous outcomes', async () => {
-  const source = await readFile(new URL('../../workers/viora-api/social-publish.js', import.meta.url), 'utf8');
-  assert.match(source, /async function claimScheduledCampaignPost/);
+  const [source, worker] = await Promise.all([
+    readFile(new URL('../../workers/viora-api/social-publish.js', import.meta.url), 'utf8'),
+    readFile(new URL('../../workers/viora-api/index.js', import.meta.url), 'utf8'),
+  ]);
+  assert.match(source, /export async function claimScheduledCampaignPost/);
   assert.match(source, /X-Firebase-ETag': 'true'/);
   assert.match(source, /'If-Match': etag/);
   assert.match(source, /post\.status = 'publish_uncertain'/);
   assert.match(source, /reconciliationRequired = true/);
   assert.match(source, /Previous publish claim expired[\s\S]*automatic retry blocked/);
-  assert.match(source, /uncertain: true, error: 'Facebook request outcome unknown/);
   assert.doesNotMatch(source, /retrying stuck post/);
-  assert.match(source, /graph\.facebook\.com\/v27\.0/);
-  assert.doesNotMatch(source, /graph\.facebook\.com\/v20\.0/);
+  assert.match(worker, /uncertain: true, error: 'Facebook request outcome unknown/);
+  assert.match(worker, /graph\.facebook\.com\/v27\.0/);
+  assert.doesNotMatch(worker, /graph\.facebook\.com\/v20\.0/);
 });
 
 test('Campaigns account verification reads provider status from the authenticated Worker', async () => {
