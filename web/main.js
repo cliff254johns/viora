@@ -1,3 +1,4 @@
+import './viora-taxonomy.js';
 // ═══════════════════════════════════════════════════════════════
 // main.js — VIORA Intercollective System v3.7.6
 // Bug-fixed rewrite.
