@@ -6281,6 +6281,50 @@ async function handleOutreachCampaignStatus(env) {
     scheduler: 'one recipient per five-minute tick; maximum 200 reservations per UTC day'
   });
 }
+function outreachLegalReviewComplete(record) {
+  const review = record && record.legalReview || {};
+  return !!(record && record.status === 'approved' && record.version && record.reviewedAt &&
+    review.status === 'complete' && review.reviewerName && review.completedAt &&
+    Array.isArray(review.sourceUrls) && review.sourceUrls.length > 0 &&
+    review.sourceUrls.every(url => /^https:\/\//i.test(String(url))));
+}
+function outreachValidateRegionalEligibility(lead, eligibility, countryCode, policy, globalPolicy) {
+  if (!outreachLegalReviewComplete(policy)) throw new Error('Country policy has not passed documented legal review');
+  if (!eligibility || eligibility.status !== 'eligible' || !eligibility.sourceUrl ||
+      !/^https:\/\//i.test(String(eligibility.sourceUrl)) || !eligibility.reviewedAt ||
+      eligibility.policyVersion !== policy.version) throw new Error('Contact evidence and matching policy version are required');
+  if (countryCode === 'KE') {
+    const consent = eligibility.consentEvidence || {};
+    if (eligibility.basis !== 'consent' || consent.status !== 'valid' ||
+        consent.channel !== 'email' || consent.purpose !== 'direct_marketing' ||
+        !consent.capturedAt || !consent.noticeVersion || !consent.evidenceUrl ||
+        !/^https:\/\//i.test(String(consent.evidenceUrl))) {
+      throw new Error('Kenya requires evidenced, express, email-specific direct-marketing consent');
+    }
+    return;
+  }
+  if (countryCode === 'GB') {
+    if (eligibility.subscriberType !== 'corporate' || !eligibility.subscriberEvidenceUrl ||
+        !/^https:\/\//i.test(String(eligibility.subscriberEvidenceUrl)) || !eligibility.subscriberReviewedAt) {
+      throw new Error('UK launch is limited to verified corporate subscribers; sole traders and unclassified subscribers are excluded');
+    }
+    if (eligibility.basis !== 'legitimate_interest' || !eligibility.liaCompletedAt ||
+        !eligibility.liaReference || !eligibility.privacyNoticeProvidedAt) {
+      throw new Error('UK corporate outreach requires a completed legitimate-interests assessment and privacy-notice record');
+    }
+    return;
+  }
+  if (countryCode === 'US') {
+    if (eligibility.subscriberType !== 'corporate' || !eligibility.subscriberEvidenceUrl ||
+        !/^https:\/\//i.test(String(eligibility.subscriberEvidenceUrl)) || !eligibility.subscriberReviewedAt ||
+        eligibility.basis !== 'us_corporate_b2b' || !eligibility.privacyNoticeProvidedAt ||
+        globalPolicy.canSpamAddressVerified !== true || globalPolicy.canSpamReviewComplete !== true) {
+      throw new Error('US corporate outreach requires verified business status, privacy review and a confirmed CAN-SPAM postal-address control');
+    }
+    return;
+  }
+  throw new Error('This country is not enabled for VIORA outbound prospecting');
+}
 async function handleOutreachCampaignSettings(body, env, user) {
   if (typeof body.outboundEnabled !== 'boolean') return json({ ok: false, error: 'outboundEnabled must be a boolean' }, 400);
   if (body.outboundEnabled) {
@@ -6290,14 +6334,16 @@ async function handleOutreachCampaignSettings(body, env, user) {
     }
     await gmailAccessToken(connection, env);
     const compliance = await outreachDbRead(env, 'outreach/compliance/globalSendingPolicy').catch(() => null);
-    if (!compliance || compliance.status !== 'approved' || !compliance.version || !compliance.reviewedAt || !compliance.senderPostalAddress || !/^https:\/\//i.test(String(compliance.privacyNoticeUrl || ''))) {
-      return json({ ok: false, error: 'Outbound activation requires an approved, versioned global policy, a recorded review date, VIORA postal address and privacy notice URL.' }, 409);
+    if (!outreachLegalReviewComplete(compliance) || !compliance.senderPostalAddress ||
+        !/^https:\/\//i.test(String(compliance.privacyNoticeUrl || '')) ||
+        compliance.senderAddressVerified !== true || compliance.humanApprovalRequired !== true) {
+      return json({ ok: false, error: 'Outbound activation requires completed independent legal review, verified sender postal address, privacy notice and mandatory human approval.' }, 409);
     }
   }
   const current = await outreachDbRead(env, 'outreach/campaignSettings').catch(() => ({})) || {};
   const next = { ...current, outboundEnabled: body.outboundEnabled, dailyLimit: 200, updatedAt: new Date().toISOString(), updatedBy: user.email || user.localId || 'admin' };
   await outreachDbWrite(env, 'outreach/campaignSettings', next);
-  return json({ ok: true, outboundEnabled: next.outboundEnabled, dailyLimit: 200, message: body.outboundEnabled ? 'Outbound campaign scheduler enabled. It will send only evidence-qualified, country-policy-approved recipients.' : 'Outbound campaign scheduler paused.' });
+  return json({ ok: true, outboundEnabled: next.outboundEnabled, dailyLimit: 200, message: body.outboundEnabled ? 'Outbound scheduler enabled subject to per-recipient legal evidence and human approval.' : 'Outbound campaign scheduler paused.' });
 }
 async function handleOutreachCampaignQueue(body, env, user) {
   const items = Array.isArray(body.items) ? body.items : [];
@@ -6305,10 +6351,12 @@ async function handleOutreachCampaignQueue(body, env, user) {
   const created = [], rejected = [];
   const existingQueue = await outreachDbRead(env, 'outreach/campaignQueue').catch(() => ({})) || {};
   const alreadyQueued = new Set(Object.values(existingQueue).filter(x => x && ['queued','sending','sent','send_uncertain'].includes(x.status)).map(x => String(x.recipient || '').toLowerCase()));
+  const globalPolicy = await outreachDbRead(env, 'outreach/compliance/globalSendingPolicy').catch(() => null);
   for (const item of items) {
     try {
       const leadId = String(item.leadId || '').trim();
       if (!leadId || leadId.length > 180 || !/^[A-Za-z0-9_-]+$/.test(leadId)) throw new Error('Missing or invalid CRM lead ID');
+      if (item.humanApproval !== true) throw new Error('A human must explicitly approve this exact recipient and message before queueing');
       const lead = await outreachDbRead(env, 'leads/' + leadId);
       if (!lead) throw new Error('CRM lead not found');
       if (!['Business','Partner'].includes(String(lead.category || 'Business'))) throw new Error('Only business and partner prospects can enter the sales campaign');
@@ -6316,16 +6364,10 @@ async function handleOutreachCampaignQueue(body, env, user) {
       if (!validOutreachEmail(email) || lead.emailVerified !== true) throw new Error('A verified business email address is required');
       if (alreadyQueued.has(email)) throw new Error('This recipient already has an active or completed campaign record');
       const eligibility = lead.contactEligibility || {};
-      if (eligibility.status !== 'eligible' || !eligibility.basis || !eligibility.sourceUrl || !eligibility.reviewedAt || !/^https:\/\//i.test(String(eligibility.sourceUrl))) {
-        throw new Error('Documented contact eligibility, basis, source URL and review timestamp are required');
-      }
-      if (!['consent','existing_relationship','legitimate_interest','public_business_contact'].includes(String(eligibility.basis))) throw new Error('Contact basis must use a supported, documented category');
       const countryCode = String(lead.countryCode || eligibility.countryCode || '').toUpperCase();
       if (!/^[A-Z]{2}$/.test(countryCode)) throw new Error('A two-letter recipient country code is required');
       const policy = await outreachDbRead(env, 'outreach/compliance/jurisdictions/' + countryCode).catch(() => null);
-      if (!policy || policy.status !== 'approved' || !policy.version || policy.version !== eligibility.policyVersion) {
-        throw new Error('No matching approved country policy version for ' + countryCode);
-      }
+      outreachValidateRegionalEligibility(lead, eligibility, countryCode, policy, globalPolicy || {});
       const suppressionKey = outreachEmailKey(email);
       const suppression = await outreachDbRead(env, 'outreach/suppressions/' + suppressionKey).catch(() => null);
       if (suppression || String(lead.status || '').toLowerCase() === 'do not contact') throw new Error('Recipient is suppressed / do not contact');
@@ -6346,7 +6388,8 @@ async function handleOutreachCampaignQueue(body, env, user) {
       const record = {
         id: queueId, status: 'queued', sequence: 0, leadId, recipient: email,
         organisation: company, countryCode, policyVersion: policy.version,
-        eligibilitySnapshot: { basis: eligibility.basis, sourceUrl: eligibility.sourceUrl, reviewedAt: eligibility.reviewedAt },
+        eligibilitySnapshot: { basis: eligibility.basis, sourceUrl: eligibility.sourceUrl, reviewedAt: eligibility.reviewedAt, subscriberType: eligibility.subscriberType || null, consentEvidence: eligibility.consentEvidence || null, liaReference: eligibility.liaReference || null },
+        humanApproved: true, humanApprovedBy: user.email || user.localId || 'admin', humanApprovedAt: new Date().toISOString(),
         subject, text: textBody, followups, unsubscribeToken,
         scheduledAt: item.scheduledAt || new Date().toISOString(),
         createdAt: new Date().toISOString(), createdBy: user.email || user.localId || 'admin',
@@ -6491,8 +6534,29 @@ async function runOutreachCampaignScheduler(env) {
         await outreachDbWrite(env, path + '/suppressedAt', new Date().toISOString());
         return;
       }
+      if (candidate.humanApproved !== true || !candidate.humanApprovedBy || !candidate.humanApprovedAt) {
+        await outreachDbWrite(env, path + '/status', 'blocked');
+        await outreachDbWrite(env, path + '/blockReason', 'Exact recipient and message lack recorded human approval');
+        return;
+      }
+      const liveLead = await outreachDbRead(env, 'leads/' + candidate.leadId).catch(() => null);
+      if (!liveLead || String(liveLead.email || '').trim().toLowerCase() !== String(candidate.recipient || '').toLowerCase() ||
+          liveLead.emailVerified !== true || String(liveLead.status || '').toLowerCase() === 'do not contact') {
+        await outreachDbWrite(env, path + '/status', 'blocked');
+        await outreachDbWrite(env, path + '/blockReason', 'Live CRM recipient identity or contact status changed after approval');
+        return;
+      }
+      const liveEligibility = liveLead.contactEligibility || {};
       const globalPolicy = await outreachDbRead(env, 'outreach/compliance/globalSendingPolicy').catch(() => null);
-    if (!globalPolicy || globalPolicy.status !== 'approved' || !globalPolicy.version || !globalPolicy.senderPostalAddress || !/^https:\/\//i.test(String(globalPolicy.privacyNoticeUrl || ''))) {
+      const liveCountryPolicy = await outreachDbRead(env, 'outreach/compliance/jurisdictions/' + candidate.countryCode).catch(() => null);
+      try {
+        outreachValidateRegionalEligibility(liveLead, liveEligibility, candidate.countryCode, liveCountryPolicy, globalPolicy || {});
+      } catch (eligibilityError) {
+        await outreachDbWrite(env, path + '/status', 'blocked');
+        await outreachDbWrite(env, path + '/blockReason', eligibilityError.message);
+        return;
+      }
+    if (!outreachLegalReviewComplete(globalPolicy) || !globalPolicy.senderPostalAddress || !/^https:\/\//i.test(String(globalPolicy.privacyNoticeUrl || '')) || globalPolicy.senderAddressVerified !== true || globalPolicy.humanApprovalRequired !== true) {
       await outreachDbWrite(env, path + '/status', 'blocked');
       await outreachDbWrite(env, path + '/blockReason', 'Global sending policy or sender disclosure configuration is missing');
       return;
