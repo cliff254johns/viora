@@ -42,15 +42,15 @@ The country-policy record is:
 
 ```json
 {
-  "status": "approved",
-  "version": "2026-11-v1",
+  "status": "pending_review",
+  "version": "REPLACE_WITH_REVIEWED_POLICY_VERSION",
   "reviewedAt": "REPLACE_WITH_ACTUAL_ISO_TIMESTAMP",
   "reviewedBy": "REPLACE_WITH_ACTUAL_REVIEWER_IDENTITY",
   "jurisdiction": "GB",
   "contactRulesSummary": "Summary of the reviewed rules and scope",
   "legalReview": {
-    "status": "complete",
-    "reviewerName": "Actual qualified legal reviewer",
+    "status": "pending_review",
+    "reviewerName": "REPLACE_WITH_ACTUAL_QUALIFIED_REVIEWER",
     "completedAt": "REPLACE_WITH_ACTUAL_COMPLETION_TIMESTAMP",
     "sourceUrls": ["https://www.ico.org.uk/official-guidance"]
   },
@@ -64,8 +64,8 @@ The global sender policy record is:
 
 ```json
 {
-  "status": "approved",
-  "version": "2026-11-v1",
+  "status": "pending_review",
+  "version": "REPLACE_WITH_REVIEWED_POLICY_VERSION",
   "reviewedAt": "REPLACE_WITH_ACTUAL_ISO_TIMESTAMP",
   "reviewedBy": "REPLACE_WITH_ACTUAL_REVIEWER_IDENTITY",
   "senderPostalAddress": "REPLACE_WITH_VERIFIED_PHYSICAL_POSTAL_ADDRESS",
@@ -75,8 +75,8 @@ The global sender policy record is:
   "canSpamAddressVerified": false,
   "canSpamReviewComplete": false,
   "legalReview": {
-    "status": "complete",
-    "reviewerName": "Actual qualified legal reviewer",
+    "status": "pending_review",
+    "reviewerName": "REPLACE_WITH_ACTUAL_QUALIFIED_REVIEWER",
     "completedAt": "REPLACE_WITH_ACTUAL_COMPLETION_TIMESTAMP",
     "sourceUrls": ["https://www.ftc.gov/business-guidance/resources/can-spam-act-compliance-guide-business"]
   }
