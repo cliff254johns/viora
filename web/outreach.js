@@ -393,7 +393,7 @@ async function sendEmail(e){
     await update(ref(db,ORG+'/commLog/'+commLogId),{status:'sending',attemptedAt:sendingAt});
     await update(ref(db,ORG+'/leads/'+lead.id),{lastOutreach:{...activity,status:'sending',attemptedAt:sendingAt},lastOutreachStatus:'sending',['outreachHistory/'+id+'/status']:'sending',['outreachHistory/'+id+'/attemptedAt']:sendingAt});
     sendAttempted=true;
-    const result=await api('/sendEmail',{to,subject,text:textBody,replyTo:'cliff254johns@gmail.com'});
+    const result=await api('/sendEmail',{to,subject,text:textBody,replyTo:'cliff254johns@gmail.com',purpose:'marketing',source:'Outreach Centre'});
     const sentAt=stamp();
     await update(ref(db,ROOT+'/emails/'+id),{status:'sent',providerId:result.id||null,threadId:result.threadId||null,transport:result.transport||'resend',sentAt});
     await update(ref(db,ORG+'/commLog/'+commLogId),{status:'sent',providerId:result.id||null,sentAt});
