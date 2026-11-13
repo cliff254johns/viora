@@ -511,6 +511,8 @@ async function _sendEmail({ to, subject, message, recipientName }) {
     subject,
     text: message,
     html: `<p>${esc(message).replace(/\n/g, '<br>')}</p>`,
+    purpose: 'service',
+    source: 'Inbox',
   });
   await _persistInboxMessage({
     channel: 'email',
