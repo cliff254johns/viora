@@ -29,8 +29,7 @@ function databaseUrl(env, path) {
   if (!env.FIREBASE_DATABASE_SECRET) {
     throw Object.assign(new Error('Preview service is not configured'), { status: 503 });
   }
-  const base = String(env.FIREBASE_DATABASE_URL || '').replace(/\/$/, '');
-  if (!base) throw Object.assign(new Error('Firebase database is not configured'), { status: 503 });
+  const base = String(env.FIREBASE_DATABASE_URL || 'https://cliffclient-35ec5-default-rtdb.europe-west1.firebasedatabase.app').replace(/\/$/, '');
   const url = new URL(base + '/' + path.replace(/^\/+/, '') + '.json');
   url.searchParams.set('auth', env.FIREBASE_DATABASE_SECRET);
   return url;
@@ -57,7 +56,7 @@ async function writeRecord(env, path, value, etag) {
 }
 
 async function appendEvent(env, uid, productId, record, event) {
-  const events = Array.isArray(record.events) ? record.events.slice(-49) : [];
+  const events = Array.isArray(record.events) ? record.events.slice() : [];
   events.push({ ...event, at: new Date().toISOString() });
   record.events = events;
   return record;
