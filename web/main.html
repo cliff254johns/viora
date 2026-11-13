@@ -1164,7 +1164,7 @@
     <div id="publicUiProductsGrid" class="card-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:16px;"></div>
       <div class="page-header">
         <div><h1><span class="pillar-icon" style="background:linear-gradient(135deg,#a855f7,#00d4ff);"><i class="fa-solid fa-store"></i></span> <span class="highlight">Products &amp; Pricing</span></h1><p class="page-desc">Manage the marketplace catalog. Changes appear instantly on the public site.</p></div>
-        <div class="actions"><button class="btn btn-outline btn-sm" id="exportProductsCsv"><i class="fa-solid fa-file-export"></i> CSV</button><button class="btn btn-primary" id="addProductBtn"><i class="fa-solid fa-plus"></i> New Product</button></div>
+        <div class="actions"><button class="btn btn-outline btn-sm" id="exportProductsCsv"><i class="fa-solid fa-file-export"></i> CSV</button><button class="btn btn-outline btn-sm" onclick="Viora.migrateMarketplaceCategories()" title="Safely standardize existing product category fields"><i class="fa-solid fa-layer-group"></i> Standardize Categories</button><button class="btn btn-primary" id="addProductBtn"><i class="fa-solid fa-plus"></i> New Product</button></div>
       </div>
       <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));">
         <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-cube"></i></div><div class="label">Total Products</div><div class="number" id="mpTotalProducts">0</div></div>
