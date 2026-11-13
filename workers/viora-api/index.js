@@ -6674,7 +6674,7 @@ async function runOutreachCampaignScheduler(env) {
       return; // At most one email per five-minute scheduler invocation.
     }
   } catch (error) {
-    console.error('Outreach campaign scheduler error', error && error.stack || error);
+    console.error(JSON.stringify({ event: 'outreach_campaign_scheduler_error', error: String(error && error.message || error).slice(0, 300) }));
   }
 }
 
