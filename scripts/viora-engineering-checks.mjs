@@ -53,6 +53,10 @@ assert.ok(industryMatcher.includes('classifyProduct(product)') && industryMatche
 assert.ok(blueprintPage.includes('classifyProduct(p)'), 'industry blueprint product matching must use the shared taxonomy');
 assert.ok(industryPage.includes('/viora-taxonomy.js'), 'industry blueprint page must load taxonomy before its industry data');
 assert.ok(supportPage.includes('classifyProduct(p)') && supportPage.includes('categories = window.VIORATaxonomy.categories'), 'support product catalogue must use the six official categories');
+const supportModuleMatch = supportPage.match(/<script type="module">([\\s\\S]*?)<\\/script>/);
+assert.ok(supportModuleMatch, 'support page must retain its module script');
+const supportModuleSource = supportModuleMatch[1].replace(/^\\s*import\\s+(?:[\\s\\S]*?\\s+from\\s+)?['"][^'"]+['"]\\s*;?\\s*$/gm, '');
+new vm.Script(supportModuleSource, { filename:'support-inline-module.js' });
 assert.ok(supportPage.indexOf('Show the canonical six solution filters immediately') < supportPage.indexOf('onValue(ref(db, `${ROOT}/products`)'), 'support filters must render before Firebase responds');
 assert.ok(industryDirectory.includes('VIORA Property & Infrastructure Solutions'), 'industry directory must expose official solution groups');
 assert.ok(publicIndustryDirectory.includes('VIORA Enterprise Solutions') && publicIndustryDirectory.includes('VIORA Business & Lifestyle Solutions'), 'public industry directory must use official VIORA category names');
