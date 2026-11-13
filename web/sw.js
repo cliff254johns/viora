@@ -479,8 +479,8 @@ self.addEventListener('push', (event) => {
   const title = n.title || d.title || 'VIORA';
   const body  = n.body  || d.body  || '';
   const url   = d.url   || '/main.html';
-  const icon  = n.icon  || '/viora-icon-192.png';
-  const badge = '/viora-icon-192.png';
+  const icon  = n.icon  || '/viora.png';
+  const badge = '/viora.png';
 
   event.waitUntil((async () => {
     // If a VIORA tab is focused, forward the event instead of showing
