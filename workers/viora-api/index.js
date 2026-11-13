@@ -313,6 +313,7 @@ if (path === '/social/stats/batch' && request.method === 'POST') {
         '/marketplace/preview/start': 'start',
         '/marketplace/preview/request': 'request',
         '/marketplace/preview/requests': 'admin-requests',
+        '/marketplace/preview/gateways': 'admin-gateways',
         '/marketplace/preview/grant': 'admin-grant',
         '/marketplace/preview/revoke': 'admin-revoke',
         '/marketplace/preview/validate': 'validate',
