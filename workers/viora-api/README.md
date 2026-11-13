@@ -18,7 +18,7 @@ The Git source now includes:
 - Outreach UI controls to connect Gmail, check connection status, and import recent incoming messages into the Outreach email timeline.
 - Gmail is preferred by `POST /sendEmail` once connected. Resend remains the fallback only when no Gmail mailbox has been connected. A failed Gmail send is not silently retried via Resend, preventing accidental duplicate sends.
 
-The OAuth flow requests `gmail.send` and `gmail.readonly`. The latter is a restricted Gmail scope. Google may require OAuth app verification and additional review before production use. Testing-mode users must be configured in the Google consent screen.
+The OAuth flow requests `gmail.send` and the narrower `gmail.metadata` scope. Reply sync reads sender/recipient/subject/date/thread headers only; it does not download or store message bodies. Google classifies `gmail.send` as sensitive and `gmail.metadata` as restricted. Restricted-scope server use may require OAuth verification and an independent security assessment before general production use. See [Gmail API scopes](https://developers.google.com/workspace/gmail/api/auth/scopes) and [restricted-scope verification](https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification). Testing-mode users must be configured in the Google consent screen.
 
 ## Current deployment status
 
@@ -42,7 +42,7 @@ Expected OAuth redirect URI:
 
 The redirect URI must match exactly in the Google Cloud OAuth Web application and the Worker.
 
-Configure the OAuth consent screen with the correct app name, support email, authorised domains, privacy policy, terms URL, publishing/testing status and test-user list. Verify current Google verification requirements for restricted Gmail read access before production rollout.
+Enable the Gmail API in the Google Cloud project. Configure the OAuth consent screen with the correct app name, support email, authorised domains, privacy policy, terms URL, publishing/testing status, test-user list and both requested scopes. An external OAuth app left in Testing issues seven-day refresh tokens for these non-basic scopes; a long-running production connection therefore needs the appropriate production publishing/verification path. See [Google OAuth refresh-token rules](https://developers.google.com/identity/protocols/oauth2).
 
 ## Cloudflare secrets
 
