@@ -55,7 +55,7 @@ async function loadMarketplacePreviewRequests() {
   const auth = (C().VioraAuth || window.VioraAuth);
   if (!tbody) return;
   if (!auth?.currentUser) {
-    tbody.innerHTML = '<tr><td colspan="5">Sign in with an administrator account to view preview requests.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6">Sign in with an administrator account to view preview requests.</td></tr>';
     return;
   }
   const button = $('refreshPreviewRequestsBtn');
@@ -76,23 +76,26 @@ async function loadMarketplacePreviewRequests() {
       }
     }
     if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="5">No preview requests yet.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6">No preview requests yet.</td></tr>';
       return;
     }
     const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     tbody.innerHTML = rows.sort((a,b) => String(b.requestedAt || '').localeCompare(String(a.requestedAt || ''))).map(row => {
       const action = row.status === 'pending'
-        ? '<button class="btn btn-primary btn-xs" data-preview-action="grant">Grant 15 min</button>'
+        ? (row.gatewayReady === true
+          ? '<button class="btn btn-primary btn-xs" data-preview-action="grant">Approve</button>'
+          : '<button class="btn btn-outline btn-xs" disabled title="The product delivery gateway has not passed verification">Gateway pending</button>')
         : row.status === 'approved'
           ? '<button class="btn btn-outline btn-xs" data-preview-action="revoke">Revoke</button>'
           : '<span>—</span>';
       return '<tr data-preview-uid="' + esc(row.uid) + '" data-preview-product="' + esc(row.productId) + '">' +
         '<td>' + esc(row.email || row.uid) + '</td><td>' + esc(row.productName || row.productId) + '</td>' +
         '<td>' + esc(row.requestedAt ? new Date(row.requestedAt).toLocaleString() : '—') + '</td>' +
+        '<td>' + (row.gatewayReady === true ? '<span class="badge badge-active">Verified</span>' : '<span class="badge badge-warning">Not verified</span>') + '</td>' +
         '<td>' + esc(row.status || 'unknown') + '</td><td>' + action + '</td></tr>';
     }).join('');
   } catch (error) {
-    tbody.innerHTML = '<tr><td colspan="5">Unable to load requests: ' + String(error.message || 'unknown error').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])) + '</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6">Unable to load requests: ' + String(error.message || 'unknown error').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])) + '</td></tr>';
     toast('Preview requests could not be loaded.', 'error');
   } finally {
     if (button) button.disabled = false;
