@@ -1,6 +1,6 @@
 # Generated module and API map
 
-Generated: 2026-11-13T10:48:14.464Z
+Generated: 2026-11-13T10:48:37.721Z
 
 Modules: 113
 
@@ -703,7 +703,7 @@ Modules: 113
 
 ### web/sw.js
 
-- Size: 23329 bytes
+- Size: 23385 bytes
 - Imports: none detected
 - Exports: none detected
 - Worker routes: none detected
