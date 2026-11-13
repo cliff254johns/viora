@@ -14,11 +14,13 @@ The Git source now includes:
 - AES-256-GCM encrypted refresh-token persistence in Firebase Realtime Database using the Worker secret `GOOGLE_TOKEN_ENCRYPTION_KEY`.
 - Gmail API token refresh and send support.
 - Gmail inbox metadata retrieval through `GET /gmail/replies`.
+- Automatic creation/lookup of the `VIORA Outreach` Gmail label and application to each successfully sent Gmail thread.
+- Admin/exec-authenticated `POST /gmail/label-thread` to label only reply threads that Outreach has matched to a saved, previously contacted lead.
 - Admin/exec-only `GET /gmail/status`.
 - Outreach UI controls to connect Gmail, check connection status, and import recent incoming messages into the Outreach email timeline.
 - Gmail is preferred by `POST /sendEmail` once connected. Resend remains the fallback only when no Gmail mailbox has been connected. A failed Gmail send is not silently retried via Resend, preventing accidental duplicate sends.
 
-The OAuth flow requests `gmail.send` and the narrower `gmail.metadata` scope. Reply sync reads sender/recipient/subject/date/thread headers only; it does not download or store message bodies. Google classifies `gmail.send` as sensitive and `gmail.metadata` as restricted. Restricted-scope server use may require OAuth verification and an independent security assessment before general production use. See [Gmail API scopes](https://developers.google.com/workspace/gmail/api/auth/scopes) and [restricted-scope verification](https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification). Testing-mode users must be configured in the Google consent screen.
+The OAuth flow requests `gmail.send`, `gmail.metadata`, and `gmail.modify`. Reply sync reads sender/recipient/subject/date/thread headers only; it does not download or store message bodies. `gmail.modify` is required to apply the dedicated `VIORA Outreach` label to sent conversations and matched replies. It grants broader mailbox modification capability than metadata-only access, so keep it limited to this dedicated VIORA mailbox and disclose it clearly in the OAuth consent screen. Google classifies Gmail scopes as sensitive/restricted; restricted-scope server use may require OAuth verification and an independent security assessment before general production use. See [Gmail API scopes](https://developers.google.com/workspace/gmail/api/auth/scopes) and [restricted-scope verification](https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification). Testing-mode users must be configured in the Google consent screen.
 
 ## Current deployment status
 
@@ -31,7 +33,7 @@ Do not describe Gmail as connected or operational until all of the following hav
 3. The refresh token is persisted only as AES-256-GCM ciphertext.
 4. `GET /gmail/status` reports the expected mailbox.
 5. A user-approved test email to the owner's own address is accepted by Gmail.
-6. A reply to that test email is retrieved and appears in the Outreach timeline.
+6. A reply to that test email is retrieved, appears in the Outreach timeline, and the Gmail conversation receives the `VIORA Outreach` label.
 7. Existing critical Worker routes and Resend fallback remain healthy.
 
 ## Google Cloud Console configuration
