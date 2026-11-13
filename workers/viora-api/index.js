@@ -5882,7 +5882,7 @@ const GMAIL_SCOPES = [
   'openid',
   'email',
   'https://www.googleapis.com/auth/gmail.send',
-  'https://www.googleapis.com/auth/gmail.readonly',
+  'https://www.googleapis.com/auth/gmail.metadata',
 ];
 
 function gmailBase64(bytes) {
@@ -6024,7 +6024,7 @@ async function handleGmailOAuthCallback(url, env) {
   }
 
   const grantedScopes = String(tokenData.scope || '').split(' ').filter(Boolean);
-  const requiredScopes = ['https://www.googleapis.com/auth/gmail.send', 'https://www.googleapis.com/auth/gmail.readonly'];
+  const requiredScopes = ['https://www.googleapis.com/auth/gmail.send', 'https://www.googleapis.com/auth/gmail.metadata'];
   if (!requiredScopes.every(scope => grantedScopes.includes(scope))) {
     return json({ ok: false, error: 'Google did not grant all requested Gmail permissions. Reconnect and approve sending and inbox access.' }, 403);
   }
@@ -6163,7 +6163,7 @@ async function handleGmailReplies(env, user) {
     const replies = await Promise.all(ids.map(async item => {
       const msg = await gmailApiFetch('messages/' + encodeURIComponent(item.id) + '?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Subject&metadataHeaders=Date&metadataHeaders=In-Reply-To&metadataHeaders=References', accessToken);
       const headers = (msg.payload && msg.payload.headers || []).reduce((acc, h) => { acc[String(h.name).toLowerCase()] = h.value; return acc; }, {});
-      return { id: msg.id, threadId: msg.threadId, from: headers.from || '', to: headers.to || '', subject: headers.subject || '', date: headers.date || '', snippet: msg.snippet || '' };
+      return { id: msg.id, threadId: msg.threadId, from: headers.from || '', to: headers.to || '', subject: headers.subject || '', date: headers.date || '' };
     }));
     return json({ ok: true, count: replies.length, messages: replies });
   } catch (e) {
