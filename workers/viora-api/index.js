@@ -7233,7 +7233,7 @@ async function publishDueScheduledPosts(env) {
         const scheduledAt = Date.parse(post.scheduledForUtc || post.scheduledFor || '');
         if (Number.isFinite(scheduledAt) && scheduledAt <= now) candidates.push({ campaignId, postId: post.id });
       } else if (post.status === 'publishing') {
-        const attempted = Date.parse(post.publishAttemptedAt || post.publishClaimedAt || '');
+        const attempted = Date.parse(post.publishAttemptedAt || post.publishClaimedAt || post.claimedAt || post.updatedAt || '');
         if (Number.isFinite(attempted) && now - attempted > STUCK_TIMEOUT_MS) {
           candidates.push({ campaignId, postId: post.id, stale: true });
         }
