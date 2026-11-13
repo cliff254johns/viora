@@ -38,6 +38,17 @@ jobs:
           grep -q '/outreach/unsubscribe' workers/viora-api/index.js
           grep -q 'id="outboundEnabled"' web/outreach.html
           grep -q 'id="aiQueueCampaign"' web/outreach.html
+          grep -q 'outreachLegalReviewComplete' workers/viora-api/index.js
+          grep -q 'outreachValidateRegionalEligibility' workers/viora-api/index.js
+          grep -q 'candidate.humanApproved !== true' workers/viora-api/index.js
+          grep -q 'expectedApprovalDigest' workers/viora-api/index.js
+          grep -q 'approvalDigest' workers/viora-api/index.js
+          grep -q 'consentEvidence' workers/viora-api/index.js
+          grep -q "countryCode === 'GB'" workers/viora-api/index.js
+          grep -q "countryCode === 'US'" workers/viora-api/index.js
+          grep -q 'canSpamAddressVerified' workers/viora-api/index.js
+          grep -q 'List-Unsubscribe' workers/viora-api/index.js
+          grep -q 'outreach/suppressions' workers/viora-api/index.js
       - name: Verify shared CRM and Communications integration
         run: |
           grep -Fq "onValue(ref(db,ORG+'/leads')" web/outreach.js
