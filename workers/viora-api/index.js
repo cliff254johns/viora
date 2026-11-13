@@ -358,7 +358,7 @@ if (path === '/social/stats/batch' && request.method === 'POST') {
       if (path === '/portal/provision')   return await handlePortalProvision(body, env, user);
       if (path === '/portal/deleteUser')  return await handlePortalDeleteUser(body, env, user);
 
-          if (path === '/social/config/status' && request.method === 'GET') {
+          if (path === '/social/config/status' && (request.method === 'GET' || request.method === 'POST')) {
         requireRole(String(user.role || '').toLowerCase(), ['admin', 'exec']);
         return await handleSocialConfigStatus(env, user);
       }
