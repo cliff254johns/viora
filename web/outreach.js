@@ -209,6 +209,62 @@ async function reviewAiSuggestion(id){const x=aiSuggestions[id];if(!x)return;$('
 async function prepareDraft(to,lead,context){if(!to)throw new Error('Select a prospect or enter a recipient email first.');const prompt='Write a concise, personalised first-contact email from VIORA Ecosystems. Do not invent facts, customers, traction, partnerships, certifications or investment returns. VIORA designs bespoke connected digital ecosystems for organisations. Ask for a brief introductory discussion. Prospect record: '+JSON.stringify(lead||{email:to})+'. Additional context: '+context+'. Return a subject line followed by the email body.';const data=await api('/outreach/draft',{system:'You are the VIORA Ecosystems business development writing assistant. Be factual, respectful and personalised. Never invent claims. Do not send emails.',message:prompt});const answer=data.reply||data.response||data.content||data.message||data.text||data.choices?.[0]?.message?.content;if(!answer)throw new Error('AI endpoint returned no draft text.');const lines=String(answer).trim().split('\n'),first=lines[0].trim();if(/^subject\s*:/i.test(first)){return {subject:first.replace(/^subject\s*:\s*/i,''),body:lines.slice(1).join('\n').replace(/^body\s*:\s*/i,'').trim()};}if(lines.length>1&&first.length<150)return {subject:first,body:lines.slice(1).join('\n').trim()};return {subject:'',body:String(answer).trim()};}
 async function modalDraft(){const lead=selectedMailLead(),to=lead?.email||parseManualMailRecipients()[0];try{busy('modalAiDraft',true,'Preparing…');const d=await prepareDraft(to,lead,lead?.notes||'');if(d.subject)$('mailSubject').value=d.subject;$('mailBody').value=d.body;status('mailStatus','AI draft prepared. Review and edit before sending.');}catch(e){status('mailStatus','AI draft unavailable: '+e.message,true);}finally{busy('modalAiDraft',false);}}
 async function studioDraft(){const lead=leads[$('aiLeadSelect').value];if(!lead){status('aiStatus','Choose a saved prospect first.',true);return;}try{busy('aiGenerate',true,'Generating…');const d=await prepareDraft(lead.email,lead,$('aiContext').value.trim());$('aiSubject').value=d.subject;$('aiBody').value=d.body;status('aiStatus','Draft generated. Verify all details before using it.');}catch(e){status('aiStatus','AI draft unavailable: '+e.message,true);}finally{busy('aiGenerate',false);}}
+async function apiGet(path){
+ const token=await currentUser.getIdToken();
+ const res=await fetch(API+path,{method:'GET',headers:{'Authorization':'Bearer '+token}});
+ const data=await res.json().catch(()=>({}));
+ if(!res.ok)throw new Error(data.error||data.message||('Request failed ('+res.status+')'));
+ return data;
+}
+async function refreshGmailStatus(){
+ try{
+  const data=await apiGet('/gmail/status');
+  $('gmailConnectionState').textContent=data.connected?'Connected':'Not connected';
+  $('gmailConnectionDetail').textContent=data.connected?'Connected as '+data.email:'Gmail is not connected. New messages will continue using the configured fallback transport.';
+  $('gmailConnectionState').className='review-tag'+(data.connected?' good':'');
+  return data;
+ }catch(e){
+  $('gmailConnectionState').textContent='Status unavailable';
+  $('gmailConnectionDetail').textContent=e.message;
+  status('gmailStatus','Could not check Gmail status: '+e.message,true);
+  throw e;
+ }
+}
+async function connectGmail(){
+ try{
+  busy('gmailConnect',true,'Opening Google…');
+  status('gmailStatus','Preparing secure Google authorization…');
+  const result=await api('/gmail/oauth/start',{});
+  if(!result.url)throw new Error('Google authorization URL was not returned');
+  window.location.assign(result.url);
+ }catch(e){status('gmailStatus','Gmail connection could not start: '+e.message,true);busy('gmailConnect',false);}
+}
+async function syncGmailReplies(){
+ try{
+  busy('gmailSyncReplies',true,'Checking inbox…');
+  status('gmailStatus','Checking the connected mailbox for recent incoming messages…');
+  const data=await apiGet('/gmail/replies');
+  let added=0;
+  for(const msg of (data.messages||[])){
+   const sender=String(msg.from||'').match(/<([^>]+)>/)?.[1]||String(msg.from||'').trim();
+   const email=sender.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/i)?.[0]||sender;
+   const lead=leadList().find(l=>String(l.email||'').toLowerCase()===email.toLowerCase());
+   const recordId='gmail-'+String(msg.id||'').replace(/[^A-Za-z0-9_-]/g,'');
+   const existing=await get(ref(db,ROOT+'/emails/'+recordId));
+   if(existing.exists())continue;
+   const receivedAt=msg.date&&Number.isFinite(Date.parse(msg.date))?new Date(msg.date).toISOString():stamp();
+   const record={id:recordId,to:email,from:email,subject:msg.subject||'(no subject)',text:'Incoming email received. Open the Gmail conversation to read the full message.',company:lead?.company||lead?.fullName||email,leadId:lead?.id||null,direction:'inbound',status:'received',providerId:msg.id,threadId:msg.threadId||null,timestamp:receivedAt,source:'Gmail reply sync'};
+   await set(ref(db,ROOT+'/emails/'+recordId),record);
+   const commId=push(ref(db,ORG+'/commLog')).key;
+   await set(ref(db,ORG+'/commLog/'+commId),{id:commId,channel:'email',direction:'inbound',recipientContact:email,recipientName:record.company,subject:record.subject,message:'Incoming email received. Message body remains in Gmail.',status:'received',timestamp:receivedAt,leadId:record.leadId,outreachEmailId:recordId,providerId:msg.id,threadId:msg.threadId||null,source:'Gmail reply sync'});
+   added++;
+  }
+  renderEmails();
+  status('gmailStatus','Inbox check complete. '+added+' new message'+(added===1?'':'s')+' added to the Outreach timeline; '+((data.count||0)-added)+' already recorded or not new.');
+  toast('Gmail inbox sync complete: '+added+' new messages.');
+ }catch(e){status('gmailStatus','Reply sync failed: '+e.message,true);}
+ finally{busy('gmailSyncReplies',false);}
+}
 async function sendEmail(e){
  e?.preventDefault();
  const subject=$('mailSubject').value.trim(),textBody=$('mailBody').value.trim(),chosen=selectedMailLeads(),manual=parseManualMailRecipients();
@@ -332,11 +388,11 @@ async function renderWorldLeadMap(force=false){
 }
 
 function bindData(){stopLeads?.();stopEmails?.();stopSuggestions?.();stopLeads=onValue(ref(db,ORG+'/leads'),s=>{leads=s.val()||{};renderLeadTables();renderFollowups();renderOverview();renderAiSelect();renderAnalytics();renderWorldLeadMap();});stopEmails=onValue(ref(db,ROOT+'/emails'),s=>{emails=s.val()||{};renderEmails();renderAudit();renderOverview();renderAnalytics();});stopSuggestions=onValue(ref(db,ROOT+'/aiSuggestions'),s=>{aiSuggestions=s.val()||{};renderAiAlerts();});}
-async function startSession(user){currentUser=user;currentRole=String(await resolveRole(user.uid)).toLowerCase();if(!['admin','exec'].includes(currentRole)){await signOut(auth);$('loginView').classList.remove('hidden');$('appView').classList.add('hidden');status('loginStatus','Access denied. This workspace is restricted to VIORA admin and exec roles.',true);return;}$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');bindData();}
+async function startSession(user){currentUser=user;currentRole=String(await resolveRole(user.uid)).toLowerCase();if(!['admin','exec'].includes(currentRole)){await signOut(auth);$('loginView').classList.remove('hidden');$('appView').classList.add('hidden');status('loginStatus','Access denied. This workspace is restricted to VIORA admin and exec roles.',true);return;}$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');bindData();refreshGmailStatus().catch(()=>{});}
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();try{busy('loginBtn',true,'Signing in…');status('loginStatus','');await authReady;await signInWithEmailAndPassword(auth,$('loginEmail').value.trim(),$('loginPassword').value);}catch(err){status('loginStatus',err.message,true);}finally{busy('loginBtn',false);}});
 authReady.then(()=>onAuthStateChanged(auth,user=>{if(user)startSession(user).catch(e=>status('loginStatus',e.message,true));else{stopLeads?.();stopEmails?.();currentUser=null;$('loginView').classList.remove('hidden');$('appView').classList.add('hidden');}})).catch(err=>status('loginStatus','Firebase session could not be restored: '+err.message,true));
 bindNavigation();
-$('leadForm').addEventListener('submit',saveLead);$('emailForm').addEventListener('submit',sendEmail);$('discoverLeadsBtn').addEventListener('click',discoverGlobalLeads);$('discoveredLeadResults').addEventListener('click',e=>{const s=e.target.closest('[data-discover-save]'),d=e.target.closest('[data-discover-draft]');if(s)saveDiscovered(Number(s.dataset.discoverSave)).catch(x=>status('discoverStatus',x.message,true));if(d)draftDiscovered(Number(d.dataset.discoverDraft));});$('aiAlerts').addEventListener('click',e=>{const b=e.target.closest('[data-review-suggestion]');if(b)reviewAiSuggestion(b.dataset.reviewSuggestion);});
+$('gmailConnect').addEventListener('click',connectGmail);$('gmailRefreshStatus').addEventListener('click',()=>refreshGmailStatus().catch(()=>{}));$('gmailSyncReplies').addEventListener('click',syncGmailReplies);$('leadForm').addEventListener('submit',saveLead);$('emailForm').addEventListener('submit',sendEmail);$('discoverLeadsBtn').addEventListener('click',discoverGlobalLeads);$('discoveredLeadResults').addEventListener('click',e=>{const s=e.target.closest('[data-discover-save]'),d=e.target.closest('[data-discover-draft]');if(s)saveDiscovered(Number(s.dataset.discoverSave)).catch(x=>status('discoverStatus',x.message,true));if(d)draftDiscovered(Number(d.dataset.discoverDraft));});$('aiAlerts').addEventListener('click',e=>{const b=e.target.closest('[data-review-suggestion]');if(b)reviewAiSuggestion(b.dataset.reviewSuggestion);});
 $('mailLeadList').addEventListener('change',updateMailRecipientSummary);
 $('mailRecipientSearch').addEventListener('input',()=>{const q=$('mailRecipientSearch').value.trim().toLowerCase();$('mailLeadList').querySelectorAll('.recipient-option').forEach(row=>{row.hidden=!!q&&!row.dataset.search.includes(q);});});
 $('mailTo').addEventListener('input',updateMailRecipientSummary);
