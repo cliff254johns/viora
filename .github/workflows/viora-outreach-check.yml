@@ -53,9 +53,9 @@ jobs:
           grep -Fq 'lastOutreachEmailId' web/outreach.js
       - name: Verify email automation is opt-in and social jobs remain independent
         run: |
-          grep -Fq 'ENABLE_OUTREACH_EMAIL_AUTOMATION' workers/viora-api/index.js
+          grep -Fq 'ENABLE_OUTREACH_EMAIL_AUTOMATION' workers/viora-api/scheduled-jobs.js
           grep -Fq "social_publish: () => publishDueScheduledPosts(env)" workers/viora-api/index.js
-          grep -Fq 'for (const [job, run] of jobs)' workers/viora-api/index.js
+          grep -Fq 'for (const [job, run] of jobs)' workers/viora-api/scheduled-jobs.js
           grep -Fq 'keep_vars = true' workers/viora-api/wrangler.toml
           grep -Fq 'ENABLE_OUTREACH_EMAIL_AUTOMATION = "false"' workers/viora-api/wrangler.toml
           grep -Fq '[observability.logs]' workers/viora-api/wrangler.toml
