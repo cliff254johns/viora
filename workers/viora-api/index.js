@@ -6179,7 +6179,15 @@ async function logGmailCommunication(env, record) {
     // The communication log is best-effort; do not expose mailbox content or tokens.
   }
 }
+function outboundEmailSendingEnabled(env) {
+  return String(env && env.ENABLE_OUTREACH_EMAIL_SENDING || '').toLowerCase() === 'true';
+}
+function outboundEmailDisabledResponse() {
+  return json({ ok: false, error: 'Outbound email sending is disabled during controlled release verification.' }, 423);
+}
+
 async function sendViaGmail(message, env, user, existingConnection) {
+  if (!outboundEmailSendingEnabled(env)) return outboundEmailDisabledResponse();
   try {
     const connection = existingConnection || await readGmailConnection(env);
     const accessToken = await gmailAccessToken(connection, env);
@@ -6499,6 +6507,7 @@ async function outreachReserveDailySlot(env) {
 }
 
 async function runScheduledOutreachInboxSync(env) {
+  if (!outboundEmailSendingEnabled(env)) return;
   try {
     const connection = await readGmailConnection(env);
     if (!connection || String(connection.email || '').toLowerCase() !== GMAIL_OWNER_EMAIL) return;
@@ -6542,6 +6551,7 @@ async function runScheduledOutreachInboxSync(env) {
 }
 
 async function sendGmailThreadFollowup(threadId, recipient, subject, textBody, unsubscribeUrl, env, connection) {
+  if (!outboundEmailSendingEnabled(env)) throw new Error('Outbound email sending is disabled during controlled release verification.');
   const accessToken = await gmailAccessToken(connection, env);
   const thread = await gmailApiFetch('threads/' + encodeURIComponent(threadId) + '?format=metadata', accessToken);
   const last = (thread.messages || []).slice(-1)[0];
@@ -6621,6 +6631,7 @@ async function writeOutreachCampaignActivity(env, candidate, status, details = {
 }
 
 async function runOutreachCampaignScheduler(env) {
+  if (!outboundEmailSendingEnabled(env)) return;
   try {
     const settings = await outreachDbRead(env, 'outreach/campaignSettings').catch(() => null);
     if (!settings || settings.outboundEnabled !== true) return;
@@ -6846,6 +6857,7 @@ async function publishOutreachEscalation(env, eventId, title, body, level = 'hig
   return { id, duplicate: false };
 }
 async function sendGmailThreadReply(thread, sourceMessage, replyText, env, user, accessToken) {
+  if (!outboundEmailSendingEnabled(env)) throw new Error('Outbound email sending is disabled during controlled release verification.');
   const sourceHeaders = gmailHeaderMap(sourceMessage);
   const from = gmailAddress(sourceHeaders.from);
   const messageId = String(sourceHeaders['message-id'] || '').replace(/[\\r\n]+/g, '').trim();
@@ -6874,6 +6886,7 @@ async function sendGmailThreadReply(thread, sourceMessage, replyText, env, user,
   return result;
 }
 async function handleOutreachAutoReply(body, env, user) {
+  if (!outboundEmailSendingEnabled(env)) return outboundEmailDisabledResponse();
   const threadId = String(body && body.threadId || '').trim();
   const messageId = String(body && body.messageId || '').trim();
   const leadId = String(body && body.leadId || '').trim();
