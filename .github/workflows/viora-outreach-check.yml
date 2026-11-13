@@ -98,6 +98,11 @@ jobs:
           grep -Fq "path === '/social/config/status'" workers/viora-api/index.js
           grep -Fq 'loadApiStatus' web/main/campaign-accounts.js
           grep -Fq 'API credentials missing' web/main/campaign-accounts.js
+      - name: Verify atomic email attribution writes
+        run: |
+          grep -Fq 'async function outreachDbMultiWrite' workers/viora-api/index.js
+          grep -Fq "method: 'PATCH'" workers/viora-api/index.js
+          grep -Fq 'outreachHistory/' workers/viora-api/index.js
       - name: Run repository contract and unit tests
         run: npm test
       - name: Run available integration tests
