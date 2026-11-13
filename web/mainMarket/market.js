@@ -2387,6 +2387,9 @@ const heroVisual = (p.image && String(p.image).trim())
     this.loadWishlist();
     this.loadRecentSearches();
 
+    // Render the canonical category controls immediately; they must not depend on Firebase/cache.
+    this.renderCategoryBar();
+
     // Paint the last known public catalogue immediately while Firebase refreshes.
     try {
       const cached = JSON.parse(localStorage.getItem(PRODUCT_CACHE_KEY) || 'null');
