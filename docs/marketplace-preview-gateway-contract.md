@@ -37,7 +37,7 @@ It fails closed if Firebase state cannot be read.
 
 The Worker supports a read-only candidate mode through `VIORA_STAGING_READ_ONLY=true`. In this mode, only `GET /health` and the authenticated `GET /marketplace/preview/gateways` route are allowed; all mutation and unrelated routes are denied before their handlers run.
 
-The candidate must be configured with a dedicated staging Firebase RTDB URL and a staging-only database credential. If the staging URL is missing or points at the production RTDB default, the preview data adapter fails closed with HTTP 503 rather than falling back to production. Do not copy production database secrets or point a staging Worker at production customer, subscription, or licence records.
+The candidate must be configured with a dedicated staging Firebase project ID, Firebase API key, RTDB URL and staging-only database credential. If any staging Firebase configuration is missing, or the RTDB URL points at the production default, authentication/data access fails closed with HTTP 503 rather than falling back to production defaults. Do not copy production database secrets or point a staging Worker at production customer, subscription, or licence records.
 
 ## Admin product gateway inventory
 
