@@ -1,10 +1,8 @@
-const VERSION='bodabiz-shell-v5';
+const VERSION='bodabiz-shell-v6-viora-logo';
 const SHELL=[
  '/viora.png',
  './ride.html','./riders.html','./admin.html',
  './manifest-public.json','./manifest-rider.json','./manifest-admin.json',
- './icons/icon.svg',
- '/viora-icon-192.png','/viora-icon-512.png','/viora-app-icon.svg'
 ];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(VERSION).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting()));
