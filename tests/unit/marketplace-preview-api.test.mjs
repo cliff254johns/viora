@@ -293,7 +293,7 @@ test('controlled candidate mode exposes only health and the authenticated read-o
   assert.notEqual(inventory.status, 403, 'the inventory route must reach the normal authentication gate');
 });
 test('staging candidate never falls back to the production Firebase database', async () => {
-  for (const databaseUrl of [undefined, ENV.FIREBASE_DATABASE_URL]) {
+  for (const databaseUrl of [undefined, 'https://cliffclient-35ec5-default-rtdb.europe-west1.firebasedatabase.app']) {
     const env = { ...ENV, VIORA_STAGING_READ_ONLY: 'true', FIREBASE_DATABASE_URL: databaseUrl };
     const response = await handleMarketplacePreview(
       makeRequest('admin-gateways', 'GET'), env, ADMIN, 'admin-gateways', {}
