@@ -137,6 +137,37 @@ for (const [legacyKey, expected] of Object.entries(taxonomyWindow.VIORATaxonomy.
   assert.equal(taxonomyWindow.VIORATaxonomy.classifyIndustry({ name:legacyKey.replace(/_/g, ' '), cat:legacyKey }), expected, 'legacy industry key '+legacyKey);
 }
 
+const handlerContext = {
+  window: { VIORATaxonomy: taxonomyWindow.VIORATaxonomy },
+  console,
+  Date,
+  setTimeout,
+  clearTimeout
+};
+const handlerSource = read('web/main/viora-main-handlers.js').replace('export function buildVioraHandlers', 'function buildVioraHandlers');
+new vm.Script(handlerSource + '\\nthis.__buildVioraHandlers = buildVioraHandlers;').runInNewContext(handlerContext);
+const migrationProducts = [
+  { id:'legacy-retail', name:'Retail POS', category:'Retail & Wholesale Systems', price:49, stock:20, description:'Sales and inventory' },
+  { id:'legacy-hotel', name:'Hotel Manager', category:'Hotel & Guest House Systems', price:99, deliveryUrl:'/downloads/hotel', image:'/hotel.png' }
+];
+const migrationWrites = [];
+const migrationApi = handlerContext.__buildVioraHandlers({
+  state: { data: { products:migrationProducts } },
+  upsertDoc: async (collection, payload, revision) => migrationWrites.push({ collection, payload, revision }),
+  vioraConfirm: async () => true,
+  EventBus: { emit() {} },
+  toast() {},
+  logActivity: async () => {}
+});
+const migrationResult = await migrationApi.migrateMarketplaceCategories();
+assert.equal(migrationResult.updated, 2, 'category migration must update both legacy products');
+assert.equal(migrationResult.failed, 0, 'category migration must not fail for valid products');
+assert.equal(migrationWrites[0].payload.vioraCategoryId, 'enterprise', 'retail product must migrate to enterprise');
+assert.equal(migrationWrites[1].payload.vioraCategoryId, 'hospitality', 'hotel product must migrate to hospitality');
+assert.equal(migrationWrites[0].payload.price, 49, 'category migration must preserve prices');
+assert.equal(migrationWrites[0].payload.stock, 20, 'category migration must preserve stock');
+assert.equal(migrationWrites[1].payload.deliveryUrl, '/downloads/hotel', 'category migration must preserve delivery settings');
+
 for (const path of ['web/manifest.webmanifest','web/main.webmanifest','web/manifest.json','web/campaigns.webmanifest','web/assets/r/manifest-public.json','web/assets/r/manifest-rider.json','web/assets/r/manifest-admin.json','web/assets/mamamboga/manifest.json']) {
   const manifest = JSON.parse(read(path));
   assert.ok(manifest.icons.some(i => i.src === '/viora.png' && i.type === 'image/png'), path+' missing canonical /viora.png app icon');
