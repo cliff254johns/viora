@@ -88,6 +88,7 @@ export function productAllowsPreview(product) {
     product.status !== 'archived' &&
     product.status !== 'draft' &&
     product.previewEnabled === true &&
+    product.previewGatewayVerified === true &&
     ['isolated-software', 'digital-sample'].includes(product.previewProfile);
 }
 
