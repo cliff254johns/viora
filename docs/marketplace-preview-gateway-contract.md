@@ -33,6 +33,12 @@ The authorizer checks:
 
 It fails closed if Firebase state cannot be read.
 
+## Controlled API candidate environment
+
+The Worker supports a read-only candidate mode through `VIORA_STAGING_READ_ONLY=true`. In this mode, only `GET /health` and the authenticated `GET /marketplace/preview/gateways` route are allowed; all mutation and unrelated routes are denied before their handlers run.
+
+The candidate must be configured with a dedicated staging Firebase RTDB URL and a staging-only database credential. If the staging URL is missing or points at the production RTDB default, the preview data adapter fails closed with HTTP 503 rather than falling back to production. Do not copy production database secrets or point a staging Worker at production customer, subscription, or licence records.
+
 ## Admin product gateway inventory
 
 An admin-only inventory is available at `GET /marketplace/preview/gateways`. It reads the live Marketplace product catalogue from the Worker's configured Firebase RTDB and returns only safe metadata: product ID, name, category, status, preview profile, preview flags and machine-readable blocking reasons. It deliberately omits delivery URLs and storage locations. The endpoint is an audit aid, not proof that a product gateway is implemented; `previewGatewayVerified` remains a trusted release flag that must only be set after the per-product acceptance evidence below is reviewed.
