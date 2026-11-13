@@ -364,7 +364,7 @@ async function sendEmail(e){
  if(invalid.length){status('mailStatus','Check these email addresses: '+invalid.map(x=>x.to).join(', '),true);return;}
  const ok=await showConfirm('Confirm multi-recipient send','Send “'+subject+'” as '+recipients.length+' separate email'+(recipients.length===1?'':'s')+'? Each recipient will receive only their own message, and every send will be logged in Outreach and the main VIORA Communications log.','Send '+recipients.length+' email'+(recipients.length===1?'':'s'));
  if(!ok)return;
- let sent=0,failed=0;const failures=[],successAddresses=[];
+ let sent=0,failed=0;const failures=[],successAddresses=[];const campaignId=crypto.randomUUID();
  try{
   busy('sendBtn',true,'Sending 0/'+recipients.length+'…');
   for(let i=0;i<recipients.length;i++){
@@ -380,24 +380,29 @@ async function sendEmail(e){
     }
    }
    const id=push(ref(db,ROOT+'/emails')).key,commLogId=push(ref(db,ORG+'/commLog')).key,now=stamp();
-   const audit={id,to,subject,text:textBody,company:lead?.company||lead?.fullName||'',leadId:lead?.id||null,commLogId,direction:'outbound',status:'queued',providerId:null,timestamp:now,sentBy:currentUser.uid,sentByEmail:currentUser.email,approvedAt:now,source:'Outreach Centre',batchSize:recipients.length};
-   const comm={id:commLogId,channel:'em',recipientId:lead?.id||to,recipientName:lead?.company||lead?.fullName||to,recipientContact:to,subject,message:textBody,sentBy:currentUser.email||currentUser.uid,status:'queued',timestamp:now,leadId:lead?.id||null,outreachEmailId:id,source:'Outreach Centre',batchSize:recipients.length};
+   const activity={id,campaignId,leadId:lead?.id||null,recipient:to,organisation:lead?.company||lead?.fullName||'',contact:lead?.contact||'',category:lead?.category||'Lead',country:lead?.country||'',countryCode:lead?.countryCode||'',website:lead?.website||'',source:lead?.source||'Outreach Centre',subject,channel:'email',sender:currentUser.email||currentUser.uid,queuedAt:now,status:'queued',commLogId};
+   const audit={id,to,subject,text:textBody,company:activity.organisation,leadId:activity.leadId,commLogId,campaignId,leadSnapshot:{contact:activity.contact,category:activity.category,country:activity.country,countryCode:activity.countryCode,website:activity.website,source:activity.source},direction:'outbound',status:'queued',providerId:null,timestamp:now,sentBy:currentUser.uid,sentByEmail:currentUser.email,approvedAt:now,source:'Outreach Centre',batchSize:recipients.length};
+   const comm={id:commLogId,channel:'email',direction:'outbound',recipientId:activity.leadId||to,recipientName:activity.organisation||to,recipientContact:to,subject,message:textBody,sentBy:currentUser.email||currentUser.uid,status:'queued',timestamp:now,leadId:activity.leadId,outreachEmailId:id,campaignId,source:'Outreach Centre',batchSize:recipients.length};
    try{
     await set(ref(db,ROOT+'/emails/'+id),audit);
     await set(ref(db,ORG+'/commLog/'+commLogId),comm);
-    await update(ref(db,ROOT+'/emails/'+id),{status:'sending',attemptedAt:stamp()});
-    await update(ref(db,ORG+'/commLog/'+commLogId),{status:'sending',attemptedAt:stamp()});
+    await update(ref(db,ORG+'/leads/'+lead.id),{lastOutreach:activity,lastOutreachAt:now,lastOutreachStatus:'queued',['outreachHistory/'+id]:activity});
+    const sendingAt=stamp();
+    await update(ref(db,ROOT+'/emails/'+id),{status:'sending',attemptedAt:sendingAt});
+    await update(ref(db,ORG+'/commLog/'+commLogId),{status:'sending',attemptedAt:sendingAt});
+    await update(ref(db,ORG+'/leads/'+lead.id),{lastOutreach:{...activity,status:'sending',attemptedAt:sendingAt},lastOutreachStatus:'sending',['outreachHistory/'+id+'/status']:'sending',['outreachHistory/'+id+'/attemptedAt']:sendingAt});
     const result=await api('/sendEmail',{to,subject,text:textBody,replyTo:'cliff254johns@gmail.com'});
     const sentAt=stamp();
     await update(ref(db,ROOT+'/emails/'+id),{status:'sent',providerId:result.id||null,threadId:result.threadId||null,transport:result.transport||'resend',sentAt});
     await update(ref(db,ORG+'/commLog/'+commLogId),{status:'sent',providerId:result.id||null,sentAt});
-    if(lead?.id)await update(ref(db,ORG+'/leads/'+lead.id),{status:lead.status==='New'?'Contacted':lead.status,lastContactedAt:sentAt,updatedAt:sentAt});
+    if(lead?.id){const sentActivity={...activity,status:'sent',sentAt,providerId:result.id||null,threadId:result.threadId||null};await update(ref(db,ORG+'/leads/'+lead.id),{status:lead.status==='New'?'Contacted':lead.status,lastContactedAt:sentAt,lastOutreach:sentActivity,lastOutreachAt:sentAt,lastOutreachStatus:'sent',lastOutreachSubject:subject,lastOutreachEmailId:id,lastOutreachProviderId:result.id||null,updatedAt:sentAt,['outreachHistory/'+id]:sentActivity});}
     sent++;successAddresses.push(to.toLowerCase());
    }catch(err){
     failed++;failures.push(to);
     const failedAt=stamp();
     await update(ref(db,ROOT+'/emails/'+id),{status:'failed',error:err.message,failedAt}).catch(()=>{});
     await update(ref(db,ORG+'/commLog/'+commLogId),{status:'failed',error:err.message,failedAt}).catch(()=>{});
+    if(lead?.id){const failedActivity={...activity,status:'failed',failedAt,error:String(err.message||err).slice(0,300)};await update(ref(db,ORG+'/leads/'+lead.id),{lastOutreach:failedActivity,lastOutreachAt:failedAt,lastOutreachStatus:'failed',['outreachHistory/'+id]:failedActivity}).catch(()=>{});}
    }
    busy('sendBtn',true,'Sending '+(i+1)+'/'+recipients.length+'…');
    status('mailStatus','Processed '+(i+1)+' of '+recipients.length+' · '+sent+' accepted · '+failed+' failed'+(failures.length?' · '+failures.join(', '):''));
