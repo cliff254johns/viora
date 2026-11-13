@@ -12,7 +12,10 @@ function response(data, status = 200) {
     status,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
-      'Cache-Control': 'no-store'
+      'Cache-Control': 'no-store',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type,Authorization'
     }
   });
 }
@@ -80,7 +83,7 @@ export function hasPaidEntitlement(subscriptions, clientId, productId, now = Dat
   );
 }
 
-function productAllowsPreview(product) {
+export function productAllowsPreview(product) {
   return !!product &&
     product.status !== 'archived' &&
     product.status !== 'draft' &&
