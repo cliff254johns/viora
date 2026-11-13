@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildScheduledJobs, runScheduledJobs } from '../../workers/viora-api/index.js';
+import { buildScheduledJobs, runScheduledJobs } from '../../workers/viora-api/scheduled-jobs.js';
 
 const handlers = Object.fromEntries([
   'reminders',
