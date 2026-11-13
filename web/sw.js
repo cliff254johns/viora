@@ -34,7 +34,7 @@
 'use strict';
 
 /* ─── Version bump invalidates every cache below ─────────────── */
-const SW_VERSION = 'viora-v1.6.28';
+const SW_VERSION = 'viora-v1.6.29';
 const CACHE_SHELL  = `${SW_VERSION}-shell`;
 const CACHE_STATIC = `${SW_VERSION}-static`;
 const CACHE_FONTS  = `${SW_VERSION}-fonts`;
@@ -48,8 +48,8 @@ const PRECACHE_URLS = [
   '/manifest.webmanifest',
   '/main.webmanifest',
   '/viora.png',
-  '/engineering-command-centre.css?v=20261113-investor-room-1',
-  '/engineering-command-centre.js?v=20261113-investor-room-1',
+  '/engineering-command-centre.css?v=20261113-investor-room-2',
+  '/engineering-command-centre.js?v=20261113-investor-room-2',
   '/investor-data-room.js',
   '/market',
   '/campaigns',
