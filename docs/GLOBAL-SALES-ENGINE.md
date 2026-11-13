@@ -11,7 +11,8 @@ Status: implementation on `feature/global-sales-engine`; outbound sending remain
 - Per-day reservation counters are at `viora_data/orgs/viora/outreach/campaignMetrics/daily/{YYYY-MM-DD}/reserved` and successful sends at `.../sent`.
 - One-click unsubscribe tokens are stored at `viora_data/orgs/viora/outreach/unsubscribeTokens/{64-hex-token}`.
 - Suppressions use the existing `viora_data/orgs/viora/outreach/suppressions/{encodedEmail}` path and are checked immediately before sending.
-- The scheduler runs from the existing Cloudflare Worker cron trigger. It processes at most one recipient per five-minute invocation and atomically reserves a maximum of 200 send attempts per UTC day using Firebase Realtime Database ETags.
+- The existing Cloudflare Worker cron trigger also checks the Gmail inbox for recent messages from CRM leads and passes eligible VIORA-labelled threads through the autonomous reply classifier. Safe high-confidence replies are sent only when the reply switch is enabled; urgent, complaint, legal, low-confidence and unsupported messages are escalated even when automatic replies are disabled.
+- The campaign scheduler runs from the same cron trigger. It processes at most one outbound recipient per five-minute invocation and atomically reserves a maximum of 200 send attempts per UTC day using Firebase Realtime Database ETags.
 - Every recipient receives an individual Gmail message, not a multi-recipient To/CC/BCC batch.
 - Each queue item can contain up to two personalised follow-ups. A follow-up is sent only if Gmail confirms the latest thread message is still from VIORA. If the thread cannot be checked, the follow-up is blocked rather than guessed.
 - An uncertain Gmail send result is never automatically retried; the item becomes `send_uncertain` and an urgent main-dashboard notification is published.
@@ -19,6 +20,7 @@ Status: implementation on `feature/global-sales-engine`; outbound sending remain
 ## Endpoints
 
 - `GET /outreach/campaign/status` — admin/exec status, daily capacity and queue counts.
+- Scheduled inbox sync — checks up to ten recent inbox messages per five-minute tick; no manual dashboard click is required for reply classification and escalation.
 - `POST /outreach/campaign/settings` — admin/exec one-time outbound enable/pause.
 - `POST /outreach/campaign/queue` — admin/exec enqueue prepared, personalised CRM prospect messages.
 - `GET /outreach/unsubscribe?token=...` — public confirmation page; GET does not unsubscribe.
