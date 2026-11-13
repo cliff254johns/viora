@@ -795,84 +795,105 @@ const App = {
      ═══════════════════════════════════════════════════════════ */
     renderCategoryBar() {
     const bar = document.getElementById('categoryBar');
+    const trigger = document.getElementById('categoryExplorerTrigger');
+    const activeLabel = document.getElementById('activeCategoryLabel');
+    const totalCount = document.getElementById('categoryTotalCount');
     if (!bar) return;
 
-    /* Build category list.
-       Primary source: INDUSTRY_MAP (populated from Firebase `industries`).
-       Fallback: compute from products if `industries` node is empty. */
-    const industryEntries = Object.values(INDUSTRY_MAP);
-    let allCats;
+    const industryEntries = Object.values(INDUSTRY_MAP).slice().sort((a, b) => a.order - b.order);
+    const names = [];
+    industryEntries.forEach(ind => { if (ind.marketCategory && !names.includes(ind.marketCategory)) names.push(ind.marketCategory); });
+    this.products.forEach(product => {
+      const category = String(product.category || 'Marketplace').trim();
+      if (category && !names.includes(category)) names.push(category);
+    });
+    const allCats = ['all', ...names];
+    const counts = new Map();
+    this.products.forEach(product => {
+      const category = String(product.category || 'Marketplace').trim();
+      counts.set(category, (counts.get(category) || 0) + 1);
+    });
 
-    if (industryEntries.length > 0) {
-      /* Use market categories from industries, sorted by industry.order */
-      const sorted = industryEntries
-        .slice()
-        .sort((a, b) => a.order - b.order);
-      allCats = ['all', ...sorted.map(i => i.marketCategory)];
-    } else {
-      /* Fallback — categories directly from products */
-      allCats = ['all', ...new Set(this.products.map(p => p.category).filter(Boolean))];
-    }
+    const visualFor = category => {
+      const ind = INDUSTRY_MAP[category];
+      if (ind) return { icon: ind.icon || 'fa-solid fa-tag', color: ind.color || '#60a5fa' };
+      const value = String(category).toLowerCase();
+      const rules = [
+        [/software|saas|app|system|erp|crm/, 'fa-solid fa-laptop-code', '#60a5fa'],
+        [/design|creative|media|photo|video/, 'fa-solid fa-wand-magic-sparkles', '#c084fc'],
+        [/business|finance|account|tax|legal/, 'fa-solid fa-briefcase', '#34d399'],
+        [/education|course|training|learn|academy/, 'fa-solid fa-graduation-cap', '#fbbf24'],
+        [/security|privacy|network|cloud|hosting/, 'fa-solid fa-shield-halved', '#38bdf8'],
+        [/marketing|social|seo|advertis/, 'fa-solid fa-bullhorn', '#fb7185'],
+        [/hardware|device|computer|accessor/, 'fa-solid fa-microchip', '#2dd4bf'],
+        [/document|template|ebook|digital/, 'fa-solid fa-file-arrow-down', '#f97316']
+      ];
+      const match = rules.find(([pattern]) => pattern.test(value));
+      return match ? { icon: match[1], color: match[2] } : { icon: 'fa-solid fa-cubes-stacked', color: '#818cf8' };
+    };
 
-    const q = (this._catSearch || '').toLowerCase().trim();
-    const cats = q
-      ? allCats.filter(c => c === 'all' || c.toLowerCase().includes(q))
-      : allCats;
+    const q = String(this._catSearch || '').toLowerCase().trim();
+    const filtered = allCats.filter(category => category === 'all' || category.toLowerCase().includes(q));
+    const allCount = this.products.length;
+    if (totalCount) totalCount.textContent = allCount.toLocaleString() + (allCount === 1 ? ' product' : ' products') + ' across ' + names.length + ' categories';
+    if (activeLabel) activeLabel.textContent = this.activeCategory === 'all' ? 'All products' : this.activeCategory;
+    if (trigger) trigger.setAttribute('aria-expanded', String(document.getElementById('categoryExplorerPanel')?.hidden === false));
 
-    const isMobile = window.matchMedia('(max-width: 900px)').matches;
-    const collapsed = isMobile && !q && !this._catExpanded;
-    const visible = collapsed ? cats.slice(0, 6) : cats;
-
-    bar.innerHTML = visible.map(c => {
-      const ind = INDUSTRY_MAP[c];
-      const icon = c === 'all'
-        ? 'fa-solid fa-layer-group'
-        : (ind ? ind.icon : 'fa-solid fa-tag');
-      const color = c === 'all' ? null : (ind ? ind.color : null);
-      const label = c === 'all' ? 'All Products' : c;
-      const active = this.activeCategory === c ? 'active' : '';
-
-      return `<button class="cat-btn ${active}" data-cat="${this.escape(c)}" role="tab">
-        <i class="${icon}"${color ? ` style="color:${color}"` : ''}></i> ${this.escape(label)}
+    bar.innerHTML = filtered.map(category => {
+      const all = category === 'all';
+      const visual = all ? { icon: 'fa-solid fa-globe', color: '#60a5fa' } : visualFor(category);
+      const count = all ? allCount : (counts.get(category) || 0);
+      const active = this.activeCategory === category;
+      const label = all ? 'All products' : category;
+      return `<button class="category-option ${active ? 'active' : ''}" type="button" role="option" aria-selected="${active}" data-cat="${this.escape(category)}">
+        <span class="category-option-icon" style="--category-accent:${this.escape(visual.color)}"><i class="${this.escape(visual.icon)}"></i></span>
+        <span class="category-option-copy"><strong>${this.escape(label)}</strong><small>${all ? 'Explore the complete collection' : 'Browse ' + this.escape(label) + ' solutions'}</small></span>
+        <span class="category-option-count">${count.toLocaleString()}</span>
       </button>`;
-    }).join('');
+    }).join('') || '<div class="category-empty"><i class="fa-solid fa-magnifying-glass"></i><span>No categories match that search.</span></div>';
 
-    if (isMobile && !q && allCats.length > 6) {
-      const more = document.createElement('button');
-      more.className = 'cat-btn cat-btn-more';
-      more.innerHTML = this._catExpanded
-        ? `<i class="fa-solid fa-chevron-up"></i> Show less`
-        : `<i class="fa-solid fa-chevron-down"></i> All ${allCats.length} categories`;
-      more.addEventListener('click', () => {
-        this._catExpanded = !this._catExpanded;
-        this.renderCategoryBar();
-      });
-      bar.appendChild(more);
-    }
-
-    bar.querySelectorAll('.cat-btn[data-cat]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        this.activeCategory = btn.dataset.cat;
+    bar.querySelectorAll('[data-cat]').forEach(button => {
+      button.addEventListener('click', () => {
+        this.activeCategory = button.dataset.cat;
+        const panel = document.getElementById('categoryExplorerPanel');
+        if (panel) panel.hidden = true;
+        this._catSearch = '';
+        const input = document.getElementById('catSearchInput');
+        if (input) input.value = '';
         this.renderCategoryBar();
         this.renderProducts();
-        if (isMobile) {
+        if (window.matchMedia('(max-width: 900px)').matches) {
           document.getElementById('products')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       });
     });
 
-    const prev = document.getElementById('catPrev');
-    const next = document.getElementById('catNext');
-    if (prev && !prev._vBound) {
-      prev._vBound = true;
-      next._vBound = true;
-      prev.addEventListener('click', () => bar.scrollBy({ left: -260, behavior: 'smooth' }));
-      next.addEventListener('click', () => bar.scrollBy({ left:  260, behavior: 'smooth' }));
+    const panel = document.getElementById('categoryExplorerPanel');
+    if (trigger && !trigger._vBound) {
+      trigger._vBound = true;
+      trigger.addEventListener('click', () => {
+        if (!panel) return;
+        panel.hidden = !panel.hidden;
+        trigger.setAttribute('aria-expanded', String(!panel.hidden));
+        if (!panel.hidden) setTimeout(() => document.getElementById('catSearchInput')?.focus(), 60);
+      });
     }
-
-    bar.querySelector('.cat-btn.active')?.scrollIntoView({
-      behavior: 'smooth', inline: 'center', block: 'nearest'
-    });
+    if (panel && !panel._vBound) {
+      panel._vBound = true;
+      document.addEventListener('click', event => {
+        const explorer = document.getElementById('categoryExplorer');
+        if (explorer && !explorer.contains(event.target)) {
+          panel.hidden = true;
+          document.getElementById('categoryExplorerTrigger')?.setAttribute('aria-expanded', 'false');
+        }
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+          panel.hidden = true;
+          document.getElementById('categoryExplorerTrigger')?.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
   },
 
    /* ── Seeded shuffle — stable per visitor, different between visitors ── */
