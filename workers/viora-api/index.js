@@ -5852,6 +5852,9 @@ async function handleOutreachDraft(body, env, user) {
    ============================================================ */
 async function handleSendEmail(body, env, user) {
   requireRole(String(user.role || '').toLowerCase(), ['admin', 'exec']);
+  if (body && (body.purpose === 'marketing' || body.source === 'Outreach Centre')) {
+    return json({ error: 'Prospect marketing must use the compliance-checked Outreach campaign queue with recipient-level human approval.' }, 409);
+  }
   const to = body && body.to;
   const subject = body && body.subject;
   const html = body && body.html;
