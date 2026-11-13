@@ -88,6 +88,7 @@ const expectedLegacyProducts = [
   ['3D Websites','business'],
   ['General Websites','business'],
   ['AI & Automation','enterprise'],
+  ['Industry Specific Production Systems','industry'],
   ['Food & Beverage','hospitality'],
   ['Health & Wellness','institutional'],
   ['Beauty & Personal Care','business'],
