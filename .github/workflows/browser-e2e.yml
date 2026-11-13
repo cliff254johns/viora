@@ -3,7 +3,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [main, "engineering/**"]
+    branches: [main, "engineering/**", "release/outreach-controlled-rollout"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -20,7 +20,7 @@ jobs:
       - name: Run browser, accessibility and mobile layout checks
         run: npm run test:e2e
         env:
-          VIORA_BASE_URL: ${{ github.event_name == 'pull_request' && 'http://127.0.0.1:4173' || 'https://viora.co.ke' }}
-          VIORA_USE_LOCAL_SERVER: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
+          VIORA_BASE_URL: ${{ (github.event_name == 'pull_request' || github.ref_name == 'release/outreach-controlled-rollout') && 'http://127.0.0.1:4173' || 'https://viora.co.ke' }}
+          VIORA_USE_LOCAL_SERVER: ${{ (github.event_name == 'pull_request' || github.ref_name == 'release/outreach-controlled-rollout') && 'true' || 'false' }}
           VIORA_TEST_EMAIL: ${{ secrets.VIORA_TEST_EMAIL }}
           VIORA_TEST_PASSWORD: ${{ secrets.VIORA_TEST_PASSWORD }}
