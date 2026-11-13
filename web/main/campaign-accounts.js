@@ -287,7 +287,7 @@ export async function renderAccountsPanel() {
     <div class="card">
       <div class="cardhead">
         <h3><i class="fa-solid fa-share-nodes"></i> Your social media accounts</h3>
-        <span class="pill">${Object.keys(byPlatform).length} of ${PLATFORMS.length} connected</span>
+        <span class="pill">${Object.keys(byPlatform).length} registered · ${Object.values(apiStatus || {}).filter(x => x?.verified).length} APIs verified</span>
       </div>
 
       <div class="accounts-grid">
@@ -456,17 +456,13 @@ export function openAccountEditor(platformKey, existingAccount) {
           : 'Optional — used for reference and analytics matching.'}
       </div>
 
-      <label style="display:flex;align-items:center;gap:8px;font-weight:400;cursor:pointer;margin:12px 0;">
-        <input type="checkbox" id="saConnectedVia" ${a.connectedVia === 'api' ? 'checked' : ''} style="width:auto;" />
-        <span>
-          API-connected (post directly via worker)
-          ${platform.canPost ? '' : '<span style="color:var(--accent-gold);">— your worker only supports Facebook & TikTok for direct posting</span>'}
-        </span>
-      </label>
+      <div class="notice" style="margin:10px 0;">
+        API connectivity is checked against the live VIORA Worker. It cannot be marked connected manually.
+      </div>
 
       <label style="display:flex;align-items:center;gap:8px;font-weight:400;cursor:pointer;margin:12px 0;">
         <input type="checkbox" id="saVerified" ${a.verified ? 'checked' : ''} style="width:auto;" />
-        <span>Mark as verified / official account</span>
+        <span>I have manually confirmed this is the official profile</span>
       </label>
 
       <label>Internal notes</label>
@@ -492,7 +488,7 @@ export function openAccountEditor(platformKey, existingAccount) {
     const displayName = (modal.querySelector('#saDisplayName').value || '').trim();
     const profileUrl = (modal.querySelector('#saProfileUrl').value || '').trim();
     const platformId = (modal.querySelector('#saPlatformId').value || '').trim();
-    const connectedVia = modal.querySelector('#saConnectedVia').checked ? 'api' : 'manual';
+    const connectedVia = 'manual';
     const verified = modal.querySelector('#saVerified').checked;
     const notes = (modal.querySelector('#saNotes').value || '').trim();
 
@@ -511,6 +507,9 @@ export function openAccountEditor(platformKey, existingAccount) {
       profileUrl,
       platformId,
       connectedVia,
+      apiConnectionStatus: 'pending',
+      apiVerifiedAt: null,
+      apiVerificationMessage: null,
       verified,
       notes,
       followers: a.followers ?? null,
