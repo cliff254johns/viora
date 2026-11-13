@@ -6289,8 +6289,8 @@ async function handleOutreachCampaignSettings(body, env, user) {
     }
     await gmailAccessToken(connection, env);
     const compliance = await outreachDbRead(env, 'outreach/compliance/globalSendingPolicy').catch(() => null);
-    if (!compliance || compliance.status !== 'approved' || !compliance.version || !compliance.reviewedAt) {
-      return json({ ok: false, error: 'Outbound activation is blocked until the global jurisdiction policy register is approved and versioned by the responsible VIORA administrator.' }, 409);
+    if (!compliance || compliance.status !== 'approved' || !compliance.version || !compliance.reviewedAt || !compliance.senderPostalAddress || !compliance.privacyNoticeUrl) {
+      return json({ ok: false, error: 'Outbound activation requires an approved, versioned global policy, a recorded review date, VIORA postal address and privacy notice URL.' }, 409);
     }
   }
   const current = await outreachDbRead(env, 'outreach/campaignSettings').catch(() => ({})) || {};
@@ -6302,6 +6302,8 @@ async function handleOutreachCampaignQueue(body, env, user) {
   const items = Array.isArray(body.items) ? body.items : [];
   if (!items.length || items.length > 50) return json({ ok: false, error: 'Provide between 1 and 50 prepared prospect messages' }, 400);
   const created = [], rejected = [];
+  const existingQueue = await outreachDbRead(env, 'outreach/campaignQueue').catch(() => ({})) || {};
+  const alreadyQueued = new Set(Object.values(existingQueue).filter(x => x && ['queued','sending','sent','send_uncertain'].includes(x.status)).map(x => String(x.recipient || '').toLowerCase()));
   for (const item of items) {
     try {
       const leadId = String(item.leadId || '').trim();
@@ -6310,6 +6312,7 @@ async function handleOutreachCampaignQueue(body, env, user) {
       if (!lead) throw new Error('CRM lead not found');
       const email = String(lead.email || '').trim().toLowerCase();
       if (!validOutreachEmail(email) || lead.emailVerified !== true) throw new Error('A verified business email address is required');
+      if (alreadyQueued.has(email)) throw new Error('This recipient already has an active or completed campaign record');
       const eligibility = lead.contactEligibility || {};
       if (eligibility.status !== 'eligible' || !eligibility.basis || !eligibility.sourceUrl || !eligibility.reviewedAt) {
         throw new Error('Documented contact eligibility, basis, source URL and review timestamp are required');
@@ -6347,6 +6350,7 @@ async function handleOutreachCampaignQueue(body, env, user) {
         attempts: 0
       };
       await outreachDbWrite(env, 'outreach/campaignQueue/' + queueId, record);
+      alreadyQueued.add(email);
       created.push({ id: queueId, recipient: email, organisation: company });
     } catch (error) { rejected.push({ leadId: item && item.leadId || null, reason: error.message }); }
   }
@@ -6365,8 +6369,20 @@ async function handleOutreachUnsubscribe(request, url, env) {
 }
 async function outreachReserveDailySlot(env) {
   const day = new Date().toISOString().slice(0, 10);
-  const count = await outreachDbIncrement(env, 'outreach/campaignMetrics/daily/' + day + '/reserved');
-  return { day, count, allowed: count <= 200 };
+  const path = 'outreach/campaignMetrics/daily/' + day + '/reserved';
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const url = `${rtdb(env)}/viora_data/orgs/viora/${path}.json?auth=${encodeURIComponent(env.FIREBASE_DATABASE_SECRET || '')}`;
+    const res = await fetch(url, { headers: { 'X-Firebase-ETag': 'true' } });
+    if (!res.ok) throw new Error('Unable to read daily campaign limit');
+    const etag = res.headers.get('ETag'), current = Number(await res.json()) || 0;
+    if (current >= 200) return { day, count: current, allowed: false };
+    const next = current + 1;
+    const put = await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'If-Match': etag }, body: String(next) });
+    if (put.status === 412) continue;
+    if (!put.ok) throw new Error('Unable to reserve daily campaign capacity');
+    return { day, count: next, allowed: true };
+  }
+  throw new Error('Daily campaign limit is busy; retry on the next scheduler tick');
 }
 async function runOutreachCampaignScheduler(env) {
   try {
@@ -6392,7 +6408,13 @@ async function runOutreachCampaignScheduler(env) {
         await outreachDbWrite(env, path + '/suppressedAt', new Date().toISOString());
         return;
       }
-      const currentPolicy = await outreachDbRead(env, 'outreach/compliance/jurisdictions/' + candidate.countryCode).catch(() => null);
+      const globalPolicy = await outreachDbRead(env, 'outreach/compliance/globalSendingPolicy').catch(() => null);
+    if (!globalPolicy || globalPolicy.status !== 'approved' || !globalPolicy.version || !globalPolicy.senderPostalAddress || !globalPolicy.privacyNoticeUrl) {
+      await outreachDbWrite(env, path + '/status', 'blocked');
+      await outreachDbWrite(env, path + '/blockReason', 'Global sending policy or sender disclosure configuration is missing');
+      return;
+    }
+    const currentPolicy = await outreachDbRead(env, 'outreach/compliance/jurisdictions/' + candidate.countryCode).catch(() => null);
       if (!currentPolicy || currentPolicy.status !== 'approved' || currentPolicy.version !== candidate.policyVersion) {
         await outreachDbWrite(env, path + '/status', 'blocked');
         await outreachDbWrite(env, path + '/blockReason', 'Country sending policy changed or is no longer approved');
@@ -6417,7 +6439,7 @@ async function runOutreachCampaignScheduler(env) {
       }
       const token = candidate.unsubscribeToken;
       const unsubscribeUrl = 'https://www.viora.co.ke/outreach/unsubscribe?token=' + encodeURIComponent(token);
-      const footer = '\n\n---\nVIORA Ecosystems | You are receiving this message because our records indicate a relevant business contact basis.\nUnsubscribe: ' + unsubscribeUrl;
+      const footer = '\n\n---\nVIORA Ecosystems\n' + globalPolicy.senderPostalAddress + '\nPrivacy: ' + globalPolicy.privacyNoticeUrl + '\nYou are receiving this business email under a documented contact basis.\nUnsubscribe: ' + unsubscribeUrl;
       const response = await sendViaGmail({
         to: candidate.recipient, subject: candidate.subject,
         text: String(candidate.text || '') + footer,
