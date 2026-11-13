@@ -6059,7 +6059,12 @@ async function gmailApiFetch(path, accessToken, options = {}) {
 }
 async function logGmailCommunication(env, record) {
   try {
-    await gmailDbWrite(env, '../../commLog', record, 'POST');
+    if (!env.FIREBASE_DATABASE_SECRET) return;
+    await fetch(`${rtdb(env)}/viora_data/orgs/viora/commLog.json?auth=${encodeURIComponent(env.FIREBASE_DATABASE_SECRET)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(record),
+    });
   } catch (e) {
     // The communication log is best-effort; do not expose mailbox content or tokens.
   }
