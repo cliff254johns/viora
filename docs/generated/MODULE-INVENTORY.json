@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-13T00:21:04.456Z",
+  "generatedAt": "2026-11-13T01:01:08.056Z",
   "moduleCount": 112,
   "modules": [
     {
@@ -1438,7 +1438,7 @@
     },
     {
       "file": "web/outreach.js",
-      "bytes": 81619,
+      "bytes": 81623,
       "imports": [
         "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js",
         "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js",
@@ -1570,7 +1570,7 @@
     },
     {
       "file": "workers/viora-api/index.js",
-      "bytes": 257080,
+      "bytes": 257085,
       "imports": [],
       "exports": [],
       "workerRoutes": []
