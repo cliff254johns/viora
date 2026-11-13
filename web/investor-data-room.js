@@ -17,11 +17,11 @@ const CATEGORIES = [
   }
 ];
 const STATUS = ['Draft','Needs evidence','Under review','Verified','Not applicable'];
-let dbApi, storageApi, roomData={}, filesData={}, loaded=false;
+let dbApi, storageApi, roomData={}, filesData={}, loaded=false, roomUnsubscribe=null;
 
 function authorized(){
-  const s=getState(), u=window.VioraAuth?.currentUser || s.user || s.currentUser;
-  const role=String(s.role || s.user?.role || s.currentUser?.role || u?.role || '').toLowerCase();
+  const s=getState(), u=window.VioraAuth?.currentUser || s.operator || s.user || s.currentUser;
+  const role=String(s.operator?.role || s.role || s.user?.role || s.currentUser?.role || u?.role || '').toLowerCase();
   return !!u && (['admin','exec'].includes(role) || u.isAdmin===true || u.isExec===true);
 }
 async function ensureFirebase(){
@@ -33,7 +33,7 @@ async function ensureFirebase(){
   storageApi={...storageMod,storage:storageMod.getStorage(app)};
   if(!dbApi.db) throw new Error('The main Firebase database is not exposed in this session.');
 }
-const roomRef=()=>dbApi.ref(dbApi.db,'investorDataRoom');
+const roomPath=()=>typeof window.P==='function'?window.P('investorDataRoom'):'investorDataRoom';\nconst roomRef=()=>dbApi.ref(dbApi.db,roomPath());
 function statusLabel(v){return STATUS.includes(v)?v:'Draft';}
 function safeFileName(s){return String(s||'file').replace(/[^a-z0-9._-]/gi,'_').slice(0,100);}
 function downloadBlob(name,blob){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);}
@@ -55,9 +55,9 @@ function renderShell(host){
     <div class="idr-grid">${sections}</div>
     <footer class="idr-foot">Evidence discipline: “Verified” is an internal review status, not an independent audit or legal certification. Investor access links are not public; share only approved, redacted copies.</footer>
   </div>`;
-  host.querySelector('#idr-save').addEventListener('click',saveRoom);
+  host.querySelector('#idr-save').addEventListener('click',()=>saveRoom().catch(e=>alert(e.message||'Save failed.')));
   host.querySelector('#idr-export').addEventListener('click',exportRoom);
-  host.querySelector('#idr-upload').addEventListener('click',uploadFile);
+  host.querySelector('#idr-upload').addEventListener('click',()=>uploadFile().catch(e=>alert(e.message||'Upload failed.')));
   host.querySelector('#idr-print').addEventListener('click',()=>window.print());
 }
 function paintRoom(){
