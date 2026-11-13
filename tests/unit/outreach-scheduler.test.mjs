@@ -70,3 +70,29 @@ test('scheduled task failures are logged without rejecting the whole run', async
   ], () => {}));
   assert.deepEqual(events, ['second']);
 });
+
+import { readFile } from 'node:fs/promises';
+
+test('Facebook publishing claims use Firebase ETags and do not auto-retry ambiguous outcomes', async () => {
+  const source = await readFile(new URL('../../workers/viora-api/index.js', import.meta.url), 'utf8');
+  assert.match(source, /async function claimScheduledCampaignPost/);
+  assert.match(source, /X-Firebase-ETag': 'true'/);
+  assert.match(source, /'If-Match': etag/);
+  assert.match(source, /post\.status = 'publish_uncertain'/);
+  assert.match(source, /reconciliationRequired = true/);
+  assert.match(source, /Previous publish claim expired[\s\S]*automatic retry blocked/);
+  assert.match(source, /uncertain: true, error: 'Facebook request outcome unknown/);
+  assert.doesNotMatch(source, /retrying stuck post/);
+});
+
+test('Campaigns account verification reads provider status from the authenticated Worker', async () => {
+  const [worker, accounts] = await Promise.all([
+    readFile(new URL('../../workers/viora-api/index.js', import.meta.url), 'utf8'),
+    readFile(new URL('../../web/main/campaign-accounts.js', import.meta.url), 'utf8'),
+  ]);
+  assert.match(worker, /async function handleSocialConfigStatus/);
+  assert.match(worker, /path === '\/social\/config\/status'/);
+  assert.match(accounts, /SAFE\.callFn\('social\/config\/status'/);
+  assert.match(accounts, /serviceStatus\?\.verified/);
+  assert.match(accounts, /API credentials missing/);
+});
