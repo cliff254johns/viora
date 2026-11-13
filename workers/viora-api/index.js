@@ -6183,6 +6183,7 @@ async function logGmailCommunication(env, record) {
     // The communication log is best-effort; do not expose mailbox content or tokens.
   }
 }
+// Release guard: every Gmail outbound path fails closed unless the explicit send switch is true.
 function outboundEmailSendingEnabled(env) {
   return String(env && env.ENABLE_OUTREACH_EMAIL_SENDING || '').toLowerCase() === 'true';
 }
