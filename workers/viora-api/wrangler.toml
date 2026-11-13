@@ -13,7 +13,6 @@ RESEND_FROM = "VIORA <cliff254johns@gmail.com>"
 WORKER_BASE_URL = "https://viora-api.cliff254johns.workers.dev"
 ENABLE_OUTREACH_EMAIL_AUTOMATION = "false"
 ENABLE_OUTREACH_EMAIL_SENDING = "false"
-ENABLE_OUTREACH_EMAIL_SENDING = "false"
 
 [observability]
 enabled = true
