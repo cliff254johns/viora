@@ -445,7 +445,7 @@ export function renderPublicUiProducts() {
     const html = filtered.map(p => {
       const priceKes = usdToKes(p.price || 0);
       const sold = metrics[p.id]?.qty || 0;
-      const imageUrl = safeUrl(p.image || p.previewUrl || '');
+      const imageUrl = safeUrl(p.image || '');
       const statusCls = p.status === 'draft' ? 'draft' : p.status === 'archived' ? 'gray' : 'active';
       const idSafe = q(p.id);
       return `<div class="card-3d">
