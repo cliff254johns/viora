@@ -118,6 +118,9 @@ for (const [label, expected] of expectedLegacyProducts) {
   assert.equal(classify({ category: label }), expected, 'legacy product category '+label);
 }
 assert.equal(taxonomyWindow.VIORATaxonomy.categories.length, 6, 'taxonomy must expose exactly six categories');
+for (const [legacyKey, expected] of Object.entries(taxonomyWindow.VIORATaxonomy.legacy)) {
+  assert.equal(taxonomyWindow.VIORATaxonomy.classifyIndustry({ name:legacyKey.replace(/_/g, ' '), cat:legacyKey }), expected, 'legacy industry key '+legacyKey);
+}
 
 for (const path of ['web/manifest.webmanifest','web/main.webmanifest','web/manifest.json','web/campaigns.webmanifest','web/assets/r/manifest-public.json','web/assets/r/manifest-rider.json','web/assets/r/manifest-admin.json','web/assets/mamamboga/manifest.json']) {
   const manifest = JSON.parse(read(path));
