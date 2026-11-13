@@ -1197,8 +1197,8 @@ export function attachForms() {
     status: $('prodStatus')?.value,
     _kind: $('prodKind')?.value || 'product',
     liveUrl: $('prodLiveUrl')?.value?.trim() || null,
-    previewUrl: $('prodPreviewUrl')?.value?.trim() || null,
-    link: $('prodLink')?.value?.trim() || null,
+    previewEnabled: $('prodPreviewEnabled')?.checked === true,
+    previewProfile: $('prodPreviewProfile')?.value || '',
     image: $('prodImage')?.value?.trim() || null
   })));
 
