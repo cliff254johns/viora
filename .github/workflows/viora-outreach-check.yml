@@ -56,6 +56,7 @@ jobs:
           grep -Fq 'ENABLE_OUTREACH_EMAIL_AUTOMATION' workers/viora-api/index.js
           grep -Fq "social_publish: () => publishDueScheduledPosts(env)" workers/viora-api/index.js
           grep -Fq 'Promise.all(jobs.map' workers/viora-api/index.js
+          grep -Fq 'keep_vars = true' workers/viora-api/wrangler.toml
           grep -Fq '[observability.logs]' workers/viora-api/wrangler.toml
           grep -Fq 'invocation_logs = true' workers/viora-api/wrangler.toml
           grep -Fq '[observability.traces]' workers/viora-api/wrangler.toml
