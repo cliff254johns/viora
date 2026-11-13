@@ -5889,7 +5889,7 @@ function gmailBase64Url(bytes) {
   const data = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   let binary = '';
   for (const byte of data) binary += String.fromCharCode(byte);
-  return btoa(binary).replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/g, '');
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 function gmailDecodeBase64(value) {
   const normalized = String(value || '').replace(/-/g, '+').replace(/_/g, '/');
@@ -6075,7 +6075,7 @@ async function sendViaGmail(message, env, user, existingConnection) {
     const accessToken = await gmailAccessToken(connection, env);
     const recipients = (Array.isArray(message.to) ? message.to : [message.to]).map(v => String(v).trim()).filter(Boolean);
     if (!recipients.length || recipients.length > 50) return json({ ok: false, error: 'Provide between 1 and 50 recipients' }, 400);
-    const cleanHeader = value => String(value || '').replace(/[\\r\\n]+/g, ' ').trim();
+    const cleanHeader = value => String(value || '').replace(/[\r\n]+/g, ' ').trim();
     const encodedSubject = '=?UTF-8?B?' + btoa(unescape(encodeURIComponent(cleanHeader(message.subject || '(no subject)')))) + '?=';
     const headers = [
       'From: ' + GMAIL_OWNER_EMAIL,
@@ -6101,7 +6101,7 @@ async function sendViaGmail(message, env, user, existingConnection) {
         '',
         btoa(unescape(encodeURIComponent(String(message.html)))),
         '--' + boundary + '--',
-      ]).join('\\r\\n');
+      ]).join('\r\n');
     } else {
       const isHtml = !!message.html;
       const body = isHtml ? String(message.html) : String(message.text || '');
@@ -6110,7 +6110,7 @@ async function sendViaGmail(message, env, user, existingConnection) {
         'Content-Transfer-Encoding: base64',
         '',
         btoa(unescape(encodeURIComponent(body))),
-      ]).join('\\r\\n');
+      ]).join('\r\n');
     }
     const raw = gmailBase64Url(new TextEncoder().encode(mime));
     const result = await gmailApiFetch('messages/send', accessToken, {
