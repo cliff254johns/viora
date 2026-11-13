@@ -2392,7 +2392,7 @@ const heroVisual = (p.image && String(p.image).trim())
       const cached = JSON.parse(localStorage.getItem(PRODUCT_CACHE_KEY) || 'null');
       if (cached && Array.isArray(cached.products) &&
           Date.now() - Number(cached.savedAt || 0) < PRODUCT_CACHE_MAX_AGE) {
-        this.products = cached.products;
+        this.products = cached.products.map(p => window.VIORATaxonomy.normalizeProduct(p));
         this.renderCategoryBar();
         this.renderProducts();
         this.renderCarousel();
