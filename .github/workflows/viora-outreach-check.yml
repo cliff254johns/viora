@@ -30,7 +30,7 @@ jobs:
           grep -q 'data-roles="admin,exec"' web/main.html
           grep -q 'href="/outreach.html"' web/main.html
           grep -q 'data-group="engineering-command"' web/main.html
-          grep -q 'data-group="engineering-visuals"' web/main.html
+          grep -q 'data-tab="engineering-visuals"' web/main.html
           grep -q '/outreach/auto-reply' workers/viora-api/index.js
           grep -q 'publishOutreachEscalation' workers/viora-api/index.js
           grep -q '/outreach/campaign/queue' workers/viora-api/index.js
