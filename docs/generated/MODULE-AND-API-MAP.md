@@ -1,8 +1,8 @@
 # Generated module and API map
 
-Generated: 2026-11-13T19:52:26.797Z
+Generated: 2026-11-13T20:42:15.259Z
 
-Modules: 113
+Modules: 114
 
 ## Modules
 ### web/analytics-config.js
@@ -161,7 +161,7 @@ Modules: 113
 
 ### web/index-home.js
 
-- Size: 110471 bytes
+- Size: 111579 bytes
 - Imports: ./order-modal.js, ./category-modal.js
 - Exports: none detected
 - Worker routes: none detected
@@ -175,7 +175,7 @@ Modules: 113
 
 ### web/industry-marketplace.js
 
-- Size: 5946 bytes
+- Size: 6152 bytes
 - Imports: none detected
 - Exports: none detected
 - Worker routes: none detected
@@ -336,7 +336,7 @@ Modules: 113
 
 ### web/main/home-content.js
 
-- Size: 95219 bytes
+- Size: 96102 bytes
 - Imports: none detected
 - Exports: initHomeContent, renderHomeContent
 - Worker routes: none detected
@@ -406,7 +406,7 @@ Modules: 113
 
 ### web/main/pp.js
 
-- Size: 67751 bytes
+- Size: 65625 bytes
 - Imports: none detected
 - Exports: initPP, PP_DEFAULTS, ppSeedCategoriesAndIndustriesFromV0, PP, bindPPEvents
 - Worker routes: none detected
@@ -441,7 +441,7 @@ Modules: 113
 
 ### web/main/render-marketplace.js
 
-- Size: 93665 bytes
+- Size: 93916 bytes
 - Imports: none detected
 - Exports: initRenderMarketplace, getMarketplaceMetrics, getProductSalesMetrics, invalidateMarketplaceMetrics, renderMarketplaceProducts, renderPublicUiProducts, renderMarketplaceOrders, computeMarketAnalytics, invalidateMarketAnalytics, materializeMarketplaceLeads, renderMarketplaceAnalytics, openOrderDetail, renderMyOrders, renderMyWishlist, renderCampaigns, applyCampMediaTypeUI, renderCampaignStats, fetchCampaignStats, connectTikTok, startCampaignStatsAutoRefresh, stopCampaignStatsAutoRefresh, refreshAllCampaignStats, openManualSale, renderMsProductsList, renderMsSummary, updateManualSaleItem, removeManualSaleItem, submitManualSale, addToWishlist, removeFromWishlist, buyFromWishlist
 - Worker routes: none detected
@@ -511,7 +511,7 @@ Modules: 113
 
 ### web/main/viora-main-handlers.js
 
-- Size: 217739 bytes
+- Size: 221091 bytes
 - Imports: none detected
 - Exports: buildVioraHandlers
 - Worker routes: none detected
@@ -546,7 +546,7 @@ Modules: 113
 
 ### web/main.js
 
-- Size: 240600 bytes
+- Size: 240630 bytes
 - Imports: firebase/app, ./main/boot.js, firebase/database, firebase/auth, ./viora-history.js, ./main/helpers.js, ./main/idb.js, ./main/render-dashboard.js, ./main/dashboard-weather.js, ./main/dashboard-kpis.js, ./main/dashboard-attention.js, ./main/write-layer.js, ./main/orchestration.js, ./main/ai-services.js, ./main/finance.js, ./main/push-notifications.js, ./main/smart-import.js, ./main/command-palette.js, ./main/render-admin.js, ./main/subscriptions.js, ./main/render-partner.js, ./main/render-personal.js, ./main/main-subscription-plans.js, ./main/training-admin-bridge.js, ./main/pp.js, ./main/market-content.js, ./main/charts.js, ./main/global-market.js, ./main/modal-utils.js, ./main/projects.js, ./main/contacts.js, ./main/clients.js, ./main/render-marketplace.js, ./main/misc-helpers.js, ./main/viora-main-renderers.js?v=20261112-world-map-mobile-fit, ./main/viora-main-handlers.js, ./main/viora-main-wiring.js, ./main/home-content.js, ./main/employee-profiles.js,  + String(value.profileName || value.from || 
 - Exports: none detected
 - Worker routes: none detected
@@ -569,7 +569,7 @@ Modules: 113
 
 ### web/mainIndex/blueprint.js
 
-- Size: 23801 bytes
+- Size: 23817 bytes
 - Imports: https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js, https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js
 - Exports: none detected
 - Worker routes: none detected
@@ -584,7 +584,7 @@ Modules: 113
 
 ### web/mainIndex/industries.js
 
-- Size: 215121 bytes
+- Size: 213902 bytes
 - Imports: none detected
 - Exports: none detected
 - Worker routes: none detected
@@ -605,7 +605,7 @@ Modules: 113
 
 ### web/mainMarket/market.js
 
-- Size: 115341 bytes
+- Size: 114479 bytes
 - Imports: ../order-modal.js
 - Exports: none detected
 - Worker routes: none detected
@@ -668,7 +668,7 @@ Modules: 113
 
 ### web/script.js
 
-- Size: 150422 bytes
+- Size: 146442 bytes
 - Imports: none detected
 - Exports: none detected
 - Worker routes: none detected
@@ -727,6 +727,13 @@ Modules: 113
 - Size: 12638 bytes
 - Imports: none detected
 - Exports: initHistoryGuard, watchModals, pushModalToHistory, closeTopModalFromHistory, isAnyModalOpen, getOpenModals
+- Worker routes: none detected
+
+### web/viora-taxonomy.js
+
+- Size: 8863 bytes
+- Imports: none detected
+- Exports: none detected
 - Worker routes: none detected
 
 ### web/worker.js
@@ -794,8 +801,8 @@ Modules: 113
 
 ### scripts/viora-engineering-checks.mjs
 
-- Size: 8574 bytes
-- Imports: node:fs, node:assert/strict
-- Exports: TranslationRateLimiter, EMBEDDED_ASSETS_GZIP_BASE64
+- Size: 19926 bytes
+- Imports: node:fs, node:assert/strict, node:vm
+- Exports: buildVioraHandlers, TranslationRateLimiter, EMBEDDED_ASSETS_GZIP_BASE64
 - Worker routes: none detected
 

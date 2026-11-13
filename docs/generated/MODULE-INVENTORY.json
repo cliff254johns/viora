@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-11-13T19:52:26.796Z",
-  "moduleCount": 113,
+  "generatedAt": "2026-11-13T20:42:15.259Z",
+  "moduleCount": 114,
   "modules": [
     {
       "file": "web/analytics-config.js",
@@ -204,7 +204,7 @@
     },
     {
       "file": "web/index-home.js",
-      "bytes": 110471,
+      "bytes": 111579,
       "imports": [
         "./order-modal.js",
         "./category-modal.js"
@@ -221,7 +221,7 @@
     },
     {
       "file": "web/industry-marketplace.js",
-      "bytes": 5946,
+      "bytes": 6152,
       "imports": [],
       "exports": [],
       "workerRoutes": []
@@ -661,7 +661,7 @@
     },
     {
       "file": "web/main/home-content.js",
-      "bytes": 95219,
+      "bytes": 96102,
       "imports": [],
       "exports": [
         "initHomeContent",
@@ -868,7 +868,7 @@
     },
     {
       "file": "web/main/pp.js",
-      "bytes": 67751,
+      "bytes": 65625,
       "imports": [],
       "exports": [
         "initPP",
@@ -970,7 +970,7 @@
     },
     {
       "file": "web/main/render-marketplace.js",
-      "bytes": 93665,
+      "bytes": 93916,
       "imports": [],
       "exports": [
         "initRenderMarketplace",
@@ -1192,7 +1192,7 @@
     },
     {
       "file": "web/main/viora-main-handlers.js",
-      "bytes": 217739,
+      "bytes": 221091,
       "imports": [],
       "exports": [
         "buildVioraHandlers"
@@ -1273,7 +1273,7 @@
     },
     {
       "file": "web/main.js",
-      "bytes": 240600,
+      "bytes": 240630,
       "imports": [
         "firebase/app",
         "./main/boot.js",
@@ -1343,7 +1343,7 @@
     },
     {
       "file": "web/mainIndex/blueprint.js",
-      "bytes": 23801,
+      "bytes": 23817,
       "imports": [
         "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js",
         "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js"
@@ -1362,7 +1362,7 @@
     },
     {
       "file": "web/mainIndex/industries.js",
-      "bytes": 215121,
+      "bytes": 213902,
       "imports": [],
       "exports": [],
       "workerRoutes": []
@@ -1390,7 +1390,7 @@
     },
     {
       "file": "web/mainMarket/market.js",
-      "bytes": 115341,
+      "bytes": 114479,
       "imports": [
         "../order-modal.js"
       ],
@@ -1484,7 +1484,7 @@
     },
     {
       "file": "web/script.js",
-      "bytes": 150422,
+      "bytes": 146442,
       "imports": [],
       "exports": [],
       "workerRoutes": []
@@ -1566,6 +1566,13 @@
         "isAnyModalOpen",
         "getOpenModals"
       ],
+      "workerRoutes": []
+    },
+    {
+      "file": "web/viora-taxonomy.js",
+      "bytes": 8863,
+      "imports": [],
+      "exports": [],
       "workerRoutes": []
     },
     {
@@ -1665,12 +1672,14 @@
     },
     {
       "file": "scripts/viora-engineering-checks.mjs",
-      "bytes": 8574,
+      "bytes": 19926,
       "imports": [
         "node:fs",
-        "node:assert/strict"
+        "node:assert/strict",
+        "node:vm"
       ],
       "exports": [
+        "buildVioraHandlers",
         "TranslationRateLimiter",
         "EMBEDDED_ASSETS_GZIP_BASE64"
       ],
