@@ -301,3 +301,16 @@ test('staging candidate never falls back to the production Firebase database', a
     assert.equal(response.status, 503);
   }
 });
+test('staging candidate refuses production Firebase authentication defaults', async () => {
+  const env = {
+    ...ENV,
+    VIORA_STAGING_READ_ONLY: 'true',
+    FIREBASE_API_KEY: undefined,
+    FIREBASE_PROJECT_ID: undefined,
+    FIREBASE_DATABASE_URL: undefined
+  };
+  const response = await worker.fetch(new Request('https://candidate.example.test/marketplace/preview/gateways', {
+    headers: { Authorization: 'Bearer staging-test-token' }
+  }), env, {});
+  assert.equal(response.status, 503);
+});
