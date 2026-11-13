@@ -133,6 +133,7 @@ test('prospect marketing cannot bypass the compliance campaign queue through dir
   const handler = worker.slice(handlerStart, handlerEnd);
   assert.match(handler, /body\.purpose === 'marketing'/);
   assert.match(handler, /body\.source === 'Outreach Centre'/);
+  assert.match(handler, /\['service', 'transactional'\]/);
   assert.match(handler, /compliance-checked Outreach campaign queue/);
   assert.match(outreach, /purpose:'marketing',source:'Outreach Centre'/);
   assert.match(outreach, /blockedSend=httpStatus===423\|\|httpStatus===409/);
