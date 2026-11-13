@@ -536,10 +536,10 @@ export function buildVioraHandlers(d) {
     kindField.value = kind;
 
     if (kind === 'publicUI') {
-      $('prodCategory').value = 'Marketplace';
+      $('prodCategory').value = 'enterprise';
       $('prodIcon').value = 'fa-solid fa-globe';
     } else {
-      $('prodCategory').value = 'Software Development';
+      $('prodCategory').value = 'enterprise';
       $('prodIcon').value = 'fa-solid fa-cube';
     }
 
@@ -556,7 +556,7 @@ export function buildVioraHandlers(d) {
     $('prodId').value = p.id || '';
     $('prodName').value = p.name || '';
     $('prodDescription').value = p.description || '';
-    $('prodCategory').value = p.category || (kind === 'publicUI' ? 'Marketplace' : 'Software Development');
+    $('prodCategory').value = window.VIORATaxonomy.classifyProduct(p);
     $('prodIcon').value = p.icon || (kind === 'publicUI' ? 'fa-solid fa-globe' : 'fa-solid fa-cube');
     $('prodPrice').value = p.price || 0;
     $('prodPeriod').value = p.period || '/mo';
@@ -596,11 +596,15 @@ export function buildVioraHandlers(d) {
     const existing = isEdit ? getProduct(originalId) : null;
     const kind = f._kind || existing?._kind || 'product';
 
+    const categoryId = window.VIORATaxonomy.classifyProduct({ ...f, category: f.category });
+    const categoryName = window.VIORATaxonomy.title(categoryId);
     const payload = {
       id: newId,
       name: f.name,
       description: f.description || '',
-      category: f.category || (kind === 'publicUI' ? 'Marketplace' : 'Software Development'),
+      category: categoryName,
+      solutionCategory: categoryName,
+      vioraCategoryId: categoryId,
       icon: f.icon || (kind === 'publicUI' ? 'fa-solid fa-globe' : 'fa-solid fa-cube'),
       price: Number(f.price) || 0,
       period: f.period || '/mo',
