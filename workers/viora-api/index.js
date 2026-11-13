@@ -6492,9 +6492,17 @@ async function runOutreachCampaignScheduler(env) {
         try {
           const accessToken = await gmailAccessToken(connection, env);
           const thread = await gmailApiFetch('threads/' + encodeURIComponent(candidate.threadId) + '?format=metadata', accessToken);
-          const last = (thread.messages || []).slice(-1)[0];
-          const lastFrom = gmailAddress(gmailHeaderMap(last).from);
-          if (lastFrom !== GMAIL_OWNER_EMAIL) {
+          const messages = thread.messages || [];
+          const initialIndex = messages.findIndex(m => m.id === candidate.initialMessageId);
+          if (initialIndex < 0) throw new Error('Initial campaign message could not be found in Gmail thread');
+          const prospectReplied = messages.slice(initialIndex + 1).some(m => gmailAddress(gmailHeaderMap(m).from) !== GMAIL_OWNER_EMAIL);
+          if (prospectReplied) {
+            await outreachDbWrite(env, path + '/status', 'replied');
+            await outreachDbWrite(env, path + '/repliedAt', new Date().toISOString());
+            return;
+          }
+          const last = messages.slice(-1)[0];
+          if (!last || gmailAddress(gmailHeaderMap(last).from) !== GMAIL_OWNER_EMAIL) {
             await outreachDbWrite(env, path + '/status', 'replied');
             await outreachDbWrite(env, path + '/repliedAt', new Date().toISOString());
             return;
@@ -6541,7 +6549,7 @@ async function runOutreachCampaignScheduler(env) {
         await publishOutreachEscalation(env, candidate.id + '-campaign-send', 'Campaign email needs delivery verification', 'Gmail did not confirm delivery for ' + candidate.recipient + '. Check the thread before retrying.', 'critical');
         return;
       }
-      await outreachDbWrite(env, path, { ...candidate, status: 'sent', attempts: Number(candidate.attempts || 0) + 1, sentAt: new Date().toISOString(), gmailMessageId: result.id || null, threadId: result.threadId || null });
+      await outreachDbWrite(env, path, { ...candidate, status: 'sent', attempts: Number(candidate.attempts || 0) + 1, sentAt: new Date().toISOString(), gmailMessageId: result.id || null, threadId: result.threadId || candidate.threadId || null });
       await outreachDbWrite(env, 'leads/' + candidate.leadId + '/lastOutreachAt', new Date().toISOString());
       await outreachDbWrite(env, 'leads/' + candidate.leadId + '/outreachStatus', 'contacted');
       await outreachDbWrite(env, 'outreach/campaignMetrics/daily/' + reserved.day + '/sent', Number(await outreachDbRead(env, 'outreach/campaignMetrics/daily/' + reserved.day + '/sent').catch(() => 0)) + 1);
@@ -6553,7 +6561,7 @@ async function runOutreachCampaignScheduler(env) {
           ...candidate, id: followId, sequence: index + 1, status: 'queued',
           subject: String(follow.subject), text: String(follow.text),
           scheduledAt: new Date(Date.now() + delayDays * 86400000).toISOString(),
-          parentQueueId: candidate.id, threadId: result.threadId || null, createdAt: new Date().toISOString()
+          parentQueueId: candidate.id, threadId: result.threadId || null, initialMessageId: result.id || null, createdAt: new Date().toISOString()
         });
       }
       return; // At most one email per five-minute scheduler invocation.
