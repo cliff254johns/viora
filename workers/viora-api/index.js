@@ -241,6 +241,11 @@ if (path === '/social/stats/batch' && request.method === 'POST') {
   return await handleSocialStatsBatch(batchBody, env, batchUser);
 }
 
+      // ── Gmail OAuth callback (Google redirects here; state is single-use) ──
+      if (path === '/gmail/oauth/callback' && request.method === 'GET') {
+        return await handleGmailOAuthCallback(url, env);
+      }
+
       // ── TikTok OAuth ──
       if (path === '/tiktok/authorize' && request.method === 'GET') {
         const authHeader = request.headers.get('Authorization') || '';
@@ -295,6 +300,20 @@ if (path === '/social/stats/batch' && request.method === 'POST') {
         user.email = user.email || portalRecord.email;
       } else {
         user.role = role;
+      }
+
+      // ── Gmail mailbox management (admin/exec only) ──
+      if (path === '/gmail/oauth/start' && request.method === 'GET') {
+        requireRole(String(user.role || '').toLowerCase(), ['admin', 'exec']);
+        return await handleGmailOAuthStart(request, env, user);
+      }
+      if (path === '/gmail/status' && request.method === 'GET') {
+        requireRole(String(user.role || '').toLowerCase(), ['admin', 'exec']);
+        return await handleGmailStatus(env);
+      }
+      if (path === '/gmail/replies' && request.method === 'GET') {
+        requireRole(String(user.role || '').toLowerCase(), ['admin', 'exec']);
+        return await handleGmailReplies(env, user);
       }
 
       // VIORA Outreach AI: authenticated admin/exec-only drafting route.
@@ -5803,6 +5822,337 @@ async function handleOutreachDraft(body, env, user) {
    EMAIL
    ============================================================ */
 async function handleSendEmail(body, env, user) {
+  requireRole(String(user.role || '').toLowerCase(), ['admin', 'exec']);
+  const to = body && body.to;
+  const subject = body && body.subject;
+  const html = body && body.html;
+  const text = body && body.text;
+  const replyTo = body && body.replyTo;
+
+  if (!to || (!html && !text)) return json({ error: 'to and html/text required' }, 400);
+
+  // Gmail is preferred when the VIORA mailbox is connected. Resend remains
+  // the fallback only when Gmail has not been connected; never retry a failed
+  // Gmail send through another provider (that could create duplicate emails).
+  const gmailConnection = await readGmailConnection(env);
+  if (gmailConnection && body.transport !== 'resend') {
+    return await sendViaGmail({ to, subject, html, text, replyTo }, env, user, gmailConnection);
+  }
+
+  if (!env.RESEND_API_KEY) return json({ error: 'No connected Gmail mailbox and RESEND_API_KEY not set' }, 500);
+  if (!env.RESEND_FROM) return json({ error: 'RESEND_FROM not set' }, 500);
+
+  const r = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + env.RESEND_API_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: env.RESEND_FROM,
+      to: Array.isArray(to) ? to : [to],
+      subject: subject || '(no subject)',
+      html: html || undefined,
+      text: text || undefined,
+      reply_to: replyTo || undefined,
+    }),
+  });
+  const data = await r.json().catch(() => ({}));
+
+  try {
+    const qs = '?auth=' + (env.FIREBASE_DATABASE_SECRET || user.idToken || '');
+    await fetch(`${rtdb(env)}/viora_data/orgs/viora/commLog.json${qs}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        channel: 'email', transport: 'resend', to, subject,
+        sentBy: user.email, providerId: data.id || null,
+        status: r.ok ? 'sent' : 'failed', error: r.ok ? null : data,
+        timestamp: new Date().toISOString(),
+      }),
+    });
+  } catch (e) {}
+
+  if (!r.ok) return json({ error: 'Email send failed', detail: data }, 502);
+  return json({ ok: true, id: data.id, transport: 'resend' });
+}
+
+/* ============================================================
+   GMAIL OAUTH + GMAIL API
+   ============================================================ */
+const GMAIL_OWNER_EMAIL = 'cliff254johns@gmail.com';
+const GMAIL_REDIRECT_URI = 'https://viora-api.cliff254johns.workers.dev/gmail/oauth/callback';
+const GMAIL_SCOPES = [
+  'openid',
+  'email',
+  'https://www.googleapis.com/auth/gmail.send',
+  'https://www.googleapis.com/auth/gmail.readonly',
+];
+
+function gmailBase64Url(bytes) {
+  const data = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  let binary = '';
+  for (const byte of data) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/g, '');
+}
+function gmailDecodeBase64(value) {
+  const normalized = String(value || '').replace(/-/g, '+').replace(/_/g, '/');
+  const padded = normalized + '='.repeat((4 - normalized.length % 4) % 4);
+  const binary = atob(padded);
+  return Uint8Array.from(binary, c => c.charCodeAt(0));
+}
+function gmailDbUrl(env, path) {
+  if (!env.FIREBASE_DATABASE_SECRET) throw new Error('FIREBASE_DATABASE_SECRET is required for secure Gmail token storage');
+  return `${rtdb(env)}/viora_data/orgs/viora/integrations/google/${path}.json?auth=${encodeURIComponent(env.FIREBASE_DATABASE_SECRET)}`;
+}
+async function gmailDbRead(env, path) {
+  const r = await fetch(gmailDbUrl(env, path));
+  if (!r.ok) throw new Error('Unable to read Gmail integration storage');
+  return await r.json();
+}
+async function gmailDbWrite(env, path, value, method = 'PUT') {
+  const r = await fetch(gmailDbUrl(env, path), {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(value),
+  });
+  if (!r.ok) throw new Error('Unable to update Gmail integration storage');
+  return await r.json().catch(() => null);
+}
+async function gmailEncryptionKey(env) {
+  if (!env.GOOGLE_TOKEN_ENCRYPTION_KEY) throw new Error('GOOGLE_TOKEN_ENCRYPTION_KEY is not configured');
+  const raw = gmailDecodeBase64(env.GOOGLE_TOKEN_ENCRYPTION_KEY.trim());
+  if (raw.length !== 32) throw new Error('GOOGLE_TOKEN_ENCRYPTION_KEY must decode to exactly 32 bytes (base64)');
+  return await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']);
+}
+async function gmailEncryptToken(value, env) {
+  const key = await gmailEncryptionKey(env);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const plain = new TextEncoder().encode(JSON.stringify(value));
+  const cipher = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, plain);
+  return { version: 1, algorithm: 'AES-256-GCM', iv: gmailBase64Url(iv), ciphertext: gmailBase64Url(new Uint8Array(cipher)) };
+}
+async function gmailDecryptToken(record, env) {
+  if (!record || record.version !== 1 || !record.iv || !record.ciphertext) throw new Error('Gmail mailbox is not connected');
+  const key = await gmailEncryptionKey(env);
+  const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: gmailDecodeBase64(record.iv) }, key, gmailDecodeBase64(record.ciphertext));
+  return JSON.parse(new TextDecoder().decode(plain));
+}
+async function readGmailConnection(env) {
+  const record = await gmailDbRead(env, 'mailbox');
+  if (!record || !record.ciphertext) return null;
+  return await gmailDecryptToken(record, env);
+}
+async function writeGmailConnection(tokens, env) {
+  const encrypted = await gmailEncryptToken(tokens, env);
+  await gmailDbWrite(env, 'mailbox', encrypted);
+}
+function gmailOAuthRedirect(env) {
+  return env.GOOGLE_REDIRECT_URI || GMAIL_REDIRECT_URI;
+}
+async function handleGmailOAuthStart(request, env, user) {
+  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return json({ ok: false, error: 'Google OAuth client secrets are missing' }, 503);
+  if (!env.GOOGLE_TOKEN_ENCRYPTION_KEY) return json({ ok: false, error: 'Gmail encryption secret is missing' }, 503);
+  if (!env.FIREBASE_DATABASE_SECRET) return json({ ok: false, error: 'Firebase database service secret is missing' }, 503);
+  const stateBytes = crypto.getRandomValues(new Uint8Array(32));
+  const state = gmailBase64Url(stateBytes);
+  const stateRecord = {
+    uid: user.localId || user.uid,
+    initiatedBy: user.email || null,
+    createdAt: Date.now(),
+    expiresAt: Date.now() + 10 * 60 * 1000,
+  };
+  await gmailDbWrite(env, `oauthStates/${state}`, stateRecord);
+  const params = new URLSearchParams({
+    client_id: env.GOOGLE_CLIENT_ID,
+    redirect_uri: gmailOAuthRedirect(env),
+    response_type: 'code',
+    scope: GMAIL_SCOPES.join(' '),
+    access_type: 'offline',
+    prompt: 'consent',
+    include_granted_scopes: 'true',
+    state,
+    login_hint: GMAIL_OWNER_EMAIL,
+  });
+  return Response.redirect('https://accounts.google.com/o/oauth2/v2/auth?' + params.toString(), 302);
+}
+async function handleGmailOAuthCallback(url, env) {
+  const error = url.searchParams.get('error');
+  if (error) return json({ ok: false, error: 'Google authorization was not completed', detail: error }, 400);
+  const code = url.searchParams.get('code');
+  const state = url.searchParams.get('state');
+  if (!code || !state || !/^[A-Za-z0-9_-]{40,60}$/.test(state)) return json({ ok: false, error: 'Missing or invalid OAuth callback parameters' }, 400);
+  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET || !env.GOOGLE_TOKEN_ENCRYPTION_KEY || !env.FIREBASE_DATABASE_SECRET) {
+    return json({ ok: false, error: 'Gmail OAuth server configuration is incomplete' }, 503);
+  }
+
+  const statePath = `oauthStates/${state}`;
+  const stateUrl = gmailDbUrl(env, statePath);
+  const stateRes = await fetch(stateUrl, { headers: { 'X-Firebase-ETag': 'true' } });
+  if (!stateRes.ok) return json({ ok: false, error: 'OAuth state lookup failed' }, 400);
+  const stateRecord = await stateRes.json();
+  const etag = stateRes.headers.get('ETag');
+  if (!stateRecord || !etag || !stateRecord.expiresAt || stateRecord.expiresAt < Date.now()) {
+    return json({ ok: false, error: 'OAuth state is invalid or expired' }, 400);
+  }
+  const consume = await fetch(stateUrl, { method: 'DELETE', headers: { 'If-Match': etag } });
+  if (consume.status === 412) return json({ ok: false, error: 'OAuth state has already been used' }, 400);
+  if (!consume.ok) return json({ ok: false, error: 'Could not safely consume OAuth state' }, 500);
+
+  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      code,
+      client_id: env.GOOGLE_CLIENT_ID,
+      client_secret: env.GOOGLE_CLIENT_SECRET,
+      redirect_uri: gmailOAuthRedirect(env),
+      grant_type: 'authorization_code',
+    }),
+  });
+  const tokenData = await tokenRes.json().catch(() => ({}));
+  if (!tokenRes.ok || !tokenData.access_token) return json({ ok: false, error: 'Google token exchange failed', detail: tokenData.error || 'token_exchange_failed' }, 502);
+
+  const profileRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+    headers: { Authorization: 'Bearer ' + tokenData.access_token },
+  });
+  const profile = await profileRes.json().catch(() => ({}));
+  if (!profileRes.ok || String(profile.email || '').toLowerCase() !== GMAIL_OWNER_EMAIL || !profile.verified_email) {
+    return json({ ok: false, error: 'The connected Google account must be the verified VIORA mailbox', expected: GMAIL_OWNER_EMAIL }, 403);
+  }
+
+  const previous = await readGmailConnection(env).catch(() => null);
+  const refreshToken = tokenData.refresh_token || (previous && previous.refreshToken);
+  if (!refreshToken) return json({ ok: false, error: 'Google did not return a refresh token. Revoke the existing VIORA grant in Google Account permissions and reconnect with consent.' }, 400);
+
+  await writeGmailConnection({
+    email: profile.email,
+    refreshToken,
+    scopes: String(tokenData.scope || '').split(' ').filter(Boolean),
+    connectedAt: new Date().toISOString(),
+  }, env);
+  try {
+    await gmailDbWrite(env, 'connectionStatus', { connected: true, email: profile.email, connectedAt: new Date().toISOString() });
+  } catch (e) {}
+  return json({ ok: true, connected: true, email: profile.email, message: 'VIORA Gmail mailbox connected. You may close this tab and return to Outreach.' });
+}
+async function gmailAccessToken(connection, env) {
+  if (!connection || !connection.refreshToken) throw new Error('Gmail mailbox is not connected');
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: env.GOOGLE_CLIENT_ID,
+      client_secret: env.GOOGLE_CLIENT_SECRET,
+      refresh_token: connection.refreshToken,
+      grant_type: 'refresh_token',
+    }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data.access_token) throw new Error('Google access token refresh failed: ' + (data.error || response.status));
+  return data.access_token;
+}
+async function gmailApiFetch(path, accessToken, options = {}) {
+  const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/' + path, {
+    ...options,
+    headers: { Authorization: 'Bearer ' + accessToken, ...(options.headers || {}) },
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error('Gmail API request failed: ' + (data.error && data.error.message || response.status));
+  return data;
+}
+async function logGmailCommunication(env, record) {
+  try {
+    await gmailDbWrite(env, '../../commLog', record, 'POST');
+  } catch (e) {
+    // The communication log is best-effort; do not expose mailbox content or tokens.
+  }
+}
+async function sendViaGmail(message, env, user, existingConnection) {
+  try {
+    const connection = existingConnection || await readGmailConnection(env);
+    const accessToken = await gmailAccessToken(connection, env);
+    const recipients = (Array.isArray(message.to) ? message.to : [message.to]).map(v => String(v).trim()).filter(Boolean);
+    if (!recipients.length || recipients.length > 50) return json({ ok: false, error: 'Provide between 1 and 50 recipients' }, 400);
+    const cleanHeader = value => String(value || '').replace(/[\\r\\n]+/g, ' ').trim();
+    const encodedSubject = '=?UTF-8?B?' + btoa(unescape(encodeURIComponent(cleanHeader(message.subject || '(no subject)')))) + '?=';
+    const headers = [
+      'From: ' + GMAIL_OWNER_EMAIL,
+      'To: ' + recipients.join(', '),
+      'Subject: ' + encodedSubject,
+      'MIME-Version: 1.0',
+    ];
+    if (message.replyTo) headers.push('Reply-To: ' + cleanHeader(message.replyTo));
+    let mime;
+    if (message.html && message.text) {
+      const boundary = 'viora_' + gmailBase64Url(crypto.getRandomValues(new Uint8Array(12)));
+      mime = headers.concat([
+        'Content-Type: multipart/alternative; boundary="' + boundary + '"',
+        '',
+        '--' + boundary,
+        'Content-Type: text/plain; charset=UTF-8',
+        'Content-Transfer-Encoding: base64',
+        '',
+        btoa(unescape(encodeURIComponent(String(message.text)))),
+        '--' + boundary,
+        'Content-Type: text/html; charset=UTF-8',
+        'Content-Transfer-Encoding: base64',
+        '',
+        btoa(unescape(encodeURIComponent(String(message.html)))),
+        '--' + boundary + '--',
+      ]).join('\\r\\n');
+    } else {
+      const isHtml = !!message.html;
+      const body = isHtml ? String(message.html) : String(message.text || '');
+      mime = headers.concat([
+        'Content-Type: ' + (isHtml ? 'text/html' : 'text/plain') + '; charset=UTF-8',
+        'Content-Transfer-Encoding: base64',
+        '',
+        btoa(unescape(encodeURIComponent(body))),
+      ]).join('\\r\\n');
+    }
+    const raw = gmailBase64Url(new TextEncoder().encode(mime));
+    const result = await gmailApiFetch('messages/send', accessToken, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ raw }),
+    });
+    await logGmailCommunication(env, {
+      channel: 'email', transport: 'gmail', to: recipients,
+      subject: cleanHeader(message.subject), sentBy: user.email || null,
+      providerId: result.id || null, threadId: result.threadId || null,
+      status: 'sent', timestamp: new Date().toISOString(),
+    });
+    return json({ ok: true, id: result.id, threadId: result.threadId, transport: 'gmail', from: GMAIL_OWNER_EMAIL });
+  } catch (e) {
+    return json({ ok: false, error: 'Gmail send failed', detail: e.message }, 502);
+  }
+}
+async function handleGmailStatus(env) {
+  try {
+    const connection = await readGmailConnection(env);
+    if (!connection) return json({ ok: true, connected: false, email: null });
+    return json({ ok: true, connected: true, email: connection.email, connectedAt: connection.connectedAt || null, scopes: connection.scopes || [] });
+  } catch (e) {
+    return json({ ok: false, connected: false, error: e.message }, 503);
+  }
+}
+async function handleGmailReplies(env, user) {
+  requireRole(String(user.role || '').toLowerCase(), ['admin', 'exec']);
+  try {
+    const connection = await readGmailConnection(env);
+    if (!connection) return json({ ok: false, error: 'Connect Gmail before checking replies' }, 409);
+    const accessToken = await gmailAccessToken(connection, env);
+    const listed = await gmailApiFetch('messages?q=' + encodeURIComponent('in:inbox newer_than:30d') + '&maxResults=50', accessToken);
+    const ids = (listed.messages || []).slice(0, 50);
+    const replies = await Promise.all(ids.map(async item => {
+      const msg = await gmailApiFetch('messages/' + encodeURIComponent(item.id) + '?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Subject&metadataHeaders=Date&metadataHeaders=In-Reply-To&metadataHeaders=References', accessToken);
+      const headers = (msg.payload && msg.payload.headers || []).reduce((acc, h) => { acc[String(h.name).toLowerCase()] = h.value; return acc; }, {});
+      return { id: msg.id, threadId: msg.threadId, from: headers.from || '', to: headers.to || '', subject: headers.subject || '', date: headers.date || '', snippet: msg.snippet || '' };
+    }));
+    return json({ ok: true, count: replies.length, messages: replies });
+  } catch (e) {
+    return json({ ok: false, error: 'Unable to retrieve Gmail replies', detail: e.message }, 502);
+  }
+}
+
+
   requireRole(String(user.role || '').toLowerCase(), ['admin', 'exec']);
   const to = body && body.to;
   const subject = body && body.subject;
