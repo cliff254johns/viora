@@ -666,11 +666,9 @@ function renderTourStepDetail(host, buckets, families, industries) {
       desc: ind.desc || '',
       longDesc: ind.longDesc || ind.desc || '',
       included: ind.included || [],
-      demoUrl: ind.previewUrl || '',
       gallery: [],
       products: [],
       faqs: ind.faqs || [],
-      viewSampleUrl: ind.previewUrl || '',
     });
   });
 
