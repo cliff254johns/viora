@@ -1,6 +1,6 @@
 # VIORA Global Sales Engine
 
-Status: implementation on `feature/global-sales-engine`; outbound sending remains disabled by default and must not be enabled until the configuration and live Gmail checks below are completed.
+Status: proposed implementation on `feature/global-sales-engine`; outbound sending must remain disabled. This branch is not production code until reviewed, merged and deployed. No legal review or sender-address verification is implied by the example records below.
 
 ## Design
 
@@ -36,7 +36,7 @@ A CRM lead can only be queued when all are true:
 4. `contactEligibility.basis`, `sourceUrl`, `reviewedAt` and `policyVersion` are present.
 5. The country policy record exists and is approved at the exact same version.
 6. The recipient is not suppressed or marked `Do not contact`.
-7. The subject and body are personalised and the body explicitly references the CRM organisation.
+7. The subject and body are personalised and the body explicitly references the CRM organisation. Human approval is cryptographically bound to the lead ID, recipient email, organisation, country, policy version and exact message/follow-ups; any change invalidates approval.
 
 The country-policy record is:
 
@@ -44,14 +44,14 @@ The country-policy record is:
 {
   "status": "approved",
   "version": "2026-11-v1",
-  "reviewedAt": "2026-11-13T12:00:00.000Z",
-  "reviewedBy": "authorised-reviewer",
+  "reviewedAt": "REPLACE_WITH_ACTUAL_ISO_TIMESTAMP",
+  "reviewedBy": "REPLACE_WITH_ACTUAL_REVIEWER_IDENTITY",
   "jurisdiction": "GB",
   "contactRulesSummary": "Summary of the reviewed rules and scope",
   "legalReview": {
     "status": "complete",
     "reviewerName": "Actual qualified legal reviewer",
-    "completedAt": "2026-11-13T12:00:00.000Z",
+    "completedAt": "REPLACE_WITH_ACTUAL_COMPLETION_TIMESTAMP",
     "sourceUrls": ["https://www.ico.org.uk/official-guidance"]
   },
   "sourceUrls": ["https://www.ico.org.uk/official-guidance"]
@@ -66,18 +66,18 @@ The global sender policy record is:
 {
   "status": "approved",
   "version": "2026-11-v1",
-  "reviewedAt": "2026-11-13T12:00:00.000Z",
-  "reviewedBy": "authorised-reviewer",
-  "senderPostalAddress": "VIORA's verified sender postal address",
-  "privacyNoticeUrl": "https://www.viora.co.ke/privacy",
-  "senderAddressVerified": true,
+  "reviewedAt": "REPLACE_WITH_ACTUAL_ISO_TIMESTAMP",
+  "reviewedBy": "REPLACE_WITH_ACTUAL_REVIEWER_IDENTITY",
+  "senderPostalAddress": "REPLACE_WITH_VERIFIED_PHYSICAL_POSTAL_ADDRESS",
+  "privacyNoticeUrl": "REPLACE_WITH_VERIFIED_LIVE_PRIVACY_NOTICE_URL",
+  "senderAddressVerified": false,
   "humanApprovalRequired": true,
-  "canSpamAddressVerified": true,
-  "canSpamReviewComplete": true,
+  "canSpamAddressVerified": false,
+  "canSpamReviewComplete": false,
   "legalReview": {
     "status": "complete",
     "reviewerName": "Actual qualified legal reviewer",
-    "completedAt": "2026-11-13T12:00:00.000Z",
+    "completedAt": "REPLACE_WITH_ACTUAL_COMPLETION_TIMESTAMP",
     "sourceUrls": ["https://www.ftc.gov/business-guidance/resources/can-spam-act-compliance-guide-business"]
   }
 }
@@ -85,7 +85,7 @@ The global sender policy record is:
 
 Path: `viora_data/orgs/viora/outreach/compliance/globalSendingPolicy`.
 
-Do not mark a jurisdiction or global policy approved merely to unlock sending. A qualified person must review applicable local rules, the contact basis, transparency/disclosure requirements and unsubscribe obligations. Do not infer that a public email address automatically permits marketing. This register is an operational control, not legal advice or a substitute for local review.
+The JSON values above are schema examples only. Never paste placeholder identities, timestamps, URLs or `true` approval flags into production. Populate these fields only from completed, independently verifiable work. Do not mark a jurisdiction or global policy approved merely to unlock sending. A qualified person must review applicable local rules, the contact basis, transparency/disclosure requirements and unsubscribe obligations. Do not infer that a public email address automatically permits marketing. This register is an operational control, not legal advice or a substitute for local review.
 
 ## Queue payload
 
