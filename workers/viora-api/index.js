@@ -6284,6 +6284,11 @@ async function handleOutreachCampaignStatus(env) {
     scheduler: 'one recipient per five-minute tick; maximum 200 reservations per UTC day'
   });
 }
+async function outreachApprovalDigest(subject, text, followups) {
+  const payload = JSON.stringify({ subject: String(subject || ''), text: String(text || ''), followups: Array.isArray(followups) ? followups : [] });
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(payload));
+  return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+}
 function outreachLegalReviewComplete(record) {
   const review = record && record.legalReview || {};
   return !!(record && record.status === 'approved' && record.version && record.reviewedAt &&
@@ -6393,6 +6398,7 @@ async function handleOutreachCampaignQueue(body, env, user) {
         organisation: company, countryCode, policyVersion: policy.version,
         eligibilitySnapshot: { basis: eligibility.basis, sourceUrl: eligibility.sourceUrl, reviewedAt: eligibility.reviewedAt, subscriberType: eligibility.subscriberType || null, consentEvidence: eligibility.consentEvidence || null, liaReference: eligibility.liaReference || null },
         humanApproved: true, humanApprovedBy: user.email || user.localId || 'admin', humanApprovedAt: new Date().toISOString(),
+        approvalDigest: await outreachApprovalDigest(subject, textBody, followups),
         subject, text: textBody, followups, unsubscribeToken,
         scheduledAt: item.scheduledAt || new Date().toISOString(),
         createdAt: new Date().toISOString(), createdBy: user.email || user.localId || 'admin',
@@ -6542,6 +6548,12 @@ async function runOutreachCampaignScheduler(env) {
         await outreachDbWrite(env, path + '/blockReason', 'Exact recipient and message lack recorded human approval');
         return;
       }
+      const expectedApprovalDigest = await outreachApprovalDigest(candidate.subject, candidate.text, candidate.sequence > 0 ? [] : (candidate.followups || []));
+      if (!candidate.approvalDigest || candidate.approvalDigest !== expectedApprovalDigest) {
+        await outreachDbWrite(env, path + '/status', 'blocked');
+        await outreachDbWrite(env, path + '/blockReason', 'Message content no longer matches the human-approved version');
+        return;
+      }
       const liveLead = await outreachDbRead(env, 'leads/' + candidate.leadId).catch(() => null);
       if (!liveLead || String(liveLead.email || '').trim().toLowerCase() !== String(candidate.recipient || '').toLowerCase() ||
           liveLead.emailVerified !== true || String(liveLead.status || '').toLowerCase() === 'do not contact') {
@@ -6642,6 +6654,7 @@ async function runOutreachCampaignScheduler(env) {
         await outreachDbWrite(env, 'outreach/campaignQueue/' + followId, {
           ...candidate, id: followId, sequence: index + 1, status: 'queued',
           subject: String(follow.subject), text: String(follow.text),
+          approvalDigest: await outreachApprovalDigest(String(follow.subject), String(follow.text), []),
           scheduledAt: new Date(Date.now() + delayDays * 86400000).toISOString(),
           parentQueueId: candidate.id, threadId: result.threadId || null, initialMessageId: result.id || null, createdAt: new Date().toISOString()
         });
