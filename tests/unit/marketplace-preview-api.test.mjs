@@ -292,3 +292,12 @@ test('controlled candidate mode exposes only health and the authenticated read-o
   const inventory = await worker.fetch(new Request('https://candidate.example.test/marketplace/preview/gateways'), env, {});
   assert.notEqual(inventory.status, 403, 'the inventory route must reach the normal authentication gate');
 });
+test('staging candidate never falls back to the production Firebase database', async () => {
+  for (const databaseUrl of [undefined, ENV.FIREBASE_DATABASE_URL]) {
+    const env = { ...ENV, VIORA_STAGING_READ_ONLY: 'true', FIREBASE_DATABASE_URL: databaseUrl };
+    const response = await handleMarketplacePreview(
+      makeRequest('admin-gateways', 'GET'), env, ADMIN, 'admin-gateways', {}
+    );
+    assert.equal(response.status, 503);
+  }
+});
