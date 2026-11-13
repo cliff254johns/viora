@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildScheduledJobs } from '../../workers/viora-api/index.js';
+import { buildScheduledJobs, runScheduledJobs } from '../../workers/viora-api/index.js';
 
 const handlers = Object.fromEntries([
   'reminders',
@@ -47,4 +47,26 @@ test('social publishing handler is retained in every scheduler mode', () => {
     const social = jobs.find(([name]) => name === 'social_publish');
     assert.equal(typeof social?.[1], 'function');
   }
+});
+
+test('scheduled jobs execute in order and continue after an individual failure', async () => {
+  const events = [];
+  const errors = [];
+  const jobs = [
+    ['reminders', async () => { events.push('reminders'); throw new Error('reminder failure'); }],
+    ['social_queue_prepare', async () => { events.push('social_queue_prepare'); }],
+    ['social_publish', async () => { events.push('social_publish'); }],
+  ];
+  await runScheduledJobs(jobs, (job, error) => errors.push({ job, message: error.message }));
+  assert.deepEqual(events, ['reminders', 'social_queue_prepare', 'social_publish']);
+  assert.deepEqual(errors, [{ job: 'reminders', message: 'reminder failure' }]);
+});
+
+test('scheduled task failures are logged without rejecting the whole run', async () => {
+  const events = [];
+  await assert.doesNotReject(runScheduledJobs([
+    ['first', async () => { throw new Error('isolated'); }],
+    ['second', async () => { events.push('second'); }],
+  ], () => {}));
+  assert.deepEqual(events, ['second']);
 });
