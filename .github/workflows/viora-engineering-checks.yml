@@ -44,6 +44,13 @@ jobs:
           node --input-type=module --check < workers/viora-static-next/worker.js
           node --input-type=module --check < workers/viora-static-next/assets.generated.js
           node --input-type=module --check < web/mainIndex/chatbot.js
+          node --input-type=module --check < web/mainMarket/market.js
+          node --input-type=module --check < web/main/viora-main-wiring.js
+          node --input-type=module --check < web/main/viora-main-handlers.js
+          node --input-type=module --check < web/main/render-marketplace.js
+          node --input-type=module --check < web/index-home.js
+          node --input-type=module --check < workers/viora-api/index.js
+          node --input-type=module --check < workers/viora-api/marketplace-preview.js
           node --input-type=module --check < scripts/backup-firebase-rtdb.mjs
           node --input-type=module --check < scripts/restore-firebase-rtdb.mjs
           node --input-type=module --check < scripts/retain-r2-backups.mjs
