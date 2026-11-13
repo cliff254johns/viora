@@ -5858,6 +5858,9 @@ async function handleOutreachDraft(body, env, user) {
    ============================================================ */
 async function handleSendEmail(body, env, user) {
   requireRole(String(user.role || '').toLowerCase(), ['admin', 'exec']);
+  if (String(env.ENABLE_OUTREACH_EMAIL_SENDING || '').toLowerCase() !== 'true') {
+    return json({ error: 'Outbound email sending is disabled during controlled release verification.' }, 423);
+  }
   const to = body && body.to;
   const subject = body && body.subject;
   const html = body && body.html;
