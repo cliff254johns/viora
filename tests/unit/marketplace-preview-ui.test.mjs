@@ -44,3 +44,20 @@ test('server refuses preview sessions unless product gateway verification is set
   assert.match(source, /If-Match/);
   assert.match(source, /marketplacePreview/);
 });
+
+
+test('Marketplace category explorer is a searchable international dropdown with live category counts', async () => {
+  const html = await read('../../web/market.html');
+  const source = await read('../../web/mainMarket/market.js');
+  const css = await read('../../web/mainMarket/market.css');
+  assert.match(html, /id="categoryExplorerTrigger"/);
+  assert.match(html, /id="categoryExplorerPanel"/);
+  assert.match(html, /id="catSearchInput"/);
+  assert.match(html, /id="categoryBar"/);
+  assert.match(source, /this\.products\.forEach\(product => \{/);
+  assert.match(source, /counts\.set\(category/);
+  assert.match(source, /category-option-count/);
+  assert.match(source, /categoryExplorerPanel/);
+  assert.match(css, /\.category-explorer-panel/);
+  assert.match(css, /\.category-option-count/);
+});
