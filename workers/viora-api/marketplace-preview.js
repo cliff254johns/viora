@@ -87,8 +87,7 @@ export function hasPaidEntitlement(subscriptions, clientId, productId, now = Dat
 
 export function productAllowsPreview(product) {
   return !!product &&
-    product.status !== 'archived' &&
-    product.status !== 'draft' &&
+    product.status === 'active' &&
     product.previewEnabled === true &&
     product.previewGatewayVerified === true &&
     ['isolated-software', 'digital-sample'].includes(product.previewProfile);
@@ -185,11 +184,12 @@ async function issueSession(env, uid, productId, actor, source = 'self') {
   };
 }
 
-export async function handleMarketplacePreview(request, env, user, route) {
+export async function handleMarketplacePreview(request, env, user, route, parsedBody) {
   try {
     const uid = cleanId(user && user.localId, 'authenticated user');
     const method = request.method;
     const url = new URL(request.url);
+    const readBody = async () => parsedBody !== undefined ? parsedBody : request.json().catch(() => ({}));
 
     if (route === 'status' && method === 'GET') {
       const productId = cleanId(url.searchParams.get('productId'), 'productId');
@@ -215,14 +215,14 @@ export async function handleMarketplacePreview(request, env, user, route) {
     }
 
     if (route === 'start' && method === 'POST') {
-      const body = await request.json().catch(() => ({}));
+      const body = await readBody();
       const productId = cleanId(body.productId, 'productId');
       const result = await issueSession(env, uid, productId, uid, 'self');
       return response({ ok: true, ...result });
     }
 
     if (route === 'request' && method === 'POST') {
-      const body = await request.json().catch(() => ({}));
+      const body = await readBody();
       const productId = cleanId(body.productId, 'productId');
       const product = await getProduct(env, productId);
       if (!product || product.status === 'archived' || product.status === 'draft') return response({ ok: false, error: 'This product is not currently available' }, 403);
@@ -267,7 +267,7 @@ export async function handleMarketplacePreview(request, env, user, route) {
 
     if (route === 'admin-grant' && method === 'POST') {
       if (String(user.role || '').toLowerCase() !== 'admin') return response({ ok: false, error: 'Admin only' }, 403);
-      const body = await request.json().catch(() => ({}));
+      const body = await readBody();
       const targetUid = cleanId(body.uid, 'uid');
       const productId = cleanId(body.productId, 'productId');
       const reqPath = paths(targetUid, productId).request;
@@ -299,7 +299,7 @@ export async function handleMarketplacePreview(request, env, user, route) {
 
     if (route === 'admin-revoke' && method === 'POST') {
       if (String(user.role || '').toLowerCase() !== 'admin') return response({ ok: false, error: 'Admin only' }, 403);
-      const body = await request.json().catch(() => ({}));
+      const body = await readBody();
       const targetUid = cleanId(body.uid, 'uid');
       const productId = cleanId(body.productId, 'productId');
       const result = await mutateEligibility(env, targetUid, productId, async record => {
@@ -321,7 +321,7 @@ export async function handleMarketplacePreview(request, env, user, route) {
     }
 
     if (route === 'validate' && method === 'POST') {
-      const body = await request.json().catch(() => ({}));
+      const body = await readBody();
       const productId = cleanId(body.productId, 'productId');
       const sessionId = cleanId(body.sessionId, 'sessionId');
       const client = await getClientContext(env, uid);
@@ -336,7 +336,7 @@ export async function handleMarketplacePreview(request, env, user, route) {
     }
 
     if (route === 'end' && method === 'POST') {
-      const body = await request.json().catch(() => ({}));
+      const body = await readBody();
       const productId = cleanId(body.productId, 'productId');
       const sessionId = cleanId(body.sessionId, 'sessionId');
       const result = await mutateEligibility(env, uid, productId, async record => {
