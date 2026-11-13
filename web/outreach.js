@@ -247,7 +247,7 @@ async function syncGmailReplies(){
   let added=0;
   for(const msg of (data.messages||[])){
    const sender=String(msg.from||'').match(/<([^>]+)>/)?.[1]||String(msg.from||'').trim();
-   const email=sender.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/i)?.[0]||sender;
+   const email=sender.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0]||sender;
    const lead=leadList().find(l=>String(l.email||'').toLowerCase()===email.toLowerCase());
    const recordId='gmail-'+String(msg.id||'').replace(/[^A-Za-z0-9_-]/g,'');
    const existing=await get(ref(db,ROOT+'/emails/'+recordId));
