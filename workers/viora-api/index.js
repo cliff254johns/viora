@@ -570,14 +570,31 @@ async function handleSocialFanout(body, env, user) {
     }
   },
 
-   async scheduled(event, env, ctx) {
-    ctx.waitUntil((async () => {
-      await runScheduledReminders(env);
-      await autoPrepareSocialQueue(env);
-      await publishDueScheduledPosts(env);
-      await runScheduledOutreachInboxSync(env);
-      await runOutreachCampaignScheduler(env);
-    })());
+  async scheduled(event, env, ctx) {
+    // Social publishing is the scheduled Worker's primary automation.
+    // Email automation is independently opt-in and cannot delay or block social jobs.
+    const jobs = [
+      ['reminders', () => runScheduledReminders(env)],
+      ['social_queue', () => autoPrepareSocialQueue(env)],
+      ['social_publish', () => publishDueScheduledPosts(env)],
+    ];
+    if (String(env.ENABLE_OUTREACH_EMAIL_AUTOMATION || '').toLowerCase() === 'true') {
+      jobs.push(
+        ['outreach_inbox_sync', () => runScheduledOutreachInboxSync(env)],
+        ['outreach_campaign_scheduler', () => runOutreachCampaignScheduler(env)],
+      );
+    }
+    ctx.waitUntil(Promise.allSettled(jobs.map(async ([name, run]) => {
+      try {
+        await run();
+      } catch (error) {
+        console.error(JSON.stringify({
+          event: 'scheduled_job_failed',
+          job: name,
+          error: String(error && error.message || error).slice(0, 300),
+        }));
+      }
+    })));
   },
 };
 
