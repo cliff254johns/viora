@@ -272,6 +272,14 @@ async function refreshHealth() {
 }
 
 function renderEngineeringCommandCentre() {
+  if (window.__vioraInvestorRoomMode) {
+    import('./investor-data-room.js').then(module => module.renderInvestorDataRoom())
+      .catch(error => {
+        const host = root();
+        if (host) host.innerHTML = '<div class="ecc-section"><h2>Investor Data Room unavailable</h2><p>' + esc(error.message || 'Module failed to load.') + '</p></div>';
+      });
+    return;
+  }
   if (!root()) return;
   if (!root().dataset.initialized) {
     root().dataset.initialized='1';
