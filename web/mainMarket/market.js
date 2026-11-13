@@ -131,8 +131,8 @@ const App = {
 
   async requestPreview(productId) {
     const product = this.products.find(item => item.id === productId);
-    if (!product || product.previewEnabled !== true || product.previewGatewayVerified !== true) {
-      this.toast('A secure preview is not yet available for this product.', 'warning');
+    if (!product || product.status !== 'active') {
+      this.toast('This product is not currently available for preview requests.', 'warning');
       return;
     }
     if (!auth) {
@@ -973,8 +973,7 @@ const App = {
       const isCustom = this.isCustomProduct(p);
       const agg = this.getReviewAggregate(p.id);
 
-      const previewAvailable = p.previewEnabled === true && p.previewGatewayVerified === true &&
-        ['isolated-software', 'digital-sample'].includes(p.previewProfile);
+      const previewAvailable = p.status === 'active';
 
       const previewBtn = (p.previewEnabled === true && p.previewGatewayVerified === true && ['isolated-software', 'digital-sample'].includes(p.previewProfile))
         ? `<button type="button" class="preview-btn" onclick="event.stopPropagation(); App.requestPreview('${p.id}')" title="Request a controlled preview"><i class="fa-solid fa-eye"></i> Preview</button>`
@@ -1474,8 +1473,7 @@ const heroVisual = (p.image && String(p.image).trim())
       const soldOut = stock.loaded && stock.qty <= 0;
       const isCustom = this.isCustomProduct(p);
 
-      const previewAvailable = p.previewEnabled === true && p.previewGatewayVerified === true &&
-        ['isolated-software', 'digital-sample'].includes(p.previewProfile);
+      const previewAvailable = p.status === 'active';
       const previewBtn = previewAvailable
         ? `<button type="button" class="carousel-preview-btn" onclick="event.stopPropagation(); App.requestPreview('${p.id}')" title="Request controlled preview"><i class="fa-solid fa-eye"></i></button>`
         : '';
