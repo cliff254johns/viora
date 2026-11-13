@@ -33,6 +33,10 @@ The authorizer checks:
 
 It fails closed if Firebase state cannot be read.
 
+## Admin product gateway inventory
+
+An admin-only inventory is available at `GET /marketplace/preview/gateways`. It reads the live Marketplace product catalogue from the Worker's configured Firebase RTDB and returns only safe metadata: product ID, name, category, status, preview profile, preview flags and machine-readable blocking reasons. It deliberately omits delivery URLs and storage locations. The endpoint is an audit aid, not proof that a product gateway is implemented; `previewGatewayVerified` remains a trusted release flag that must only be set after the per-product acceptance evidence below is reviewed.
+
 ## Software products — `isolated-software`
 
 Before enabling a software product:
