@@ -138,3 +138,17 @@ test('prospect marketing cannot bypass the compliance campaign queue through dir
   assert.match(outreach, /purpose:'marketing',source:'Outreach Centre'/);
   assert.match(outreach, /blockedSend=httpStatus===423\|\|httpStatus===409/);
 });
+
+test('scheduled email ledger, comm log and lead history are written atomically', async () => {
+  const source = await readFile(new URL('../../workers/viora-api/index.js', import.meta.url), 'utf8');
+  assert.match(source, /async function outreachDbMultiWrite/);
+  assert.match(source, /method: 'PATCH'/);
+  const start = source.indexOf('async function writeOutreachCampaignActivity(');
+  const end = source.indexOf('\nasync function runOutreachCampaignScheduler', start);
+  const helper = source.slice(start, end);
+  assert.match(helper, /outreach\/emails\//);
+  assert.match(helper, /commLog\//);
+  assert.match(helper, /outreachHistory\//);
+  assert.match(helper, /await outreachDbMultiWrite\(env, updates\)/);
+  assert.match(helper, /if \(status === 'sent'\)/);
+});
