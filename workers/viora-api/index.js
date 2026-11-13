@@ -2291,7 +2291,6 @@ async function handleSocialConfigStatus(env, user) {
     try {
       const url = new URL('https://www.googleapis.com/youtube/v3/i18nLanguages');
       url.searchParams.set('part', 'snippet');
-      url.searchParams.set('maxResults', '1');
       url.searchParams.set('key', env.YOUTUBE_API_KEY);
       const response = await fetch(url.toString());
       const data = await response.json();
