@@ -48,7 +48,13 @@ The country-policy record is:
   "reviewedBy": "authorised-reviewer",
   "jurisdiction": "GB",
   "contactRulesSummary": "Summary of the reviewed rules and scope",
-  "sourceUrls": ["https://official-regulator.example/guidance"]
+  "legalReview": {
+    "status": "complete",
+    "reviewerName": "Actual qualified legal reviewer",
+    "completedAt": "2026-11-13T12:00:00.000Z",
+    "sourceUrls": ["https://www.ico.org.uk/official-guidance"]
+  },
+  "sourceUrls": ["https://www.ico.org.uk/official-guidance"]
 }
 ```
 
@@ -62,8 +68,18 @@ The global sender policy record is:
   "version": "2026-11-v1",
   "reviewedAt": "2026-11-13T12:00:00.000Z",
   "reviewedBy": "authorised-reviewer",
-  "senderPostalAddress": "VIORA's real postal address",
-  "privacyNoticeUrl": "https://www.viora.co.ke/privacy"
+  "senderPostalAddress": "VIORA's verified sender postal address",
+  "privacyNoticeUrl": "https://www.viora.co.ke/privacy",
+  "senderAddressVerified": true,
+  "humanApprovalRequired": true,
+  "canSpamAddressVerified": true,
+  "canSpamReviewComplete": true,
+  "legalReview": {
+    "status": "complete",
+    "reviewerName": "Actual qualified legal reviewer",
+    "completedAt": "2026-11-13T12:00:00.000Z",
+    "sourceUrls": ["https://www.ftc.gov/business-guidance/resources/can-spam-act-compliance-guide-business"]
+  }
 }
 ```
 
@@ -79,6 +95,7 @@ Do not mark a jurisdiction or global policy approved merely to unlock sending. A
 {
   "items": [{
     "leadId": "existing-shared-crm-lead-id",
+    "humanApproval": true,
     "subject": "Specific subject for this organisation",
     "text": "Individually researched message naming the organisation and its verified business context.",
     "followups": [{
