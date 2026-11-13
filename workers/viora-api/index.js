@@ -1,4 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
+import { handleMarketplacePreview } from './marketplace-preview.js';
+
 // viora-api — Viora Intercollective System
 // v4.9.0 — Campaign Command Center + Trends
 //        • NEW: /trends/rss          (Google Trends proxy)
@@ -303,6 +305,21 @@ if (path === '/social/stats/batch' && request.method === 'POST') {
         user.email = user.email || portalRecord.email;
       } else {
         user.role = role;
+      }
+
+      // ── VIORA Marketplace controlled preview service ──
+      const previewRoutes = {
+        '/marketplace/preview/status': 'status',
+        '/marketplace/preview/start': 'start',
+        '/marketplace/preview/request': 'request',
+        '/marketplace/preview/requests': 'admin-requests',
+        '/marketplace/preview/grant': 'admin-grant',
+        '/marketplace/preview/revoke': 'admin-revoke',
+        '/marketplace/preview/validate': 'validate',
+        '/marketplace/preview/end': 'end'
+      };
+      if (previewRoutes[path]) {
+        return await handleMarketplacePreview(request, env, user, previewRoutes[path]);
       }
 
       // ── Gmail mailbox management (admin/exec only) ──
