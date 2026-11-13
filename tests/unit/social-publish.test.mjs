@@ -105,3 +105,14 @@ test('compose-link outcomes remain manual rather than falsely marked published',
   assert.equal(post.publishOutcome, 'manual_action_required');
   assert.equal(post.reconciliationRequired, false);
 });
+
+test('legacy publishing records with claimedAt are moved to uncertain, not retried', async () => {
+  const campaign = { posts: [{
+    id: 'post-legacy', status: 'publishing',
+    claimedAt: new Date(now - 7 * 60 * 1000).toISOString(),
+  }] };
+  const db = makeRtdb(campaign);
+  const result = await claimScheduledCampaignPost('https://db.test/campaign.json', 'post-legacy', now, 300000, db.fetchImpl, () => 'new-claim');
+  assert.deepEqual(result, { claimed: false, reason: 'marked_uncertain' });
+  assert.equal(db.getCampaign().posts[0].status, 'publish_uncertain');
+});
