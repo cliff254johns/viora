@@ -315,6 +315,10 @@ if (path === '/social/stats/batch' && request.method === 'POST') {
         requireRole(String(user.role || '').toLowerCase(), ['admin', 'exec']);
         return await handleGmailReplies(env, user);
       }
+      if (path === '/gmail/label-thread' && request.method === 'POST') {
+        requireRole(String(user.role || '').toLowerCase(), ['admin', 'exec']);
+        return await handleGmailLabelThread(body, env);
+      }
 
       // VIORA Outreach AI: authenticated admin/exec-only drafting route.
       if (path === '/outreach/draft' && request.method === 'POST') {
@@ -5883,6 +5887,7 @@ const GMAIL_SCOPES = [
   'email',
   'https://www.googleapis.com/auth/gmail.send',
   'https://www.googleapis.com/auth/gmail.metadata',
+  'https://www.googleapis.com/auth/gmail.modify',
 ];
 
 function gmailBase64(bytes) {
@@ -6132,13 +6137,28 @@ async function sendViaGmail(message, env, user, existingConnection) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ raw }),
     });
+    // Apply the dedicated label to the sent message/thread. Label failures are
+    // reported in logs but never turn a successful send into a duplicate retry.
+    let outreachLabelApplied = false;
+    try {
+      if (result.threadId) {
+        const labelId = await gmailEnsureOutreachLabel(accessToken);
+        await gmailApiFetch('threads/' + encodeURIComponent(result.threadId) + '/modify', accessToken, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ addLabelIds: [labelId] }),
+        });
+        outreachLabelApplied = true;
+      }
+    } catch (labelError) {
+      await logGmailCommunication(env, { channel: 'email', transport: 'gmail', status: 'label_failed', providerId: result.id || null, threadId: result.threadId || null, error: labelError.message, timestamp: new Date().toISOString() });
+    }
     await logGmailCommunication(env, {
       channel: 'email', transport: 'gmail', to: recipients,
       subject: cleanHeader(message.subject), sentBy: user.email || null,
       providerId: result.id || null, threadId: result.threadId || null,
       status: 'sent', timestamp: new Date().toISOString(),
     });
-    return json({ ok: true, id: result.id, threadId: result.threadId, transport: 'gmail', from: GMAIL_OWNER_EMAIL });
+    return json({ ok: true, id: result.id, threadId: result.threadId, transport: 'gmail', from: GMAIL_OWNER_EMAIL, outreachLabelApplied });
   } catch (e) {
     return json({ ok: false, error: 'Gmail send failed', detail: e.message }, 502);
   }
@@ -6150,6 +6170,34 @@ async function handleGmailStatus(env) {
     return json({ ok: true, connected: true, email: connection.email, connectedAt: connection.connectedAt || null, scopes: connection.scopes || [] });
   } catch (e) {
     return json({ ok: false, connected: false, error: e.message }, 503);
+  }
+}
+async function gmailEnsureOutreachLabel(accessToken) {
+  const labels = await gmailApiFetch('labels', accessToken);
+  const existing = (labels.labels || []).find(label => label.name === 'VIORA Outreach');
+  if (existing) return existing.id;
+  const created = await gmailApiFetch('labels', accessToken, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: 'VIORA Outreach', labelListVisibility: 'labelShow', messageListVisibility: 'show' }),
+  });
+  if (!created.id) throw new Error('Gmail did not return the VIORA Outreach label ID');
+  return created.id;
+}
+async function handleGmailLabelThread(body, env) {
+  try {
+    const threadId = String(body && body.threadId || '').trim();
+    if (!threadId || threadId.length > 256) return json({ ok: false, error: 'A valid Gmail threadId is required' }, 400);
+    const connection = await readGmailConnection(env);
+    if (!connection) return json({ ok: false, error: 'Connect Gmail before applying labels' }, 409);
+    const accessToken = await gmailAccessToken(connection, env);
+    const labelId = await gmailEnsureOutreachLabel(accessToken);
+    await gmailApiFetch('threads/' + encodeURIComponent(threadId) + '/modify', accessToken, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ addLabelIds: [labelId] }),
+    });
+    return json({ ok: true, labeled: true, label: 'VIORA Outreach' });
+  } catch (e) {
+    return json({ ok: false, error: 'Unable to label Gmail conversation', detail: e.message }, 502);
   }
 }
 async function handleGmailReplies(env, user) {
