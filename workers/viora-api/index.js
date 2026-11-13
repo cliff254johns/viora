@@ -6863,13 +6863,6 @@ async function outreachDbWrite(env, path, value, method = 'PUT') {
   if (!response.ok) throw new Error('Unable to write Outreach state');
   return response.json().catch(() => null);
 }
-async function outreachDbMultiWrite(env, updates) {
-  if (!env.FIREBASE_DATABASE_SECRET) throw new Error('Firebase database service secret is not configured');
-  const url = `${rtdb(env)}/viora_data/orgs/viora.json?auth=${encodeURIComponent(env.FIREBASE_DATABASE_SECRET)}`;
-  const response = await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) });
-  if (!response.ok) throw new Error('Unable to atomically write Outreach activity');
-  return response.json().catch(() => null);
-}
 async function publishOutreachEscalation(env, eventId, title, body, level = 'high', threadId = '') {
   const clean = String(eventId || '').replace(/[^A-Za-z0-9_-]/g, '-').slice(0, 100);
   const id = 'outreach-' + clean;
