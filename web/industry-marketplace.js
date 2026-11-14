@@ -45,12 +45,15 @@ async function viInitIndustryMarketplace(){
  host.setAttribute("aria-busy","true");
  try{
   const products=await viLoadProducts();
-  const matches=products.map(product=>{
-   const categoryMatch=window.VIORATaxonomy.classifyProduct(product)===solutionCategory;
-   const name=viNorm(product.name||"");
-   const nameMatch=config.nameTerms.some(term=>name.includes(term));
-   return {product,rank:categoryMatch?0:nameMatch?1:9};
-  }).filter(item=>item.rank<9).sort((a,b)=>a.rank-b.rank).map(item=>item.product).slice(0,6);
+  const matches=products.filter(product=>{
+   if(window.VIORATaxonomy.classifyProduct(product)!==solutionCategory)return false;
+   const searchable=viNorm([
+    product.name,product.title,product.category,product.categoryName,product.categoryId,
+    product.productType,product.industry,product.subcategory,product.subCategory,
+    product.description,product.tags,product.features
+   ].flat().filter(Boolean).join(" "));
+   return config.nameTerms.some(term=>searchable.includes(viNorm(term)));
+  }).slice(0,6);
   if(!matches.length){
    host.innerHTML='<div class="industry-marketplace-empty"><span class="industry-product-placeholder"><i class="fa-solid fa-box-open"></i></span><div><strong>No matching products are listed yet.</strong><p>Browse the Marketplace to see the full catalogue or check back as this category grows.</p><a class="btn" href="/market">Explore the Marketplace <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div></div>';
   }else{
