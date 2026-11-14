@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-14T10:42:15.075Z",
+  "generatedAt": "2026-11-14T10:44:10.144Z",
   "moduleCount": 114,
   "modules": [
     {
@@ -1570,7 +1570,7 @@
     },
     {
       "file": "web/viora-taxonomy.js",
-      "bytes": 8863,
+      "bytes": 9120,
       "imports": [],
       "exports": [],
       "workerRoutes": []
