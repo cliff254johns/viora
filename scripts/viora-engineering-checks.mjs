@@ -133,6 +133,11 @@ const expectedLegacyProducts = [
 for (const [label, expected] of expectedLegacyProducts) {
   assert.equal(classify({ category: label }), expected, 'legacy product category '+label);
 }
+assert.equal(classify({ name:'Hospital Website', category:'General Websites', vioraCategoryId:'business' }), 'institutional', 'industry-specific hospital websites must follow the institutional family');
+assert.equal(classify({ name:'Retail E-commerce Website', category:'General Websites' }), 'enterprise', 'retail e-commerce websites must follow the enterprise family');
+assert.equal(classify({ name:'Hotel Website', category:'General Websites' }), 'hospitality', 'hotel websites must follow the hospitality family');
+assert.equal(classify({ name:'Property Listing Website', category:'General Websites' }), 'property', 'property websites must follow the property family');
+assert.equal(classify({ name:'General Portfolio Website', category:'General Websites' }), 'business', 'general websites must remain in business and lifestyle');
 assert.equal(taxonomyWindow.VIORATaxonomy.categories.length, 6, 'taxonomy must expose exactly six categories');
 for (const [legacyKey, expected] of Object.entries(taxonomyWindow.VIORATaxonomy.legacy)) {
   assert.equal(taxonomyWindow.VIORATaxonomy.classifyIndustry({ name:legacyKey.replace(/_/g, ' '), cat:legacyKey }), expected, 'legacy industry key '+legacyKey);
