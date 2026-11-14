@@ -1,6 +1,6 @@
 # Generated module and API map
 
-Generated: 2026-11-14T10:44:10.145Z
+Generated: 2026-11-14T10:44:20.910Z
 
 Modules: 114
 
@@ -731,7 +731,7 @@ Modules: 114
 
 ### web/viora-taxonomy.js
 
-- Size: 9120 bytes
+- Size: 9068 bytes
 - Imports: none detected
 - Exports: none detected
 - Worker routes: none detected
