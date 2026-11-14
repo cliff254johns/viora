@@ -55,7 +55,7 @@
     const text = [p.category,p.categoryName,p.categoryId,p.solutionCategory,p.productType,p.industry,p.name,p.title,p.description,p.id,
       ...(Array.isArray(p.tags)?p.tags:[typeof p.tags==='string'?p.tags:'']),
       ...(Array.isArray(p.features)?p.features:[])].join(' ');
-    const isWebsite = /\\b(websites?|web design|website builder|3d website|e ?commerce)\\b/i.test(text);
+    const isWebsite = /\b(websites?|web design|website builder|3d website|e[- ]?commerce)\b/i.test(text);
     const explicit = canonicalId(p.vioraCategoryId || p.solutionCategory || p.solutionCategoryId || p.categoryGroup);
     if (isWebsite) {
       const industryMatch = classifyText(text,null);
@@ -84,7 +84,7 @@
     return p;
   }
   root.VIORATaxonomy = Object.freeze({
-    version:'2026-11-13.1',
+    version:'2026-11-14.1',
     categories:Object.freeze(categories.map(c=>Object.freeze(c))),
     byId:Object.freeze(byId),
     legacy:Object.freeze(legacy),
