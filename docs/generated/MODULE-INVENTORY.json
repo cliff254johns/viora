@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-13T20:49:05.894Z",
+  "generatedAt": "2026-11-14T10:42:15.075Z",
   "moduleCount": 114,
   "modules": [
     {
@@ -221,7 +221,7 @@
     },
     {
       "file": "web/industry-marketplace.js",
-      "bytes": 6152,
+      "bytes": 6277,
       "imports": [],
       "exports": [],
       "workerRoutes": []
@@ -1343,7 +1343,7 @@
     },
     {
       "file": "web/mainIndex/blueprint.js",
-      "bytes": 23817,
+      "bytes": 24179,
       "imports": [
         "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js",
         "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js"

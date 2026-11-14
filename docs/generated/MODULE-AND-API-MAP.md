@@ -1,6 +1,6 @@
 # Generated module and API map
 
-Generated: 2026-11-13T20:49:05.894Z
+Generated: 2026-11-14T10:42:15.076Z
 
 Modules: 114
 
@@ -175,7 +175,7 @@ Modules: 114
 
 ### web/industry-marketplace.js
 
-- Size: 6152 bytes
+- Size: 6277 bytes
 - Imports: none detected
 - Exports: none detected
 - Worker routes: none detected
@@ -569,7 +569,7 @@ Modules: 114
 
 ### web/mainIndex/blueprint.js
 
-- Size: 23817 bytes
+- Size: 24179 bytes
 - Imports: https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js, https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js
 - Exports: none detected
 - Worker routes: none detected
